@@ -1,0 +1,66 @@
+# ---------------------------------------------------------------------------
+# General
+# ---------------------------------------------------------------------------
+*.log
+*.tmp
+*.class
+*.pyc
+*.swp
+.atom/
+.buildlog/
+.history/
+.svn/
+migrate_working_dir/
+
+# ---------------------------------------------------------------------------
+# IDEs
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+# The .vscode folder contains launch configuration and tasks which you
+# may keep tracked; comment the line above if you wish to include it.
+
+# ---------------------------------------------------------------------------
+# Dart / Flutter
+# ---------------------------------------------------------------------------
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub/
+.pub-cache/
+
+# Build outputs
+/build/
+**/build/
+**/doc/api/
+
+# Flutter specific build & intermediate files
+**/ios/Flutter/.last_build_id
+**/ios/Pods/
+**/macos/Pods/
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/web/.dart_tool/
+
+# Symbol & map files (obfuscation, symbolication)
+app.*.symbols
+app.*.map.json
+
+# Coverage
+coverage/
+
+# Misc
+.DS_Store
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Keep or ignore generated files ------------------------------------------------
+*.g.dart
+*.freezed.dart

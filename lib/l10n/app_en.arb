@@ -1,0 +1,100 @@
+{
+  "about": "About",
+  "adhan": "Adhan",
+  "adhanHoursAgo": "{hours} hours ago",
+  "@adhanHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "adhanHoursLeft": "{hours} hours left",
+  "@adhanHoursLeft": {
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "adhanMinsAgo": "{mins} minutes ago",
+  "@adhanMinsAgo": {
+    "placeholders": {
+      "mins": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "adhanMinsLeft": "{mins} minutes left",
+  "@adhanMinsLeft": {
+    "placeholders": {
+      "mins": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "appearance": "Display Settings",
+  "appearanceSubtitle": "Customize the app's appearance.",
+  "appName": "Hasanat",
+  "arabic": "Arabic",
+  "asr": "Asr",
+  "blue": "Blue",
+  "colorTheme": "Color Theme",
+  "colorThemeSubtitle": "Change the apps color themes.",
+  "completed": "Completed •",
+  "completionStatus": "Completion Status",
+  "currentPrayer": "Current Prayer",
+  "dark": "Dark",
+  "dhuhr": "Dhuhr",
+  "english": "English",
+  "errorNotFoundPage": "we couldn't find this page please make sure you entered the correct url.",
+  "fajr": "Fajir",
+  "green": "Green",
+  "hadith": "Hadith",
+  "iqamah": "Iqamah",
+  "iqamahSubtitleMessage": "+{iqamahMins} minutes",
+  "@iqamahSubtitleMessage": {
+    "placeholders": {
+      "iqamahMins": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "isha": "Isha",
+  "islamicTheme": "Manuscript",
+  "jamaah": "Jamaah",
+  "lastThirdOfTheNight": "Last Third Of The Night",
+  "late": "Late",
+  "light": "Light",
+  "maghrib": "Maghrib",
+  "midnight": "Midnight",
+  "missed": "Missed",
+  "muslimFortress": "Muslim Fortress",
+  "neutral": "Neutral",
+  "nextPrayer": "Next Prayer",
+  "onTime": "On Time",
+  "orange": "Orange",
+  "prayer": "Prayer",
+  "prayerTimes": "Prayer Times",
+  "prayerTrackerSubtitle": "Track your prayers and stay consistent, click on a prayer to mark it as completed.",
+  "prayerTrackerTitle": "Prayer Tracker",
+  "prepareForPrayer": "Prepare yourself for the prayer.",
+  "quran": "Holy Quran",
+  "red": "Red",
+  "remembrance": "Remembrance",
+  "rose": "Rose",
+  "settings": "Settings",
+  "slate": "Slate",
+  "status": "Status",
+  "stone": "Stone",
+  "sunrise": "Sunrise",
+  "toggleArabic": "Toggle Arabic",
+  "violet": "Violet",
+  "yellow": "Yellow",
+  "zinc": "Zinc"
+}

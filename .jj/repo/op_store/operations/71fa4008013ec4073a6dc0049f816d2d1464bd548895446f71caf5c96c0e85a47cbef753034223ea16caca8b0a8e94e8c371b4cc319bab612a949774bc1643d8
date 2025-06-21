@@ -1,0 +1,9 @@
+
+@¥ÑZø•GâQç<‰ºI™Ó¤y²’3©B‹Ï¯UÇ‡ôV»e‰«×ô|©ZQd>DğvvRÆ2oC|@[aÙ@_™’iÀ3ãè¿¡uf™6ß»8}l†z_ªDKœÊ2­ŞãÔè¥Wv!y|ãl>/[/v8Ú£×ôòÉ‚÷
+
+Ÿ¯§Œù2´
+¡¯§Œù2´snapshot working copy"fedora*moath2´
+args«jj log -T 'change_id ++ "à¶jjk" ++ commit_id ++ "à¶jjk" ++ author.name() ++ "à¶jjk" ++ author.email() ++ "à¶jjk" ++ author.timestamp().local().format("%F %H:%M:%S") ++ "à¶jjk" ++ description ++ "à¶jjk" ++ empty ++ "à¶jjk" ++ conflict ++ "à¶jjk" ++ diff.files().map(|entry| entry.status() ++ "@?!" ++ entry.source().path().display() ++ "@?!" ++ entry.target().path().display() ++ "@?!" ++ entry.target().conflict()).join("
+") ++ "jjkà¶
+"' --no-graph -r oqzkwrxz --config-file /home/moath/.cursor/extensions/jjk.jjk-0.8.1-universal/dist/config.toml8",
+ôˆ¥¥9­î_Á^‡É‘cÒ/F¿ş†è`íçóa»ggS\¾ewÓ(

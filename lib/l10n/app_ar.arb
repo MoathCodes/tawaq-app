@@ -1,0 +1,104 @@
+{
+  "about": "عن التطبيق",
+  "adhan": "الأذان",
+  "adhanHoursAgo": "{hours} ساعة مضت",
+  "@adhanHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "adhanHoursLeft": "{hours} ساعة متبقية",
+  "@adhanHoursLeft": {
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "adhanMinsAgo": "{mins} دقيقة مضت",
+  "@adhanMinsAgo": {
+    "placeholders": {
+      "mins": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "adhanMinsLeft": "{mins} دقيقة متبقية",
+  "@adhanMinsLeft": {
+    "placeholders": {
+      "mins": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "appearance": "خصائص العرض",
+  "appearanceSubtitle": "تخصيص مظهر التطبيق.",
+  "appName": "حسانات",
+  "@appName": {},
+  "arabic": "العربية",
+  "asr": "العصر",
+  "blue": "أزرق",
+  "colorTheme": "نمط الألوان",
+  "colorThemeSubtitle": "تغيير نمط الألوان في التطبيق.",
+  "completed": "مكتملة •",
+  "completionStatus": "حالة الاكتمال",
+  "currentPrayer": "الصلاة الحالية",
+  "dark": "داكن",
+  "dhuhr": "الظهر",
+  "english": "الإنجيليزية",
+  "errorNotFoundPage": "لم نستطع الوصول لهذه الصفحة الرجاء التأكد من الرابط ثم إعادة المحاولة.",
+  "@errorNotFoundPage": {},
+  "fajr": "الفجر",
+  "green": "أخضر",
+  "hadith": "الحديث",
+  "iqamah": "الإقامة",
+  "iqamahSubtitleMessage": "+{iqamahMins} دقيقة",
+  "@iqamahSubtitleMessage": {
+    "placeholders": {
+      "iqamahMins": {
+        "type": "int",
+        "format": "compact"
+      }
+    }
+  },
+  "isha": "العشاء",
+  "islamicTheme": "المخطوطة",
+  "jamaah": "جماعة",
+  "lastThirdOfTheNight": "الثلث الأخير من الليل",
+  "late": "متأخر",
+  "light": "فاتح",
+  "maghrib": "المغرب",
+  "midnight": "منتصف الليل",
+  "missed": "فائتة",
+  "muslimFortress": "حصن المسلم",
+  "@muslimFortress": {},
+  "neutral": "محايد",
+  "nextPrayer": "الصلاة القادمة",
+  "onTime": "في وقتها",
+  "orange": "برتقالي",
+  "prayer": "الصلاة",
+  "prayerTimes": "مواقيت الصلاة",
+  "prayerTrackerSubtitle": "تتبع صلواتك وكن منتظمًا، انقر على صلاة لتحديدها كمكتملة.",
+  "prayerTrackerTitle": "متعقب الصلاة",
+  "prepareForPrayer": "تجهز للصلاة.",
+  "quran": "القرآن الكريم",
+  "@quran": {},
+  "red": "أحمر",
+  "remembrance": "الأذكار",
+  "rose": "وردي",
+  "settings": "الإعدادات",
+  "slate": "رمادي",
+  "status": "الحالة",
+  "stone": "حجر",
+  "sunrise": "الشروق",
+  "toggleArabic": "حول اللغة",
+  "violet": "بنفسجي",
+  "yellow": "أصفر",
+  "zinc": "زنك"
+}

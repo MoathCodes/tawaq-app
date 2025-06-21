@@ -1,0 +1,78 @@
+lib
+├── core
+│   ├── locale
+│   │   ├── arabic_delegate.dart
+│   │   ├── arabic_shadcn_locale.dart
+│   │   ├── locale_extension.dart
+│   │   ├── locale_provider.dart
+│   │   └── locale_provider.g.dart
+│   ├── routing
+│   │   ├── route.dart
+│   │   ├── route.freezed.dart
+│   │   ├── route_provider.dart
+│   │   └── route_provider.g.dart
+│   ├── theme
+│   │   ├── custom_themes.dart
+│   │   ├── theme.dart
+│   │   ├── theme.freezed.dart
+│   │   ├── theme_provider.dart
+│   │   └── theme_provider.g.dart
+│   ├── utils
+│   │   ├── date_formatter.dart
+│   │   ├── date_formatter.g.dart
+│   │   ├── prayer_extensions.dart
+│   │   └── rtl_swapper.dart
+│   └── widgets
+│       ├── custom_text_button.dart
+│       ├── mouse_click.dart
+│       ├── navigation_shell.dart
+│       └── not_found_page.dart
+├── feature
+│   ├── home
+│   │   └── home_page.dart
+│   ├── prayer
+│   │   ├── models
+│   │   │   ├── prayer_card_model.dart
+│   │   │   ├── prayer_card_model.freezed.dart
+│   │   │   ├── prayer_settings_model.dart
+│   │   │   ├── prayer_settings_model.freezed.dart
+│   │   │   ├── prayer_table_model.dart
+│   │   │   └── prayer_table_model.freezed.dart
+│   │   ├── presentation
+│   │   │   └── prayer_page.dart
+│   │   ├── provider
+│   │   │   ├── prayer_provider.dart
+│   │   │   ├── prayer_provider.g.dart
+│   │   │   ├── prayer_settings_provider.dart
+│   │   │   └── prayer_settings_provider.g.dart
+│   │   ├── repository
+│   │   │   └── prayer_repo.dart
+│   │   └── widgets
+│   │       ├── current_prayer_card.dart
+│   │       └── prayer_table.dart
+│   ├── quran
+│   └── settings
+│       ├── models
+│       ├── presentation
+│       │   └── settings_page.dart
+│       ├── provider
+│       └── widgets
+│           ├── app_theme_selector.dart
+│           └── settings_section.dart
+├── gen
+│   ├── assets.gen.dart
+│   └── fonts.gen.dart
+├── generated
+│   ├── intl
+│   │   ├── messages_all.dart
+│   │   └── messages_en.dart
+│   └── l10n.dart
+├── l10n
+│   ├── app_ar.arb
+│   ├── app_en.arb
+│   ├── app_localizations_ar.dart
+│   ├── app_localizations.dart
+│   └── app_localizations_en.dart
+└── main.dart
+
+25 directories, 51 files
