@@ -1,39 +1,35 @@
 {
   "about": "عن التطبيق",
   "adhan": "الأذان",
-  "adhanHoursAgo": "{hours} ساعة مضت",
+  "adhanHoursAgo": "{hours, plural, =0 {الآن} =1 {قبل ساعة} =2 {قبل ساعتين} few {قبل {hours} ساعات} many {قبل {hours} ساعة} other {قبل {hours} ساعة}}",
   "@adhanHoursAgo": {
     "placeholders": {
       "hours": {
-        "type": "int",
-        "format": "compact"
+        "type": "int"
       }
     }
   },
-  "adhanHoursLeft": "{hours} ساعة متبقية",
+  "adhanHoursLeft": "{hours, plural, =0 {الآن} =1 {متبقي ساعة} =2 {متبقي ساعتين} few {متبقي {hours} ساعات} many {متبقي {hours} ساعة} other {متبقي {hours} ساعة}}",
   "@adhanHoursLeft": {
     "placeholders": {
       "hours": {
-        "type": "int",
-        "format": "compact"
+        "type": "int"
       }
     }
   },
-  "adhanMinsAgo": "{mins} دقيقة مضت",
+  "adhanMinsAgo": "{mins, plural, =0 {الآن} =1 {قبل دقيقة} =2 {قبل دقيقتين} few {قبل {mins} دقائق} many {قبل {mins} دقيقة} other {قبل {mins} دقيقة}}",
   "@adhanMinsAgo": {
     "placeholders": {
       "mins": {
-        "type": "int",
-        "format": "compact"
+        "type": "int"
       }
     }
   },
-  "adhanMinsLeft": "{mins} دقيقة متبقية",
+  "adhanMinsLeft": "{mins, plural, =0 {الآن} =1 {متبقي دقيقة} =2 {متبقي دقيقتين} few {متبقي {mins} دقائق} many {متبقي {mins} دقيقة} other {متبقي {mins} دقيقة}}",
   "@adhanMinsLeft": {
     "placeholders": {
       "mins": {
-        "type": "int",
-        "format": "compact"
+        "type": "int"
       }
     }
   },
@@ -43,12 +39,14 @@
   "@appName": {},
   "arabic": "العربية",
   "asr": "العصر",
+  "bestStreak": "أفضل إنجاز",
   "blue": "أزرق",
   "colorTheme": "نمط الألوان",
   "colorThemeSubtitle": "تغيير نمط الألوان في التطبيق.",
   "completed": "مكتملة •",
   "completionStatus": "حالة الاكتمال",
   "currentPrayer": "الصلاة الحالية",
+  "currentStreak": "الإنجاز الحالي",
   "dark": "داكن",
   "dhuhr": "الظهر",
   "english": "الإنجيليزية",
@@ -58,30 +56,38 @@
   "green": "أخضر",
   "hadith": "الحديث",
   "iqamah": "الإقامة",
-  "iqamahSubtitleMessage": "+{iqamahMins} دقيقة",
+  "iqamahSubtitleMessage": "{iqamahMins, plural, =0 {الآن} =1 {+ دقيقة} =2 {+ دقيقتين} few {+{iqamahMins} دقائق} many {+{iqamahMins} دقيقة} other {+{iqamahMins} دقيقة}}",
   "@iqamahSubtitleMessage": {
     "placeholders": {
       "iqamahMins": {
-        "type": "int",
-        "format": "compact"
+        "type": "int"
       }
     }
   },
   "isha": "العشاء",
   "islamicTheme": "المخطوطة",
   "jamaah": "جماعة",
+  "jamaahRate": "الصلاة جماعة",
   "lastThirdOfTheNight": "الثلث الأخير من الليل",
   "late": "متأخر",
+  "lateRate": "الصلاة متأخرًا",
   "light": "فاتح",
   "maghrib": "المغرب",
   "midnight": "منتصف الليل",
   "missed": "فائتة",
+  "missedRate": "الصلاة الفائتة",
+  "monthly": "شهري",
   "muslimFortress": "حصن المسلم",
   "@muslimFortress": {},
   "neutral": "محايد",
   "nextPrayer": "الصلاة القادمة",
   "onTime": "في وقتها",
+  "onTimePrayersLast30Days": "الصلاة المنتظمة (ﻷخر 30 يوم)",
+  "onTimePrayersLast365Days": "الصلاة المنتظمة (ﻷخر 365 يوم)",
+  "onTimePrayersLast7Days": "الصلاة المنتظمة (ﻷخر 7 أيام)",
+  "onTimeRate": "الصلاة على وقتها",
   "orange": "برتقالي",
+  "playerAnalytics": "تحليل الصلاة",
   "prayer": "الصلاة",
   "prayerTimes": "مواقيت الصلاة",
   "prayerTrackerSubtitle": "تتبع صلواتك وكن منتظمًا، انقر على صلاة لتحديدها كمكتملة.",
@@ -96,9 +102,19 @@
   "slate": "رمادي",
   "status": "الحالة",
   "stone": "حجر",
+  "streakInDays": "{streak, plural, =0 {يوم} =1 {يوم} =2 {يومان} few {{streak} أيام} many {{streak} يومًا} other {{streak} يومًا}}",
+  "@streakInDays": {
+    "placeholders": {
+      "streak": {
+        "type": "int"
+      }
+    }
+  },
   "sunrise": "الشروق",
   "toggleArabic": "حول اللغة",
   "violet": "بنفسجي",
+  "weekly": "أسبوعي",
+  "yearly": "سنوي",
   "yellow": "أصفر",
   "zinc": "زنك"
 }

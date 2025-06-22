@@ -16,42 +16,62 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String adhanHoursAgo(int hours) {
-    final intl.NumberFormat hoursNumberFormat = intl.NumberFormat.compact(
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
       locale: localeName,
+      other: 'قبل $hours ساعة',
+      many: 'قبل $hours ساعة',
+      few: 'قبل $hours ساعات',
+      two: 'قبل ساعتين',
+      one: 'قبل ساعة',
+      zero: 'الآن',
     );
-    final String hoursString = hoursNumberFormat.format(hours);
-
-    return '$hoursString ساعة مضت';
+    return '$_temp0';
   }
 
   @override
   String adhanHoursLeft(int hours) {
-    final intl.NumberFormat hoursNumberFormat = intl.NumberFormat.compact(
+    String _temp0 = intl.Intl.pluralLogic(
+      hours,
       locale: localeName,
+      other: 'متبقي $hours ساعة',
+      many: 'متبقي $hours ساعة',
+      few: 'متبقي $hours ساعات',
+      two: 'متبقي ساعتين',
+      one: 'متبقي ساعة',
+      zero: 'الآن',
     );
-    final String hoursString = hoursNumberFormat.format(hours);
-
-    return '$hoursString ساعة متبقية';
+    return '$_temp0';
   }
 
   @override
   String adhanMinsAgo(int mins) {
-    final intl.NumberFormat minsNumberFormat = intl.NumberFormat.compact(
+    String _temp0 = intl.Intl.pluralLogic(
+      mins,
       locale: localeName,
+      other: 'قبل $mins دقيقة',
+      many: 'قبل $mins دقيقة',
+      few: 'قبل $mins دقائق',
+      two: 'قبل دقيقتين',
+      one: 'قبل دقيقة',
+      zero: 'الآن',
     );
-    final String minsString = minsNumberFormat.format(mins);
-
-    return '$minsString دقيقة مضت';
+    return '$_temp0';
   }
 
   @override
   String adhanMinsLeft(int mins) {
-    final intl.NumberFormat minsNumberFormat = intl.NumberFormat.compact(
+    String _temp0 = intl.Intl.pluralLogic(
+      mins,
       locale: localeName,
+      other: 'متبقي $mins دقيقة',
+      many: 'متبقي $mins دقيقة',
+      few: 'متبقي $mins دقائق',
+      two: 'متبقي دقيقتين',
+      one: 'متبقي دقيقة',
+      zero: 'الآن',
     );
-    final String minsString = minsNumberFormat.format(mins);
-
-    return '$minsString دقيقة متبقية';
+    return '$_temp0';
   }
 
   @override
@@ -70,6 +90,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get asr => 'العصر';
 
   @override
+  String get bestStreak => 'أفضل إنجاز';
+
+  @override
   String get blue => 'أزرق';
 
   @override
@@ -86,6 +109,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get currentPrayer => 'الصلاة الحالية';
+
+  @override
+  String get currentStreak => 'الإنجاز الحالي';
 
   @override
   String get dark => 'داكن';
@@ -114,12 +140,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String iqamahSubtitleMessage(int iqamahMins) {
-    final intl.NumberFormat iqamahMinsNumberFormat = intl.NumberFormat.compact(
+    String _temp0 = intl.Intl.pluralLogic(
+      iqamahMins,
       locale: localeName,
+      other: '+$iqamahMins دقيقة',
+      many: '+$iqamahMins دقيقة',
+      few: '+$iqamahMins دقائق',
+      two: '+ دقيقتين',
+      one: '+ دقيقة',
+      zero: 'الآن',
     );
-    final String iqamahMinsString = iqamahMinsNumberFormat.format(iqamahMins);
-
-    return '+$iqamahMinsString دقيقة';
+    return '$_temp0';
   }
 
   @override
@@ -132,10 +163,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get jamaah => 'جماعة';
 
   @override
+  String get jamaahRate => 'الصلاة جماعة';
+
+  @override
   String get lastThirdOfTheNight => 'الثلث الأخير من الليل';
 
   @override
   String get late => 'متأخر';
+
+  @override
+  String get lateRate => 'الصلاة متأخرًا';
 
   @override
   String get light => 'فاتح';
@@ -150,6 +187,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get missed => 'فائتة';
 
   @override
+  String get missedRate => 'الصلاة الفائتة';
+
+  @override
+  String get monthly => 'شهري';
+
+  @override
   String get muslimFortress => 'حصن المسلم';
 
   @override
@@ -162,7 +205,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onTime => 'في وقتها';
 
   @override
+  String get onTimePrayersLast30Days => 'الصلاة المنتظمة (ﻷخر 30 يوم)';
+
+  @override
+  String get onTimePrayersLast365Days => 'الصلاة المنتظمة (ﻷخر 365 يوم)';
+
+  @override
+  String get onTimePrayersLast7Days => 'الصلاة المنتظمة (ﻷخر 7 أيام)';
+
+  @override
+  String get onTimeRate => 'الصلاة على وقتها';
+
+  @override
   String get orange => 'برتقالي';
+
+  @override
+  String get playerAnalytics => 'تحليل الصلاة';
 
   @override
   String get prayer => 'الصلاة';
@@ -205,6 +263,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get stone => 'حجر';
 
   @override
+  String streakInDays(int streak) {
+    String _temp0 = intl.Intl.pluralLogic(
+      streak,
+      locale: localeName,
+      other: '$streak يومًا',
+      many: '$streak يومًا',
+      few: '$streak أيام',
+      two: 'يومان',
+      one: 'يوم',
+      zero: 'يوم',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get sunrise => 'الشروق';
 
   @override
@@ -212,6 +285,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get violet => 'بنفسجي';
+
+  @override
+  String get weekly => 'أسبوعي';
+
+  @override
+  String get yearly => 'سنوي';
 
   @override
   String get yellow => 'أصفر';

@@ -43,26 +43,26 @@ class PrayerService {
 
   PrayerService(this._repo, this._settings, this._log);
 
-  Future<void> addOrUpdateCompletion(PrayerCompletion completion) {
-    return _repo.addOrUpdateCompletion(completion);
-  }
+  // Future<void> addOrUpdateCompletion(PrayerCompletion completion) {
+  //   return _repo.addOrUpdateCompletion(completion);
+  // }
 
   Prayer currentPrayer(PrayerTimes prayerTime) {
     final date = _currentTime();
     return prayerTime.currentPrayer(date: date);
   }
 
-  Future<void> deleteCompletion(int id) {
-    return _repo.deleteCompletion(id);
-  }
+  // Future<void> deleteCompletion(int id) {
+  //   return _repo.deleteCompletion(id);
+  // }
 
-  Future<List<PrayerCompletion>> getAllCompletions() {
-    return _repo.getAllCompletions();
-  }
+  // Future<List<PrayerCompletion>> getAllCompletions() {
+  //   return _repo.getAllCompletions();
+  // }
 
-  Future<PrayerCompletion?> getSingleCompletion(int id) {
-    return _repo.getSingleCompletion(id);
-  }
+  // Future<PrayerCompletion?> getSingleCompletion(int id) {
+  //   return _repo.getSingleCompletion(id);
+  // }
 
   SunnahTimes getSunnahTime(PrayerTimes prayerTimes) {
     return _repo.getSunnahTime(prayerTimes);
@@ -87,24 +87,24 @@ class PrayerService {
     return prayerTimes;
   }
 
-  Future<bool> isCompletionExists(int id) {
-    return _repo.isCompletionExists(id);
-  }
+  // Future<bool> isCompletionExists(int id) {
+  //   return _repo.isCompletionExists(id);
+  // }
 
   Prayer nextPrayerByDate(PrayerTimes prayerTime, [DateTime? date]) {
     final activeDate = date ?? _currentTime();
     return prayerTime.nextPrayer(date: activeDate);
   }
 
-  Stream<List<PrayerCompletion>> watchPrayerCompletionByDate([DateTime? date]) {
-    final activeDate = date ?? _currentTime();
+  // Stream<List<PrayerCompletion>> watchPrayerCompletionByDate([DateTime? date]) {
+  //   final activeDate = date ?? _currentTime();
 
-    return _repo.watchPrayerCompletionByDate(
-      activeDate.year,
-      activeDate.month,
-      activeDate.day,
-    );
-  }
+  //   return _repo.watchPrayerCompletionByDate(
+  //     activeDate.year,
+  //     activeDate.month,
+  //     activeDate.day,
+  //   );
+  // }
 
   TZDateTime _currentTime() {
     return TZDateTime.from(DateTime.now(), _settings.location);

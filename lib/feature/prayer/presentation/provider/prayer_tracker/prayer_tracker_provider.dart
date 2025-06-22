@@ -21,11 +21,11 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
   Map<Prayer, PrayerCompletion>? _completionMap;
   // bool _hasChanged = false;
 
-  void addOrUpdateCompletion(PrayerCompletion completion) async {
-    final service = ref.read(prayerServiceProvider);
-    await service.addOrUpdateCompletion(completion);
-    ref.invalidateSelf();
-  }
+  // void addOrUpdateCompletion(PrayerCompletion completion) async {
+  //   final service = ref.read(prayerServiceProvider);
+  //   await service.addOrUpdateCompletion(completion);
+  //   ref.invalidateSelf();
+  // }
 
   @override
   Stream<List<PrayerTrackerCardModel>> build(AppLocalizations l10n) async* {
@@ -57,14 +57,14 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
         _lastDate = currentTime;
       }
 
-      service.watchPrayerCompletionByDate(currentTime).listen((completions) {
-        if (completions != _completionMap?.values.toList()) {
-          _completionMap = Map.fromEntries(
-            completions.map((c) => MapEntry(c.prayer, c)),
-          );
-          // _hasChanged = true;
-        }
-      });
+      // service.watchPrayerCompletionByDate(currentTime).listen((completions) {
+      //   if (completions != _completionMap?.values.toList()) {
+      //     _completionMap = Map.fromEntries(
+      //       completions.map((c) => MapEntry(c.prayer, c)),
+      //     );
+      //     // _hasChanged = true;
+      //   }
+      // });
 
       if (_completionMap == null) {
         await Future.delayed(const Duration(milliseconds: 500));

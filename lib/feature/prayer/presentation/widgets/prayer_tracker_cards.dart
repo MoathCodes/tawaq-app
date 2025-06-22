@@ -39,15 +39,15 @@ class PrayerTrackerCards extends ConsumerWidget {
               return _MainWidget(
                 data: data,
                 expanded: expanded,
-                time: time,
-                onCompletionChanged: ref
-                    .read(prayerTrackerCardsProvider(context.l10n).notifier)
-                    .addOrUpdateCompletion,
+                time: time
+              //   onCompletionChanged: ref
+              //       .read(prayerTrackerCardsProvider(context.l10n).notifier)
+              //       .addOrUpdateCompletion,
               );
             },
             error: (error, stackTrace) => Center(child: Text('Error: $error')),
             loading: () => _MainWidget(
-              onCompletionChanged: (prayerCompletion) {},
+              // onCompletionChanged: (prayerCompletion) {},
               data: List.generate(5, (index) => PrayerTrackerCardModel.empty()),
               expanded: true,
               time: DateTime.now(),
@@ -61,7 +61,7 @@ class PrayerTrackerCards extends ConsumerWidget {
 
 class _MainWidget extends StatelessWidget {
   final List<PrayerTrackerCardModel> data;
-  final Function(PrayerCompletion) onCompletionChanged;
+  // final Function(PrayerCompletion) onCompletionChanged;
 
   final bool expanded;
   final DateTime time;
@@ -69,7 +69,7 @@ class _MainWidget extends StatelessWidget {
     required this.data,
     required this.expanded,
     required this.time,
-    required this.onCompletionChanged,
+    // required this.onCompletionChanged,
   });
 
   @override
@@ -84,7 +84,7 @@ class _MainWidget extends StatelessWidget {
         return ClickablePrayerCard(
           cardData: card,
           completionTime: time,
-          onCompletionChanged: onCompletionChanged,
+          // onCompletionChanged: onCompletionChanged,
           key: ValueKey("clickable-prayer-card-$index"),
           expanded: expanded,
         );

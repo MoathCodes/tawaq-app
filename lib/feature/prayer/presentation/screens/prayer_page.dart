@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:hasanat/core/utils/smooth_scroll.dart';
+import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/current_prayer_card.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/prayer_analytics_card.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/prayer_table.dart';
@@ -20,7 +21,19 @@ class _PrayerPageState extends ConsumerState<PrayerPage> {
 
   static const _widgets = [
     CurrentPrayerCard(key: ValueKey('current_prayer_card')),
-    PrayerAnalyticsCard(key: ValueKey('prayer_analytics_card')),
+    PrayerAnalyticsCard(
+      key: ValueKey('prayer_analytics_card'),
+      prayerAnalytics: PrayerAnalytics(
+        period: PrayerAnalyticsPeriod.weekly,
+        completionPercentage: 0.85,
+        currentStreak: 10,
+        bestStreak: 15,
+        jamaahPercentage: 0.85,
+        onTimePercentage: 0.85,
+        missedPercentage: 0.15,
+        latePercentage: 0.0,
+      ),
+    ),
     PrayerTable(key: ValueKey('prayer_table')),
     PrayerTrackerCards(
       key: ValueKey('prayer_tracker_cards'),

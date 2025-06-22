@@ -164,6 +164,12 @@ abstract class AppLocalizations {
   /// **'Asr'**
   String get asr;
 
+  /// No description provided for @bestStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Streak'**
+  String get bestStreak;
+
   /// No description provided for @blue.
   ///
   /// In en, this message translates to:
@@ -199,6 +205,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current Prayer'**
   String get currentPrayer;
+
+  /// No description provided for @currentStreak.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Streak'**
+  String get currentStreak;
 
   /// No description provided for @dark.
   ///
@@ -272,6 +284,12 @@ abstract class AppLocalizations {
   /// **'Jamaah'**
   String get jamaah;
 
+  /// No description provided for @jamaahRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Jamaah Rate'**
+  String get jamaahRate;
+
   /// No description provided for @lastThirdOfTheNight.
   ///
   /// In en, this message translates to:
@@ -283,6 +301,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Late'**
   String get late;
+
+  /// No description provided for @lateRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Late Rate'**
+  String get lateRate;
 
   /// No description provided for @light.
   ///
@@ -308,6 +332,18 @@ abstract class AppLocalizations {
   /// **'Missed'**
   String get missed;
 
+  /// No description provided for @missedRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed Rate'**
+  String get missedRate;
+
+  /// No description provided for @monthly.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly'**
+  String get monthly;
+
   /// No description provided for @muslimFortress.
   ///
   /// In en, this message translates to:
@@ -332,11 +368,41 @@ abstract class AppLocalizations {
   /// **'On Time'**
   String get onTime;
 
+  /// No description provided for @onTimePrayersLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'On time prayers (last 30 days)'**
+  String get onTimePrayersLast30Days;
+
+  /// No description provided for @onTimePrayersLast365Days.
+  ///
+  /// In en, this message translates to:
+  /// **'On time prayers (last 365 days)'**
+  String get onTimePrayersLast365Days;
+
+  /// No description provided for @onTimePrayersLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'On time prayers (last 7 days)'**
+  String get onTimePrayersLast7Days;
+
+  /// No description provided for @onTimeRate.
+  ///
+  /// In en, this message translates to:
+  /// **'On Time Rate'**
+  String get onTimeRate;
+
   /// No description provided for @orange.
   ///
   /// In en, this message translates to:
   /// **'Orange'**
   String get orange;
+
+  /// No description provided for @playerAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'Player Analytics'**
+  String get playerAnalytics;
 
   /// No description provided for @prayer.
   ///
@@ -416,6 +482,12 @@ abstract class AppLocalizations {
   /// **'Stone'**
   String get stone;
 
+  /// No description provided for @streakInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{streak} days'**
+  String streakInDays(int streak);
+
   /// No description provided for @sunrise.
   ///
   /// In en, this message translates to:
@@ -433,6 +505,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Violet'**
   String get violet;
+
+  /// No description provided for @weekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get weekly;
+
+  /// No description provided for @yearly.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly'**
+  String get yearly;
 
   /// No description provided for @yellow.
   ///

@@ -4,7 +4,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/feature/prayer/data/database/prayer_database.dart';
+// import 'package:hasanat/feature/prayer/data/database/prayer_database.dart';
 import 'package:hasanat/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
@@ -25,9 +25,7 @@ void main() async {
   });
   final talker = TalkerFlutter.init();
   final service = PrayerService(
-      PrayerRepo(prayerDatabase: PrayerDatabase(database), talker: talker),
-      PrayerSettings.defaultSettings(),
-      talker);
+      PrayerRepo(talker: talker), PrayerSettings.defaultSettings(), talker);
   final location = getLocation('Asia/Riyadh');
 
   // final currentTime = DateTime.now().toLocation(location);
