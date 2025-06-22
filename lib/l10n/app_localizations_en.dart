@@ -70,6 +70,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get asr => 'Asr';
 
   @override
+  String get bestStreak => 'Best Streak';
+
+  @override
   String get blue => 'Blue';
 
   @override
@@ -86,6 +89,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get currentPrayer => 'Current Prayer';
+
+  @override
+  String get currentStreak => 'Current Streak';
 
   @override
   String get dark => 'Dark';
@@ -132,10 +138,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get jamaah => 'Jamaah';
 
   @override
+  String get jamaahRate => 'Jamaah Rate';
+
+  @override
   String get lastThirdOfTheNight => 'Last Third Of The Night';
 
   @override
   String get late => 'Late';
+
+  @override
+  String get lateRate => 'Late Rate';
 
   @override
   String get light => 'Light';
@@ -150,6 +162,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get missed => 'Missed';
 
   @override
+  String get missedRate => 'Missed Rate';
+
+  @override
+  String get monthly => 'Monthly';
+
+  @override
   String get muslimFortress => 'Muslim Fortress';
 
   @override
@@ -162,7 +180,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onTime => 'On Time';
 
   @override
+  String get onTimePrayersLast30Days => 'On time prayers (last 30 days)';
+
+  @override
+  String get onTimePrayersLast365Days => 'On time prayers (last 365 days)';
+
+  @override
+  String get onTimePrayersLast7Days => 'On time prayers (last 7 days)';
+
+  @override
+  String get onTimeRate => 'On Time Rate';
+
+  @override
   String get orange => 'Orange';
+
+  @override
+  String get playerAnalytics => 'Player Analytics';
 
   @override
   String get prayer => 'Prayer';
@@ -205,6 +238,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stone => 'Stone';
 
   @override
+  String streakInDays(int streak) {
+    return '$streak days';
+  }
+
+  @override
   String get sunrise => 'Sunrise';
 
   @override
@@ -212,6 +250,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get violet => 'Violet';
+
+  @override
+  String get weekly => 'Weekly';
+
+  @override
+  String get yearly => 'Yearly';
 
   @override
   String get yellow => 'Yellow';
