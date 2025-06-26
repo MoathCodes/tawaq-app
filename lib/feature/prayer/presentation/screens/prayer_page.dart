@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:hasanat/core/utils/smooth_scroll.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/current_prayer_card.dart';
-import 'package:hasanat/feature/prayer/presentation/widgets/prayer_analytics_card.dart'
-    hide PrayerAnalyticsPeriod;
+import 'package:hasanat/feature/prayer/presentation/widgets/prayer_analytics_card.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/prayer_table.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/prayer_tracker_cards.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -17,29 +16,17 @@ class PrayerPage extends ConsumerStatefulWidget {
 }
 
 class _PrayerPageState extends ConsumerState<PrayerPage> {
-  static const double _mainAxisExtent = 350.0;
-  static const double _trackerCardsMainAxisExtent = 541.5;
-
   static const _widgets = [
     CurrentPrayerCard(key: ValueKey('current_prayer_card')),
-    PrayerAnalyticsCard(
-      key: ValueKey('prayer_analytics_card'),
-      prayerAnalytics: PrayerAnalytics(
-        period: PrayerAnalyticsPeriod.weekly,
-        completionPercentage: 0.85,
-        currentStreak: 10,
-        bestStreak: 15,
-        jamaahPercentage: 0.85,
-        onTimePercentage: 0.85,
-        missedPercentage: 0.15,
-        latePercentage: 0.0,
-      ),
-    ),
+    PrayerAnalyticsCard(key: ValueKey('prayer_analytics_card')),
     PrayerTable(key: ValueKey('prayer_table')),
     PrayerTrackerCards(
       key: ValueKey('prayer_analytics_card'),
     ),
   ];
+  final double _mainAxisExtent = 350.0.h;
+
+  final double _trackerCardsMainAxisExtent = 541.5.h;
 
   // final bool _expandTrackerCards = false;
 
@@ -54,7 +41,7 @@ class _PrayerPageState extends ConsumerState<PrayerPage> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               // Determine if we should stack or place side by side
-              bool shouldStack = constraints.maxWidth < 900;
+              bool shouldStack = constraints.maxWidth.w < 900.w;
 
               if (shouldStack) {
                 // Stack vertically on small screens
@@ -63,7 +50,7 @@ class _PrayerPageState extends ConsumerState<PrayerPage> {
                   children: _widgets
                       .map(
                         (widget) => ConstrainedBox(
-                          constraints: const BoxConstraints(
+                          constraints: BoxConstraints(
                             minHeight: _mainAxisExtent,
                           ),
                           child: widget,

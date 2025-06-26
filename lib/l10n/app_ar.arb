@@ -85,7 +85,7 @@
   "onTimePrayersLast30Days": "الصلاة المنتظمة (ﻷخر 30 يوم)",
   "onTimePrayersLast365Days": "الصلاة المنتظمة (ﻷخر 365 يوم)",
   "onTimePrayersLast7Days": "الصلاة المنتظمة (ﻷخر 7 أيام)",
-  "onTimeRate": "الصلاة على وقتها",
+  "onTimeRate": "الصلاة في وقتها",
   "orange": "برتقالي",
   "playerAnalytics": "تحليل الصلاة",
   "prayer": "الصلاة",
@@ -102,7 +102,7 @@
   "slate": "رمادي",
   "status": "الحالة",
   "stone": "حجر",
-  "streakInDays": "{streak, plural, =0 {يوم} =1 {يوم} =2 {يومان} few {{streak} أيام} many {{streak} يومًا} other {{streak} يومًا}}",
+  "streakInDays": "{streak, plural, =0 {0} =1 {يوم واحد} =2 {يومان} few {{streak} أيام} many {{streak} يومًا} other {{streak} يومًا}}",
   "@streakInDays": {
     "placeholders": {
       "streak": {

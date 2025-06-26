@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
@@ -13,8 +14,7 @@ class SettingsCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isArabic = context.l10n.localeName == 'ar';
     return ConstrainedBox(
-      constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width / 2, minHeight: 400),
+      constraints: BoxConstraints(maxWidth: 0.75.sw, minHeight: 400),
       child: OutlinedContainer(
         backgroundColor: theme.colorScheme.secondary,
         borderColor: theme.colorScheme.foreground.withAlpha(100),

@@ -214,7 +214,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onTimePrayersLast7Days => 'الصلاة المنتظمة (ﻷخر 7 أيام)';
 
   @override
-  String get onTimeRate => 'الصلاة على وقتها';
+  String get onTimeRate => 'الصلاة في وقتها';
 
   @override
   String get orange => 'برتقالي';
@@ -271,8 +271,8 @@ class AppLocalizationsAr extends AppLocalizations {
       many: '$streak يومًا',
       few: '$streak أيام',
       two: 'يومان',
-      one: 'يوم',
-      zero: 'يوم',
+      one: 'يوم واحد',
+      zero: '0',
     );
     return '$_temp0';
   }

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/core/widgets/mouse_click.dart';
@@ -38,7 +39,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
   Widget build(BuildContext context) {
     return ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: widget.expanded ? 200 : 100,
+          maxHeight: widget.expanded ? 220.h : 110.h,
         ),
         child: MouseClick(
           disabled: _isDisabled,
@@ -73,7 +74,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
               child: AnimatedContainer(
                   duration: _animationDuration,
                   curve: Curves.easeInOut,
-                  width: widget.expanded ? 250 : 132,
+                  width: widget.expanded ? 250.w : 132.w,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.card,
@@ -107,13 +108,14 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            width: widget.expanded ? 42 : 32,
-                            height: widget.expanded ? 42 : 32,
+                            width: widget.expanded ? 46.w : 30.w,
+                            height: widget.expanded ? 46.h : 30.h,
                             decoration: BoxDecoration(
                               image: DecorationImage(
                                 image: AssetImage(
                                     widget.cardData.prayer.imagePath),
                                 fit: BoxFit.cover,
+                                alignment: widget.cardData.prayer.alignment,
                               ),
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -124,17 +126,17 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
                       ),
                       Text(widget.cardData.prayer.getLocaleName(context.l10n),
                               style: TextStyle(
-                                  fontSize: widget.expanded ? 28 : 16))
+                                  fontSize: widget.expanded ? 26.sp : 13.sp))
                           .bold,
                       Text(
                         widget.cardData.adhan,
                         style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
-                            fontSize: widget.expanded ? 26 : 12),
+                            fontSize: widget.expanded ? 26.sp : 13.sp),
                       ).bold,
                       Text(widget.cardData.subtitle,
-                              style:
-                                  TextStyle(fontSize: widget.expanded ? 16 : 9))
+                              style: TextStyle(
+                                  fontSize: widget.expanded ? 16.sp : 10.sp))
                           .muted(),
                     ],
                   )),

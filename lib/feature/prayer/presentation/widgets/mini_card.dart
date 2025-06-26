@@ -1,3 +1,4 @@
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class MiniCard extends StatelessWidget {
@@ -20,15 +21,15 @@ class MiniCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return OutlinedContainer(
-      width: width,
-      height: height,
+      width: width.w,
+      height: height.h,
       borderColor:
           Theme.of(context).colorScheme.secondaryForeground.withAlpha(55),
       padding: padding,
       child: Column(
           spacing: spacing,
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [Text(label).muted.small, child]),
+          children: [Text(label).muted.small.bold, child]),
     );
   }
 }

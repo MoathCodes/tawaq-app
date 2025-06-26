@@ -4,10 +4,12 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:timezone/timezone.dart';
 
 part 'prayer_database.g.dart';
 
@@ -43,6 +45,19 @@ class PrayerDatabase extends _$PrayerDatabase {
   @override
   int get schemaVersion => 1;
 
+  Future<int> countAllPrayersOnDate(DateTime from, DateTime to) {
+    final query = managers.prayerCompletions
+        .filter((f) => f.completionTime.isBetween(from, to));
+    return query.count();
+  }
+
+  Future<int> countPrayerStatusOnDate(
+      CompletionStatus status, DateTime from, DateTime to) {
+    final query = managers.prayerCompletions.filter(
+        (f) => f.completionTime.isBetween(from, to) & f.status.equals(status));
+    return query.count();
+  }
+
   Future<void> deleteCompletion(int id) {
     final query = managers.prayerCompletions.filter((f) => f.id.equals(id));
     return query.delete();
@@ -56,6 +71,31 @@ class PrayerDatabase extends _$PrayerDatabase {
   Future<PrayerCompletion?> getCompletionById(int id) {
     final query = managers.prayerCompletions.filter((f) => f.id.equals(id));
     return query.getSingleOrNull();
+  }
+
+  Future<List<DateTime>> getFullyCompletedDays(Location loc) async {
+    final completions = await (select(prayerCompletions)
+          ..where((tbl) =>
+              tbl.status.equals(CompletionStatus.missed.index).not() &
+              tbl.status.equals(CompletionStatus.none.index).not()))
+        .get();
+
+    // 2️⃣  Group by local calendar day and collect distinct prayers.
+    final Map<DateTime, Set<Prayer>> bucket = {};
+    for (final entry in completions) {
+      final localTime = entry.completionTime.toLocation(loc);
+      final dayKey = DateTime(localTime.year, localTime.month, localTime.day);
+      bucket.putIfAbsent(dayKey, () => <Prayer>{}).add(entry.prayer);
+    }
+
+    // 3️⃣  Keep only days that have ALL obligatory prayers (5).
+    final fullDays = bucket.entries
+        .where((e) => e.value.length == 5)
+        .map((e) => e.key)
+        .toList()
+      ..sort();
+
+    return fullDays;
   }
 
   Future<void> insertOrUpdateCompletion(PrayerCompletionsCompanion completion) {

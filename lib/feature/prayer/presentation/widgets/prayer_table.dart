@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/core/utils/rtl_swapper.dart';
@@ -15,16 +16,16 @@ class PrayerTable extends ConsumerStatefulWidget {
 }
 
 class _PrayerTableState extends ConsumerState<PrayerTable> {
-  static const double _defaultRowHeight = 60.0;
-  // static const double _timeColumnWidth = 140.0;
-  // static const double _statusColumnWidth = 80.0;
-  static const int _nextPrayerAlpha = 40;
-  static const int _currentPrayerAlpha = 80;
-  static const double _borderWidth = 3.0;
-  static const double _ringBorderWidth = 1.0;
-  static const double _cellPadding = 8.0;
-  static const double _imageSize = 64.0;
-  static const double _imageBorderRadius = 12.0;
+  static const double _defaultRowHeight = 60;
+  // static const _timeColumnWidth = 140.0;
+  // static const _statusColumnWidth = 80.0;
+  static const _nextPrayerAlpha = 40;
+  static const _currentPrayerAlpha = 80;
+  static const _borderWidth = 3.0;
+  static const _ringBorderWidth = 1.0;
+  static const _cellPadding = 8.0;
+  static const _imageSize = 64.0;
+  static const _imageBorderRadius = 12.0;
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +44,7 @@ class _PrayerTableState extends ConsumerState<PrayerTable> {
             ),
           AsyncValue(:final value) => Builder(builder: (context) {
               return Table(
-                defaultRowHeight: const FixedTableSize(_defaultRowHeight),
+                defaultRowHeight: FixedTableSize(_defaultRowHeight.h),
                 columnWidths: ref.rtlSwap({
                   0: const FlexTableSize(flex: 2),
                   1: const FlexTableSize(),
@@ -88,6 +89,7 @@ class _PrayerTableState extends ConsumerState<PrayerTable> {
           title: row.prayer.getLocaleName(context.l10n),
           theme: theme,
           alignRight: false,
+          alignment: row.prayer.alignment,
           imagePath: row.prayer.imagePath),
       _buildCell(title: row.adhan.title, subtitle: row.adhan.subtitle),
       _buildCell(title: row.iqamah.title, subtitle: row.iqamah.subtitle),
@@ -108,6 +110,7 @@ class _PrayerTableState extends ConsumerState<PrayerTable> {
           theme: theme,
           alignRight: true,
           // subtitle: row.prayer.getLocaleName(context.l10n),
+          alignment: row.prayer.alignment,
           imagePath: row.prayer.imagePath),
     ];
     final cellTheme = row.isCurrentPrayer
@@ -149,7 +152,7 @@ class _PrayerTableState extends ConsumerState<PrayerTable> {
           title: Text(title),
           titleAlignment:
               alignRight ? Alignment.centerRight : Alignment.centerLeft,
-          subtitle: subtitle != null ? Text(subtitle).muted() : null,
+          subtitle: subtitle != null ? Text(subtitle).muted().small : null,
           subtitleAlignment:
               alignRight ? Alignment.centerRight : Alignment.centerLeft,
         ),
@@ -191,6 +194,7 @@ class _PrayerTableState extends ConsumerState<PrayerTable> {
     required String title,
     String? subtitle,
     required String imagePath,
+    required Alignment alignment,
     required ThemeData theme,
     required bool alignRight,
   }) {
@@ -200,8 +204,8 @@ class _PrayerTableState extends ConsumerState<PrayerTable> {
           padding: const EdgeInsets.all(_cellPadding),
           child: BasicLayout(
             leading: Container(
-              width: _imageSize,
-              height: _imageSize,
+              width: _imageSize.w,
+              height: _imageSize.h,
               decoration: BoxDecoration(
                 color: theme.colorScheme.card,
                 borderRadius: BorderRadius.circular(_imageBorderRadius),
@@ -210,11 +214,12 @@ class _PrayerTableState extends ConsumerState<PrayerTable> {
                 borderRadius: BorderRadius.circular(_imageBorderRadius),
                 child: Image.asset(
                   imagePath,
-                  width: _imageSize,
-                  height: _imageSize,
+                  width: _imageSize.w,
+                  height: _imageSize.h,
                   fit: BoxFit.cover,
-                  cacheWidth: _imageSize.toInt(),
-                  cacheHeight: _imageSize.toInt(),
+                  cacheWidth: _imageSize.w.toInt(),
+                  cacheHeight: _imageSize.h.toInt(),
+                  alignment: alignment,
                 ),
               ),
             ),

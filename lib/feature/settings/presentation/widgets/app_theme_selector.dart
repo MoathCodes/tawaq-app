@@ -11,8 +11,8 @@ class AppThemeSelector extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 16,
-      runSpacing: 16,
+      spacing: 8,
+      runSpacing: 8,
       alignment: WrapAlignment.center,
       children: [
         ...AppPalette.values.map((e) => _SingleColorCard(

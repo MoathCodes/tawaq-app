@@ -68,6 +68,7 @@ dependencies:
   drift: ^2.27.0
   drift_flutter: ^0.2.4
   path_provider: ^2.1.5
+  flutter_screenutil: ^5.9.3
 
 
 dev_dependencies:

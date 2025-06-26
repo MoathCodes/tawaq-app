@@ -6,6 +6,7 @@ import 'package:hasanat/feature/prayer/data/database/prayer_database.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import 'package:timezone/timezone.dart';
 
 part 'prayer_repo.g.dart';
 
@@ -38,12 +39,29 @@ class PrayerRepo {
     return prayerDatabase.insertOrUpdateCompletion(companion);
   }
 
+  Future<int> countAllPrayersOnDate(DateTime from, DateTime to) {
+    return prayerDatabase.countAllPrayersOnDate(from, to);
+  }
+
+  Future<int> countPrayerStatusOnDate(
+      CompletionStatus status, DateTime from, DateTime to) {
+    return prayerDatabase.countPrayerStatusOnDate(status, from, to);
+  }
+
   Future<void> deleteCompletion(int id) {
     return prayerDatabase.deleteCompletion(id);
   }
 
+  Future<bool> doesCompletionExists(int id) {
+    return prayerDatabase.isCompletionExists(id);
+  }
+
   Future<List<PrayerCompletion>> getAllCompletions() {
     return prayerDatabase.getAllCompletions();
+  }
+
+  Future<List<DateTime>> getFullyCompletedDays(Location loc) {
+    return prayerDatabase.getFullyCompletedDays(loc);
   }
 
   PrayerTimes getPrayerTimes(DateTime date, Coordinates coordinates,
@@ -64,10 +82,6 @@ class PrayerRepo {
     final sunnahTimes = SunnahTimes(prayerTimes);
     // print("in repo getSunnahTime: ${sunnahTimes.middleOfTheNight}");
     return sunnahTimes;
-  }
-
-  Future<bool> isCompletionExists(int id) {
-    return prayerDatabase.isCompletionExists(id);
   }
 
   Stream<List<PrayerCompletion>> watchPrayerCompletionByDate(

@@ -1,5 +1,6 @@
 import 'package:adhan_dart/src/Prayer.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/core/widgets/custom_text_button.dart';
@@ -8,19 +9,6 @@ import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/mini_card.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-
-const _shadowedText = TextStyle(
-  color: Colors.white,
-  fontSize: 34,
-  fontWeight: FontWeight.bold,
-  shadows: [
-    Shadow(
-      offset: Offset(1, 1),
-      blurRadius: 2,
-      color: Color.from(alpha: 0.6, red: 0, green: 0, blue: 0),
-    ),
-  ],
-);
 
 class CurrentPrayerCard extends ConsumerWidget {
   const CurrentPrayerCard({super.key});
@@ -81,6 +69,18 @@ class _MainWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final shadowedText = TextStyle(
+      color: Colors.white,
+      fontSize: 36.sp,
+      fontWeight: FontWeight.bold,
+      shadows: [
+        const Shadow(
+          offset: Offset(1, 1),
+          blurRadius: 2,
+          color: Color.from(alpha: 0.6, red: 0, green: 0, blue: 0),
+        ),
+      ],
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 4,
@@ -88,43 +88,42 @@ class _MainWidget extends StatelessWidget {
       children: [
         Text(
           context.l10n.nextPrayer,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.white,
-            fontSize: 14,
+            fontSize: 14.sp,
             fontWeight: FontWeight.w500,
           ),
         ).small.muted,
         Text(
           value.prayer.getLocaleName(context.l10n),
-          style: _shadowedText,
+          style: shadowedText,
         ),
         Text(
           value.time,
-          style: _shadowedText.copyWith(
-            fontSize: 30,
+          style: shadowedText.copyWith(
+            fontSize: 32.sp,
             color: Colors.white,
           ),
         ),
         Text(
           context.l10n.prepareForPrayer,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white, fontSize: 16.sp),
         ).small,
         Wrap(
-          spacing: 24,
           alignment: WrapAlignment.spaceEvenly,
           children: [
             MiniCard(
               label: context.l10n.adhan,
               child: Text(
                 value.adhanTime,
-                style: const TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 16.sp),
               ),
             ),
             MiniCard(
               label: context.l10n.iqamah,
               child: Text(
                 value.iqamahTime,
-                style: const TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 16.sp),
               ),
             ),
             MiniCard(

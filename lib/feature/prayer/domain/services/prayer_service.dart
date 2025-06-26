@@ -2,8 +2,10 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/core/utils/calculation_methods_extension.dart';
+import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/data/repository/prayer_repo.dart';
+import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hijri_date_time/hijri_date_time.dart';
@@ -47,6 +49,53 @@ class PrayerService {
     return _repo.addOrUpdateCompletion(completion);
   }
 
+  Future<({int current, int best})> computeStreaks(Location loc) async {
+    final completedDays = await _repo.getFullyCompletedDays(loc);
+    print(completedDays);
+    if (completedDays.isEmpty) return (current: 0, best: 0);
+
+    int bestStreak = 0, currentStreak = 0, consecutiveDays = 0;
+    DateTime? previousDay;
+
+    for (final currentDay in completedDays) {
+      if (previousDay == null ||
+          currentDay.difference(previousDay).inDays == 1) {
+        consecutiveDays++;
+      } else {
+        bestStreak =
+            consecutiveDays > bestStreak ? consecutiveDays : bestStreak;
+        consecutiveDays = 1;
+      }
+      previousDay = currentDay;
+    }
+    bestStreak = consecutiveDays > bestStreak ? consecutiveDays : bestStreak;
+
+    final today = DateTime.now().toLocation(loc);
+    if (previousDay != null && today.difference(previousDay).inDays == 0) {
+      currentStreak = consecutiveDays;
+    } else {
+      currentStreak = 0;
+    }
+    return (current: currentStreak, best: bestStreak);
+  }
+
+  Future<int> countAllPrayersOnPeriod(PrayerAnalyticsPeriod period,
+      [DateTime? date]) {
+    final activeDate = date ?? _currentTime();
+    final fromDate = activeDate.subtract(period.duration);
+    final toDate = activeDate;
+    return _repo.countAllPrayersOnDate(fromDate, toDate);
+  }
+
+  Future<int> countPrayerOnPeriod(
+      CompletionStatus status, PrayerAnalyticsPeriod period,
+      [DateTime? date]) {
+    final activeDate = date ?? _currentTime();
+    final fromDate = activeDate.subtract(period.duration);
+    final toDate = activeDate;
+    return _repo.countPrayerStatusOnDate(status, fromDate, toDate);
+  }
+
   Prayer currentPrayer(PrayerTimes prayerTime) {
     final date = _currentTime();
     return prayerTime.currentPrayer(date: date);
@@ -54,6 +103,10 @@ class PrayerService {
 
   Future<void> deleteCompletion(int id) {
     return _repo.deleteCompletion(id);
+  }
+
+  Future<bool> doesCompletionExists(int id) {
+    return _repo.doesCompletionExists(id);
   }
 
   Future<List<PrayerCompletion>> getAllCompletions() {
@@ -85,10 +138,6 @@ class PrayerService {
     }
 
     return prayerTimes;
-  }
-
-  Future<bool> isCompletionExists(int id) {
-    return _repo.isCompletionExists(id);
   }
 
   Prayer nextPrayerByDate(PrayerTimes prayerTime, [DateTime? date]) {

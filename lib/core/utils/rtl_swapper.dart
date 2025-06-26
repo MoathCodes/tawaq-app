@@ -14,7 +14,7 @@ import 'package:hasanat/feature/settings/presentation/provider/settings_provider
 // }
 
 extension RTLSwapperExtension on WidgetRef {
-  T rtlSwap<T>(T ltr, T rtl) {
+  T rtlSwap<T>(T ltr, rtl) {
     final locale = watch(localeNotifierProvider);
     final isArabic = locale.value?.languageCode == 'ar';
     return isArabic ? rtl : ltr;
