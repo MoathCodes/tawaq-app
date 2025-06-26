@@ -25,6 +25,7 @@ class _ShellSidebarState extends ConsumerState<ShellSidebar> {
     final isArabic = ref.watch(localeNotifierProvider.notifier).isArabic();
     final routes = ref.watch(routesProvider(context.l10n));
     final alignment = isArabic ? Alignment.centerRight : Alignment.centerLeft;
+    final colorScheme = Theme.of(context).colorScheme;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (ResponsiveContainer.isTablet(context) && !controller.collapsed) {
         controller.tryCollapse();
@@ -60,7 +61,7 @@ class _ShellSidebarState extends ConsumerState<ShellSidebar> {
                 return NavigationSidebar(
                   spacing: 8,
                   // roundedCorners: true,
-                  backgroundColor: Theme.of(context).colorScheme.secondary,
+                  backgroundColor: colorScheme.secondary,
                   labelType: controller.collapsed
                       ? NavigationLabelType.tooltip
                       : NavigationLabelType.expanded,
@@ -78,7 +79,7 @@ class _ShellSidebarState extends ConsumerState<ShellSidebar> {
                   children: [
                     NavigationDivider(
                       thickness: 0.2,
-                      color: Theme.of(context).colorScheme.secondaryForeground,
+                      color: colorScheme.secondaryForeground,
                     ),
                     ...routes.map(
                       (e) => NavigationItem(

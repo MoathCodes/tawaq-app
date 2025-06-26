@@ -14,15 +14,15 @@ class PrayerTrackerCards extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cardsStream = ref.watch(prayerTrackerCardsProvider(context.l10n));
+    final colorScheme = Theme.of(context).colorScheme;
     final time = ref
         .read(prayerTrackerCardsProvider(context.l10n).notifier)
         .currentLocationTime();
 
     return OutlinedContainer(
       padding: const EdgeInsets.all(16),
-      backgroundColor: Theme.of(context).colorScheme.secondary,
-      borderColor:
-          Theme.of(context).colorScheme.secondaryForeground.withAlpha(45),
+      backgroundColor: colorScheme.secondary,
+      borderColor: colorScheme.secondaryForeground.withAlpha(45),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

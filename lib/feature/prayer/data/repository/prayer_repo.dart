@@ -22,7 +22,7 @@ class PrayerRepo {
   final Talker talker;
   const PrayerRepo({required this.prayerDatabase, required this.talker});
 
-  Future<void> addOrUpdateCompletion(PrayerCompletion completion) {
+  Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
     final companion = completion.id != null
         ? PrayerCompletionsCompanion(
             id: Value(completion.id!),
@@ -36,7 +36,12 @@ class PrayerRepo {
             prayer: Value(completion.prayer),
           );
 
-    return prayerDatabase.insertOrUpdateCompletion(companion);
+    try {
+      await prayerDatabase.insertOrUpdateCompletion(companion);
+    } catch (e, stackTrace) {
+      talker.handle(e, stackTrace);
+      rethrow;
+    }
   }
 
   Future<int> countAllPrayersOnDate(DateTime from, DateTime to) {

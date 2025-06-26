@@ -1,3 +1,4 @@
+import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
@@ -11,9 +12,14 @@ part 'prayer_analytics_provider.g.dart';
 class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
   @override
   FutureOr<PrayerAnalytics> build() async {
-    state = const AsyncValue.loading();
     const period = PrayerAnalyticsPeriod.weekly;
-    return await _computeAnalytics(period);
+    try {
+      return await _computeAnalytics(period);
+    } catch (e, stackTrace) {
+      ref.read(talkerNotifierProvider).handle(
+          e, stackTrace, '[PrayerAnalyticsNotifier] Error computing analytics');
+      rethrow;
+    }
   }
 
   Future<void> changePeriod(PrayerAnalyticsPeriod period) async {
@@ -41,11 +47,11 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
     final missedPrayers =
         await service.countPrayerOnPeriod(CompletionStatus.missed, period);
 
-    final completionPercentage = allPrayers / allPrayers;
     final jamaahPercentage = jamaahPrayers / allPrayers;
     final onTimePercentage = onTimePrayers / allPrayers;
     final latePercentage = latePrayers / allPrayers;
     final missedPercentage = missedPrayers / allPrayers;
+    final completionPercentage = (jamaahPrayers + onTimePrayers) / allPrayers;
 
     return PrayerAnalytics(
       period: period,

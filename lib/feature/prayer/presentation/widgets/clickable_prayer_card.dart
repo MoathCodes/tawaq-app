@@ -37,6 +37,8 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
   late CompletionStatus _isComplete;
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     return ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: widget.expanded ? 220.h : 110.h,
@@ -44,7 +46,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
         child: MouseClick(
           disabled: _isDisabled,
           onClick: () {
-            _handleClick();
+            _handleClick(theme);
           },
           onExit: (event) {
             setState(() {
@@ -77,23 +79,17 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
                   width: widget.expanded ? 250.w : 132.w,
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.card,
+                    color: colorScheme.card,
                     border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .secondaryForeground
-                          .withAlpha(45),
+                      color: colorScheme.secondaryForeground.withAlpha(45),
                       width: 1,
                     ),
-                    borderRadius:
-                        BorderRadius.circular(Theme.of(context).radiusXl),
+                    borderRadius: BorderRadius.circular(theme.radiusXl),
                     boxShadow: _isHover
                         ? [
                             BoxShadow(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .secondaryForeground
-                                  .withAlpha(60),
+                              color:
+                                  colorScheme.secondaryForeground.withAlpha(60),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -131,7 +127,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
                       Text(
                         widget.cardData.adhan,
                         style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
+                            color: colorScheme.primary,
                             fontSize: widget.expanded ? 26.sp : 13.sp),
                       ).bold,
                       Text(widget.cardData.subtitle,
@@ -195,10 +191,10 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
     };
   }
 
-  void _handleClick() {
+  void _handleClick(ThemeData theme) {
     final completer = ResponsiveContainer.isMobile(context)
         ? _showCompletionDialog(context)
-        : _showCompletionPopover(context);
+        : _showCompletionPopover(context, theme);
     completer.future.then(
       (value) {
         if (value == null) return;
@@ -256,8 +252,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
   }
 
   OverlayCompleter<CompletionStatus?> _showCompletionPopover(
-      BuildContext context) {
-    final theme = Theme.of(context);
+      BuildContext context, ThemeData theme) {
     return showPopover(
       context: context,
       alignment: Alignment.topCenter,

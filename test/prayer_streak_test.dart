@@ -18,13 +18,13 @@ void main() {
     late PrayerDatabase db;
     late PrayerRepo repo;
     late PrayerService service;
-    final talker = Talker();
+    final talker = TalkerFlutter.init();
     late Location loc;
 
     setUp(() {
       tz.initializeTimeZones();
       loc = UTC;
-      db = PrayerDatabase(NativeDatabase.memory());
+      db = PrayerDatabase(NativeDatabase.memory(), talker);
       repo = PrayerRepo(prayerDatabase: db, talker: talker);
       final settings = PrayerSettings.defaultSettings().copyWith(location: loc);
       service = PrayerService(repo, settings, talker);

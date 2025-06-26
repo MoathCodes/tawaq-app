@@ -56,33 +56,32 @@ class _PrayerTableState extends ConsumerState<PrayerTable> {
                   2: const FlexTableSize(flex: 2),
                 }),
                 rows: [
-                  buildHeaders(),
-                  ...value!.map((row) => buildPrayerRow(row)),
+                  buildHeaders(theme.colorScheme),
+                  ...value!.map((row) => buildPrayerRow(row, theme)),
                 ],
               );
             }),
         });
   }
 
-  TableRow buildHeaders() {
+  TableRow buildHeaders(ColorScheme colorScheme) {
     return ref.rtlSwap(
       TableRow(cells: [
-        _buildHeaderCell(text: context.l10n.prayer),
-        _buildHeaderCell(text: context.l10n.adhan),
-        _buildHeaderCell(text: context.l10n.iqamah),
+        _buildHeaderCell(text: context.l10n.prayer, colorScheme: colorScheme),
+        _buildHeaderCell(text: context.l10n.adhan, colorScheme: colorScheme),
+        _buildHeaderCell(text: context.l10n.iqamah, colorScheme: colorScheme),
         // _buildHeaderCell(text: context.l10n.status),
       ]),
       TableRow(cells: [
         // _buildHeaderCell(text: context.l10n.status, alignRight: true),
-        _buildHeaderCell(text: context.l10n.iqamah, alignRight: true),
-        _buildHeaderCell(text: context.l10n.adhan, alignRight: true),
-        _buildHeaderCell(text: context.l10n.prayer, alignRight: true),
+        _buildHeaderCell(text: context.l10n.iqamah, alignRight: true, colorScheme: colorScheme),
+        _buildHeaderCell(text: context.l10n.adhan, alignRight: true, colorScheme: colorScheme),
+        _buildHeaderCell(text: context.l10n.prayer, alignRight: true, colorScheme: colorScheme),
       ]),
     );
   }
 
-  TableRow buildPrayerRow(PrayerTableRow row) {
-    final theme = Theme.of(context);
+  TableRow buildPrayerRow(PrayerTableRow row, ThemeData theme) {
     final colorScheme = theme.colorScheme;
     final ltrCells = [
       _buildPrayerCell(
@@ -174,8 +173,8 @@ class _PrayerTableState extends ConsumerState<PrayerTable> {
   TableCell _buildHeaderCell({
     required String text,
     bool alignRight = false,
+    required ColorScheme colorScheme,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
     return TableCell(
       theme: TableCellTheme(
         border: WidgetStatePropertyAll(Border(

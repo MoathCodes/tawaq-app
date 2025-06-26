@@ -1,9 +1,11 @@
 import 'package:adhan_dart/adhan_dart.dart';
+import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/core/utils/date_formatter.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_tracker_card_model.dart';
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
+import 'package:hasanat/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
@@ -24,12 +26,14 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
   void addOrUpdateCompletion(PrayerCompletion completion) async {
     final service = ref.read(prayerServiceProvider);
     await service.addOrUpdateCompletion(completion);
+    ref.invalidate(prayerAnalyticsNotifierProvider);
     ref.invalidateSelf();
   }
 
   @override
   Stream<List<PrayerTrackerCardModel>> build(AppLocalizations l10n) async* {
     final service = ref.read(prayerServiceProvider);
+    final talker = ref.read(talkerNotifierProvider);
 
     ref.listen(prayerSettingsNotifierProvider, (previous, next) {
       if (next.hasValue && previous?.valueOrNull != next.valueOrNull) {
@@ -40,39 +44,47 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
     _settings = ref.read(prayerSettingsNotifierProvider).valueOrNull;
 
     while (true) {
-      if (_settings == null) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        _settings = ref.read(prayerSettingsNotifierProvider).valueOrNull;
-        continue;
-      }
-
-      final location = _settings!.location;
-      final formatter =
-          ref.read(timeFormatterProvider(is24Hours: _settings!.is24Hours));
-      final currentTime = DateTime.now().toLocation(location);
-
-      if (_needsUpdate(currentTime)) {
-        // _hasChanged = false;
-        _lastPrayerTimes = service.getTodaysPrayerTimes();
-        _lastDate = currentTime;
-      }
-
-      service.watchPrayerCompletionByDate(currentTime).listen((completions) {
-        if (completions != _completionMap?.values.toList()) {
-          _completionMap = Map.fromEntries(
-            completions.map((c) => MapEntry(c.prayer, c)),
-          );
-          // _hasChanged = true;
+      try {
+        if (_settings == null) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          _settings = ref.read(prayerSettingsNotifierProvider).valueOrNull;
+          continue;
         }
-      });
 
-      if (_completionMap == null) {
-        await Future.delayed(const Duration(milliseconds: 500));
-        continue;
+        final location = _settings!.location;
+        final formatter =
+            ref.read(timeFormatterProvider(is24Hours: _settings!.is24Hours));
+        final currentTime = DateTime.now().toLocation(location);
+
+        if (_needsUpdate(currentTime)) {
+          // _hasChanged = false;
+          _lastPrayerTimes = service.getTodaysPrayerTimes();
+          _lastDate = currentTime;
+        }
+
+        service.watchPrayerCompletionByDate(currentTime).listen((completions) {
+          if (completions != _completionMap?.values.toList()) {
+            _completionMap = Map.fromEntries(
+              completions.map((c) => MapEntry(c.prayer, c)),
+            );
+            // _hasChanged = true;
+          }
+        });
+
+        if (_completionMap == null) {
+          await Future.delayed(const Duration(milliseconds: 500));
+          continue;
+        }
+
+        yield _buildPrayerCards(
+            formatter, _lastPrayerTimes!, currentTime, location, l10n);
+      } catch (e, stackTrace) {
+        talker.handle(
+            e, stackTrace, '[PrayerTrackerCards] Error producing card stream');
+        // Optionally emit empty list so the UI gets something.
+        yield [];
       }
 
-      yield _buildPrayerCards(
-          formatter, _lastPrayerTimes!, currentTime, location, l10n);
       await Future.delayed(const Duration(minutes: 1));
     }
   }
@@ -81,7 +93,6 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
     return DateTime.now().toLocation(
         _settings?.location ?? PrayerSettings.defaultSettings().location);
   }
-
 
   List<PrayerTrackerCardModel> _buildPrayerCards(
       DateFormat formatter,
@@ -104,8 +115,6 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
 
       final subtitle =
           _subtitleMessage(isCurrentPrayer, prayer, currentTime, times, l10n);
-
-
 
       return PrayerTrackerCardModel(
         prayer: prayer,

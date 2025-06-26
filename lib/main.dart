@@ -14,6 +14,9 @@ import 'package:timezone/data/latest.dart' as tz;
 
 void main() async {
   // WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (details) {
+    talker.handle(details.exception, details.stack);
+  };
 
   tz.initializeTimeZones();
 
@@ -26,19 +29,23 @@ void main() async {
   //   }
   //   return false;
   // };
-  runApp(ProviderScope(
-    observers: [
-      TalkerRiverpodObserver(
-          talker: talker,
-          settings: const TalkerRiverpodLoggerSettings(
-            printStateFullData: true,
-            // providerFilter: (provider) {
-            //   // return provider.name != prayerCardProvider.name;
-            // },
-          )),
-    ],
-    child: const SeratiApp(),
-  ));
+  runTalkerZonedGuarded(
+      talker,
+      () => runApp(ProviderScope(
+            observers: [
+              TalkerRiverpodObserver(
+                  talker: talker,
+                  settings: const TalkerRiverpodLoggerSettings(
+                    printStateFullData: true,
+                    // providerFilter: (provider) {
+                    //   // return provider.name != prayerCardProvider.name;
+                    // },
+                  )),
+            ],
+            child: const SeratiApp(),
+          )), (error, stackTrace) {
+    talker.handle(error, stackTrace);
+  });
 }
 
 final talker = TalkerFlutter.init();

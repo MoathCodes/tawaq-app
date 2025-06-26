@@ -21,6 +21,7 @@ class _CustomTextButtonState extends State<CustomTextButton> {
   bool _isHovered = false;
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return MouseClick(
       onClick: widget.onPressed,
       onHover: (event) => setState(() {
@@ -40,15 +41,12 @@ class _CustomTextButtonState extends State<CustomTextButton> {
             widget.label,
             style: TextStyle(
               color: widget.enabled == false
-                  ? Theme.of(context).colorScheme.muted
-                  : Theme.of(context).colorScheme.primary,
+                  ? colorScheme.muted
+                  : colorScheme.primary,
               shadows: _isHovered
                   ? [
                       Shadow(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withAlpha(100),
+                        color: colorScheme.primary.withAlpha(100),
                         blurRadius: 4.0,
                       ),
                     ]

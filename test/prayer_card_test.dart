@@ -25,7 +25,8 @@ void main() async {
   });
   final talker = TalkerFlutter.init();
   final service = PrayerService(
-      PrayerRepo(prayerDatabase: PrayerDatabase(database), talker: talker),
+      PrayerRepo(
+          prayerDatabase: PrayerDatabase(database, talker), talker: talker),
       PrayerSettings.defaultSettings(),
       talker);
   final location = getLocation('Asia/Riyadh');

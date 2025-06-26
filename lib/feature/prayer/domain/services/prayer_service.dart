@@ -50,33 +50,37 @@ class PrayerService {
   }
 
   Future<({int current, int best})> computeStreaks(Location loc) async {
-    final completedDays = await _repo.getFullyCompletedDays(loc);
-    print(completedDays);
-    if (completedDays.isEmpty) return (current: 0, best: 0);
+    try {
+      final completedDays = await _repo.getFullyCompletedDays(loc);
+      if (completedDays.isEmpty) return (current: 0, best: 0);
 
-    int bestStreak = 0, currentStreak = 0, consecutiveDays = 0;
-    DateTime? previousDay;
+      int bestStreak = 0, currentStreak = 0, consecutiveDays = 0;
+      DateTime? previousDay;
 
-    for (final currentDay in completedDays) {
-      if (previousDay == null ||
-          currentDay.difference(previousDay).inDays == 1) {
-        consecutiveDays++;
-      } else {
-        bestStreak =
-            consecutiveDays > bestStreak ? consecutiveDays : bestStreak;
-        consecutiveDays = 1;
+      for (final currentDay in completedDays) {
+        if (previousDay == null ||
+            currentDay.difference(previousDay).inDays == 1) {
+          consecutiveDays++;
+        } else {
+          bestStreak =
+              consecutiveDays > bestStreak ? consecutiveDays : bestStreak;
+          consecutiveDays = 1;
+        }
+        previousDay = currentDay;
       }
-      previousDay = currentDay;
-    }
-    bestStreak = consecutiveDays > bestStreak ? consecutiveDays : bestStreak;
+      bestStreak = consecutiveDays > bestStreak ? consecutiveDays : bestStreak;
 
-    final today = DateTime.now().toLocation(loc);
-    if (previousDay != null && today.difference(previousDay).inDays == 0) {
-      currentStreak = consecutiveDays;
-    } else {
-      currentStreak = 0;
+      final today = DateTime.now().toLocation(loc);
+      if (previousDay != null && today.difference(previousDay).inDays == 0) {
+        currentStreak = consecutiveDays;
+      } else {
+        currentStreak = 0;
+      }
+      return (current: currentStreak, best: bestStreak);
+    } catch (e, stackTrace) {
+      _log.handle(e, stackTrace);
+      return (current: 0, best: 0);
     }
-    return (current: currentStreak, best: bestStreak);
   }
 
   Future<int> countAllPrayersOnPeriod(PrayerAnalyticsPeriod period,
