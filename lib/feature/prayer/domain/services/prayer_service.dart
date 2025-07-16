@@ -91,6 +91,15 @@ class PrayerService {
     return _repo.countAllPrayersOnDate(fromDate, toDate);
   }
 
+  Future<Map<CompletionStatus, int>> countAllStatusesOnPeriod(
+      PrayerAnalyticsPeriod period,
+      [DateTime? date]) {
+    final activeDate = date ?? _currentTime();
+    final fromDate = activeDate.subtract(period.duration);
+    final toDate = activeDate;
+    return _repo.countAllStatusesOnDate(fromDate, toDate);
+  }
+
   Future<int> countPrayerOnPeriod(
       CompletionStatus status, PrayerAnalyticsPeriod period,
       [DateTime? date]) {

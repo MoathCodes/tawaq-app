@@ -36,6 +36,7 @@ class PrayerTrackerCards extends ConsumerWidget {
           SizedBox(height: expanded ? 14 : 12),
           cardsStream.when(
             data: (data) {
+              print("data: $data");
               return _MainWidget(
                 data: data,
                 expanded: expanded,
@@ -46,12 +47,16 @@ class PrayerTrackerCards extends ConsumerWidget {
               );
             },
             error: (error, stackTrace) => Center(child: Text('Error: $error')),
-            loading: () => _MainWidget(
-              onCompletionChanged: (prayerCompletion) {},
-              data: List.generate(5, (index) => PrayerTrackerCardModel.empty()),
-              expanded: true,
-              time: DateTime.now(),
-            ).asSkeleton(),
+            loading: () {
+              print("loading");
+              return _MainWidget(
+                onCompletionChanged: (prayerCompletion) {},
+                data:
+                    List.generate(5, (index) => PrayerTrackerCardModel.empty()),
+                expanded: true,
+                time: DateTime.now(),
+              ).asSkeleton();
+            },
           ),
         ],
       ),

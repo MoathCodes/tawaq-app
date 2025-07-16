@@ -12,9 +12,16 @@ class PageShell extends StatelessWidget {
     return Scaffold(
       child: Center(
         child: ResponsiveContainer(
-          desktopChild: ShellSidebar(child: child),
-          mobileChild: ShellNavigationBar(
+          desktopChild: ShellSidebar(
+              child: Padding(
+            padding: const EdgeInsets.all(8.0),
             child: child,
+          )),
+          mobileChild: ShellNavigationBar(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: child,
+            ),
           ),
         ),
       ),

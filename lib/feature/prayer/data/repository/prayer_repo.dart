@@ -48,6 +48,11 @@ class PrayerRepo {
     return prayerDatabase.countAllPrayersOnDate(from, to);
   }
 
+  Future<Map<CompletionStatus, int>> countAllStatusesOnDate(
+      DateTime from, DateTime to) {
+    return prayerDatabase.countAllPrayerStatusOnDate(from, to);
+  }
+
   Future<int> countPrayerStatusOnDate(
       CompletionStatus status, DateTime from, DateTime to) {
     return prayerDatabase.countPrayerStatusOnDate(status, from, to);

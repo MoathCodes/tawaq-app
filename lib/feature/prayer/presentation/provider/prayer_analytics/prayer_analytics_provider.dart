@@ -24,45 +24,68 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
 
   Future<void> changePeriod(PrayerAnalyticsPeriod period) async {
     state = const AsyncValue.loading();
-    state = AsyncValue.data(await _computeAnalytics(period));
+    try {
+      final analytics = await _computeAnalytics(period);
+      state = AsyncValue.data(analytics);
+    } catch (e, stackTrace) {
+      ref.read(talkerNotifierProvider).handle(e, stackTrace,
+          '[PrayerAnalyticsNotifier] Error while changing period');
+      state = AsyncValue.error(e, stackTrace);
+    }
   }
 
   Future<PrayerAnalytics> _computeAnalytics(
       PrayerAnalyticsPeriod period) async {
-    final service = ref.read(prayerServiceProvider);
-    final settings = ref.read(prayerSettingsNotifierProvider);
+    final talker = ref.read(talkerNotifierProvider);
+    try {
+      final service = ref.read(prayerServiceProvider);
+      final settings = ref.read(prayerSettingsNotifierProvider);
 
-    final streaks = await service.computeStreaks(settings.when(
-      data: (data) => data.location,
-      loading: () => local,
-      error: (error, stackTrace) => local,
-    ));
-    final allPrayers = await service.countAllPrayersOnPeriod(period);
-    final jamaahPrayers =
-        await service.countPrayerOnPeriod(CompletionStatus.jamaah, period);
-    final onTimePrayers =
-        await service.countPrayerOnPeriod(CompletionStatus.onTime, period);
-    final latePrayers =
-        await service.countPrayerOnPeriod(CompletionStatus.late, period);
-    final missedPrayers =
-        await service.countPrayerOnPeriod(CompletionStatus.missed, period);
+      final streaks = await service.computeStreaks(settings.when(
+        data: (data) => data.location,
+        loading: () => local,
+        error: (error, stackTrace) => local,
+      ));
 
-    final jamaahPercentage = jamaahPrayers / allPrayers;
-    final onTimePercentage = onTimePrayers / allPrayers;
-    final latePercentage = latePrayers / allPrayers;
-    final missedPercentage = missedPrayers / allPrayers;
-    final completionPercentage = (jamaahPrayers + onTimePrayers) / allPrayers;
+      final countsMap = await service.countAllStatusesOnPeriod(period);
 
-    return PrayerAnalytics(
-      period: period,
-      completionPercentage:
-          double.parse(completionPercentage.toStringAsFixed(1)),
-      jamaahPercentage: double.parse(jamaahPercentage.toStringAsFixed(1)),
-      onTimePercentage: double.parse(onTimePercentage.toStringAsFixed(1)),
-      latePercentage: double.parse(latePercentage.toStringAsFixed(1)),
-      missedPercentage: double.parse(missedPercentage.toStringAsFixed(1)),
-      currentStreak: streaks.current,
-      bestStreak: streaks.best,
-    );
+      final int allPrayers =
+          countsMap.values.fold<int>(0, (prev, e) => prev + e);
+
+      double pct(int count) => allPrayers == 0 ? 0 : count / allPrayers;
+
+      final jamaahPrayers = countsMap[CompletionStatus.jamaah] ?? 0;
+      final onTimePrayers = countsMap[CompletionStatus.onTime] ?? 0;
+      final latePrayers = countsMap[CompletionStatus.late] ?? 0;
+      final missedPrayers = countsMap[CompletionStatus.missed] ?? 0;
+
+      final completionPercentage = pct(jamaahPrayers + onTimePrayers);
+
+      return PrayerAnalytics(
+        period: period,
+        completionPercentage:
+            double.parse(completionPercentage.toStringAsFixed(1)),
+        jamaahPercentage: double.parse(pct(jamaahPrayers).toStringAsFixed(1)),
+        onTimePercentage: double.parse(pct(onTimePrayers).toStringAsFixed(1)),
+        latePercentage: double.parse(pct(latePrayers).toStringAsFixed(1)),
+        missedPercentage: double.parse(pct(missedPrayers).toStringAsFixed(1)),
+        currentStreak: streaks.current,
+        bestStreak: streaks.best,
+      );
+    } catch (e, stackTrace) {
+      talker.handle(
+          e, stackTrace, '[PrayerAnalyticsNotifier] Error computing analytics');
+      // Return zeroed analytics in case of error so UI still renders.
+      return PrayerAnalytics(
+        period: period,
+        completionPercentage: 0,
+        jamaahPercentage: 0,
+        onTimePercentage: 0,
+        latePercentage: 0,
+        missedPercentage: 0,
+        currentStreak: 0,
+        bestStreak: 0,
+      );
+    }
   }
 }

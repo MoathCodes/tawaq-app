@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/core/utils/date_formatter.dart';
@@ -21,7 +23,9 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
   PrayerTimes? _lastPrayerTimes;
   PrayerSettings? _settings;
   Map<Prayer, PrayerCompletion>? _completionMap;
-  // bool _hasChanged = false;
+  StreamSubscription<List<PrayerCompletion>>? _completionSub;
+  DateFormat? _formatter;
+  DateTime? _subscriptionDateKey;
 
   void addOrUpdateCompletion(PrayerCompletion completion) async {
     final service = ref.read(prayerServiceProvider);
@@ -35,14 +39,21 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
     final service = ref.read(prayerServiceProvider);
     final talker = ref.read(talkerNotifierProvider);
 
-    ref.listen(prayerSettingsNotifierProvider, (previous, next) {
+    final prayerSettingsSub =
+        ref.listen(prayerSettingsNotifierProvider, (previous, next) {
       if (next.hasValue && previous?.valueOrNull != next.valueOrNull) {
         _settings = next.value;
+        _formatter = null; // force refresh with new locale/time format
       }
     });
 
     _settings = ref.read(prayerSettingsNotifierProvider).valueOrNull;
 
+    // Ensure the stream subscription is cancelled when provider is disposed.
+    ref.onDispose(() {
+      _completionSub?.cancel();
+      prayerSettingsSub.close();
+    });
     while (true) {
       try {
         if (_settings == null) {
@@ -52,32 +63,40 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
         }
 
         final location = _settings!.location;
-        final formatter =
-            ref.read(timeFormatterProvider(is24Hours: _settings!.is24Hours));
+        // Cache DateFormat for current locale/24h preference
+        _formatter ??= ref.read(timeFormatterProvider);
         final currentTime = DateTime.now().toLocation(location);
 
         if (_needsUpdate(currentTime)) {
-          // _hasChanged = false;
           _lastPrayerTimes = service.getTodaysPrayerTimes();
           _lastDate = currentTime;
         }
 
-        service.watchPrayerCompletionByDate(currentTime).listen((completions) {
-          if (completions != _completionMap?.values.toList()) {
-            _completionMap = Map.fromEntries(
-              completions.map((c) => MapEntry(c.prayer, c)),
-            );
-            // _hasChanged = true;
-          }
-        });
-
-        if (_completionMap == null) {
-          await Future.delayed(const Duration(milliseconds: 500));
-          continue;
+        // Subscribe once per date change
+        final dateKey =
+            DateTime(currentTime.year, currentTime.month, currentTime.day);
+        if (_completionSub == null || _subscriptionDateKey != dateKey) {
+          await _completionSub?.cancel();
+          _completionSub = service
+              .watchPrayerCompletionByDate(currentTime)
+              .listen((completions) {
+            // Always update the cached map – an empty list still represents
+            // a valid (yet-to-be-completed) state for the current day.
+            _completionMap = {
+              for (final c in completions) c.prayer: c,
+            };
+          });
+          _subscriptionDateKey = dateKey;
         }
 
-        yield _buildPrayerCards(
-            formatter, _lastPrayerTimes!, currentTime, location, l10n);
+        // Ensure we have a non-null map so the UI can render even when no
+        // completions exist for the day yet.
+        _completionMap ??= {};
+
+        final cards = _buildPrayerCards(
+            _formatter!, _lastPrayerTimes!, currentTime, location, l10n);
+
+        yield cards;
       } catch (e, stackTrace) {
         talker.handle(
             e, stackTrace, '[PrayerTrackerCards] Error producing card stream');
@@ -131,7 +150,6 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
       _lastDate == null ||
       _lastDate?.day != currentTime.day ||
       _settings == null ||
-      // _hasChanged == true ||
       _lastPrayerTimes == null;
 
   String? _subtitleMessage(bool isCurrentPrayer, Prayer prayer,

@@ -1,0 +1,1882 @@
+name: mushaf_reader
+description: "A new Flutter package project."
+version: 0.0.1
+homepage:
+
+environment:
+  sdk: ^3.8.1
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_svg: ^2.2.0
+  freezed_annotation: ^3.1.0
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  build_runner: ^2.5.4
+  json_serializable: ^6.9.5
+  freezed: ^3.1.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+
+  assets:
+    - assets/images/
+    - assets/jsons/
+
+
+  # To add assets to your package, add an assets section, like this:
+  # assets:
+  #   - images/a_dot_burr.jpeg
+  #   - images/a_dot_ham.jpeg
+  #
+  # For details regarding assets in packages, see
+  # https://flutter.dev/to/asset-from-package
+  #
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # To add custom fonts to your package, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+
+  fonts:
+    - family: QCF4_BSML
+      fonts:
+        - asset: assets/otf_fonts/QCF4_BSML.otf
+    - family: QuranPage_001
+      fonts:
+        - asset: assets/otf_fonts/QCF4_001.otf
+    - family: QuranPage_002
+      fonts:
+        - asset: assets/otf_fonts/QCF4_002.otf
+    - family: QuranPage_003
+      fonts:
+        - asset: assets/otf_fonts/QCF4_003.otf
+    - family: QuranPage_004
+      fonts:
+        - asset: assets/otf_fonts/QCF4_004.otf
+    - family: QuranPage_005
+      fonts:
+        - asset: assets/otf_fonts/QCF4_005.otf
+    - family: QuranPage_006
+      fonts:
+        - asset: assets/otf_fonts/QCF4_006.otf
+    - family: QuranPage_007
+      fonts:
+        - asset: assets/otf_fonts/QCF4_007.otf
+    - family: QuranPage_008
+      fonts:
+        - asset: assets/otf_fonts/QCF4_008.otf
+    - family: QuranPage_009
+      fonts:
+        - asset: assets/otf_fonts/QCF4_009.otf
+    - family: QuranPage_010
+      fonts:
+        - asset: assets/otf_fonts/QCF4_010.otf
+    - family: QuranPage_011
+      fonts:
+        - asset: assets/otf_fonts/QCF4_011.otf
+    - family: QuranPage_012
+      fonts:
+        - asset: assets/otf_fonts/QCF4_012.otf
+    - family: QuranPage_013
+      fonts:
+        - asset: assets/otf_fonts/QCF4_013.otf
+    - family: QuranPage_014
+      fonts:
+        - asset: assets/otf_fonts/QCF4_014.otf
+    - family: QuranPage_015
+      fonts:
+        - asset: assets/otf_fonts/QCF4_015.otf
+    - family: QuranPage_016
+      fonts:
+        - asset: assets/otf_fonts/QCF4_016.otf
+    - family: QuranPage_017
+      fonts:
+        - asset: assets/otf_fonts/QCF4_017.otf
+    - family: QuranPage_018
+      fonts:
+        - asset: assets/otf_fonts/QCF4_018.otf
+    - family: QuranPage_019
+      fonts:
+        - asset: assets/otf_fonts/QCF4_019.otf
+    - family: QuranPage_020
+      fonts:
+        - asset: assets/otf_fonts/QCF4_020.otf
+    - family: QuranPage_021
+      fonts:
+        - asset: assets/otf_fonts/QCF4_021.otf
+    - family: QuranPage_022
+      fonts:
+        - asset: assets/otf_fonts/QCF4_022.otf
+    - family: QuranPage_023
+      fonts:
+        - asset: assets/otf_fonts/QCF4_023.otf
+    - family: QuranPage_024
+      fonts:
+        - asset: assets/otf_fonts/QCF4_024.otf
+    - family: QuranPage_025
+      fonts:
+        - asset: assets/otf_fonts/QCF4_025.otf
+    - family: QuranPage_026
+      fonts:
+        - asset: assets/otf_fonts/QCF4_026.otf
+    - family: QuranPage_027
+      fonts:
+        - asset: assets/otf_fonts/QCF4_027.otf
+    - family: QuranPage_028
+      fonts:
+        - asset: assets/otf_fonts/QCF4_028.otf
+    - family: QuranPage_029
+      fonts:
+        - asset: assets/otf_fonts/QCF4_029.otf
+    - family: QuranPage_030
+      fonts:
+        - asset: assets/otf_fonts/QCF4_030.otf
+    - family: QuranPage_031
+      fonts:
+        - asset: assets/otf_fonts/QCF4_031.otf
+    - family: QuranPage_032
+      fonts:
+        - asset: assets/otf_fonts/QCF4_032.otf
+    - family: QuranPage_033
+      fonts:
+        - asset: assets/otf_fonts/QCF4_033.otf
+    - family: QuranPage_034
+      fonts:
+        - asset: assets/otf_fonts/QCF4_034.otf
+    - family: QuranPage_035
+      fonts:
+        - asset: assets/otf_fonts/QCF4_035.otf
+    - family: QuranPage_036
+      fonts:
+        - asset: assets/otf_fonts/QCF4_036.otf
+    - family: QuranPage_037
+      fonts:
+        - asset: assets/otf_fonts/QCF4_037.otf
+    - family: QuranPage_038
+      fonts:
+        - asset: assets/otf_fonts/QCF4_038.otf
+    - family: QuranPage_039
+      fonts:
+        - asset: assets/otf_fonts/QCF4_039.otf
+    - family: QuranPage_040
+      fonts:
+        - asset: assets/otf_fonts/QCF4_040.otf
+    - family: QuranPage_041
+      fonts:
+        - asset: assets/otf_fonts/QCF4_041.otf
+    - family: QuranPage_042
+      fonts:
+        - asset: assets/otf_fonts/QCF4_042.otf
+    - family: QuranPage_043
+      fonts:
+        - asset: assets/otf_fonts/QCF4_043.otf
+    - family: QuranPage_044
+      fonts:
+        - asset: assets/otf_fonts/QCF4_044.otf
+    - family: QuranPage_045
+      fonts:
+        - asset: assets/otf_fonts/QCF4_045.otf
+    - family: QuranPage_046
+      fonts:
+        - asset: assets/otf_fonts/QCF4_046.otf
+    - family: QuranPage_047
+      fonts:
+        - asset: assets/otf_fonts/QCF4_047.otf
+    - family: QuranPage_048
+      fonts:
+        - asset: assets/otf_fonts/QCF4_048.otf
+    - family: QuranPage_049
+      fonts:
+        - asset: assets/otf_fonts/QCF4_049.otf
+    - family: QuranPage_050
+      fonts:
+        - asset: assets/otf_fonts/QCF4_050.otf
+    - family: QuranPage_051
+      fonts:
+        - asset: assets/otf_fonts/QCF4_051.otf
+    - family: QuranPage_052
+      fonts:
+        - asset: assets/otf_fonts/QCF4_052.otf
+    - family: QuranPage_053
+      fonts:
+        - asset: assets/otf_fonts/QCF4_053.otf
+    - family: QuranPage_054
+      fonts:
+        - asset: assets/otf_fonts/QCF4_054.otf
+    - family: QuranPage_055
+      fonts:
+        - asset: assets/otf_fonts/QCF4_055.otf
+    - family: QuranPage_056
+      fonts:
+        - asset: assets/otf_fonts/QCF4_056.otf
+    - family: QuranPage_057
+      fonts:
+        - asset: assets/otf_fonts/QCF4_057.otf
+    - family: QuranPage_058
+      fonts:
+        - asset: assets/otf_fonts/QCF4_058.otf
+    - family: QuranPage_059
+      fonts:
+        - asset: assets/otf_fonts/QCF4_059.otf
+    - family: QuranPage_060
+      fonts:
+        - asset: assets/otf_fonts/QCF4_060.otf
+    - family: QuranPage_061
+      fonts:
+        - asset: assets/otf_fonts/QCF4_061.otf
+    - family: QuranPage_062
+      fonts:
+        - asset: assets/otf_fonts/QCF4_062.otf
+    - family: QuranPage_063
+      fonts:
+        - asset: assets/otf_fonts/QCF4_063.otf
+    - family: QuranPage_064
+      fonts:
+        - asset: assets/otf_fonts/QCF4_064.otf
+    - family: QuranPage_065
+      fonts:
+        - asset: assets/otf_fonts/QCF4_065.otf
+    - family: QuranPage_066
+      fonts:
+        - asset: assets/otf_fonts/QCF4_066.otf
+    - family: QuranPage_067
+      fonts:
+        - asset: assets/otf_fonts/QCF4_067.otf
+    - family: QuranPage_068
+      fonts:
+        - asset: assets/otf_fonts/QCF4_068.otf
+    - family: QuranPage_069
+      fonts:
+        - asset: assets/otf_fonts/QCF4_069.otf
+    - family: QuranPage_070
+      fonts:
+        - asset: assets/otf_fonts/QCF4_070.otf
+    - family: QuranPage_071
+      fonts:
+        - asset: assets/otf_fonts/QCF4_071.otf
+    - family: QuranPage_072
+      fonts:
+        - asset: assets/otf_fonts/QCF4_072.otf
+    - family: QuranPage_073
+      fonts:
+        - asset: assets/otf_fonts/QCF4_073.otf
+    - family: QuranPage_074
+      fonts:
+        - asset: assets/otf_fonts/QCF4_074.otf
+    - family: QuranPage_075
+      fonts:
+        - asset: assets/otf_fonts/QCF4_075.otf
+    - family: QuranPage_076
+      fonts:
+        - asset: assets/otf_fonts/QCF4_076.otf
+    - family: QuranPage_077
+      fonts:
+        - asset: assets/otf_fonts/QCF4_077.otf
+    - family: QuranPage_078
+      fonts:
+        - asset: assets/otf_fonts/QCF4_078.otf
+    - family: QuranPage_079
+      fonts:
+        - asset: assets/otf_fonts/QCF4_079.otf
+    - family: QuranPage_080
+      fonts:
+        - asset: assets/otf_fonts/QCF4_080.otf
+    - family: QuranPage_081
+      fonts:
+        - asset: assets/otf_fonts/QCF4_081.otf
+    - family: QuranPage_082
+      fonts:
+        - asset: assets/otf_fonts/QCF4_082.otf
+    - family: QuranPage_083
+      fonts:
+        - asset: assets/otf_fonts/QCF4_083.otf
+    - family: QuranPage_084
+      fonts:
+        - asset: assets/otf_fonts/QCF4_084.otf
+    - family: QuranPage_085
+      fonts:
+        - asset: assets/otf_fonts/QCF4_085.otf
+    - family: QuranPage_086
+      fonts:
+        - asset: assets/otf_fonts/QCF4_086.otf
+    - family: QuranPage_087
+      fonts:
+        - asset: assets/otf_fonts/QCF4_087.otf
+    - family: QuranPage_088
+      fonts:
+        - asset: assets/otf_fonts/QCF4_088.otf
+    - family: QuranPage_089
+      fonts:
+        - asset: assets/otf_fonts/QCF4_089.otf
+    - family: QuranPage_090
+      fonts:
+        - asset: assets/otf_fonts/QCF4_090.otf
+    - family: QuranPage_091
+      fonts:
+        - asset: assets/otf_fonts/QCF4_091.otf
+    - family: QuranPage_092
+      fonts:
+        - asset: assets/otf_fonts/QCF4_092.otf
+    - family: QuranPage_093
+      fonts:
+        - asset: assets/otf_fonts/QCF4_093.otf
+    - family: QuranPage_094
+      fonts:
+        - asset: assets/otf_fonts/QCF4_094.otf
+    - family: QuranPage_095
+      fonts:
+        - asset: assets/otf_fonts/QCF4_095.otf
+    - family: QuranPage_096
+      fonts:
+        - asset: assets/otf_fonts/QCF4_096.otf
+    - family: QuranPage_097
+      fonts:
+        - asset: assets/otf_fonts/QCF4_097.otf
+    - family: QuranPage_098
+      fonts:
+        - asset: assets/otf_fonts/QCF4_098.otf
+    - family: QuranPage_099
+      fonts:
+        - asset: assets/otf_fonts/QCF4_099.otf
+    - family: QuranPage_100
+      fonts:
+        - asset: assets/otf_fonts/QCF4_100.otf
+    - family: QuranPage_101
+      fonts:
+        - asset: assets/otf_fonts/QCF4_101.otf
+    - family: QuranPage_102
+      fonts:
+        - asset: assets/otf_fonts/QCF4_102.otf
+    - family: QuranPage_103
+      fonts:
+        - asset: assets/otf_fonts/QCF4_103.otf
+    - family: QuranPage_104
+      fonts:
+        - asset: assets/otf_fonts/QCF4_104.otf
+    - family: QuranPage_105
+      fonts:
+        - asset: assets/otf_fonts/QCF4_105.otf
+    - family: QuranPage_106
+      fonts:
+        - asset: assets/otf_fonts/QCF4_106.otf
+    - family: QuranPage_107
+      fonts:
+        - asset: assets/otf_fonts/QCF4_107.otf
+    - family: QuranPage_108
+      fonts:
+        - asset: assets/otf_fonts/QCF4_108.otf
+    - family: QuranPage_109
+      fonts:
+        - asset: assets/otf_fonts/QCF4_109.otf
+    - family: QuranPage_110
+      fonts:
+        - asset: assets/otf_fonts/QCF4_110.otf
+    - family: QuranPage_111
+      fonts:
+        - asset: assets/otf_fonts/QCF4_111.otf
+    - family: QuranPage_112
+      fonts:
+        - asset: assets/otf_fonts/QCF4_112.otf
+    - family: QuranPage_113
+      fonts:
+        - asset: assets/otf_fonts/QCF4_113.otf
+    - family: QuranPage_114
+      fonts:
+        - asset: assets/otf_fonts/QCF4_114.otf
+    - family: QuranPage_115
+      fonts:
+        - asset: assets/otf_fonts/QCF4_115.otf
+    - family: QuranPage_116
+      fonts:
+        - asset: assets/otf_fonts/QCF4_116.otf
+    - family: QuranPage_117
+      fonts:
+        - asset: assets/otf_fonts/QCF4_117.otf
+    - family: QuranPage_118
+      fonts:
+        - asset: assets/otf_fonts/QCF4_118.otf
+    - family: QuranPage_119
+      fonts:
+        - asset: assets/otf_fonts/QCF4_119.otf
+    - family: QuranPage_120
+      fonts:
+        - asset: assets/otf_fonts/QCF4_120.otf
+    - family: QuranPage_121
+      fonts:
+        - asset: assets/otf_fonts/QCF4_121.otf
+    - family: QuranPage_122
+      fonts:
+        - asset: assets/otf_fonts/QCF4_122.otf
+    - family: QuranPage_123
+      fonts:
+        - asset: assets/otf_fonts/QCF4_123.otf
+    - family: QuranPage_124
+      fonts:
+        - asset: assets/otf_fonts/QCF4_124.otf
+    - family: QuranPage_125
+      fonts:
+        - asset: assets/otf_fonts/QCF4_125.otf
+    - family: QuranPage_126
+      fonts:
+        - asset: assets/otf_fonts/QCF4_126.otf
+    - family: QuranPage_127
+      fonts:
+        - asset: assets/otf_fonts/QCF4_127.otf
+    - family: QuranPage_128
+      fonts:
+        - asset: assets/otf_fonts/QCF4_128.otf
+    - family: QuranPage_129
+      fonts:
+        - asset: assets/otf_fonts/QCF4_129.otf
+    - family: QuranPage_130
+      fonts:
+        - asset: assets/otf_fonts/QCF4_130.otf
+    - family: QuranPage_131
+      fonts:
+        - asset: assets/otf_fonts/QCF4_131.otf
+    - family: QuranPage_132
+      fonts:
+        - asset: assets/otf_fonts/QCF4_132.otf
+    - family: QuranPage_133
+      fonts:
+        - asset: assets/otf_fonts/QCF4_133.otf
+    - family: QuranPage_134
+      fonts:
+        - asset: assets/otf_fonts/QCF4_134.otf
+    - family: QuranPage_135
+      fonts:
+        - asset: assets/otf_fonts/QCF4_135.otf
+    - family: QuranPage_136
+      fonts:
+        - asset: assets/otf_fonts/QCF4_136.otf
+    - family: QuranPage_137
+      fonts:
+        - asset: assets/otf_fonts/QCF4_137.otf
+    - family: QuranPage_138
+      fonts:
+        - asset: assets/otf_fonts/QCF4_138.otf
+    - family: QuranPage_139
+      fonts:
+        - asset: assets/otf_fonts/QCF4_139.otf
+    - family: QuranPage_140
+      fonts:
+        - asset: assets/otf_fonts/QCF4_140.otf
+    - family: QuranPage_141
+      fonts:
+        - asset: assets/otf_fonts/QCF4_141.otf
+    - family: QuranPage_142
+      fonts:
+        - asset: assets/otf_fonts/QCF4_142.otf
+    - family: QuranPage_143
+      fonts:
+        - asset: assets/otf_fonts/QCF4_143.otf
+    - family: QuranPage_144
+      fonts:
+        - asset: assets/otf_fonts/QCF4_144.otf
+    - family: QuranPage_145
+      fonts:
+        - asset: assets/otf_fonts/QCF4_145.otf
+    - family: QuranPage_146
+      fonts:
+        - asset: assets/otf_fonts/QCF4_146.otf
+    - family: QuranPage_147
+      fonts:
+        - asset: assets/otf_fonts/QCF4_147.otf
+    - family: QuranPage_148
+      fonts:
+        - asset: assets/otf_fonts/QCF4_148.otf
+    - family: QuranPage_149
+      fonts:
+        - asset: assets/otf_fonts/QCF4_149.otf
+    - family: QuranPage_150
+      fonts:
+        - asset: assets/otf_fonts/QCF4_150.otf
+    - family: QuranPage_151
+      fonts:
+        - asset: assets/otf_fonts/QCF4_151.otf
+    - family: QuranPage_152
+      fonts:
+        - asset: assets/otf_fonts/QCF4_152.otf
+    - family: QuranPage_153
+      fonts:
+        - asset: assets/otf_fonts/QCF4_153.otf
+    - family: QuranPage_154
+      fonts:
+        - asset: assets/otf_fonts/QCF4_154.otf
+    - family: QuranPage_155
+      fonts:
+        - asset: assets/otf_fonts/QCF4_155.otf
+    - family: QuranPage_156
+      fonts:
+        - asset: assets/otf_fonts/QCF4_156.otf
+    - family: QuranPage_157
+      fonts:
+        - asset: assets/otf_fonts/QCF4_157.otf
+    - family: QuranPage_158
+      fonts:
+        - asset: assets/otf_fonts/QCF4_158.otf
+    - family: QuranPage_159
+      fonts:
+        - asset: assets/otf_fonts/QCF4_159.otf
+    - family: QuranPage_160
+      fonts:
+        - asset: assets/otf_fonts/QCF4_160.otf
+    - family: QuranPage_161
+      fonts:
+        - asset: assets/otf_fonts/QCF4_161.otf
+    - family: QuranPage_162
+      fonts:
+        - asset: assets/otf_fonts/QCF4_162.otf
+    - family: QuranPage_163
+      fonts:
+        - asset: assets/otf_fonts/QCF4_163.otf
+    - family: QuranPage_164
+      fonts:
+        - asset: assets/otf_fonts/QCF4_164.otf
+    - family: QuranPage_165
+      fonts:
+        - asset: assets/otf_fonts/QCF4_165.otf
+    - family: QuranPage_166
+      fonts:
+        - asset: assets/otf_fonts/QCF4_166.otf
+    - family: QuranPage_167
+      fonts:
+        - asset: assets/otf_fonts/QCF4_167.otf
+    - family: QuranPage_168
+      fonts:
+        - asset: assets/otf_fonts/QCF4_168.otf
+    - family: QuranPage_169
+      fonts:
+        - asset: assets/otf_fonts/QCF4_169.otf
+    - family: QuranPage_170
+      fonts:
+        - asset: assets/otf_fonts/QCF4_170.otf
+    - family: QuranPage_171
+      fonts:
+        - asset: assets/otf_fonts/QCF4_171.otf
+    - family: QuranPage_172
+      fonts:
+        - asset: assets/otf_fonts/QCF4_172.otf
+    - family: QuranPage_173
+      fonts:
+        - asset: assets/otf_fonts/QCF4_173.otf
+    - family: QuranPage_174
+      fonts:
+        - asset: assets/otf_fonts/QCF4_174.otf
+    - family: QuranPage_175
+      fonts:
+        - asset: assets/otf_fonts/QCF4_175.otf
+    - family: QuranPage_176
+      fonts:
+        - asset: assets/otf_fonts/QCF4_176.otf
+    - family: QuranPage_177
+      fonts:
+        - asset: assets/otf_fonts/QCF4_177.otf
+    - family: QuranPage_178
+      fonts:
+        - asset: assets/otf_fonts/QCF4_178.otf
+    - family: QuranPage_179
+      fonts:
+        - asset: assets/otf_fonts/QCF4_179.otf
+    - family: QuranPage_180
+      fonts:
+        - asset: assets/otf_fonts/QCF4_180.otf
+    - family: QuranPage_181
+      fonts:
+        - asset: assets/otf_fonts/QCF4_181.otf
+    - family: QuranPage_182
+      fonts:
+        - asset: assets/otf_fonts/QCF4_182.otf
+    - family: QuranPage_183
+      fonts:
+        - asset: assets/otf_fonts/QCF4_183.otf
+    - family: QuranPage_184
+      fonts:
+        - asset: assets/otf_fonts/QCF4_184.otf
+    - family: QuranPage_185
+      fonts:
+        - asset: assets/otf_fonts/QCF4_185.otf
+    - family: QuranPage_186
+      fonts:
+        - asset: assets/otf_fonts/QCF4_186.otf
+    - family: QuranPage_187
+      fonts:
+        - asset: assets/otf_fonts/QCF4_187.otf
+    - family: QuranPage_188
+      fonts:
+        - asset: assets/otf_fonts/QCF4_188.otf
+    - family: QuranPage_189
+      fonts:
+        - asset: assets/otf_fonts/QCF4_189.otf
+    - family: QuranPage_190
+      fonts:
+        - asset: assets/otf_fonts/QCF4_190.otf
+    - family: QuranPage_191
+      fonts:
+        - asset: assets/otf_fonts/QCF4_191.otf
+    - family: QuranPage_192
+      fonts:
+        - asset: assets/otf_fonts/QCF4_192.otf
+    - family: QuranPage_193
+      fonts:
+        - asset: assets/otf_fonts/QCF4_193.otf
+    - family: QuranPage_194
+      fonts:
+        - asset: assets/otf_fonts/QCF4_194.otf
+    - family: QuranPage_195
+      fonts:
+        - asset: assets/otf_fonts/QCF4_195.otf
+    - family: QuranPage_196
+      fonts:
+        - asset: assets/otf_fonts/QCF4_196.otf
+    - family: QuranPage_197
+      fonts:
+        - asset: assets/otf_fonts/QCF4_197.otf
+    - family: QuranPage_198
+      fonts:
+        - asset: assets/otf_fonts/QCF4_198.otf
+    - family: QuranPage_199
+      fonts:
+        - asset: assets/otf_fonts/QCF4_199.otf
+    - family: QuranPage_200
+      fonts:
+        - asset: assets/otf_fonts/QCF4_200.otf
+    - family: QuranPage_201
+      fonts:
+        - asset: assets/otf_fonts/QCF4_201.otf
+    - family: QuranPage_202
+      fonts:
+        - asset: assets/otf_fonts/QCF4_202.otf
+    - family: QuranPage_203
+      fonts:
+        - asset: assets/otf_fonts/QCF4_203.otf
+    - family: QuranPage_204
+      fonts:
+        - asset: assets/otf_fonts/QCF4_204.otf
+    - family: QuranPage_205
+      fonts:
+        - asset: assets/otf_fonts/QCF4_205.otf
+    - family: QuranPage_206
+      fonts:
+        - asset: assets/otf_fonts/QCF4_206.otf
+    - family: QuranPage_207
+      fonts:
+        - asset: assets/otf_fonts/QCF4_207.otf
+    - family: QuranPage_208
+      fonts:
+        - asset: assets/otf_fonts/QCF4_208.otf
+    - family: QuranPage_209
+      fonts:
+        - asset: assets/otf_fonts/QCF4_209.otf
+    - family: QuranPage_210
+      fonts:
+        - asset: assets/otf_fonts/QCF4_210.otf
+    - family: QuranPage_211
+      fonts:
+        - asset: assets/otf_fonts/QCF4_211.otf
+    - family: QuranPage_212
+      fonts:
+        - asset: assets/otf_fonts/QCF4_212.otf
+    - family: QuranPage_213
+      fonts:
+        - asset: assets/otf_fonts/QCF4_213.otf
+    - family: QuranPage_214
+      fonts:
+        - asset: assets/otf_fonts/QCF4_214.otf
+    - family: QuranPage_215
+      fonts:
+        - asset: assets/otf_fonts/QCF4_215.otf
+    - family: QuranPage_216
+      fonts:
+        - asset: assets/otf_fonts/QCF4_216.otf
+    - family: QuranPage_217
+      fonts:
+        - asset: assets/otf_fonts/QCF4_217.otf
+    - family: QuranPage_218
+      fonts:
+        - asset: assets/otf_fonts/QCF4_218.otf
+    - family: QuranPage_219
+      fonts:
+        - asset: assets/otf_fonts/QCF4_219.otf
+    - family: QuranPage_220
+      fonts:
+        - asset: assets/otf_fonts/QCF4_220.otf
+    - family: QuranPage_221
+      fonts:
+        - asset: assets/otf_fonts/QCF4_221.otf
+    - family: QuranPage_222
+      fonts:
+        - asset: assets/otf_fonts/QCF4_222.otf
+    - family: QuranPage_223
+      fonts:
+        - asset: assets/otf_fonts/QCF4_223.otf
+    - family: QuranPage_224
+      fonts:
+        - asset: assets/otf_fonts/QCF4_224.otf
+    - family: QuranPage_225
+      fonts:
+        - asset: assets/otf_fonts/QCF4_225.otf
+    - family: QuranPage_226
+      fonts:
+        - asset: assets/otf_fonts/QCF4_226.otf
+    - family: QuranPage_227
+      fonts:
+        - asset: assets/otf_fonts/QCF4_227.otf
+    - family: QuranPage_228
+      fonts:
+        - asset: assets/otf_fonts/QCF4_228.otf
+    - family: QuranPage_229
+      fonts:
+        - asset: assets/otf_fonts/QCF4_229.otf
+    - family: QuranPage_230
+      fonts:
+        - asset: assets/otf_fonts/QCF4_230.otf
+    - family: QuranPage_231
+      fonts:
+        - asset: assets/otf_fonts/QCF4_231.otf
+    - family: QuranPage_232
+      fonts:
+        - asset: assets/otf_fonts/QCF4_232.otf
+    - family: QuranPage_233
+      fonts:
+        - asset: assets/otf_fonts/QCF4_233.otf
+    - family: QuranPage_234
+      fonts:
+        - asset: assets/otf_fonts/QCF4_234.otf
+    - family: QuranPage_235
+      fonts:
+        - asset: assets/otf_fonts/QCF4_235.otf
+    - family: QuranPage_236
+      fonts:
+        - asset: assets/otf_fonts/QCF4_236.otf
+    - family: QuranPage_237
+      fonts:
+        - asset: assets/otf_fonts/QCF4_237.otf
+    - family: QuranPage_238
+      fonts:
+        - asset: assets/otf_fonts/QCF4_238.otf
+    - family: QuranPage_239
+      fonts:
+        - asset: assets/otf_fonts/QCF4_239.otf
+    - family: QuranPage_240
+      fonts:
+        - asset: assets/otf_fonts/QCF4_240.otf
+    - family: QuranPage_241
+      fonts:
+        - asset: assets/otf_fonts/QCF4_241.otf
+    - family: QuranPage_242
+      fonts:
+        - asset: assets/otf_fonts/QCF4_242.otf
+    - family: QuranPage_243
+      fonts:
+        - asset: assets/otf_fonts/QCF4_243.otf
+    - family: QuranPage_244
+      fonts:
+        - asset: assets/otf_fonts/QCF4_244.otf
+    - family: QuranPage_245
+      fonts:
+        - asset: assets/otf_fonts/QCF4_245.otf
+    - family: QuranPage_246
+      fonts:
+        - asset: assets/otf_fonts/QCF4_246.otf
+    - family: QuranPage_247
+      fonts:
+        - asset: assets/otf_fonts/QCF4_247.otf
+    - family: QuranPage_248
+      fonts:
+        - asset: assets/otf_fonts/QCF4_248.otf
+    - family: QuranPage_249
+      fonts:
+        - asset: assets/otf_fonts/QCF4_249.otf
+    - family: QuranPage_250
+      fonts:
+        - asset: assets/otf_fonts/QCF4_250.otf
+    - family: QuranPage_251
+      fonts:
+        - asset: assets/otf_fonts/QCF4_251.otf
+    - family: QuranPage_252
+      fonts:
+        - asset: assets/otf_fonts/QCF4_252.otf
+    - family: QuranPage_253
+      fonts:
+        - asset: assets/otf_fonts/QCF4_253.otf
+    - family: QuranPage_254
+      fonts:
+        - asset: assets/otf_fonts/QCF4_254.otf
+    - family: QuranPage_255
+      fonts:
+        - asset: assets/otf_fonts/QCF4_255.otf
+    - family: QuranPage_256
+      fonts:
+        - asset: assets/otf_fonts/QCF4_256.otf
+    - family: QuranPage_257
+      fonts:
+        - asset: assets/otf_fonts/QCF4_257.otf
+    - family: QuranPage_258
+      fonts:
+        - asset: assets/otf_fonts/QCF4_258.otf
+    - family: QuranPage_259
+      fonts:
+        - asset: assets/otf_fonts/QCF4_259.otf
+    - family: QuranPage_260
+      fonts:
+        - asset: assets/otf_fonts/QCF4_260.otf
+    - family: QuranPage_261
+      fonts:
+        - asset: assets/otf_fonts/QCF4_261.otf
+    - family: QuranPage_262
+      fonts:
+        - asset: assets/otf_fonts/QCF4_262.otf
+    - family: QuranPage_263
+      fonts:
+        - asset: assets/otf_fonts/QCF4_263.otf
+    - family: QuranPage_264
+      fonts:
+        - asset: assets/otf_fonts/QCF4_264.otf
+    - family: QuranPage_265
+      fonts:
+        - asset: assets/otf_fonts/QCF4_265.otf
+    - family: QuranPage_266
+      fonts:
+        - asset: assets/otf_fonts/QCF4_266.otf
+    - family: QuranPage_267
+      fonts:
+        - asset: assets/otf_fonts/QCF4_267.otf
+    - family: QuranPage_268
+      fonts:
+        - asset: assets/otf_fonts/QCF4_268.otf
+    - family: QuranPage_269
+      fonts:
+        - asset: assets/otf_fonts/QCF4_269.otf
+    - family: QuranPage_270
+      fonts:
+        - asset: assets/otf_fonts/QCF4_270.otf
+    - family: QuranPage_271
+      fonts:
+        - asset: assets/otf_fonts/QCF4_271.otf
+    - family: QuranPage_272
+      fonts:
+        - asset: assets/otf_fonts/QCF4_272.otf
+    - family: QuranPage_273
+      fonts:
+        - asset: assets/otf_fonts/QCF4_273.otf
+    - family: QuranPage_274
+      fonts:
+        - asset: assets/otf_fonts/QCF4_274.otf
+    - family: QuranPage_275
+      fonts:
+        - asset: assets/otf_fonts/QCF4_275.otf
+    - family: QuranPage_276
+      fonts:
+        - asset: assets/otf_fonts/QCF4_276.otf
+    - family: QuranPage_277
+      fonts:
+        - asset: assets/otf_fonts/QCF4_277.otf
+    - family: QuranPage_278
+      fonts:
+        - asset: assets/otf_fonts/QCF4_278.otf
+    - family: QuranPage_279
+      fonts:
+        - asset: assets/otf_fonts/QCF4_279.otf
+    - family: QuranPage_280
+      fonts:
+        - asset: assets/otf_fonts/QCF4_280.otf
+    - family: QuranPage_281
+      fonts:
+        - asset: assets/otf_fonts/QCF4_281.otf
+    - family: QuranPage_282
+      fonts:
+        - asset: assets/otf_fonts/QCF4_282.otf
+    - family: QuranPage_283
+      fonts:
+        - asset: assets/otf_fonts/QCF4_283.otf
+    - family: QuranPage_284
+      fonts:
+        - asset: assets/otf_fonts/QCF4_284.otf
+    - family: QuranPage_285
+      fonts:
+        - asset: assets/otf_fonts/QCF4_285.otf
+    - family: QuranPage_286
+      fonts:
+        - asset: assets/otf_fonts/QCF4_286.otf
+    - family: QuranPage_287
+      fonts:
+        - asset: assets/otf_fonts/QCF4_287.otf
+    - family: QuranPage_288
+      fonts:
+        - asset: assets/otf_fonts/QCF4_288.otf
+    - family: QuranPage_289
+      fonts:
+        - asset: assets/otf_fonts/QCF4_289.otf
+    - family: QuranPage_290
+      fonts:
+        - asset: assets/otf_fonts/QCF4_290.otf
+    - family: QuranPage_291
+      fonts:
+        - asset: assets/otf_fonts/QCF4_291.otf
+    - family: QuranPage_292
+      fonts:
+        - asset: assets/otf_fonts/QCF4_292.otf
+    - family: QuranPage_293
+      fonts:
+        - asset: assets/otf_fonts/QCF4_293.otf
+    - family: QuranPage_294
+      fonts:
+        - asset: assets/otf_fonts/QCF4_294.otf
+    - family: QuranPage_295
+      fonts:
+        - asset: assets/otf_fonts/QCF4_295.otf
+    - family: QuranPage_296
+      fonts:
+        - asset: assets/otf_fonts/QCF4_296.otf
+    - family: QuranPage_297
+      fonts:
+        - asset: assets/otf_fonts/QCF4_297.otf
+    - family: QuranPage_298
+      fonts:
+        - asset: assets/otf_fonts/QCF4_298.otf
+    - family: QuranPage_299
+      fonts:
+        - asset: assets/otf_fonts/QCF4_299.otf
+    - family: QuranPage_300
+      fonts:
+        - asset: assets/otf_fonts/QCF4_300.otf
+    - family: QuranPage_301
+      fonts:
+        - asset: assets/otf_fonts/QCF4_301.otf
+    - family: QuranPage_302
+      fonts:
+        - asset: assets/otf_fonts/QCF4_302.otf
+    - family: QuranPage_303
+      fonts:
+        - asset: assets/otf_fonts/QCF4_303.otf
+    - family: QuranPage_304
+      fonts:
+        - asset: assets/otf_fonts/QCF4_304.otf
+    - family: QuranPage_305
+      fonts:
+        - asset: assets/otf_fonts/QCF4_305.otf
+    - family: QuranPage_306
+      fonts:
+        - asset: assets/otf_fonts/QCF4_306.otf
+    - family: QuranPage_307
+      fonts:
+        - asset: assets/otf_fonts/QCF4_307.otf
+    - family: QuranPage_308
+      fonts:
+        - asset: assets/otf_fonts/QCF4_308.otf
+    - family: QuranPage_309
+      fonts:
+        - asset: assets/otf_fonts/QCF4_309.otf
+    - family: QuranPage_310
+      fonts:
+        - asset: assets/otf_fonts/QCF4_310.otf
+    - family: QuranPage_311
+      fonts:
+        - asset: assets/otf_fonts/QCF4_311.otf
+    - family: QuranPage_312
+      fonts:
+        - asset: assets/otf_fonts/QCF4_312.otf
+    - family: QuranPage_313
+      fonts:
+        - asset: assets/otf_fonts/QCF4_313.otf
+    - family: QuranPage_314
+      fonts:
+        - asset: assets/otf_fonts/QCF4_314.otf
+    - family: QuranPage_315
+      fonts:
+        - asset: assets/otf_fonts/QCF4_315.otf
+    - family: QuranPage_316
+      fonts:
+        - asset: assets/otf_fonts/QCF4_316.otf
+    - family: QuranPage_317
+      fonts:
+        - asset: assets/otf_fonts/QCF4_317.otf
+    - family: QuranPage_318
+      fonts:
+        - asset: assets/otf_fonts/QCF4_318.otf
+    - family: QuranPage_319
+      fonts:
+        - asset: assets/otf_fonts/QCF4_319.otf
+    - family: QuranPage_320
+      fonts:
+        - asset: assets/otf_fonts/QCF4_320.otf
+    - family: QuranPage_321
+      fonts:
+        - asset: assets/otf_fonts/QCF4_321.otf
+    - family: QuranPage_322
+      fonts:
+        - asset: assets/otf_fonts/QCF4_322.otf
+    - family: QuranPage_323
+      fonts:
+        - asset: assets/otf_fonts/QCF4_323.otf
+    - family: QuranPage_324
+      fonts:
+        - asset: assets/otf_fonts/QCF4_324.otf
+    - family: QuranPage_325
+      fonts:
+        - asset: assets/otf_fonts/QCF4_325.otf
+    - family: QuranPage_326
+      fonts:
+        - asset: assets/otf_fonts/QCF4_326.otf
+    - family: QuranPage_327
+      fonts:
+        - asset: assets/otf_fonts/QCF4_327.otf
+    - family: QuranPage_328
+      fonts:
+        - asset: assets/otf_fonts/QCF4_328.otf
+    - family: QuranPage_329
+      fonts:
+        - asset: assets/otf_fonts/QCF4_329.otf
+    - family: QuranPage_330
+      fonts:
+        - asset: assets/otf_fonts/QCF4_330.otf
+    - family: QuranPage_331
+      fonts:
+        - asset: assets/otf_fonts/QCF4_331.otf
+    - family: QuranPage_332
+      fonts:
+        - asset: assets/otf_fonts/QCF4_332.otf
+    - family: QuranPage_333
+      fonts:
+        - asset: assets/otf_fonts/QCF4_333.otf
+    - family: QuranPage_334
+      fonts:
+        - asset: assets/otf_fonts/QCF4_334.otf
+    - family: QuranPage_335
+      fonts:
+        - asset: assets/otf_fonts/QCF4_335.otf
+    - family: QuranPage_336
+      fonts:
+        - asset: assets/otf_fonts/QCF4_336.otf
+    - family: QuranPage_337
+      fonts:
+        - asset: assets/otf_fonts/QCF4_337.otf
+    - family: QuranPage_338
+      fonts:
+        - asset: assets/otf_fonts/QCF4_338.otf
+    - family: QuranPage_339
+      fonts:
+        - asset: assets/otf_fonts/QCF4_339.otf
+    - family: QuranPage_340
+      fonts:
+        - asset: assets/otf_fonts/QCF4_340.otf
+    - family: QuranPage_341
+      fonts:
+        - asset: assets/otf_fonts/QCF4_341.otf
+    - family: QuranPage_342
+      fonts:
+        - asset: assets/otf_fonts/QCF4_342.otf
+    - family: QuranPage_343
+      fonts:
+        - asset: assets/otf_fonts/QCF4_343.otf
+    - family: QuranPage_344
+      fonts:
+        - asset: assets/otf_fonts/QCF4_344.otf
+    - family: QuranPage_345
+      fonts:
+        - asset: assets/otf_fonts/QCF4_345.otf
+    - family: QuranPage_346
+      fonts:
+        - asset: assets/otf_fonts/QCF4_346.otf
+    - family: QuranPage_347
+      fonts:
+        - asset: assets/otf_fonts/QCF4_347.otf
+    - family: QuranPage_348
+      fonts:
+        - asset: assets/otf_fonts/QCF4_348.otf
+    - family: QuranPage_349
+      fonts:
+        - asset: assets/otf_fonts/QCF4_349.otf
+    - family: QuranPage_350
+      fonts:
+        - asset: assets/otf_fonts/QCF4_350.otf
+    - family: QuranPage_351
+      fonts:
+        - asset: assets/otf_fonts/QCF4_351.otf
+    - family: QuranPage_352
+      fonts:
+        - asset: assets/otf_fonts/QCF4_352.otf
+    - family: QuranPage_353
+      fonts:
+        - asset: assets/otf_fonts/QCF4_353.otf
+    - family: QuranPage_354
+      fonts:
+        - asset: assets/otf_fonts/QCF4_354.otf
+    - family: QuranPage_355
+      fonts:
+        - asset: assets/otf_fonts/QCF4_355.otf
+    - family: QuranPage_356
+      fonts:
+        - asset: assets/otf_fonts/QCF4_356.otf
+    - family: QuranPage_357
+      fonts:
+        - asset: assets/otf_fonts/QCF4_357.otf
+    - family: QuranPage_358
+      fonts:
+        - asset: assets/otf_fonts/QCF4_358.otf
+    - family: QuranPage_359
+      fonts:
+        - asset: assets/otf_fonts/QCF4_359.otf
+    - family: QuranPage_360
+      fonts:
+        - asset: assets/otf_fonts/QCF4_360.otf
+    - family: QuranPage_361
+      fonts:
+        - asset: assets/otf_fonts/QCF4_361.otf
+    - family: QuranPage_362
+      fonts:
+        - asset: assets/otf_fonts/QCF4_362.otf
+    - family: QuranPage_363
+      fonts:
+        - asset: assets/otf_fonts/QCF4_363.otf
+    - family: QuranPage_364
+      fonts:
+        - asset: assets/otf_fonts/QCF4_364.otf
+    - family: QuranPage_365
+      fonts:
+        - asset: assets/otf_fonts/QCF4_365.otf
+    - family: QuranPage_366
+      fonts:
+        - asset: assets/otf_fonts/QCF4_366.otf
+    - family: QuranPage_367
+      fonts:
+        - asset: assets/otf_fonts/QCF4_367.otf
+    - family: QuranPage_368
+      fonts:
+        - asset: assets/otf_fonts/QCF4_368.otf
+    - family: QuranPage_369
+      fonts:
+        - asset: assets/otf_fonts/QCF4_369.otf
+    - family: QuranPage_370
+      fonts:
+        - asset: assets/otf_fonts/QCF4_370.otf
+    - family: QuranPage_371
+      fonts:
+        - asset: assets/otf_fonts/QCF4_371.otf
+    - family: QuranPage_372
+      fonts:
+        - asset: assets/otf_fonts/QCF4_372.otf
+    - family: QuranPage_373
+      fonts:
+        - asset: assets/otf_fonts/QCF4_373.otf
+    - family: QuranPage_374
+      fonts:
+        - asset: assets/otf_fonts/QCF4_374.otf
+    - family: QuranPage_375
+      fonts:
+        - asset: assets/otf_fonts/QCF4_375.otf
+    - family: QuranPage_376
+      fonts:
+        - asset: assets/otf_fonts/QCF4_376.otf
+    - family: QuranPage_377
+      fonts:
+        - asset: assets/otf_fonts/QCF4_377.otf
+    - family: QuranPage_378
+      fonts:
+        - asset: assets/otf_fonts/QCF4_378.otf
+    - family: QuranPage_379
+      fonts:
+        - asset: assets/otf_fonts/QCF4_379.otf
+    - family: QuranPage_380
+      fonts:
+        - asset: assets/otf_fonts/QCF4_380.otf
+    - family: QuranPage_381
+      fonts:
+        - asset: assets/otf_fonts/QCF4_381.otf
+    - family: QuranPage_382
+      fonts:
+        - asset: assets/otf_fonts/QCF4_382.otf
+    - family: QuranPage_383
+      fonts:
+        - asset: assets/otf_fonts/QCF4_383.otf
+    - family: QuranPage_384
+      fonts:
+        - asset: assets/otf_fonts/QCF4_384.otf
+    - family: QuranPage_385
+      fonts:
+        - asset: assets/otf_fonts/QCF4_385.otf
+    - family: QuranPage_386
+      fonts:
+        - asset: assets/otf_fonts/QCF4_386.otf
+    - family: QuranPage_387
+      fonts:
+        - asset: assets/otf_fonts/QCF4_387.otf
+    - family: QuranPage_388
+      fonts:
+        - asset: assets/otf_fonts/QCF4_388.otf
+    - family: QuranPage_389
+      fonts:
+        - asset: assets/otf_fonts/QCF4_389.otf
+    - family: QuranPage_390
+      fonts:
+        - asset: assets/otf_fonts/QCF4_390.otf
+    - family: QuranPage_391
+      fonts:
+        - asset: assets/otf_fonts/QCF4_391.otf
+    - family: QuranPage_392
+      fonts:
+        - asset: assets/otf_fonts/QCF4_392.otf
+    - family: QuranPage_393
+      fonts:
+        - asset: assets/otf_fonts/QCF4_393.otf
+    - family: QuranPage_394
+      fonts:
+        - asset: assets/otf_fonts/QCF4_394.otf
+    - family: QuranPage_395
+      fonts:
+        - asset: assets/otf_fonts/QCF4_395.otf
+    - family: QuranPage_396
+      fonts:
+        - asset: assets/otf_fonts/QCF4_396.otf
+    - family: QuranPage_397
+      fonts:
+        - asset: assets/otf_fonts/QCF4_397.otf
+    - family: QuranPage_398
+      fonts:
+        - asset: assets/otf_fonts/QCF4_398.otf
+    - family: QuranPage_399
+      fonts:
+        - asset: assets/otf_fonts/QCF4_399.otf
+    - family: QuranPage_400
+      fonts:
+        - asset: assets/otf_fonts/QCF4_400.otf
+    - family: QuranPage_401
+      fonts:
+        - asset: assets/otf_fonts/QCF4_401.otf
+    - family: QuranPage_402
+      fonts:
+        - asset: assets/otf_fonts/QCF4_402.otf
+    - family: QuranPage_403
+      fonts:
+        - asset: assets/otf_fonts/QCF4_403.otf
+    - family: QuranPage_404
+      fonts:
+        - asset: assets/otf_fonts/QCF4_404.otf
+    - family: QuranPage_405
+      fonts:
+        - asset: assets/otf_fonts/QCF4_405.otf
+    - family: QuranPage_406
+      fonts:
+        - asset: assets/otf_fonts/QCF4_406.otf
+    - family: QuranPage_407
+      fonts:
+        - asset: assets/otf_fonts/QCF4_407.otf
+    - family: QuranPage_408
+      fonts:
+        - asset: assets/otf_fonts/QCF4_408.otf
+    - family: QuranPage_409
+      fonts:
+        - asset: assets/otf_fonts/QCF4_409.otf
+    - family: QuranPage_410
+      fonts:
+        - asset: assets/otf_fonts/QCF4_410.otf
+    - family: QuranPage_411
+      fonts:
+        - asset: assets/otf_fonts/QCF4_411.otf
+    - family: QuranPage_412
+      fonts:
+        - asset: assets/otf_fonts/QCF4_412.otf
+    - family: QuranPage_413
+      fonts:
+        - asset: assets/otf_fonts/QCF4_413.otf
+    - family: QuranPage_414
+      fonts:
+        - asset: assets/otf_fonts/QCF4_414.otf
+    - family: QuranPage_415
+      fonts:
+        - asset: assets/otf_fonts/QCF4_415.otf
+    - family: QuranPage_416
+      fonts:
+        - asset: assets/otf_fonts/QCF4_416.otf
+    - family: QuranPage_417
+      fonts:
+        - asset: assets/otf_fonts/QCF4_417.otf
+    - family: QuranPage_418
+      fonts:
+        - asset: assets/otf_fonts/QCF4_418.otf
+    - family: QuranPage_419
+      fonts:
+        - asset: assets/otf_fonts/QCF4_419.otf
+    - family: QuranPage_420
+      fonts:
+        - asset: assets/otf_fonts/QCF4_420.otf
+    - family: QuranPage_421
+      fonts:
+        - asset: assets/otf_fonts/QCF4_421.otf
+    - family: QuranPage_422
+      fonts:
+        - asset: assets/otf_fonts/QCF4_422.otf
+    - family: QuranPage_423
+      fonts:
+        - asset: assets/otf_fonts/QCF4_423.otf
+    - family: QuranPage_424
+      fonts:
+        - asset: assets/otf_fonts/QCF4_424.otf
+    - family: QuranPage_425
+      fonts:
+        - asset: assets/otf_fonts/QCF4_425.otf
+    - family: QuranPage_426
+      fonts:
+        - asset: assets/otf_fonts/QCF4_426.otf
+    - family: QuranPage_427
+      fonts:
+        - asset: assets/otf_fonts/QCF4_427.otf
+    - family: QuranPage_428
+      fonts:
+        - asset: assets/otf_fonts/QCF4_428.otf
+    - family: QuranPage_429
+      fonts:
+        - asset: assets/otf_fonts/QCF4_429.otf
+    - family: QuranPage_430
+      fonts:
+        - asset: assets/otf_fonts/QCF4_430.otf
+    - family: QuranPage_431
+      fonts:
+        - asset: assets/otf_fonts/QCF4_431.otf
+    - family: QuranPage_432
+      fonts:
+        - asset: assets/otf_fonts/QCF4_432.otf
+    - family: QuranPage_433
+      fonts:
+        - asset: assets/otf_fonts/QCF4_433.otf
+    - family: QuranPage_434
+      fonts:
+        - asset: assets/otf_fonts/QCF4_434.otf
+    - family: QuranPage_435
+      fonts:
+        - asset: assets/otf_fonts/QCF4_435.otf
+    - family: QuranPage_436
+      fonts:
+        - asset: assets/otf_fonts/QCF4_436.otf
+    - family: QuranPage_437
+      fonts:
+        - asset: assets/otf_fonts/QCF4_437.otf
+    - family: QuranPage_438
+      fonts:
+        - asset: assets/otf_fonts/QCF4_438.otf
+    - family: QuranPage_439
+      fonts:
+        - asset: assets/otf_fonts/QCF4_439.otf
+    - family: QuranPage_440
+      fonts:
+        - asset: assets/otf_fonts/QCF4_440.otf
+    - family: QuranPage_441
+      fonts:
+        - asset: assets/otf_fonts/QCF4_441.otf
+    - family: QuranPage_442
+      fonts:
+        - asset: assets/otf_fonts/QCF4_442.otf
+    - family: QuranPage_443
+      fonts:
+        - asset: assets/otf_fonts/QCF4_443.otf
+    - family: QuranPage_444
+      fonts:
+        - asset: assets/otf_fonts/QCF4_444.otf
+    - family: QuranPage_445
+      fonts:
+        - asset: assets/otf_fonts/QCF4_445.otf
+    - family: QuranPage_446
+      fonts:
+        - asset: assets/otf_fonts/QCF4_446.otf
+    - family: QuranPage_447
+      fonts:
+        - asset: assets/otf_fonts/QCF4_447.otf
+    - family: QuranPage_448
+      fonts:
+        - asset: assets/otf_fonts/QCF4_448.otf
+    - family: QuranPage_449
+      fonts:
+        - asset: assets/otf_fonts/QCF4_449.otf
+    - family: QuranPage_450
+      fonts:
+        - asset: assets/otf_fonts/QCF4_450.otf
+    - family: QuranPage_451
+      fonts:
+        - asset: assets/otf_fonts/QCF4_451.otf
+    - family: QuranPage_452
+      fonts:
+        - asset: assets/otf_fonts/QCF4_452.otf
+    - family: QuranPage_453
+      fonts:
+        - asset: assets/otf_fonts/QCF4_453.otf
+    - family: QuranPage_454
+      fonts:
+        - asset: assets/otf_fonts/QCF4_454.otf
+    - family: QuranPage_455
+      fonts:
+        - asset: assets/otf_fonts/QCF4_455.otf
+    - family: QuranPage_456
+      fonts:
+        - asset: assets/otf_fonts/QCF4_456.otf
+    - family: QuranPage_457
+      fonts:
+        - asset: assets/otf_fonts/QCF4_457.otf
+    - family: QuranPage_458
+      fonts:
+        - asset: assets/otf_fonts/QCF4_458.otf
+    - family: QuranPage_459
+      fonts:
+        - asset: assets/otf_fonts/QCF4_459.otf
+    - family: QuranPage_460
+      fonts:
+        - asset: assets/otf_fonts/QCF4_460.otf
+    - family: QuranPage_461
+      fonts:
+        - asset: assets/otf_fonts/QCF4_461.otf
+    - family: QuranPage_462
+      fonts:
+        - asset: assets/otf_fonts/QCF4_462.otf
+    - family: QuranPage_463
+      fonts:
+        - asset: assets/otf_fonts/QCF4_463.otf
+    - family: QuranPage_464
+      fonts:
+        - asset: assets/otf_fonts/QCF4_464.otf
+    - family: QuranPage_465
+      fonts:
+        - asset: assets/otf_fonts/QCF4_465.otf
+    - family: QuranPage_466
+      fonts:
+        - asset: assets/otf_fonts/QCF4_466.otf
+    - family: QuranPage_467
+      fonts:
+        - asset: assets/otf_fonts/QCF4_467.otf
+    - family: QuranPage_468
+      fonts:
+        - asset: assets/otf_fonts/QCF4_468.otf
+    - family: QuranPage_469
+      fonts:
+        - asset: assets/otf_fonts/QCF4_469.otf
+    - family: QuranPage_470
+      fonts:
+        - asset: assets/otf_fonts/QCF4_470.otf
+    - family: QuranPage_471
+      fonts:
+        - asset: assets/otf_fonts/QCF4_471.otf
+    - family: QuranPage_472
+      fonts:
+        - asset: assets/otf_fonts/QCF4_472.otf
+    - family: QuranPage_473
+      fonts:
+        - asset: assets/otf_fonts/QCF4_473.otf
+    - family: QuranPage_474
+      fonts:
+        - asset: assets/otf_fonts/QCF4_474.otf
+    - family: QuranPage_475
+      fonts:
+        - asset: assets/otf_fonts/QCF4_475.otf
+    - family: QuranPage_476
+      fonts:
+        - asset: assets/otf_fonts/QCF4_476.otf
+    - family: QuranPage_477
+      fonts:
+        - asset: assets/otf_fonts/QCF4_477.otf
+    - family: QuranPage_478
+      fonts:
+        - asset: assets/otf_fonts/QCF4_478.otf
+    - family: QuranPage_479
+      fonts:
+        - asset: assets/otf_fonts/QCF4_479.otf
+    - family: QuranPage_480
+      fonts:
+        - asset: assets/otf_fonts/QCF4_480.otf
+    - family: QuranPage_481
+      fonts:
+        - asset: assets/otf_fonts/QCF4_481.otf
+    - family: QuranPage_482
+      fonts:
+        - asset: assets/otf_fonts/QCF4_482.otf
+    - family: QuranPage_483
+      fonts:
+        - asset: assets/otf_fonts/QCF4_483.otf
+    - family: QuranPage_484
+      fonts:
+        - asset: assets/otf_fonts/QCF4_484.otf
+    - family: QuranPage_485
+      fonts:
+        - asset: assets/otf_fonts/QCF4_485.otf
+    - family: QuranPage_486
+      fonts:
+        - asset: assets/otf_fonts/QCF4_486.otf
+    - family: QuranPage_487
+      fonts:
+        - asset: assets/otf_fonts/QCF4_487.otf
+    - family: QuranPage_488
+      fonts:
+        - asset: assets/otf_fonts/QCF4_488.otf
+    - family: QuranPage_489
+      fonts:
+        - asset: assets/otf_fonts/QCF4_489.otf
+    - family: QuranPage_490
+      fonts:
+        - asset: assets/otf_fonts/QCF4_490.otf
+    - family: QuranPage_491
+      fonts:
+        - asset: assets/otf_fonts/QCF4_491.otf
+    - family: QuranPage_492
+      fonts:
+        - asset: assets/otf_fonts/QCF4_492.otf
+    - family: QuranPage_493
+      fonts:
+        - asset: assets/otf_fonts/QCF4_493.otf
+    - family: QuranPage_494
+      fonts:
+        - asset: assets/otf_fonts/QCF4_494.otf
+    - family: QuranPage_495
+      fonts:
+        - asset: assets/otf_fonts/QCF4_495.otf
+    - family: QuranPage_496
+      fonts:
+        - asset: assets/otf_fonts/QCF4_496.otf
+    - family: QuranPage_497
+      fonts:
+        - asset: assets/otf_fonts/QCF4_497.otf
+    - family: QuranPage_498
+      fonts:
+        - asset: assets/otf_fonts/QCF4_498.otf
+    - family: QuranPage_499
+      fonts:
+        - asset: assets/otf_fonts/QCF4_499.otf
+    - family: QuranPage_500
+      fonts:
+        - asset: assets/otf_fonts/QCF4_500.otf
+    - family: QuranPage_501
+      fonts:
+        - asset: assets/otf_fonts/QCF4_501.otf
+    - family: QuranPage_502
+      fonts:
+        - asset: assets/otf_fonts/QCF4_502.otf
+    - family: QuranPage_503
+      fonts:
+        - asset: assets/otf_fonts/QCF4_503.otf
+    - family: QuranPage_504
+      fonts:
+        - asset: assets/otf_fonts/QCF4_504.otf
+    - family: QuranPage_505
+      fonts:
+        - asset: assets/otf_fonts/QCF4_505.otf
+    - family: QuranPage_506
+      fonts:
+        - asset: assets/otf_fonts/QCF4_506.otf
+    - family: QuranPage_507
+      fonts:
+        - asset: assets/otf_fonts/QCF4_507.otf
+    - family: QuranPage_508
+      fonts:
+        - asset: assets/otf_fonts/QCF4_508.otf
+    - family: QuranPage_509
+      fonts:
+        - asset: assets/otf_fonts/QCF4_509.otf
+    - family: QuranPage_510
+      fonts:
+        - asset: assets/otf_fonts/QCF4_510.otf
+    - family: QuranPage_511
+      fonts:
+        - asset: assets/otf_fonts/QCF4_511.otf
+    - family: QuranPage_512
+      fonts:
+        - asset: assets/otf_fonts/QCF4_512.otf
+    - family: QuranPage_513
+      fonts:
+        - asset: assets/otf_fonts/QCF4_513.otf
+    - family: QuranPage_514
+      fonts:
+        - asset: assets/otf_fonts/QCF4_514.otf
+    - family: QuranPage_515
+      fonts:
+        - asset: assets/otf_fonts/QCF4_515.otf
+    - family: QuranPage_516
+      fonts:
+        - asset: assets/otf_fonts/QCF4_516.otf
+    - family: QuranPage_517
+      fonts:
+        - asset: assets/otf_fonts/QCF4_517.otf
+    - family: QuranPage_518
+      fonts:
+        - asset: assets/otf_fonts/QCF4_518.otf
+    - family: QuranPage_519
+      fonts:
+        - asset: assets/otf_fonts/QCF4_519.otf
+    - family: QuranPage_520
+      fonts:
+        - asset: assets/otf_fonts/QCF4_520.otf
+    - family: QuranPage_521
+      fonts:
+        - asset: assets/otf_fonts/QCF4_521.otf
+    - family: QuranPage_522
+      fonts:
+        - asset: assets/otf_fonts/QCF4_522.otf
+    - family: QuranPage_523
+      fonts:
+        - asset: assets/otf_fonts/QCF4_523.otf
+    - family: QuranPage_524
+      fonts:
+        - asset: assets/otf_fonts/QCF4_524.otf
+    - family: QuranPage_525
+      fonts:
+        - asset: assets/otf_fonts/QCF4_525.otf
+    - family: QuranPage_526
+      fonts:
+        - asset: assets/otf_fonts/QCF4_526.otf
+    - family: QuranPage_527
+      fonts:
+        - asset: assets/otf_fonts/QCF4_527.otf
+    - family: QuranPage_528
+      fonts:
+        - asset: assets/otf_fonts/QCF4_528.otf
+    - family: QuranPage_529
+      fonts:
+        - asset: assets/otf_fonts/QCF4_529.otf
+    - family: QuranPage_530
+      fonts:
+        - asset: assets/otf_fonts/QCF4_530.otf
+    - family: QuranPage_531
+      fonts:
+        - asset: assets/otf_fonts/QCF4_531.otf
+    - family: QuranPage_532
+      fonts:
+        - asset: assets/otf_fonts/QCF4_532.otf
+    - family: QuranPage_533
+      fonts:
+        - asset: assets/otf_fonts/QCF4_533.otf
+    - family: QuranPage_534
+      fonts:
+        - asset: assets/otf_fonts/QCF4_534.otf
+    - family: QuranPage_535
+      fonts:
+        - asset: assets/otf_fonts/QCF4_535.otf
+    - family: QuranPage_536
+      fonts:
+        - asset: assets/otf_fonts/QCF4_536.otf
+    - family: QuranPage_537
+      fonts:
+        - asset: assets/otf_fonts/QCF4_537.otf
+    - family: QuranPage_538
+      fonts:
+        - asset: assets/otf_fonts/QCF4_538.otf
+    - family: QuranPage_539
+      fonts:
+        - asset: assets/otf_fonts/QCF4_539.otf
+    - family: QuranPage_540
+      fonts:
+        - asset: assets/otf_fonts/QCF4_540.otf
+    - family: QuranPage_541
+      fonts:
+        - asset: assets/otf_fonts/QCF4_541.otf
+    - family: QuranPage_542
+      fonts:
+        - asset: assets/otf_fonts/QCF4_542.otf
+    - family: QuranPage_543
+      fonts:
+        - asset: assets/otf_fonts/QCF4_543.otf
+    - family: QuranPage_544
+      fonts:
+        - asset: assets/otf_fonts/QCF4_544.otf
+    - family: QuranPage_545
+      fonts:
+        - asset: assets/otf_fonts/QCF4_545.otf
+    - family: QuranPage_546
+      fonts:
+        - asset: assets/otf_fonts/QCF4_546.otf
+    - family: QuranPage_547
+      fonts:
+        - asset: assets/otf_fonts/QCF4_547.otf
+    - family: QuranPage_548
+      fonts:
+        - asset: assets/otf_fonts/QCF4_548.otf
+    - family: QuranPage_549
+      fonts:
+        - asset: assets/otf_fonts/QCF4_549.otf
+    - family: QuranPage_550
+      fonts:
+        - asset: assets/otf_fonts/QCF4_550.otf
+    - family: QuranPage_551
+      fonts:
+        - asset: assets/otf_fonts/QCF4_551.otf
+    - family: QuranPage_552
+      fonts:
+        - asset: assets/otf_fonts/QCF4_552.otf
+    - family: QuranPage_553
+      fonts:
+        - asset: assets/otf_fonts/QCF4_553.otf
+    - family: QuranPage_554
+      fonts:
+        - asset: assets/otf_fonts/QCF4_554.otf
+    - family: QuranPage_555
+      fonts:
+        - asset: assets/otf_fonts/QCF4_555.otf
+    - family: QuranPage_556
+      fonts:
+        - asset: assets/otf_fonts/QCF4_556.otf
+    - family: QuranPage_557
+      fonts:
+        - asset: assets/otf_fonts/QCF4_557.otf
+    - family: QuranPage_558
+      fonts:
+        - asset: assets/otf_fonts/QCF4_558.otf
+    - family: QuranPage_559
+      fonts:
+        - asset: assets/otf_fonts/QCF4_559.otf
+    - family: QuranPage_560
+      fonts:
+        - asset: assets/otf_fonts/QCF4_560.otf
+    - family: QuranPage_561
+      fonts:
+        - asset: assets/otf_fonts/QCF4_561.otf
+    - family: QuranPage_562
+      fonts:
+        - asset: assets/otf_fonts/QCF4_562.otf
+    - family: QuranPage_563
+      fonts:
+        - asset: assets/otf_fonts/QCF4_563.otf
+    - family: QuranPage_564
+      fonts:
+        - asset: assets/otf_fonts/QCF4_564.otf
+    - family: QuranPage_565
+      fonts:
+        - asset: assets/otf_fonts/QCF4_565.otf
+    - family: QuranPage_566
+      fonts:
+        - asset: assets/otf_fonts/QCF4_566.otf
+    - family: QuranPage_567
+      fonts:
+        - asset: assets/otf_fonts/QCF4_567.otf
+    - family: QuranPage_568
+      fonts:
+        - asset: assets/otf_fonts/QCF4_568.otf
+    - family: QuranPage_569
+      fonts:
+        - asset: assets/otf_fonts/QCF4_569.otf
+    - family: QuranPage_570
+      fonts:
+        - asset: assets/otf_fonts/QCF4_570.otf
+    - family: QuranPage_571
+      fonts:
+        - asset: assets/otf_fonts/QCF4_571.otf
+    - family: QuranPage_572
+      fonts:
+        - asset: assets/otf_fonts/QCF4_572.otf
+    - family: QuranPage_573
+      fonts:
+        - asset: assets/otf_fonts/QCF4_573.otf
+    - family: QuranPage_574
+      fonts:
+        - asset: assets/otf_fonts/QCF4_574.otf
+    - family: QuranPage_575
+      fonts:
+        - asset: assets/otf_fonts/QCF4_575.otf
+    - family: QuranPage_576
+      fonts:
+        - asset: assets/otf_fonts/QCF4_576.otf
+    - family: QuranPage_577
+      fonts:
+        - asset: assets/otf_fonts/QCF4_577.otf
+    - family: QuranPage_578
+      fonts:
+        - asset: assets/otf_fonts/QCF4_578.otf
+    - family: QuranPage_579
+      fonts:
+        - asset: assets/otf_fonts/QCF4_579.otf
+    - family: QuranPage_580
+      fonts:
+        - asset: assets/otf_fonts/QCF4_580.otf
+    - family: QuranPage_581
+      fonts:
+        - asset: assets/otf_fonts/QCF4_581.otf
+    - family: QuranPage_582
+      fonts:
+        - asset: assets/otf_fonts/QCF4_582.otf
+    - family: QuranPage_583
+      fonts:
+        - asset: assets/otf_fonts/QCF4_583.otf
+    - family: QuranPage_584
+      fonts:
+        - asset: assets/otf_fonts/QCF4_584.otf
+    - family: QuranPage_585
+      fonts:
+        - asset: assets/otf_fonts/QCF4_585.otf
+    - family: QuranPage_586
+      fonts:
+        - asset: assets/otf_fonts/QCF4_586.otf
+    - family: QuranPage_587
+      fonts:
+        - asset: assets/otf_fonts/QCF4_587.otf
+    - family: QuranPage_588
+      fonts:
+        - asset: assets/otf_fonts/QCF4_588.otf
+    - family: QuranPage_589
+      fonts:
+        - asset: assets/otf_fonts/QCF4_589.otf
+    - family: QuranPage_590
+      fonts:
+        - asset: assets/otf_fonts/QCF4_590.otf
+    - family: QuranPage_591
+      fonts:
+        - asset: assets/otf_fonts/QCF4_591.otf
+    - family: QuranPage_592
+      fonts:
+        - asset: assets/otf_fonts/QCF4_592.otf
+    - family: QuranPage_593
+      fonts:
+        - asset: assets/otf_fonts/QCF4_593.otf
+    - family: QuranPage_594
+      fonts:
+        - asset: assets/otf_fonts/QCF4_594.otf
+    - family: QuranPage_595
+      fonts:
+        - asset: assets/otf_fonts/QCF4_595.otf
+    - family: QuranPage_596
+      fonts:
+        - asset: assets/otf_fonts/QCF4_596.otf
+    - family: QuranPage_597
+      fonts:
+        - asset: assets/otf_fonts/QCF4_597.otf
+    - family: QuranPage_598
+      fonts:
+        - asset: assets/otf_fonts/QCF4_598.otf
+    - family: QuranPage_599
+      fonts:
+        - asset: assets/otf_fonts/QCF4_599.otf
+    - family: QuranPage_600
+      fonts:
+        - asset: assets/otf_fonts/QCF4_600.otf
+    - family: QuranPage_601
+      fonts:
+        - asset: assets/otf_fonts/QCF4_601.otf
+    - family: QuranPage_602
+      fonts:
+        - asset: assets/otf_fonts/QCF4_602.otf
+    - family: QuranPage_603
+      fonts:
+        - asset: assets/otf_fonts/QCF4_603.otf
+    - family: QuranPage_604
+      fonts:
+        - asset: assets/otf_fonts/QCF4_604.otf 
+ # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.otf
+  #       - asset: fonts/Schyler-Italic.otf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.otf
+  #       - asset: fonts/TrajanPro_Bold.otf
+  #         weight: 700
+  #
+  # For details regarding fonts in packages, see
+  # https://flutter.dev/to/font-from-package

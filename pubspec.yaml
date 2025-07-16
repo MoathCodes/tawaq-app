@@ -69,6 +69,8 @@ dependencies:
   drift_flutter: ^0.2.4
   path_provider: ^2.1.5
   flutter_screenutil: ^5.9.3
+  smooth_scroll_multiplatform: 
+    path: packages/dyn_mouse_scroll
 
 
 dev_dependencies:

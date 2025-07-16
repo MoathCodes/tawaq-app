@@ -50,7 +50,14 @@ PrayerDatabase prayerDatabase(Ref ref) {
 class PrayerCompletions extends Table {
   DateTimeColumn get completionTime => dateTime()();
   IntColumn get id => integer().autoIncrement()();
+  // Add useful indexes to speed up date-range and status queries.
+  @override
+  List<Set<Column>> get indexes => [
+        {completionTime},
+        {status, completionTime},
+      ];
   IntColumn get prayer => intEnum<Prayer>()();
+
   @override
   Set<Column> get primaryKey => {id};
 
@@ -71,6 +78,42 @@ class PrayerDatabase extends _$PrayerDatabase {
       final query = managers.prayerCompletions
           .filter((f) => f.completionTime.isBetween(from, to));
       return await query.count();
+    } catch (e, stackTrace) {
+      _log.handle(e, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<Map<CompletionStatus, int>> countAllPrayerStatusOnDate(
+      DateTime from, DateTime to) async {
+    try {
+      // Initialize result map with zero counts for all statuses so callers
+      // can rely on every key being present.
+      final Map<CompletionStatus, int> counts = {
+        for (final s in CompletionStatus.values) s: 0,
+      };
+
+      // Use Drift's fluent API instead of raw SQL. We create a SELECT query
+      // that only fetches the `status` column and an aggregated COUNT(*),
+      // filtered by the requested date interval, and grouped by status.
+
+      final statusColumn = prayerCompletions.status;
+      final countExpr = statusColumn.count();
+
+      final rows = await (selectOnly(prayerCompletions)
+            ..addColumns([statusColumn, countExpr])
+            ..where(prayerCompletions.completionTime.isBetweenValues(from, to))
+            ..groupBy([statusColumn]))
+          .get();
+
+      for (final row in rows) {
+        final int statusIndex = row.read(statusColumn)!;
+        final int total = row.read(countExpr)!;
+        final status = CompletionStatus.values[statusIndex];
+        counts[status] = total;
+      }
+
+      return counts;
     } catch (e, stackTrace) {
       _log.handle(e, stackTrace);
       rethrow;

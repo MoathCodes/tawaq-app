@@ -35,31 +35,40 @@ class PrayerCard extends _$PrayerCard {
       return const Stream.empty();
     }
 
-    final formatter = ref.watch(
-      timeFormatterProvider(is24Hours: settings.is24Hours),
-    );
+    final formatter = ref.watch(timeFormatterProvider);
 
     return Stream.periodic(const Duration(seconds: 1), (_) {
-      final now = DateTime.now().toLocation(settings.location);
+      try {
+        final now = DateTime.now().toLocation(settings.location);
 
-      _ensureCache(settings, now, service, log);
+        _ensureCache(settings, now, service, log);
 
-      final decision = computePrayerCardDecision(
-        currentTime: now,
-        location: settings.location,
-        todaysPrayerTimes: _cache!.todaysTimes,
-        yesterdaysPrayerTimes: _cache!.yesterdaysTimes,
-        todaysSunnahTimes: _cache!.todaysSunnah,
-        yesterdaysSunnahTimes: _cache!.yesterdaysSunnah,
-      );
+        if (_cache == null) {
+          // Shouldn\'t normally happen, but be defensive.
+          return PrayerCardInfo.empty();
+        }
 
-      return _generateCard(
-        decision,
-        settings.location,
-        now,
-        formatter,
-        settings,
-      );
+        final decision = computePrayerCardDecision(
+          currentTime: now,
+          location: settings.location,
+          todaysPrayerTimes: _cache!.todaysTimes,
+          yesterdaysPrayerTimes: _cache!.yesterdaysTimes,
+          todaysSunnahTimes: _cache!.todaysSunnah,
+          yesterdaysSunnahTimes: _cache!.yesterdaysSunnah,
+        );
+
+        return _generateCard(
+          decision,
+          settings.location,
+          now,
+          formatter,
+          settings,
+        );
+      } catch (e, stackTrace) {
+        log.handle(
+            e, stackTrace, '$_prayerCardLogPrefix Error producing prayer card');
+        return PrayerCardInfo.empty();
+      }
     });
   }
 

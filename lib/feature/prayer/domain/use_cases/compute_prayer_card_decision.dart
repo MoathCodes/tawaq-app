@@ -73,7 +73,7 @@ PrayerCardDecision computePrayerCardDecision({
       referenceTime:
           effectiveSunnahTimes.lastThirdOfTheNight.toLocation(location),
       prayer: Prayer.ishaBefore,
-      isCountdown: false,
+      isCountdown: true,
     );
   }
 

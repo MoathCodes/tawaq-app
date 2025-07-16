@@ -1,0 +1,32 @@
+name: example
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  mushaf_reader:
+    path: ../
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # fonts:
+  #   - family: QCF4_BSML
+  #     fonts:
+  #       - asset: packages/mushaf_reader/assets/otf_fonts/QCF4_BSML.otf
+  #   - family: QuranPage_001           # add more as you test
+  #     fonts:
+  #       - asset: packages/mushaf_reader/assets/otf_fonts/QCF4_001.otf
+    # - family: QuranPage_002
+    #   fonts:
+    #     - asset: packages/mushaf_reader/assets/quran_fonts/QCF4_002.woff

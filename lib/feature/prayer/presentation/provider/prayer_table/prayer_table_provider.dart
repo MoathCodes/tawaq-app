@@ -37,25 +37,35 @@ class PrayerTable extends _$PrayerTable {
     log.info("$_prayerTableLogPrefix Stream started (auto-dispose)");
 
     while (true) {
-      final now = DateTime.now().toLocation(settings.location);
+      try {
+        final now = DateTime.now().toLocation(settings.location);
 
-      _ensureCache(now, settings, service, log);
+        _ensureCache(now, settings, service, log);
 
-      final formatter = ref.watch(
-        timeFormatterProvider(is24Hours: settings.is24Hours),
-      );
+        if (_cache == null) {
+          yield [];
+          await Future.delayed(const Duration(minutes: 1));
+          continue;
+        }
 
-      final rows = _buildPrayerTableRows(
-        formatter,
-        _cache!.today,
-        _cache!.todaySunnah,
-        now,
-        settings,
-        settings.location,
-        l10n,
-      );
+        final formatter = ref.watch(timeFormatterProvider);
 
-      yield rows;
+        final rows = _buildPrayerTableRows(
+          formatter,
+          _cache!.today,
+          _cache!.todaySunnah,
+          now,
+          settings,
+          settings.location,
+          l10n,
+        );
+
+        yield rows;
+      } catch (e, stackTrace) {
+        log.handle(
+            e, stackTrace, '$_prayerTableLogPrefix Error producing table');
+        yield [];
+      }
 
       await Future.delayed(const Duration(minutes: 1));
     }
