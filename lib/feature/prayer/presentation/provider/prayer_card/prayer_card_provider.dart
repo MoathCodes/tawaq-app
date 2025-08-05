@@ -23,7 +23,7 @@ class PrayerCard extends _$PrayerCard {
   PrayerSettings? _cachedSettings;
 
   @override
-  Stream<PrayerCardInfo> build() {
+  Stream<PrayerCardInfo> build() async* {
     final log = ref.read(talkerNotifierProvider);
     final service = ref.read(prayerServiceProvider);
 
@@ -32,20 +32,20 @@ class PrayerCard extends _$PrayerCard {
 
     if (settings == null) {
       log.debug("$_prayerCardLogPrefix Settings unavailable – empty stream");
-      return const Stream.empty();
+      yield PrayerCardInfo.empty();
     }
 
     final formatter = ref.watch(timeFormatterProvider);
 
-    return Stream.periodic(const Duration(seconds: 1), (_) {
+    while (true) {
       try {
-        final now = DateTime.now().toLocation(settings.location);
+        final now = DateTime.now().toLocation(settings!.location);
 
         _ensureCache(settings, now, service, log);
 
         if (_cache == null) {
           // Shouldn\'t normally happen, but be defensive.
-          return PrayerCardInfo.empty();
+          yield PrayerCardInfo.empty();
         }
 
         final decision = computePrayerCardDecision(
@@ -57,19 +57,20 @@ class PrayerCard extends _$PrayerCard {
           yesterdaysSunnahTimes: _cache!.yesterdaysSunnah,
         );
 
-        return _generateCard(
+        yield _generateCard(
           decision,
           settings.location,
           now,
           formatter,
           settings,
         );
+        await Future.delayed(const Duration(seconds: 1));
       } catch (e, stackTrace) {
         log.handle(
             e, stackTrace, '$_prayerCardLogPrefix Error producing prayer card');
-        return PrayerCardInfo.empty();
+        yield PrayerCardInfo.empty();
       }
-    });
+    }
   }
 
   void _ensureCache(
@@ -136,8 +137,8 @@ class _PrayerCache {
   /// Midnight of the day the cache was built (in the active location).
   final DateTime anchorDate;
 
-  final PrayerTimes todaysTimes;
-  final PrayerTimes yesterdaysTimes;
+  final PrayerTimesData todaysTimes;
+  final PrayerTimesData yesterdaysTimes;
   final SunnahTimes todaysSunnah;
   final SunnahTimes yesterdaysSunnah;
   const _PrayerCache({

@@ -1,17 +1,17 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class MouseClick extends StatelessWidget {
   final Widget child;
-  final VoidCallback onClick;
-  final void Function(PointerHoverEvent)? onHover;
-  final void Function(PointerExitEvent)? onExit;
+  final VoidCallback? onClick;
+  final void Function(PointerHoverEvent event)? onHover;
+  final void Function(PointerExitEvent event)? onExit;
   final SystemMouseCursor cursor;
   final bool? disabled;
   const MouseClick(
       {super.key,
       required this.child,
-      required this.onClick,
+      this.onClick,
       this.onHover,
       this.onExit,
       this.cursor = SystemMouseCursors.click,
@@ -20,7 +20,7 @@ class MouseClick extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
-      cursor: cursor,
+      cursor: onClick == null || disabled == true ? MouseCursor.defer : cursor,
       onHover: onHover,
       onExit: onExit,
       child: GestureDetector(

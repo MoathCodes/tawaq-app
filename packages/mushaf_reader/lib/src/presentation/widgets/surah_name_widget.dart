@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:mushaf_reader/core/font_manager.dart';
 
 class SurahNameWidget extends StatelessWidget {

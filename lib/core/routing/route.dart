@@ -1,5 +1,5 @@
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 part 'route.freezed.dart';
 

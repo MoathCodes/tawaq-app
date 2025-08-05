@@ -64,3 +64,6 @@ coverage/
 # Keep or ignore generated files ------------------------------------------------
 *.g.dart
 *.freezed.dart
+
+# FVM Version Cache
+.fvm/

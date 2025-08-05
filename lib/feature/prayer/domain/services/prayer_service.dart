@@ -1,14 +1,13 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
-import 'package:hasanat/core/utils/calculation_methods_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hijri_date_time/hijri_date_time.dart';
+import 'package:hijriyah_indonesia/hijriyah_indonesia.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:timezone/timezone.dart';
@@ -109,7 +108,7 @@ class PrayerService {
     return _repo.countPrayerStatusOnDate(status, fromDate, toDate);
   }
 
-  Prayer currentPrayer(PrayerTimes prayerTime) {
+  Prayer currentPrayer(PrayerTimesData prayerTime) {
     final date = _currentTime();
     return prayerTime.currentPrayer(date: date);
   }
@@ -130,30 +129,32 @@ class PrayerService {
     return _repo.getSingleCompletion(id);
   }
 
-  SunnahTimes getSunnahTime(PrayerTimes prayerTimes) {
+  SunnahTimes getSunnahTime(PrayerTimesData prayerTimes) {
     return _repo.getSunnahTime(prayerTimes);
   }
 
-  PrayerTimes getTodaysPrayerTimes([DateTime? date]) {
+  PrayerTimesData getTodaysPrayerTimes([DateTime? date]) {
     const logPrefix = "[PrayerService.getTodaysPrayerTimes] ";
     final activeDate = date ?? _currentTime();
+    final params = _settings.method.parameters
+        .copyWith(adjustments: _settings.adhanAdjustments);
+    PrayerTimesData prayerTimes =
+        _repo.getPrayerTimes(activeDate, _settings.coordinates, params);
 
-    final prayerTimes = _repo.getPrayerTimes(
-        activeDate, _settings.coordinates, _settings.method.parameters);
-
-    final isRamadan = HijriDateTime.now().month == 9;
+    final isRamadan = Hijriyah.now().hMonth == 9;
 
     if (isRamadan && _settings.method == CalculationMethod.ummAlQura) {
       _log.debug("$logPrefix Method is Umm Al-Qura, and month is Ramadan, "
           "adjusting prayer times accordingly");
-      prayerTimes.isha =
-          prayerTimes.isha.copyWith(minute: prayerTimes.isha.minute + 30);
+      prayerTimes = prayerTimes.copyWith(
+        isha: prayerTimes.isha.add(const Duration(minutes: 30)),
+      );
     }
 
     return prayerTimes;
   }
 
-  Prayer nextPrayerByDate(PrayerTimes prayerTime, [DateTime? date]) {
+  Prayer nextPrayerByDate(PrayerTimesData prayerTime, [DateTime? date]) {
     final activeDate = date ?? _currentTime();
     return prayerTime.nextPrayer(date: activeDate);
   }

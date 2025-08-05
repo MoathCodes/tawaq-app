@@ -51,7 +51,7 @@ extension MethodParamsExtension on CalculationMethod {
   }
 }
 
-extension PrayerLocaleExtension on PrayerTimes {
+extension PrayerLocaleExtension on PrayerTimesData {
   DateTime getCurrentPrayerDateTime(Location location) {
     return switch (
         currentPrayer(date: TZDateTime.from(DateTime.now(), location))) {
@@ -99,7 +99,9 @@ extension PrayerLocaleNameExtension on Prayer {
     return switch (this) {
       Prayer.fajr => locale.fajr,
       Prayer.sunrise => locale.sunrise,
-      Prayer.dhuhr => locale.dhuhr,
+      Prayer.dhuhr => DateTime.now().toLocal().weekday == DateTime.friday
+          ? locale.jumuah
+          : locale.dhuhr,
       Prayer.asr => locale.asr,
       Prayer.maghrib => locale.maghrib,
       Prayer.isha => locale.isha,

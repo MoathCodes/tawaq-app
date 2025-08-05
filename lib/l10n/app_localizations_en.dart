@@ -141,6 +141,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get jamaahRate => 'Jamaah Rate';
 
   @override
+  String get jumuah => 'Jumuah';
+
+  @override
   String get lastThirdOfTheNight => 'Last Third Of The Night';
 
   @override

@@ -31,3 +31,6 @@ migrate_working_dir/
 build/
 
 cursor_find_logic_for_quranic_font_chan.md
+
+# FVM Version Cache
+.fvm/

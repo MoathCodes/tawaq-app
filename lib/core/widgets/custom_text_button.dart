@@ -1,5 +1,5 @@
+import 'package:flutter/material.dart';
 import 'package:hasanat/core/widgets/mouse_click.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class CustomTextButton extends StatefulWidget {
   final String label;
@@ -11,7 +11,7 @@ class CustomTextButton extends StatefulWidget {
       required this.label,
       this.enabled,
       required this.onPressed,
-      this.duration = const Duration(milliseconds: 200)});
+      this.duration = const Duration(milliseconds: 100)});
 
   @override
   _CustomTextButtonState createState() => _CustomTextButtonState();
@@ -32,16 +32,15 @@ class _CustomTextButtonState extends State<CustomTextButton> {
       }),
       child: AnimatedScale(
         duration: widget.duration,
-        scale: _isHovered ? 1.05 : 1.0,
+        scale: _isHovered ? 1.2 : 1.0,
         curve: Curves.easeInOut,
         child: TextButton(
-          onPressed: widget.onPressed,
-          enabled: widget.enabled,
+          onPressed: widget.enabled ?? false ? null : widget.onPressed,
           child: Text(
             widget.label,
             style: TextStyle(
               color: widget.enabled == false
-                  ? colorScheme.muted
+                  ? colorScheme.shadow
                   : colorScheme.primary,
               shadows: _isHovered
                   ? [
@@ -52,7 +51,7 @@ class _CustomTextButtonState extends State<CustomTextButton> {
                     ]
                   : [],
             ),
-          ).bold,
+          ),
         ),
       ),
     );

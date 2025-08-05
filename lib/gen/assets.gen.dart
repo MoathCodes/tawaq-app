@@ -59,24 +59,10 @@ class $AssetsImagesGen {
   ];
 }
 
-class $AssetsJsonGen {
-  const $AssetsJsonGen();
-
-  /// File path: assets/json/quranV2.json
-  String get quranV2 => 'assets/json/quranV2.json';
-
-  /// File path: assets/json/surahs.json
-  String get surahs => 'assets/json/surahs.json';
-
-  /// List of all assets
-  List<String> get values => [quranV2, surahs];
-}
-
 class Assets {
   const Assets._();
 
   static const $AssetsImagesGen images = $AssetsImagesGen();
-  static const $AssetsJsonGen json = $AssetsJsonGen();
 }
 
 class AssetGenImage {

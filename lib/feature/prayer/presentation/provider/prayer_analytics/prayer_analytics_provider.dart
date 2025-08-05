@@ -38,7 +38,7 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
       PrayerAnalyticsPeriod period) async {
     final talker = ref.read(talkerNotifierProvider);
     try {
-      final service = ref.read(prayerServiceProvider);
+      final service = ref.watch(prayerServiceProvider);
       final settings = ref.read(prayerSettingsNotifierProvider);
 
       final streaks = await service.computeStreaks(settings.when(

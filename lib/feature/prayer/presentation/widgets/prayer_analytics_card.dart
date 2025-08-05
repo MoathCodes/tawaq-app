@@ -1,144 +1,170 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
+import 'package:hasanat/core/utils/text_extensions.dart';
+import 'package:hasanat/core/widgets/hover_card.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/mini_card.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:hasanat/l10n/app_localizations.dart';
 
-class PrayerAnalyticsCard extends ConsumerStatefulWidget {
-  const PrayerAnalyticsCard({
-    super.key,
-  });
+class PrayerAnalyticsCard extends ConsumerWidget {
+  const PrayerAnalyticsCard({super.key});
 
   @override
-  ConsumerState<PrayerAnalyticsCard> createState() =>
-      _PrayerAnalyticsCardState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prayerAnalytics = ref.watch(prayerAnalyticsNotifierProvider);
+
+    return prayerAnalytics.when(
+      data: (data) => _PrayerAnalyticsWidget(
+        data: data,
+        onPeriodChanged: (period) => ref
+            .read(prayerAnalyticsNotifierProvider.notifier)
+            .changePeriod(period),
+      ),
+      loading: () => const FProgress.circularIcon(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
 }
 
-class _MainWidget extends StatelessWidget {
+class _PrayerAnalyticsWidget extends StatelessWidget {
+  // Combined constants from both widgets
+
+  static const _contentPadding =
+      EdgeInsets.symmetric(horizontal: 12, vertical: 16);
+  static const _progressBarRadius = 8.0;
+  static const _wrapSpacing = 8.0;
+
   final PrayerAnalytics data;
   final void Function(PrayerAnalyticsPeriod) onPeriodChanged;
-  const _MainWidget({
+
+  const _PrayerAnalyticsWidget({
     required this.data,
     required this.onPeriodChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return OutlinedContainer(
-      padding: const EdgeInsets.all(16),
-      backgroundColor: colorScheme.secondary,
-      borderColor: colorScheme.secondaryForeground.withAlpha(45),
+    final colors = FTheme.of(context).colors;
+    final l10n = context.l10n;
+
+    return HoverCard(
+      padding: const EdgeInsets.all(12),
       child: Column(
-        spacing: 4,
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(context.l10n.playerAnalytics).small,
-              Tabs(
-                index: data.period.index,
-                onChanged: (value) {
-                  onPeriodChanged(PrayerAnalyticsPeriod.values[value]);
-                },
-                children: [
-                  TabItem(
-                      // value: PrayerAnalyticsPeriod.daily,
-                      child: Text(PrayerAnalyticsPeriod.weekly
-                          .getLocaleName(context.l10n))),
-                  TabItem(
-                      // value: PrayerAnalyticsPeriod.weekly,
-                      child: Text(PrayerAnalyticsPeriod.monthly
-                          .getLocaleName(context.l10n))),
-                  TabItem(
-                      // value: PrayerAnalyticsPeriod.monthly,
-                      child: Text(PrayerAnalyticsPeriod.yearly
-                          .getLocaleName(context.l10n))),
-                ],
-              )
-            ],
-          ),
-          OutlinedContainer(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-            // backgroundColor: colorScheme.secondary,
-            borderColor: colorScheme.secondaryForeground.withAlpha(45),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: 12,
-              children: [
-                Text("${data.completionPercentage * 100}%",
-                        textAlign: TextAlign.center)
-                    .x4Large
-                    .bold,
-                Text(
-                        switch (data.period) {
-                          PrayerAnalyticsPeriod.weekly =>
-                            context.l10n.onTimePrayersLast7Days,
-                          PrayerAnalyticsPeriod.monthly =>
-                            context.l10n.onTimePrayersLast30Days,
-                          PrayerAnalyticsPeriod.yearly =>
-                            context.l10n.onTimePrayersLast365Days,
-                        },
-                        textAlign: TextAlign.center)
-                    .muted,
-                Progress(
-                  progress: data.completionPercentage,
-                ),
-              ],
+          Text(context.l10n.playerAnalytics).bold,
+          const SizedBox(height: 8),
+          FTabs(
+            initialIndex: data.period.index,
+            style: (style) => style.copyWith(
+              decoration: style.decoration.copyWith(color: colors.barrier),
+              unselectedLabelTextStyle: style.unselectedLabelTextStyle.copyWith(
+                color: colors.secondaryForeground.withAlpha(150),
+              ),
             ),
-          ),
-          Wrap(
-            alignment: WrapAlignment.spaceEvenly,
-            children: [
-              MiniCard(
-                  label: context.l10n.currentStreak,
-                  child: Text(context.l10n.streakInDays(data.currentStreak))),
-              MiniCard(
-                  label: context.l10n.bestStreak,
-                  child: Text(context.l10n.streakInDays(data.bestStreak))),
-              MiniCard(
-                  label: context.l10n.jamaahRate,
-                  child: Text("${data.jamaahPercentage * 100}%")),
-              MiniCard(
-                  label: context.l10n.onTimeRate,
-                  child: Text("${data.onTimePercentage * 100}%")),
-              MiniCard(
-                  label: context.l10n.lateRate,
-                  child: Text("${data.latePercentage * 100}%")),
-              MiniCard(
-                  label: context.l10n.missedRate,
-                  child: Text("${data.missedPercentage * 100}%")),
-              // MiniCard(label: "Best", child: Text("5 prayers")),
-              // MiniCard(label: "Perfect", child: Text("5 prayers")),
-            ],
+            onChange: (index) =>
+                onPeriodChanged(PrayerAnalyticsPeriod.values[index]),
+            children: _buildTabEntries(context, colors, l10n),
           ),
         ],
       ),
     );
   }
-}
 
-class _PrayerAnalyticsCardState extends ConsumerState<PrayerAnalyticsCard> {
-  @override
-  Widget build(BuildContext context) {
-    final prayerAnalytics = ref.watch(prayerAnalyticsNotifierProvider);
-
-    return prayerAnalytics.when(
-      data: (data) => _MainWidget(
-          data: data,
-          onPeriodChanged: (period) {
-            ref
-                .read(prayerAnalyticsNotifierProvider.notifier)
-                .changePeriod(period);
-          }),
-      loading: () => _MainWidget(
-              data: PrayerAnalytics.empty(), onPeriodChanged: (period) {})
-          .asSkeleton(),
-      error: (error, stackTrace) => const SizedBox.shrink(),
+  Widget _buildAnalyticsContent(
+      BuildContext context, FColors colors, AppLocalizations l10n) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        _buildProgressSection(colors, l10n),
+        _buildStatsSection(l10n),
+      ],
     );
+  }
+
+  Widget _buildProgressSection(FColors colors, AppLocalizations l10n) {
+    return Container(
+      padding: _contentPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            _formatPercentage(data.completionPercentage),
+            textAlign: TextAlign.center,
+          ).xl2,
+          Text(
+            _getPeriodText(l10n),
+            textAlign: TextAlign.center,
+          ),
+          FProgress(
+            value: data.completionPercentage,
+            style: (style) => style.copyWith(
+              backgroundDecoration: BoxDecoration(
+                color: colors.background,
+                borderRadius: BorderRadius.circular(_progressBarRadius),
+              ),
+              progressDecoration: BoxDecoration(
+                color: _getProgressColor(data.completionPercentage, colors),
+                borderRadius: BorderRadius.circular(_progressBarRadius),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsSection(AppLocalizations l10n) {
+    final stats = [
+      (l10n.currentStreak, l10n.streakInDays(data.currentStreak)),
+      (l10n.bestStreak, l10n.streakInDays(data.bestStreak)),
+      (l10n.jamaahRate, _formatPercentage(data.jamaahPercentage)),
+      (l10n.onTimeRate, _formatPercentage(data.onTimePercentage)),
+      (l10n.lateRate, _formatPercentage(data.latePercentage)),
+      (l10n.missedRate, _formatPercentage(data.missedPercentage)),
+    ];
+
+    return Wrap(
+      spacing: _wrapSpacing,
+      alignment: WrapAlignment.spaceEvenly,
+      children: stats
+          .map((stat) => MiniCard(
+                label: stat.$1,
+                child: Text(stat.$2),
+              ))
+          .toList(),
+    );
+  }
+
+  List<FTabEntry> _buildTabEntries(
+      BuildContext context, FColors colors, AppLocalizations l10n) {
+    return PrayerAnalyticsPeriod.values.map((period) {
+      return FTabEntry(
+        label: Text(period.getLocaleName(l10n)),
+        child: _buildAnalyticsContent(context, colors, l10n),
+      );
+    }).toList();
+  }
+
+  // Utility methods
+  String _formatPercentage(double value) => "${(value * 100).round()}%";
+
+  String _getPeriodText(AppLocalizations l10n) {
+    return switch (data.period) {
+      PrayerAnalyticsPeriod.weekly => l10n.onTimePrayersLast7Days,
+      PrayerAnalyticsPeriod.monthly => l10n.onTimePrayersLast30Days,
+      PrayerAnalyticsPeriod.yearly => l10n.onTimePrayersLast365Days,
+    };
+  }
+
+  Color _getProgressColor(double percentage, FColors colors) {
+    return switch (percentage) {
+      > 0.6 => Colors.green.shade700,
+      > 0.3 => colors.primary,
+      _ => colors.error,
+    };
   }
 }

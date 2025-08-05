@@ -99,7 +99,7 @@ class PrayerTable extends _$PrayerTable {
 
   List<PrayerTableRow> _buildPrayerTableRows(
       DateFormat formatter,
-      PrayerTimes prayerTimes,
+      PrayerTimesData prayerTimes,
       SunnahTimes sunnahTimes,
       DateTime currentTime,
       PrayerSettings settings,
@@ -230,7 +230,7 @@ class PrayerTable extends _$PrayerTable {
 class _TableCache {
   final DateTime anchorDate;
 
-  final PrayerTimes today;
+  final PrayerTimesData today;
   final SunnahTimes todaySunnah;
   _TableCache({
     required this.anchorDate,

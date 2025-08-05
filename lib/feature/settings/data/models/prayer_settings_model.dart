@@ -8,6 +8,15 @@ import 'package:timezone/timezone.dart';
 part 'prayer_settings_model.freezed.dart';
 part 'prayer_settings_model.g.dart';
 
+Map<Prayer, int> adhanAdjustmentsFromJson(Map<String, dynamic> json) {
+  return json.map((key, value) =>
+      MapEntry(Prayer.values.firstWhere((e) => e.name == key), value as int));
+}
+
+Map<String, int> adhanAdjustmentsToJson(Map<Prayer, int> settings) {
+  return settings.map((key, value) => MapEntry(key.name, value));
+}
+
 CalculationMethod calculationMethodFromJson(String method) {
   return CalculationMethod.values.firstWhere((e) => e.name == method);
 }
@@ -59,6 +68,11 @@ abstract class PrayerSettings with _$PrayerSettings {
           toJson: iqamahSettingsToJson)
       required Map<Prayer, int> iqamahSettings,
       @JsonKey(
+          name: 'adhan_adjustments',
+          fromJson: adhanAdjustmentsFromJson,
+          toJson: adhanAdjustmentsToJson)
+      required Map<Prayer, int> adhanAdjustments,
+      @JsonKey(
           name: 'coordinates',
           fromJson: coordinatesFromJson,
           toJson: coordinatesToJson)
@@ -72,7 +86,8 @@ abstract class PrayerSettings with _$PrayerSettings {
       method: CalculationMethod.ummAlQura,
       is24Hours: false,
       iqamahSettings: {Prayer.dhuhr: 20},
-      coordinates: Coordinates(21.556126, 39.216189),
+      adhanAdjustments: {},
+      coordinates: const Coordinates(21.556126, 39.216189),
       location: tz.getLocation('Asia/Riyadh'),
     );
   }

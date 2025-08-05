@@ -34,8 +34,13 @@ class AyahWidget extends StatelessWidget {
         if (snapshot.hasError) {
           return errorWidget ?? Center(child: Text('Error: ${snapshot.error}'));
         }
+        // Use the ayah's page to determine the correct font chunk
+        final pageFontFamily = FontHelper.getFontFamilyForPage(
+          snapshot.data!.page,
+        );
+
         final defaultAyahStyle = TextStyle(
-          fontFamily: FontHelper.getFontFamilyForPage(surah),
+          fontFamily: pageFontFamily,
           package: 'mushaf_reader',
           fontSize: 28,
           height: 1.6,
@@ -46,7 +51,7 @@ class AyahWidget extends StatelessWidget {
           textAlign: TextAlign.right,
           style:
               style?.copyWith(
-                fontFamily: FontHelper.getFontFamilyForPage(surah),
+                fontFamily: pageFontFamily,
                 package: 'mushaf_reader',
               ) ??
               defaultAyahStyle,

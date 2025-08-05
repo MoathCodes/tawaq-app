@@ -11,8 +11,8 @@ import 'package:timezone/timezone.dart';
 PrayerCardDecision computePrayerCardDecision({
   required DateTime currentTime,
   required Location location,
-  required PrayerTimes todaysPrayerTimes,
-  required PrayerTimes yesterdaysPrayerTimes,
+  required PrayerTimesData todaysPrayerTimes,
+  required PrayerTimesData yesterdaysPrayerTimes,
   required SunnahTimes todaysSunnahTimes,
   required SunnahTimes yesterdaysSunnahTimes,
 }) {
@@ -42,12 +42,16 @@ PrayerCardDecision computePrayerCardDecision({
   //      the short window *before* (Fajr − 1 h).
   // -------------------------------------------------------------------------
   final fajrHour = todaysPrayerTimes.fajr.toLocation(location).hour;
-  final beforeFajrMinusOneHour = currentTime.hour < fajrHour - 1;
+  final beforeFajrMinusOneHour = currentTime.hour <= fajrHour - 1;
 
   final effectivePrayerTimes =
       beforeFajrMinusOneHour ? yesterdaysPrayerTimes : todaysPrayerTimes;
   final effectiveSunnahTimes =
       beforeFajrMinusOneHour ? yesterdaysSunnahTimes : todaysSunnahTimes;
+
+  print(
+      "beforeFajrMinusOneHour: ${todaysPrayerTimes.fajr.toLocation(location)} "
+      "-> $beforeFajrMinusOneHour, difference: ${currentTime.difference(todaysPrayerTimes.fajr.toLocation(location))}");
 
   // -------------------------------------------------------------------------
   // 3️⃣  Special night-time cases.
@@ -73,7 +77,7 @@ PrayerCardDecision computePrayerCardDecision({
       referenceTime:
           effectiveSunnahTimes.lastThirdOfTheNight.toLocation(location),
       prayer: Prayer.ishaBefore,
-      isCountdown: true,
+      isCountdown: false,
     );
   }
 

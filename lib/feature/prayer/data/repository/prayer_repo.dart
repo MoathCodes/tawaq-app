@@ -74,9 +74,9 @@ class PrayerRepo {
     return prayerDatabase.getFullyCompletedDays(loc);
   }
 
-  PrayerTimes getPrayerTimes(DateTime date, Coordinates coordinates,
+  PrayerTimesData getPrayerTimes(DateTime date, Coordinates coordinates,
       CalculationParameters calculationParameters) {
-    final prayerTimes = PrayerTimes(
+    final prayerTimes = PrayerTimesData.calculate(
       date: date,
       coordinates: coordinates,
       calculationParameters: calculationParameters,
@@ -88,7 +88,7 @@ class PrayerRepo {
     return prayerDatabase.getCompletionById(id);
   }
 
-  SunnahTimes getSunnahTime(PrayerTimes prayerTimes) {
+  SunnahTimes getSunnahTime(PrayerTimesData prayerTimes) {
     final sunnahTimes = SunnahTimes(prayerTimes);
     // print("in repo getSunnahTime: ${sunnahTimes.middleOfTheNight}");
     return sunnahTimes;

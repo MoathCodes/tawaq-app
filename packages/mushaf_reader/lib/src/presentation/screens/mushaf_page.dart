@@ -10,7 +10,9 @@ class MushafPage extends StatelessWidget {
   final TextStyle? textStyle;
   final TextStyle? activeTextStyle;
   final TextStyle? surahNameTextStyle;
-  final Function(int) onTap;
+  final Function(int ayahId) onTapAyah;
+  final Color highlightColor;
+  // final bool show
 
   const MushafPage({
     super.key,
@@ -18,9 +20,10 @@ class MushafPage extends StatelessWidget {
     this.loadingWidget,
     this.textStyle,
     this.enableHighlight = true,
-    required this.onTap,
+    required this.onTapAyah,
     this.activeTextStyle,
     this.surahNameTextStyle,
+    this.highlightColor = const Color.fromARGB(202, 245, 205, 110),
   });
 
   @override
@@ -30,8 +33,7 @@ class MushafPage extends StatelessWidget {
       future: getPage,
       builder: (_, snap) {
         if (!snap.hasData) {
-          return loadingWidget ??
-              const Center(child: CircularProgressIndicator());
+          return loadingWidget ?? const Center(child: Text('Loading'));
         }
         final data = snap.data!;
         // Statically get the font family name. No need to wait or check.
@@ -46,20 +48,25 @@ class MushafPage extends StatelessWidget {
         );
 
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SurahNameWidget(
-                  name: data.surahs[0].glyph,
-                  textStyle: defaultAyahStyle.copyWith(fontSize: 18),
-                ),
-                JuzWidget(
-                  number: data.juzNumber,
-                  textStyle: defaultAyahStyle.copyWith(fontSize: 36),
-                ),
-              ],
+            SizedBox(
+              width: 500,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  SurahNameWidget(
+                    name: data.surahs[0].glyph,
+                    textStyle: defaultAyahStyle.copyWith(fontSize: 18),
+                  ),
+                  JuzWidget(
+                    number: data.juzNumber,
+                    textStyle: defaultAyahStyle.copyWith(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
             const Spacer(),
             for (final block in data.surahs) ...[
@@ -78,10 +85,8 @@ class MushafPage extends StatelessWidget {
                 enableHighlight: enableHighlight,
                 activeStyle:
                     activeTextStyle?.copyWith(fontFamily: pageFontFamily) ??
-                    defaultAyahStyle.copyWith(
-                      backgroundColor: const Color.fromARGB(195, 243, 216, 127),
-                    ),
-                onAyahSelection: onTap,
+                    defaultAyahStyle.copyWith(backgroundColor: highlightColor),
+                onAyahSelection: onTapAyah,
                 ayahs: block.ayahs,
                 style:
                     textStyle?.copyWith(fontFamily: pageFontFamily) ??

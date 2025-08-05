@@ -1,6 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 enum DefaultBreakpoint { mobile, tablet, desktop }
 

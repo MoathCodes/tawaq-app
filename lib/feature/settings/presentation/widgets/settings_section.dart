@@ -1,40 +1,44 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:forui/forui.dart';
+import 'package:hasanat/core/widgets/hover_card.dart';
 
 class SettingsCard extends StatelessWidget {
   final String title;
   final String? subtitle;
-  final List<SettingsSection> sections;
+  final double spacing;
+  final List<Widget> sections;
   const SettingsCard(
-      {super.key, required this.title, required this.sections, this.subtitle});
+      {super.key,
+      required this.title,
+      required this.sections,
+      this.subtitle,
+      this.spacing = 8});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isArabic = context.l10n.localeName == 'ar';
+    final theme = FTheme.of(context);
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: 0.75.sw, minHeight: 400),
-      child: OutlinedContainer(
-        backgroundColor: theme.colorScheme.secondary,
-        borderColor: theme.colorScheme.foreground.withAlpha(100),
-        padding: const EdgeInsets.all(16),
+      child: FCard(
+        // titleAlignment:
+        //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
+        // subtitleAlignment:
+        //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
+        // leading: const Icon(Icons.settings),
+        title: Text(title),
+        style: (p0) => p0.copyWith(
+            decoration: p0.decoration.copyWith(
+                border: Border.all(color: theme.colors.border, width: 2))),
+        subtitle: subtitle != null ? Text(subtitle!) : null,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: spacing,
           children: [
-            Basic(
-              titleAlignment:
-                  isArabic ? Alignment.centerRight : Alignment.centerLeft,
-              subtitleAlignment:
-                  isArabic ? Alignment.centerRight : Alignment.centerLeft,
-              // leading: const Icon(Icons.settings),
-              title: Text(title).h3,
-              subtitle: subtitle != null ? Text(subtitle!) : null,
-            ),
             // Text(title).h3,
             Divider(
-              color: theme.colorScheme.foreground,
+              color: theme.colors.foreground,
               thickness: .5,
               height: 48,
             ),
@@ -51,38 +55,49 @@ class SettingsSection extends StatelessWidget {
   final String subtitle;
   final Widget? leading;
   final Widget child;
+  final CrossAxisAlignment crossAxisAlignment;
   const SettingsSection(
       {super.key,
       required this.child,
       required this.title,
       required this.subtitle,
+      this.crossAxisAlignment = CrossAxisAlignment.stretch,
       this.leading});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isArabic = context.l10n.localeName == 'ar';
+    final theme = FTheme.of(context);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Basic(
-          titleAlignment:
-              isArabic ? Alignment.centerRight : Alignment.centerLeft,
-          subtitleAlignment:
-              isArabic ? Alignment.centerRight : Alignment.centerLeft,
-          leading: leading,
-          title: Text(title).bold.h4,
+    return HoverCard(
+      padding: const EdgeInsets.all(8),
+      child: FCard(
+          // titleAlignment:
+          //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
+          // subtitleAlignment:
+          //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
+          image: leading,
+          style: (p0) => p0.copyWith(
+                decoration: p0.decoration.copyWith(
+                    // color: theme.colors.secondary,
+                    color: Colors.transparent,
+                    border: Border.all(color: Colors.transparent)),
+                contentStyle: (p0) =>
+                    p0.copyWith(padding: const EdgeInsets.all(0)),
+              ),
+          title: Text(title),
           subtitle: Text(subtitle),
-        ),
-        Divider(
-          color: theme.colorScheme.foreground,
-          thickness: .5,
-          height: 12,
-        ),
-        const Gap(12),
-        child,
-      ],
+          child: Column(
+            crossAxisAlignment: crossAxisAlignment,
+            children: [
+              Divider(
+                color: theme.colors.foreground,
+                thickness: .5,
+                height: 12,
+              ),
+              const SizedBox(height: 12),
+              child,
+            ],
+          )),
     );
   }
 }

@@ -1,5 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class NotFoundPage extends StatelessWidget {
   final String errorMsg;
@@ -7,21 +8,21 @@ class NotFoundPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return FScaffold(
         child: Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Text(
-                  "This Page Doesn't Exists. Please go back to the Home Page")
-              .h1(),
-          Text(errorMsg).small().muted(),
-          gap(12),
-          SecondaryButton(
-            leading: const Icon(BootstrapIcons.arrowLeft),
+              "This Page Doesn't Exists. Please go back to the Home Page"),
+          Text(errorMsg),
+          // gap(12),
+          FButton(
+            style: FButtonStyle.secondary(),
+            // leading: const Icon(BootstrapIcons.arrowLeft),
             child: const Text("Prayer Page"),
-            onPressed: () {
+            onPress: () {
               context.go('/prayer');
             },
           )

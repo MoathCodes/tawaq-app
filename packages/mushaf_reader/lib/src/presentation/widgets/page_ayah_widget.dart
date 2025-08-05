@@ -1,5 +1,5 @@
 import 'package:flutter/gestures.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:mushaf_reader/src/data/models/ayah_fragment.dart';
 
 /// Displays part of the page text with per-ayah mouse-over / tap highlight.

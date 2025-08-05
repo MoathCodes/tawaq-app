@@ -18,6 +18,8 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   final ctrl = PageController();
   final _pageController = TextEditingController();
+  final _ayahController = TextEditingController();
+  final _surahController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +82,43 @@ class _MyAppState extends State<MyApp> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            AyahWidget(surah: 114, ayah: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  width: 100,
+                  child: TextField(
+                    controller: _surahController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      hintText: 'Surah #',
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (value) {
+                      setState(() {});
+                    },
+                  ),
+                ),
+                SizedBox(
+                  width: 100,
+                  child: TextField(
+                    controller: _ayahController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      hintText: 'Ayah #',
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (value) {
+                      setState(() {});
+                    },
+                  ),
+                ),
+                AyahWidget(
+                  surah: int.tryParse(_surahController.text) ?? 1,
+                  ayah: int.tryParse(_ayahController.text) ?? 1,
+                ),
+              ],
+            ),
             Expanded(
               child: PageView.builder(
                 controller: ctrl,
@@ -95,7 +133,7 @@ class _MyAppState extends State<MyApp> {
                     child: MushafPage(
                       key: ValueKey('page_${index + 1}'),
                       page: index + 1,
-                      onTap: (ayahNumber) {
+                      onTapAyah: (ayahNumber) {
                         debugPrint('Ayah tapped: $ayahNumber');
                       },
                     ),

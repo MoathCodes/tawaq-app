@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:mushaf_reader/core/font_manager.dart';
 import 'package:mushaf_reader/src/data/models/juz_model.dart';
 import 'package:mushaf_reader/src/logic/mushaf_controller.dart';

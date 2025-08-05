@@ -147,7 +147,7 @@ class QuranRepository {
       surah: meta.surah,
       numberInSurah: meta.numberInSurah,
       page: meta.page,
-      codeV4: _codeV4ByAyahId![ayahId]!,
+      codeV4: _codeV4ByAyahId![ayahId]!.replaceAll('\n', ''),
     );
   }
 

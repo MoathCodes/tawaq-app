@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/core/theme/theme.dart';
@@ -5,7 +6,6 @@ import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart'
 import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:prf/prf.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 part 'settings_repo.g.dart';
@@ -21,7 +21,7 @@ class SettingsRepo {
   final _appPalette = Prf.enumerated<AppPalette>(
     'app_palette',
     values: AppPalette.values,
-    defaultValue: AppPalette.islamic,
+    defaultValue: AppPalette.zinc,
   );
   final _themeMode = Prf.enumerated<ThemeMode>(
     'theme_mode',

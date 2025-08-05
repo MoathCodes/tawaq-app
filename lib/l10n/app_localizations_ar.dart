@@ -166,6 +166,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get jamaahRate => 'الصلاة جماعة';
 
   @override
+  String get jumuah => 'الجمعة';
+
+  @override
   String get lastThirdOfTheNight => 'الثلث الأخير من الليل';
 
   @override

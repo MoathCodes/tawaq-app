@@ -290,6 +290,12 @@ abstract class AppLocalizations {
   /// **'Jamaah Rate'**
   String get jamaahRate;
 
+  /// No description provided for @jumuah.
+  ///
+  /// In en, this message translates to:
+  /// **'Jumuah'**
+  String get jumuah;
+
   /// No description provided for @lastThirdOfTheNight.
   ///
   /// In en, this message translates to:

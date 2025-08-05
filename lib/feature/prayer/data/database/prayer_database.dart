@@ -58,9 +58,6 @@ class PrayerCompletions extends Table {
       ];
   IntColumn get prayer => intEnum<Prayer>()();
 
-  @override
-  Set<Column> get primaryKey => {id};
-
   IntColumn get status => intEnum<CompletionStatus>()();
 }
 

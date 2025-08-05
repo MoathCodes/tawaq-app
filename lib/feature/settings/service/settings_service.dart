@@ -1,10 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/data/repository/settings_repo.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 part 'settings_service.g.dart';
