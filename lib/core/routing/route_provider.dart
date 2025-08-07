@@ -14,7 +14,6 @@ import 'package:hasanat/feature/prayer/presentation/screens/prayer_page.dart';
 import 'package:hasanat/feature/quran/presentation/screens/quran_page.dart';
 import 'package:hasanat/feature/settings/presentation/pages/settings_page.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/feature/testpages/new_design.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -83,7 +82,7 @@ List<AppRoute> mainRoutes(Ref ref, AppLocalizations? localization) {
         path: '/hadith',
         label: _labelLocalization(localization?.hadith, "الحديث"),
         icon: FIcons.mic,
-        child: const TawaqApp()),
+        child: const QuranPage()),
   ];
 }
 
@@ -199,10 +198,10 @@ GoRoute _buildGoRoute(AppRoute route, ThemeSettings themeData) => GoRoute(
 List<RouteBase> _generateRoutes(
         List<AppRoute> routes, ThemeSettings themeData, Talker talker) =>
     [
-      GoRoute(
-        path: '/test',
-        builder: (context, state) => const TawaqApp(),
-      ),
+      // GoRoute(
+      //   path: '/test',
+      //   builder: (context, state) => const TawaqApp(),
+      // ),
       ShellRoute(
         routes: [
           ...routes.map((route) => _buildGoRoute(route, themeData)),

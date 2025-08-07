@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 import 'package:hasanat/core/utils/text_extensions.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/sections/time_section.dart';
+import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/widgets/location_picker_dialog.dart';
 import 'package:hasanat/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:timezone/timezone.dart' as tz;
 
@@ -20,6 +21,8 @@ class PrayerSection extends ConsumerStatefulWidget {
 class _PrayerSectionState extends ConsumerState<PrayerSection>
     with TickerProviderStateMixin {
   late final FSelectController<tz.Location> _locationController;
+  late final TextEditingController _latitudeController;
+  late final TextEditingController _longitudeController;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +51,30 @@ class _PrayerSectionState extends ConsumerState<PrayerSection>
                           Expanded(
                             child: FButton(
                               onPress: () {
-                                // Placeholder - open map for location selection
+                                showFDialog(
+                                  context: context,
+                                  builder: (context, style, animation) =>
+                                      LocationPickerDialog(
+                                    style: style.call,
+                                    animation: animation,
+                                    onLocationSelected: (newLocation) {
+                                      ref
+                                          .read(prayerSettingsNotifierProvider
+                                              .notifier)
+                                          .setCoordinates(newLocation);
+                                      setState(() {
+                                        _latitudeController.text = newLocation
+                                            .latitude
+                                            .toStringAsFixed(6);
+                                        _longitudeController.text = newLocation
+                                            .longitude
+                                            .toStringAsFixed(6);
+                                      });
+                                    },
+                                  ),
+                                  // builder: (p0, p1, p2) =>
+                                  //     const TestLocationPicker(),
+                                );
                               },
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -93,23 +119,43 @@ class _PrayerSectionState extends ConsumerState<PrayerSection>
                         ],
                       ),
                       // Coordinates display
-                      const Row(
+                      Row(
                         spacing: 12,
                         children: [
                           Expanded(
                             child: FTextField(
-                              label: Text('خط العرض'),
+                              controller: _latitudeController,
+                              label: const Text('خط العرض'),
                               hint: '21.55826',
-                              keyboardType: TextInputType.numberWithOptions(
-                                  decimal: true, signed: false),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true, signed: true),
+                              onChange: (value) {
+                                final lat = double.tryParse(value);
+                                if (lat != null && lat >= -90 && lat <= 90) {
+                                  // setState(() {
+                                  //   pin = LatLng(lat, pin.longitude);
+                                  // });
+                                }
+                              },
                             ),
                           ),
                           Expanded(
                             child: FTextField(
-                              label: Text('خط الطول'),
+                              controller: _longitudeController,
+                              label: const Text('خط الطول'),
                               hint: '39.26189',
-                              keyboardType: TextInputType.numberWithOptions(
-                                  decimal: true, signed: false),
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true, signed: true),
+                              onChange: (value) {
+                                final lng = double.tryParse(value);
+                                if (lng != null && lng >= -180 && lng <= 180) {
+                                  // setState(() {
+                                  //   pin = LatLng(pin.latitude, lng);
+                                  // });
+                                }
+                              },
                             ),
                           ),
                         ],
@@ -230,6 +276,8 @@ class _PrayerSectionState extends ConsumerState<PrayerSection>
   @override
   void dispose() {
     _locationController.dispose();
+    _latitudeController.dispose();
+    _longitudeController.dispose();
     super.dispose();
   }
 
@@ -239,6 +287,10 @@ class _PrayerSectionState extends ConsumerState<PrayerSection>
     final location = ref.read(prayerSettingsNotifierProvider);
     _locationController = FSelectController<tz.Location>(
         vsync: this, value: location.valueOrNull?.location);
+
+    // Initialize coordinate controllers with default values
+    _latitudeController = TextEditingController();
+    _longitudeController = TextEditingController();
   }
 
   Future<List<tz.Location>> _loadTimezones() async {

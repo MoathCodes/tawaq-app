@@ -21,9 +21,11 @@ class ShellAppBar extends ConsumerWidget {
     // final colors = FTheme.of(context).colors;
 
     final isArabic = appSettings.value?.languageCode == 'ar';
-    final hijri = Hijriyah.fromDate(DateTime.now().toLocal(), isPasaran: false)
-        .toFormat("EEEE, dd, MMMM(mm), yyyy")
-        .toString();
+    Hijriyah.setLocal(appSettings.value?.languageCode ?? 'en');
+    final hijriDate =
+        Hijriyah.fromDate(DateTime.now().toLocal(), isPasaran: false)
+            .toFormat("EEEE, dd, MMMM(mm), yyyy")
+            .toString();
     // Widget displayed next to the Sidebar.
     final nearWidgets = [
       Icon(
@@ -40,7 +42,7 @@ class ShellAppBar extends ConsumerWidget {
         "Saudi Arabia, Medina",
       ),
       const Spacer(),
-      Text(hijri),
+      Text(hijriDate),
     ];
 
     // Widgets displayed at the end from of the Sidebar
@@ -59,16 +61,15 @@ class ShellAppBar extends ConsumerWidget {
           },
           prefix: const Icon(FIcons.languages),
           child: Text(isArabic ? context.l10n.arabic : context.l10n.english)),
-      if (themeMode.value?.themeMode == ThemeMode.light)
-        AnimatedIconButton(
-          primaryIcon: FIcons.sun,
-          secondaryIcon: FIcons.moon,
-          buttonStyle: FButtonStyle.ghost(),
-          isSecondaryActive: themeMode.value?.themeMode == ThemeMode.dark,
-          onPressed: () {
-            ref.read(themeNotifierProvider.notifier).toggleThemeMode();
-          },
-        ),
+      AnimatedIconButton(
+        primaryIcon: FIcons.sun,
+        secondaryIcon: FIcons.moon,
+        buttonStyle: FButtonStyle.ghost(),
+        isSecondaryActive: themeMode.value?.themeMode == ThemeMode.dark,
+        onPressed: () {
+          ref.read(themeNotifierProvider.notifier).toggleThemeMode();
+        },
+      ),
     ];
 
     return Padding(

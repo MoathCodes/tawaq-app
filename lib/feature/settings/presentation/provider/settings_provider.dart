@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:hasanat/feature/settings/service/location_service.dart';
 import 'package:hasanat/feature/settings/service/settings_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart';
@@ -82,13 +83,19 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
         '$_prayerSettingsNotifierLogPrefix 24 hour format set to: $value');
   }
 
-  void setCoordinates(Coordinates coordinates) {
+  void setCoordinates(Coordinates coordinates) async {
     if (state.valueOrNull == null) return;
     final talker = ref.read(talkerNotifierProvider);
     talker.info(
         '$_prayerSettingsNotifierLogPrefix Setting coordinates to: $coordinates');
     final service = ref.read(settingsServiceProvider);
-    final newSettings = state.value!.copyWith(coordinates: coordinates);
+    final newLocation = ref
+        .read(locationServiceProvider)
+        .getLocationFromCoordinatesOffline(coordinates);
+
+    final newSettings = state.value!.copyWith(
+        coordinates: coordinates,
+        location: newLocation ?? state.value!.location);
     if (state.value == newSettings) {
       talker.warning(
           '$_prayerSettingsNotifierLogPrefix Coordinates are the same, not updating.');
@@ -116,35 +123,6 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     state = AsyncData(newSettings);
     talker.info(
         '$_prayerSettingsNotifierLogPrefix Iqamah times set to: $iqamahTimes');
-  }
-
-  void updatePrayerIqamahTime(Prayer prayer, int iqamahTime) {
-    if (state.valueOrNull == null) return;
-    final talker = ref.read(talkerNotifierProvider);
-    final currentSettings = state.value!;
-    final currentIqamah = currentSettings.iqamahSettings[prayer] ?? 0;
-    if (currentIqamah == iqamahTime) {
-      talker.warning(
-          '[33m$_prayerSettingsNotifierLogPrefix Iqamah time for $prayer already $iqamahTime, not updating.[0m');
-      return;
-    }
-
-    talker.info(
-        '$_prayerSettingsNotifierLogPrefix Updating $prayer iqamah time to: $iqamahTime');
-
-    // Create a new map to avoid mutating the existing one.
-    final newIqamahSettings = Map<Prayer, int>.from(currentSettings.iqamahSettings)
-      ..[prayer] = iqamahTime;
-
-    final newSettings = currentSettings.copyWith(iqamahSettings: newIqamahSettings);
-
-    // Persist via service and update state.
-    final service = ref.read(settingsServiceProvider);
-    service.setPrayerSettings(newSettings);
-    state = AsyncData(newSettings);
-
-    talker.info(
-        '$_prayerSettingsNotifierLogPrefix Iqamah time for $prayer set to: $iqamahTime');
   }
 
   void setLocation(Location location) {
@@ -202,6 +180,37 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
           '$_prayerSettingsNotifierLogPrefix Prayer settings updated successfully: $value');
       return value;
     });
+  }
+
+  void updatePrayerIqamahTime(Prayer prayer, int iqamahTime) {
+    if (state.valueOrNull == null) return;
+    final talker = ref.read(talkerNotifierProvider);
+    final currentSettings = state.value!;
+    final currentIqamah = currentSettings.iqamahSettings[prayer] ?? 0;
+    if (currentIqamah == iqamahTime) {
+      talker.warning(
+          '[33m$_prayerSettingsNotifierLogPrefix Iqamah time for $prayer already $iqamahTime, not updating.[0m');
+      return;
+    }
+
+    talker.info(
+        '$_prayerSettingsNotifierLogPrefix Updating $prayer iqamah time to: $iqamahTime');
+
+    // Create a new map to avoid mutating the existing one.
+    final newIqamahSettings =
+        Map<Prayer, int>.from(currentSettings.iqamahSettings)
+          ..[prayer] = iqamahTime;
+
+    final newSettings =
+        currentSettings.copyWith(iqamahSettings: newIqamahSettings);
+
+    // Persist via service and update state.
+    final service = ref.read(settingsServiceProvider);
+    service.setPrayerSettings(newSettings);
+    state = AsyncData(newSettings);
+
+    talker.info(
+        '$_prayerSettingsNotifierLogPrefix Iqamah time for $prayer set to: $iqamahTime');
   }
 }
 

@@ -6,18 +6,33 @@ import 'package:forui/forui.dart';
 import 'package:hasanat/core/routing/route_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:hasanat/gen/fonts.gen.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:talker_riverpod_logger/talker_riverpod_logger.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:window_manager/window_manager.dart';
 
 void main() async {
-  // WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
   FlutterError.onError = (details) {
     talker.handle(details.exception, details.stack);
   };
 
   tz.initializeTimeZones();
+  await windowManager.ensureInitialized();
+
+  WindowOptions windowOptions = const WindowOptions(
+    // size: Size(800, 600),
+    center: true,
+    backgroundColor: Colors.transparent,
+    skipTaskbar: false,
+    titleBarStyle: TitleBarStyle.hidden,
+  );
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
 
   // ui.PlatformDispatcher.instance.onKeyData = (ui.KeyData data) {
   //   final metaLeft = LogicalKeyboardKey.metaLeft.keyId;
@@ -81,7 +96,7 @@ class SeratiApp extends ConsumerWidget {
             if (isArabic) {
               final typo = FTypography.inherit(
                   colors: currentTheme.colors,
-                  defaultFontFamily: 'IBMPlexSansArabic');
+                  defaultFontFamily: FontFamily.iBMPlexSansArabic);
               // .scale(sizeScalar: 1.285);
               themeData =
                   FThemeData(colors: currentTheme.colors, typography: typo);

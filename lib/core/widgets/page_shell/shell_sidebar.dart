@@ -5,7 +5,8 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/routing/route_provider.dart';
-import 'package:hasanat/core/widgets/hover_card.dart';
+import 'package:hasanat/core/widgets/window_controls.dart';
+import 'package:hasanat/gen/fonts.gen.dart';
 
 class ShellSidebar extends ConsumerStatefulWidget {
   const ShellSidebar({super.key});
@@ -24,44 +25,52 @@ class _ShellSidebarState extends ConsumerState<ShellSidebar> {
           backgroundColor: FWidgetStateMap({
             WidgetState.disabled: Colors.transparent,
             WidgetState.selected | WidgetState.hovered | WidgetState.pressed:
-                theme.colors.hover(theme.colors.background),
+                theme.colors.hover(theme.colors.secondary),
             WidgetState.any: Colors.transparent,
           }),
         );
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: HoverCard(
-        // backgroundColor: Colors.transparent,
-        padding: const EdgeInsets.all(0),
-        child: FSidebar(
-          style: (p0) => p0.copyWith(
-              decoration: p0.decoration.copyWith(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.transparent))),
-          header: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                FLabel(
-                    axis: Axis.vertical,
-                    child: Text(
-                      'توّاق',
-                      style: TextStyle(fontFamily: 'Zain', fontSize: 36.sp),
-                      textAlign: TextAlign.center,
-                    )),
-                FDivider(
-                    style: context.theme.dividerStyles.horizontalStyle
-                        .copyWith(padding: EdgeInsets.zero)
-                        .call),
-              ],
-            ),
-          ),
+    return FSidebar(
+      style: (p0) => p0.copyWith(
+        headerPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      ),
+      header: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const WindowControls(),
+          FLabel(
+              axis: Axis.vertical,
+              child: Text(
+                'توّاق',
+                style: TextStyle(
+                    fontFamily: FontFamily.zain,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 36.sp),
+                textAlign: TextAlign.center,
+              )),
+          const FDivider(),
+        ],
+      ),
+      children: [
+        FSidebarGroup(
           children: [
-            FSidebarGroup(
-              children: [
-                ...mainRoutes.map(
+            ...mainRoutes.map(
+              (e) => FSidebarItem(
+                style: style,
+                onPress: () {
+                  setState(() {});
+                  context.go(e.path);
+                },
+                icon: Icon(e.icon),
+                selected: GoRouter.of(context).state.fullPath == e.path,
+                label: Text(e.label),
+                key: ValueKey(e.path),
+              ),
+            ),
+          ],
+        ),
+        FSidebarGroup(
+            children: secondaryRoutes
+                .map(
                   (e) => FSidebarItem(
                     style: style,
                     onPress: () {
@@ -73,28 +82,9 @@ class _ShellSidebarState extends ConsumerState<ShellSidebar> {
                     label: Text(e.label),
                     key: ValueKey(e.path),
                   ),
-                ),
-              ],
-            ),
-            FSidebarGroup(
-                children: secondaryRoutes
-                    .map(
-                      (e) => FSidebarItem(
-                        style: style,
-                        onPress: () {
-                          setState(() {});
-                          context.go(e.path);
-                        },
-                        icon: Icon(e.icon),
-                        selected: GoRouter.of(context).state.fullPath == e.path,
-                        label: Text(e.label),
-                        key: ValueKey(e.path),
-                      ),
-                    )
-                    .toList())
-          ],
-        ),
-      ),
+                )
+                .toList())
+      ],
     );
   }
 }
