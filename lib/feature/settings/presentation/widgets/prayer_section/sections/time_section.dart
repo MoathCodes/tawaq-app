@@ -74,7 +74,7 @@ class _TimeSectionState extends ConsumerState<TimeSection> {
                   label: const Text("ضبط الأذان"),
                   children: Prayer.values
                       .where((element) =>
-                          element != Prayer.fajrAfter &&
+                        element != Prayer.fajrAfter &&
                           element != Prayer.ishaBefore &&
                           element != Prayer.sunrise)
                       .map((e) => _buildPrayerTimeTile(

@@ -44,6 +44,77 @@ class _PrayerSectionState extends ConsumerState<PrayerSection>
                   child: Column(
                     spacing: 8,
                     children: [
+                      Row(
+                          children: [
+                            Expanded(
+                              flex: 6,
+                              child: FSelect<tz.Location>.search(
+                                controller: _locationController,
+                                searchFieldProperties:
+                                    const FSelectSearchFieldProperties(
+                                  hint: "ابحث للمزيد من الخيارات",
+                                ),
+                                emptyBuilder: (context, value, child) =>
+                                    Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    spacing: 8,
+                                    children: [
+                                      const Icon(FIcons.searchX),
+                                      const Text("لا يوجد نتائج").sm,
+                                    ],
+                                  ),
+                                ),
+                                onChange: (value) {
+                                  if (value == null) return;
+                                  _locationController.value = value;
+                                  ref
+                                      .read(prayerSettingsNotifierProvider
+                                          .notifier)
+                                      .setLocation(value);
+                                },
+                                format: (p0) {
+                                  return p0.name;
+                                },
+                                contentBuilder: (context, data) {
+                                  return [
+                                    for (final loc in data.values.whereIndexed(
+                                        (index, loc) => index < 16))
+                                      FSelectItem(loc.name, loc)
+                                  ];
+                                },
+                                searchLoadingBuilder: (context, value, child) =>
+                                    const FProgress.circularIcon(),
+                                filter: (query) async {
+                                  final location = await _loadTimezones();
+                                  return query.isEmpty
+                                      ? location
+                                      : location.where((loc) => loc.name
+                                          .toLowerCase()
+                                          .contains(query.toLowerCase()));
+                                },
+                              ),
+                            ),
+                            const Spacer(),
+                            Flexible(
+                              child: FButton.icon(
+                                child: const Icon(FIcons.locate),
+                                onPress: () async {
+                                  final String currentTimeZone =
+                                      await FlutterTimezone.getLocalTimezone();
+                                  final location =
+                                      tz.getLocation(currentTimeZone);
+                                  _locationController.value = location;
+                                  ref
+                                      .read(prayerSettingsNotifierProvider
+                                          .notifier)
+                                      .setLocation(location);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
                       // Location selection buttons
                       Row(
                         spacing: 12,
@@ -169,77 +240,7 @@ class _PrayerSectionState extends ConsumerState<PrayerSection>
                     Expanded(
                       child: FCard(
                         title: const Text("المنطقة الزمنية"),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 6,
-                              child: FSelect<tz.Location>.search(
-                                controller: _locationController,
-                                searchFieldProperties:
-                                    const FSelectSearchFieldProperties(
-                                  hint: "ابحث للمزيد من الخيارات",
-                                ),
-                                emptyBuilder: (context, value, child) =>
-                                    Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    spacing: 8,
-                                    children: [
-                                      const Icon(FIcons.searchX),
-                                      const Text("لا يوجد نتائج").sm,
-                                    ],
-                                  ),
-                                ),
-                                onChange: (value) {
-                                  if (value == null) return;
-                                  _locationController.value = value;
-                                  ref
-                                      .read(prayerSettingsNotifierProvider
-                                          .notifier)
-                                      .setLocation(value);
-                                },
-                                format: (p0) {
-                                  return p0.name;
-                                },
-                                contentBuilder: (context, data) {
-                                  return [
-                                    for (final loc in data.values.whereIndexed(
-                                        (index, loc) => index < 16))
-                                      FSelectItem(loc.name, loc)
-                                  ];
-                                },
-                                searchLoadingBuilder: (context, value, child) =>
-                                    const FProgress.circularIcon(),
-                                filter: (query) async {
-                                  final location = await _loadTimezones();
-                                  return query.isEmpty
-                                      ? location
-                                      : location.where((loc) => loc.name
-                                          .toLowerCase()
-                                          .contains(query.toLowerCase()));
-                                },
-                              ),
-                            ),
-                            const Spacer(),
-                            Flexible(
-                              child: FButton.icon(
-                                child: const Icon(FIcons.locate),
-                                onPress: () async {
-                                  final String currentTimeZone =
-                                      await FlutterTimezone.getLocalTimezone();
-                                  final location =
-                                      tz.getLocation(currentTimeZone);
-                                  _locationController.value = location;
-                                  ref
-                                      .read(prayerSettingsNotifierProvider
-                                          .notifier)
-                                      .setLocation(location);
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
+                        child: 
                       ),
                     ),
                     Expanded(
