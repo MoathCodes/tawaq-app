@@ -24,6 +24,51 @@ class HoverCard extends StatefulWidget {
   State<HoverCard> createState() => _HoverCardState();
 }
 
+class StaticCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final BorderRadiusGeometry? borderRadius;
+  final Color? borderColor;
+  final Color? backgroundColor;
+
+  const StaticCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.borderRadius,
+    this.borderColor,
+    this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = FTheme.of(context).colors;
+    const defaultBorderRadius = 15.0;
+    const borderOpacity = 100;
+
+    return Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? colors.secondary,
+        borderRadius:
+            borderRadius ?? BorderRadius.circular(defaultBorderRadius),
+        border: Border.all(
+          color: borderColor ??
+              colors.secondaryForeground.withAlpha(borderOpacity),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black38,
+            blurRadius: 10,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
 class _HoverCardState extends State<HoverCard> {
   // static const _cardPadding = EdgeInsets.all(16.0);
   static const _borderRadius = 15.0;

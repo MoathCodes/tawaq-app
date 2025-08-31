@@ -80,6 +80,7 @@ dependencies:
   window_manager: ^0.5.1
   geolocator: ^14.0.2
   lat_lng_to_timezone: ^0.2.0
+  skeletonizer: ^2.1.0+1
 
 
 dev_dependencies:

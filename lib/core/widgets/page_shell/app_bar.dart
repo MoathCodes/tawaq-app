@@ -5,7 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/widgets/animated_icon_button.dart';
-import 'package:hasanat/core/widgets/hover_card.dart';
+import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hijriyah_indonesia/hijriyah_indonesia.dart';
 
@@ -16,33 +16,48 @@ class ShellAppBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeNotifierProvider);
     final appSettings = ref.watch(localeNotifierProvider);
+    final locationName = ref.watch(prayerSettingsNotifierProvider
+        .select((value) => value.valueOrNull?.locationName));
     // final formatter = DateFormat.E(appSettings.value);
 
     // final colors = FTheme.of(context).colors;
 
     final isArabic = appSettings.value?.languageCode == 'ar';
-    Hijriyah.setLocal(appSettings.value?.languageCode ?? 'en');
-    final hijriDate =
-        Hijriyah.fromDate(DateTime.now().toLocal(), isPasaran: false)
+
+    final hijriStream = Stream.periodic(
+      const Duration(seconds: 1),
+      (_) {
+        Hijriyah.setLocal(appSettings.value?.languageCode ?? 'en');
+        final hijriDate = Hijriyah.fromDate(DateTime.now().toLocal())
             .toFormat("EEEE, dd, MMMM(mm), yyyy")
             .toString();
+        return hijriDate;
+      },
+    );
+
     // Widget displayed next to the Sidebar.
     final nearWidgets = [
-      Icon(
-        FIcons.pin,
-        size: 18,
-        color: themeMode.value?.themeMode == ThemeMode.dark
-            ? Colors.white
-            : Colors.black,
-      ),
-      const SizedBox(
-        width: 4,
-      ),
-      const Text(
-        "Saudi Arabia, Medina",
-      ),
+      if (locationName != null && locationName.isNotEmpty) ...[
+        Icon(
+          FIcons.mapPin,
+          size: 16,
+          color: themeMode.value?.themeMode == ThemeMode.dark
+              ? Colors.white
+              : Colors.black,
+        ),
+        const SizedBox(
+          width: 4,
+        ),
+        Text(
+          locationName,
+        ),
+      ],
       const Spacer(),
-      Text(hijriDate),
+      StreamBuilder(
+          stream: hijriStream,
+          builder: (context, asyncSnapshot) {
+            return Text(asyncSnapshot.data ?? '');
+          }),
     ];
 
     // Widgets displayed at the end from of the Sidebar
@@ -52,7 +67,7 @@ class ShellAppBar extends ConsumerWidget {
             style: FButtonStyle.primary(),
             child: const Icon(FIcons.bug),
             onPress: () {
-              context.go('/debug1');
+              context.go('/wizard');
             }),
       FButton(
           style: FButtonStyle.ghost(),
@@ -64,6 +79,7 @@ class ShellAppBar extends ConsumerWidget {
       AnimatedIconButton(
         primaryIcon: FIcons.sun,
         secondaryIcon: FIcons.moon,
+        animationDuration: const Duration(milliseconds: 300),
         buttonStyle: FButtonStyle.ghost(),
         isSecondaryActive: themeMode.value?.themeMode == ThemeMode.dark,
         onPressed: () {
@@ -79,7 +95,7 @@ class ShellAppBar extends ConsumerWidget {
           suffixes: [
             Expanded(
                 flex: 2,
-                child: HoverCard(
+                child: StaticCard(
                   padding: const EdgeInsets.all(8),
                   child: Row(
                     children: nearWidgets,

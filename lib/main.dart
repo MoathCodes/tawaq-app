@@ -14,52 +14,58 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  FlutterError.onError = (details) {
-    talker.handle(details.exception, details.stack);
-  };
+  // Initialize Talker first, before any other initialization
 
-  tz.initializeTimeZones();
-  await windowManager.ensureInitialized();
-
-  WindowOptions windowOptions = const WindowOptions(
-    // size: Size(800, 600),
-    center: true,
-    backgroundColor: Colors.transparent,
-    skipTaskbar: false,
-    titleBarStyle: TitleBarStyle.hidden,
-  );
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
-
-  // ui.PlatformDispatcher.instance.onKeyData = (ui.KeyData data) {
-  //   final metaLeft = LogicalKeyboardKey.metaLeft.keyId;
-  //   final metaRight = LogicalKeyboardKey.metaRight.keyId;
-
-  //   if (data.logical == metaLeft || data.logical == metaRight) {
-  //     return true;
-  //   }
-  //   return false;
-  // };
+  // Run everything inside the Talker zone from the beginning
   runTalkerZonedGuarded(
-      talker,
-      () => runApp(ProviderScope(
-            observers: [
-              TalkerRiverpodObserver(
-                  talker: talker,
-                  settings: TalkerRiverpodLoggerSettings(
-                    printStateFullData: true,
-                    providerFilter: (provider) {
-                      return provider.name != prayerCardProvider.name;
-                    },
-                  )),
-            ],
-            child: const SeratiApp(),
-          )), (error, stackTrace) {
-    talker.handle(error, stackTrace);
-  });
+    talker,
+    () async {
+      // Initialize Flutter bindings inside the zone
+      WidgetsFlutterBinding.ensureInitialized();
+
+      // Set up error handling
+      FlutterError.onError = (details) {
+        talker.handle(details.exception, details.stack);
+      };
+
+      // Initialize timezone data
+      tz.initializeTimeZones();
+
+      // Initialize window manager
+      await windowManager.ensureInitialized();
+
+      const windowOptions = WindowOptions(
+        center: true,
+        backgroundColor: Colors.transparent,
+        skipTaskbar: false,
+        titleBarStyle: TitleBarStyle.hidden,
+      );
+
+      windowManager.waitUntilReadyToShow(windowOptions, () async {
+        await windowManager.show();
+        await windowManager.focus();
+      });
+
+      // Run the app
+      runApp(ProviderScope(
+        observers: [
+          TalkerRiverpodObserver(
+            talker: talker,
+            settings: TalkerRiverpodLoggerSettings(
+              printStateFullData: true,
+              providerFilter: (provider) {
+                return provider.name != prayerCardProvider.name;
+              },
+            ),
+          ),
+        ],
+        child: const SeratiApp(),
+      ));
+    },
+    (error, stackTrace) {
+      talker.handle(error, stackTrace);
+    },
+  );
 }
 
 final talker = TalkerFlutter.init();

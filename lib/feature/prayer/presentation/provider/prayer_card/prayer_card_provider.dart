@@ -89,9 +89,9 @@ class PrayerCard extends _$PrayerCard {
 
     log.debug("$_prayerCardLogPrefix Building prayer cache …");
 
-    final todaysTimes = service.getTodaysPrayerTimes(now);
+    final todaysTimes = service.getTodaysPrayerTimes(now, false);
     final yesterdaysTimes =
-        service.getTodaysPrayerTimes(now.subtract(const Duration(days: 1)));
+        service.getTodaysPrayerTimes(now.subtract(const Duration(days: 1)), false);
 
     _cache = _PrayerCache(
       anchorDate: todayAnchor,

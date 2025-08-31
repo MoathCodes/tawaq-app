@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/text_extensions.dart';
-import 'package:hasanat/core/widgets/hover_card.dart';
-// import 'package:hasanat/core/widgets/hover_card.dart';
+import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_tracker_card_model.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_completion_provider.dart';
@@ -21,7 +20,7 @@ class PrayerTrackerWidget extends ConsumerWidget {
     final cardsStream = ref.watch(prayerTrackerCardsProvider(context.l10n));
     final time = ref.read(currentLocationTimeProvider);
 
-    return HoverCard(
+    return StaticCard(
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

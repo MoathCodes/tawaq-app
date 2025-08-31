@@ -13,6 +13,7 @@ import 'package:hasanat/core/widgets/page_shell/page_shell.dart';
 import 'package:hasanat/feature/prayer/presentation/screens/prayer_page.dart';
 import 'package:hasanat/feature/quran/presentation/screens/quran_page.dart';
 import 'package:hasanat/feature/settings/presentation/pages/settings_page.dart';
+import 'package:hasanat/feature/settings/presentation/pages/start_wizard.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -202,6 +203,10 @@ List<RouteBase> _generateRoutes(
       //   path: '/test',
       //   builder: (context, state) => const TawaqApp(),
       // ),
+      GoRoute(
+        path: '/wizard',
+        builder: (context, state) => const StartedPage(),
+      ),
       ShellRoute(
         routes: [
           ...routes.map((route) => _buildGoRoute(route, themeData)),

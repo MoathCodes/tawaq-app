@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:free_map/free_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
+import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tzMapper;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -13,8 +14,11 @@ part 'location_service.g.dart';
 @riverpod
 LocationService locationService(Ref ref) {
   final talker = ref.read(talkerNotifierProvider);
+  final lang = ref.watch(localeNotifierProvider.select(
+    (value) => value.value?.languageCode,
+  ));
   final service = FmService();
-  return LocationService(talker, service);
+  return LocationService(talker, service, lang);
 }
 
 class LocationException implements Exception {
@@ -27,8 +31,9 @@ class LocationException implements Exception {
 
 class LocationService {
   final Talker _talker;
+  final String? languageCode;
   final FmService _service;
-  LocationService(this._talker, this._service);
+  LocationService(this._talker, this._service, this.languageCode);
 
   Future<LatLng> getCurrentPosition() async {
     try {
@@ -100,7 +105,10 @@ class LocationService {
       _talker.info('[LocationService] Searching for: $query');
       final results = await _service.search(
         q: query,
-        p: const FmSearchParams(),
+        p: FmSearchParams(langs: [
+          'en',
+          if (languageCode != 'en' && languageCode != null) languageCode!
+        ]),
       );
       _talker.info('[LocationService] Found ${results.length} results');
       return results;

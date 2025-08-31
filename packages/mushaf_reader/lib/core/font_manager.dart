@@ -1,4 +1,4 @@
-// lib/src/core/font_manager.dart
+import 'package:mushaf_reader/core/performance_utils.dart';
 
 /// A helper class to determine the correct font family for a given page.
 ///
@@ -8,8 +8,9 @@ class FontHelper {
   static const String basmalahFamily = 'QCF4_BSML';
 
   /// Returns the font family name for the chunk that contains the given page.
+  /// Uses performance-optimized caching.
   static String getFontFamilyForPage(int pageNumber) {
-    return 'QuranPage_${pageNumber.toString().padLeft(3, '0')}';
+    return PerformanceUtils.getFontFamilyForPage(pageNumber);
   }
 }
 

@@ -164,6 +164,12 @@ abstract class AppLocalizations {
   /// **'Asr'**
   String get asr;
 
+  /// No description provided for @autoSelectOrMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Select or Map'**
+  String get autoSelectOrMap;
+
   /// No description provided for @bestStreak.
   ///
   /// In en, this message translates to:
@@ -175,6 +181,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Blue'**
   String get blue;
+
+  /// No description provided for @calculationMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculation Method'**
+  String get calculationMethod;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @chooseLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Location'**
+  String get chooseLocation;
 
   /// No description provided for @colorTheme.
   ///
@@ -200,6 +224,12 @@ abstract class AppLocalizations {
   /// **'Completion Status'**
   String get completionStatus;
 
+  /// No description provided for @coordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'Coordinates'**
+  String get coordinates;
+
   /// No description provided for @currentPrayer.
   ///
   /// In en, this message translates to:
@@ -224,6 +254,12 @@ abstract class AppLocalizations {
   /// **'Dhuhr'**
   String get dhuhr;
 
+  /// No description provided for @dragTheMapTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the map to position the pin'**
+  String get dragTheMapTip;
+
   /// No description provided for @english.
   ///
   /// In en, this message translates to:
@@ -236,11 +272,23 @@ abstract class AppLocalizations {
   /// **'we couldn\'t find this page please make sure you entered the correct url.'**
   String get errorNotFoundPage;
 
+  /// No description provided for @errorOccurredWhile.
+  ///
+  /// In en, this message translates to:
+  /// **'Error Occurred While {whileError}'**
+  String errorOccurredWhile(String whileError);
+
   /// No description provided for @fajr.
   ///
   /// In en, this message translates to:
   /// **'Fajir'**
   String get fajr;
+
+  /// No description provided for @gettingLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Getting Location'**
+  String get gettingLocation;
 
   /// No description provided for @green.
   ///
@@ -259,6 +307,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Iqamah'**
   String get iqamah;
+
+  /// No description provided for @iqamahAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah Adjustment'**
+  String get iqamahAdjustment;
 
   /// No description provided for @iqamahSubtitleMessage.
   ///
@@ -314,11 +368,35 @@ abstract class AppLocalizations {
   /// **'Late Rate'**
   String get lateRate;
 
+  /// No description provided for @latitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Latitude'**
+  String get latitude;
+
   /// No description provided for @light.
   ///
   /// In en, this message translates to:
   /// **'Light'**
   String get light;
+
+  /// No description provided for @locationSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set geographical location and prayer time calculation method.'**
+  String get locationSectionSubtitle;
+
+  /// No description provided for @locationSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location & Calculation'**
+  String get locationSectionTitle;
+
+  /// No description provided for @longitude.
+  ///
+  /// In en, this message translates to:
+  /// **'Longitude'**
+  String get longitude;
 
   /// No description provided for @maghrib.
   ///
@@ -331,6 +409,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Midnight'**
   String get midnight;
+
+  /// No description provided for @minute.
+  ///
+  /// In en, this message translates to:
+  /// **'دقيقة'**
+  String get minute;
 
   /// No description provided for @missed.
   ///
@@ -368,6 +452,12 @@ abstract class AppLocalizations {
   /// **'Next Prayer'**
   String get nextPrayer;
 
+  /// No description provided for @noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found.'**
+  String get noResults;
+
   /// No description provided for @onTime.
   ///
   /// In en, this message translates to:
@@ -404,6 +494,18 @@ abstract class AppLocalizations {
   /// **'Orange'**
   String get orange;
 
+  /// No description provided for @pageNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Page Not Found'**
+  String get pageNotFound;
+
+  /// No description provided for @pageNotFoundDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This page doesn\'t exist. Please go back to the home page.'**
+  String get pageNotFoundDescription;
+
   /// No description provided for @playerAnalytics.
   ///
   /// In en, this message translates to:
@@ -415,6 +517,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Prayer'**
   String get prayer;
+
+  /// No description provided for @prayerSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings for prayer times, tracking, and related configurations.'**
+  String get prayerSettingsSubtitle;
+
+  /// No description provided for @prayerSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer Settings'**
+  String get prayerSettingsTitle;
 
   /// No description provided for @prayerTimes.
   ///
@@ -464,6 +578,18 @@ abstract class AppLocalizations {
   /// **'Rose'**
   String get rose;
 
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @searchForMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for more options'**
+  String get searchForMore;
+
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:
@@ -500,11 +626,53 @@ abstract class AppLocalizations {
   /// **'Sunrise'**
   String get sunrise;
 
+  /// No description provided for @timeFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Time Format'**
+  String get timeFormat;
+
+  /// No description provided for @timeSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure time display format and Iqamah times for each prayer.'**
+  String get timeSectionSubtitle;
+
+  /// No description provided for @timeSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Time Display & Iqamah'**
+  String get timeSectionTitle;
+
+  /// No description provided for @timezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Timezone'**
+  String get timezone;
+
+  /// No description provided for @tipHoldCtrlToRotate.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: Hold Ctrl and drag to rotate and tilt the map.'**
+  String get tipHoldCtrlToRotate;
+
   /// No description provided for @toggleArabic.
   ///
   /// In en, this message translates to:
   /// **'Toggle Arabic'**
   String get toggleArabic;
+
+  /// No description provided for @use24HourFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 24-hour format'**
+  String get use24HourFormat;
+
+  /// No description provided for @useMyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use My Location'**
+  String get useMyLocation;
 
   /// No description provided for @violet.
   ///

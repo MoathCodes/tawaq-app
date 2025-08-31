@@ -75,11 +75,12 @@ class PrayerRepo {
   }
 
   PrayerTimesData getPrayerTimes(DateTime date, Coordinates coordinates,
-      CalculationParameters calculationParameters) {
+      CalculationParameters calculationParameters, bool roundToMinutes) {
     final prayerTimes = PrayerTimesData.calculate(
       date: date,
       coordinates: coordinates,
       calculationParameters: calculationParameters,
+      roundToMinutes: roundToMinutes,
     );
     return prayerTimes;
   }

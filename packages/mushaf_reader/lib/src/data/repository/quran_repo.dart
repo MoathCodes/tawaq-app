@@ -198,13 +198,15 @@ class QuranRepository {
       );
     }
 
+    // Pre-allocate with estimated capacity for better performance
     final buf = StringBuffer();
     final ayahFragments = <AyahFragment>[];
 
     // Build fragments in single pass
     for (final entry in pageEntries) {
       final start = buf.length;
-      buf.write(_codeV4ByAyahId![entry['id']] ?? '');
+      final ayahText = _codeV4ByAyahId![entry['id']] ?? '';
+      buf.write(ayahText);
       final end = buf.length;
 
       ayahFragments.add(
@@ -212,45 +214,47 @@ class QuranRepository {
       );
     }
 
-    // Build lines more efficiently
+    // Build lines more efficiently with pre-sorting
     final lineMap = <int, List<Map<String, dynamic>>>{};
     for (final entry in pageEntries) {
       final lineStart = entry['line_start'] as int;
-      lineMap.putIfAbsent(lineStart, () => []).add(entry);
+      (lineMap[lineStart] ??= []).add(entry);
     }
 
+    // Pre-sorted line numbers for faster iteration
+    final sortedLineNumbers = lineMap.keys.toList()..sort();
     final lines = <LineModel>[];
-    final sortedLineEntries = lineMap.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
 
-    var lineIdx = 0;
-    for (final entry in sortedLineEntries) {
-      final lineData = entry.value.first;
+    for (int i = 0; i < sortedLineNumbers.length; i++) {
+      final lineNumber = sortedLineNumbers[i];
+      final lineData = lineMap[lineNumber]!.first;
       final start = lineData['line_start'] as int;
       final end = lineData['line_end'] as int;
 
-      final frags = ayahFragments
-          .where((f) => f.start >= start && f.end <= end)
-          .toList();
+      // Use more efficient filtering
+      final frags = <AyahFragment>[];
+      for (final frag in ayahFragments) {
+        if (frag.start >= start && frag.end <= end) {
+          frags.add(frag);
+        }
+      }
 
-      lines.add(
-        LineModel(index: lineIdx++, start: start, end: end, fragments: frags),
-      );
+      lines.add(LineModel(index: i, start: start, end: end, fragments: frags));
     }
 
-    // Build surah blocks efficiently
+    // Build surah blocks efficiently with fewer iterations
     final surahBlocks = <SurahBlock>[];
     if (ayahFragments.isNotEmpty) {
       var currentStart = 0;
       var currentSurah = _ayahMetaById![ayahFragments.first.ayahId]!.surah;
       var firstNumInSurah =
           _ayahMetaById![ayahFragments.first.ayahId]!.numberInSurah;
+      var currentBlockFragments = <AyahFragment>[];
 
-      for (int i = 0; i < ayahFragments.length; i++) {
-        final frag = ayahFragments[i];
-        final surahNo = _ayahMetaById![frag.ayahId]!.surah;
+      for (final frag in ayahFragments) {
+        final meta = _ayahMetaById![frag.ayahId]!;
 
-        if (surahNo != currentSurah) {
+        if (meta.surah != currentSurah) {
           // Close previous block
           surahBlocks.add(
             SurahBlock(
@@ -260,16 +264,18 @@ class QuranRepository {
               end: frag.start,
               hasBasmalah:
                   _surahHasBasmalah![currentSurah]! && firstNumInSurah == 1,
-              ayahs: ayahFragments
-                  .where((f) => f.start >= currentStart && f.end <= frag.start)
-                  .toList(),
+              ayahs: List.from(currentBlockFragments),
             ),
           );
 
-          currentSurah = surahNo;
+          // Start new block
+          currentSurah = meta.surah;
           currentStart = frag.start;
-          firstNumInSurah = _ayahMetaById![frag.ayahId]!.numberInSurah;
+          firstNumInSurah = meta.numberInSurah;
+          currentBlockFragments.clear();
         }
+
+        currentBlockFragments.add(frag);
       }
 
       // Close final block
@@ -281,7 +287,7 @@ class QuranRepository {
           end: buf.length,
           hasBasmalah:
               _surahHasBasmalah![currentSurah]! && firstNumInSurah == 1,
-          ayahs: ayahFragments.where((f) => f.start >= currentStart).toList(),
+          ayahs: List.from(currentBlockFragments),
         ),
       );
     }

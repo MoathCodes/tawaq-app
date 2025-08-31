@@ -22,9 +22,8 @@ PrayerCardDecision computePrayerCardDecision({
   final currentPrayerTime =
       todaysPrayerTimes.getCurrentPrayerDateTime(location);
   final currentPrayer = todaysPrayerTimes.currentPrayer(date: currentTime);
-  final nextPrayer = todaysPrayerTimes.nextPrayer(date: currentTime);
 
-  // Grace period: show the *current* prayer for up to 30 min after its time.
+  // Grace period: show the *current* prayer for up to 30 min after its time.
   final minutesSinceCurrentPrayer =
       currentTime.difference(currentPrayerTime).inMinutes;
   final withinGracePeriod =
@@ -39,30 +38,39 @@ PrayerCardDecision computePrayerCardDecision({
 
   // -------------------------------------------------------------------------
   // 2️⃣  Decide whether we should look at yesterday's timings. This happens for
-  //      the short window *before* (Fajr − 1 h).
+  //      the short window *before* (Fajr − 1 h), but only in very early hours.
   // -------------------------------------------------------------------------
-  final fajrHour = todaysPrayerTimes.fajr.toLocation(location).hour;
-  final beforeFajrMinusOneHour = currentTime.hour <= fajrHour - 1;
+  final todaysFajr = todaysPrayerTimes.fajr.toLocation(location);
+  final beforeTodaysFajr = currentTime.isBefore(todaysFajr);
+  final veryEarlyMorning =
+      currentTime.hour <= 2; // Only very early morning hours (1-2 AM)
+  final shouldUseYesterday = beforeTodaysFajr && veryEarlyMorning;
 
   final effectivePrayerTimes =
-      beforeFajrMinusOneHour ? yesterdaysPrayerTimes : todaysPrayerTimes;
+      shouldUseYesterday ? yesterdaysPrayerTimes : todaysPrayerTimes;
   final effectiveSunnahTimes =
-      beforeFajrMinusOneHour ? yesterdaysSunnahTimes : todaysSunnahTimes;
+      shouldUseYesterday ? yesterdaysSunnahTimes : todaysSunnahTimes;
 
-  print(
-      "beforeFajrMinusOneHour: ${todaysPrayerTimes.fajr.toLocation(location)} "
-      "-> $beforeFajrMinusOneHour, difference: ${currentTime.difference(todaysPrayerTimes.fajr.toLocation(location))}");
+  // print(
+  //     "shouldUseYesterday: $shouldUseYesterday (current: ${currentTime.hour}:${currentTime.minute}, fajr: ${todaysFajr.hour}:${todaysFajr.minute})");
 
   // -------------------------------------------------------------------------
   // 3️⃣  Special night-time cases.
   // -------------------------------------------------------------------------
-  final isBeforeMidnight = nextPrayer == Prayer.fajrAfter;
+  final effectiveNextPrayer =
+      effectivePrayerTimes.nextPrayer(date: currentTime);
+
+  final isBeforeMidnight =
+      currentPrayer == Prayer.fajrAfter && effectiveNextPrayer == Prayer.fajr;
   final isAfterMidnightAndBeforeFajr = currentPrayer == Prayer.ishaBefore &&
       todaysPrayerTimes.fajr
               .toLocation(location)
               .difference(currentTime)
               .inHours >=
           1;
+
+  // print("Effective prayer: $effectiveNextPrayer");
+  // print("current prayer $currentPrayer");
 
   if (isBeforeMidnight) {
     return PrayerCardDecision(
@@ -84,9 +92,23 @@ PrayerCardDecision computePrayerCardDecision({
   // -------------------------------------------------------------------------
   // 4️⃣  Default – show the *next* prayer.
   // -------------------------------------------------------------------------
+  // Use the effective prayer times to determine the next prayer
+  final nextPrayerDateTime = switch (effectiveNextPrayer) {
+    Prayer.fajr => effectivePrayerTimes.fajr.toLocation(location),
+    Prayer.sunrise => effectivePrayerTimes.sunrise.toLocation(location),
+    Prayer.dhuhr => effectivePrayerTimes.dhuhr.toLocation(location),
+    Prayer.asr => effectivePrayerTimes.asr.toLocation(location),
+    Prayer.maghrib => effectivePrayerTimes.maghrib.toLocation(location),
+    Prayer.isha => effectivePrayerTimes.isha.toLocation(location),
+    Prayer.ishaBefore =>
+      effectiveSunnahTimes.lastThirdOfTheNight.toLocation(location),
+    Prayer.fajrAfter =>
+      effectiveSunnahTimes.middleOfTheNight.toLocation(location),
+  };
+
   return PrayerCardDecision(
-    referenceTime: effectivePrayerTimes.getNextPrayerDateTime(location),
-    prayer: nextPrayer,
+    referenceTime: nextPrayerDateTime,
+    prayer: effectiveNextPrayer,
     isCountdown: true,
   );
 }

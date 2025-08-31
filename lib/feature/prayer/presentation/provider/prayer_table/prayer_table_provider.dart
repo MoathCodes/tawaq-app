@@ -189,6 +189,11 @@ class PrayerTable extends _$PrayerTable {
     }).toList();
     final allRows = [...prayers, ...sunnahPrayers];
 
+    print("Current Prayer: $currentPrayer");
+    print("The Current Prayer Row: ${allRows.where(
+      (element) => element.isCurrentPrayer == true,
+    )}");
+
     // the row after the isCurrentPrayer will be the next prayer.
     final currentPrayerIndex = allRows.indexWhere((row) => row.isCurrentPrayer);
     if (currentPrayerIndex != -1) {

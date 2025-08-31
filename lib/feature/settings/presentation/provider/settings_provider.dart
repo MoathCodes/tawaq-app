@@ -83,19 +83,14 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
         '$_prayerSettingsNotifierLogPrefix 24 hour format set to: $value');
   }
 
-  void setCoordinates(Coordinates coordinates) async {
+  void setCoordinates(Coordinates coordinates) {
     if (state.valueOrNull == null) return;
     final talker = ref.read(talkerNotifierProvider);
     talker.info(
         '$_prayerSettingsNotifierLogPrefix Setting coordinates to: $coordinates');
-    final service = ref.read(settingsServiceProvider);
-    final newLocation = ref
-        .read(locationServiceProvider)
-        .getLocationFromCoordinatesOffline(coordinates);
 
-    final newSettings = state.value!.copyWith(
-        coordinates: coordinates,
-        location: newLocation ?? state.value!.location);
+    final service = ref.read(settingsServiceProvider);
+    final newSettings = state.value!.copyWith(coordinates: coordinates);
     if (state.value == newSettings) {
       talker.warning(
           '$_prayerSettingsNotifierLogPrefix Coordinates are the same, not updating.');
@@ -142,6 +137,24 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     talker.info('$_prayerSettingsNotifierLogPrefix Location set to: $location');
   }
 
+  void setLocationName(String locationName) {
+    if (state.valueOrNull == null) return;
+    final talker = ref.read(talkerNotifierProvider);
+    talker.info(
+        '$_prayerSettingsNotifierLogPrefix Setting location name to: $locationName');
+    final service = ref.read(settingsServiceProvider);
+    final newSettings = state.value!.copyWith(locationName: locationName);
+    if (state.value == newSettings) {
+      talker.warning(
+          '$_prayerSettingsNotifierLogPrefix Location name is the same, not updating.');
+      return;
+    }
+    service.setPrayerSettings(newSettings);
+    state = AsyncData(newSettings);
+    talker.info(
+        '$_prayerSettingsNotifierLogPrefix Location name set to: $locationName');
+  }
+
   void setPrayerSettings(PrayerSettings settings) {
     if (state.valueOrNull == null) return;
     final talker = ref.read(talkerNotifierProvider);
@@ -180,6 +193,55 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
           '$_prayerSettingsNotifierLogPrefix Prayer settings updated successfully: $value');
       return value;
     });
+  }
+
+  Future<void> updateLocationData({
+    Coordinates? coordinates,
+    String? locationName,
+    Location? location,
+  }) async {
+    if (state.valueOrNull == null) return;
+    final talker = ref.read(talkerNotifierProvider);
+
+    talker.info(
+        '$_prayerSettingsNotifierLogPrefix Updating location data - coordinates: $coordinates, locationName: $locationName, location: $location');
+
+    var finalCoordinates = coordinates;
+    var finalLocationName = locationName;
+    var finalLocation = location;
+
+    // If we have coordinates but need location
+    if (finalCoordinates != null && finalLocation == null) {
+      try {
+        finalLocation = ref
+            .read(locationServiceProvider)
+            .getLocationFromCoordinatesOffline(finalCoordinates);
+        talker.info(
+            '$_prayerSettingsNotifierLogPrefix Auto-resolved location from coordinates: $finalLocation');
+      } catch (e) {
+        talker.error(
+            '$_prayerSettingsNotifierLogPrefix Failed to resolve location from coordinates: $e');
+      }
+    }
+
+    final newSettings = state.value!.copyWith(
+      coordinates: finalCoordinates ?? state.value!.coordinates,
+      locationName: finalLocationName ?? state.value!.locationName,
+      location: finalLocation ?? state.value!.location,
+    );
+
+    if (state.value == newSettings) {
+      talker.warning(
+          '$_prayerSettingsNotifierLogPrefix No changes detected, not updating.');
+      return;
+    }
+
+    final service = ref.read(settingsServiceProvider);
+    service.setPrayerSettings(newSettings);
+    state = AsyncData(newSettings);
+
+    talker.info(
+        '$_prayerSettingsNotifierLogPrefix Location data updated successfully - coordinates: ${newSettings.coordinates}, locationName: ${newSettings.locationName}, location: ${newSettings.location}');
   }
 
   void updatePrayerIqamahTime(Prayer prayer, int iqamahTime) {

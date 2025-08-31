@@ -88,9 +88,7 @@ class _SingleColorCardState extends ConsumerState<_SingleColorCard> {
                         ),
                       ]
                     : null,
-                color: isSelected
-                    ? selectedTheme.colorScheme.colors.background
-                    : null,
+                color: selectedTheme.colorScheme.colors.background,
                 border: Border.all(
                   color: isSelected
                       ? selectedTheme.colorScheme.colors.primary
@@ -125,7 +123,7 @@ class _SingleColorCardState extends ConsumerState<_SingleColorCard> {
                                     ? Border.all(
                                         color: lightTheme.colors.primary)
                                     : null,
-                                color: lightTheme.colors.primaryForeground,
+                                color: lightTheme.colors.background,
                               ),
                               padding: const EdgeInsets.all(12),
                               child: Text(
@@ -152,7 +150,7 @@ class _SingleColorCardState extends ConsumerState<_SingleColorCard> {
                               border: isSelected && isDarkThemeSelected
                                   ? Border.all(color: darkTheme.colors.primary)
                                   : null,
-                              color: darkTheme.colors.primaryForeground,
+                              color: darkTheme.colors.background,
                             ),
                             padding: const EdgeInsets.all(12),
                             child: Text(

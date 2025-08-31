@@ -90,10 +90,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get asr => 'العصر';
 
   @override
+  String get autoSelectOrMap => 'تحديد تلقائي او بالخريطة';
+
+  @override
   String get bestStreak => 'أفضل إنجاز';
 
   @override
   String get blue => 'أزرق';
+
+  @override
+  String get calculationMethod => 'طريقة الحساب';
+
+  @override
+  String get cancel => 'إلغاء';
+
+  @override
+  String get chooseLocation => 'اختر الموقع';
 
   @override
   String get colorTheme => 'نمط الألوان';
@@ -108,6 +120,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get completionStatus => 'حالة الاكتمال';
 
   @override
+  String get coordinates => 'الإحداثيات الجغرافية';
+
+  @override
   String get currentPrayer => 'الصلاة الحالية';
 
   @override
@@ -120,6 +135,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dhuhr => 'الظهر';
 
   @override
+  String get dragTheMapTip => 'اسحب الخريطة لتحديد موقع الدبوس';
+
+  @override
   String get english => 'الإنجيليزية';
 
   @override
@@ -127,7 +145,15 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم نستطع الوصول لهذه الصفحة الرجاء التأكد من الرابط ثم إعادة المحاولة.';
 
   @override
+  String errorOccurredWhile(String whileError) {
+    return 'حدث خطأ أثناء $whileError';
+  }
+
+  @override
   String get fajr => 'الفجر';
+
+  @override
+  String get gettingLocation => 'الحصول على الموقع';
 
   @override
   String get green => 'أخضر';
@@ -137,6 +163,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get iqamah => 'الإقامة';
+
+  @override
+  String get iqamahAdjustment => 'ضبط الإقامة';
 
   @override
   String iqamahSubtitleMessage(int iqamahMins) {
@@ -178,13 +207,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get lateRate => 'الصلاة متأخرًا';
 
   @override
+  String get latitude => 'خط العرض';
+
+  @override
   String get light => 'فاتح';
+
+  @override
+  String get locationSectionSubtitle =>
+      'تحديد الموقع الجغرافي وطريقة حساب مواقيت الصلاة.';
+
+  @override
+  String get locationSectionTitle => 'الموقع والحساب';
+
+  @override
+  String get longitude => 'خط الطول';
 
   @override
   String get maghrib => 'المغرب';
 
   @override
   String get midnight => 'منتصف الليل';
+
+  @override
+  String get minute => 'دقيقة';
 
   @override
   String get missed => 'فائتة';
@@ -205,6 +250,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nextPrayer => 'الصلاة القادمة';
 
   @override
+  String get noResults => 'لا يوجد نتائج.';
+
+  @override
   String get onTime => 'في وقتها';
 
   @override
@@ -223,10 +271,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get orange => 'برتقالي';
 
   @override
+  String get pageNotFound => 'الصفحة غير موجودة';
+
+  @override
+  String get pageNotFoundDescription =>
+      'هذه الصفحة غير موجودة. يرجى العودة إلى الصفحة الرئيسية.';
+
+  @override
   String get playerAnalytics => 'تحليل الصلاة';
 
   @override
   String get prayer => 'الصلاة';
+
+  @override
+  String get prayerSettingsSubtitle =>
+      'الإعدادات الخاصة بالصلاة ومواقيتها وتعقبها.';
+
+  @override
+  String get prayerSettingsTitle => 'اعدادات الصلاة';
 
   @override
   String get prayerTimes => 'مواقيت الصلاة';
@@ -252,6 +314,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get rose => 'وردي';
+
+  @override
+  String get save => 'حفظ';
+
+  @override
+  String get searchForMore => 'ابحث للمزيد من الخيارات';
 
   @override
   String get settings => 'الإعدادات';
@@ -284,7 +352,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sunrise => 'الشروق';
 
   @override
+  String get timeFormat => 'تنسيق الوقت';
+
+  @override
+  String get timeSectionSubtitle => 'تنسيق عرض الوقت وأوقات الإقامة لكل صلاة.';
+
+  @override
+  String get timeSectionTitle => 'عرض الأوقات والإقامة';
+
+  @override
+  String get timezone => 'المنطقة الزمنية';
+
+  @override
+  String get tipHoldCtrlToRotate =>
+      'تلميح: اضغط على Ctrl واسحب لتدوير وإمالة الخريطة.';
+
+  @override
   String get toggleArabic => 'حول اللغة';
+
+  @override
+  String get use24HourFormat => 'استخدام نظام 24 ساعة';
+
+  @override
+  String get useMyLocation => 'استخدم موقعي الحالي';
 
   @override
   String get violet => 'بنفسجي';

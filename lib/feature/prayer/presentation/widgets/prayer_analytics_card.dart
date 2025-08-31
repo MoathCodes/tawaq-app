@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/text_extensions.dart';
-import 'package:hasanat/core/widgets/hover_card.dart';
+import 'package:hasanat/core/widgets/custom_cards.dart';
+import 'package:hasanat/core/widgets/f_skeletonizer.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/mini_card.dart';
@@ -23,7 +24,20 @@ class PrayerAnalyticsCard extends ConsumerWidget {
             .read(prayerAnalyticsNotifierProvider.notifier)
             .changePeriod(period),
       ),
-      loading: () => const FProgress.circularIcon(),
+      loading: () => FSkeletonizer(
+          child: _PrayerAnalyticsWidget(
+        data: const PrayerAnalytics(
+          period: PrayerAnalyticsPeriod.weekly,
+          completionPercentage: 0.75,
+          currentStreak: 5,
+          bestStreak: 12,
+          jamaahPercentage: 0.65,
+          onTimePercentage: 0.55,
+          missedPercentage: 0.10,
+          latePercentage: 0.20,
+        ),
+        onPeriodChanged: (p0) {},
+      )),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -50,7 +64,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     final colors = FTheme.of(context).colors;
     final l10n = context.l10n;
 
-    return HoverCard(
+    return StaticCard(
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

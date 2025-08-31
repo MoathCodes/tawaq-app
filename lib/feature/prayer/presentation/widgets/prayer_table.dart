@@ -1,107 +1,259 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/core/utils/text_extensions.dart';
-import 'package:hasanat/core/widgets/hover_card.dart';
+import 'package:hasanat/core/widgets/custom_cards.dart';
+import 'package:hasanat/core/widgets/f_skeletonizer.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_table_model.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_table/prayer_table_provider.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
 
 class PrayerTable extends ConsumerWidget {
-  // Constants for styling
+  // Static constants for performance
   static const double _headerHeight = 48.0;
-
-  static const double _imageSize = 56.0;
+  static const Size _imageSize = Size(56.0, 56.0);
   static const double _imageBorderRadius = 12.0;
   static const int _nextPrayerAlpha = 30;
   static const int _currentPrayerAlpha = 50;
+
+  // Static objects to avoid repeated creation
+  static final BorderRadius _imageBorderRadiusGeometry =
+      BorderRadius.circular(_imageBorderRadius);
+  static const EdgeInsets _cellPadding = EdgeInsets.all(8);
+  static const SizedBox _imagePadding = SizedBox(width: 12);
+
   const PrayerTable({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = FTheme.of(context);
     final l10n = context.l10n;
     final prayerTableStream = ref.watch(prayerTableProvider(l10n));
 
-    // Using a Material Card as the main container
-    return HoverCard(
-      padding: const EdgeInsets.all(0),
-      // clipBehavior:
-      //     Clip.antiAlias, // Ensures content respects the border radius
-      // color: theme.colors.secondary,
-      // elevation: 0,
-      // shape: RoundedRectangleBorder(
-      //   side: BorderSide(color: theme.dividerStyles.horizontalStyle.color),
-      //   borderRadius: const BorderRadius.all(Radius.circular(12)),
-      // ),
-      child: switch (prayerTableStream) {
-        // Error State
-        AsyncError(:final error) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text('Error: ${error.toString()}'),
-            ),
-          ),
-        // Loading State
-        AsyncLoading() => const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32.0),
-              child: FProgress.circularIcon(),
-            ),
-          ),
-        // Data State
-        AsyncValue(:final value) =>
-          // DataTable should be horizontally scrollable if content overflows
-          LayoutBuilder(builder: (context, constraints) {
-            final totalH = constraints.maxHeight;
-            const rowCount = 8;
+    return StaticCard(
+      padding: EdgeInsets.zero,
+      child: prayerTableStream.when(
+        data: (rows) => _PrayerTableContent(rows: rows),
+        loading: () => const _LoadingWidget(),
+        error: (error, _) => _ErrorWidget(error: error),
+      ),
+    );
+  }
+}
 
-            final rowH = (totalH - _headerHeight) / rowCount;
-            return DataTable(
-              border: TableBorder.symmetric(
-                  inside:
-                      BorderSide(color: theme.colors.primary.withAlpha(150))),
-              headingRowHeight: _headerHeight,
-              dataRowMaxHeight: rowH.clamp(24.0, double.infinity),
-              columnSpacing: 16.0,
-              dividerThickness: 1.0,
-              columns: _buildColumns(l10n, theme),
-              rows:
-                  value!.map((row) => _buildDataRow(row, theme, l10n)).toList(),
-            );
-          }),
+/// Error widget for when data loading fails
+class _ErrorWidget extends StatelessWidget {
+  final Object error;
+
+  const _ErrorWidget({required this.error});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: theme.colors.destructive,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error loading prayer table',
+              style: theme.typography.base,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              style: theme.typography.sm.copyWith(
+                color: theme.colors.mutedForeground,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Loading widget with skeleton effect
+class _LoadingWidget extends StatelessWidget {
+  const _LoadingWidget();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    final l10n = context.l10n;
+
+    return FSkeletonizer(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final totalH = constraints.maxHeight;
+          const rowCount = 8;
+          final rowH = (totalH - PrayerTable._headerHeight) / rowCount;
+
+          return DataTable(
+            headingRowHeight: PrayerTable._headerHeight,
+            dataRowMaxHeight: rowH.clamp(24.0, double.infinity),
+            columnSpacing: 16.0,
+            dividerThickness: 1.0,
+            columns: _buildColumns(l10n, theme),
+            rows: List.generate(
+              8,
+              (index) => DataRow(
+                cells: [
+                  DataCell(
+                    Padding(
+                      padding: PrayerTable._cellPadding,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: PrayerTable._imageSize.width,
+                            height: PrayerTable._imageSize.height,
+                            decoration: BoxDecoration(
+                              color: theme.colors.mutedForeground,
+                              borderRadius:
+                                  PrayerTable._imageBorderRadiusGeometry,
+                            ),
+                          ),
+                          PrayerTable._imagePadding,
+                          const Text('Loading Prayer'),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const DataCell(
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('00:00'),
+                        Text('Loading'),
+                      ],
+                    ),
+                  ),
+                  const DataCell(
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('00:00'),
+                        Text('Loading'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  List<DataColumn> _buildColumns(AppLocalizations l10n, FThemeData theme) {
+    return [
+      DataColumn(
+        label: Text(l10n.prayer, style: theme.typography.sm),
+        numeric: false,
+      ),
+      DataColumn(
+        label: Text(l10n.adhan, style: theme.typography.sm),
+        numeric: true,
+      ),
+      DataColumn(
+        label: Text(l10n.iqamah, style: theme.typography.sm),
+        numeric: true,
+      ),
+    ];
+  }
+}
+
+/// Main content widget for the prayer table
+class _PrayerTableContent extends StatelessWidget {
+  // Static cached columns to avoid rebuilding
+  static List<DataColumn>? _cachedColumns;
+
+  static AppLocalizations? _cachedL10n;
+
+  static FThemeData? _cachedTheme;
+  final List<PrayerTableRow> rows;
+  const _PrayerTableContent({required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    final l10n = context.l10n;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final totalH = constraints.maxHeight;
+        const rowCount = 8;
+        final rowH = (totalH - PrayerTable._headerHeight) / rowCount;
+
+        return DataTable(
+          border: TableBorder.symmetric(
+            inside: BorderSide(color: theme.colors.primary.withAlpha(150)),
+          ),
+          headingRowHeight: PrayerTable._headerHeight,
+          dataRowMaxHeight: rowH.clamp(24.0, double.infinity),
+          columnSpacing: 16.0,
+          dividerThickness: 1.0,
+          columns: _buildColumns(l10n, theme),
+          rows: rows.map((row) => _buildDataRow(row, theme, l10n)).toList(),
+        );
       },
     );
   }
 
-  /// Builds the list of columns for the DataTable.
   List<DataColumn> _buildColumns(AppLocalizations l10n, FThemeData theme) {
-    final columns = [
+    // Return cached columns if available and valid
+    if (_cachedColumns != null &&
+        _cachedL10n == l10n &&
+        _cachedTheme == theme) {
+      return _cachedColumns!;
+    }
+
+    _cachedColumns = [
       DataColumn(
-        label: Text(l10n.prayer, style: theme.typography.lg),
+        label: Text(l10n.prayer, style: theme.typography.sm),
+        numeric: false,
       ),
       DataColumn(
-          label: Text(l10n.adhan, style: theme.typography.sm), numeric: true),
+        label: Text(l10n.adhan, style: theme.typography.sm),
+        numeric: true,
+      ),
       DataColumn(
-          label: Text(l10n.iqamah, style: theme.typography.sm), numeric: true),
+        label: Text(l10n.iqamah, style: theme.typography.sm),
+        numeric: true,
+      ),
     ];
-    // Reverse the order for RTL layouts
-    return columns;
+    _cachedL10n = l10n;
+    _cachedTheme = theme;
+
+    return _cachedColumns!;
   }
 
-  /// Builds a single DataRow for the DataTable.
   DataRow _buildDataRow(
-      PrayerTableRow row, FThemeData theme, AppLocalizations l10n) {
+    PrayerTableRow row,
+    FThemeData theme,
+    AppLocalizations l10n,
+  ) {
     // Define the background color based on the prayer state
     Color? rowColor;
     if (row.isCurrentPrayer) {
-      rowColor = theme.colors.primary.withAlpha(_currentPrayerAlpha);
+      rowColor =
+          theme.colors.primary.withAlpha(PrayerTable._currentPrayerAlpha);
     } else if (row.isNextPrayer) {
-      rowColor = theme.colors.primary.withAlpha(_nextPrayerAlpha);
+      rowColor = theme.colors.primary.withAlpha(PrayerTable._nextPrayerAlpha);
     }
 
     final cells = [
@@ -118,38 +270,41 @@ class PrayerTable extends ConsumerWidget {
 
   /// Builds the cell containing the prayer name and image.
   DataCell _buildPrayerCell(
-      PrayerTableRow row, FThemeData theme, AppLocalizations l10n) {
+    PrayerTableRow row,
+    FThemeData theme,
+    AppLocalizations l10n,
+  ) {
     return DataCell(
       Padding(
-        padding: const EdgeInsets.all(8),
+        padding: PrayerTable._cellPadding,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Prayer Image
+            // Prayer Image with optimized container
             Container(
-              width: _imageSize.w,
-              height: _imageSize.h,
+              width: PrayerTable._imageSize.width,
+              height: PrayerTable._imageSize.height,
               decoration: BoxDecoration(
                 color: theme.colors.mutedForeground,
-                borderRadius: BorderRadius.circular(_imageBorderRadius),
+                borderRadius: PrayerTable._imageBorderRadiusGeometry,
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(_imageBorderRadius),
+                borderRadius: PrayerTable._imageBorderRadiusGeometry,
                 child: Image.asset(
                   row.prayer.imagePath,
                   fit: BoxFit.cover,
                   alignment: row.prayer.alignment,
-                  cacheWidth:
-                      _imageSize.w.toInt() * 2, // Higher res for caching
-                  cacheHeight: _imageSize.h.toInt() * 2,
+                  cacheWidth: (PrayerTable._imageSize.width * 2).toInt(),
+                  cacheHeight: (PrayerTable._imageSize.height * 2).toInt(),
                 ),
               ),
             ),
-            const SizedBox(width: 16),
+            PrayerTable._imagePadding,
             // Prayer Name
             Text(
               row.prayer.getLocaleName(l10n),
-            ).lg,
+              style: theme.typography.lg,
+            ),
           ],
         ),
       ),
@@ -158,12 +313,12 @@ class PrayerTable extends ConsumerWidget {
 
   /// Builds a generic cell for Adhan and Iqamah times.
   DataCell _buildTimeCell(
-      ({String title, String? subtitle}) timeInfo, FThemeData theme) {
+    ({String title, String? subtitle}) timeInfo,
+    FThemeData theme,
+  ) {
     return DataCell(
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        // crossAxisAlignment:
-        //     isRtl ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           Text(timeInfo.title).sm,
           if (timeInfo.subtitle != null)

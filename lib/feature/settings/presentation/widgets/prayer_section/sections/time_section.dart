@@ -7,23 +7,27 @@ import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/sections/custom_parameters_section.dart';
 import 'package:hasanat/feature/settings/presentation/widgets/settings_section.dart';
 
-class TimeSection extends ConsumerStatefulWidget {
+class PrayerSettingsTimeSection extends ConsumerStatefulWidget {
   final double maxWidth;
 
-  const TimeSection({super.key, required this.maxWidth});
+  const PrayerSettingsTimeSection({super.key, required this.maxWidth});
 
   @override
-  ConsumerState<TimeSection> createState() => _TimeSectionState();
+  ConsumerState<PrayerSettingsTimeSection> createState() => _TimeSectionState();
 }
 
-class _TimeSectionState extends ConsumerState<TimeSection> {
+class _TimeSectionState extends ConsumerState<PrayerSettingsTimeSection>
+    with TickerProviderStateMixin {
   late TextEditingController _fajrIqamahController;
-  late TextEditingController _duhurIqamahController;
+  late TextEditingController _dhuhrIqamahController;
   late TextEditingController _asrIqamahController;
-  late TextEditingController _magrihbIqamahController;
+  late TextEditingController _maghribIqamahController;
   late TextEditingController _ishaIqamahController;
+
+  late FSelectController<CalculationMethod> _methodController;
 
   @override
   Widget build(BuildContext context) {
@@ -34,13 +38,18 @@ class _TimeSectionState extends ConsumerState<TimeSection> {
             )));
     return SettingsSection(
       crossAxisAlignment: CrossAxisAlignment.center,
-      title: "عرض الأوقات والإقامة",
-      subtitle: "تنسيق عرض الوقت وأوقات الإقامة لكل صلاة.",
+      title: context.l10n.timeSectionTitle,
+      subtitle: context.l10n.timeSectionSubtitle,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: widget.maxWidth),
         child: Column(spacing: 20, children: [
           FCard(
-            title: const Text("تنسيق الوقت"),
+            title: Text(context.l10n.calculationMethod),
+            child: _buildCalculationMethodSelector(),
+          ),
+          PrayerSettingsCustomParametersCard(maxWidth: widget.maxWidth),
+          FCard(
+            title: Text(context.l10n.timeFormat),
             child: FSwitch(
               value: prayerSettings.is24Hours ?? false, // Placeholder value
               onChange: (value) {
@@ -48,7 +57,7 @@ class _TimeSectionState extends ConsumerState<TimeSection> {
                     .read(prayerSettingsNotifierProvider.notifier)
                     .set24HourFormat(value);
               },
-              label: const Text("استخدام نظام 24 ساعة"),
+              label: Text(context.l10n.use24HourFormat),
             ),
           ),
           Row(
@@ -57,7 +66,7 @@ class _TimeSectionState extends ConsumerState<TimeSection> {
             children: [
               Expanded(
                 child: FTileGroup(
-                  label: const Text("ضبط الإقامة"),
+                  label: Text(context.l10n.iqamahAdjustment),
                   children: Prayer.values
                       .where((element) =>
                           element != Prayer.fajrAfter &&
@@ -65,20 +74,6 @@ class _TimeSectionState extends ConsumerState<TimeSection> {
                           element != Prayer.sunrise)
                       .map((e) => _buildPrayerTimeTile(
                           e, _getPrayerController(e), false))
-                      .toList()
-                      .cast<FTileMixin>(),
-                ),
-              ),
-              Expanded(
-                child: FTileGroup(
-                  label: const Text("ضبط الأذان"),
-                  children: Prayer.values
-                      .where((element) =>
-                        element != Prayer.fajrAfter &&
-                          element != Prayer.ishaBefore &&
-                          element != Prayer.sunrise)
-                      .map((e) => _buildPrayerTimeTile(
-                          e, _getPrayerController(e), true))
                       .toList()
                       .cast<FTileMixin>(),
                 ),
@@ -93,28 +88,59 @@ class _TimeSectionState extends ConsumerState<TimeSection> {
   @override
   void dispose() {
     _fajrIqamahController.dispose();
-    _duhurIqamahController.dispose();
+    _dhuhrIqamahController.dispose();
     _asrIqamahController.dispose();
-    _magrihbIqamahController.dispose();
+    _maghribIqamahController.dispose();
     _ishaIqamahController.dispose();
+    _methodController.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    final values =
-        ref.read(prayerSettingsNotifierProvider).value?.iqamahSettings;
+    final prayerSettings = ref.read(prayerSettingsNotifierProvider);
+    final values = prayerSettings.value?.iqamahSettings;
     _fajrIqamahController =
         TextEditingController(text: (values?[Prayer.fajr] ?? '').toString());
-    _duhurIqamahController =
+    _dhuhrIqamahController =
         TextEditingController(text: (values?[Prayer.dhuhr] ?? '').toString());
     _asrIqamahController =
         TextEditingController(text: (values?[Prayer.asr] ?? '').toString());
-    _magrihbIqamahController =
+    _maghribIqamahController =
         TextEditingController(text: (values?[Prayer.maghrib] ?? '').toString());
     _ishaIqamahController =
         TextEditingController(text: (values?[Prayer.isha] ?? '').toString());
+
+    _methodController =
+        FSelectController(vsync: this, value: prayerSettings.value?.method);
+  }
+
+  Widget _buildCalculationMethodSelector() {
+    return FSelect<CalculationMethod>.search(
+      controller: _methodController,
+      label: Text(context.l10n.calculationMethod),
+      format: (value) => value.getLocaleName(context.l10n),
+      filter: (query) => CalculationMethod.values.where(
+        (method) => method
+            .getLocaleName(context.l10n)
+            .toLowerCase()
+            .contains(query.toLowerCase()),
+      ),
+      contentBuilder: (context, data) => data.values
+          .map((method) => FSelectItem(
+                method.getLocaleName(context.l10n),
+                method,
+              ))
+          .toList(),
+      onChange: (value) {
+        if (value != null) {
+          ref.read(prayerSettingsNotifierProvider.notifier).update(
+                (settings) => settings.copyWith(method: value),
+              );
+        }
+      },
+    );
   }
 
   Widget _buildPrayerTimeTile(
@@ -133,39 +159,70 @@ class _TimeSectionState extends ConsumerState<TimeSection> {
           color: theme.colors.foreground,
         ),
       ),
-      suffix: SizedBox(
-        width: 120,
-        child: FTextField(
-          controller: controller,
+      suffix: Row(
+        children: [
+          const Expanded(
+            child: SizedBox.shrink(),
+          ),
+          Expanded(
+            child: FTextField(
+              controller: controller,
 
-          keyboardType: const TextInputType.numberWithOptions(
-              decimal: false, signed: false),
-          inputFormatters: [
-            allowSigned
-                ? FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]*$'))
-                : FilteringTextInputFormatter.digitsOnly
-          ],
-          onEditingComplete: () => _saveTextField(prayer),
-          hint: allowSigned ? "20 أو -10" : null,
+              keyboardType: const TextInputType.numberWithOptions(
+                  decimal: false, signed: false),
+              inputFormatters: [
+                allowSigned
+                    ? FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]*$'))
+                    : FilteringTextInputFormatter.digitsOnly
+              ],
+              onEditingComplete: () => _saveTextField(prayer),
+              hint: allowSigned ? "20 أو -10" : null,
 
-          onSubmit: (value) => _saveTextField(prayer),
-          // suffixBuilder: (context, value, child) => ,
-          description: Text(
-            "دقيقة",
-            style: theme.typography.xs.copyWith(
-              color: theme.colors.mutedForeground,
+              onSubmit: (value) => _saveTextField(prayer),
+              // suffixBuilder: (context, value, child) => ,
+              description: Text(
+                context.l10n.minute,
+                style: theme.typography.xs.copyWith(
+                  color: theme.colors.mutedForeground,
+                ),
+              ),
             ),
           ),
-        ),
+          Expanded(
+            child: FTextField(
+              controller: controller,
+
+              keyboardType: const TextInputType.numberWithOptions(
+                  decimal: false, signed: false),
+              inputFormatters: [
+                allowSigned
+                    ? FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]*$'))
+                    : FilteringTextInputFormatter.digitsOnly
+              ],
+              onEditingComplete: () => _saveTextField(prayer),
+              hint: allowSigned ? "20 أو -10" : null,
+
+              onSubmit: (value) => _saveTextField(prayer),
+              // suffixBuilder: (context, value, child) => ,
+              description: Text(
+                context.l10n.minute,
+                style: theme.typography.xs.copyWith(
+                  color: theme.colors.mutedForeground,
+                ),
+              ),
+            ),
+          ),
+          FButton.icon(onPress: () {}, child: const Icon(FIcons.volume2))
+        ],
       ),
     );
   }
 
   TextEditingController _getPrayerController(Prayer prayer) => switch (prayer) {
         Prayer.fajr => _fajrIqamahController,
-        Prayer.dhuhr => _duhurIqamahController,
+        Prayer.dhuhr => _dhuhrIqamahController,
         Prayer.asr => _asrIqamahController,
-        Prayer.maghrib => _magrihbIqamahController,
+        Prayer.maghrib => _maghribIqamahController,
         Prayer.isha => _ishaIqamahController,
         _ => throw UnimplementedError(),
       };

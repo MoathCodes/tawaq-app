@@ -27,6 +27,62 @@ extension DurationFormatting on Duration {
   }
 }
 
+extension MethodLocaleExtension on CalculationMethod {
+  String getLocaleName(AppLocalizations locale, {bool isArabic = false}) {
+    // return switch (this) {
+    //   CalculationMethod.dubai => locale.dubai,
+    //   CalculationMethod.egyptian => locale.egyptian,
+    //   CalculationMethod.karachi => locale.karachi,
+    //   CalculationMethod.kuwait => locale.kuwait,
+    //   CalculationMethod.moonsightingCommittee => locale.moonsightingCommittee,
+    //   CalculationMethod.morocco => locale.morocco,
+    //   CalculationMethod.muslimWorldLeague => locale.muslimWorldLeague,
+    //   CalculationMethod.northAmerica => locale.northAmerica,
+    //   CalculationMethod.other => locale.other,
+    //   CalculationMethod.qatar => locale.qatar,
+    //   CalculationMethod.singapore => locale.singapore,
+    //   CalculationMethod.tehran => locale.tehran,
+    //   CalculationMethod.turkiye => locale.turkiye,
+    //   CalculationMethod.ummAlQura => locale.ummAlQura,
+    // };
+    if (isArabic) {
+      return switch (this) {
+        CalculationMethod.dubai => "دبي",
+        CalculationMethod.egyptian => "الهيئة العامة المصرية للمساحة",
+        CalculationMethod.karachi => "جامعة العلوم الإسلامية، كراتشي",
+        CalculationMethod.kuwait => "الكويت",
+        CalculationMethod.moonsightingCommittee => "لجنة رؤية الهلال",
+        CalculationMethod.morocco => "المغرب",
+        CalculationMethod.muslimWorldLeague => "رابطة العالم الإسلامي",
+        CalculationMethod.northAmerica => "أمريكا الشمالية (ISNA)",
+        CalculationMethod.other => "أخرى",
+        CalculationMethod.qatar => "قطر",
+        CalculationMethod.singapore => "سنغافورة",
+        CalculationMethod.tehran => "طهران",
+        CalculationMethod.turkiye => "تركيا (ديانت)",
+        CalculationMethod.ummAlQura => "جامعة أم القرى",
+      };
+    }
+
+    return switch (this) {
+      CalculationMethod.dubai => "Dubai",
+      CalculationMethod.egyptian => "Egyptian General Authority",
+      CalculationMethod.karachi => "University of Islamic Sciences, Karachi",
+      CalculationMethod.kuwait => "Kuwait",
+      CalculationMethod.moonsightingCommittee => "Moonsighting Committee",
+      CalculationMethod.morocco => "Morocco",
+      CalculationMethod.muslimWorldLeague => "Muslim World League",
+      CalculationMethod.northAmerica => "North America (ISNA)",
+      CalculationMethod.other => "Other",
+      CalculationMethod.qatar => "Qatar",
+      CalculationMethod.singapore => "Singapore",
+      CalculationMethod.tehran => "Tehran",
+      CalculationMethod.turkiye => "Turkey (Diyanet)",
+      CalculationMethod.ummAlQura => "Umm Al-Qura University",
+    };
+  }
+}
+
 extension MethodParamsExtension on CalculationMethod {
   CalculationParameters getParams() {
     return switch (this) {

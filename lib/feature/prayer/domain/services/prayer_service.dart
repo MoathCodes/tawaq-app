@@ -133,13 +133,14 @@ class PrayerService {
     return _repo.getSunnahTime(prayerTimes);
   }
 
-  PrayerTimesData getTodaysPrayerTimes([DateTime? date]) {
+  PrayerTimesData getTodaysPrayerTimes(
+      [DateTime? date, bool roundToMinutes = true]) {
     const logPrefix = "[PrayerService.getTodaysPrayerTimes] ";
     final activeDate = date ?? _currentTime();
     final params = _settings.method.parameters
         .copyWith(adjustments: _settings.adhanAdjustments);
-    PrayerTimesData prayerTimes =
-        _repo.getPrayerTimes(activeDate, _settings.coordinates, params);
+    PrayerTimesData prayerTimes = _repo.getPrayerTimes(
+        activeDate, _settings.coordinates, params, roundToMinutes);
 
     final isRamadan = Hijriyah.now().hMonth == 9;
 

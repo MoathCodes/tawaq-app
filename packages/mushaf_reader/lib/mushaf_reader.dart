@@ -1,5 +1,7 @@
 library;
 
+// performance utilities
+export 'core/performance_utils.dart';
 // core models
 export 'src/data/models/ayah_model.dart';
 export 'src/data/models/quran_page_model.dart';

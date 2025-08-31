@@ -31,13 +31,23 @@ void main() async {
       talker);
   final location = getLocation('Asia/Riyadh');
 
-  // final currentTime = DateTime.now().toLocation(location);
-  final currentTime = DateTime(2025, 6, 21, 3, 12, 0).toLocation(location);
+  // Test the 11:15 PM scenario where the issue occurs
+  final currentTime = DateTime(2025, 8, 14, 23, 15, 0).toLocation(location);
+  //final currentTime = DateTime.now().toLocation(location);
+  //final currentTime = DateTime(2025, 6, 21, 3, 12, 0).toLocation(location);
   final todaysPrayerTimes = service.getTodaysPrayerTimes(currentTime);
   final yesterdaysPrayerTimes = service
       .getTodaysPrayerTimes(currentTime.subtract(const Duration(days: 1)));
   final todaysSunnahTimes = service.getSunnahTime(todaysPrayerTimes);
   final yesterdaysSunnahTimes = service.getSunnahTime(yesterdaysPrayerTimes);
+
+  print("Current time: $currentTime");
+  print("Today's Fajr: ${todaysPrayerTimes.fajr.toLocation(location)}");
+  print("Today's Isha: ${todaysPrayerTimes.isha.toLocation(location)}");
+  print(
+      "Today's Midnight: ${todaysSunnahTimes.middleOfTheNight.toLocation(location)}");
+  print(
+      "Today's Last Third: ${todaysSunnahTimes.lastThirdOfTheNight.toLocation(location)}");
 
   final decision = computePrayerCardDecision(
     currentTime: currentTime,
@@ -47,8 +57,7 @@ void main() async {
     todaysSunnahTimes: todaysSunnahTimes,
     yesterdaysSunnahTimes: yesterdaysSunnahTimes,
   );
-
-  print(decision);
+  print("Decision: $decision");
 }
 
 /// Pure, synchronous and side-effect-free port of the decision making that is
@@ -62,8 +71,8 @@ void main() async {
 PrayerCardDecision computePrayerCardDecision({
   required DateTime currentTime,
   required Location location,
-  required PrayerTimes todaysPrayerTimes,
-  required PrayerTimes yesterdaysPrayerTimes,
+  required PrayerTimesData todaysPrayerTimes,
+  required PrayerTimesData yesterdaysPrayerTimes,
   required SunnahTimes todaysSunnahTimes,
   required SunnahTimes yesterdaysSunnahTimes,
 }) {
@@ -92,7 +101,6 @@ PrayerCardDecision computePrayerCardDecision({
   // -----------------------------------------------------------------------
   if (isCurrentPrayerFinished &&
       currentPrayerTime.difference(currentTime).inMinutes.abs() <= 30) {
-    print("showing current prayer");
     return PrayerCardDecision(
       referenceTime: currentPrayerTime,
       prayer: currentPrayer,
@@ -105,7 +113,7 @@ PrayerCardDecision computePrayerCardDecision({
   //    dataset to look at (today vs. yesterday) – this mirrors the original
   //    `thisPrayerTimes` / `thisSunnahTimes` handling in `build()`.
   // -----------------------------------------------------------------------
-  late final PrayerTimes effectivePrayerTimes;
+  late final PrayerTimesData effectivePrayerTimes;
   late final SunnahTimes effectiveSunnahTimes;
 
   if (currentTime.hour <

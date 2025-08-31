@@ -70,10 +70,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get asr => 'Asr';
 
   @override
+  String get autoSelectOrMap => 'Auto Select or Map';
+
+  @override
   String get bestStreak => 'Best Streak';
 
   @override
   String get blue => 'Blue';
+
+  @override
+  String get calculationMethod => 'Calculation Method';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get chooseLocation => 'Choose Location';
 
   @override
   String get colorTheme => 'Color Theme';
@@ -88,6 +100,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get completionStatus => 'Completion Status';
 
   @override
+  String get coordinates => 'Coordinates';
+
+  @override
   String get currentPrayer => 'Current Prayer';
 
   @override
@@ -100,6 +115,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dhuhr => 'Dhuhr';
 
   @override
+  String get dragTheMapTip => 'Drag the map to position the pin';
+
+  @override
   String get english => 'English';
 
   @override
@@ -107,7 +125,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'we couldn\'t find this page please make sure you entered the correct url.';
 
   @override
+  String errorOccurredWhile(String whileError) {
+    return 'Error Occurred While $whileError';
+  }
+
+  @override
   String get fajr => 'Fajir';
+
+  @override
+  String get gettingLocation => 'Getting Location';
 
   @override
   String get green => 'Green';
@@ -117,6 +143,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get iqamah => 'Iqamah';
+
+  @override
+  String get iqamahAdjustment => 'Iqamah Adjustment';
 
   @override
   String iqamahSubtitleMessage(int iqamahMins) {
@@ -153,13 +182,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lateRate => 'Late Rate';
 
   @override
+  String get latitude => 'Latitude';
+
+  @override
   String get light => 'Light';
+
+  @override
+  String get locationSectionSubtitle =>
+      'Set geographical location and prayer time calculation method.';
+
+  @override
+  String get locationSectionTitle => 'Location & Calculation';
+
+  @override
+  String get longitude => 'Longitude';
 
   @override
   String get maghrib => 'Maghrib';
 
   @override
   String get midnight => 'Midnight';
+
+  @override
+  String get minute => 'دقيقة';
 
   @override
   String get missed => 'Missed';
@@ -180,6 +225,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nextPrayer => 'Next Prayer';
 
   @override
+  String get noResults => 'No results found.';
+
+  @override
   String get onTime => 'On Time';
 
   @override
@@ -198,10 +246,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orange => 'Orange';
 
   @override
+  String get pageNotFound => 'Page Not Found';
+
+  @override
+  String get pageNotFoundDescription =>
+      'This page doesn\'t exist. Please go back to the home page.';
+
+  @override
   String get playerAnalytics => 'Player Analytics';
 
   @override
   String get prayer => 'Prayer';
+
+  @override
+  String get prayerSettingsSubtitle =>
+      'Settings for prayer times, tracking, and related configurations.';
+
+  @override
+  String get prayerSettingsTitle => 'Prayer Settings';
 
   @override
   String get prayerTimes => 'Prayer Times';
@@ -229,6 +291,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get rose => 'Rose';
 
   @override
+  String get save => 'Save';
+
+  @override
+  String get searchForMore => 'Search for more options';
+
+  @override
   String get settings => 'Settings';
 
   @override
@@ -249,7 +317,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sunrise => 'Sunrise';
 
   @override
+  String get timeFormat => 'Time Format';
+
+  @override
+  String get timeSectionSubtitle =>
+      'Configure time display format and Iqamah times for each prayer.';
+
+  @override
+  String get timeSectionTitle => 'Time Display & Iqamah';
+
+  @override
+  String get timezone => 'Timezone';
+
+  @override
+  String get tipHoldCtrlToRotate =>
+      'Tip: Hold Ctrl and drag to rotate and tilt the map.';
+
+  @override
   String get toggleArabic => 'Toggle Arabic';
+
+  @override
+  String get use24HourFormat => 'Use 24-hour format';
+
+  @override
+  String get useMyLocation => 'Use My Location';
 
   @override
   String get violet => 'Violet';

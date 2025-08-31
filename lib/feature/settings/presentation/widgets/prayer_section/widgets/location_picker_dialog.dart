@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:free_map/free_map.dart';
+import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/location_extensions.dart';
-import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/location_provider.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 
 class LocationPickerDialog extends ConsumerStatefulWidget {
   final FDialogStyle Function(FDialogStyle) style;
   final Animation<double> animation;
-  final void Function(Coordinates coordinates) onLocationSelected;
+  final void Function(Coordinates coordinates, String locationName)
+      onLocationSelected;
 
   const LocationPickerDialog({
     super.key,
@@ -32,26 +32,32 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     final colors = theme.colors;
-    final coords = ref.watch(prayerSettingsNotifierProvider.select(
-      (value) => value.value?.coordinates,
-    ));
-    final selectedLocation = ref.watch(locationPickerProvider(
-        coords ?? PrayerSettings.defaultSettings().coordinates));
-    final notifierController = ref.read(locationPickerProvider(
-            coords ?? PrayerSettings.defaultSettings().coordinates)
-        .notifier);
-      WidgetsBinding.instance.addPostFrameCallback((_) {
 
-      _mapController.move(selectedLocation, 12);
-      });
-    
+    final selectedLocation = ref.watch(locationPickerProvider);
+    final notifierController = ref.read(locationPickerProvider.notifier);
+
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   selectedLocation.whenOrNull(
+    //     data: (data) {
+    //       _mapController.move(data.latLng, 15);
+    //     },
+    //     error: (error, stackTrace) {
+    //       ref.read(talkerNotifierProvider).handle(error, stackTrace);
+    //       showFToast(
+    //           context: context,
+    //           title: Text(context.l10n.errorOccurredWhile("Loading Location")),
+    //           description: Text(error.toString()));
+    //     },
+    //   );
+    // });
+
     return FDialog(
       animation: widget.animation,
       style: widget.style,
       direction: Axis.horizontal,
       constraints: const BoxConstraints(maxWidth: 850),
       title: Text(
-        "Choose Location",
+        context.l10n.chooseLocation,
         style: TextStyle(
           color: colors.foreground,
           fontSize: 18,
@@ -68,7 +74,7 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(colors, notifierController),
+            _buildHeader(colors, notifierController, selectedLocation),
             _buildMapSection(colors, selectedLocation, notifierController),
             _buildTipSection(colors),
           ],
@@ -78,17 +84,27 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
         FButton(
           style: FButtonStyle.secondary(),
           onPress: () => Navigator.of(context).pop(),
-          child: const Text("Cancel"),
+          child: Text(context.l10n.cancel),
         ),
         FButton(
-          onPress: () {
-            widget.onLocationSelected(selectedLocation.coordinates);
+          onPress: () async {
+            widget.onLocationSelected(
+              selectedLocation.$1,
+              selectedLocation.$2,
+            );
+
             Navigator.of(context).pop();
           },
-          child: const Text("Save"),
+          child: Text(context.l10n.save),
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
   }
 
   Widget _buildCoordinateField({
@@ -121,7 +137,6 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
             style: TextStyle(
               color: colors.foreground,
               fontSize: 13,
-              fontFamily: 'monospace',
             ),
           ),
         ),
@@ -152,7 +167,7 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
               ),
               const SizedBox(width: 8),
               Text(
-                "Coordinates",
+                context.l10n.coordinates,
                 style: TextStyle(
                   color: colors.foreground,
                   fontSize: 16,
@@ -162,12 +177,12 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
             ],
           ),
           _buildCoordinateField(
-            label: "Lat:",
+            label: "${context.l10n.latitude}: ",
             value: selectedLocation.latitude.toStringAsFixed(5),
             colors: colors,
           ),
           _buildCoordinateField(
-            label: "Lng:",
+            label: "${context.l10n.longitude}: ",
             value: selectedLocation.longitude.toStringAsFixed(5),
             colors: colors,
           ),
@@ -176,7 +191,11 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
     );
   }
 
-  Widget _buildHeader(FColors colors, LocationPicker notifierController) {
+  Widget _buildHeader(
+    FColors colors,
+    LocationPicker notifierController,
+    (Coordinates coords, String name) selectedLocation,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -194,7 +213,7 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Drag the map to position the pin',
+                context.l10n.dragTheMapTip,
                 style: TextStyle(
                   color: colors.mutedForeground,
                   fontSize: 14,
@@ -206,40 +225,27 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
                     await notifierController.useCurrentLocation();
                   } catch (e) {
                     // Show error snackbar
-
-                    showFToast(
-                        context: context,
-                        title:
-                            const Text("Error Occurred While Getting Location"),
-                        description: Text(e.toString()));
+                    if (mounted) {
+                      showFToast(
+                          context: context,
+                          title: Text(context.l10n.errorOccurredWhile(
+                              context.l10n.gettingLocation)),
+                          description: Text(e.toString()));
+                    }
                   }
                 },
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   spacing: 8,
                   children: [
-                    Icon(Icons.my_location, size: 16),
-                    Text("Use My Location"),
+                    const Icon(Icons.my_location, size: 16),
+                    Text(context.l10n.useMyLocation),
                   ],
                 ),
               ),
             ],
           ),
-          FutureBuilder(
-            future: notifierController.getSelectedPlace(),
-            builder: (context, asyncSnapshot) =>
-                asyncSnapshot.connectionState == ConnectionState.waiting
-                    ? const Center(child: FProgress.circularIcon())
-                    : asyncSnapshot.hasError
-                        ? Text(
-                            'Error: ${asyncSnapshot.error}',
-                            style: TextStyle(color: colors.destructive),
-                          )
-                        : asyncSnapshot.hasData
-                            ? _buildSearchField(
-                                asyncSnapshot.data!, notifierController)
-                            : const SizedBox.shrink(),
-          ),
+          _buildSearchField(selectedLocation, notifierController),
         ],
       ),
     );
@@ -289,26 +295,26 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
     );
   }
 
-  Widget _buildMapSection(FColors colors, LatLng selectedLocation,
+  Widget _buildMapSection(
+      FColors colors,
+      (Coordinates coords, String name) selectedLocation,
       LocationPicker notifierController) {
     return Expanded(
       child: Row(
         children: [
-          _buildMap(colors, selectedLocation, notifierController),
-          _buildCoordinatesPanel(colors, selectedLocation),
+          _buildMap(colors, selectedLocation.$1.latLng, notifierController),
+          _buildCoordinatesPanel(colors, selectedLocation.$1.latLng),
         ],
       ),
     );
   }
 
-  Widget _buildSearchField(
-      FmData initialValue, LocationPicker notifierController) {
-    print("Building search field with initial value: ${initialValue.geoJson}");
+  Widget _buildSearchField((Coordinates coords, String name) selectedLocation,
+      LocationPicker notifierController) {
     return SizedBox(
       height: 48,
       child: FSelect<FmData>.search(
-        initialValue: initialValue,
-        hint: initialValue.address,
+        hint: selectedLocation.$2,
         format: (s) => s.name,
         filter: (query) => ref.read(searchPlacesProvider(query).future),
         contentBuilder: (context, data) {
@@ -322,6 +328,7 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
         },
         onChange: (place) {
           if (place != null) {
+            // data = place;
             notifierController.selectPlace(place);
           }
         },
@@ -348,7 +355,7 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
           ),
           const SizedBox(width: 8),
           Text(
-            'Tip: Hold Shift and drag to rotate and tilt the map.',
+            context.l10n.tipHoldCtrlToRotate,
             style: TextStyle(
               color: colors.mutedForeground,
               fontSize: 13,

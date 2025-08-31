@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/widgets/hover_card.dart';
+import 'package:hasanat/core/widgets/custom_cards.dart';
 
 class SettingsCard extends StatelessWidget {
   final String title;
@@ -19,7 +19,7 @@ class SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 0.75.sw, minHeight: 400),
+      constraints: BoxConstraints(maxWidth: 0.50.sw, minHeight: 400),
       child: FCard(
         // titleAlignment:
         //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
@@ -68,7 +68,7 @@ class SettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return HoverCard(
+    return StaticCard(
       padding: const EdgeInsets.all(8),
       child: FCard(
           // titleAlignment:

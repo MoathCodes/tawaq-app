@@ -37,7 +37,7 @@ class PrayerTrackerCards extends _$PrayerTrackerCards {
             p != Prayer.sunrise)
         .map((prayer) {
       final prayerTime = prayerTimes
-          .timeForPrayer(prayer)!
+          .timeForPrayer(prayer)
           .toLocation(location ?? getLocation('Asia/Riyadh'));
       final isCurrentPrayer = currentPrayer == prayer;
       final isTimePassed = currentTime.isAfter(prayerTime);
