@@ -1,5 +1,6 @@
 import 'package:dyn_mouse_scroll/smooth_scroll_multiplatform.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
@@ -54,7 +55,15 @@ class _PrayerPageState extends ConsumerState<PrayerPage> {
                       child: widget,
                     ),
                   )
-                  .toList(),
+                  .toList()
+                  // Stagger animations so each item starts after the previous
+                  .animate(interval: 150.ms, delay: 100.ms)
+                  .fadeIn(duration: 500.ms)
+                  .slideY(
+                    begin: 0.3,
+                    duration: 500.ms,
+                    curve: Curves.easeInOut,
+                  ),
             );
           } else {
             // Use StaggeredGrid on larger screens
