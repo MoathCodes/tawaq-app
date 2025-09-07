@@ -56,7 +56,6 @@ class _PrayerPageState extends ConsumerState<PrayerPage> {
                     ),
                   )
                   .toList()
-                  // Stagger animations so each item starts after the previous
                   .animate(interval: 150.ms, delay: 100.ms)
                   .fadeIn(duration: 500.ms)
                   .slideY(
@@ -71,26 +70,56 @@ class _PrayerPageState extends ConsumerState<PrayerPage> {
               crossAxisCount: 7,
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
+              // Important: animate the tile CHILDREN, not the tiles themselves,
+              // otherwise StaggeredGrid can't read sizing and layout info.
               children: [
                 StaggeredGridTile.extent(
                   crossAxisCellCount: 3,
                   mainAxisExtent: _mainAxisExtent,
-                  child: _widgets[0], // CurrentPrayerCard
+                  child: _widgets[0]
+                      .animate(delay: 100.ms)
+                      .fadeIn(duration: 500.ms)
+                      .slideY(
+                        begin: 0.3,
+                        duration: 500.ms,
+                        curve: Curves.easeInOut,
+                      ), // CurrentPrayerCard
                 ),
                 StaggeredGridTile.extent(
                   crossAxisCellCount: 4,
                   mainAxisExtent: _mainAxisExtent,
-                  child: _widgets[1], // PrayerAnalyticsCard
+                  child: _widgets[1]
+                      .animate(delay: 100.ms + 150.ms)
+                      .fadeIn(duration: 500.ms)
+                      .slideY(
+                        begin: 0.3,
+                        duration: 500.ms,
+                        curve: Curves.easeInOut,
+                      ), // PrayerAnalyticsCard
                 ),
                 StaggeredGridTile.extent(
                   crossAxisCellCount: 3,
                   mainAxisExtent: _trackerCardsMainAxisExtent,
-                  child: _widgets[2], // PrayerTable
+                  child: _widgets[2]
+                      .animate(delay: 100.ms + 300.ms)
+                      .fadeIn(duration: 500.ms)
+                      .slideY(
+                        begin: 0.3,
+                        duration: 500.ms,
+                        curve: Curves.easeInOut,
+                      ), // PrayerTable
                 ),
                 StaggeredGridTile.fit(
                   crossAxisCellCount: 4,
                   // mainAxisExtent: _trackerCardsMainAxisExtent,
-                  child: _widgets[3], // PrayerTrackerCards
+                  child: _widgets[3]
+                      .animate(delay: 100.ms + 450.ms)
+                      .fadeIn(duration: 500.ms)
+                      .slideY(
+                        begin: 0.3,
+                        duration: 500.ms,
+                        curve: Curves.easeInOut,
+                      ), // PrayerTrackerCards
                 ),
               ],
             );
