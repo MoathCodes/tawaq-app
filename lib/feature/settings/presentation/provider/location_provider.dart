@@ -1,6 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:free_map/free_map.dart';
+import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/core/utils/location_extensions.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/feature/settings/service/location_service.dart';
@@ -85,19 +86,48 @@ class LocationPicker extends _$LocationPicker {
   }
 
   void updateLocation(LatLng location) async {
-    final data = await _getSelectedPlace(location);
-    state = (location.coordinates, data?.name ?? 'Unknown Location');
+    state = (location.coordinates, 'Loading...');
+    try {
+      final data = await _getSelectedPlace(location);
+      state = (location.coordinates, _getAvailableName(data));
+    } catch (e, stack) {
+      ref.read(talkerNotifierProvider).handle(e, stack);
+      rethrow;
+    }
   }
 
-  Future<void> useCurrentLocation() async {
+  Future<void> useCurrentLocation(MapController mapController) async {
     try {
       final locationService = ref.read(locationServiceProvider);
       final currentLocation = await locationService.getCurrentPosition();
+      state = (currentLocation.coordinates, 'Loading...');
+      mapController.move(currentLocation, 14);
       final data = await _getSelectedPlace(currentLocation);
-      state = (currentLocation.coordinates, data?.name ?? 'Unknown Location');
-    } catch (e) {
+      state = (currentLocation.coordinates, _getAvailableName(data));
+    } catch (e, stack) {
+      ref.read(talkerNotifierProvider).handle(e, stack);
       rethrow;
     }
+  }
+
+  String _getAvailableName(FmData? data) {
+    if (data == null) return 'Unknown Location';
+    if (data.name.isNotEmpty) {
+      return data.name;
+    }
+    if (data.rawAddress != null) {
+      final address = data.rawAddress!;
+      if (address.city != null && address.city!.isNotEmpty) {
+        return address.city!;
+      }
+      if (address.state != null && address.state!.isNotEmpty) {
+        return address.state!;
+      }
+      if (address.country != null && address.country!.isNotEmpty) {
+        return address.country!;
+      }
+    }
+    return 'Unknown Location';
   }
 
   Future<FmData?> _getSelectedPlace(LatLng location) async {

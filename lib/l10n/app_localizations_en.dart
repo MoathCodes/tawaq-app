@@ -15,6 +15,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adhan => 'Adhan';
 
   @override
+  String get adhanAdjustments => 'Adhan adjustments (minutes)';
+
+  @override
   String adhanHoursAgo(int hours) {
     final intl.NumberFormat hoursNumberFormat = intl.NumberFormat.compact(
       locale: localeName,
@@ -55,6 +58,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get advancedSettingsTitle => 'Advanced Settings';
+
+  @override
   String get appearance => 'Display Settings';
 
   @override
@@ -73,6 +79,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoSelectOrMap => 'Auto Select or Map';
 
   @override
+  String get back => 'Back';
+
+  @override
+  String get basicParametersTitle => 'Basic Parameters';
+
+  @override
   String get bestStreak => 'Best Streak';
 
   @override
@@ -83,6 +95,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get changingTimezone => 'Changing Timezone';
+
+  @override
+  String get chooseCalculationMethod => 'Choose your calculation method';
 
   @override
   String get chooseLocation => 'Choose Location';
@@ -109,13 +127,50 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentStreak => 'Current Streak';
 
   @override
+  String get customParametersCollapsedHint =>
+      'Tap to configure custom calculation parameters';
+
+  @override
+  String get customParametersLabel => 'Custom parameters';
+
+  @override
+  String get customParametersTitle => 'Custom Parameters';
+
+  @override
   String get dark => 'Dark';
+
+  @override
+  String get detectTimezone => 'Detect timezone';
+
+  @override
+  String get detectTimezoneNotImplemented =>
+      'Timezone detection is not implemented here.';
+
+  @override
+  String get deviceLocationNotImplemented =>
+      'Using device location is not implemented here.';
 
   @override
   String get dhuhr => 'Dhuhr';
 
   @override
+  String get done => 'Done';
+
+  @override
   String get dragTheMapTip => 'Drag the map to position the pin';
+
+  @override
+  String get dubai => 'Dubai';
+
+  @override
+  String get editsSavedDescription =>
+      'Your changes have been saved successfully.';
+
+  @override
+  String get editsSavedTitle => 'Edits were saved';
+
+  @override
+  String get egyptian => 'Egyptian General Authority of Survey';
 
   @override
   String get english => 'English';
@@ -130,7 +185,18 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get errorUpdatingLocationDescription =>
+      'Your coordinates were updated successfully, but we couldn\'t get your location name. This won\'t affect the app\'s functionality.';
+
+  @override
+  String get errorUpdatingLocationTitle =>
+      'Error occurred while updating location';
+
+  @override
   String get fajr => 'Fajir';
+
+  @override
+  String get fajrAngleLabel => 'Fajr Angle (°)';
 
   @override
   String get gettingLocation => 'Getting Location';
@@ -142,10 +208,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadith => 'Hadith';
 
   @override
+  String get highLatitudeRule_middleOfTheNight => 'Middle of the Night';
+
+  @override
+  String get highLatitudeRule_seventhOfTheNight => 'Seventh of the Night';
+
+  @override
+  String get highLatitudeRule_twilightAngle => 'Twilight Angle';
+
+  @override
+  String get highLatitudeRuleLabel => 'High Latitude Rule';
+
+  @override
+  String get invalidCoordinatesDescription =>
+      'Please enter valid latitude and longitude values.';
+
+  @override
+  String get invalidCoordinatesTitle => 'Invalid Coordinates';
+
+  @override
+  String get invalidParametersDescription => 'Please check your input values.';
+
+  @override
+  String get invalidParametersTitle => 'Invalid Parameters';
+
+  @override
   String get iqamah => 'Iqamah';
 
   @override
   String get iqamahAdjustment => 'Iqamah Adjustment';
+
+  @override
+  String get iqamahAfterAdhan => 'Iqamah (minutes after adhan)';
 
   @override
   String iqamahSubtitleMessage(int iqamahMins) {
@@ -161,6 +255,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get isha => 'Isha';
 
   @override
+  String get ishaAngleLabel => 'Isha Angle (°)';
+
+  @override
+  String get ishaIntervalLabel => 'Isha Interval (min)';
+
+  @override
   String get islamicTheme => 'Manuscript';
 
   @override
@@ -171,6 +271,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get jumuah => 'Jumuah';
+
+  @override
+  String get karachi => 'University of Islamic Sciences, Karachi';
+
+  @override
+  String get kuwait => 'Kuwait';
 
   @override
   String get lastThirdOfTheNight => 'Last Third Of The Night';
@@ -188,6 +294,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get light => 'Light';
 
   @override
+  String get loadingLocationSettings => 'Loading Location Settings';
+
+  @override
   String get locationSectionSubtitle =>
       'Set geographical location and prayer time calculation method.';
 
@@ -198,13 +307,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get longitude => 'Longitude';
 
   @override
+  String get madhab_hanafi => 'Hanafi';
+
+  @override
+  String get madhab_shafi => 'Shafi';
+
+  @override
+  String get madhabLabel => 'Madhab';
+
+  @override
   String get maghrib => 'Maghrib';
+
+  @override
+  String get maghribAngleLabel => 'Maghrib Angle (°)';
 
   @override
   String get midnight => 'Midnight';
 
   @override
-  String get minute => 'دقيقة';
+  String get minute => 'minute';
 
   @override
   String get missed => 'Missed';
@@ -216,16 +337,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get monthly => 'Monthly';
 
   @override
+  String get moonsightingCommittee => 'Moonsighting Committee';
+
+  @override
+  String get morocco => 'Morocco';
+
+  @override
   String get muslimFortress => 'Muslim Fortress';
 
   @override
+  String get muslimWorldLeague => 'Muslim World League';
+
+  @override
   String get neutral => 'Neutral';
+
+  @override
+  String get next => 'Next';
 
   @override
   String get nextPrayer => 'Next Prayer';
 
   @override
   String get noResults => 'No results found.';
+
+  @override
+  String get northAmerica => 'North America (ISNA)';
 
   @override
   String get onTime => 'On Time';
@@ -243,7 +379,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onTimeRate => 'On Time Rate';
 
   @override
+  String get optionalHint => 'Optional';
+
+  @override
   String get orange => 'Orange';
+
+  @override
+  String get other => 'Other';
 
   @override
   String get pageNotFound => 'Page Not Found';
@@ -253,7 +395,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'This page doesn\'t exist. Please go back to the home page.';
 
   @override
+  String get parametersSavedDescription =>
+      'Your custom parameters have been saved successfully.';
+
+  @override
+  String get parametersSavedTitle => 'Parameters Saved';
+
+  @override
+  String get placeholdersHint =>
+      'Madhab and other options can be configured later. These inputs are placeholders.';
+
+  @override
   String get playerAnalytics => 'Player Analytics';
+
+  @override
+  String get pleaseSelectMethod => 'Please select a calculation method.';
 
   @override
   String get prayer => 'Prayer';
@@ -264,6 +420,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prayerSettingsTitle => 'Prayer Settings';
+
+  @override
+  String get prayerTimeAdjustmentsTitle => 'Prayer Time Adjustments (minutes)';
 
   @override
   String get prayerTimes => 'Prayer Times';
@@ -279,6 +438,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prepareForPrayer => 'Prepare yourself for the prayer.';
 
   @override
+  String get qatar => 'Qatar';
+
+  @override
   String get quran => 'Holy Quran';
 
   @override
@@ -288,16 +450,51 @@ class AppLocalizationsEn extends AppLocalizations {
   String get remembrance => 'Remembrance';
 
   @override
+  String get resetCompleteDescription =>
+      'Parameters have been reset to default values.';
+
+  @override
+  String get resetCompleteTitle => 'Reset Complete';
+
+  @override
+  String get resetToDefaults => 'Reset to Defaults';
+
+  @override
   String get rose => 'Rose';
 
   @override
   String get save => 'Save';
 
   @override
+  String get saveParameters => 'Save Parameters';
+
+  @override
   String get searchForMore => 'Search for more options';
 
   @override
+  String get searchPlaceLabel => 'Search for a place';
+
+  @override
   String get settings => 'Settings';
+
+  @override
+  String get setupPrayerSettingsSubtitle =>
+      'We\'ll guide you through a few quick steps. You can change these later in Settings.';
+
+  @override
+  String get setupPrayerSettingsTitle => 'Let\'s set up your prayer settings.';
+
+  @override
+  String get setupPreferences => 'Let\'s set up your preferences.';
+
+  @override
+  String get signedExampleHint => '20 or -10';
+
+  @override
+  String get singapore => 'Singapore';
+
+  @override
+  String get skip => 'Skip';
 
   @override
   String get slate => 'Slate';
@@ -315,6 +512,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sunrise => 'Sunrise';
+
+  @override
+  String get tehran => 'Tehran';
 
   @override
   String get timeFormat => 'Time Format';
@@ -337,16 +537,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get toggleArabic => 'Toggle Arabic';
 
   @override
+  String get turkiye => 'Turkey (Diyanet)';
+
+  @override
+  String get ummAlQura => 'Umm Al-Qura University';
+
+  @override
   String get use24HourFormat => 'Use 24-hour format';
 
   @override
+  String get useDeviceLocation => 'Use device location';
+
+  @override
   String get useMyLocation => 'Use My Location';
+
+  @override
+  String get useSystemTimezone => 'Use System Timezone';
 
   @override
   String get violet => 'Violet';
 
   @override
   String get weekly => 'Weekly';
+
+  @override
+  String get welcomeToApp => 'Welcome to the app!';
+
+  @override
+  String get wizardStep_calculationMethod => 'Calculation Method';
+
+  @override
+  String get wizardStep_getStarted => 'Get Started';
+
+  @override
+  String get wizardStep_iqamahAdjustments => 'Iqamah & Adjustments';
+
+  @override
+  String get wizardStep_location => 'Location';
+
+  @override
+  String get wizardStep_timeFormat => 'Time Format';
+
+  @override
+  String get wizardStep_welcome => 'Welcome';
 
   @override
   String get yearly => 'Yearly';

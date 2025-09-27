@@ -6,15 +6,17 @@ import 'package:hasanat/theme/button_style.dart';
 import 'package:window_manager/window_manager.dart';
 
 class MacOSWindowControls extends StatelessWidget {
-  final VoidCallback? onClose;
-  final VoidCallback? onMinimize;
-  final VoidCallback? onFullscreen;
+  final VoidCallback onClose;
+  final VoidCallback onMinimize;
+  final void Function(AsyncSnapshot<bool> snapshot) onFullscreen;
+  final Stream<bool> isMaximized;
 
   const MacOSWindowControls({
     super.key,
-    this.onClose,
-    this.onMinimize,
-    this.onFullscreen,
+    required this.onClose,
+    required this.onMinimize,
+    required this.onFullscreen,
+    required this.isMaximized,
   });
 
   @override
@@ -35,11 +37,15 @@ class MacOSWindowControls extends StatelessWidget {
           icon: Icons.minimize,
           onPressed: onMinimize,
         ),
-        _MacOSControlButton(
-          color: const Color(0xFF28CA42), // Green
-          hoverColor: const Color(0xFF00FF57),
-          icon: Icons.fullscreen,
-          onPressed: onFullscreen,
+
+        StreamBuilder(
+          stream: isMaximized,
+          builder: (context, snapshot) => _MacOSControlButton(
+            color: const Color(0xFF28CA42), // Green
+            hoverColor: const Color(0xFF00FF57),
+            icon: Icons.fullscreen,
+            onPressed: () => onFullscreen(snapshot),
+          ),
         ),
       ],
     );
@@ -57,7 +63,12 @@ class WindowControls extends StatelessWidget {
     final isMacStyle = Platform.isMacOS || forceMacStyle == true;
 
     if (isMacStyle) {
-      return const MacOSWindowControls();
+      return MacOSWindowControls(
+        onClose: _closeWindow,
+        onMinimize: _minimizeWindow,
+        isMaximized: isMaximized,
+        onFullscreen: _maximizeWindow,
+      );
     }
 
     return Row(
@@ -70,36 +81,28 @@ class WindowControls extends StatelessWidget {
             typography: theme.typography,
             style: theme.style,
           ),
-          onPress: () async {
-            await windowManager.close();
-          },
+          onPress: _closeWindow,
           child: const Icon(FIcons.x, size: 14),
         ),
 
         // Maximize button
         StreamBuilder(
-            stream: isMaximized,
-            builder: (context, asyncSnapshot) {
-              return FButton.icon(
-                style: (style) => windowControlButtonStyle(
-                  colors: theme.colors,
-                  typography: theme.typography,
-                  style: theme.style,
-                ),
-                onPress: () async {
-                  if (asyncSnapshot.data ?? false) {
-                    await windowManager.unmaximize();
-                  } else {
-                    await windowManager.maximize();
-                  }
-                },
-                child: Icon(
-                    asyncSnapshot.data ?? false
-                        ? FIcons.maximize2
-                        : FIcons.square,
-                    size: 14),
-              );
-            }),
+          stream: isMaximized,
+          builder: (context, asyncSnapshot) {
+            return FButton.icon(
+              style: (style) => windowControlButtonStyle(
+                colors: theme.colors,
+                typography: theme.typography,
+                style: theme.style,
+              ),
+              onPress: () => _maximizeWindow(asyncSnapshot),
+              child: Icon(
+                asyncSnapshot.data ?? false ? FIcons.maximize2 : FIcons.square,
+                size: 14,
+              ),
+            );
+          },
+        ),
 
         // Minimize button
         FButton.icon(
@@ -108,13 +111,27 @@ class WindowControls extends StatelessWidget {
             typography: theme.typography,
             style: theme.style,
           ),
-          onPress: () async {
-            await windowManager.minimize();
-          },
+          onPress: _minimizeWindow,
           child: const Icon(FIcons.minus, size: 14),
         ),
       ],
     );
+  }
+
+  void _closeWindow() async {
+    await windowManager.close();
+  }
+
+  void _maximizeWindow(AsyncSnapshot<bool> asyncSnapshot) async {
+    if (asyncSnapshot.data ?? false) {
+      await windowManager.unmaximize();
+    } else {
+      await windowManager.maximize();
+    }
+  }
+
+  void _minimizeWindow() async {
+    await windowManager.minimize();
   }
 }
 
@@ -161,11 +178,7 @@ class _MacOSControlButtonState extends State<_MacOSControlButton> {
             ],
           ),
           child: _isHovered
-              ? Icon(
-                  widget.icon,
-                  size: 8,
-                  color: Colors.black87,
-                )
+              ? Icon(widget.icon, size: 8, color: Colors.black87)
               : null,
         ),
       ),

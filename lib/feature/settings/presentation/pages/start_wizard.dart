@@ -15,13 +15,14 @@ class StartedPage extends StatelessWidget {
         builder: (context, style, animation) => const _StartWizardDialog(),
       );
     });
-    return const FScaffold(
-        child: Column(
-      children: [
-        Text("Welcome to the app!"),
-        Text("Let's set up your preferences."),
-      ],
-    ));
+    return FScaffold(
+      child: Column(
+        children: [
+          Text(context.l10n.welcomeToApp),
+          Text(context.l10n.setupPreferences),
+        ],
+      ),
+    );
   }
 }
 
@@ -41,10 +42,12 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
   bool _is24Hours = false;
 
   // Custom parameters (visible only when method == other)
-  final TextEditingController _fajrAngleCtrl =
-      TextEditingController(text: '18.0');
-  final TextEditingController _ishaAngleCtrl =
-      TextEditingController(text: '18.0');
+  final TextEditingController _fajrAngleCtrl = TextEditingController(
+    text: '18.0',
+  );
+  final TextEditingController _ishaAngleCtrl = TextEditingController(
+    text: '18.0',
+  );
   final TextEditingController _ishaIntervalCtrl = TextEditingController();
   final TextEditingController _maghribAngleCtrl = TextEditingController();
 
@@ -89,19 +92,15 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
         child: _buildBody(),
       ),
       actions: [
-        if (_step > 0)
-          FButton(
-            onPress: _back,
-            child: const Text('Back'),
-          ),
+        if (_step > 0) FButton(onPress: _back, child: Text(context.l10n.back)),
         const Spacer(),
         FButton(
           onPress: () => Navigator.of(context).pop(),
-          child: const Text('Skip'),
+          child: Text(context.l10n.skip),
         ),
         FButton(
           onPress: _next,
-          child: Text(_step < 4 ? 'Next' : 'Done'),
+          child: Text(_step < 4 ? context.l10n.next : context.l10n.done),
         ),
       ],
     );
@@ -151,7 +150,7 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Iqamah (minutes after adhan)'),
+          Text(context.l10n.iqamahAfterAdhan),
           const SizedBox(height: 8),
           Wrap(
             runSpacing: 8,
@@ -170,7 +169,7 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
                 .toList(),
           ),
           const SizedBox(height: 16),
-          const Text('Adhan adjustments (minutes)'),
+          Text(context.l10n.adhanAdjustments),
           const SizedBox(height: 8),
           Wrap(
             runSpacing: 8,
@@ -213,7 +212,9 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
                 controller: _latCtrl,
                 // decoration: const InputDecoration(labelText: 'Latitude'),
                 keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true, signed: true),
+                  decimal: true,
+                  signed: true,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -222,7 +223,9 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
                 controller: _lngCtrl,
                 // decoration: const InputDecoration(labelText: 'Longitude'),
                 keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true, signed: true),
+                  decimal: true,
+                  signed: true,
+                ),
               ),
             ),
           ],
@@ -234,24 +237,24 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
               onPress: () {
                 // Placeholder: you can hook device location here later
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text(
-                          'Using device location is not implemented here.')),
+                  SnackBar(
+                    content: Text(context.l10n.deviceLocationNotImplemented),
+                  ),
                 );
               },
-              child: const Text('Use device location'),
+              child: Text(context.l10n.useDeviceLocation),
             ),
             const SizedBox(width: 8),
             FButton(
               onPress: () {
                 // Placeholder: you can hook timezone detection here later
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content:
-                          Text('Timezone detection is not implemented here.')),
+                  SnackBar(
+                    content: Text(context.l10n.detectTimezoneNotImplemented),
+                  ),
                 );
               },
-              child: const Text('Detect timezone'),
+              child: Text(context.l10n.detectTimezone),
             ),
           ],
         ),
@@ -264,17 +267,17 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text('Choose your calculation method'),
+        Text(context.l10n.chooseCalculationMethod),
         const SizedBox(height: 8),
         FSelect<CalculationMethod>(
-            format: (CalculationMethod p1) => p1.getLocaleName(context.l10n),
-            children: [
-              for (final method in CalculationMethod.values)
-                FSelectItem(method.getLocaleName(context.l10n), method),
-            ]),
+          items: {
+            for (final method in CalculationMethod.values)
+              method.getLocaleName(context.l10n): method,
+          },
+        ),
         if (_method == CalculationMethod.other) ...[
           const SizedBox(height: 16),
-          const Text('Custom parameters'),
+          Text(context.l10n.customParametersLabel),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -284,7 +287,9 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
                   // decoration:
                   //     const InputDecoration(labelText: 'Fajr angle (°)'),
                   keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true, signed: false),
+                    decimal: true,
+                    signed: false,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -294,7 +299,9 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
                   // decoration:
                   //     const InputDecoration(labelText: 'Isha angle (°)'),
                   keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true, signed: false),
+                    decimal: true,
+                    signed: false,
+                  ),
                 ),
               ),
             ],
@@ -317,15 +324,17 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
                   // decoration:
                   //     const InputDecoration(labelText: 'Maghrib angle (°)'),
                   keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true, signed: false),
+                    decimal: true,
+                    signed: false,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Madhab and other options can be configured later. These inputs are placeholders.',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+          Text(
+            context.l10n.placeholdersHint,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],
       ],
@@ -336,7 +345,7 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
     return Material(
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
-        title: const Text('Use 24-hour time format'),
+        title: Text(context.l10n.use24HourFormat),
         value: _is24Hours,
         onChanged: (v) => setState(() => _is24Hours = v),
       ),
@@ -348,23 +357,23 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          'Let\'s set up your prayer settings.',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        Text(
+          context.l10n.setupPrayerSettingsTitle,
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 8),
-        const Text(
-            'We\'ll guide you through a few quick steps. You can change these later in Settings.'),
+        Text(context.l10n.setupPrayerSettingsSubtitle),
         SizedBox(
           width: 200,
           height: 80,
           child: FTextField.password(
             suffixBuilder: (context, value, child) => FButton.icon(
-                onPress: () {},
-                style: FButtonStyle.ghost(),
-                child: const Icon(FIcons.eye)),
+              onPress: () {},
+              style: FButtonStyle.ghost(),
+              child: const Icon(FIcons.eye),
+            ),
           ),
-        )
+        ),
       ],
     );
   }
@@ -372,8 +381,9 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
   void _next() {
     if (_step == 1 && _method == null) {
       showFToast(
-          context: context,
-          title: const Text('Please select a calculation method.'));
+        context: context,
+        title: Text(context.l10n.pleaseSelectMethod),
+      );
       return;
     }
     if (_step < 4) {
@@ -386,17 +396,17 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
   String _stepTitle(int step) {
     switch (step) {
       case 0:
-        return 'Welcome';
+        return context.l10n.wizardStep_welcome;
       case 1:
-        return 'Calculation Method';
+        return context.l10n.wizardStep_calculationMethod;
       case 2:
-        return 'Time Format';
+        return context.l10n.wizardStep_timeFormat;
       case 3:
-        return 'Location';
+        return context.l10n.wizardStep_location;
       case 4:
-        return 'Iqamah & Adjustments';
+        return context.l10n.wizardStep_iqamahAdjustments;
       default:
-        return 'Get Started';
+        return context.l10n.wizardStep_getStarted;
     }
   }
 }

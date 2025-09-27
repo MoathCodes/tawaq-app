@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:mushaf_reader/src/presentation/widgets/page_ayah_widget.dart';
 
-class MushafPage extends StatelessWidget {
+class MushafPage extends StatefulWidget {
   final int page;
   final bool enableHighlight;
+  final MushafController? controller;
   final Widget? loadingWidget;
   final TextStyle? textStyle;
   final TextStyle? activeTextStyle;
@@ -15,6 +16,7 @@ class MushafPage extends StatelessWidget {
   const MushafPage({
     super.key,
     required this.page,
+    this.controller,
     this.loadingWidget,
     this.textStyle,
     this.enableHighlight = true,
@@ -25,12 +27,25 @@ class MushafPage extends StatelessWidget {
   });
 
   @override
+  State<MushafPage> createState() => _MushafPageState();
+}
+
+class _MushafPageState extends State<MushafPage> {
+  late MushafController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.controller ?? MushafController.instance;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FutureBuilder<QuranPageModel>(
-      future: MushafController.instance.getPage(page),
+      future: _controller.getPage(widget.page),
       builder: (_, snap) {
         if (!snap.hasData) {
-          return loadingWidget ?? const Center(child: Text('Loading'));
+          return widget.loadingWidget ?? const Center(child:CircularProgressIndicator());
         }
 
         final data = snap.data!;
@@ -41,11 +56,11 @@ class MushafPage extends StatelessWidget {
 
   Widget _buildPageContent(QuranPageModel data) {
     // Get cached font family
-    final pageFontFamily = PerformanceUtils.getFontFamilyForPage(page);
+    final pageFontFamily = PerformanceUtils.getFontFamilyForPage(widget.page);
 
     // Cache frequently used styles
     final defaultAyahStyle = PerformanceUtils.getCachedTextStyle(
-      'default_$page',
+      'default_${widget.page}',
       () => TextStyle(
         fontFamily: pageFontFamily,
         package: 'mushaf_reader',
@@ -56,25 +71,27 @@ class MushafPage extends StatelessWidget {
     );
 
     final headerNameStyle = PerformanceUtils.getCachedTextStyle(
-      'header_name_$page',
+      'header_name_${widget.page}',
       () => defaultAyahStyle.copyWith(fontSize: 18),
     );
 
     final juzStyle = PerformanceUtils.getCachedTextStyle(
-      'juz_$page',
+      'juz_${widget.page}',
       () =>
           defaultAyahStyle.copyWith(fontSize: 36, fontWeight: FontWeight.bold),
     );
 
     final activeStyle =
-        activeTextStyle?.copyWith(fontFamily: pageFontFamily) ??
+        widget.activeTextStyle?.copyWith(fontFamily: pageFontFamily) ??
         PerformanceUtils.getCachedTextStyle(
-          'active_$page',
-          () => defaultAyahStyle.copyWith(backgroundColor: highlightColor),
+          'active_${widget.page}',
+          () =>
+              defaultAyahStyle.copyWith(backgroundColor: widget.highlightColor),
         );
 
     final finalTextStyle =
-        textStyle?.copyWith(fontFamily: pageFontFamily) ?? defaultAyahStyle;
+        widget.textStyle?.copyWith(fontFamily: pageFontFamily) ??
+        defaultAyahStyle;
 
     return Column(
       children: [
@@ -101,7 +118,7 @@ class MushafPage extends StatelessWidget {
                 if (block.hasBasmalah) ...[
                   SurahHeaderWidget(
                     name: block.glyph,
-                    textStyle: surahNameTextStyle,
+                    textStyle: widget.surahNameTextStyle,
                   ),
                   const SizedBox(height: 8),
                 ],
@@ -111,9 +128,9 @@ class MushafPage extends StatelessWidget {
                   const BasmalahWidget(),
                 PageAyahWidget(
                   fullText: data.glyphText,
-                  enableHighlight: enableHighlight,
+                  enableHighlight: widget.enableHighlight,
                   activeStyle: activeStyle,
-                  onAyahSelection: onTapAyah,
+                  onAyahSelection: widget.onTapAyah,
                   ayahs: block.ayahs,
                   style: finalTextStyle,
                 ),
@@ -122,7 +139,7 @@ class MushafPage extends StatelessWidget {
             )
             .expand((widgets) => widgets),
 
-        PageNumberWidget(page: page),
+        PageNumberWidget(page: widget.page),
       ],
     );
   }

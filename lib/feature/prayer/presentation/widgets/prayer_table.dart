@@ -20,8 +20,9 @@ class PrayerTable extends ConsumerWidget {
   static const int _currentPrayerAlpha = 50;
 
   // Static objects to avoid repeated creation
-  static final BorderRadius _imageBorderRadiusGeometry =
-      BorderRadius.circular(_imageBorderRadius);
+  static final BorderRadius _imageBorderRadiusGeometry = BorderRadius.circular(
+    _imageBorderRadius,
+  );
   static const EdgeInsets _cellPadding = EdgeInsets.all(8);
   static const SizedBox _imagePadding = SizedBox(width: 12);
 
@@ -32,7 +33,7 @@ class PrayerTable extends ConsumerWidget {
     final l10n = context.l10n;
     final prayerTableStream = ref.watch(prayerTableProvider(l10n));
 
-    return StaticCard(
+    return HoverCard(
       padding: EdgeInsets.zero,
       child: prayerTableStream.when(
         data: (rows) => _PrayerTableContent(rows: rows),
@@ -135,19 +136,13 @@ class _LoadingWidget extends StatelessWidget {
                   const DataCell(
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('00:00'),
-                        Text('Loading'),
-                      ],
+                      children: [Text('00:00'), Text('Loading')],
                     ),
                   ),
                   const DataCell(
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text('00:00'),
-                        Text('Loading'),
-                      ],
+                      children: [Text('00:00'), Text('Loading')],
                     ),
                   ),
                 ],
@@ -250,8 +245,9 @@ class _PrayerTableContent extends StatelessWidget {
     // Define the background color based on the prayer state
     Color? rowColor;
     if (row.isCurrentPrayer) {
-      rowColor =
-          theme.colors.primary.withAlpha(PrayerTable._currentPrayerAlpha);
+      rowColor = theme.colors.primary.withAlpha(
+        PrayerTable._currentPrayerAlpha,
+      );
     } else if (row.isNextPrayer) {
       rowColor = theme.colors.primary.withAlpha(PrayerTable._nextPrayerAlpha);
     }
@@ -262,10 +258,7 @@ class _PrayerTableContent extends StatelessWidget {
       _buildTimeCell(row.iqamah, theme),
     ];
 
-    return DataRow(
-      color: WidgetStateProperty.all(rowColor),
-      cells: cells,
-    );
+    return DataRow(color: WidgetStateProperty.all(rowColor), cells: cells);
   }
 
   /// Builds the cell containing the prayer name and image.
@@ -301,10 +294,7 @@ class _PrayerTableContent extends StatelessWidget {
             ),
             PrayerTable._imagePadding,
             // Prayer Name
-            Text(
-              row.prayer.getLocaleName(l10n),
-              style: theme.typography.lg,
-            ),
+            Text(row.prayer.getLocaleName(l10n), style: theme.typography.lg),
           ],
         ),
       ),

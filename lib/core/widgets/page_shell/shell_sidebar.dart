@@ -22,13 +22,14 @@ class _ShellSidebarState extends ConsumerState<ShellSidebar> {
     final secondaryRoutes = ref.read(secondaryRoutesProvider(context.l10n));
     final theme = FTheme.of(context);
     FSidebarItemStyle style(FSidebarItemStyle p0) => p0.copyWith(
-          backgroundColor: FWidgetStateMap({
-            WidgetState.disabled: Colors.transparent,
-            WidgetState.selected | WidgetState.hovered | WidgetState.pressed:
-                theme.colors.hover(theme.colors.secondary),
-            WidgetState.any: Colors.transparent,
-          }),
-        );
+      backgroundColor: FWidgetStateMap({
+        WidgetState.disabled: Colors.transparent,
+        WidgetState.selected | WidgetState.hovered | WidgetState.pressed: theme
+            .colors
+            .hover(theme.colors.secondary),
+        WidgetState.any: Colors.transparent,
+      }),
+    );
     return FSidebar(
       style: (p0) => p0.copyWith(
         headerPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -38,15 +39,17 @@ class _ShellSidebarState extends ConsumerState<ShellSidebar> {
         children: [
           const WindowControls(),
           FLabel(
-              axis: Axis.vertical,
-              child: Text(
-                'توّاق',
-                style: TextStyle(
-                    fontFamily: FontFamily.zain,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 36.sp),
-                textAlign: TextAlign.center,
-              )),
+            axis: Axis.vertical,
+            child: Text(
+              'توّاق',
+              style: TextStyle(
+                fontFamily: FontFamily.zain,
+                fontWeight: FontWeight.bold,
+                fontSize: 36.sp,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
           const FDivider(),
         ],
       ),
@@ -69,21 +72,22 @@ class _ShellSidebarState extends ConsumerState<ShellSidebar> {
           ],
         ),
         FSidebarGroup(
-            children: secondaryRoutes
-                .map(
-                  (e) => FSidebarItem(
-                    style: style,
-                    onPress: () {
-                      setState(() {});
-                      context.go(e.path);
-                    },
-                    icon: Icon(e.icon),
-                    selected: GoRouter.of(context).state.fullPath == e.path,
-                    label: Text(e.label),
-                    key: ValueKey(e.path),
-                  ),
-                )
-                .toList())
+          children: secondaryRoutes
+              .map(
+                (e) => FSidebarItem(
+                  style: style,
+                  onPress: () {
+                    setState(() {});
+                    context.go(e.path);
+                  },
+                  icon: Icon(e.icon),
+                  selected: GoRouter.of(context).state.fullPath == e.path,
+                  label: Text(e.label),
+                  key: ValueKey(e.path),
+                ),
+              )
+              .toList(),
+        ),
       ],
     );
   }

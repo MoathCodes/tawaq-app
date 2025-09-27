@@ -29,7 +29,8 @@ class _PrayerSettingsLocationSectionState
 
   late FSelectController<tz.Location> _timezoneController;
 
-  bool _allowEdit = false;
+  bool _lockLat = true;
+  bool _lockLng = true;
 
   @override
   Widget build(BuildContext context) {
@@ -47,10 +48,14 @@ class _PrayerSettingsLocationSectionState
       onError: (error, stackTrace) {
         ref.read(talkerNotifierProvider).handle(error, stackTrace);
         showFToast(
-            context: context,
-            title: Text(
-                context.l10n.errorOccurredWhile("Loading Location Settings")),
-            description: Text(error.toString()));
+          context: context,
+          title: Text(
+            context.l10n.errorOccurredWhile(
+              context.l10n.loadingLocationSettings,
+            ),
+          ),
+          description: Text(error.toString()),
+        );
       },
     );
     return SettingsSection(
@@ -87,11 +92,15 @@ class _PrayerSettingsLocationSectionState
     super.initState();
     final prayerSettings = ref.read(prayerSettingsNotifierProvider);
     _latitudeController = TextEditingController(
-        text: prayerSettings.value?.coordinates.latitude.toStringAsFixed(7));
+      text: prayerSettings.value?.coordinates.latitude.toStringAsFixed(7),
+    );
     _longitudeController = TextEditingController(
-        text: prayerSettings.value?.coordinates.longitude.toStringAsFixed(7));
-    _timezoneController =
-        FSelectController(vsync: this, value: prayerSettings.value?.location);
+      text: prayerSettings.value?.coordinates.longitude.toStringAsFixed(7),
+    );
+    _timezoneController = FSelectController(
+      vsync: this,
+      value: prayerSettings.value?.location,
+    );
   }
 
   Widget _buildActionButtons() {
@@ -103,7 +112,7 @@ class _PrayerSettingsLocationSectionState
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(FIcons.locationEdit, size: 16),
+              const Icon(FIcons.mapPinPen, size: 16),
               const SizedBox(width: 8),
               Text(context.l10n.autoSelectOrMap),
             ],
@@ -113,17 +122,50 @@ class _PrayerSettingsLocationSectionState
     );
   }
 
-  Widget _buildCoordinateField(String label, TextEditingController controller,
-      [bool readOnly = true]) {
+  Widget _buildCoordinateField(
+    String label,
+    TextEditingController controller,
+    bool locked,
+    VoidCallback onPress,
+  ) {
     return FTextField(
       label: Text(label),
+      suffixBuilder: (context, value, child) => FButton.icon(
+        style: FButtonStyle.ghost(),
+        onPress: () {
+          if (!locked) {
+            final lat = double.tryParse(_latitudeController.text);
+            final lng = double.tryParse(_longitudeController.text);
+
+            if (lat != null && lng != null) {
+              ref
+                  .read(prayerSettingsNotifierProvider.notifier)
+                  .setCoordinates(Coordinates(lat, lng));
+              showFToast(
+                context: context,
+                title: Text(context.l10n.editsSavedTitle),
+                description: Text(context.l10n.editsSavedDescription),
+              );
+            } else {
+              showFToast(
+                context: context,
+                title: Text(context.l10n.invalidCoordinatesTitle),
+                description: Text(context.l10n.invalidCoordinatesDescription),
+              );
+              return;
+            }
+          }
+          onPress();
+        },
+        child: Icon(locked ? FIcons.lock : FIcons.lockOpen),
+      ),
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(
         decimal: true,
         signed: true,
       ),
       readOnly:
-          readOnly, // Made read-only since coordinates are set via location picker
+          locked, // Made read-only since coordinates are set via location picker
     );
   }
 
@@ -133,55 +175,24 @@ class _PrayerSettingsLocationSectionState
       children: [
         Expanded(
           child: _buildCoordinateField(
-              context.l10n.latitude, _latitudeController, !_allowEdit),
+            context.l10n.latitude,
+            _latitudeController,
+            _lockLat,
+            () => setState(() {
+              _lockLat = !_lockLat;
+            }),
+          ),
         ),
         Expanded(
           child: _buildCoordinateField(
-              context.l10n.longitude, _longitudeController, !_allowEdit),
+            context.l10n.longitude,
+            _longitudeController,
+            _lockLng,
+            () => setState(() {
+              _lockLng = !_lockLng;
+            }),
+          ),
         ),
-        FButton(
-            style: FButtonStyle.ghost(),
-            onPress: () {
-              if (_allowEdit) {
-                final lat = double.tryParse(_latitudeController.text);
-                final lng = double.tryParse(_longitudeController.text);
-
-                if (lat != null && lng != null) {
-                  ref
-                      .read(prayerSettingsNotifierProvider.notifier)
-                      .setCoordinates(
-                        Coordinates(lat, lng),
-                      );
-                  setState(() {
-                    _allowEdit = false;
-                  });
-                } else {
-                  showFToast(
-                      context: context,
-                      title: const Text("Invalid Coordinates"),
-                      description: const Text(
-                          "Please enter valid latitude and longitude values."));
-                  return;
-                }
-
-                showFToast(
-                    context: context,
-                    title: const Text("Edits were saved"),
-                    description: const Text(
-                        "Your changes have been saved successfully."));
-              } else {
-                setState(() {
-                  _allowEdit = true;
-                });
-              }
-            },
-            child: Row(
-              spacing: 4,
-              children: [
-                Icon(_allowEdit ? FIcons.save : FIcons.pen),
-                Text(_allowEdit ? "Save" : "Edit")
-              ],
-            ))
       ],
     );
   }
@@ -192,10 +203,7 @@ class _PrayerSettingsLocationSectionState
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         spacing: 8,
-        children: [
-          const Icon(FIcons.searchX),
-          Text(context.l10n.noResults).sm,
-        ],
+        children: [const Icon(FIcons.searchX), Text(context.l10n.noResults).sm],
       ),
     );
   }
@@ -205,7 +213,7 @@ class _PrayerSettingsLocationSectionState
   }
 
   Widget _buildTimezoneSelector() {
-    return FSelect<tz.Location>.search(
+    return FSelect<tz.Location>.searchBuilder(
       controller: _timezoneController,
       label: Text(context.l10n.timezone),
       searchFieldProperties: FSelectSearchFieldProperties(
@@ -219,7 +227,7 @@ class _PrayerSettingsLocationSectionState
           Icon(FIcons.chevronDown, color: context.theme.colors.primary),
           FTooltip(
             tipBuilder: (context, controller) =>
-                const Text('Use System Timezone'),
+                Text(context.l10n.useSystemTimezone),
             child: FButton.icon(
               child: const Icon(FIcons.locate),
               onPress: () => _setTimezone(null),
@@ -227,19 +235,18 @@ class _PrayerSettingsLocationSectionState
           ),
         ],
       ),
-      emptyBuilder: (context, value, child) => _buildEmptyState(context),
+      contentEmptyBuilder: (context, style) => _buildEmptyState(context),
       onChange: (value) {
         if (value != null) {
           _setTimezone(value);
         }
       },
       format: (location) => location.name,
-      contentBuilder: (context, data) => data.values
+      contentBuilder: (context, query, data) => data
           .take(16)
-          .map((loc) => FSelectItem(loc.name, loc))
+          .map((loc) => FSelectItem(title: Text(loc.name), value: loc))
           .toList(),
-      searchLoadingBuilder: (context, value, child) =>
-          const FProgress.circularIcon(),
+      contentLoadingBuilder: (context, style) => const FProgress.circularIcon(),
       filter: (query) => _filterTimezones(query),
     );
   }
@@ -249,7 +256,8 @@ class _PrayerSettingsLocationSectionState
     return query.isEmpty
         ? locations
         : locations.where(
-            (loc) => loc.name.toLowerCase().contains(query.toLowerCase()));
+            (loc) => loc.name.toLowerCase().contains(query.toLowerCase()),
+          );
   }
 
   Future<void> _setTimezone([tz.Location? location]) async {
@@ -259,9 +267,12 @@ class _PrayerSettingsLocationSectionState
     } catch (e) {
       if (mounted) {
         showFToast(
-            context: context,
-            title: Text(context.l10n.errorOccurredWhile("Changing Timezone")),
-            description: Text(e.toString()));
+          context: context,
+          title: Text(
+            context.l10n.errorOccurredWhile(context.l10n.changingTimezone),
+          ),
+          description: Text(e.toString()),
+        );
       }
     }
   }
@@ -273,7 +284,9 @@ class _PrayerSettingsLocationSectionState
         style: style.call,
         animation: animation,
         onLocationSelected: (coordinates, locationName) {
-          ref.read(prayerSettingsNotifierProvider.notifier).updateLocationData(
+          ref
+              .read(prayerSettingsNotifierProvider.notifier)
+              .updateLocationData(
                 coordinates: coordinates,
                 locationName: locationName,
               );

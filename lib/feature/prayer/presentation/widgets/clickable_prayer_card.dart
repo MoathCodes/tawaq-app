@@ -146,19 +146,30 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Container(
-                              width: widget.expanded ? 46.w : 30.w,
-                              height: widget.expanded ? 46.h : 30.h,
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                  image: AssetImage(
-                                      widget.cardData.prayer.imagePath),
-                                  fit: BoxFit.cover,
-                                  alignment: widget.cardData.prayer.alignment,
+                            Builder(builder: (context) {
+                              final w = (widget.expanded ? 46.w : 30.w);
+                              final h = (widget.expanded ? 46.h : 30.h);
+                              final dpr =
+                                  MediaQuery.of(context).devicePixelRatio;
+                              final provider = ResizeImage(
+                                AssetImage(widget.cardData.prayer.imagePath),
+                                width: (w * dpr).round(),
+                                height: (h * dpr).round(),
+                              );
+                              return Container(
+                                width: w,
+                                height: h,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: provider,
+                                    fit: BoxFit.cover,
+                                    alignment: widget.cardData.prayer.alignment,
+                                    filterQuality: FilterQuality.medium,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
+                              );
+                            }),
                             _buildStatusChip(
                                 widget.cardData.completion?.status ??
                                     _isComplete,

@@ -51,10 +51,12 @@ class _PrayerSettingsCustomParametersCardState
       onError: (error, stackTrace) {
         ref.read(talkerNotifierProvider).handle(error, stackTrace);
         showFToast(
-            context: context,
-            title: Text(
-                context.l10n.errorOccurredWhile("Loading Custom Parameters")),
-            description: Text(error.toString()));
+          context: context,
+          title: Text(
+            context.l10n.errorOccurredWhile(context.l10n.customParametersTitle),
+          ),
+          description: Text(error.toString()),
+        );
       },
     );
 
@@ -71,7 +73,7 @@ class _PrayerSettingsCustomParametersCardState
     return FCard(
       title: Row(
         children: [
-          const Text("Custom Parameters"),
+          Text(context.l10n.customParametersTitle),
           const Spacer(),
           FButton.icon(
             style: FButtonStyle.ghost(),
@@ -86,14 +88,15 @@ class _PrayerSettingsCustomParametersCardState
       child: AnimatedCrossFade(
         duration: const Duration(milliseconds: 300),
         sizeCurve: Curves.easeInOutCubic,
-        crossFadeState:
-            _isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+        crossFadeState: _isExpanded
+            ? CrossFadeState.showSecond
+            : CrossFadeState.showFirst,
         firstChild: SizedBox(
           width: double.infinity,
           child: Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              "Tap to configure custom calculation parameters",
+              context.l10n.customParametersCollapsedHint,
               style: theme.typography.sm.copyWith(
                 color: theme.colors.mutedForeground,
               ),
@@ -129,34 +132,47 @@ class _PrayerSettingsCustomParametersCardState
     final customParams = prayerSettings.value?.customParameters;
 
     _fajrAngleController = TextEditingController(
-        text: customParams?.fajrAngle.toString() ?? '18.0');
+      text: customParams?.fajrAngle.toString() ?? '18.0',
+    );
     _ishaAngleController = TextEditingController(
-        text: customParams?.ishaAngle.toString() ?? '18.0');
+      text: customParams?.ishaAngle.toString() ?? '18.0',
+    );
     _ishaIntervalController = TextEditingController(
-        text: customParams?.ishaInterval?.toString() ?? '');
+      text: customParams?.ishaInterval?.toString() ?? '',
+    );
     _maghribAngleController = TextEditingController(
-        text: customParams?.maghribAngle?.toString() ?? '');
+      text: customParams?.maghribAngle?.toString() ?? '',
+    );
 
     _madhabController = FSelectController(
-        vsync: this, value: customParams?.madhab ?? Madhab.shafi);
+      vsync: this,
+      value: customParams?.madhab ?? Madhab.shafi,
+    );
     _highLatitudeRuleController = FSelectController(
-        vsync: this,
-        value: customParams?.highLatitudeRule ??
-            HighLatitudeRule.middleOfTheNight);
+      vsync: this,
+      value:
+          customParams?.highLatitudeRule ?? HighLatitudeRule.middleOfTheNight,
+    );
 
     // Initialize adjustment controllers
     _fajrAdjustmentController = TextEditingController(
-        text: (customParams?.adjustments[Prayer.fajr] ?? 0).toString());
+      text: (customParams?.adjustments[Prayer.fajr] ?? 0).toString(),
+    );
     _sunriseAdjustmentController = TextEditingController(
-        text: (customParams?.adjustments[Prayer.sunrise] ?? 0).toString());
+      text: (customParams?.adjustments[Prayer.sunrise] ?? 0).toString(),
+    );
     _dhuhrAdjustmentController = TextEditingController(
-        text: (customParams?.adjustments[Prayer.dhuhr] ?? 0).toString());
+      text: (customParams?.adjustments[Prayer.dhuhr] ?? 0).toString(),
+    );
     _asrAdjustmentController = TextEditingController(
-        text: (customParams?.adjustments[Prayer.asr] ?? 0).toString());
+      text: (customParams?.adjustments[Prayer.asr] ?? 0).toString(),
+    );
     _maghribAdjustmentController = TextEditingController(
-        text: (customParams?.adjustments[Prayer.maghrib] ?? 0).toString());
+      text: (customParams?.adjustments[Prayer.maghrib] ?? 0).toString(),
+    );
     _ishaAdjustmentController = TextEditingController(
-        text: (customParams?.adjustments[Prayer.isha] ?? 0).toString());
+      text: (customParams?.adjustments[Prayer.isha] ?? 0).toString(),
+    );
   }
 
   Widget _buildActionButtons() {
@@ -170,12 +186,12 @@ class _PrayerSettingsCustomParametersCardState
               child: FButton(
                 style: FButtonStyle.secondary(),
                 onPress: _resetToDefaults,
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(FIcons.rotateCcw, size: 16),
-                    SizedBox(width: 8),
-                    Text("Reset to Defaults"),
+                    const Icon(FIcons.rotateCcw, size: 16),
+                    const SizedBox(width: 8),
+                    Text(context.l10n.resetToDefaults),
                   ],
                 ),
               ),
@@ -183,12 +199,12 @@ class _PrayerSettingsCustomParametersCardState
             Expanded(
               child: FButton(
                 onPress: _saveCustomParameters,
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(FIcons.save, size: 16),
-                    SizedBox(width: 8),
-                    Text("Save Parameters"),
+                    const Icon(FIcons.save, size: 16),
+                    const SizedBox(width: 8),
+                    Text(context.l10n.saveParameters),
                   ],
                 ),
               ),
@@ -210,7 +226,7 @@ class _PrayerSettingsCustomParametersCardState
 
   Widget _buildAdjustmentsCard() {
     return FCard(
-      title: const Text("Prayer Time Adjustments (minutes)"),
+      title: Text(context.l10n.prayerTimeAdjustmentsTitle),
       child: Column(
         spacing: 12,
         children: [
@@ -218,28 +234,46 @@ class _PrayerSettingsCustomParametersCardState
             spacing: 12,
             children: [
               Expanded(
-                  child:
-                      _buildAdjustmentField("Fajr", _fajrAdjustmentController)),
+                child: _buildAdjustmentField(
+                  context.l10n.fajr,
+                  _fajrAdjustmentController,
+                ),
+              ),
               Expanded(
-                  child: _buildAdjustmentField(
-                      "Sunrise", _sunriseAdjustmentController)),
+                child: _buildAdjustmentField(
+                  context.l10n.sunrise,
+                  _sunriseAdjustmentController,
+                ),
+              ),
               Expanded(
-                  child: _buildAdjustmentField(
-                      "Dhuhr", _dhuhrAdjustmentController)),
+                child: _buildAdjustmentField(
+                  context.l10n.dhuhr,
+                  _dhuhrAdjustmentController,
+                ),
+              ),
             ],
           ),
           Row(
             spacing: 12,
             children: [
               Expanded(
-                  child:
-                      _buildAdjustmentField("Asr", _asrAdjustmentController)),
+                child: _buildAdjustmentField(
+                  context.l10n.asr,
+                  _asrAdjustmentController,
+                ),
+              ),
               Expanded(
-                  child: _buildAdjustmentField(
-                      "Maghrib", _maghribAdjustmentController)),
+                child: _buildAdjustmentField(
+                  context.l10n.maghrib,
+                  _maghribAdjustmentController,
+                ),
+              ),
               Expanded(
-                  child:
-                      _buildAdjustmentField("Isha", _ishaAdjustmentController)),
+                child: _buildAdjustmentField(
+                  context.l10n.isha,
+                  _ishaAdjustmentController,
+                ),
+              ),
             ],
           ),
         ],
@@ -249,7 +283,7 @@ class _PrayerSettingsCustomParametersCardState
 
   Widget _buildAdvancedParametersCard() {
     return FCard(
-      title: const Text("Advanced Settings"),
+      title: Text(context.l10n.advancedSettingsTitle),
       child: Column(
         spacing: 16,
         children: [
@@ -276,7 +310,7 @@ class _PrayerSettingsCustomParametersCardState
 
   Widget _buildBasicParametersCard() {
     return FCard(
-      title: const Text("Basic Parameters"),
+      title: Text(context.l10n.basicParametersTitle),
       child: Column(
         spacing: 16,
         children: [
@@ -284,22 +318,34 @@ class _PrayerSettingsCustomParametersCardState
             spacing: 12,
             children: [
               Expanded(
-                  child:
-                      _buildAngleField("Fajr Angle (°)", _fajrAngleController)),
+                child: _buildAngleField(
+                  context.l10n.fajrAngleLabel,
+                  _fajrAngleController,
+                ),
+              ),
               Expanded(
-                  child:
-                      _buildAngleField("Isha Angle (°)", _ishaAngleController)),
+                child: _buildAngleField(
+                  context.l10n.ishaAngleLabel,
+                  _ishaAngleController,
+                ),
+              ),
             ],
           ),
           Row(
             spacing: 12,
             children: [
               Expanded(
-                  child: _buildIntervalField(
-                      "Isha Interval (min)", _ishaIntervalController)),
+                child: _buildIntervalField(
+                  context.l10n.ishaIntervalLabel,
+                  _ishaIntervalController,
+                ),
+              ),
               Expanded(
-                  child: _buildAngleField(
-                      "Maghrib Angle (°)", _maghribAngleController)),
+                child: _buildAngleField(
+                  context.l10n.maghribAngleLabel,
+                  _maghribAngleController,
+                ),
+              ),
             ],
           ),
         ],
@@ -322,15 +368,9 @@ class _PrayerSettingsCustomParametersCardState
 
   Widget _buildHighLatitudeRuleSelector() {
     return FSelect<HighLatitudeRule>(
+      items: {for (final rule in HighLatitudeRule.values) _getHighLatitudeRuleDisplayName(rule): rule},
       controller: _highLatitudeRuleController,
-      label: const Text("High Latitude Rule"),
-      format: (rule) => _getHighLatitudeRuleDisplayName(rule),
-      children: HighLatitudeRule.values
-          .map((rule) => FSelectItem(
-                _getHighLatitudeRuleDisplayName(rule),
-                rule,
-              ))
-          .toList(),
+      label: Text(context.l10n.highLatitudeRuleLabel),
       onChange: (value) {
         if (value != null) {
           _updateCustomParameters();
@@ -344,21 +384,15 @@ class _PrayerSettingsCustomParametersCardState
       label: Text(label),
       controller: controller,
       keyboardType: TextInputType.number,
-      hint: "Optional",
+      hint: context.l10n.optionalHint,
     );
   }
 
   Widget _buildMadhabSelector() {
     return FSelect<Madhab>(
+      items: {for (final madhab in Madhab.values) _getMadhabDisplayName(madhab): madhab},
       controller: _madhabController,
-      label: const Text("Madhab"),
-      format: (madhab) => _getMadhabDisplayName(madhab),
-      children: Madhab.values
-          .map((madhab) => FSelectItem(
-                _getMadhabDisplayName(madhab),
-                madhab,
-              ))
-          .toList(),
+      label: Text(context.l10n.madhabLabel),
       onChange: (value) {
         if (value != null) {
           _updateCustomParameters();
@@ -369,16 +403,19 @@ class _PrayerSettingsCustomParametersCardState
 
   String _getHighLatitudeRuleDisplayName(HighLatitudeRule rule) {
     return switch (rule) {
-      HighLatitudeRule.middleOfTheNight => "Middle of the Night",
-      HighLatitudeRule.seventhOfTheNight => "Seventh of the Night",
-      HighLatitudeRule.twilightAngle => "Twilight Angle",
+      HighLatitudeRule.middleOfTheNight =>
+        context.l10n.highLatitudeRule_middleOfTheNight,
+      HighLatitudeRule.seventhOfTheNight =>
+        context.l10n.highLatitudeRule_seventhOfTheNight,
+      HighLatitudeRule.twilightAngle =>
+        context.l10n.highLatitudeRule_twilightAngle,
     };
   }
 
   String _getMadhabDisplayName(Madhab madhab) {
     return switch (madhab) {
-      Madhab.shafi => "Shafi",
-      Madhab.hanafi => "Hanafi",
+      Madhab.shafi => context.l10n.madhab_shafi,
+      Madhab.hanafi => context.l10n.madhab_hanafi,
     };
   }
 
@@ -401,8 +438,8 @@ class _PrayerSettingsCustomParametersCardState
 
     showFToast(
       context: context,
-      title: const Text("Reset Complete"),
-      description: const Text("Parameters have been reset to default values."),
+      title: Text(context.l10n.resetCompleteTitle),
+      description: Text(context.l10n.resetCompleteDescription),
     );
   }
 
@@ -410,9 +447,8 @@ class _PrayerSettingsCustomParametersCardState
     _updateCustomParameters();
     showFToast(
       context: context,
-      title: const Text("Parameters Saved"),
-      description:
-          const Text("Your custom parameters have been saved successfully."),
+      title: Text(context.l10n.parametersSavedTitle),
+      description: Text(context.l10n.parametersSavedDescription),
     );
   }
 
@@ -430,8 +466,8 @@ class _PrayerSettingsCustomParametersCardState
         (customParams.adjustments[Prayer.sunrise] ?? 0).toString();
     _dhuhrAdjustmentController.text =
         (customParams.adjustments[Prayer.dhuhr] ?? 0).toString();
-    _asrAdjustmentController.text =
-        (customParams.adjustments[Prayer.asr] ?? 0).toString();
+    _asrAdjustmentController.text = (customParams.adjustments[Prayer.asr] ?? 0)
+        .toString();
     _maghribAdjustmentController.text =
         (customParams.adjustments[Prayer.maghrib] ?? 0).toString();
     _ishaAdjustmentController.text =
@@ -465,7 +501,8 @@ class _PrayerSettingsCustomParametersCardState
         ishaInterval: ishaInterval,
         maghribAngle: maghribAngle,
         madhab: _madhabController.value ?? Madhab.shafi,
-        highLatitudeRule: _highLatitudeRuleController.value ??
+        highLatitudeRule:
+            _highLatitudeRuleController.value ??
             HighLatitudeRule.middleOfTheNight,
         adjustments: adjustments,
         methodAdjustments: const {
@@ -478,14 +515,18 @@ class _PrayerSettingsCustomParametersCardState
         },
       );
 
-      ref.read(prayerSettingsNotifierProvider.notifier).update(
+      ref
+          .read(prayerSettingsNotifierProvider.notifier)
+          .update(
             (settings) => settings.copyWith(customParameters: customParameters),
           );
     } catch (e) {
       showFToast(
         context: context,
-        title: const Text("Invalid Parameters"),
-        description: Text("Please check your input values: ${e.toString()}"),
+        title: Text(context.l10n.invalidParametersTitle),
+        description: Text(
+          "${context.l10n.invalidParametersDescription} ${e.toString()}",
+        ),
       );
     }
   }

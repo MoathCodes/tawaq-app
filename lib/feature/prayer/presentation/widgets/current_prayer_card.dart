@@ -55,29 +55,28 @@ class CurrentPrayerCard extends ConsumerWidget {
   static const _containerPadding = EdgeInsets.all(16);
   static const _animationDuration = Duration(milliseconds: 330);
   static TextStyle get _headerTextStyle => TextStyle(
-        color: Colors.white,
-        fontSize: 14.sp,
-        fontWeight: FontWeight.w500,
-      );
+    color: Colors.white,
+    fontSize: 14.sp,
+    fontWeight: FontWeight.w500,
+  );
 
   static TextStyle get _miniCardTextStyle => TextStyle(fontSize: 20.sp);
 
-  static TextStyle get _prepareTextStyle => TextStyle(
-        color: Colors.white,
-        fontSize: 16.sp,
-      );
+  static TextStyle get _prepareTextStyle =>
+      TextStyle(color: Colors.white, fontSize: 16.sp);
 
   const CurrentPrayerCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cardStream = ref.watch(prayerCardProvider);
-    final completion =
-        ref.watch(prayerCompletionNotifierProvider)[cardStream.value?.prayer];
+    final completion = ref.watch(
+      prayerCompletionNotifierProvider,
+    )[cardStream.value?.prayer];
     final appTheme = ref.watch(themeNotifierProvider);
     final theme = FTheme.of(context);
 
-    return StaticCard(
+    return HoverCard(
       backgroundColor: Colors.transparent,
       borderColor: Colors.transparent,
       padding: EdgeInsets.zero,
@@ -104,11 +103,11 @@ class CurrentPrayerCard extends ConsumerWidget {
 
   // Cached style getters
   static TextStyle _shadowedTextStyle(double fontSize) => TextStyle(
-        color: Colors.white,
-        fontSize: fontSize,
-        fontWeight: FontWeight.bold,
-        shadows: _textShadow,
-      );
+    color: Colors.white,
+    fontSize: fontSize,
+    fontWeight: FontWeight.bold,
+    shadows: _textShadow,
+  );
 }
 
 // Extract completion badge to its own widget
@@ -130,16 +129,18 @@ class _CompletionBadge extends ConsumerWidget {
         FItemGroup(
           children: CompletionStatus.values
               .where((e) => e != CompletionStatus.none)
-              .map((e) => FItem(
-                    title: Text(e.getLocaleName(context.l10n)),
-                    prefix: Icon(
-                      e.getIcon(),
-                      color: e.getBadgeColor(
-                        isDark: appTheme.value?.themeMode == ThemeMode.dark,
-                      ),
+              .map(
+                (e) => FItem(
+                  title: Text(e.getLocaleName(context.l10n)),
+                  prefix: Icon(
+                    e.getIcon(),
+                    color: e.getBadgeColor(
+                      isDark: appTheme.value?.themeMode == ThemeMode.dark,
                     ),
-                    onPress: () => _updateCompletion(e, ref),
-                  ))
+                  ),
+                  onPress: () => _updateCompletion(e, ref),
+                ),
+              )
               .toList(),
         ),
       ],
@@ -168,7 +169,9 @@ class _CompletionBadge extends ConsumerWidget {
   }
 
   void _updateCompletion(CompletionStatus status, WidgetRef ref) {
-    ref.read(prayerCompletionNotifierProvider.notifier).addOrUpdateCompletion(
+    ref
+        .read(prayerCompletionNotifierProvider.notifier)
+        .addOrUpdateCompletion(
           PrayerCompletion(
             id: completion.id,
             prayer: data.prayer,
@@ -263,14 +266,21 @@ class _PrayerCardContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isArabic = ref.watch(localeNotifierProvider.select(
-          (value) => value.value?.languageCode,
-        )) ==
+    final isArabic =
+        ref.watch(
+          localeNotifierProvider.select((value) => value.value?.languageCode),
+        ) ==
         'ar';
     return AnimatedContainer(
       duration: CurrentPrayerCard._animationDuration,
       decoration: BoxDecoration(
-        image: _decorationImage(data.prayer),
+        image: DecorationImage(
+          image: AssetImage(data.prayer.imagePath),
+
+          alignment: data.prayer.alignment,
+          fit: BoxFit.fitWidth,
+          // filterQuality: FilterQuality.medium,
+        ),
         color: theme.colors.secondary,
         borderRadius: CurrentPrayerCard._borderRadius,
       ),
@@ -297,10 +307,7 @@ class _PrayerCardContent extends ConsumerWidget {
               data.prayer.getLocaleName(context.l10n),
               style: CurrentPrayerCard._shadowedTextStyle(42.sp),
             ),
-            Text(
-              data.time,
-              style: CurrentPrayerCard._shadowedTextStyle(32.sp),
-            ),
+            Text(data.time, style: CurrentPrayerCard._shadowedTextStyle(32.sp)),
             Text(
               context.l10n.prepareForPrayer,
               style: CurrentPrayerCard._prepareTextStyle,
@@ -331,11 +338,5 @@ class _PrayerCardContent extends ConsumerWidget {
     );
   }
 
-  DecorationImage _decorationImage(Prayer prayer) {
-    return DecorationImage(
-      image: AssetImage(prayer.imagePath),
-      alignment: prayer.alignment,
-      fit: BoxFit.cover,
-    );
-  }
+  // Note: DecorationImage provider is now sized via ResizeImage in build.
 }

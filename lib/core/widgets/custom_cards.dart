@@ -10,15 +10,16 @@ class HoverCard extends StatefulWidget {
   final Color? borderColor;
   final Color? activeBorderColor;
   final Color? backgroundColor;
-  const HoverCard(
-      {super.key,
-      required this.child,
-      this.padding,
-      this.enableHoverEffect = true,
-      this.borderRadius,
-      this.borderColor,
-      this.activeBorderColor,
-      this.backgroundColor});
+  const HoverCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.enableHoverEffect = true,
+    this.borderRadius,
+    this.borderColor,
+    this.activeBorderColor,
+    this.backgroundColor,
+  });
 
   @override
   State<HoverCard> createState() => _HoverCardState();
@@ -53,16 +54,10 @@ class StaticCard extends StatelessWidget {
         borderRadius:
             borderRadius ?? BorderRadius.circular(defaultBorderRadius),
         border: Border.all(
-          color: borderColor ??
+          color:
+              borderColor ??
               colors.secondaryForeground.withAlpha(borderOpacity),
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black38,
-            blurRadius: 10,
-            offset: Offset(0, 1),
-          ),
-        ],
       ),
       child: child,
     );
@@ -100,7 +95,7 @@ class _HoverCardState extends State<HoverCard> {
             color: _isHovering && widget.enableHoverEffect
                 ? widget.activeBorderColor ?? colors.primary
                 : widget.borderColor ??
-                    colors.secondaryForeground.withAlpha(_borderOpacity),
+                      colors.secondaryForeground.withAlpha(_borderOpacity),
           ),
           boxShadow: [
             _isHovering && widget.enableHoverEffect

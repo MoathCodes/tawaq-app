@@ -64,11 +64,15 @@ class PrayerCard extends _$PrayerCard {
           formatter,
           settings,
         );
-        await Future.delayed(const Duration(seconds: 1));
       } catch (e, stackTrace) {
         log.handle(
-            e, stackTrace, '$_prayerCardLogPrefix Error producing prayer card');
+          e,
+          stackTrace,
+          '$_prayerCardLogPrefix Error producing prayer card',
+        );
         yield PrayerCardInfo.empty();
+      } finally {
+        await Future.delayed(const Duration(seconds: 1));
       }
     }
   }
@@ -81,7 +85,8 @@ class PrayerCard extends _$PrayerCard {
   ) {
     final DateTime todayAnchor = DateTime(now.year, now.month, now.day);
 
-    final bool needsRefresh = _cache == null ||
+    final bool needsRefresh =
+        _cache == null ||
         _cachedSettings != settings ||
         _cache!.anchorDate != todayAnchor;
 
@@ -90,8 +95,10 @@ class PrayerCard extends _$PrayerCard {
     log.debug("$_prayerCardLogPrefix Building prayer cache …");
 
     final todaysTimes = service.getTodaysPrayerTimes(now, false);
-    final yesterdaysTimes =
-        service.getTodaysPrayerTimes(now.subtract(const Duration(days: 1)), false);
+    final yesterdaysTimes = service.getTodaysPrayerTimes(
+      now.subtract(const Duration(days: 1)),
+      false,
+    );
 
     _cache = _PrayerCache(
       anchorDate: todayAnchor,
@@ -123,9 +130,7 @@ class PrayerCard extends _$PrayerCard {
       prayer: decision.prayer,
       adhanTime: formatter.format(decision.referenceTime),
       iqamahTime: formatter.format(
-        decision.referenceTime.add(
-          Duration(minutes: iqamahMinutes),
-        ),
+        decision.referenceTime.add(Duration(minutes: iqamahMinutes)),
       ),
     );
     return cardInfo;

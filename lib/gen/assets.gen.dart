@@ -1,3 +1,5 @@
+// dart format width=80
+
 /// GENERATED CODE - DO NOT MODIFY BY HAND
 /// *****************************************************
 ///  FlutterGen
@@ -5,7 +7,7 @@
 
 // coverage:ignore-file
 // ignore_for_file: type=lint
-// ignore_for_file: directives_ordering,unnecessary_import,implicit_dynamic_list_literal,deprecated_member_use
+// ignore_for_file: deprecated_member_use,directives_ordering,implicit_dynamic_list_literal,unnecessary_import
 
 import 'package:flutter/widgets.dart';
 
@@ -15,39 +17,36 @@ class $AssetsImagesGen {
   /// File path: assets/images/888-02.png
   AssetGenImage get a88802 => const AssetGenImage('assets/images/888-02.png');
 
-  /// File path: assets/images/Basmala.png
-  AssetGenImage get basmala => const AssetGenImage('assets/images/Basmala.png');
+  /// File path: assets/images/asr.webp
+  AssetGenImage get asr => const AssetGenImage('assets/images/asr.webp');
 
-  /// File path: assets/images/asr.jpg
-  AssetGenImage get asr => const AssetGenImage('assets/images/asr.jpg');
-
-  /// File path: assets/images/duhr.jpg
-  AssetGenImage get duhr => const AssetGenImage('assets/images/duhr.jpg');
+  /// File path: assets/images/duhr.webp
+  AssetGenImage get duhr => const AssetGenImage('assets/images/duhr.webp');
 
   /// File path: assets/images/fajr.webp
   AssetGenImage get fajr => const AssetGenImage('assets/images/fajr.webp');
 
-  /// File path: assets/images/isha.jpg
-  AssetGenImage get isha => const AssetGenImage('assets/images/isha.jpg');
+  /// File path: assets/images/isha.webp
+  AssetGenImage get isha => const AssetGenImage('assets/images/isha.webp');
 
-  /// File path: assets/images/lastThirdOfNight.jpg
+  /// File path: assets/images/lastThirdOfNight.webp
   AssetGenImage get lastThirdOfNight =>
-      const AssetGenImage('assets/images/lastThirdOfNight.jpg');
+      const AssetGenImage('assets/images/lastThirdOfNight.webp');
 
-  /// File path: assets/images/magrib.jpg
-  AssetGenImage get magrib => const AssetGenImage('assets/images/magrib.jpg');
+  /// File path: assets/images/magrib.webp
+  AssetGenImage get magrib => const AssetGenImage('assets/images/magrib.webp');
 
-  /// File path: assets/images/midnight.jpg
+  /// File path: assets/images/midnight.webp
   AssetGenImage get midnight =>
-      const AssetGenImage('assets/images/midnight.jpg');
+      const AssetGenImage('assets/images/midnight.webp');
 
-  /// File path: assets/images/sunrise.jpg
-  AssetGenImage get sunrise => const AssetGenImage('assets/images/sunrise.jpg');
+  /// File path: assets/images/sunrise.webp
+  AssetGenImage get sunrise =>
+      const AssetGenImage('assets/images/sunrise.webp');
 
   /// List of all assets
   List<AssetGenImage> get values => [
     a88802,
-    basmala,
     asr,
     duhr,
     fajr,
@@ -66,12 +65,18 @@ class Assets {
 }
 
 class AssetGenImage {
-  const AssetGenImage(this._assetName, {this.size, this.flavors = const {}});
+  const AssetGenImage(
+    this._assetName, {
+    this.size,
+    this.flavors = const {},
+    this.animation,
+  });
 
   final String _assetName;
 
   final Size? size;
   final Set<String> flavors;
+  final AssetGenImageAnimation? animation;
 
   Image image({
     Key? key,
@@ -133,4 +138,16 @@ class AssetGenImage {
   String get path => _assetName;
 
   String get keyName => _assetName;
+}
+
+class AssetGenImageAnimation {
+  const AssetGenImageAnimation({
+    required this.isAnimation,
+    required this.duration,
+    required this.frames,
+  });
+
+  final bool isAnimation;
+  final Duration duration;
+  final int frames;
 }

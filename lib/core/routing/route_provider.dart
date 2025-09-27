@@ -1,8 +1,9 @@
 // ignore_for_file: avoid_build_context_in_providers
 // import 'dart:ui';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/assets.dart';
+import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
@@ -103,6 +104,32 @@ List<AppRoute> secondaryRoutes(Ref ref, AppLocalizations? localization) {
   ];
 }
 
+/// Builds a GoRoute for a given AppRoute
+GoRoute _buildGoRoute(AppRoute route, ThemeSettings themeData) => GoRoute(
+      path: route.path,
+      name: route.label,
+      // pageBuilder: (context, state) => _buildCustomTransitionPage(
+      //   state.pageKey,
+      //   route.child,
+      //   themeData,
+      // ),
+      // pageBuilder: (context, state) => MaterialPage(
+      //   key: state.pageKey,
+      //   child: route.child,
+      // ),
+      // builder: (context, state) => route.child,
+      pageBuilder: (context, state) {
+        final theme = FTheme.of(context);
+        // Use theme-aware surface color for a tasteful fade backdrop
+        final overlay = theme.colors.background;
+        return _desktopTransitionPage(
+          state.pageKey,
+          route.child,
+          barrierColor: overlay,
+        );
+      },
+    );
+
 /// Reusable method to create a custom transition page
 // CustomTransitionPage<T> _buildCustomTransitionPage<T>(
 //     LocalKey key, Widget child, ThemeSettings themeData) {
@@ -175,25 +202,52 @@ List<AppRoute> secondaryRoutes(Ref ref, AppLocalizations? localization) {
 //   );
 // }
 
-/// Builds a GoRoute for a given AppRoute
-GoRoute _buildGoRoute(AppRoute route, ThemeSettings themeData) => GoRoute(
-      path: route.path,
-      name: route.label,
-      // pageBuilder: (context, state) => _buildCustomTransitionPage(
-      //   state.pageKey,
-      //   route.child,
-      //   themeData,
-      // ),
-      // pageBuilder: (context, state) => MaterialPage(
-      //   key: state.pageKey,
-      //   child: route.child,
-      // ),
-      // builder: (context, state) => route.child,
-      pageBuilder: (context, state) => NoTransitionPage(
-        key: state.pageKey,
-        child: route.child,
-      ),
-    );
+/// Desktop transition: theme-colored fade backdrop + gentle elevate/slide-in
+CustomTransitionPage<T> _desktopTransitionPage<T>(
+  LocalKey key,
+  Widget child, {
+  required Color barrierColor,
+}) {
+  return CustomTransitionPage<T>(
+    key: key,
+    child: child,
+    barrierDismissible: false,
+    barrierColor: barrierColor, // theme-aware
+    opaque: false, // allow the barrier to show
+    transitionDuration: const Duration(milliseconds: 400),
+    reverseTransitionDuration: const Duration(milliseconds: 280),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final motion = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      final fade = CurvedAnimation(
+        parent: animation,
+        curve: Curves.linearToEaseOut,
+        reverseCurve: Curves.easeIn,
+      );
+
+      // Subtle depth and slide for desktop feel
+      final slide = Tween<Offset>(
+        begin: const Offset(0, 0.02), // ~2% height
+        end: Offset.zero,
+      ).animate(motion);
+      final scale = Tween<double>(begin: 0.985, end: 1.0).animate(motion);
+
+      return FadeTransition(
+        opacity: Tween<double>(begin: 0, end: 1).animate(fade),
+        child: SlideTransition(
+          position: slide,
+          child: ScaleTransition(
+            scale: scale,
+            child: child,
+          ),
+        ),
+      );
+    },
+  );
+}
 
 /// Generates the routes for the app
 List<RouteBase> _generateRoutes(

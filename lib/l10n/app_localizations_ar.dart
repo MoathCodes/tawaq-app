@@ -15,6 +15,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adhan => 'الأذان';
 
   @override
+  String get adhanAdjustments => 'تعديلات الأذان (بالدقائق)';
+
+  @override
   String adhanHoursAgo(int hours) {
     String _temp0 = intl.Intl.pluralLogic(
       hours,
@@ -75,6 +78,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get advancedSettingsTitle => 'إعدادات متقدمة';
+
+  @override
   String get appearance => 'خصائص العرض';
 
   @override
@@ -93,6 +99,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get autoSelectOrMap => 'تحديد تلقائي او بالخريطة';
 
   @override
+  String get back => 'رجوع';
+
+  @override
+  String get basicParametersTitle => 'إعدادات أساسية';
+
+  @override
   String get bestStreak => 'أفضل إنجاز';
 
   @override
@@ -103,6 +115,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cancel => 'إلغاء';
+
+  @override
+  String get changingTimezone => 'تغيير المنطقة الزمنية';
+
+  @override
+  String get chooseCalculationMethod => 'اختر طريقة الحساب';
 
   @override
   String get chooseLocation => 'اختر الموقع';
@@ -129,13 +147,49 @@ class AppLocalizationsAr extends AppLocalizations {
   String get currentStreak => 'الإنجاز الحالي';
 
   @override
+  String get customParametersCollapsedHint =>
+      'انقر لتكوين إعدادات الحساب المخصصة';
+
+  @override
+  String get customParametersLabel => 'إعدادات مخصصة';
+
+  @override
+  String get customParametersTitle => 'إعدادات مخصصة';
+
+  @override
   String get dark => 'داكن';
+
+  @override
+  String get detectTimezone => 'اكتشاف المنطقة الزمنية';
+
+  @override
+  String get detectTimezoneNotImplemented =>
+      'اكتشاف المنطقة الزمنية غير متاح هنا.';
+
+  @override
+  String get deviceLocationNotImplemented =>
+      'استخدام موقع الجهاز غير متاح هنا.';
 
   @override
   String get dhuhr => 'الظهر';
 
   @override
+  String get done => 'تم';
+
+  @override
   String get dragTheMapTip => 'اسحب الخريطة لتحديد موقع الدبوس';
+
+  @override
+  String get dubai => 'دبي';
+
+  @override
+  String get editsSavedDescription => 'تم حفظ تغييراتك بنجاح.';
+
+  @override
+  String get editsSavedTitle => 'تم حفظ التعديلات';
+
+  @override
+  String get egyptian => 'الهيئة العامة المصرية للمساحة';
 
   @override
   String get english => 'الإنجيليزية';
@@ -150,7 +204,17 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get errorUpdatingLocationDescription =>
+      'تم تحديث الإحداثيات بنجاح، ولكن لم نتمكن من جلب اسم موقعك. لن يؤثر ذلك على عمل التطبيق.';
+
+  @override
+  String get errorUpdatingLocationTitle => 'حدث خطأ أثناء تحديث الموقع';
+
+  @override
   String get fajr => 'الفجر';
+
+  @override
+  String get fajrAngleLabel => 'زاوية الفجر (°)';
 
   @override
   String get gettingLocation => 'الحصول على الموقع';
@@ -162,10 +226,38 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadith => 'الحديث';
 
   @override
+  String get highLatitudeRule_middleOfTheNight => 'منتصف الليل';
+
+  @override
+  String get highLatitudeRule_seventhOfTheNight => 'سبع الليل';
+
+  @override
+  String get highLatitudeRule_twilightAngle => 'زاوية الشفق';
+
+  @override
+  String get highLatitudeRuleLabel => 'قاعدة خطوط العرض العالية';
+
+  @override
+  String get invalidCoordinatesDescription =>
+      'يرجى إدخال قيم صحيحة لخط العرض وخط الطول.';
+
+  @override
+  String get invalidCoordinatesTitle => 'إحداثيات غير صالحة';
+
+  @override
+  String get invalidParametersDescription => 'يرجى التحقق من القيم المدخلة.';
+
+  @override
+  String get invalidParametersTitle => 'إعدادات غير صالحة';
+
+  @override
   String get iqamah => 'الإقامة';
 
   @override
   String get iqamahAdjustment => 'ضبط الإقامة';
+
+  @override
+  String get iqamahAfterAdhan => 'الإقامة (دقائق بعد الأذان)';
 
   @override
   String iqamahSubtitleMessage(int iqamahMins) {
@@ -186,6 +278,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get isha => 'العشاء';
 
   @override
+  String get ishaAngleLabel => 'زاوية العشاء (°)';
+
+  @override
+  String get ishaIntervalLabel => 'فاصل العشاء (دقيقة)';
+
+  @override
   String get islamicTheme => 'المخطوطة';
 
   @override
@@ -196,6 +294,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get jumuah => 'الجمعة';
+
+  @override
+  String get karachi => 'جامعة العلوم الإسلامية، كراتشي';
+
+  @override
+  String get kuwait => 'الكويت';
 
   @override
   String get lastThirdOfTheNight => 'الثلث الأخير من الليل';
@@ -213,6 +317,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get light => 'فاتح';
 
   @override
+  String get loadingLocationSettings => 'جاري تحميل إعدادات الموقع';
+
+  @override
   String get locationSectionSubtitle =>
       'تحديد الموقع الجغرافي وطريقة حساب مواقيت الصلاة.';
 
@@ -223,7 +330,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get longitude => 'خط الطول';
 
   @override
+  String get madhab_hanafi => 'حنفي';
+
+  @override
+  String get madhab_shafi => 'شافعي';
+
+  @override
+  String get madhabLabel => 'المذهب';
+
+  @override
   String get maghrib => 'المغرب';
+
+  @override
+  String get maghribAngleLabel => 'زاوية المغرب (°)';
 
   @override
   String get midnight => 'منتصف الليل';
@@ -241,16 +360,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get monthly => 'شهري';
 
   @override
+  String get moonsightingCommittee => 'لجنة رؤية الهلال';
+
+  @override
+  String get morocco => 'المغرب';
+
+  @override
   String get muslimFortress => 'حصن المسلم';
 
   @override
+  String get muslimWorldLeague => 'رابطة العالم الإسلامي';
+
+  @override
   String get neutral => 'محايد';
+
+  @override
+  String get next => 'التالي';
 
   @override
   String get nextPrayer => 'الصلاة القادمة';
 
   @override
   String get noResults => 'لا يوجد نتائج.';
+
+  @override
+  String get northAmerica => 'أمريكا الشمالية (ISNA)';
 
   @override
   String get onTime => 'في وقتها';
@@ -268,7 +402,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onTimeRate => 'الصلاة في وقتها';
 
   @override
+  String get optionalHint => 'اختياري';
+
+  @override
   String get orange => 'برتقالي';
+
+  @override
+  String get other => 'أخرى';
 
   @override
   String get pageNotFound => 'الصفحة غير موجودة';
@@ -278,7 +418,20 @@ class AppLocalizationsAr extends AppLocalizations {
       'هذه الصفحة غير موجودة. يرجى العودة إلى الصفحة الرئيسية.';
 
   @override
+  String get parametersSavedDescription => 'تم حفظ إعداداتك المخصصة بنجاح.';
+
+  @override
+  String get parametersSavedTitle => 'تم حفظ الإعدادات';
+
+  @override
+  String get placeholdersHint =>
+      'يمكن ضبط المذهب والخيارات الأخرى لاحقًا. هذه المدخلات مؤقتة.';
+
+  @override
   String get playerAnalytics => 'تحليل الصلاة';
+
+  @override
+  String get pleaseSelectMethod => 'يرجى اختيار طريقة الحساب.';
 
   @override
   String get prayer => 'الصلاة';
@@ -289,6 +442,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get prayerSettingsTitle => 'اعدادات الصلاة';
+
+  @override
+  String get prayerTimeAdjustmentsTitle => 'تعديلات مواقيت الصلاة (بالدقائق)';
 
   @override
   String get prayerTimes => 'مواقيت الصلاة';
@@ -304,6 +460,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prepareForPrayer => 'تجهز للصلاة.';
 
   @override
+  String get qatar => 'قطر';
+
+  @override
   String get quran => 'القرآن الكريم';
 
   @override
@@ -313,16 +472,51 @@ class AppLocalizationsAr extends AppLocalizations {
   String get remembrance => 'الأذكار';
 
   @override
+  String get resetCompleteDescription =>
+      'تمت إعادة الإعدادات إلى القيم الافتراضية.';
+
+  @override
+  String get resetCompleteTitle => 'تمت إعادة الضبط';
+
+  @override
+  String get resetToDefaults => 'إعادة الضبط للوضع الافتراضي';
+
+  @override
   String get rose => 'وردي';
 
   @override
   String get save => 'حفظ';
 
   @override
+  String get saveParameters => 'حفظ الإعدادات';
+
+  @override
   String get searchForMore => 'ابحث للمزيد من الخيارات';
 
   @override
+  String get searchPlaceLabel => 'البحث عن موقع';
+
+  @override
   String get settings => 'الإعدادات';
+
+  @override
+  String get setupPrayerSettingsSubtitle =>
+      'سنرشدك عبر خطوات سريعة. يمكنك تغيير هذه لاحقًا من الإعدادات.';
+
+  @override
+  String get setupPrayerSettingsTitle => 'لنقم بإعداد إعدادات الصلاة.';
+
+  @override
+  String get setupPreferences => 'لنقم بضبط تفضيلاتك.';
+
+  @override
+  String get signedExampleHint => '20 أو -10';
+
+  @override
+  String get singapore => 'سنغافورة';
+
+  @override
+  String get skip => 'تخطي';
 
   @override
   String get slate => 'رمادي';
@@ -352,6 +546,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sunrise => 'الشروق';
 
   @override
+  String get tehran => 'طهران';
+
+  @override
   String get timeFormat => 'تنسيق الوقت';
 
   @override
@@ -371,16 +568,49 @@ class AppLocalizationsAr extends AppLocalizations {
   String get toggleArabic => 'حول اللغة';
 
   @override
+  String get turkiye => 'تركيا (ديانت)';
+
+  @override
+  String get ummAlQura => 'جامعة أم القرى';
+
+  @override
   String get use24HourFormat => 'استخدام نظام 24 ساعة';
 
   @override
+  String get useDeviceLocation => 'استخدام موقع الجهاز';
+
+  @override
   String get useMyLocation => 'استخدم موقعي الحالي';
+
+  @override
+  String get useSystemTimezone => 'استخدام المنطقة الزمنية للنظام';
 
   @override
   String get violet => 'بنفسجي';
 
   @override
   String get weekly => 'أسبوعي';
+
+  @override
+  String get welcomeToApp => 'مرحبًا بك في التطبيق!';
+
+  @override
+  String get wizardStep_calculationMethod => 'طريقة الحساب';
+
+  @override
+  String get wizardStep_getStarted => 'ابدأ';
+
+  @override
+  String get wizardStep_iqamahAdjustments => 'الإقامة والتعديلات';
+
+  @override
+  String get wizardStep_location => 'الموقع';
+
+  @override
+  String get wizardStep_timeFormat => 'تنسيق الوقت';
+
+  @override
+  String get wizardStep_welcome => 'مرحبًا';
 
   @override
   String get yearly => 'سنوي';

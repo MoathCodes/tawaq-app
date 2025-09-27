@@ -63,7 +63,7 @@ import 'app_localizations_en.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -86,16 +86,16 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
-    Locale('en')
+    Locale('en'),
   ];
 
   /// No description provided for @about.
@@ -109,6 +109,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Adhan'**
   String get adhan;
+
+  /// No description provided for @adhanAdjustments.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan adjustments (minutes)'**
+  String get adhanAdjustments;
 
   /// No description provided for @adhanHoursAgo.
   ///
@@ -133,6 +139,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{mins} minutes left'**
   String adhanMinsLeft(int mins);
+
+  /// No description provided for @advancedSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced Settings'**
+  String get advancedSettingsTitle;
 
   /// No description provided for @appearance.
   ///
@@ -170,6 +182,18 @@ abstract class AppLocalizations {
   /// **'Auto Select or Map'**
   String get autoSelectOrMap;
 
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @basicParametersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic Parameters'**
+  String get basicParametersTitle;
+
   /// No description provided for @bestStreak.
   ///
   /// In en, this message translates to:
@@ -193,6 +217,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
+
+  /// No description provided for @changingTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing Timezone'**
+  String get changingTimezone;
+
+  /// No description provided for @chooseCalculationMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your calculation method'**
+  String get chooseCalculationMethod;
 
   /// No description provided for @chooseLocation.
   ///
@@ -242,11 +278,47 @@ abstract class AppLocalizations {
   /// **'Current Streak'**
   String get currentStreak;
 
+  /// No description provided for @customParametersCollapsedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to configure custom calculation parameters'**
+  String get customParametersCollapsedHint;
+
+  /// No description provided for @customParametersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom parameters'**
+  String get customParametersLabel;
+
+  /// No description provided for @customParametersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Parameters'**
+  String get customParametersTitle;
+
   /// No description provided for @dark.
   ///
   /// In en, this message translates to:
   /// **'Dark'**
   String get dark;
+
+  /// No description provided for @detectTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Detect timezone'**
+  String get detectTimezone;
+
+  /// No description provided for @detectTimezoneNotImplemented.
+  ///
+  /// In en, this message translates to:
+  /// **'Timezone detection is not implemented here.'**
+  String get detectTimezoneNotImplemented;
+
+  /// No description provided for @deviceLocationNotImplemented.
+  ///
+  /// In en, this message translates to:
+  /// **'Using device location is not implemented here.'**
+  String get deviceLocationNotImplemented;
 
   /// No description provided for @dhuhr.
   ///
@@ -254,11 +326,41 @@ abstract class AppLocalizations {
   /// **'Dhuhr'**
   String get dhuhr;
 
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
   /// No description provided for @dragTheMapTip.
   ///
   /// In en, this message translates to:
   /// **'Drag the map to position the pin'**
   String get dragTheMapTip;
+
+  /// No description provided for @dubai.
+  ///
+  /// In en, this message translates to:
+  /// **'Dubai'**
+  String get dubai;
+
+  /// No description provided for @editsSavedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your changes have been saved successfully.'**
+  String get editsSavedDescription;
+
+  /// No description provided for @editsSavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edits were saved'**
+  String get editsSavedTitle;
+
+  /// No description provided for @egyptian.
+  ///
+  /// In en, this message translates to:
+  /// **'Egyptian General Authority of Survey'**
+  String get egyptian;
 
   /// No description provided for @english.
   ///
@@ -278,11 +380,29 @@ abstract class AppLocalizations {
   /// **'Error Occurred While {whileError}'**
   String errorOccurredWhile(String whileError);
 
+  /// No description provided for @errorUpdatingLocationDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your coordinates were updated successfully, but we couldn\'t get your location name. This won\'t affect the app\'s functionality.'**
+  String get errorUpdatingLocationDescription;
+
+  /// No description provided for @errorUpdatingLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Error occurred while updating location'**
+  String get errorUpdatingLocationTitle;
+
   /// No description provided for @fajr.
   ///
   /// In en, this message translates to:
   /// **'Fajir'**
   String get fajr;
+
+  /// No description provided for @fajrAngleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fajr Angle (°)'**
+  String get fajrAngleLabel;
 
   /// No description provided for @gettingLocation.
   ///
@@ -302,6 +422,54 @@ abstract class AppLocalizations {
   /// **'Hadith'**
   String get hadith;
 
+  /// No description provided for @highLatitudeRule_middleOfTheNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Middle of the Night'**
+  String get highLatitudeRule_middleOfTheNight;
+
+  /// No description provided for @highLatitudeRule_seventhOfTheNight.
+  ///
+  /// In en, this message translates to:
+  /// **'Seventh of the Night'**
+  String get highLatitudeRule_seventhOfTheNight;
+
+  /// No description provided for @highLatitudeRule_twilightAngle.
+  ///
+  /// In en, this message translates to:
+  /// **'Twilight Angle'**
+  String get highLatitudeRule_twilightAngle;
+
+  /// No description provided for @highLatitudeRuleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'High Latitude Rule'**
+  String get highLatitudeRuleLabel;
+
+  /// No description provided for @invalidCoordinatesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter valid latitude and longitude values.'**
+  String get invalidCoordinatesDescription;
+
+  /// No description provided for @invalidCoordinatesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Coordinates'**
+  String get invalidCoordinatesTitle;
+
+  /// No description provided for @invalidParametersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your input values.'**
+  String get invalidParametersDescription;
+
+  /// No description provided for @invalidParametersTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid Parameters'**
+  String get invalidParametersTitle;
+
   /// No description provided for @iqamah.
   ///
   /// In en, this message translates to:
@@ -314,6 +482,12 @@ abstract class AppLocalizations {
   /// **'Iqamah Adjustment'**
   String get iqamahAdjustment;
 
+  /// No description provided for @iqamahAfterAdhan.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah (minutes after adhan)'**
+  String get iqamahAfterAdhan;
+
   /// No description provided for @iqamahSubtitleMessage.
   ///
   /// In en, this message translates to:
@@ -325,6 +499,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Isha'**
   String get isha;
+
+  /// No description provided for @ishaAngleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Isha Angle (°)'**
+  String get ishaAngleLabel;
+
+  /// No description provided for @ishaIntervalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Isha Interval (min)'**
+  String get ishaIntervalLabel;
 
   /// No description provided for @islamicTheme.
   ///
@@ -349,6 +535,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Jumuah'**
   String get jumuah;
+
+  /// No description provided for @karachi.
+  ///
+  /// In en, this message translates to:
+  /// **'University of Islamic Sciences, Karachi'**
+  String get karachi;
+
+  /// No description provided for @kuwait.
+  ///
+  /// In en, this message translates to:
+  /// **'Kuwait'**
+  String get kuwait;
 
   /// No description provided for @lastThirdOfTheNight.
   ///
@@ -380,6 +578,12 @@ abstract class AppLocalizations {
   /// **'Light'**
   String get light;
 
+  /// No description provided for @loadingLocationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading Location Settings'**
+  String get loadingLocationSettings;
+
   /// No description provided for @locationSectionSubtitle.
   ///
   /// In en, this message translates to:
@@ -398,11 +602,35 @@ abstract class AppLocalizations {
   /// **'Longitude'**
   String get longitude;
 
+  /// No description provided for @madhab_hanafi.
+  ///
+  /// In en, this message translates to:
+  /// **'Hanafi'**
+  String get madhab_hanafi;
+
+  /// No description provided for @madhab_shafi.
+  ///
+  /// In en, this message translates to:
+  /// **'Shafi'**
+  String get madhab_shafi;
+
+  /// No description provided for @madhabLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Madhab'**
+  String get madhabLabel;
+
   /// No description provided for @maghrib.
   ///
   /// In en, this message translates to:
   /// **'Maghrib'**
   String get maghrib;
+
+  /// No description provided for @maghribAngleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Maghrib Angle (°)'**
+  String get maghribAngleLabel;
 
   /// No description provided for @midnight.
   ///
@@ -413,7 +641,7 @@ abstract class AppLocalizations {
   /// No description provided for @minute.
   ///
   /// In en, this message translates to:
-  /// **'دقيقة'**
+  /// **'minute'**
   String get minute;
 
   /// No description provided for @missed.
@@ -434,17 +662,41 @@ abstract class AppLocalizations {
   /// **'Monthly'**
   String get monthly;
 
+  /// No description provided for @moonsightingCommittee.
+  ///
+  /// In en, this message translates to:
+  /// **'Moonsighting Committee'**
+  String get moonsightingCommittee;
+
+  /// No description provided for @morocco.
+  ///
+  /// In en, this message translates to:
+  /// **'Morocco'**
+  String get morocco;
+
   /// No description provided for @muslimFortress.
   ///
   /// In en, this message translates to:
   /// **'Muslim Fortress'**
   String get muslimFortress;
 
+  /// No description provided for @muslimWorldLeague.
+  ///
+  /// In en, this message translates to:
+  /// **'Muslim World League'**
+  String get muslimWorldLeague;
+
   /// No description provided for @neutral.
   ///
   /// In en, this message translates to:
   /// **'Neutral'**
   String get neutral;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
 
   /// No description provided for @nextPrayer.
   ///
@@ -457,6 +709,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No results found.'**
   String get noResults;
+
+  /// No description provided for @northAmerica.
+  ///
+  /// In en, this message translates to:
+  /// **'North America (ISNA)'**
+  String get northAmerica;
 
   /// No description provided for @onTime.
   ///
@@ -488,11 +746,23 @@ abstract class AppLocalizations {
   /// **'On Time Rate'**
   String get onTimeRate;
 
+  /// No description provided for @optionalHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optionalHint;
+
   /// No description provided for @orange.
   ///
   /// In en, this message translates to:
   /// **'Orange'**
   String get orange;
+
+  /// No description provided for @other.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get other;
 
   /// No description provided for @pageNotFound.
   ///
@@ -506,11 +776,35 @@ abstract class AppLocalizations {
   /// **'This page doesn\'t exist. Please go back to the home page.'**
   String get pageNotFoundDescription;
 
+  /// No description provided for @parametersSavedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your custom parameters have been saved successfully.'**
+  String get parametersSavedDescription;
+
+  /// No description provided for @parametersSavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parameters Saved'**
+  String get parametersSavedTitle;
+
+  /// No description provided for @placeholdersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Madhab and other options can be configured later. These inputs are placeholders.'**
+  String get placeholdersHint;
+
   /// No description provided for @playerAnalytics.
   ///
   /// In en, this message translates to:
   /// **'Player Analytics'**
   String get playerAnalytics;
+
+  /// No description provided for @pleaseSelectMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a calculation method.'**
+  String get pleaseSelectMethod;
 
   /// No description provided for @prayer.
   ///
@@ -529,6 +823,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Prayer Settings'**
   String get prayerSettingsTitle;
+
+  /// No description provided for @prayerTimeAdjustmentsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer Time Adjustments (minutes)'**
+  String get prayerTimeAdjustmentsTitle;
 
   /// No description provided for @prayerTimes.
   ///
@@ -554,6 +854,12 @@ abstract class AppLocalizations {
   /// **'Prepare yourself for the prayer.'**
   String get prepareForPrayer;
 
+  /// No description provided for @qatar.
+  ///
+  /// In en, this message translates to:
+  /// **'Qatar'**
+  String get qatar;
+
   /// No description provided for @quran.
   ///
   /// In en, this message translates to:
@@ -572,6 +878,24 @@ abstract class AppLocalizations {
   /// **'Remembrance'**
   String get remembrance;
 
+  /// No description provided for @resetCompleteDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Parameters have been reset to default values.'**
+  String get resetCompleteDescription;
+
+  /// No description provided for @resetCompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Complete'**
+  String get resetCompleteTitle;
+
+  /// No description provided for @resetToDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to Defaults'**
+  String get resetToDefaults;
+
   /// No description provided for @rose.
   ///
   /// In en, this message translates to:
@@ -584,17 +908,65 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
+  /// No description provided for @saveParameters.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Parameters'**
+  String get saveParameters;
+
   /// No description provided for @searchForMore.
   ///
   /// In en, this message translates to:
   /// **'Search for more options'**
   String get searchForMore;
 
+  /// No description provided for @searchPlaceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a place'**
+  String get searchPlaceLabel;
+
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:
   /// **'Settings'**
   String get settings;
+
+  /// No description provided for @setupPrayerSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll guide you through a few quick steps. You can change these later in Settings.'**
+  String get setupPrayerSettingsSubtitle;
+
+  /// No description provided for @setupPrayerSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s set up your prayer settings.'**
+  String get setupPrayerSettingsTitle;
+
+  /// No description provided for @setupPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Let\'s set up your preferences.'**
+  String get setupPreferences;
+
+  /// No description provided for @signedExampleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'20 or -10'**
+  String get signedExampleHint;
+
+  /// No description provided for @singapore.
+  ///
+  /// In en, this message translates to:
+  /// **'Singapore'**
+  String get singapore;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
 
   /// No description provided for @slate.
   ///
@@ -625,6 +997,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sunrise'**
   String get sunrise;
+
+  /// No description provided for @tehran.
+  ///
+  /// In en, this message translates to:
+  /// **'Tehran'**
+  String get tehran;
 
   /// No description provided for @timeFormat.
   ///
@@ -662,17 +1040,41 @@ abstract class AppLocalizations {
   /// **'Toggle Arabic'**
   String get toggleArabic;
 
+  /// No description provided for @turkiye.
+  ///
+  /// In en, this message translates to:
+  /// **'Turkey (Diyanet)'**
+  String get turkiye;
+
+  /// No description provided for @ummAlQura.
+  ///
+  /// In en, this message translates to:
+  /// **'Umm Al-Qura University'**
+  String get ummAlQura;
+
   /// No description provided for @use24HourFormat.
   ///
   /// In en, this message translates to:
   /// **'Use 24-hour format'**
   String get use24HourFormat;
 
+  /// No description provided for @useDeviceLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use device location'**
+  String get useDeviceLocation;
+
   /// No description provided for @useMyLocation.
   ///
   /// In en, this message translates to:
   /// **'Use My Location'**
   String get useMyLocation;
+
+  /// No description provided for @useSystemTimezone.
+  ///
+  /// In en, this message translates to:
+  /// **'Use System Timezone'**
+  String get useSystemTimezone;
 
   /// No description provided for @violet.
   ///
@@ -685,6 +1087,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weekly'**
   String get weekly;
+
+  /// No description provided for @welcomeToApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to the app!'**
+  String get welcomeToApp;
+
+  /// No description provided for @wizardStep_calculationMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculation Method'**
+  String get wizardStep_calculationMethod;
+
+  /// No description provided for @wizardStep_getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get wizardStep_getStarted;
+
+  /// No description provided for @wizardStep_iqamahAdjustments.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah & Adjustments'**
+  String get wizardStep_iqamahAdjustments;
+
+  /// No description provided for @wizardStep_location.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get wizardStep_location;
+
+  /// No description provided for @wizardStep_timeFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Time Format'**
+  String get wizardStep_timeFormat;
+
+  /// No description provided for @wizardStep_welcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome'**
+  String get wizardStep_welcome;
 
   /// No description provided for @yearly.
   ///
@@ -732,8 +1176,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

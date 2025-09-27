@@ -20,18 +20,14 @@ class PrayerTrackerWidget extends ConsumerWidget {
     final cardsStream = ref.watch(prayerTrackerCardsProvider(context.l10n));
     final time = ref.read(currentLocationTimeProvider);
 
-    return StaticCard(
+    return HoverCard(
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            context.l10n.prayerTrackerTitle,
-          ).bold,
+          Text(context.l10n.prayerTrackerTitle).bold,
           SizedBox(height: expanded ? 6 : 4),
-          Text(
-            context.l10n.prayerTrackerSubtitle,
-          ).sm,
+          Text(context.l10n.prayerTrackerSubtitle).sm,
           SizedBox(height: expanded ? 14 : 12),
           _MainWidget(
             data: cardsStream,

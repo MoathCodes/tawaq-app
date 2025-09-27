@@ -25,19 +25,20 @@ class PrayerAnalyticsCard extends ConsumerWidget {
             .changePeriod(period),
       ),
       loading: () => FSkeletonizer(
-          child: _PrayerAnalyticsWidget(
-        data: const PrayerAnalytics(
-          period: PrayerAnalyticsPeriod.weekly,
-          completionPercentage: 0.75,
-          currentStreak: 5,
-          bestStreak: 12,
-          jamaahPercentage: 0.65,
-          onTimePercentage: 0.55,
-          missedPercentage: 0.10,
-          latePercentage: 0.20,
+        child: _PrayerAnalyticsWidget(
+          data: const PrayerAnalytics(
+            period: PrayerAnalyticsPeriod.weekly,
+            completionPercentage: 0.75,
+            currentStreak: 5,
+            bestStreak: 12,
+            jamaahPercentage: 0.65,
+            onTimePercentage: 0.55,
+            missedPercentage: 0.10,
+            latePercentage: 0.20,
+          ),
+          onPeriodChanged: (p0) {},
         ),
-        onPeriodChanged: (p0) {},
-      )),
+      ),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -46,8 +47,10 @@ class PrayerAnalyticsCard extends ConsumerWidget {
 class _PrayerAnalyticsWidget extends StatelessWidget {
   // Combined constants from both widgets
 
-  static const _contentPadding =
-      EdgeInsets.symmetric(horizontal: 12, vertical: 16);
+  static const _contentPadding = EdgeInsets.symmetric(
+    horizontal: 12,
+    vertical: 16,
+  );
   static const _progressBarRadius = 8.0;
   static const _wrapSpacing = 8.0;
 
@@ -64,7 +67,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     final colors = FTheme.of(context).colors;
     final l10n = context.l10n;
 
-    return StaticCard(
+    return HoverCard(
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -89,13 +92,13 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
   }
 
   Widget _buildAnalyticsContent(
-      BuildContext context, FColors colors, AppLocalizations l10n) {
+    BuildContext context,
+    FColors colors,
+    AppLocalizations l10n,
+  ) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        _buildProgressSection(colors, l10n),
-        _buildStatsSection(l10n),
-      ],
+      children: [_buildProgressSection(colors, l10n), _buildStatsSection(l10n)],
     );
   }
 
@@ -109,10 +112,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
             _formatPercentage(data.completionPercentage),
             textAlign: TextAlign.center,
           ).xl2,
-          Text(
-            _getPeriodText(l10n),
-            textAlign: TextAlign.center,
-          ),
+          Text(_getPeriodText(l10n), textAlign: TextAlign.center),
           FProgress(
             value: data.completionPercentage,
             style: (style) => style.copyWith(
@@ -145,16 +145,16 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
       spacing: _wrapSpacing,
       alignment: WrapAlignment.spaceEvenly,
       children: stats
-          .map((stat) => MiniCard(
-                label: stat.$1,
-                child: Text(stat.$2),
-              ))
+          .map((stat) => MiniCard(label: stat.$1, child: Text(stat.$2)))
           .toList(),
     );
   }
 
   List<FTabEntry> _buildTabEntries(
-      BuildContext context, FColors colors, AppLocalizations l10n) {
+    BuildContext context,
+    FColors colors,
+    AppLocalizations l10n,
+  ) {
     return PrayerAnalyticsPeriod.values.map((period) {
       return FTabEntry(
         label: Text(period.getLocaleName(l10n)),

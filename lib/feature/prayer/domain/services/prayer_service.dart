@@ -13,7 +13,7 @@ import 'package:talker_flutter/talker_flutter.dart';
 import 'package:timezone/timezone.dart';
 
 export '../use_cases/compute_prayer_card_decision.dart'
-    show computePrayerCardDecision;
+    show computePrayerCardDecision, computePrayerCardDecisionTake2;
 
 part 'prayer_service.g.dart';
 

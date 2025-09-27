@@ -117,7 +117,7 @@ FButtonStyle closeButtonStyle({
           ),
         ),
         WidgetState.any: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: style.borderRadius,
           border: Border.all(
             color: colors.border,
             width: style.borderWidth,

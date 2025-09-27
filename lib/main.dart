@@ -39,6 +39,7 @@ void main() async {
         backgroundColor: Colors.transparent,
         skipTaskbar: false,
         titleBarStyle: TitleBarStyle.hidden,
+        windowButtonVisibility: true,
       );
 
       windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -47,20 +48,22 @@ void main() async {
       });
 
       // Run the app
-      runApp(ProviderScope(
-        observers: [
-          TalkerRiverpodObserver(
-            talker: talker,
-            settings: TalkerRiverpodLoggerSettings(
-              printStateFullData: true,
-              providerFilter: (provider) {
-                return provider.name != prayerCardProvider.name;
-              },
+      runApp(
+        ProviderScope(
+          observers: [
+            TalkerRiverpodObserver(
+              talker: talker,
+              settings: TalkerRiverpodLoggerSettings(
+                printStateFullData: true,
+                providerFilter: (provider) {
+                  return provider.name != prayerCardProvider.name;
+                },
+              ),
             ),
-          ),
-        ],
-        child: const SeratiApp(),
-      ));
+          ],
+          child: const SeratiApp(),
+        ),
+      );
     },
     (error, stackTrace) {
       talker.handle(error, stackTrace);
@@ -73,7 +76,7 @@ final talker = TalkerFlutter.init();
 class SeratiApp extends ConsumerWidget {
   const SeratiApp({super.key});
 
-// 1910x990
+  // 1910x990
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -101,16 +104,16 @@ class SeratiApp extends ConsumerWidget {
             FThemeData themeData = currentTheme;
             if (isArabic) {
               final typo = FTypography.inherit(
-                  colors: currentTheme.colors,
-                  defaultFontFamily: FontFamily.iBMPlexSansArabic);
+                colors: currentTheme.colors,
+                defaultFontFamily: FontFamily.iBMPlexSansArabic,
+              );
               // .scale(sizeScalar: 1.285);
-              themeData =
-                  FThemeData(colors: currentTheme.colors, typography: typo);
+              themeData = FThemeData(
+                colors: currentTheme.colors,
+                typography: typo,
+              );
             }
-            return FTheme(
-              data: themeData,
-              child: child!,
-            );
+            return FTheme(data: themeData, child: child!);
           },
           themeMode: appTheme.value?.themeMode,
           onGenerateTitle: (context) =>
