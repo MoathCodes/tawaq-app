@@ -8,7 +8,7 @@ import 'package:hasanat/core/widgets/animation_entry.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/current_prayer_card.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/prayer_analytics_card.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/prayer_table.dart';
-import 'package:hasanat/feature/prayer/presentation/widgets/prayer_tracker_cards.dart';
+import 'package:hasanat/feature/prayer/presentation/widgets/prayer_tracker.dart';
 
 class PrayerScreen extends ConsumerStatefulWidget {
   const PrayerScreen({super.key});

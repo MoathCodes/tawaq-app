@@ -2,6 +2,11 @@
 ///
 /// This function initializes the necessary bindings, sets up error handling,
 /// initializes timezone data, and runs the application.
+library;
+
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,20 +26,20 @@ void main() async {
   // Initialize Talker first, before any other initialization
 
   // Run everything inside the Talker zone from the beginning
-  runTalkerZonedGuarded(
-    talker,
-    () async {
-      // Initialize Flutter bindings inside the zone
-      WidgetsFlutterBinding.ensureInitialized();
+  runTalkerZonedGuarded(talker, () async {
+    // Initialize Flutter bindings inside the zone
+    WidgetsFlutterBinding.ensureInitialized();
 
-      // Set up error handling
-      FlutterError.onError = (details) {
-        talker.handle(details.exception, details.stack);
-      };
+    // Set up error handling
+    FlutterError.onError = (details) {
+      talker.handle(details.exception, details.stack);
+    };
 
-      // Initialize timezone data
-      tz.initializeTimeZones();
+    // Initialize timezone data
+    tz.initializeTimeZones();
 
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       // Initialize window manager
       await windowManager.ensureInitialized();
 
@@ -49,26 +54,24 @@ void main() async {
         await windowManager.show();
         await windowManager.focus();
       });
-
-      // Run the app
-      runApp(
-        ProviderScope(
-          observers: [
-            TalkerRiverpodObserver(
-              talker: talker,
-              settings: TalkerRiverpodLoggerSettings(
-                providerFilter: (provider) {
-                  return provider.name != prayerCardProvider.name;
-                },
-              ),
+    }
+    // Run the app
+    runApp(
+      ProviderScope(
+        observers: [
+          TalkerRiverpodObserver(
+            talker: talker,
+            settings: TalkerRiverpodLoggerSettings(
+              providerFilter: (provider) {
+                return provider.name != prayerCardProvider.name;
+              },
             ),
-          ],
-          child: const SeratiApp(),
-        ),
-      );
-    },
-    talker.handle,
-  );
+          ),
+        ],
+        child: const TawaqApp(),
+      ),
+    );
+  }, talker.handle);
 }
 
 /// The Talker instance for logging and error handling.
@@ -78,9 +81,9 @@ final Talker talker = TalkerFlutter.init();
 ///
 /// This widget is responsible for setting up the application's theme,
 /// localization, and routing.
-class SeratiApp extends ConsumerWidget {
-  /// Creates a new instance of [SeratiApp].
-  const SeratiApp({super.key});
+class TawaqApp extends ConsumerWidget {
+  /// Creates a new instance of [TawaqApp].
+  const TawaqApp({super.key});
 
   // 1910x990
 

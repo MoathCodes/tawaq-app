@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/text_extensions.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
@@ -12,8 +13,8 @@ import 'package:hasanat/feature/prayer/presentation/provider/prayer_tracker/pray
 import 'package:hasanat/feature/prayer/presentation/widgets/clickable_prayer_card.dart';
 
 class PrayerTrackerWidget extends ConsumerWidget {
-  const PrayerTrackerWidget({this.expanded = true, super.key});
   final bool expanded;
+  const PrayerTrackerWidget({this.expanded = true, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,7 +26,17 @@ class PrayerTrackerWidget extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(context.l10n.prayerTrackerTitle).bold,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(context.l10n.prayerTrackerTitle).bold,
+              FLineCalendar(
+                initialScroll: DateTime.now(),
+                end: DateTime.now(),
+                start: DateTime.now().subtract(const Duration(days: 7)),
+              ),
+            ],
+          ),
           SizedBox(height: expanded ? 6 : 4),
           Text(context.l10n.prayerTrackerSubtitle).sm,
           SizedBox(height: expanded ? 14 : 12),
@@ -44,17 +55,17 @@ class PrayerTrackerWidget extends ConsumerWidget {
 }
 
 class _MainWidget extends StatelessWidget {
+  final List<PrayerTrackerCardModel> data;
+  final Function(PrayerCompletion) onCompletionChanged;
+  final bool expanded;
+
+  final DateTime time;
   const _MainWidget({
     required this.data,
     required this.expanded,
     required this.time,
     required this.onCompletionChanged,
   });
-  final List<PrayerTrackerCardModel> data;
-  final Function(PrayerCompletion) onCompletionChanged;
-
-  final bool expanded;
-  final DateTime time;
 
   @override
   Widget build(BuildContext context) {
