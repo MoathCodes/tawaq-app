@@ -30,7 +30,7 @@ void main() {
       });
     });
 
-    group('Page Loading Tests', () {
+    group('ScreenLoading Tests', () {
       test('should load pages successfully', () async {
         await controller.init();
 

@@ -54,34 +54,34 @@ void main() {
     yesterdaysSunnahTimes: todaysSunnahTimes,
   );
 
-  print("=== TEST RESULTS ===");
+  print('=== TEST RESULTS ===');
   print(
       "Test time: ${testTime.hour}:${testTime.minute.toString().padLeft(2, '0')}");
-  print("Decision prayer: ${decision.prayer}");
-  print("Reference time: ${decision.referenceTime}");
-  print("Is countdown: ${decision.isCountdown}");
+  print('Decision prayer: ${decision.prayer}');
+  print('Reference time: ${decision.referenceTime}');
+  print('Is countdown: ${decision.isCountdown}');
   print(
-      "Duration until reference: ${decision.referenceTime.difference(testTime)}");
+      'Duration until reference: ${decision.referenceTime.difference(testTime)}');
 
   // Check if midnight time comes from SunnahTimes
   final midnightFromSunnah =
       TZDateTime.from(todaysSunnahTimes.middleOfTheNight, location);
   final fajrFromPrayer = TZDateTime.from(todaysPrayerTimes.fajr, location);
 
-  print("\n=== TIME SOURCE VERIFICATION ===");
-  print("Midnight from SunnahTimes: $midnightFromSunnah");
-  print("Fajr from PrayerTimes: $fajrFromPrayer");
-  print("Decision reference time: ${decision.referenceTime}");
-  print("Using SunnahTimes? ${decision.referenceTime == midnightFromSunnah}");
+  print('\n=== TIME SOURCE VERIFICATION ===');
+  print('Midnight from SunnahTimes: $midnightFromSunnah');
+  print('Fajr from PrayerTimes: $fajrFromPrayer');
+  print('Decision reference time: ${decision.referenceTime}');
+  print('Using SunnahTimes? ${decision.referenceTime == midnightFromSunnah}');
 
   // Verify the fix
   if (decision.prayer == Prayer.fajrAfter &&
       decision.isCountdown &&
       decision.referenceTime == midnightFromSunnah) {
-    print("\n✅ SUCCESS: Midnight logic is working correctly!");
+    print('\n✅ SUCCESS: Midnight logic is working correctly!');
     print(
-        "The prayer card will show countdown to midnight from SunnahTimes, not PrayerTimes.");
+        'The prayer card will show countdown to midnight from SunnahTimes, not PrayerTimes.');
   } else {
-    print("\n❌ FAILURE: Midnight logic needs fixing.");
+    print('\n❌ FAILURE: Midnight logic needs fixing.');
   }
 }

@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
@@ -15,20 +14,14 @@ import 'package:timezone/timezone.dart';
 
 part 'prayer_database.g.dart';
 
-@Riverpod(keepAlive: true)
-
-/// This is the database for the prayer data.
+/// Provides a singleton instance of the [PrayerDatabase].
 ///
-/// It is used by any class trying to access the prayer data.
-///
-/// It is a singleton, so it is only created once and is kept alive for the
-/// duration of the app.
-///
-/// It is also used to watch the prayer data for changes.
-///
-/// It is also used to insert and update the prayer data.
+/// This provider is responsible for creating and managing the lifecycle of the
+/// [PrayerDatabase]. It ensures that the database is opened when it is first
+/// accessed and closed when the application is disposed.
+@riverpod
 PrayerDatabase prayerDatabase(Ref ref) {
-  final log = ref.read(talkerNotifierProvider);
+  final log = ref.read(talkerProvider);
   try {
     final database = LazyDatabase(() async {
       final dbFolder = await getApplicationDocumentsDirectory();
@@ -46,9 +39,13 @@ PrayerDatabase prayerDatabase(Ref ref) {
   }
 }
 
+/// The table that stores the prayer completion data.
 @UseRowClass(PrayerCompletion)
 class PrayerCompletions extends Table {
+  /// The time the prayer was completed.
   DateTimeColumn get completionTime => dateTime()();
+
+  /// The unique identifier of the prayer completion.
   IntColumn get id => integer().autoIncrement()();
   // Add useful indexes to speed up date-range and status queries.
   @override
@@ -56,15 +53,20 @@ class PrayerCompletions extends Table {
         {completionTime},
         {status, completionTime},
       ];
+
+  /// The prayer that was completed.
   IntColumn get prayer => intEnum<Prayer>()();
 
+  /// The status of the prayer completion.
   IntColumn get status => intEnum<CompletionStatus>()();
 }
 
+/// The database for the prayer data.
 @DriftDatabase(tables: [PrayerCompletions])
 class PrayerDatabase extends _$PrayerDatabase {
-  final Talker _log;
+  /// Creates a new instance of the [PrayerDatabase].
   PrayerDatabase(super.executor, this._log);
+  final Talker _log;
 
   @override
   int get schemaVersion => 1;
@@ -72,8 +74,9 @@ class PrayerDatabase extends _$PrayerDatabase {
   /// Counts the number of all prayers on a given date.
   Future<int> countAllPrayersOnDate(DateTime from, DateTime to) async {
     try {
-      final query = managers.prayerCompletions
-          .filter((f) => f.completionTime.isBetween(from, to));
+      final query = managers.prayerCompletions.filter(
+        (f) => f.completionTime.isBetween(from, to),
+      );
       return await query.count();
     } catch (e, stackTrace) {
       _log.handle(e, stackTrace);
@@ -81,12 +84,15 @@ class PrayerDatabase extends _$PrayerDatabase {
     }
   }
 
+  /// Counts the number of prayers for each completion status on a given date.
   Future<Map<CompletionStatus, int>> countAllPrayerStatusOnDate(
-      DateTime from, DateTime to) async {
+    DateTime from,
+    DateTime to,
+  ) async {
     try {
       // Initialize result map with zero counts for all statuses so callers
       // can rely on every key being present.
-      final Map<CompletionStatus, int> counts = {
+      final counts = <CompletionStatus, int>{
         for (final s in CompletionStatus.values) s: 0,
       };
 
@@ -99,13 +105,15 @@ class PrayerDatabase extends _$PrayerDatabase {
 
       final rows = await (selectOnly(prayerCompletions)
             ..addColumns([statusColumn, countExpr])
-            ..where(prayerCompletions.completionTime.isBetweenValues(from, to))
+            ..where(
+              prayerCompletions.completionTime.isBetweenValues(from, to),
+            )
             ..groupBy([statusColumn]))
           .get();
 
       for (final row in rows) {
-        final int statusIndex = row.read(statusColumn)!;
-        final int total = row.read(countExpr)!;
+        final statusIndex = row.read(statusColumn)!;
+        final total = row.read(countExpr)!;
         final status = CompletionStatus.values[statusIndex];
         counts[status] = total;
       }
@@ -117,11 +125,16 @@ class PrayerDatabase extends _$PrayerDatabase {
     }
   }
 
+  /// Counts the number of prayers with a specific completion status on a given date.
   Future<int> countPrayerStatusOnDate(
-      CompletionStatus status, DateTime from, DateTime to) async {
+    CompletionStatus status,
+    DateTime from,
+    DateTime to,
+  ) async {
     try {
-      final query = managers.prayerCompletions.filter((f) =>
-          f.completionTime.isBetween(from, to) & f.status.equals(status));
+      final query = managers.prayerCompletions.filter(
+        (f) => f.completionTime.isBetween(from, to) & f.status.equals(status),
+      );
       return await query.count();
     } catch (e, stackTrace) {
       _log.handle(e, stackTrace);
@@ -129,6 +142,7 @@ class PrayerDatabase extends _$PrayerDatabase {
     }
   }
 
+  /// Deletes a prayer completion.
   Future<void> deleteCompletion(int id) async {
     try {
       final query = managers.prayerCompletions.filter((f) => f.id.equals(id));
@@ -139,6 +153,7 @@ class PrayerDatabase extends _$PrayerDatabase {
     }
   }
 
+  /// Returns all prayer completions.
   Future<List<PrayerCompletion>> getAllCompletions() async {
     try {
       final query = select(prayerCompletions);
@@ -149,6 +164,7 @@ class PrayerDatabase extends _$PrayerDatabase {
     }
   }
 
+  /// Returns a prayer completion by its ID.
   Future<PrayerCompletion?> getCompletionById(int id) async {
     try {
       final query = managers.prayerCompletions.filter((f) => f.id.equals(id));
@@ -159,16 +175,19 @@ class PrayerDatabase extends _$PrayerDatabase {
     }
   }
 
+  /// Returns a list of dates on which all prayers were completed.
   Future<List<DateTime>> getFullyCompletedDays(Location loc) async {
     try {
       final completions = await (select(prayerCompletions)
-            ..where((tbl) =>
-                tbl.status.equals(CompletionStatus.missed.index).not() &
-                tbl.status.equals(CompletionStatus.none.index).not()))
+            ..where(
+              (tbl) =>
+                  tbl.status.equals(CompletionStatus.missed.index).not() &
+                  tbl.status.equals(CompletionStatus.none.index).not(),
+            ))
           .get();
 
       // 2️⃣  Group by local calendar day and collect distinct prayers.
-      final Map<DateTime, Set<Prayer>> bucket = {};
+      final bucket = <DateTime, Set<Prayer>>{};
       for (final entry in completions) {
         final localTime = entry.completionTime.toLocation(loc);
         final dayKey = DateTime(localTime.year, localTime.month, localTime.day);
@@ -189,8 +208,10 @@ class PrayerDatabase extends _$PrayerDatabase {
     }
   }
 
+  /// Inserts or updates a prayer completion.
   Future<void> insertOrUpdateCompletion(
-      PrayerCompletionsCompanion completion) async {
+    PrayerCompletionsCompanion completion,
+  ) async {
     try {
       final query = into(prayerCompletions);
       await query.insertOnConflictUpdate(completion);
@@ -200,11 +221,10 @@ class PrayerDatabase extends _$PrayerDatabase {
     }
   }
 
+  /// Returns whether a prayer completion exists.
   Future<bool> isCompletionExists(int id) async {
     try {
-      final query = managers.prayerCompletions.filter(
-        (f) => f.id.equals(id),
-      );
+      final query = managers.prayerCompletions.filter((f) => f.id.equals(id));
       return await query.exists();
     } catch (e, stackTrace) {
       _log.handle(e, stackTrace);
@@ -212,13 +232,19 @@ class PrayerDatabase extends _$PrayerDatabase {
     }
   }
 
+  /// Watches for changes to the prayer completions on a specific date.
   Stream<List<PrayerCompletion>> watchCompletionsBasedOnDate(
-      int day, int month, int year) {
+    int day,
+    int month,
+    int year,
+  ) {
     try {
-      final query = managers.prayerCompletions.filter((f) =>
-          f.completionTime.column.year.equals(year) &
-          f.completionTime.column.month.equals(month) &
-          f.completionTime.column.day.equals(day));
+      final query = managers.prayerCompletions.filter(
+        (f) =>
+            f.completionTime.column.year.equals(year) &
+            f.completionTime.column.month.equals(month) &
+            f.completionTime.column.day.equals(day),
+      );
 
       return query.watch();
     } catch (e, stackTrace) {

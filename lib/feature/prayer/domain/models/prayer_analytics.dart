@@ -3,19 +3,37 @@ import 'package:hasanat/l10n/app_localizations.dart';
 
 part 'prayer_analytics.freezed.dart';
 
+/// A class that holds the prayer analytics data.
 @freezed
 abstract class PrayerAnalytics with _$PrayerAnalytics {
+  /// Creates a new instance of [PrayerAnalytics].
   const factory PrayerAnalytics({
+    /// The period of the analytics.
     required PrayerAnalyticsPeriod period,
+
+    /// The percentage of completed prayers.
     required double completionPercentage,
+
+    /// The current streak of completed prayers.
     required int currentStreak,
+
+    /// The best streak of completed prayers.
     required int bestStreak,
+
+    /// The percentage of prayers performed in congregation.
     required double jamaahPercentage,
+
+    /// The percentage of prayers performed on time.
     required double onTimePercentage,
+
+    /// The percentage of missed prayers.
     required double missedPercentage,
+
+    /// The percentage of late prayers.
     required double latePercentage,
   }) = _PrayerAnalytics;
 
+  /// Creates an empty instance of [PrayerAnalytics].
   factory PrayerAnalytics.empty() => const PrayerAnalytics(
         period: PrayerAnalyticsPeriod.weekly,
         completionPercentage: 0,
@@ -33,12 +51,19 @@ abstract class PrayerAnalytics with _$PrayerAnalytics {
 
 // part 'prayer_analytics.g.dart';
 
+/// The period of the prayer analytics.
 enum PrayerAnalyticsPeriod {
   // daily,
+  /// The analytics for the last 7 days.
   weekly,
+
+  /// The analytics for the last 30 days.
   monthly,
+
+  /// The analytics for the last 365 days.
   yearly;
 
+  /// The duration of the period.
   Duration get duration {
     return switch (this) {
       PrayerAnalyticsPeriod.weekly => const Duration(days: 7),
@@ -47,6 +72,7 @@ enum PrayerAnalyticsPeriod {
     };
   }
 
+  /// Returns the localized name of the period.
   String getLocaleName(AppLocalizations l10n) {
     return switch (this) {
       PrayerAnalyticsPeriod.weekly => l10n.weekly,

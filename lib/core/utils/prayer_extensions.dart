@@ -2,7 +2,10 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:timezone/timezone.dart';
 
+/// Formatting helpers for computing human-readable time differences.
 extension DateTimeDifference on DateTime {
+  /// Returns the absolute difference between this time and [other] formatted
+  /// as `HH:mm:ss`.
   String timeDifference(DateTime other) {
     final duration = difference(other);
     return '${duration.inHours.toString().padLeft(2, '0')}:'
@@ -10,24 +13,37 @@ extension DateTimeDifference on DateTime {
         '${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
   }
 
+  /// Converts this [DateTime] to the given timezone [location].
   DateTime toLocation(Location location) {
     return TZDateTime.from(this, location);
   }
 }
 
+/// Convenience formatter for [Duration] instances.
 extension DurationFormatting on Duration {
-  String toHHMMSS() {
+  /// Returns the duration formatted as `HH:mm:ss`.
+  String toHHMMSS({required bool useHinduArabicNumerals}) {
     final hours = inHours;
     final minutes = inMinutes.remainder(60);
     final seconds = inSeconds.remainder(60);
-
-    return '${hours.toString().padLeft(2, '0')}:'
+    final time =
+        '${hours.toString().padLeft(2, '0')}:'
         '${(minutes % 60).toString().padLeft(2, '0')}:'
         '${(seconds % 60).toString().padLeft(2, '0')}';
+
+    // Map Western digits to Arabic-Indic (Hindu-Arabic) numerals.
+    const arabicIndicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    if (!useHinduArabicNumerals) return time;
+    return time.replaceAllMapped(RegExp(r'\d'), (m) {
+      final idx = int.parse(m[0]!);
+      return arabicIndicDigits[idx];
+    });
   }
 }
 
+/// Localized labels for [CalculationMethod] values.
 extension MethodLocaleExtension on CalculationMethod {
+  /// Returns the localized name for this calculation method.
   String getLocaleName(AppLocalizations locale) {
     return switch (this) {
       CalculationMethod.dubai => locale.dubai,
@@ -48,7 +64,9 @@ extension MethodLocaleExtension on CalculationMethod {
   }
 }
 
+/// Factory helpers for obtaining the canonical parameters of each method.
 extension MethodParamsExtension on CalculationMethod {
+  /// Returns the canonical [CalculationParameters] for this method.
   CalculationParameters getParams() {
     return switch (this) {
       CalculationMethod.dubai => CalculationMethodParameters.dubai(),
@@ -72,7 +90,9 @@ extension MethodParamsExtension on CalculationMethod {
   }
 }
 
+/// Utilities for reading localized prayer times from [PrayerTimesData].
 extension PrayerLocaleExtension on PrayerTimesData {
+  /// Returns the [DateTime] of the currently active prayer in the [location].
   DateTime getCurrentPrayerDateTime(Location location) {
     return switch (currentPrayer(
       date: TZDateTime.from(DateTime.now(), location),
@@ -88,6 +108,7 @@ extension PrayerLocaleExtension on PrayerTimesData {
     };
   }
 
+  /// Returns the [DateTime] of the next prayer in the given [location].
   DateTime getNextPrayerDateTime(Location location) {
     return switch (nextPrayer(
       date: TZDateTime.from(DateTime.now(), location),
@@ -103,6 +124,7 @@ extension PrayerLocaleExtension on PrayerTimesData {
     };
   }
 
+  /// Returns the localized [DateTime] for [prayer] in the supplied [location].
   DateTime getTimesForPrayer(Prayer prayer, Location location) {
     return switch (prayer) {
       Prayer.fajr => TZDateTime.from(fajr, location),
@@ -117,7 +139,10 @@ extension PrayerLocaleExtension on PrayerTimesData {
   }
 }
 
+/// Localized display names for [Prayer] values.
 extension PrayerLocaleNameExtension on Prayer {
+  /// Returns the localized label for this prayer, including Friday handling
+  /// for Jumu'ah.
   String getLocaleName(AppLocalizations locale) {
     return switch (this) {
       Prayer.fajr => locale.fajr,

@@ -4,21 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
+import 'package:hasanat/core/utils/hijri_provider.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/core/widgets/theme_mode_button.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hijriyah_indonesia/hijriyah_indonesia.dart';
 
+/// The app bar for the main shell.
 class ShellAppBar extends ConsumerWidget {
+  /// Creates a new instance of [ShellAppBar].
   const ShellAppBar({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appSettings = ref.watch(localeNotifierProvider);
+    final appSettings = ref.watch(localeProvider);
     final locationName = ref.watch(
-      prayerSettingsNotifierProvider.select(
-        (value) => value.valueOrNull?.locationName,
-      ),
+      prayerSettingsProvider.select((value) => value.value?.locationName),
     );
     // final formatter = DateFormat.E(appSettings.value);
 
@@ -26,13 +26,7 @@ class ShellAppBar extends ConsumerWidget {
 
     final isArabic = appSettings.value?.languageCode == 'ar';
 
-    final hijriStream = Stream.periodic(const Duration(seconds: 1), (_) {
-      Hijriyah.setLocal(appSettings.value?.languageCode ?? 'en');
-      final hijriDate = Hijriyah.fromDate(
-        DateTime.now().toLocal(),
-      ).toFormat('EEEE, dd MMMM yyyy');
-      return hijriDate;
-    });
+    final hijriDate = ref.watch(hijriClockProvider);
 
     final Widget? locationChip =
         (locationName != null && locationName.isNotEmpty)
@@ -53,12 +47,10 @@ class ShellAppBar extends ConsumerWidget {
     final nearWidgets = [
       ?locationChip,
       const Spacer(),
-      StreamBuilder(
-        stream: hijriStream,
-        builder: (context, asyncSnapshot) {
-          return Text(asyncSnapshot.data ?? '');
-        },
-      ),
+      switch (hijriDate) {
+        AsyncData<String>() => Text(hijriDate.value),
+        _ => const SizedBox.shrink(),
+      },
     ];
 
     final Widget? debugButton = kDebugMode
@@ -77,7 +69,7 @@ class ShellAppBar extends ConsumerWidget {
       FButton(
         style: FButtonStyle.ghost(),
         onPress: () {
-          ref.read(localeNotifierProvider.notifier).toggleLocale();
+          ref.read(localeProvider.notifier).toggleLocale();
         },
         prefix: const Icon(FIcons.languages),
         child: Text(isArabic ? context.l10n.arabic : context.l10n.english),
@@ -86,7 +78,7 @@ class ShellAppBar extends ConsumerWidget {
     ];
 
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(8),
       child: FHeader.nested(
         // prefixes: isArabic ? suffixes : prefixes,
         suffixes: [

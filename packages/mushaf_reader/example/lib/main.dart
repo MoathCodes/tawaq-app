@@ -46,7 +46,7 @@ class _MyAppState extends State<MyApp> {
                 onSubmitted: (value) => _jumpToPage(value),
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  hintText: 'Page #',
+                  hintText: 'Page#',
                   border: InputBorder.none,
                 ),
               ),

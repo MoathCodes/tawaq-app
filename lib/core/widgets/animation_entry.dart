@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+/// A widget that applies a staggered fade-in and slide-up animation to its child.
+///
+/// This widget is useful for creating a visually appealing entrance animation
+/// for a list of items.
 class AnimationEntry extends StatelessWidget {
-  final Widget child;
-  final Duration delay;
-  final bool forceAnimation;
+  /// Creates an animation entry.
   const AnimationEntry(
-      {super.key,
-      required this.child,
+      {required this.child, super.key,
       this.delay = Duration.zero,
-      this.forceAnimation = false});
+      this.forceAnimation = false,});
+
+  /// The widget to animate.
+  final Widget child;
+
+  /// The delay before the animation starts.
+  final Duration delay;
+
+  /// Whether to force the animation to play even if animations are disabled
+  /// on the device.
+  final bool forceAnimation;
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +36,7 @@ class AnimationEntry extends StatelessWidget {
                     begin: 20,
                     end: 0,
                     duration: 420.ms,
-                    curve: Curves.easeOutCubic)
+                    curve: Curves.easeOutCubic,)
                 .then()
                 .scale(
                   begin: const Offset(0.98, 0.98),

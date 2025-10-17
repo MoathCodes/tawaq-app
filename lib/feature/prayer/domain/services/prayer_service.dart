@@ -1,5 +1,4 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
@@ -13,15 +12,15 @@ import 'package:talker_flutter/talker_flutter.dart';
 import 'package:timezone/timezone.dart';
 
 export '../use_cases/compute_prayer_card_decision.dart'
-    show computePrayerCardDecision, computePrayerCardDecisionTake2;
+    show computePrayerCardDecision;
 
 part 'prayer_service.g.dart';
 
 @riverpod
 PrayerService prayerService(Ref ref) {
   final repo = ref.watch(prayerRepoProvider);
-  final talker = ref.read(talkerNotifierProvider);
-  final settings = ref.watch(prayerSettingsNotifierProvider);
+  final talker = ref.read(talkerProvider);
+  final settings = ref.watch(prayerSettingsProvider);
 
   return settings.when(
     data: (data) {
@@ -38,11 +37,10 @@ PrayerService prayerService(Ref ref) {
 }
 
 class PrayerService {
+  PrayerService(this._repo, this._settings, this._log);
   final PrayerRepo _repo;
   final PrayerSettings _settings;
   final Talker _log;
-
-  PrayerService(this._repo, this._settings, this._log);
 
   Future<void> addOrUpdateCompletion(PrayerCompletion completion) {
     return _repo.addOrUpdateCompletion(completion);
@@ -53,7 +51,9 @@ class PrayerService {
       final completedDays = await _repo.getFullyCompletedDays(loc);
       if (completedDays.isEmpty) return (current: 0, best: 0);
 
-      int bestStreak = 0, currentStreak = 0, consecutiveDays = 0;
+      var bestStreak = 0;
+      var currentStreak = 0;
+      var consecutiveDays = 0;
       DateTime? previousDay;
 
       for (final currentDay in completedDays) {
@@ -61,8 +61,9 @@ class PrayerService {
             currentDay.difference(previousDay).inDays == 1) {
           consecutiveDays++;
         } else {
-          bestStreak =
-              consecutiveDays > bestStreak ? consecutiveDays : bestStreak;
+          bestStreak = consecutiveDays > bestStreak
+              ? consecutiveDays
+              : bestStreak;
           consecutiveDays = 1;
         }
         previousDay = currentDay;
@@ -82,8 +83,10 @@ class PrayerService {
     }
   }
 
-  Future<int> countAllPrayersOnPeriod(PrayerAnalyticsPeriod period,
-      [DateTime? date]) {
+  Future<int> countAllPrayersOnPeriod(
+    PrayerAnalyticsPeriod period, [
+    DateTime? date,
+  ]) {
     final activeDate = date ?? _currentTime();
     final fromDate = activeDate.subtract(period.duration);
     final toDate = activeDate;
@@ -91,8 +94,9 @@ class PrayerService {
   }
 
   Future<Map<CompletionStatus, int>> countAllStatusesOnPeriod(
-      PrayerAnalyticsPeriod period,
-      [DateTime? date]) {
+    PrayerAnalyticsPeriod period, [
+    DateTime? date,
+  ]) {
     final activeDate = date ?? _currentTime();
     final fromDate = activeDate.subtract(period.duration);
     final toDate = activeDate;
@@ -100,8 +104,10 @@ class PrayerService {
   }
 
   Future<int> countPrayerOnPeriod(
-      CompletionStatus status, PrayerAnalyticsPeriod period,
-      [DateTime? date]) {
+    CompletionStatus status,
+    PrayerAnalyticsPeriod period, [
+    DateTime? date,
+  ]) {
     final activeDate = date ?? _currentTime();
     final fromDate = activeDate.subtract(period.duration);
     final toDate = activeDate;
@@ -133,20 +139,27 @@ class PrayerService {
     return _repo.getSunnahTime(prayerTimes);
   }
 
-  PrayerTimesData getTodaysPrayerTimes(
-      [DateTime? date, bool roundToMinutes = true]) {
-    const logPrefix = "[PrayerService.getTodaysPrayerTimes] ";
+  PrayerTimesData getTodaysPrayerTimes([
+    DateTime? date,
+    bool roundToMinutes = true,
+  ]) {
+    const logPrefix = '[PrayerService.getTodaysPrayerTimes] ';
     final activeDate = date ?? _currentTime();
-    final params = _settings.method.parameters
-        .copyWith(adjustments: _settings.adhanAdjustments);
-    PrayerTimesData prayerTimes = _repo.getPrayerTimes(
-        activeDate, _settings.coordinates, params, roundToMinutes);
+    final params = _settings.customParameters ?? _settings.method.parameters;
+    var prayerTimes = _repo.getPrayerTimes(
+      activeDate,
+      _settings.coordinates,
+      params,
+      roundToMinutes,
+    );
 
     final isRamadan = Hijriyah.now().hMonth == 9;
 
     if (isRamadan && _settings.method == CalculationMethod.ummAlQura) {
-      _log.debug("$logPrefix Method is Umm Al-Qura, and month is Ramadan, "
-          "adjusting prayer times accordingly");
+      _log.debug(
+        '$logPrefix Method is Umm Al-Qura, and month is Ramadan, '
+        'adjusting prayer times accordingly',
+      );
       prayerTimes = prayerTimes.copyWith(
         isha: prayerTimes.isha.add(const Duration(minutes: 30)),
       );

@@ -13,8 +13,8 @@ import 'package:hasanat/feature/settings/presentation/widgets/settings_section.d
 import 'package:timezone/timezone.dart' as tz;
 
 class PrayerSettingsLocationSection extends ConsumerStatefulWidget {
-  final double maxWidth;
   const PrayerSettingsLocationSection({required this.maxWidth, super.key});
+  final double maxWidth;
 
   @override
   ConsumerState<PrayerSettingsLocationSection> createState() =>
@@ -35,7 +35,7 @@ class _PrayerSettingsLocationSectionState
   @override
   Widget build(BuildContext context) {
     ref.listen(
-      prayerSettingsNotifierProvider,
+      prayerSettingsProvider,
       (previous, next) {
         if (previous != next) {
           _latitudeController.text =
@@ -46,7 +46,7 @@ class _PrayerSettingsLocationSectionState
         }
       },
       onError: (error, stackTrace) {
-        ref.read(talkerNotifierProvider).handle(error, stackTrace);
+        ref.read(talkerProvider).handle(error, stackTrace);
         showFToast(
           context: context,
           title: Text(
@@ -90,7 +90,7 @@ class _PrayerSettingsLocationSectionState
   @override
   void initState() {
     super.initState();
-    final prayerSettings = ref.read(prayerSettingsNotifierProvider);
+    final prayerSettings = ref.read(prayerSettingsProvider);
     _latitudeController = TextEditingController(
       text: prayerSettings.value?.coordinates.latitude.toStringAsFixed(7),
     );
@@ -108,7 +108,7 @@ class _PrayerSettingsLocationSectionState
       spacing: 12,
       children: [
         FButton(
-          onPress: () => _showLocationPicker(),
+          onPress: _showLocationPicker,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -130,34 +130,41 @@ class _PrayerSettingsLocationSectionState
   ) {
     return FTextField(
       label: Text(label),
-      suffixBuilder: (context, value, child) => FButton.icon(
-        style: FButtonStyle.ghost(),
-        onPress: () {
-          if (!locked) {
-            final lat = double.tryParse(_latitudeController.text);
-            final lng = double.tryParse(_longitudeController.text);
+      suffixBuilder: (context, value, child) => FTooltip(
+        tipBuilder: (context, controller) => Text(
+          locked
+              ? context.l10n.unlockToEditCoordinates
+              : context.l10n.lockToPreventEdits,
+        ),
+        child: FButton.icon(
+          style: FButtonStyle.ghost(),
+          onPress: () {
+            if (!locked) {
+              final lat = double.tryParse(_latitudeController.text);
+              final lng = double.tryParse(_longitudeController.text);
 
-            if (lat != null && lng != null) {
-              ref
-                  .read(prayerSettingsNotifierProvider.notifier)
-                  .setCoordinates(Coordinates(lat, lng));
-              showFToast(
-                context: context,
-                title: Text(context.l10n.editsSavedTitle),
-                description: Text(context.l10n.editsSavedDescription),
-              );
-            } else {
-              showFToast(
-                context: context,
-                title: Text(context.l10n.invalidCoordinatesTitle),
-                description: Text(context.l10n.invalidCoordinatesDescription),
-              );
-              return;
+              if (lat != null && lng != null) {
+                ref
+                    .read(prayerSettingsProvider.notifier)
+                    .setCoordinates(Coordinates(lat, lng));
+                showFToast(
+                  context: context,
+                  title: Text(context.l10n.editsSavedTitle),
+                  description: Text(context.l10n.editsSavedDescription),
+                );
+              } else {
+                showFToast(
+                  context: context,
+                  title: Text(context.l10n.invalidCoordinatesTitle),
+                  description: Text(context.l10n.invalidCoordinatesDescription),
+                );
+                return;
+              }
             }
-          }
-          onPress();
-        },
-        child: Icon(locked ? FIcons.lock : FIcons.lockOpen),
+            onPress();
+          },
+          child: Icon(locked ? FIcons.lock : FIcons.lockOpen),
+        ),
       ),
       controller: controller,
       keyboardType: const TextInputType.numberWithOptions(
@@ -199,7 +206,7 @@ class _PrayerSettingsLocationSectionState
 
   Widget _buildEmptyState(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.all(8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         spacing: 8,
@@ -229,8 +236,9 @@ class _PrayerSettingsLocationSectionState
             tipBuilder: (context, controller) =>
                 Text(context.l10n.useSystemTimezone),
             child: FButton.icon(
+              style: FButtonStyle.ghost(),
+              onPress: _setTimezone,
               child: const Icon(FIcons.locate),
-              onPress: () => _setTimezone(null),
             ),
           ),
         ],
@@ -246,8 +254,8 @@ class _PrayerSettingsLocationSectionState
           .take(16)
           .map((loc) => FSelectItem(title: Text(loc.name), value: loc))
           .toList(),
-      contentLoadingBuilder: (context, style) => const FProgress.circularIcon(),
-      filter: (query) => _filterTimezones(query),
+      contentLoadingBuilder: (context, style) => const FCircularProgress(),
+      filter: _filterTimezones,
     );
   }
 
@@ -262,8 +270,12 @@ class _PrayerSettingsLocationSectionState
 
   Future<void> _setTimezone([tz.Location? location]) async {
     try {
-      location ??= tz.getLocation(await FlutterTimezone.getLocalTimezone());
-      ref.read(prayerSettingsNotifierProvider.notifier).setLocation(location);
+      location ??= tz.getLocation(
+        await FlutterTimezone.getLocalTimezone().then(
+          (value) => value.identifier,
+        ),
+      );
+      ref.read(prayerSettingsProvider.notifier).setLocation(location);
     } catch (e) {
       if (mounted) {
         showFToast(
@@ -285,7 +297,7 @@ class _PrayerSettingsLocationSectionState
         animation: animation,
         onLocationSelected: (coordinates, locationName) {
           ref
-              .read(prayerSettingsNotifierProvider.notifier)
+              .read(prayerSettingsProvider.notifier)
               .updateLocationData(
                 coordinates: coordinates,
                 locationName: locationName,

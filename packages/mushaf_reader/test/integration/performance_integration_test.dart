@@ -39,12 +39,12 @@ void main() {
 
       stopwatch.stop();
 
-      // Page should render in reasonable time
+      // Pageshould render in reasonable time
       expect(stopwatch.elapsedMilliseconds, lessThan(2000)); // 2 seconds
 
       // Verify page content
       expect(find.byType(PageNumberWidget), findsOneWidget);
-      expect(find.text('١'), findsOneWidget); // Page 1 in Arabic numerals
+      expect(find.text('١'), findsOneWidget); // Page1 in Arabic numerals
     });
 
     testWidgets('should handle rapid page navigation efficiently', (
@@ -100,7 +100,7 @@ void main() {
       pageController.dispose();
     });
 
-    testWidgets('should handle multiple MushafPage widgets efficiently', (
+    testWidgets('should handle multiple MushafPagewidgets efficiently', (
       tester,
     ) async {
       await MushafController.instance.init();

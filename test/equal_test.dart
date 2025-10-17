@@ -11,7 +11,7 @@ void main() {
         status: CompletionStatus.jamaah,
       ),
       prayer: Prayer.asr,
-      adhan: "4:00 PM",
+      adhan: '4:00 PM',
       subtitle: '1 hour ago',
       isCurrentPrayer: false,
       isTimePassed: true);
@@ -24,10 +24,10 @@ void main() {
         status: CompletionStatus.onTime,
       ),
       prayer: Prayer.asr,
-      adhan: "4:00 PM",
+      adhan: '4:00 PM',
       subtitle: '1 hour ago',
       isCurrentPrayer: false,
       isTimePassed: true);
   print(cardInfo1 == cardInfo2);
-  assert(cardInfo1 == cardInfo2, "The two card models should be equal.");
+  assert(cardInfo1 == cardInfo2, 'The two card models should be equal.');
 }

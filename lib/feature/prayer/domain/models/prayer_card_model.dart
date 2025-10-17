@@ -13,9 +13,9 @@ abstract class PrayerCardInfo with _$PrayerCardInfo {
   }) = _PrayerCardInfo;
 
   factory PrayerCardInfo.empty() => const PrayerCardInfo(
-        time: "00:00",
+        time: '00:00',
         prayer: Prayer.fajrAfter,
-        adhanTime: "00:00",
-        iqamahTime: "00:00",
+        adhanTime: '00:00',
+        iqamahTime: '00:00',
       );
 }

@@ -8,17 +8,14 @@ import 'package:hasanat/core/utils/location_extensions.dart';
 import 'package:hasanat/feature/settings/presentation/provider/location_provider.dart';
 
 class LocationPickerDialog extends ConsumerStatefulWidget {
+
+  const LocationPickerDialog({
+    required this.onLocationSelected, required this.style, required this.animation, super.key,
+  });
   final FDialogStyle Function(FDialogStyle) style;
   final Animation<double> animation;
   final void Function(Coordinates coordinates, String locationName)
   onLocationSelected;
-
-  const LocationPickerDialog({
-    super.key,
-    required this.onLocationSelected,
-    required this.style,
-    required this.animation,
-  });
 
   @override
   ConsumerState<LocationPickerDialog> createState() =>
@@ -152,12 +149,12 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
             ],
           ),
           _buildCoordinateField(
-            label: "${context.l10n.latitude}: ",
+            label: '${context.l10n.latitude}: ',
             value: selectedLocation.latitude.toStringAsFixed(5),
             colors: colors,
           ),
           _buildCoordinateField(
-            label: "${context.l10n.longitude}: ",
+            label: '${context.l10n.longitude}: ',
             value: selectedLocation.longitude.toStringAsFixed(5),
             colors: colors,
           ),
@@ -246,16 +243,13 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
             mapController: _mapController,
             mapOptions: MapOptions(
               initialCenter: selectedLocation,
-              initialZoom: 12.0,
-              minZoom: 2.0,
-              maxZoom: 18.0,
-              interactionOptions: const InteractionOptions(
-                flags: InteractiveFlag.all,
-              ),
+              initialZoom: 12,
+              minZoom: 2,
+              maxZoom: 18,
               onTap: (tapPos, latlng) {
                 try {
                   notifierController.updateLocation(latlng);
-                  _mapController.move(latlng, 14.0);
+                  _mapController.move(latlng, 14);
                 } catch (e) {
                   if (mounted) {
                     showFToast(
@@ -324,7 +318,7 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
       onChange: (place) {
         if (place != null) {
           notifierController.selectPlace(place);
-          _mapController.move(place.coordinates.latLng, 14.0);
+          _mapController.move(place.coordinates.latLng, 14);
         }
       },
     );

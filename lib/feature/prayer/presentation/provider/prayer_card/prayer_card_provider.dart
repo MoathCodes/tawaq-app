@@ -5,7 +5,7 @@ import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_card_decision.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_card_model.dart';
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart'
-    show computePrayerCardDecision, prayerServiceProvider, PrayerService;
+    show PrayerService, computePrayerCardDecision, prayerServiceProvider;
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:intl/intl.dart';
@@ -13,9 +13,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:timezone/timezone.dart';
 
-part 'prayer_provider.g.dart';
+part 'prayer_card_provider.g.dart';
 
-const String _prayerCardLogPrefix = "[PrayerCard]";
+const String _prayerCardLogPrefix = '[PrayerCard]';
 
 @riverpod
 class PrayerCard extends _$PrayerCard {
@@ -24,14 +24,14 @@ class PrayerCard extends _$PrayerCard {
 
   @override
   Stream<PrayerCardInfo> build() async* {
-    final log = ref.read(talkerNotifierProvider);
+    final log = ref.read(talkerProvider);
     final service = ref.read(prayerServiceProvider);
 
-    final settingsState = ref.watch(prayerSettingsNotifierProvider);
+    final settingsState = ref.watch(prayerSettingsProvider);
     final settings = settingsState.value;
 
     if (settings == null) {
-      log.debug("$_prayerCardLogPrefix Settings unavailable – empty stream");
+      log.debug('$_prayerCardLogPrefix Settings unavailable – empty stream');
       yield PrayerCardInfo.empty();
     }
 
@@ -61,6 +61,7 @@ class PrayerCard extends _$PrayerCard {
           decision,
           settings.location,
           now,
+          ref.read(localeProvider.notifier).isArabic(),
           formatter,
           settings,
         );
@@ -83,16 +84,16 @@ class PrayerCard extends _$PrayerCard {
     PrayerService service,
     Talker log,
   ) {
-    final DateTime todayAnchor = DateTime(now.year, now.month, now.day);
+    final todayAnchor = DateTime(now.year, now.month, now.day);
 
-    final bool needsRefresh =
+    final needsRefresh =
         _cache == null ||
         _cachedSettings != settings ||
         _cache!.anchorDate != todayAnchor;
 
     if (!needsRefresh) return;
 
-    log.debug("$_prayerCardLogPrefix Building prayer cache …");
+    log.debug('$_prayerCardLogPrefix Building prayer cache …');
 
     final todaysTimes = service.getTodaysPrayerTimes(now, false);
     final yesterdaysTimes = service.getTodaysPrayerTimes(
@@ -115,12 +116,15 @@ class PrayerCard extends _$PrayerCard {
     PrayerCardDecision decision,
     Location location,
     DateTime currentTime,
+    bool useHinduArabicNumerals,
     DateFormat formatter,
     PrayerSettings activeSettingsForIqamah,
   ) {
     final time = decision.isCountdown
-        ? decision.referenceTime.difference(currentTime).toHHMMSS()
-        : "+${currentTime.difference(decision.referenceTime).toHHMMSS()}";
+        ? decision.referenceTime
+              .difference(currentTime)
+              .toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)
+        : '+${currentTime.difference(decision.referenceTime).toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)}';
 
     final iqamahMinutes =
         activeSettingsForIqamah.iqamahSettings[decision.prayer] ?? 0;
@@ -139,13 +143,6 @@ class PrayerCard extends _$PrayerCard {
 
 // Lightweight container for today/yesterday prayer & sunnah times.
 class _PrayerCache {
-  /// Midnight of the day the cache was built (in the active location).
-  final DateTime anchorDate;
-
-  final PrayerTimesData todaysTimes;
-  final PrayerTimesData yesterdaysTimes;
-  final SunnahTimes todaysSunnah;
-  final SunnahTimes yesterdaysSunnah;
   const _PrayerCache({
     required this.anchorDate,
     required this.todaysTimes,
@@ -153,4 +150,12 @@ class _PrayerCache {
     required this.todaysSunnah,
     required this.yesterdaysSunnah,
   });
+
+  /// Midnight of the day the cache was built (in the active location).
+  final DateTime anchorDate;
+
+  final PrayerTimesData todaysTimes;
+  final PrayerTimesData yesterdaysTimes;
+  final SunnahTimes todaysSunnah;
+  final SunnahTimes yesterdaysSunnah;
 }

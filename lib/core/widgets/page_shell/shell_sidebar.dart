@@ -8,8 +8,13 @@ import 'package:hasanat/core/routing/route_provider.dart';
 import 'package:hasanat/core/widgets/window_controls.dart';
 import 'package:hasanat/gen/fonts.gen.dart';
 
+/// The sidebar for the main shell.
 class ShellSidebar extends ConsumerStatefulWidget {
-  const ShellSidebar({super.key});
+  /// Creates a new instance of [ShellSidebar].
+  const ShellSidebar({super.key, this.hideWindowControls});
+
+  /// Whether to hide the window controls.
+  final bool? hideWindowControls;
 
   @override
   ConsumerState<ShellSidebar> createState() => _ShellSidebarState();
@@ -22,14 +27,14 @@ class _ShellSidebarState extends ConsumerState<ShellSidebar> {
     final secondaryRoutes = ref.read(secondaryRoutesProvider(context.l10n));
     final theme = FTheme.of(context);
     FSidebarItemStyle style(FSidebarItemStyle p0) => p0.copyWith(
-      backgroundColor: FWidgetStateMap({
-        WidgetState.disabled: Colors.transparent,
-        WidgetState.selected | WidgetState.hovered | WidgetState.pressed: theme
-            .colors
-            .hover(theme.colors.secondary),
-        WidgetState.any: Colors.transparent,
-      }),
-    );
+          backgroundColor: FWidgetStateMap({
+            WidgetState.disabled: Colors.transparent,
+            WidgetState.selected | WidgetState.hovered | WidgetState.pressed: theme
+                .colors
+                .hover(theme.colors.secondary),
+            WidgetState.any: Colors.transparent,
+          }),
+        );
     return FSidebar(
       style: (p0) => p0.copyWith(
         headerPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
@@ -37,7 +42,7 @@ class _ShellSidebarState extends ConsumerState<ShellSidebar> {
       header: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const WindowControls(),
+          if (widget.hideWindowControls != true) const WindowControls(),
           FLabel(
             axis: Axis.vertical,
             child: Text(

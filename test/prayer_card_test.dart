@@ -6,7 +6,9 @@ import 'package:drift/native.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/data/database/prayer_database.dart';
 import 'package:hasanat/feature/prayer/data/repository/prayer_repo.dart';
+import 'package:hasanat/feature/prayer/domain/models/prayer_card_model.dart' show PrayerCardInfo;
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
+import 'package:hasanat/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart' show PrayerCard;
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -32,7 +34,7 @@ void main() async {
   final location = getLocation('Asia/Riyadh');
 
   // Test the 11:15 PM scenario where the issue occurs
-  final currentTime = DateTime(2025, 8, 14, 23, 15, 0).toLocation(location);
+  final currentTime = DateTime(2025, 8, 14, 23, 15).toLocation(location);
   //final currentTime = DateTime.now().toLocation(location);
   //final currentTime = DateTime(2025, 6, 21, 3, 12, 0).toLocation(location);
   final todaysPrayerTimes = service.getTodaysPrayerTimes(currentTime);
@@ -41,7 +43,7 @@ void main() async {
   final todaysSunnahTimes = service.getSunnahTime(todaysPrayerTimes);
   final yesterdaysSunnahTimes = service.getSunnahTime(yesterdaysPrayerTimes);
 
-  print("Current time: $currentTime");
+  print('Current time: $currentTime');
   print("Today's Fajr: ${todaysPrayerTimes.fajr.toLocation(location)}");
   print("Today's Isha: ${todaysPrayerTimes.isha.toLocation(location)}");
   print(
@@ -57,7 +59,7 @@ void main() async {
     todaysSunnahTimes: todaysSunnahTimes,
     yesterdaysSunnahTimes: yesterdaysSunnahTimes,
   );
-  print("Decision: $decision");
+  print('Decision: $decision');
 }
 
 /// Pure, synchronous and side-effect-free port of the decision making that is
@@ -79,15 +81,15 @@ PrayerCardDecision computePrayerCardDecision({
   // -----------------------------------------------------------------------
   // 1. Figure out what the "current" and "next" prayers are for `currentTime`.
   // -----------------------------------------------------------------------
-  final DateTime currentPrayerTime =
+  final currentPrayerTime =
       todaysPrayerTimes.getCurrentPrayerDateTime(location);
-  final bool isCurrentPrayerFinished = currentTime.isAfter(currentPrayerTime);
-  final Prayer currentPrayer =
+  final isCurrentPrayerFinished = currentTime.isAfter(currentPrayerTime);
+  final currentPrayer =
       todaysPrayerTimes.currentPrayer(date: currentTime);
-  final Prayer nextPrayer = todaysPrayerTimes.nextPrayer(date: currentTime);
+  final nextPrayer = todaysPrayerTimes.nextPrayer(date: currentTime);
 
-  final bool isBeforeMidnight = nextPrayer == Prayer.fajrAfter;
-  final bool isAfterMidnightAndBeforeFajr =
+  final isBeforeMidnight = nextPrayer == Prayer.fajrAfter;
+  final isAfterMidnightAndBeforeFajr =
       currentPrayer == Prayer.ishaBefore &&
           todaysPrayerTimes.fajr
                   .toLocation(location)
@@ -131,14 +133,14 @@ PrayerCardDecision computePrayerCardDecision({
   // 4. Case B – Special handling around midnight / last third of the night.
   // -----------------------------------------------------------------------
   if (isBeforeMidnight) {
-    print("showing middle of the night");
+    print('showing middle of the night');
     return PrayerCardDecision(
       referenceTime: effectiveSunnahTimes.middleOfTheNight.toLocation(location),
       prayer: Prayer.fajrAfter,
       reverseTime: true,
     );
   } else if (isAfterMidnightAndBeforeFajr) {
-    print("showing last third of the night");
+    print('showing last third of the night');
     return PrayerCardDecision(
       referenceTime:
           effectiveSunnahTimes.lastThirdOfTheNight.toLocation(location),
@@ -150,7 +152,7 @@ PrayerCardDecision computePrayerCardDecision({
   // -----------------------------------------------------------------------
   // 5. Default – display the *next* prayer.
   // -----------------------------------------------------------------------
-  print("showing next prayer");
+  print('showing next prayer');
   return PrayerCardDecision(
     referenceTime: effectivePrayerTimes.getNextPrayerDateTime(location),
     prayer: nextPrayer,
@@ -162,6 +164,12 @@ PrayerCardDecision computePrayerCardDecision({
 /// prayer card. This is intentionally minimal so it can be easily asserted
 /// against in unit-tests **without** touching any presentation concerns.
 class PrayerCardDecision {
+
+  const PrayerCardDecision({
+    required this.referenceTime,
+    required this.prayer,
+    required this.reverseTime,
+  });
   /// The point in time the card should count **to** (if [reverseTime] is
   /// true) or **from** (if it is false).
   final DateTime referenceTime;
@@ -172,12 +180,6 @@ class PrayerCardDecision {
   /// Whether the countdown should be reversed (i.e. [referenceTime] lies in
   /// the future) or shown as time elapsed (lies in the past).
   final bool reverseTime;
-
-  const PrayerCardDecision({
-    required this.referenceTime,
-    required this.prayer,
-    required this.reverseTime,
-  });
 
   @override
   String toString() =>

@@ -16,8 +16,13 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
     try {
       return await _computeAnalytics(period);
     } catch (e, stackTrace) {
-      ref.read(talkerNotifierProvider).handle(
-          e, stackTrace, '[PrayerAnalyticsNotifier] Error computing analytics');
+      ref
+          .read(talkerProvider)
+          .handle(
+            e,
+            stackTrace,
+            '[PrayerAnalyticsNotifier] Error computing analytics',
+          );
       rethrow;
     }
   }
@@ -28,29 +33,36 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
       final analytics = await _computeAnalytics(period);
       state = AsyncValue.data(analytics);
     } catch (e, stackTrace) {
-      ref.read(talkerNotifierProvider).handle(e, stackTrace,
-          '[PrayerAnalyticsNotifier] Error while changing period');
+      ref
+          .read(talkerProvider)
+          .handle(
+            e,
+            stackTrace,
+            '[PrayerAnalyticsNotifier] Error while changing period',
+          );
       state = AsyncValue.error(e, stackTrace);
     }
   }
 
   Future<PrayerAnalytics> _computeAnalytics(
-      PrayerAnalyticsPeriod period) async {
-    final talker = ref.read(talkerNotifierProvider);
+    PrayerAnalyticsPeriod period,
+  ) async {
+    final talker = ref.read(talkerProvider);
     try {
       final service = ref.watch(prayerServiceProvider);
-      final settings = ref.read(prayerSettingsNotifierProvider);
+      final settings = ref.read(prayerSettingsProvider);
 
-      final streaks = await service.computeStreaks(settings.when(
-        data: (data) => data.location,
-        loading: () => local,
-        error: (error, stackTrace) => local,
-      ));
+      final streaks = await service.computeStreaks(
+        settings.when(
+          data: (data) => data.location,
+          loading: () => local,
+          error: (error, stackTrace) => local,
+        ),
+      );
 
       final countsMap = await service.countAllStatusesOnPeriod(period);
 
-      final int allPrayers =
-          countsMap.values.fold<int>(0, (prev, e) => prev + e);
+      final allPrayers = countsMap.values.fold<int>(0, (prev, e) => prev + e);
 
       double pct(int count) => allPrayers == 0 ? 0 : count / allPrayers;
 
@@ -63,8 +75,9 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
 
       return PrayerAnalytics(
         period: period,
-        completionPercentage:
-            double.parse(completionPercentage.toStringAsFixed(1)),
+        completionPercentage: double.parse(
+          completionPercentage.toStringAsFixed(1),
+        ),
         jamaahPercentage: double.parse(pct(jamaahPrayers).toStringAsFixed(1)),
         onTimePercentage: double.parse(pct(onTimePrayers).toStringAsFixed(1)),
         latePercentage: double.parse(pct(latePrayers).toStringAsFixed(1)),
@@ -74,7 +87,10 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
       );
     } catch (e, stackTrace) {
       talker.handle(
-          e, stackTrace, '[PrayerAnalyticsNotifier] Error computing analytics');
+        e,
+        stackTrace,
+        '[PrayerAnalyticsNotifier] Error computing analytics',
+      );
       // Return zeroed analytics in case of error so UI still renders.
       return PrayerAnalytics(
         period: period,

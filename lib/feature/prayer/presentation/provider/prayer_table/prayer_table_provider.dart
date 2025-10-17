@@ -14,7 +14,7 @@ import 'package:timezone/timezone.dart';
 
 part 'prayer_table_provider.g.dart';
 
-const String _prayerTableLogPrefix = "[PrayerTable]";
+const String _prayerTableLogPrefix = '[PrayerTable]';
 
 @riverpod
 class PrayerTable extends _$PrayerTable {
@@ -22,35 +22,29 @@ class PrayerTable extends _$PrayerTable {
 
   @override
   Stream<List<PrayerTableRow>> build(AppLocalizations l10n) async* {
-    final log = ref.read(talkerNotifierProvider);
+    final log = ref.read(talkerProvider);
     final service = ref.read(prayerServiceProvider);
 
-    final settings = ref.watch(prayerSettingsNotifierProvider).value;
-
+    final settings = ref.watch(prayerSettingsProvider).value;
     if (settings == null) {
       log.debug(
-          "$_prayerTableLogPrefix No settings yet – emitting empty table.");
+        '$_prayerTableLogPrefix No settings yet – emitting empty table.',
+      );
       yield [];
       return;
     }
 
-    log.info("$_prayerTableLogPrefix Stream started (auto-dispose)");
+    log.info('$_prayerTableLogPrefix Stream started (auto-dispose)');
+    final formatter = ref.watch(timeFormatterProvider);
 
-    while (true) {
+    // Emit immediately, then on every minute boundary to keep times fresh
+    yield* _minuteTicker().map((_) {
       try {
         final now = DateTime.now().toLocation(settings.location);
-
         _ensureCache(now, settings, service, log);
+        if (_cache == null) return <PrayerTableRow>[];
 
-        if (_cache == null) {
-          yield [];
-          await Future.delayed(const Duration(minutes: 1));
-          continue;
-        }
-
-        final formatter = ref.watch(timeFormatterProvider);
-
-        final rows = _buildPrayerTableRows(
+        return _buildPrayerTableRows(
           formatter,
           _cache!.today,
           _cache!.todaySunnah,
@@ -59,20 +53,23 @@ class PrayerTable extends _$PrayerTable {
           settings.location,
           l10n,
         );
-
-        yield rows;
       } catch (e, stackTrace) {
         log.handle(
-            e, stackTrace, '$_prayerTableLogPrefix Error producing table');
-        yield [];
+          e,
+          stackTrace,
+          '$_prayerTableLogPrefix Error producing table',
+        );
+        return <PrayerTableRow>[];
       }
-
-      await Future.delayed(const Duration(minutes: 1));
-    }
+    });
   }
 
-  String? _adhanMessage(bool isCurrentPrayer, DateTime currentTime,
-      DateTime times, AppLocalizations l10n) {
+  String? _adhanMessage(
+    bool isCurrentPrayer,
+    DateTime currentTime,
+    DateTime times,
+    AppLocalizations l10n,
+  ) {
     String? adhanMessage;
     if (isCurrentPrayer) {
       adhanMessage = l10n.currentPrayer;
@@ -98,17 +95,18 @@ class PrayerTable extends _$PrayerTable {
   }
 
   List<PrayerTableRow> _buildPrayerTableRows(
-      DateFormat formatter,
-      PrayerTimesData prayerTimes,
-      SunnahTimes sunnahTimes,
-      DateTime currentTime,
-      PrayerSettings settings,
-      Location location,
-      AppLocalizations l10n) {
+    DateFormat formatter,
+    PrayerTimesData prayerTimes,
+    SunnahTimes sunnahTimes,
+    DateTime currentTime,
+    PrayerSettings settings,
+    Location location,
+    AppLocalizations l10n,
+  ) {
     final midnightTime = sunnahTimes.middleOfTheNight.toLocation(location);
     final lastThirdTime = sunnahTimes.lastThirdOfTheNight.toLocation(location);
     final currentPrayer = prayerTimes.currentPrayer(date: currentTime);
-    final List<PrayerTableRow> sunnahPrayers = [
+    final sunnahPrayers = <PrayerTableRow>[
       // Prayer.fajrAfter is used as midnight
       PrayerTableRow(
         prayer: Prayer.fajrAfter,
@@ -118,15 +116,13 @@ class PrayerTable extends _$PrayerTable {
         adhan: (
           title: formatter.format(midnightTime),
           subtitle: _adhanMessage(
-              prayerTimes.currentPrayer(date: currentTime) == Prayer.fajrAfter,
-              currentTime,
-              midnightTime,
-              l10n),
+            currentPrayer == Prayer.fajrAfter,
+            currentTime,
+            midnightTime,
+            l10n,
+          ),
         ),
-        iqamah: (
-          title: "------",
-          subtitle: null,
-        ),
+        iqamah: (title: '------', subtitle: null),
         // isChecked: currentTime.isAfter(midnightTime),
       ),
       // Prayer.ishaBefore is used as Last Third of the Night
@@ -137,69 +133,75 @@ class PrayerTable extends _$PrayerTable {
         adhan: (
           title: formatter.format(lastThirdTime),
           subtitle: _adhanMessage(
-              prayerTimes.currentPrayer(date: currentTime) == Prayer.ishaBefore,
-              currentTime,
-              lastThirdTime,
-              l10n),
+            currentPrayer == Prayer.ishaBefore,
+            currentTime,
+            lastThirdTime,
+            l10n,
+          ),
         ),
-        iqamah: (
-          title: "------",
-          subtitle: null,
-        ),
+        iqamah: (title: '------', subtitle: null),
         // isChecked: currentTime.isAfter(lastThirdTime),
       ),
     ];
 
     final prayers = Prayer.values
-        .where((element) =>
-            element != Prayer.fajrAfter && element != Prayer.ishaBefore)
+        .where(
+          (element) =>
+              element != Prayer.fajrAfter && element != Prayer.ishaBefore,
+        )
         .map((prayer) {
-      final times = prayerTimes.getTimesForPrayer(prayer, location);
-      final adhanTime = formatter.format(times);
-      String iqamahTime = formatter.format(
-        times.add(Duration(minutes: settings.iqamahSettings[prayer] ?? 0)),
-      );
-      // final l10n = AppLocalizationsEn(); // This was creating a new instance, should use the passed one
+          final times = prayerTimes.getTimesForPrayer(prayer, location);
+          final adhanTime = formatter.format(times);
+          final iqamahMinutes = settings.iqamahSettings[prayer] ?? 0;
+          var iqamahTime = iqamahMinutes == 0
+              ? '------'
+              : formatter.format(times.add(Duration(minutes: iqamahMinutes)));
 
-      final isCurrentPrayer = currentPrayer == prayer;
-      String? adhanMessage;
-      String? iqamahMessage = settings.iqamahSettings[prayer] != null
-          ? l10n.iqamahSubtitleMessage(settings.iqamahSettings[prayer]!)
-          : null;
-      if (prayer == Prayer.sunrise) {
-        iqamahMessage = null;
-        iqamahTime = "------";
-      }
+          if (adhanTime == iqamahTime) {
+            iqamahTime = '------';
+          }
+          // final l10n = AppLocalizationsEn(); // This was creating a new instance, should use the passed one
 
-      // logic to write a message on how long ago or left for adhan or iqamah
-      // either in hours or minutes
-      adhanMessage = _adhanMessage(isCurrentPrayer, currentTime, times, l10n);
+          final isCurrentPrayer = currentPrayer == prayer;
+          String? adhanMessage;
+          var iqamahMessage = iqamahMinutes != 0
+              ? l10n.iqamahSubtitleMessage(iqamahMinutes)
+              : null;
+          if (prayer == Prayer.sunrise) {
+            iqamahMessage = null;
+            iqamahTime = '------';
+          }
 
-      // talker.debug("$_prayerTableLogPrefix Adan Message for $prayer: $adhanMessage");
-      // talker.debug("$_prayerTableLogPrefix Iqamah Message for $prayer: $iqamahMessage");
+          // logic to write a message on how long ago or left for adhan or iqamah
+          // either in hours or minutes
+          adhanMessage = _adhanMessage(
+            isCurrentPrayer,
+            currentTime,
+            times,
+            l10n,
+          );
 
-      return PrayerTableRow(
-        prayer: prayer,
-        isNextPrayer: false,
-        isCurrentPrayer: isCurrentPrayer,
-        adhan: (title: adhanTime, subtitle: adhanMessage),
-        iqamah: (title: iqamahTime, subtitle: iqamahMessage),
-        // isChecked: currentTime.isAfter(times),
-      );
-    }).toList();
+          // talker.debug("$_prayerTableLogPrefix Adan Message for $prayer: $adhanMessage");
+          // talker.debug("$_prayerTableLogPrefix Iqamah Message for $prayer: $iqamahMessage");
+
+          return PrayerTableRow(
+            prayer: prayer,
+            isNextPrayer: false,
+            isCurrentPrayer: isCurrentPrayer,
+            adhan: (title: adhanTime, subtitle: adhanMessage),
+            iqamah: (title: iqamahTime, subtitle: iqamahMessage),
+            // isChecked: currentTime.isAfter(times),
+          );
+        })
+        .toList();
     final allRows = [...prayers, ...sunnahPrayers];
-
-    print("Current Prayer: $currentPrayer");
-    print("The Current Prayer Row: ${allRows.where(
-      (element) => element.isCurrentPrayer == true,
-    )}");
 
     // the row after the isCurrentPrayer will be the next prayer.
     final currentPrayerIndex = allRows.indexWhere((row) => row.isCurrentPrayer);
     if (currentPrayerIndex != -1) {
       if (currentPrayerIndex + 1 < allRows.length) {
-        allRows[currentPrayerIndex + 1] =
-            allRows[currentPrayerIndex + 1].copyWith(isNextPrayer: true);
+        allRows[currentPrayerIndex + 1] = allRows[currentPrayerIndex + 1]
+            .copyWith(isNextPrayer: true);
       } else {
         // If current prayer is the last one, we can set the first prayer as next
         allRows[0] = allRows[0].copyWith(isNextPrayer: true);
@@ -219,7 +221,7 @@ class PrayerTable extends _$PrayerTable {
 
     if (_cache != null && _cache!.anchorDate == anchor) return;
 
-    log.debug("$_prayerTableLogPrefix Refreshing cache …");
+    log.debug('$_prayerTableLogPrefix Refreshing cache …');
 
     final todayTimes = service.getTodaysPrayerTimes(now);
     final todaySunnah = service.getSunnahTime(todayTimes);
@@ -230,16 +232,33 @@ class PrayerTable extends _$PrayerTable {
       todaySunnah: todaySunnah,
     );
   }
+
+  /// Emits immediately, then at each next minute boundary.
+  Stream<DateTime> _minuteTicker() async* {
+    yield DateTime.now();
+    while (true) {
+      final now = DateTime.now();
+      final next = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        now.hour,
+        now.minute + 1,
+      );
+      await Future.delayed(next.difference(now));
+      yield DateTime.now();
+    }
+  }
 }
 
 class _TableCache {
-  final DateTime anchorDate;
-
-  final PrayerTimesData today;
-  final SunnahTimes todaySunnah;
   _TableCache({
     required this.anchorDate,
     required this.today,
     required this.todaySunnah,
   });
+  final DateTime anchorDate;
+
+  final PrayerTimesData today;
+  final SunnahTimes todaySunnah;
 }

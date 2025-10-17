@@ -488,6 +488,18 @@ abstract class AppLocalizations {
   /// **'Iqamah (minutes after adhan)'**
   String get iqamahAfterAdhan;
 
+  /// No description provided for @iqamahSavedDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Your iqamah adjustments have been saved successfully.'**
+  String get iqamahSavedDescription;
+
+  /// No description provided for @iqamahSavedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah adjustments saved'**
+  String get iqamahSavedTitle;
+
   /// No description provided for @iqamahSubtitleMessage.
   ///
   /// In en, this message translates to:
@@ -595,6 +607,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Location & Calculation'**
   String get locationSectionTitle;
+
+  /// No description provided for @lockToPreventEdits.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock to prevent edits'**
+  String get lockToPreventEdits;
 
   /// No description provided for @longitude.
   ///
@@ -1051,6 +1069,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Umm Al-Qura University'**
   String get ummAlQura;
+
+  /// No description provided for @unlockToEditCoordinates.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock to edit coordinates'**
+  String get unlockToEditCoordinates;
 
   /// No description provided for @use24HourFormat.
   ///

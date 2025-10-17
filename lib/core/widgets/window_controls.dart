@@ -5,19 +5,28 @@ import 'package:forui/forui.dart';
 import 'package:hasanat/theme/button_style.dart';
 import 'package:window_manager/window_manager.dart';
 
+/// Window controls for macOS.
 class MacOSWindowControls extends StatelessWidget {
-  final VoidCallback onClose;
-  final VoidCallback onMinimize;
-  final void Function(AsyncSnapshot<bool> snapshot) onFullscreen;
-  final Stream<bool> isMaximized;
-
+  /// Creates a new instance of [MacOSWindowControls].
   const MacOSWindowControls({
-    super.key,
     required this.onClose,
     required this.onMinimize,
     required this.onFullscreen,
     required this.isMaximized,
+    super.key,
   });
+
+  /// The callback that is called when the close button is tapped.
+  final VoidCallback onClose;
+
+  /// The callback that is called when the minimize button is tapped.
+  final VoidCallback onMinimize;
+
+  /// The callback that is called when the fullscreen button is tapped.
+  final void Function(AsyncSnapshot<bool> snapshot) onFullscreen;
+
+  /// A stream that emits whether the window is maximized.
+  final Stream<bool> isMaximized;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +46,6 @@ class MacOSWindowControls extends StatelessWidget {
           icon: Icons.minimize,
           onPressed: onMinimize,
         ),
-
         StreamBuilder(
           stream: isMaximized,
           builder: (context, snapshot) => _MacOSControlButton(
@@ -52,15 +60,19 @@ class MacOSWindowControls extends StatelessWidget {
   }
 }
 
+/// Window controls that adapt to the current platform.
 class WindowControls extends StatelessWidget {
-  final bool? forceMacStyle;
+  /// Creates a new instance of [WindowControls].
   const WindowControls({super.key, this.forceMacStyle});
+
+  /// Whether to force the macOS style.
+  final bool? forceMacStyle;
 
   @override
   Widget build(BuildContext context) {
     final isMaximized = windowManager.isMaximized().asStream();
     final theme = FTheme.of(context);
-    final isMacStyle = Platform.isMacOS || forceMacStyle == true;
+    final isMacStyle = Platform.isMacOS || (forceMacStyle ?? false);
 
     if (isMacStyle) {
       return MacOSWindowControls(
@@ -118,11 +130,11 @@ class WindowControls extends StatelessWidget {
     );
   }
 
-  void _closeWindow() async {
+  Future<void> _closeWindow() async {
     await windowManager.close();
   }
 
-  void _maximizeWindow(AsyncSnapshot<bool> asyncSnapshot) async {
+  Future<void> _maximizeWindow(AsyncSnapshot<bool> asyncSnapshot) async {
     if (asyncSnapshot.data ?? false) {
       await windowManager.unmaximize();
     } else {
@@ -130,23 +142,22 @@ class WindowControls extends StatelessWidget {
     }
   }
 
-  void _minimizeWindow() async {
+  Future<void> _minimizeWindow() async {
     await windowManager.minimize();
   }
 }
 
 class _MacOSControlButton extends StatefulWidget {
-  final Color color;
-  final Color hoverColor;
-  final IconData icon;
-  final VoidCallback? onPressed;
-
   const _MacOSControlButton({
     required this.color,
     required this.hoverColor,
     required this.icon,
     this.onPressed,
   });
+  final Color color;
+  final Color hoverColor;
+  final IconData icon;
+  final VoidCallback? onPressed;
 
   @override
   State<_MacOSControlButton> createState() => _MacOSControlButtonState();

@@ -12,10 +12,12 @@ import 'package:hasanat/feature/prayer/presentation/provider/prayer_table/prayer
 import 'package:hasanat/l10n/app_localizations.dart';
 
 class PrayerTable extends ConsumerWidget {
+
+  const PrayerTable({super.key});
   // Static constants for performance
-  static const double _headerHeight = 48.0;
-  static const Size _imageSize = Size(56.0, 56.0);
-  static const double _imageBorderRadius = 12.0;
+  static const double _headerHeight = 48;
+  static const Size _imageSize = Size(56, 56);
+  static const double _imageBorderRadius = 12;
   static const int _nextPrayerAlpha = 30;
   static const int _currentPrayerAlpha = 50;
 
@@ -25,8 +27,6 @@ class PrayerTable extends ConsumerWidget {
   );
   static const EdgeInsets _cellPadding = EdgeInsets.all(8);
   static const SizedBox _imagePadding = SizedBox(width: 12);
-
-  const PrayerTable({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -46,9 +46,9 @@ class PrayerTable extends ConsumerWidget {
 
 /// Error widget for when data loading fails
 class _ErrorWidget extends StatelessWidget {
-  final Object error;
 
   const _ErrorWidget({required this.error});
+  final Object error;
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +56,7 @@ class _ErrorWidget extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -105,8 +105,8 @@ class _LoadingWidget extends StatelessWidget {
           return DataTable(
             headingRowHeight: PrayerTable._headerHeight,
             dataRowMaxHeight: rowH.clamp(24.0, double.infinity),
-            columnSpacing: 16.0,
-            dividerThickness: 1.0,
+            columnSpacing: 16,
+            dividerThickness: 1,
             columns: _buildColumns(l10n, theme),
             rows: List.generate(
               8,
@@ -158,7 +158,6 @@ class _LoadingWidget extends StatelessWidget {
     return [
       DataColumn(
         label: Text(l10n.prayer, style: theme.typography.sm),
-        numeric: false,
       ),
       DataColumn(
         label: Text(l10n.adhan, style: theme.typography.sm),
@@ -174,6 +173,7 @@ class _LoadingWidget extends StatelessWidget {
 
 /// Main content widget for the prayer table
 class _PrayerTableContent extends StatelessWidget {
+  const _PrayerTableContent({required this.rows});
   // Static cached columns to avoid rebuilding
   static List<DataColumn>? _cachedColumns;
 
@@ -181,7 +181,6 @@ class _PrayerTableContent extends StatelessWidget {
 
   static FThemeData? _cachedTheme;
   final List<PrayerTableRow> rows;
-  const _PrayerTableContent({required this.rows});
 
   @override
   Widget build(BuildContext context) {
@@ -200,8 +199,8 @@ class _PrayerTableContent extends StatelessWidget {
           ),
           headingRowHeight: PrayerTable._headerHeight,
           dataRowMaxHeight: rowH.clamp(24.0, double.infinity),
-          columnSpacing: 16.0,
-          dividerThickness: 1.0,
+          columnSpacing: 16,
+          dividerThickness: 1,
           columns: _buildColumns(l10n, theme),
           rows: rows.map((row) => _buildDataRow(row, theme, l10n)).toList(),
         );
@@ -220,7 +219,6 @@ class _PrayerTableContent extends StatelessWidget {
     _cachedColumns = [
       DataColumn(
         label: Text(l10n.prayer, style: theme.typography.sm),
-        numeric: false,
       ),
       DataColumn(
         label: Text(l10n.adhan, style: theme.typography.sm),

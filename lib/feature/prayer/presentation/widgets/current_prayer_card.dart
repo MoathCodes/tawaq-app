@@ -19,10 +19,9 @@ import 'package:hasanat/feature/prayer/presentation/widgets/mini_card.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 
 class CurrentPrayerCard extends ConsumerWidget {
+  const CurrentPrayerCard({super.key});
   // Static constants to avoid recreation on every build
   static const _gradientOverlay = LinearGradient(
-    end: Alignment.centerRight,
-    begin: Alignment.centerLeft,
     colors: [
       Color.from(alpha: 0.6, red: 0, green: 0, blue: 0), // Strongest at top
       Color.from(alpha: 0.4, red: 0, green: 0, blue: 0), // Medium in middle
@@ -65,15 +64,15 @@ class CurrentPrayerCard extends ConsumerWidget {
   static TextStyle get _prepareTextStyle =>
       TextStyle(color: Colors.white, fontSize: 16.sp);
 
-  const CurrentPrayerCard({super.key});
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cardStream = ref.watch(prayerCardProvider);
     final completion = ref.watch(
-      prayerCompletionNotifierProvider,
-    )[cardStream.value?.prayer];
-    final appTheme = ref.watch(themeNotifierProvider);
+      prayerCompletionProvider.select(
+        (value) => value[cardStream.value?.prayer],
+      ),
+    );
+    final appTheme = ref.watch(themeProvider);
     final theme = FTheme.of(context);
 
     return HoverCard(
@@ -112,15 +111,15 @@ class CurrentPrayerCard extends ConsumerWidget {
 
 // Extract completion badge to its own widget
 class _CompletionBadge extends ConsumerWidget {
-  final PrayerCompletion completion;
-
-  final AsyncValue<ThemeSettings?> appTheme;
-  final PrayerCardInfo data;
   const _CompletionBadge({
     required this.completion,
     required this.appTheme,
     required this.data,
   });
+  final PrayerCompletion completion;
+
+  final AsyncValue<ThemeSettings?> appTheme;
+  final PrayerCardInfo data;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -170,7 +169,7 @@ class _CompletionBadge extends ConsumerWidget {
 
   void _updateCompletion(CompletionStatus status, WidgetRef ref) {
     ref
-        .read(prayerCompletionNotifierProvider.notifier)
+        .read(prayerCompletionProvider.notifier)
         .addOrUpdateCompletion(
           PrayerCompletion(
             id: completion.id,
@@ -183,14 +182,13 @@ class _CompletionBadge extends ConsumerWidget {
 }
 
 class _ErrorCard extends StatelessWidget {
-  final Object error;
-
   const _ErrorCard({required this.error});
+  final Object error;
 
   @override
   Widget build(BuildContext context) {
     return FAlert(
-      title: Text(context.l10n.errorOccurredWhile("Calculating Prayer Times")),
+      title: Text(context.l10n.errorOccurredWhile('Calculating Prayer Times')),
       subtitle: Text(error.toString()),
     );
   }
@@ -198,17 +196,17 @@ class _ErrorCard extends StatelessWidget {
 
 // Optimized header row
 class _HeaderRow extends StatelessWidget {
-  final PrayerCompletion? completion;
-
-  final AsyncValue<ThemeSettings?> appTheme;
-  final PrayerCardInfo data;
-  final bool isLoading;
   const _HeaderRow({
     required this.completion,
     required this.appTheme,
     required this.data,
     required this.isLoading,
   });
+  final PrayerCompletion? completion;
+
+  final AsyncValue<ThemeSettings?> appTheme;
+  final PrayerCardInfo data;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -235,27 +233,21 @@ class _HeaderRow extends StatelessWidget {
 // Mock data for loading state
 class _MockPrayerData implements PrayerCardInfo {
   @override
-  String get adhanTime => "--:--";
+  String get adhanTime => '--:--';
   @override
   $PrayerCardInfoCopyWith<PrayerCardInfo> get copyWith =>
       throw UnimplementedError();
   @override
-  String get iqamahTime => "--:--";
+  String get iqamahTime => '--:--';
   @override
   Prayer get prayer => Prayer.fajr;
 
   @override
-  String get time => "Loading...";
+  String get time => 'Loading...';
 }
 
 // Separate widget for the main content to optimize rebuilds
 class _PrayerCardContent extends ConsumerWidget {
-  final PrayerCardInfo data;
-
-  final PrayerCompletion? completion;
-  final AsyncValue<ThemeSettings?> appTheme;
-  final FThemeData theme;
-  final bool isLoading;
   const _PrayerCardContent({
     required this.data,
     required this.completion,
@@ -263,12 +255,18 @@ class _PrayerCardContent extends ConsumerWidget {
     required this.theme,
     this.isLoading = false,
   });
+  final PrayerCardInfo data;
+
+  final PrayerCompletion? completion;
+  final AsyncValue<ThemeSettings?> appTheme;
+  final FThemeData theme;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isArabic =
         ref.watch(
-          localeNotifierProvider.select((value) => value.value?.languageCode),
+          localeProvider.select((value) => value.value?.languageCode),
         ) ==
         'ar';
     return AnimatedContainer(

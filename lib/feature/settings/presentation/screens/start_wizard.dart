@@ -4,8 +4,8 @@ import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 
-class StartedPage extends StatelessWidget {
-  const StartedPage({super.key});
+class StartedScreen extends StatelessWidget {
+  const StartedScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +88,7 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
       direction: Axis.horizontal,
       title: Text(_stepTitle(_step)),
       body: Padding(
-        padding: const EdgeInsets.only(top: 4.0),
+        padding: const EdgeInsets.only(top: 4),
         child: _buildBody(),
       ),
       actions: [
@@ -288,7 +288,6 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
                   //     const InputDecoration(labelText: 'Fajr angle (°)'),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
-                    signed: false,
                   ),
                 ),
               ),
@@ -300,7 +299,6 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
                   //     const InputDecoration(labelText: 'Isha angle (°)'),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
-                    signed: false,
                   ),
                 ),
               ),
@@ -325,7 +323,6 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
                   //     const InputDecoration(labelText: 'Maghrib angle (°)'),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
-                    signed: false,
                   ),
                 ),
               ),
@@ -367,11 +364,6 @@ class _StartWizardDialogState extends State<_StartWizardDialog> {
           width: 200,
           height: 80,
           child: FTextField.password(
-            suffixBuilder: (context, value, child) => FButton.icon(
-              onPress: () {},
-              style: FButtonStyle.ghost(),
-              child: const Icon(FIcons.eye),
-            ),
           ),
         ),
       ],

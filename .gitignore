@@ -61,9 +61,13 @@ coverage/
 /android/app/profile
 /android/app/release
 
-# Keep or ignore generated files ------------------------------------------------
+# Generated code
 *.g.dart
 *.freezed.dart
+*.gr.dart
+.dart_tool/
+build/
 
 # FVM Version Cache
 .fvm/
+

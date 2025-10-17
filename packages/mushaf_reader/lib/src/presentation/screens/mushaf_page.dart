@@ -31,13 +31,8 @@ class MushafPage extends StatefulWidget {
 }
 
 class _MushafPageState extends State<MushafPage> {
+  static const String _packageName = 'mushaf_reader';
   late MushafController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = widget.controller ?? MushafController.instance;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,13 +40,20 @@ class _MushafPageState extends State<MushafPage> {
       future: _controller.getPage(widget.page),
       builder: (_, snap) {
         if (!snap.hasData) {
-          return widget.loadingWidget ?? const Center(child:CircularProgressIndicator());
+          return widget.loadingWidget ??
+              const Center(child: CircularProgressIndicator());
         }
 
         final data = snap.data!;
         return _buildPageContent(data);
       },
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.controller ?? MushafController.instance;
   }
 
   Widget _buildPageContent(QuranPageModel data) {
@@ -63,7 +65,7 @@ class _MushafPageState extends State<MushafPage> {
       'default_${widget.page}',
       () => TextStyle(
         fontFamily: pageFontFamily,
-        package: 'mushaf_reader',
+        package: _packageName,
         fontSize: 28,
         height: 1.6,
         color: const Color(0xFF000000),
@@ -82,7 +84,10 @@ class _MushafPageState extends State<MushafPage> {
     );
 
     final activeStyle =
-        widget.activeTextStyle?.copyWith(fontFamily: pageFontFamily) ??
+        widget.activeTextStyle?.copyWith(
+          fontFamily: pageFontFamily,
+          package: _packageName,
+        ) ??
         PerformanceUtils.getCachedTextStyle(
           'active_${widget.page}',
           () =>
@@ -90,7 +95,10 @@ class _MushafPageState extends State<MushafPage> {
         );
 
     final finalTextStyle =
-        widget.textStyle?.copyWith(fontFamily: pageFontFamily) ??
+        widget.textStyle?.copyWith(
+          fontFamily: pageFontFamily,
+          package: _packageName,
+        ) ??
         defaultAyahStyle;
 
     return Column(

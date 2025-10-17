@@ -104,6 +104,8 @@
   "iqamah": "Iqamah",
   "iqamahAdjustment": "Iqamah Adjustment",
   "iqamahAfterAdhan": "Iqamah (minutes after adhan)",
+  "iqamahSavedDescription": "Your iqamah adjustments have been saved successfully.",
+  "iqamahSavedTitle": "Iqamah adjustments saved",
   "iqamahSubtitleMessage": "+{iqamahMins} minutes",
   "@iqamahSubtitleMessage": {
     "placeholders": {
@@ -130,6 +132,7 @@
   "loadingLocationSettings": "Loading Location Settings",
   "locationSectionSubtitle": "Set geographical location and prayer time calculation method.",
   "locationSectionTitle": "Location & Calculation",
+  "lockToPreventEdits": "Lock to prevent edits",
   "longitude": "Longitude",
   "madhab_hanafi": "Hanafi",
   "madhab_shafi": "Shafi",
@@ -213,6 +216,7 @@
   "toggleArabic": "Toggle Arabic",
   "turkiye": "Turkey (Diyanet)",
   "ummAlQura": "Umm Al-Qura University",
+  "unlockToEditCoordinates": "Unlock to edit coordinates",
   "use24HourFormat": "Use 24-hour format",
   "useDeviceLocation": "Use device location",
   "useMyLocation": "Use My Location",

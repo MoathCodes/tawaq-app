@@ -5,8 +5,8 @@ import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/sec
 import 'package:hasanat/feature/settings/presentation/widgets/settings_section.dart';
 
 class PrayerSection extends StatelessWidget {
-  final double maxWidth;
   const PrayerSection({super.key, this.maxWidth = 800});
+  final double maxWidth;
 
   @override
   Widget build(BuildContext context) {

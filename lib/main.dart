@@ -1,3 +1,7 @@
+/// The entry point of the application.
+///
+/// This function initializes the necessary bindings, sets up error handling,
+/// initializes timezone data, and runs the application.
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,7 +43,6 @@ void main() async {
         backgroundColor: Colors.transparent,
         skipTaskbar: false,
         titleBarStyle: TitleBarStyle.hidden,
-        windowButtonVisibility: true,
       );
 
       windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -54,7 +57,6 @@ void main() async {
             TalkerRiverpodObserver(
               talker: talker,
               settings: TalkerRiverpodLoggerSettings(
-                printStateFullData: true,
                 providerFilter: (provider) {
                   return provider.name != prayerCardProvider.name;
                 },
@@ -65,15 +67,19 @@ void main() async {
         ),
       );
     },
-    (error, stackTrace) {
-      talker.handle(error, stackTrace);
-    },
+    talker.handle,
   );
 }
 
-final talker = TalkerFlutter.init();
+/// The Talker instance for logging and error handling.
+final Talker talker = TalkerFlutter.init();
 
+/// The root widget of the application.
+///
+/// This widget is responsible for setting up the application's theme,
+/// localization, and routing.
 class SeratiApp extends ConsumerWidget {
+  /// Creates a new instance of [SeratiApp].
   const SeratiApp({super.key});
 
   // 1910x990
@@ -82,8 +88,8 @@ class SeratiApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Get the localization instance
     final appRouter = ref.watch(appRouterProvider);
-    final locale = ref.watch(localeNotifierProvider);
-    final appTheme = ref.watch(themeNotifierProvider);
+    final locale = ref.watch(localeProvider);
+    final appTheme = ref.watch(themeProvider);
     return ScreenUtilInit(
       designSize: const Size(1908, 987),
       minTextAdapt: true,
@@ -98,10 +104,10 @@ class SeratiApp extends ConsumerWidget {
       builder: (context, child) {
         return MaterialApp.router(
           builder: (context, child) {
-            bool isArabic = locale.value?.languageCode == 'ar';
+            final isArabic = locale.value?.languageCode == 'ar';
             final currentTheme =
                 appTheme.value?.colorScheme ?? FThemes.zinc.light;
-            FThemeData themeData = currentTheme;
+            var themeData = currentTheme;
             if (isArabic) {
               final typo = FTypography.inherit(
                 colors: currentTheme.colors,
@@ -117,7 +123,7 @@ class SeratiApp extends ConsumerWidget {
           },
           themeMode: appTheme.value?.themeMode,
           onGenerateTitle: (context) =>
-              AppLocalizations.of(context)?.appName ?? "",
+              AppLocalizations.of(context)?.appName ?? '',
           debugShowCheckedModeBanner: false,
           // theme: ThemeData(
           //     colorScheme:

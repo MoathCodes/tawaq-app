@@ -260,6 +260,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get iqamahAfterAdhan => 'الإقامة (دقائق بعد الأذان)';
 
   @override
+  String get iqamahSavedDescription => 'تم حفظ تعديلات الإقامة بنجاح.';
+
+  @override
+  String get iqamahSavedTitle => 'تم حفظ إعدادات الإقامة';
+
+  @override
   String iqamahSubtitleMessage(int iqamahMins) {
     String _temp0 = intl.Intl.pluralLogic(
       iqamahMins,
@@ -325,6 +331,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get locationSectionTitle => 'الموقع والحساب';
+
+  @override
+  String get lockToPreventEdits => 'اقفل لمنع التعديل';
 
   @override
   String get longitude => 'خط الطول';
@@ -572,6 +581,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ummAlQura => 'جامعة أم القرى';
+
+  @override
+  String get unlockToEditCoordinates => 'افتح القفل لتعديل الإحداثيات';
 
   @override
   String get use24HourFormat => 'استخدام نظام 24 ساعة';

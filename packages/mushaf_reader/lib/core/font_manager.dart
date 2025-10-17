@@ -42,7 +42,7 @@ class FontHelper {
 //   }
 
 //   void prefetchAroundPage(int currentPage, {int radius = 3}) {
-//     for (int i = currentPage - radius; i <= currentPage + radius; i++) {
+//     for (int i = currentScreen- radius; i <= currentScreen+ radius; i++) {
 //       if (i >= 1 && i <= 604) {
 //         loadAssetsForPage(i); // Fire-and-forget
 //       }

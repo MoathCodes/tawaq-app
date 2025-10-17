@@ -17,8 +17,8 @@ abstract class PrayerTrackerCardModel with _$PrayerTrackerCardModel {
 
   factory PrayerTrackerCardModel.empty() => const PrayerTrackerCardModel(
         prayer: Prayer.fajrAfter,
-        adhan: "00:00",
-        subtitle: "Fajr",
+        adhan: '00:00',
+        subtitle: 'Fajr',
         isCurrentPrayer: false,
         isTimePassed: false,
         completion: null,

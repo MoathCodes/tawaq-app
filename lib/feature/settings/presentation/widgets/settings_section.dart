@@ -9,9 +9,9 @@ class SettingsCard extends StatelessWidget {
   final double spacing;
   final List<Widget> sections;
   const SettingsCard({
-    super.key,
     required this.title,
     required this.sections,
+    super.key,
     this.subtitle,
     this.spacing = 8,
   });
@@ -20,7 +20,10 @@ class SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 0.50.sw, minHeight: 400),
+      constraints: BoxConstraints(
+        maxWidth: ScreenUtil().screenWidth >= 1024 ? 0.50.sw : 1.sw,
+        minHeight: 400,
+      ),
       child: FCard(
         // titleAlignment:
         //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
@@ -40,7 +43,7 @@ class SettingsCard extends StatelessWidget {
           spacing: spacing,
           children: [
             // Text(title).h3,
-            Divider(color: theme.colors.foreground, thickness: .5, height: 48),
+            Divider(color: theme.colors.foreground, thickness: .5, height: 16),
             ...sections,
           ],
         ),
@@ -57,10 +60,10 @@ class SettingsSection extends StatelessWidget {
   final Widget child;
   final CrossAxisAlignment crossAxisAlignment;
   const SettingsSection({
-    super.key,
     required this.child,
     required this.title,
     required this.subtitle,
+    super.key,
     this.crossAxisAlignment = CrossAxisAlignment.stretch,
     this.leading,
     this.suffix,

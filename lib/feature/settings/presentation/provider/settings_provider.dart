@@ -18,7 +18,7 @@ const String _themeNotifierLogPrefix = '[ThemeNotifier]';
 class LocaleNotifier extends _$LocaleNotifier {
   @override
   FutureOr<Locale> build() {
-    final talker = ref.read(talkerNotifierProvider);
+    final talker = ref.read(talkerProvider);
     talker.info('$_localeNotifierLogPrefix Building Locale...');
     final services = ref.read(settingsServiceProvider);
     final locale = services.getLocale();
@@ -27,12 +27,12 @@ class LocaleNotifier extends _$LocaleNotifier {
   }
 
   bool isArabic() {
-    return state.valueOrNull?.languageCode == 'ar';
+    return state.value?.languageCode == 'ar';
   }
 
   void setLocale(Locale newLocale) {
-    if (newLocale == state.valueOrNull || state.value == null) return;
-    final talker = ref.read(talkerNotifierProvider);
+    if (newLocale == state.value || state.value == null) return;
+    final talker = ref.read(talkerProvider);
     talker.info('$_localeNotifierLogPrefix Setting locale to: $newLocale');
     final service = ref.read(settingsServiceProvider);
     service.setLocale(newLocale);
@@ -41,8 +41,8 @@ class LocaleNotifier extends _$LocaleNotifier {
   }
 
   void toggleLocale() {
-    if (state.valueOrNull == null) return;
-    final talker = ref.read(talkerNotifierProvider);
+    if (state.value == null) return;
+    final talker = ref.read(talkerProvider);
     talker.info('$_localeNotifierLogPrefix Toggling locale...');
     final currentLocale = state.value!;
     final newLocale = currentLocale.languageCode == 'ar'
@@ -56,23 +56,26 @@ class LocaleNotifier extends _$LocaleNotifier {
 class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   @override
   FutureOr<PrayerSettings> build() {
-    final talker = ref.read(talkerNotifierProvider);
+    final talker = ref.read(talkerProvider);
     talker.info('$_prayerSettingsNotifierLogPrefix Building PrayerSettings...');
     final services = ref.read(settingsServiceProvider);
     final prayerSettings = services.getPrayerSettings();
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix PrayerSettings loaded: $prayerSettings');
+      '$_prayerSettingsNotifierLogPrefix PrayerSettings loaded: $prayerSettings',
+    );
     return prayerSettings;
   }
 
   void set24HourFormat(bool value) {
-    if (state.valueOrNull == null) return;
-    final talker = ref.read(talkerNotifierProvider);
+    if (state.value == null) return;
+    final talker = ref.read(talkerProvider);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Setting 24 hour format to: $value');
+      '$_prayerSettingsNotifierLogPrefix Setting 24 hour format to: $value',
+    );
     if (state.value!.is24Hours == value) {
       talker.warning(
-          '$_prayerSettingsNotifierLogPrefix 24 format settings are the same, not updating.');
+        '$_prayerSettingsNotifierLogPrefix 24 format settings are the same, not updating.',
+      );
       return;
     }
     final service = ref.read(settingsServiceProvider);
@@ -80,56 +83,64 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     service.setPrayerSettings(newSettings);
     state = AsyncData(newSettings);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix 24 hour format set to: $value');
+      '$_prayerSettingsNotifierLogPrefix 24 hour format set to: $value',
+    );
   }
 
   void setCoordinates(Coordinates coordinates) {
-    if (state.valueOrNull == null) return;
-    final talker = ref.read(talkerNotifierProvider);
+    if (state.value == null) return;
+    final talker = ref.read(talkerProvider);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Setting coordinates to: $coordinates');
-
+      '$_prayerSettingsNotifierLogPrefix Setting coordinates to: $coordinates',
+    );
     final service = ref.read(settingsServiceProvider);
     final newSettings = state.value!.copyWith(coordinates: coordinates);
     if (state.value == newSettings) {
       talker.warning(
-          '$_prayerSettingsNotifierLogPrefix Coordinates are the same, not updating.');
+        '$_prayerSettingsNotifierLogPrefix Coordinates are the same, not updating.',
+      );
       return;
     }
     service.setPrayerSettings(newSettings);
     state = AsyncData(newSettings);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Coordinates set to: $coordinates');
+      '$_prayerSettingsNotifierLogPrefix Coordinates set to: $coordinates',
+    );
   }
 
   void setIqamahTimes(Map<Prayer, int> iqamahTimes) {
-    if (state.valueOrNull == null) return;
-    final talker = ref.read(talkerNotifierProvider);
+    if (state.value == null) return;
+    final talker = ref.read(talkerProvider);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Setting Iqamah times to: $iqamahTimes');
+      '$_prayerSettingsNotifierLogPrefix Setting Iqamah times to: $iqamahTimes',
+    );
     final service = ref.read(settingsServiceProvider);
     final newSettings = state.value!.copyWith(iqamahSettings: iqamahTimes);
     if (state.value == newSettings) {
       talker.warning(
-          '$_prayerSettingsNotifierLogPrefix Iqamah times are the same, not updating.');
+        '$_prayerSettingsNotifierLogPrefix Iqamah times are the same, not updating.',
+      );
       return;
     }
     service.setPrayerSettings(newSettings);
     state = AsyncData(newSettings);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Iqamah times set to: $iqamahTimes');
+      '$_prayerSettingsNotifierLogPrefix Iqamah times set to: $iqamahTimes',
+    );
   }
 
   void setLocation(Location location) {
-    if (state.valueOrNull == null) return;
-    final talker = ref.read(talkerNotifierProvider);
+    if (state.value == null) return;
+    final talker = ref.read(talkerProvider);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Setting location to: $location');
+      '$_prayerSettingsNotifierLogPrefix Setting location to: $location',
+    );
     final service = ref.read(settingsServiceProvider);
     final newSettings = state.value!.copyWith(location: location);
     if (state.value == newSettings) {
       talker.warning(
-          '$_prayerSettingsNotifierLogPrefix Location is the same, not updating.');
+        '$_prayerSettingsNotifierLogPrefix Location is the same, not updating.',
+      );
       return;
     }
     service.setPrayerSettings(newSettings);
@@ -138,61 +149,88 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   }
 
   void setLocationName(String locationName) {
-    if (state.valueOrNull == null) return;
-    final talker = ref.read(talkerNotifierProvider);
+    if (state.value == null) return;
+    final talker = ref.read(talkerProvider);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Setting location name to: $locationName');
+      '$_prayerSettingsNotifierLogPrefix Setting location name to: $locationName',
+    );
     final service = ref.read(settingsServiceProvider);
     final newSettings = state.value!.copyWith(locationName: locationName);
     if (state.value == newSettings) {
       talker.warning(
-          '$_prayerSettingsNotifierLogPrefix Location name is the same, not updating.');
+        '$_prayerSettingsNotifierLogPrefix Location name is the same, not updating.',
+      );
       return;
     }
     service.setPrayerSettings(newSettings);
     state = AsyncData(newSettings);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Location name set to: $locationName');
+      '$_prayerSettingsNotifierLogPrefix Location name set to: $locationName',
+    );
   }
 
   void setPrayerSettings(PrayerSettings settings) {
-    if (state.valueOrNull == null) return;
-    final talker = ref.read(talkerNotifierProvider);
+    if (state.value == null) return;
+    final talker = ref.read(talkerProvider);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Setting prayer settings to: $settings');
+      '$_prayerSettingsNotifierLogPrefix Setting prayer settings to: $settings',
+    );
     if (state.value == settings) {
       talker.warning(
-          '$_prayerSettingsNotifierLogPrefix Prayer settings are the same, not updating.');
+        '$_prayerSettingsNotifierLogPrefix Prayer settings are the same, not updating.',
+      );
       return;
     }
     final service = ref.read(settingsServiceProvider);
     service.setPrayerSettings(settings);
     state = AsyncData(settings);
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Prayer settings set to: $settings');
+      '$_prayerSettingsNotifierLogPrefix Prayer settings set to: $settings',
+    );
   }
 
   @override
   Future<PrayerSettings> update(
-      FutureOr<PrayerSettings> Function(PrayerSettings p1) cb,
-      {FutureOr<PrayerSettings> Function(Object err, StackTrace stackTrace)?
-          onError}) {
-    final talker = ref.read(talkerNotifierProvider);
-    talker
-        .info('$_prayerSettingsNotifierLogPrefix Updating prayer settings...');
-    return super.update(cb, onError: (err, stackTrace) {
-      talker.handle(err, stackTrace,
-          '$_prayerSettingsNotifierLogPrefix Error updating prayer settings');
-      if (onError != null) {
-        return onError(err, stackTrace);
-      }
-      // Re-throw the error if no custom onError is provided to maintain original behavior
-      throw err;
-    }).then((value) {
-      talker.info(
-          '$_prayerSettingsNotifierLogPrefix Prayer settings updated successfully: $value');
-      return value;
-    });
+    FutureOr<PrayerSettings> Function(PrayerSettings p1) cb, {
+    FutureOr<PrayerSettings> Function(Object err, StackTrace stackTrace)?
+    onError,
+  }) {
+    final talker = ref.read(talkerProvider);
+    talker.info(
+      '$_prayerSettingsNotifierLogPrefix Updating prayer settings...',
+    );
+    final previous = state.value;
+    return super
+        .update(
+          cb,
+          onError: (err, stackTrace) {
+            talker.handle(
+              err,
+              stackTrace,
+              '$_prayerSettingsNotifierLogPrefix Error updating prayer settings',
+            );
+            if (onError != null) {
+              return onError(err, stackTrace);
+            }
+            // Re-throw the error if no custom onError is provided to maintain original behavior
+            throw err;
+          },
+        )
+        .then((value) {
+          // Persist changes so they survive hot restart/app relaunch.
+          if (previous != value) {
+            final service = ref.read(settingsServiceProvider);
+            service.setPrayerSettings(value);
+            talker.info(
+              '$_prayerSettingsNotifierLogPrefix Prayer settings updated and persisted: $value',
+            );
+          } else {
+            talker.info(
+              '$_prayerSettingsNotifierLogPrefix No changes detected after update; skipping persistence.',
+            );
+          }
+          return value;
+        });
   }
 
   Future<void> updateLocationData({
@@ -200,14 +238,15 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     String? locationName,
     Location? location,
   }) async {
-    if (state.valueOrNull == null) return;
-    final talker = ref.read(talkerNotifierProvider);
+    if (state.value == null) return;
+    final talker = ref.read(talkerProvider);
 
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Updating location data - coordinates: $coordinates, locationName: $locationName, location: $location');
+      '$_prayerSettingsNotifierLogPrefix Updating location data - coordinates: $coordinates, locationName: $locationName, location: $location',
+    );
 
-    var finalCoordinates = coordinates;
-    var finalLocationName = locationName;
+    final finalCoordinates = coordinates;
+    final finalLocationName = locationName;
     var finalLocation = location;
 
     // If we have coordinates but need location
@@ -217,10 +256,12 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
             .read(locationServiceProvider)
             .getLocationFromCoordinatesOffline(finalCoordinates);
         talker.info(
-            '$_prayerSettingsNotifierLogPrefix Auto-resolved location from coordinates: $finalLocation');
+          '$_prayerSettingsNotifierLogPrefix Auto-resolved location from coordinates: $finalLocation',
+        );
       } catch (e) {
         talker.error(
-            '$_prayerSettingsNotifierLogPrefix Failed to resolve location from coordinates: $e');
+          '$_prayerSettingsNotifierLogPrefix Failed to resolve location from coordinates: $e',
+        );
       }
     }
 
@@ -232,7 +273,8 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
 
     if (state.value == newSettings) {
       talker.warning(
-          '$_prayerSettingsNotifierLogPrefix No changes detected, not updating.');
+        '$_prayerSettingsNotifierLogPrefix No changes detected, not updating.',
+      );
       return;
     }
 
@@ -241,30 +283,34 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     state = AsyncData(newSettings);
 
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Location data updated successfully - coordinates: ${newSettings.coordinates}, locationName: ${newSettings.locationName}, location: ${newSettings.location}');
+      '$_prayerSettingsNotifierLogPrefix Location data updated successfully - coordinates: ${newSettings.coordinates}, locationName: ${newSettings.locationName}, location: ${newSettings.location}',
+    );
   }
 
   void updatePrayerIqamahTime(Prayer prayer, int iqamahTime) {
-    if (state.valueOrNull == null) return;
-    final talker = ref.read(talkerNotifierProvider);
+    if (state.value == null) return;
+    final talker = ref.read(talkerProvider);
     final currentSettings = state.value!;
     final currentIqamah = currentSettings.iqamahSettings[prayer] ?? 0;
     if (currentIqamah == iqamahTime) {
       talker.warning(
-          '[33m$_prayerSettingsNotifierLogPrefix Iqamah time for $prayer already $iqamahTime, not updating.[0m');
+        '[33m$_prayerSettingsNotifierLogPrefix Iqamah time for $prayer already $iqamahTime, not updating.[0m',
+      );
       return;
     }
 
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Updating $prayer iqamah time to: $iqamahTime');
+      '$_prayerSettingsNotifierLogPrefix Updating $prayer iqamah time to: $iqamahTime',
+    );
 
     // Create a new map to avoid mutating the existing one.
-    final newIqamahSettings =
-        Map<Prayer, int>.from(currentSettings.iqamahSettings)
-          ..[prayer] = iqamahTime;
+    final newIqamahSettings = Map<Prayer, int>.from(
+      currentSettings.iqamahSettings,
+    )..[prayer] = iqamahTime;
 
-    final newSettings =
-        currentSettings.copyWith(iqamahSettings: newIqamahSettings);
+    final newSettings = currentSettings.copyWith(
+      iqamahSettings: newIqamahSettings,
+    );
 
     // Persist via service and update state.
     final service = ref.read(settingsServiceProvider);
@@ -272,7 +318,8 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     state = AsyncData(newSettings);
 
     talker.info(
-        '$_prayerSettingsNotifierLogPrefix Iqamah time for $prayer set to: $iqamahTime');
+      '$_prayerSettingsNotifierLogPrefix Iqamah time for $prayer set to: $iqamahTime',
+    );
   }
 }
 
@@ -280,61 +327,71 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
 class ThemeNotifier extends _$ThemeNotifier {
   @override
   FutureOr<ThemeSettings> build() async {
-    final talker = ref.read(talkerNotifierProvider);
+    final talker = ref.read(talkerProvider);
     talker.info('$_themeNotifierLogPrefix Building ThemeSettings...');
     final services = ref.read(settingsServiceProvider);
     final appPalette = await services.getAppPalette();
     final themeMode = await services.getThemeMode();
     final settings = ThemeSettings(
-        appPalette: appPalette,
-        themeMode: themeMode,
-        colorScheme: resolveColorScheme(appPalette, themeMode));
+      appPalette: appPalette,
+      themeMode: themeMode,
+      colorScheme: resolveColorScheme(appPalette, themeMode),
+    );
     talker.info('$_themeNotifierLogPrefix ThemeSettings loaded: $settings');
     return settings;
   }
 
   void setPalette(AppPalette newPalette) {
-    if (newPalette == state.valueOrNull?.appPalette || state.value == null) {
+    if (newPalette == state.value?.appPalette || state.value == null) {
       return;
     }
-    final talker = ref.read(talkerNotifierProvider);
+    final talker = ref.read(talkerProvider);
     talker.info('$_themeNotifierLogPrefix Setting palette to: $newPalette');
 
     final service = ref.read(settingsServiceProvider);
     service.setAppPalette(newPalette);
-    final newColorScheme =
-        resolveColorScheme(newPalette, state.valueOrNull!.themeMode);
-    state = AsyncData(state.value!.copyWith(
-      appPalette: newPalette,
-      colorScheme: newColorScheme,
-    ));
+    final newColorScheme = resolveColorScheme(
+      newPalette,
+      state.value!.themeMode,
+    );
+    state = AsyncData(
+      state.value!.copyWith(
+        appPalette: newPalette,
+        colorScheme: newColorScheme,
+      ),
+    );
     talker.info('$_themeNotifierLogPrefix Palette set to: $newPalette');
   }
 
   void setThemeMode(ThemeMode newThemeMode) {
-    if (newThemeMode == state.valueOrNull?.themeMode || state.value == null) {
+    if (newThemeMode == state.value?.themeMode || state.value == null) {
       return;
     }
-    final talker = ref.read(talkerNotifierProvider);
-    talker
-        .info('$_themeNotifierLogPrefix Setting theme mode to: $newThemeMode');
+    final talker = ref.read(talkerProvider);
+    talker.info(
+      '$_themeNotifierLogPrefix Setting theme mode to: $newThemeMode',
+    );
 
-    final newColorScheme =
-        resolveColorScheme(state.value!.appPalette, newThemeMode);
+    final newColorScheme = resolveColorScheme(
+      state.value!.appPalette,
+      newThemeMode,
+    );
 
     final service = ref.read(settingsServiceProvider);
     service.setThemeMode(newThemeMode);
-    state = AsyncData(state.value!.copyWith(
-      themeMode: newThemeMode,
-      colorScheme: newColorScheme,
-    ));
+    state = AsyncData(
+      state.value!.copyWith(
+        themeMode: newThemeMode,
+        colorScheme: newColorScheme,
+      ),
+    );
     talker.info('$_themeNotifierLogPrefix Theme mode set to: $newThemeMode');
   }
 
   void toggleThemeMode() {
-    final talker = ref.read(talkerNotifierProvider);
+    final talker = ref.read(talkerProvider);
     talker.info('$_themeNotifierLogPrefix Toggling theme mode...');
-    final newThemeMode = state.valueOrNull?.themeMode == ThemeMode.dark
+    final newThemeMode = state.value?.themeMode == ThemeMode.dark
         ? ThemeMode.light
         : ThemeMode.dark;
     setThemeMode(newThemeMode);

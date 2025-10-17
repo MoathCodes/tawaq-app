@@ -4,15 +4,16 @@ import 'package:forui/forui.dart';
 import 'package:hasanat/core/widgets/animated_icon_button.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 
+/// A button that toggles the theme mode between light and dark.
 class ThemeModeButton extends ConsumerWidget {
+  /// Creates a theme mode button.
   const ThemeModeButton({
     super.key,
   });
 
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-        final themeMode = ref.watch(themeNotifierProvider);
+    final themeMode = ref.watch(themeProvider);
     return AnimatedIconButton(
       primaryIcon: FIcons.sun,
       secondaryIcon: FIcons.moon,
@@ -20,7 +21,7 @@ class ThemeModeButton extends ConsumerWidget {
       buttonStyle: FButtonStyle.ghost(),
       isSecondaryActive: themeMode.value?.themeMode == ThemeMode.dark,
       onPressed: () {
-        ref.read(themeNotifierProvider.notifier).toggleThemeMode();
+        ref.read(themeProvider.notifier).toggleThemeMode();
       },
     );
   }

@@ -1,5 +1,4 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:free_map/free_map.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/core/utils/location_extensions.dart';
@@ -35,8 +34,7 @@ Future<List<tz.Location>> loadTimezones(Ref ref) async {
   return Future.microtask(() {
     final database = tz.timeZoneDatabase;
     final allLocations = database.locations.values.toList();
-    final currentLocation =
-        ref.read(prayerSettingsNotifierProvider).valueOrNull?.location;
+    final currentLocation = ref.read(prayerSettingsProvider).value?.location;
 
     // Sort with selected location first, then common timezones, then alphabetically
     allLocations.sort((a, b) {
@@ -74,7 +72,7 @@ Future<List<FmData>> searchPlaces(Ref ref, String query) async {
 class LocationPicker extends _$LocationPicker {
   @override
   (Coordinates coords, String name) build() {
-    final settings = ref.read(prayerSettingsNotifierProvider).value;
+    final settings = ref.read(prayerSettingsProvider).value;
     final coords =
         settings?.coordinates ?? const Coordinates(21.4362544, 39.6817387);
     final name = settings?.locationName ?? 'مكة المكرمة';
@@ -85,13 +83,13 @@ class LocationPicker extends _$LocationPicker {
     state = (place.coordinates, place.name);
   }
 
-  void updateLocation(LatLng location) async {
+  Future<void> updateLocation(LatLng location) async {
     state = (location.coordinates, 'Loading...');
     try {
       final data = await _getSelectedPlace(location);
       state = (location.coordinates, _getAvailableName(data));
     } catch (e, stack) {
-      ref.read(talkerNotifierProvider).handle(e, stack);
+      ref.read(talkerProvider).handle(e, stack);
       rethrow;
     }
   }
@@ -105,7 +103,7 @@ class LocationPicker extends _$LocationPicker {
       final data = await _getSelectedPlace(currentLocation);
       state = (currentLocation.coordinates, _getAvailableName(data));
     } catch (e, stack) {
-      ref.read(talkerNotifierProvider).handle(e, stack);
+      ref.read(talkerProvider).handle(e, stack);
       rethrow;
     }
   }

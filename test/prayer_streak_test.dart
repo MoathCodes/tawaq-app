@@ -32,8 +32,8 @@ void main() {
 
     Future<void> seedDays(int consecutiveDays) async {
       final now = TZDateTime.now(loc);
-      int id = 1;
-      for (int i = 0; i < consecutiveDays; i++) {
+      var id = 1;
+      for (var i = 0; i < consecutiveDays; i++) {
         final dayDate = TZDateTime(loc, now.year, now.month, now.day)
             .subtract(Duration(days: i));
         for (final prayer in const [
@@ -63,8 +63,8 @@ void main() {
 
       // Seed an older streak of 8 days that ended 10 days ago
       final now = TZDateTime.now(loc);
-      int idCounter = 10000;
-      for (int offset = 10; offset < 18; offset++) {
+      var idCounter = 10000;
+      for (var offset = 10; offset < 18; offset++) {
         final day = TZDateTime(loc, now.year, now.month, now.day)
             .subtract(Duration(days: offset));
         for (final p in [

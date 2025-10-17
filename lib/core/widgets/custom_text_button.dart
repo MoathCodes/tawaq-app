@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:hasanat/core/widgets/mouse_click.dart';
 
+/// A text button that displays a hover effect when the mouse is over it.
 class CustomTextButton extends StatefulWidget {
-  final String label;
-  final VoidCallback onPressed;
-  final bool? enabled;
-  final Duration duration;
+  /// Creates a custom text button.
   const CustomTextButton(
-      {super.key,
-      required this.label,
+      {required this.label, required this.onPressed, super.key,
       this.enabled,
-      required this.onPressed,
-      this.duration = const Duration(milliseconds: 100)});
+      this.duration = const Duration(milliseconds: 100),});
+
+  /// The text to display on the button.
+  final String label;
+
+  /// The callback that is called when the button is tapped.
+  final VoidCallback onPressed;
+
+  /// Whether the button is enabled.
+  final bool? enabled;
+
+  /// The duration of the hover animation.
+  final Duration duration;
 
   @override
   _CustomTextButtonState createState() => _CustomTextButtonState();
@@ -46,7 +54,7 @@ class _CustomTextButtonState extends State<CustomTextButton> {
                   ? [
                       Shadow(
                         color: colorScheme.primary.withAlpha(100),
-                        blurRadius: 4.0,
+                        blurRadius: 4,
                       ),
                     ]
                   : [],

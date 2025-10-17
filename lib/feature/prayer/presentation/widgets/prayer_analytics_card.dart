@@ -15,14 +15,13 @@ class PrayerAnalyticsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final prayerAnalytics = ref.watch(prayerAnalyticsNotifierProvider);
+    final prayerAnalytics = ref.watch(prayerAnalyticsProvider);
 
     return prayerAnalytics.when(
       data: (data) => _PrayerAnalyticsWidget(
         data: data,
-        onPeriodChanged: (period) => ref
-            .read(prayerAnalyticsNotifierProvider.notifier)
-            .changePeriod(period),
+        onPeriodChanged: (period) =>
+            ref.read(prayerAnalyticsProvider.notifier).changePeriod(period),
       ),
       loading: () => FSkeletonizer(
         child: _PrayerAnalyticsWidget(
@@ -45,6 +44,10 @@ class PrayerAnalyticsCard extends ConsumerWidget {
 }
 
 class _PrayerAnalyticsWidget extends StatelessWidget {
+  const _PrayerAnalyticsWidget({
+    required this.data,
+    required this.onPeriodChanged,
+  });
   // Combined constants from both widgets
 
   static const _contentPadding = EdgeInsets.symmetric(
@@ -56,11 +59,6 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
 
   final PrayerAnalytics data;
   final void Function(PrayerAnalyticsPeriod) onPeriodChanged;
-
-  const _PrayerAnalyticsWidget({
-    required this.data,
-    required this.onPeriodChanged,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -113,14 +111,14 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
             textAlign: TextAlign.center,
           ).xl2,
           Text(_getPeriodText(l10n), textAlign: TextAlign.center),
-          FProgress(
+          FDeterminateProgress(
             value: data.completionPercentage,
             style: (style) => style.copyWith(
-              backgroundDecoration: BoxDecoration(
+              trackDecoration: BoxDecoration(
                 color: colors.background,
                 borderRadius: BorderRadius.circular(_progressBarRadius),
               ),
-              progressDecoration: BoxDecoration(
+              fillDecoration: BoxDecoration(
                 color: _getProgressColor(data.completionPercentage, colors),
                 borderRadius: BorderRadius.circular(_progressBarRadius),
               ),
@@ -143,6 +141,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
 
     return Wrap(
       spacing: _wrapSpacing,
+      runSpacing: _wrapSpacing,
       alignment: WrapAlignment.spaceEvenly,
       children: stats
           .map((stat) => MiniCard(label: stat.$1, child: Text(stat.$2)))
@@ -164,7 +163,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
   }
 
   // Utility methods
-  String _formatPercentage(double value) => "${(value * 100).round()}%";
+  String _formatPercentage(double value) => '${(value * 100).round()}%';
 
   String _getPeriodText(AppLocalizations l10n) {
     return switch (data.period) {

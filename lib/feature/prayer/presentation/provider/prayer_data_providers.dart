@@ -13,19 +13,23 @@ part 'prayer_data_providers.g.dart';
 /// This will automatically update dependents when the settings change.
 @riverpod
 DateTime currentLocationTime(Ref ref) {
-  final location = ref.watch(prayerSettingsNotifierProvider
-      .select((settings) => settings.value?.location));
+  final location = ref.watch(
+    prayerSettingsProvider.select((settings) => settings.value?.location),
+  );
 
   // Use default location if settings are not loaded yet.
-  return DateTime.now()
-      .toLocation(location ?? PrayerSettings.defaultSettings().location);
+  return DateTime.now().toLocation(
+    location ?? PrayerSettings.defaultSettings().location,
+  );
 }
 
 /// Watches the prayer completions for a specific date from the database.
 /// Using a `.family` allows us to fetch data for any given date.
 @Riverpod(keepAlive: true)
 Stream<List<PrayerCompletion>> prayerCompletionsForDate(
-    Ref ref, DateTime date) {
+  Ref ref,
+  DateTime date,
+) {
   final service = ref.watch(prayerServiceProvider);
   // Normalize the date to avoid issues with time components.
   final dateKey = DateTime(date.year, date.month, date.day);

@@ -11,8 +11,8 @@ PrayerCardDecision computePrayerCardDecision({
   required SunnahTimes todaysSunnahTimes,
   required SunnahTimes yesterdaysSunnahTimes,
 }) {
-  final DateTime fajrToday = todaysPrayerTimes.fajr.toLocation(location);
-  final bool useTodayNight = !currentTime.isBefore(fajrToday);
+  final fajrToday = todaysPrayerTimes.fajr.toLocation(location);
+  final useTodayNight = !currentTime.isBefore(fajrToday);
 
   final nightPrayerTimes = useTodayNight
       ? todaysPrayerTimes
@@ -52,12 +52,12 @@ PrayerCardDecision computePrayerCardDecision({
     yesterdaysSunnahTimes: yesterdaysSunnahTimes,
   );
 
-  int currentIdx = orderedPrayers.indexOf(cp);
+  var currentIdx = orderedPrayers.indexOf(cp);
   if (currentIdx == -1) currentIdx = 0; // Defensive: should not happen.
   final nextIdx = (currentIdx + 1) % orderedPrayers.length;
 
-  DateTime currentRef = timeOf(orderedPrayers[currentIdx]);
-  DateTime nextRef = timeOf(orderedPrayers[nextIdx]);
+  var currentRef = timeOf(orderedPrayers[currentIdx]);
+  var nextRef = timeOf(orderedPrayers[nextIdx]);
 
   // Ensure forward progression when the cycle wraps (e.g., lastThird -> fajr).
   if (!nextRef.isAfter(currentRef)) {
@@ -92,7 +92,7 @@ Prayer getCurrentPrayer({
   required SunnahTimes yesterdaysSunnahTimes,
 }) {
   final tFajr = todaysPrayerTimes.fajr.toLocation(location);
-  final bool beforeFajr = currentTime.isBefore(tFajr);
+  final beforeFajr = currentTime.isBefore(tFajr);
 
   // Night anchors (yesterday vs today) and day anchors (today)
   final nIsha = (beforeFajr ? yesterdaysPrayerTimes : todaysPrayerTimes).isha
@@ -178,7 +178,7 @@ Prayer getCurrentPrayer({
   }
 
   // Fallback: pick the last start that is <= now.
-  int idx = -1;
+  var idx = -1;
   for (var i = 0; i < pts.length; i++) {
     final p = pts[i];
     if (p.isBefore(currentTime) || p.isAtSameMomentAs(currentTime)) {

@@ -13,38 +13,40 @@ part 'location_service.g.dart';
 
 @riverpod
 LocationService locationService(Ref ref) {
-  final talker = ref.read(talkerNotifierProvider);
-  final lang = ref.watch(localeNotifierProvider.select(
-    (value) => value.value?.languageCode,
-  ));
+  final talker = ref.read(talkerProvider);
+  final lang = ref.watch(
+    localeProvider.select(
+      (value) => value.value?.languageCode,
+    ),
+  );
   final service = FmService();
   return LocationService(talker, service, lang);
 }
 
 class LocationException implements Exception {
-  final String message;
   LocationException(this.message);
+  final String message;
 
   @override
   String toString() => message;
 }
 
 class LocationService {
+  LocationService(this._talker, this._service, this.languageCode);
   final Talker _talker;
   final String? languageCode;
   final FmService _service;
-  LocationService(this._talker, this._service, this.languageCode);
 
   Future<LatLng> getCurrentPosition() async {
     try {
       _talker.info('[LocationService] Getting current position...');
 
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         throw LocationException('Location services are disabled.');
       }
 
-      LocationPermission permission = await Geolocator.checkPermission();
+      var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
@@ -54,7 +56,8 @@ class LocationService {
 
       if (permission == LocationPermission.deniedForever) {
         throw LocationException(
-            'Location permissions are permanently denied, we cannot request permissions.');
+          'Location permissions are permanently denied, we cannot request permissions.',
+        );
       }
 
       final position = await Geolocator.getCurrentPosition(
@@ -73,12 +76,17 @@ class LocationService {
   Location? getLocationFromCoordinatesOffline(Coordinates coordinates) {
     try {
       final timezoneName = tzMapper.latLngToTimezoneString(
-          coordinates.latitude, coordinates.longitude);
+        coordinates.latitude,
+        coordinates.longitude,
+      );
 
       return getLocation(timezoneName);
     } catch (e, stack) {
-      _talker.handle(e, stack,
-          '[LocationService] Error getting location from coordinates');
+      _talker.handle(
+        e,
+        stack,
+        '[LocationService] Error getting location from coordinates',
+      );
       throw LocationException('Error getting location from coordinates');
     }
   }
@@ -87,7 +95,9 @@ class LocationService {
     try {
       _talker.info('[LocationService] Getting details for place: $coords');
       final place = await _service.getAddress(
-          lat: coords.latitude, lng: coords.longitude);
+        lat: coords.latitude,
+        lng: coords.longitude,
+      );
       if (place == null) {
         throw LocationException('No place found for coordinates: $coords');
       }
@@ -95,7 +105,10 @@ class LocationService {
       return place;
     } catch (e, stackTrace) {
       _talker.handle(
-          e, stackTrace, '[LocationService] Error getting place details');
+        e,
+        stackTrace,
+        '[LocationService] Error getting place details',
+      );
       rethrow;
     }
   }
@@ -105,10 +118,12 @@ class LocationService {
       _talker.info('[LocationService] Searching for: $query');
       final results = await _service.search(
         q: query,
-        p: FmSearchParams(langs: [
-          'en',
-          if (languageCode != 'en' && languageCode != null) languageCode!
-        ]),
+        p: FmSearchParams(
+          langs: [
+            'en',
+            if (languageCode != 'en' && languageCode != null) languageCode!,
+          ],
+        ),
       );
       _talker.info('[LocationService] Found ${results.length} results');
       return results;

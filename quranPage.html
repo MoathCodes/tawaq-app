@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>القرآن الكريم — أوضاع القراءة (مرجع تصميم)</title>
+
+    <!-- UI + Quran fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Scheherazade+New:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      :root {
+        /* Palette */
+        --sand-25: #fcfaf6;
+        --sand-50: #f8f3ea;
+        --sand-100: #f2ebdf;
+        --sand-200: #e9decd;
+        --sand-300: #dfd0bb;
+
+        --ink: #3a2b1f;
+        --ink-70: rgba(58, 43, 31, 0.7);
+        --ink-50: rgba(58, 43, 31, 0.5);
+
+        --gold-500: #c79c6b;
+        --gold-600: #b88a56;
+
+        --teal-600: #2f7a70;
+        --teal-700: #27665e;
+
+        --bg: var(--sand-25);
+        --surface: var(--sand-50);
+        --surface-2: var(--sand-100);
+        --border: #e6dccf;
+
+        --radius-lg: 18px;
+        --radius-md: 14px;
+        --radius-sm: 10px;
+
+        --shadow-sm: 0 6px 18px rgba(58, 43, 31, 0.08);
+        --shadow: 0 12px 28px rgba(58, 43, 31, 0.12);
+        --shadow-lg: 0 20px 44px rgba(58, 43, 31, 0.16);
+
+        --reader-font: "Scheherazade New", "Amiri", "Noto Naskh Arabic",
+          "Traditional Arabic", serif;
+        --ui-font: "Cairo", system-ui, -apple-system, "Segoe UI", Roboto, Arial,
+          "Noto Sans Arabic", sans-serif;
+
+        --ayah-size: 28px;
+        --line-height: 2.2;
+
+        --pane-min-h: 620px;
+        --gutter: 16px;
+      }
+
+      [data-theme="night"] {
+        --bg: #171411;
+        --surface: #1f1a16;
+        --surface-2: #241e19;
+        --border: rgba(255, 255, 255, 0.06);
+
+        --ink: #efe7de;
+        --ink-70: rgba(239, 231, 222, 0.7);
+        --ink-50: rgba(239, 231, 222, 0.5);
+
+        --gold-500: #d3a474;
+        --gold-600: #c2915d;
+
+        --teal-600: #3e9187;
+        --teal-700: #347b73;
+
+        --shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.25);
+        --shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        --shadow-lg: 0 20px 44px rgba(0, 0, 0, 0.45);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        font-family: var(--ui-font);
+        background: radial-gradient(
+            1000px 600px at 100% -200px,
+            rgba(199, 156, 107, 0.14),
+            transparent 60%
+          ),
+          radial-gradient(
+            1100px 700px at -200px 100%,
+            rgba(63, 138, 127, 0.1),
+            transparent 60%
+          ),
+          var(--bg);
+        color: var(--ink);
+      }
+
+      /* Layout */
+      .app {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        gap: 22px;
+        /* Wider canvas by default */
+        width: min(98vw, 1920px);
+        padding: 22px;
+        margin: 0 auto;
+      }
+      .app.wide {
+        width: min(100vw, 2160px);
+      }
+
+      /* Right rail (matches app feel) */
+      .rail {
+        position: sticky;
+        top: 22px;
+        height: calc(100vh - 44px);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .rail .brand {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        border-radius: var(--radius-md);
+        background: linear-gradient(
+            180deg,
+            rgba(199, 156, 107, 0.08),
+            rgba(199, 156, 107, 0.04)
+          ),
+          var(--surface-2);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-sm);
+      }
+      .brand .title {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-weight: 800;
+      }
+      .brand .badge {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(63, 138, 127, 0.12);
+        color: var(--teal-600);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .menu {
+        margin-top: 6px;
+        display: grid;
+        gap: 6px;
+      }
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        color: var(--ink-70);
+        cursor: pointer;
+        transition: 0.15s ease;
+      }
+      .item:hover {
+        background: var(--surface-2);
+        color: var(--ink);
+      }
+      .item.active {
+        background: linear-gradient(
+          145deg,
+          rgba(199, 156, 107, 0.18),
+          rgba(199, 156, 107, 0.06)
+        );
+        color: var(--ink);
+        border: 1px solid var(--gold-500);
+      }
+      .icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(
+          145deg,
+          rgba(63, 138, 127, 0.15),
+          rgba(63, 138, 127, 0.05)
+        );
+        color: var(--teal-700);
+        border: 1px solid var(--border);
+      }
+      .label {
+        font-weight: 700;
+      }
+      .sub {
+        font-size: 12px;
+        opacity: 0.75;
+      }
+      .spacer {
+        flex: 1;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--ink);
+        cursor: pointer;
+      }
+
+      /* Main */
+      .main {
+        display: grid;
+        gap: 16px;
+      }
+      .topbar {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        padding: 14px 16px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 12px;
+      }
+      .breadcrumbs {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        color: var(--ink-70);
+        font-weight: 700;
+      }
+      .breadcrumbs .sep {
+        opacity: 0.4;
+      }
+      .breadcrumbs .current {
+        color: var(--ink);
+      }
+      .top-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        min-width: 260px;
+      }
+      .search input {
+        all: unset;
+        width: 100%;
+        color: var(--ink);
+      }
+      .btn {
+        height: 40px;
+        padding: 0 14px;
+        border-radius: 12px;
+        border: 1px solid var(--gold-500);
+        background: linear-gradient(
+          135deg,
+          rgba(199, 156, 107, 0.25),
+          rgba(199, 156, 107, 0.12)
+        );
+        color: var(--ink);
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .ghost {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+      }
+
+      /* Hero */
+      .hero {
+        position: relative;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        border: 1px solid var(--border);
+        background: linear-gradient(
+            180deg,
+            rgba(199, 156, 107, 0.23),
+            rgba(63, 138, 127, 0.16)
+          ),
+          var(--surface);
+        box-shadow: var(--shadow-lg);
+        padding: clamp(10px, 1.2vw, 16px);
+        transition: padding 0.2s ease;
+      }
+      .hero-canvas {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+            1200px 600px at 80% -100px,
+            rgba(255, 235, 205, 0.2),
+            transparent 60%
+          ),
+          radial-gradient(
+            1000px 600px at -100px 100%,
+            rgba(63, 138, 127, 0.18),
+            transparent 60%
+          );
+        pointer-events: none;
+      }
+      .hero-inner {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 16px;
+        align-items: center;
+      }
+      .overline {
+        color: var(--teal-700);
+        font-weight: 800;
+        letter-spacing: 0.6px;
+        font-size: 12px;
+      }
+      .hero h1 {
+        margin: 0;
+        font-size: clamp(22px, 2.2vw, 28px);
+        line-height: 1.25;
+      }
+      .hero .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 12px;
+        color: var(--ink-70);
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .hero .quick {
+        display: grid;
+        gap: 8px;
+        align-content: start;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--ink);
+        font-weight: 800;
+        font-size: 12px;
+      }
+
+      /* Compact hero when reading (auto on scroll) */
+      .hero.compact {
+        padding: 8px 12px;
+      }
+      .hero.compact h1 {
+        font-size: 20px;
+        line-height: 1.2;
+      }
+      .hero.compact .meta {
+        gap: 6px 10px;
+        font-size: 12px;
+      }
+      .hero.compact .quick { display: none; }
+
+      /* Controls */
+      .controls {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        padding: 12px;
+        display: grid;
+        grid-template-columns: 1.4fr 1.1fr 1.1fr 1.4fr auto;
+        gap: 10px;
+      }
+      .control {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        padding: 12px;
+        border-radius: var(--radius-md);
+      }
+      .control label {
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--ink-70);
+        min-width: 88px;
+      }
+      .select,
+      .range {
+        flex: 1;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 8px 10px;
+        color: var(--ink);
+        font-weight: 700;
+      }
+      .range input[type="range"] {
+        width: 100%;
+        accent-color: var(--teal-600);
+      }
+      .segmented {
+        display: inline-flex;
+        gap: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 4px;
+        border-radius: 999px;
+      }
+      .segmented button {
+        border: 0;
+        padding: 8px 10px;
+        border-radius: 999px;
+        font-weight: 800;
+        color: var(--ink-70);
+        background: transparent;
+        cursor: pointer;
+      }
+      .segmented button.active {
+        background: var(--teal-600);
+        color: #fff;
+      }
+
+      /* Workspace (reading modes) */
+      .workspace {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--gutter);
+        min-height: var(--pane-min-h);
+        align-items: stretch;
+      }
+      .workspace.spread {
+        grid-template-columns: 1fr 14px 1fr;
+        background: radial-gradient(
+            800px 480px at 50% 0,
+            rgba(255, 255, 255, 0.08),
+            transparent 60%
+          ),
+          transparent;
+      }
+      .workspace.split {
+        grid-template-columns: 1fr 14px minmax(360px, 36vw);
+      }
+      /* Horizontal strip: panes laid out sideways with snap */
+      .workspace.horizontal {
+        grid-auto-flow: column;
+        grid-auto-columns: clamp(600px, 46vw, 980px);
+        grid-template-columns: none;
+        overflow-x: auto;
+        overflow-y: visible;
+        scroll-snap-type: x proximity;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+      }
+      .workspace.horizontal .pane {
+        scroll-snap-align: start;
+      }
+      .spine {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        background: linear-gradient(
+          90deg,
+          rgba(0, 0, 0, 0) 0%,
+          rgba(0, 0, 0, 0.08) 50%,
+          rgba(0, 0, 0, 0) 100%
+        );
+        opacity: 0.15;
+      }
+
+      .pane {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        min-height: var(--pane-min-h);
+        overflow: hidden;
+        display: grid;
+        /* Fill content area + sticky audio bar */
+        grid-template-rows: 1fr auto;
+      }
+
+      /* Mushaf page */
+      .mushaf {
+        /* Scrollable reading area inside pane */
+        display: block;
+        overflow: auto;
+        max-height: 100%;
+        padding: 16px;
+        scroll-padding-block-start: 12px;
+        overscroll-behavior: contain;
+        background: linear-gradient(
+            180deg,
+            rgba(199, 156, 107, 0.06),
+            transparent
+          ),
+          var(--surface-2);
+        border-top: 1px solid var(--border);
+      }
+      .surah-header {
+        display: grid;
+        gap: 6px;
+        text-align: center;
+        padding: 12px;
+        border-radius: var(--radius-md);
+        border: 1px dashed var(--border);
+        background: linear-gradient(
+          145deg,
+          rgba(63, 138, 127, 0.08),
+          rgba(199, 156, 107, 0.08)
+        );
+      }
+      .surah-header .name {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: 1px;
+      }
+      .surah-header .info {
+        color: var(--ink-70);
+        font-weight: 700;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+      }
+      .bismillah {
+        text-align: center;
+        opacity: 0.9;
+        margin: 4px 0 6px 0;
+        font-family: var(--reader-font);
+        font-size: 22px;
+      }
+      .ayah {
+        position: relative;
+        font-family: var(--reader-font);
+        font-size: var(--ayah-size);
+        line-height: var(--line-height);
+        padding: 10px 12px;
+        border-radius: 12px;
+        transition: background 0.15s ease, border-color 0.15s ease;
+        border: 1px solid transparent;
+        cursor: pointer;
+      }
+      .ayah:hover {
+        background: var(--surface);
+        border-color: var(--border);
+      }
+      .ayah.selected {
+        background: linear-gradient(
+          145deg,
+          rgba(63, 138, 127, 0.08),
+          rgba(199, 156, 107, 0.08)
+        );
+        border-color: var(--gold-500);
+      }
+      .marker {
+        display: inline-grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        margin-inline: 8px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 14px;
+        color: #fff;
+        background: linear-gradient(145deg, var(--gold-600), var(--gold-500));
+        box-shadow: var(--shadow-sm);
+      }
+      .actions {
+        position: absolute;
+        inset-inline-start: 12px;
+        inset-block-end: 100%;
+        transform: translateY(-10px);
+        display: none;
+        z-index: 5;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 8px;
+        gap: 6px;
+      }
+      .ayah.selected .actions {
+        display: inline-flex;
+      }
+      .icon-btn {
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--ink);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .icon-btn:hover {
+        background: var(--surface);
+      }
+      .audio {
+        position: sticky;
+        bottom: 0;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        padding: 10px 12px;
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 10px;
+      }
+      .timeline {
+        height: 8px;
+        width: 100%;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .timeline .fill {
+        height: 100%;
+        width: 18%;
+        background: linear-gradient(90deg, var(--gold-600), var(--teal-600));
+      }
+      .kbd {
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-weight: 800;
+        font-size: 12px;
+        color: var(--ink-70);
+      }
+
+      /* Tafsir pane */
+      .tafsir {
+        padding: 14px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 10px;
+      }
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface-2);
+      }
+      .panel-head h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+      .tafsir-body {
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        background: var(--surface);
+      }
+      .tafsir-verse {
+        font-family: var(--reader-font);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-inline-start: 4px solid var(--teal-600);
+        padding: 10px 12px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        text-align: center;
+        font-size: 22px;
+      }
+      .tafsir-text {
+        font-weight: 700;
+        line-height: 1.9;
+      }
+      .tafsir-meta {
+        margin-top: 10px;
+        color: var(--ink-70);
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      /* Notes pane */
+      .notes {
+        padding: 14px;
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 10px;
+      }
+      .note-input {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+      }
+      .note-input textarea {
+        resize: vertical;
+        min-height: 90px;
+        max-height: 220px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 10px;
+        background: var(--surface-2);
+        color: var(--ink);
+        font-weight: 700;
+      }
+      .note-list {
+        overflow: auto;
+        display: grid;
+        gap: 10px;
+      }
+      .note-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface);
+        padding: 10px;
+        display: grid;
+        gap: 6px;
+      }
+      .note-card .meta {
+        font-size: 12px;
+        color: var(--ink-70);
+        font-weight: 800;
+      }
+
+      /* Responsive */
+      @media (max-width: 1280px) {
+        .controls {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .app {
+          grid-template-columns: 1fr;
+        }
+        .rail {
+          order: 2;
+          position: static;
+          height: auto;
+        }
+      }
+      @media (max-width: 780px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+        .workspace.spread,
+        .workspace.split {
+          grid-template-columns: 1fr;
+        }
+        .spine {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app" id="appRoot">
+      <!-- MAIN -->
+      <div class="main">
+        <!-- Top bar -->
+        <div class="topbar">
+          <div class="breadcrumbs">
+            <span>الصفحة الرئيسية</span>
+            <span class="sep">›</span>
+            <span>المكتبة</span>
+            <span class="sep">›</span>
+            <span class="current">القرآن الكريم</span>
+          </div>
+
+          <div class="top-actions">
+            <div class="search" title="ابحث في السور أو الكلمات">
+              <span>🔎</span>
+              <input id="globalSearch" placeholder="البحث في القرآن..." />
+            </div>
+            <button class="btn ghost" id="wideBtn">⤢ عرض ممتد</button>
+          </div>
+        </div>
+
+        <!-- Hero -->
+        <section class="hero">
+          <div class="hero-canvas"></div>
+          <div class="hero-inner">
+            <div>
+              <div class="overline">القرآن الكريم</div>
+              <h1 id="heroTitle">سورة الفاتحة</h1>
+              <div class="meta" id="heroMeta">
+                <span>الجزء ١</span>
+                <span>•</span>
+                <span>مكّية</span>
+                <span>•</span>
+                <span>٧ آيات</span>
+                <span>•</span>
+                <span>صفحة ١</span>
+              </div>
+            </div>
+            <div class="hero quick">
+              <div class="chip"><span>🎧</span><span id="reciterChip">القارئ: عبد الباسط</span></div>
+              <div class="chip"><span>📑</span><span>آخر موضع: الفاتحة — آية ٣</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Controls -->
+        <section class="controls" aria-label="أدوات القراءة">
+          <div class="control">
+            <label>القارئ</label>
+            <select id="reciter" class="select">
+              <option value="AbdAlbasit">عبد الباسط عبد الصمد</option>
+              <option value="Minshawi">محمد صديق المنشاوي</option>
+              <option value="AlAfasy">مشاري راشد العفاسي</option>
+              <option value="AlMuaiqly">ماهر المعيقلي</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label>التفسير</label>
+            <select id="tafsirSource" class="select">
+              <option value="tabari">تفسير الطبري</option>
+              <option value="ibnkathir">تفسير ابن كثير</option>
+              <option value="jalalain">تفسير الجلالين</option>
+              <option value="muyassar">التفسير الميسر</option>
+            </select>
+          </div>
+
+          <div class="control">
+            <label>حجم الخط</label>
+            <div class="range">
+              <input id="fontSize" type="range" min="20" max="36" value="28" />
+            </div>
+          </div>
+
+          <div class="control">
+            <label>الوضع</label>
+            <div class="segmented" id="themeSeg">
+              <button class="active" data-theme="sepia">سِبيا</button>
+              <button data-theme="day">نهاري</button>
+              <button data-theme="night">ليلي</button>
+            </div>
+          </div>
+
+          <div class="control">
+            <label>أوضاع القراءة</label>
+            <div class="segmented" id="modeSeg">
+              <button class="active" data-mode="single">صفحة واحدة</button>
+              <button data-mode="spread">صفحتان</button>
+              <button data-mode="q-tafsir">قرآن + تفسير</button>
+              <button data-mode="q-notes">قرآن + ملاحظات</button>
+              <button data-mode="horizontal">تمرير أفقي</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- WORKSPACE -->
+        <section class="workspace" id="workspace" data-mode="single">
+          <!-- Quran (Page A / Right page in spread) -->
+          <div class="pane" id="paneQuranA">
+            <div class="mushaf" id="mushafA">
+              <div class="surah-header">
+                <div class="name" id="surahNameA">سورة الفاتحة</div>
+                <div class="info" id="surahInfoA">
+                  <span>مكّية</span><span>—</span><span>٧ آيات</span
+                  ><span>—</span><span>صفحة ١</span>
+                </div>
+              </div>
+
+              <div class="bismillah" id="bismillahA">
+                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+              </div>
+
+              <div class="ayah" data-ayah="1:1">
+                <span class="marker">١</span> الْحَمْدُ لِلَّهِ رَبِّ
+                الْعَالَمِينَ
+                <div class="actions">
+                  <button class="icon-btn" data-action="tafsir">📖 تفسير</button>
+                  <button class="icon-btn" data-action="play">🔊 تشغيل</button>
+                  <button class="icon-btn" data-action="bookmark">🔖 حفظ</button>
+                  <button class="icon-btn" data-action="note">📝 ملاحظة</button>
+                </div>
+              </div>
+
+              <div class="ayah" data-ayah="1:2">
+                <span class="marker">٢</span> الرَّحْمَٰنِ الرَّحِيمِ
+                <div class="actions">
+                  <button class="icon-btn" data-action="tafsir">📖 تفسير</button>
+                  <button class="icon-btn" data-action="play">🔊 تشغيل</button>
+                  <button class="icon-btn" data-action="bookmark">🔖 حفظ</button>
+                  <button class="icon-btn" data-action="note">📝 ملاحظة</button>
+                </div>
+              </div>
+
+              <div class="ayah" data-ayah="1:3">
+                <span class="marker">٣</span> مَالِكِ يَوْمِ الدِّينِ
+                <div class="actions">
+                  <button class="icon-btn" data-action="tafsir">📖 تفسير</button>
+                  <button class="icon-btn" data-action="play">🔊 تشغيل</button>
+                  <button class="icon-btn" data-action="bookmark">🔖 حفظ</button>
+                  <button class="icon-btn" data-action="note">📝 ملاحظة</button>
+                </div>
+              </div>
+
+              <div class="ayah" data-ayah="1:4">
+                <span class="marker">٤</span> إِيَّاكَ نَعْبُدُ
+                وَإِيَّاكَ نَسْتَعِينُ
+                <div class="actions">
+                  <button class="icon-btn" data-action="tafsir">📖 تفسير</button>
+                  <button class="icon-btn" data-action="play">🔊 تشغيل</button>
+                  <button class="icon-btn" data-action="bookmark">🔖 حفظ</button>
+                  <button class="icon-btn" data-action="note">📝 ملاحظة</button>
+                </div>
+              </div>
+
+              <div class="ayah" data-ayah="1:5">
+                <span class="marker">٥</span> اهْدِنَا الصِّرَاطَ
+                الْمُسْتَقِيمَ
+                <div class="actions">
+                  <button class="icon-btn" data-action="tafsir">📖 تفسير</button>
+                  <button class="icon-btn" data-action="play">🔊 تشغيل</button>
+                  <button class="icon-btn" data-action="bookmark">🔖 حفظ</button>
+                  <button class="icon-btn" data-action="note">📝 ملاحظة</button>
+                </div>
+              </div>
+
+              <div class="ayah" data-ayah="1:6">
+                <span class="marker">٦</span> صِرَاطَ الَّذِينَ أَنْعَمْتَ
+                عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ
+                <div class="actions">
+                  <button class="icon-btn" data-action="tafsir">📖 تفسير</button>
+                  <button class="icon-btn" data-action="play">🔊 تشغيل</button>
+                  <button class="icon-btn" data-action="bookmark">🔖 حفظ</button>
+                  <button class="icon-btn" data-action="note">📝 ملاحظة</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Audio (shared) -->
+            <div class="audio">
+              <div class="timeline"><div class="fill" id="progress"></div></div>
+              <button class="btn ghost" id="playBtn">▶️ تشغيل</button>
+              <div style="display:flex;gap:8px;align-items:center">
+                <span class="kbd">← السابق</span>
+                <span class="kbd">→ التالي</span>
+                <span class="kbd">Esc</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spine between panes -->
+          <div class="spine" id="spine" style="display: none"></div>
+
+          <!-- Quran (Page B / Left page in spread) -->
+          <div class="pane" id="paneQuranB" style="display: none">
+            <div class="mushaf" id="mushafB">
+              <div class="surah-header">
+                <div class="name" id="surahNameB">سورة البقرة</div>
+                <div class="info" id="surahInfoB">
+                  <span>مدنيّة</span><span>—</span><span>٣ آيات (عرض)</span>
+                  <span>—</span><span>صفحة ٢</span>
+                </div>
+              </div>
+
+              <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+
+              <div class="ayah" data-ayah="2:1">
+                <span class="marker">١</span> الم
+                <div class="actions">
+                  <button class="icon-btn" data-action="tafsir">📖 تفسير</button>
+                  <button class="icon-btn" data-action="play">🔊 تشغيل</button>
+                  <button class="icon-btn" data-action="bookmark">🔖 حفظ</button>
+                  <button class="icon-btn" data-action="note">📝 ملاحظة</button>
+                </div>
+              </div>
+
+              <div class="ayah" data-ayah="2:2">
+                <span class="marker">٢</span> ذَٰلِكَ الْكِتَابُ لَا رَيْبَ
+                فِيهِ هُدًى لِّلْمُتَّقِينَ
+                <div class="actions">
+                  <button class="icon-btn" data-action="tafsir">📖 تفسير</button>
+                  <button class="icon-btn" data-action="play">🔊 تشغيل</button>
+                  <button class="icon-btn" data-action="bookmark">🔖 حفظ</button>
+                  <button class="icon-btn" data-action="note">📝 ملاحظة</button>
+                </div>
+              </div>
+
+              <div class="ayah" data-ayah="2:3">
+                <span class="marker">٣</span> الَّذِينَ يُؤْمِنُونَ
+                بِالْغَيْبِ وَيُقِيمُونَ الصَّلَاةَ وَمِمَّا رَزَقْنَاهُمْ
+                يُنفِقُونَ
+                <div class="actions">
+                  <button class="icon-btn" data-action="tafsir">📖 تفسير</button>
+                  <button class="icon-btn" data-action="play">🔊 تشغيل</button>
+                  <button class="icon-btn" data-action="bookmark">🔖 حفظ</button>
+                  <button class="icon-btn" data-action="note">📝 ملاحظة</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="audio">
+              <div class="timeline"><div class="fill" style="width: 0%"></div></div>
+              <div class="kbd">صفحة يسار</div>
+              <div class="kbd">عرض تجريبي</div>
+            </div>
+          </div>
+
+          <!-- Tafsir -->
+          <div class="pane" id="paneTafsir" style="display: none">
+            <div class="tafsir">
+              <div class="panel-head">
+                <h3>التفسير</h3>
+                <div class="segmented" id="tafSeg" style="margin-inline-start:auto">
+                  <button class="active" data-src="tabari">الطبري</button>
+                  <button data-src="ibnkathir">ابن كثير</button>
+                  <button data-src="muyassar">الميسر</button>
+                </div>
+              </div>
+              <div class="tafsir-body" id="tafsirBody">
+                <div class="tafsir-verse" id="tafsirVerse">
+                  الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
+                </div>
+                <div class="tafsir-text" id="tafsirText">
+                  الحمدُ هو الثناء على الله لِما له من الكمال والجلال، وهو رب
+                  العالمين: خالقهم ومدبّر أمرهم.
+                </div>
+                <div class="tafsir-meta" id="tafsirMeta">المصدر: الطبري</div>
+              </div>
+            </div>
+
+            <div class="audio">
+              <div class="timeline"><div class="fill" style="width: 0%"></div></div>
+              <div class="kbd">لوحة التفسير</div>
+              <div class="kbd">قراءة فقط</div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div class="pane" id="paneNotes" style="display: none">
+            <div class="notes">
+              <div class="panel-head">
+                <h3>الملاحظات</h3>
+                <div class="kbd" id="selectedAyahHint">بدون آية محددة</div>
+              </div>
+              <div class="note-input">
+                <textarea id="noteText" placeholder="اكتب ملاحظتك هنا..."></textarea>
+                <button class="btn" id="addNote">حفظ</button>
+              </div>
+              <div class="note-list" id="noteList"></div>
+            </div>
+
+            <div class="audio">
+              <div class="timeline"><div class="fill" style="width: 0%"></div></div>
+              <div class="kbd">لوحة الملاحظات</div>
+              <div class="kbd">محفوظ محليًا</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- RAIL -->
+      <aside class="rail" aria-label="قائمة التطبيق">
+        <div class="brand">
+          <div class="title"><span style="font-size:22px">🕋</span><span>تطبيق المسلم</span></div>
+          <span class="badge">سطح المكتب</span>
+        </div>
+
+        <div class="menu">
+          <div class="item">
+            <div class="icon">🕰️</div>
+            <div>
+              <div class="label">مواقيت الصلاة</div>
+              <div class="sub">المدينة المنوّرة</div>
+            </div>
+          </div>
+          <div class="item active">
+            <div class="icon">📖</div>
+            <div>
+              <div class="label">القرآن الكريم</div>
+              <div class="sub">قراءة — استماع — تفسير</div>
+            </div>
+          </div>
+          <div class="item">
+            <div class="icon">🛡️</div>
+            <div>
+              <div class="label">حصن المسلم</div>
+              <div class="sub">أذكار وأدعية</div>
+            </div>
+          </div>
+          <div class="item">
+            <div class="icon">🧠</div>
+            <div>
+              <div class="label">الأذكار</div>
+              <div class="sub">سبحة — تذكير</div>
+            </div>
+          </div>
+          <div class="item">
+            <div class="icon">📜</div>
+            <div>
+              <div class="label">الحديث</div>
+              <div class="sub">صحيح — حسن</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="pill" id="themeToggle"><span>🌙</span><span>الوضع الليلي</span></div>
+        <div class="pill"><span>⚙️</span><span>الإعدادات</span></div>
+      </aside>
+    </div>
+
+    <script>
+      // Demo tafsir data
+      const TAFSIR = {
+        "1:1": {
+          verse: "الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ",
+          text:
+            "الحمدُ هو الثناءُ على الله لِما له من الكمال والجلال، وهو ربُّ العالمين: خالقُهم ومدبِّرُ أمرهم.",
+          source: "الطبري",
+        },
+        "1:2": {
+          verse: "الرَّحْمٰنِ الرَّحِيمِ",
+          text:
+            "اسمان يدلاّن على سعة رحمته سبحانه: رحمة عامة ورحـمة خاصة بأوليائه.",
+          source: "الميسر",
+        },
+        "1:3": {
+          verse: "مَالِكِ يَوْمِ الدِّينِ",
+          text:
+            "المالك المتصرف يوم الجزاء والحساب، إليه المصير وبأمره الحكم.",
+          source: "ابن كثير",
+        },
+        "1:4": {
+          verse: "إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ",
+          text:
+            "إخلاص العبادة والاستعانة لله وحده؛ كمالُ الذل مع كمال المحبّة.",
+          source: "الجلالين",
+        },
+        "1:5": {
+          verse: "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ",
+          text:
+            "مسألةٌ لله هدايةُ الثبات والزيادة على طريق الحق، وهو الإسلام.",
+          source: "الميسر",
+        },
+        "1:6": {
+          verse:
+            "صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ",
+          text:
+            "طريق المهتدين، لا طريق من علموا الحق وتركوه، ولا من جهلوا الحق فضلّوا.",
+          source: "ابن كثير",
+        },
+      };
+
+      // Elements
+      const appRoot = document.getElementById("appRoot");
+      const wideBtn = document.getElementById("wideBtn");
+      const themeToggle = document.getElementById("themeToggle");
+      const themeSeg = document.getElementById("themeSeg");
+      const modeSeg = document.getElementById("modeSeg");
+      const workspace = document.getElementById("workspace");
+      const spine = document.getElementById("spine");
+
+      const paneQuranA = document.getElementById("paneQuranA");
+      const paneQuranB = document.getElementById("paneQuranB");
+      const paneTafsir = document.getElementById("paneTafsir");
+      const paneNotes = document.getElementById("paneNotes");
+
+      const mushafA = document.getElementById("mushafA");
+      const mushafB = document.getElementById("mushafB");
+  const hero = document.querySelector(".hero");
+
+      const reciter = document.getElementById("reciter");
+      const reciterChip = document.getElementById("reciterChip");
+      const fontSize = document.getElementById("fontSize");
+      const globalSearch = document.getElementById("globalSearch");
+
+      const tafsirVerse = document.getElementById("tafsirVerse");
+      const tafsirText = document.getElementById("tafsirText");
+      const tafsirMeta = document.getElementById("tafsirMeta");
+
+      const playBtn = document.getElementById("playBtn");
+      const progress = document.getElementById("progress");
+
+      const selectedAyahHint = document.getElementById("selectedAyahHint");
+      const noteText = document.getElementById("noteText");
+      const noteList = document.getElementById("noteList");
+      const addNoteBtn = document.getElementById("addNote");
+
+      // Width toggle
+      wideBtn.onclick = () => appRoot.classList.toggle("wide");
+
+      // Theme
+      themeToggle.onclick = () => {
+        const isNight = appRoot.getAttribute("data-theme") === "night";
+        if (isNight) appRoot.removeAttribute("data-theme");
+        else appRoot.setAttribute("data-theme", "night");
+      };
+      themeSeg.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        themeSeg.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        if (btn.dataset.theme === "night") appRoot.setAttribute("data-theme", "night");
+        else appRoot.removeAttribute("data-theme");
+      });
+
+      // Reading modes
+      modeSeg.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        modeSeg.querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        applyMode(btn.dataset.mode);
+      });
+
+      function applyMode(mode) {
+        workspace.dataset.mode = mode;
+        // Reset visibility
+        paneQuranA.style.display = "grid";
+        spine.style.display = "none";
+        paneQuranB.style.display = "none";
+        paneTafsir.style.display = "none";
+        paneNotes.style.display = "none";
+
+        // Remove any inline grid template overrides; rely on CSS classes
+        workspace.style.removeProperty("grid-template-columns");
+        workspace.classList.remove("spread", "split", "horizontal");
+
+        if (mode === "single") {
+          // single page; nothing else to show
+        } else if (mode === "spread") {
+          paneQuranB.style.display = "grid";
+          spine.style.display = "";
+          workspace.classList.add("spread");
+        } else if (mode === "q-tafsir") {
+          paneTafsir.style.display = "grid";
+          spine.style.display = "";
+          workspace.classList.add("split");
+        } else if (mode === "q-notes") {
+          paneNotes.style.display = "grid";
+          spine.style.display = "";
+          workspace.classList.add("split");
+          renderNotes();
+        } else if (mode === "horizontal") {
+          paneQuranB.style.display = "grid";
+          spine.style.display = "none";
+          workspace.classList.add("horizontal");
+          // Reset horizontal scroll position
+          workspace.scrollTo({ left: 0, behavior: "auto" });
+        }
+      }
+      applyMode("single");
+
+      // Font size
+      fontSize.addEventListener("input", (e) => {
+        document.documentElement.style.setProperty(
+          "--ayah-size",
+          `${e.target.value}px`
+        );
+      });
+
+      // Reciter label
+      reciter.addEventListener("change", () => {
+        const first = reciter.options[reciter.selectedIndex].textContent.split(" ")[0];
+        reciterChip.textContent = `القارئ: ${first}`;
+      });
+
+      // Global search (demo highlight)
+      globalSearch.addEventListener("input", (e) => {
+        const q = e.target.value.trim();
+        [mushafA, mushafB].forEach((m) => m && highlightOccurrences(m, q));
+      });
+      function highlightOccurrences(container, query) {
+        // Clear previous marks
+        container.querySelectorAll('mark[data-hl="1"]').forEach((m) => {
+          const parent = m.parentNode;
+          while (m.firstChild) parent.insertBefore(m.firstChild, m);
+          parent.removeChild(m);
+        });
+        if (!query) return;
+        const q = query.toLocaleLowerCase();
+        const walker = document.createTreeWalker(
+          container,
+          NodeFilter.SHOW_TEXT,
+          {
+            acceptNode: (node) => {
+              // Skip text nodes inside controls/actions/meta
+              const p = node.parentElement;
+              if (!p) return NodeFilter.FILTER_REJECT;
+              if (
+                p.closest('.actions, .icon-btn, .marker, .panel-head, .timeline, .audio')
+              )
+                return NodeFilter.FILTER_REJECT;
+              if (!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+              return NodeFilter.FILTER_ACCEPT;
+            },
+          },
+          false
+        );
+        const toProcess = [];
+        while (walker.nextNode()) toProcess.push(walker.currentNode);
+        toProcess.forEach((textNode) => {
+          const text = textNode.nodeValue;
+          const low = text.toLocaleLowerCase();
+          let idx = 0;
+          let cursor = 0;
+          const frag = document.createDocumentFragment();
+          while ((idx = low.indexOf(q, cursor)) !== -1 && q.length) {
+            if (idx > cursor) frag.appendChild(document.createTextNode(text.slice(cursor, idx)));
+            const mark = document.createElement('mark');
+            mark.setAttribute('data-hl', '1');
+            mark.style.background = 'rgba(255,221,87,.6)';
+            mark.style.padding = '2px 4px';
+            mark.style.borderRadius = '6px';
+            mark.textContent = text.slice(idx, idx + q.length);
+            frag.appendChild(mark);
+            cursor = idx + q.length;
+          }
+          if (cursor === 0) return; // no changes
+          if (cursor < text.length) frag.appendChild(document.createTextNode(text.slice(cursor)));
+          textNode.parentNode.replaceChild(frag, textNode);
+        });
+      }
+
+      // Ayah interactions
+      [mushafA, mushafB].forEach((m) => {
+        m.addEventListener("click", (e) => {
+          const ayah = e.target.closest(".ayah");
+          if (!ayah) return;
+          m.querySelectorAll(".ayah").forEach((a) => a.classList.remove("selected"));
+          ayah.classList.add("selected");
+          selectedAyahHint.textContent = `موضع: ${ayah.dataset.ayah}`;
+        });
+
+        m.addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-action]");
+          if (!btn) return;
+          const ayahEl = e.target.closest(".ayah");
+          const id = ayahEl?.dataset.ayah;
+          const action = btn.dataset.action;
+          if (action === "tafsir") {
+            openTafsir(id);
+            applyMode("q-tafsir");
+            // Reflect active button in segmented control
+            modeSeg.querySelectorAll("button").forEach((b) =>
+              b.classList.toggle("active", b.dataset.mode === "q-tafsir")
+            );
+          } else if (action === "bookmark") {
+            addBookmark(id);
+          } else if (action === "note") {
+            applyMode("q-notes");
+            modeSeg.querySelectorAll("button").forEach((b) =>
+              b.classList.toggle("active", b.dataset.mode === "q-notes")
+            );
+            selectedAyahHint.textContent = `ملاحظة لـ ${id}`;
+            noteText.focus();
+          } else if (action === "play") {
+            playBtn.click();
+          }
+        });
+      });
+
+      // Tafsir
+      function openTafsir(ayahId = "1:1") {
+        const data = TAFSIR[ayahId] || TAFSIR["1:1"];
+        tafsirVerse.textContent = data.verse;
+        tafsirText.textContent = data.text;
+        tafsirMeta.textContent = `المصدر: ${data.source}`;
+      }
+      document.getElementById("tafSeg").addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        document
+          .querySelectorAll("#tafSeg button")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        // For demo, just swap source label
+        tafsirMeta.textContent = `المصدر: ${btn.textContent}`;
+      });
+
+      // Notes (local)
+      function renderNotes() {
+        const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+        noteList.innerHTML = "";
+        if (!notes.length) {
+          const empty = document.createElement("div");
+          empty.style.color = "var(--ink-70)";
+          empty.style.fontWeight = "800";
+          empty.textContent = "لا توجد ملاحظات بعد.";
+          noteList.appendChild(empty);
+          return;
+        }
+        notes.forEach((n, i) => {
+          const card = document.createElement("div");
+          card.className = "note-card";
+          card.innerHTML = `
+            <div class="meta">${n.ayah || "عام"} — ${new Date(
+            n.time
+          ).toLocaleString("ar-SA")}</div>
+            <div>${n.text}</div>
+            <div style="display:flex;gap:8px;margin-top:6px">
+              <button class="icon-btn" data-i="${i}" data-act="goto">انتقال</button>
+              <button class="icon-btn" data-i="${i}" data-act="del">حذف</button>
+            </div>
+          `;
+          noteList.appendChild(card);
+        });
+
+        noteList.onclick = (e) => {
+          const btn = e.target.closest("button[data-i]");
+          if (!btn) return;
+          const idx = +btn.dataset.i;
+          const act = btn.dataset.act;
+          const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+          if (act === "del") {
+            notes.splice(idx, 1);
+            localStorage.setItem("notes", JSON.stringify(notes));
+            renderNotes();
+          } else if (act === "goto") {
+            const id = notes[idx]?.ayah;
+            if (!id) return;
+            const el =
+              document.querySelector(`.ayah[data-ayah="${id}"]`) || null;
+            if (el) {
+              el.classList.add("selected");
+              el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }
+        };
+      }
+      addNoteBtn.onclick = () => {
+        const text = noteText.value.trim();
+        if (!text) return;
+        const notes = JSON.parse(localStorage.getItem("notes") || "[]");
+        notes.unshift({
+          text,
+          ayah: selectedAyahHint.textContent.includes(":")
+            ? selectedAyahHint.textContent.replace("موضع: ", "")
+            : "",
+          time: Date.now(),
+        });
+        localStorage.setItem("notes", JSON.stringify(notes.slice(0, 100)));
+        noteText.value = "";
+        renderNotes();
+      };
+
+      // Audio demo
+      let playing = false;
+      let pct = 18;
+      let t;
+      playBtn.addEventListener("click", () => {
+        playing = !playing;
+        playBtn.textContent = playing ? "⏸️ إيقاف" : "▶️ تشغيل";
+        if (playing) {
+          t = setInterval(() => {
+            pct = (pct + 2) % 100;
+            progress.style.width = pct + "%";
+          }, 700);
+        } else clearInterval(t);
+      });
+
+      // Keyboard
+      function visibleHorizontalPanes() {
+        // Only panes currently displayed
+        return [paneQuranA, paneQuranB, paneTafsir, paneNotes].filter(
+          (el) => el && getComputedStyle(el).display !== "none"
+        );
+      }
+      function mostVisiblePaneIndex(panes) {
+        const wr = workspace.getBoundingClientRect();
+        let bestIdx = 0;
+        let bestWidth = -1;
+        panes.forEach((el, i) => {
+          const r = el.getBoundingClientRect();
+          const overlap = Math.max(0, Math.min(r.right, wr.right) - Math.max(r.left, wr.left));
+          if (overlap > bestWidth) {
+            bestWidth = overlap;
+            bestIdx = i;
+          }
+        });
+        return bestIdx;
+      }
+      function scrollHorizontalBy(delta) {
+        const panes = visibleHorizontalPanes();
+        if (!panes.length) return;
+        const cur = mostVisiblePaneIndex(panes);
+        let next = Math.max(0, Math.min(panes.length - 1, cur + delta));
+        if (next === cur && delta !== 0) return;
+        panes[next].scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        // Dismiss selection
+        if (e.key === "Escape") {
+          document.querySelectorAll(".ayah.selected").forEach((a) => a.classList.remove("selected"));
+          selectedAyahHint.textContent = "بدون آية محددة";
+          return;
+        }
+        // Toggle wide
+        if (e.key === "w" || e.key === "W") {
+          wideBtn.click();
+          return;
+        }
+        // Horizontal paging (avoid when typing)
+        const typingTarget = e.target.closest?.("input, textarea, [contenteditable='true']");
+        const isHorizontal = workspace.classList.contains("horizontal") || workspace.dataset.mode === "horizontal";
+        if (!typingTarget && isHorizontal && (e.key === "ArrowRight" || e.key === "ArrowLeft")) {
+          e.preventDefault();
+          const delta = e.key === "ArrowRight" ? 1 : -1; // → التالي ، ← السابق
+          scrollHorizontalBy(delta);
+        }
+      });
+
+      // Auto-compact hero: shrink when main reading area is scrolled
+      function bindHeroCompaction(scroller) {
+        if (!scroller) return;
+        let compact = false;
+        scroller.addEventListener("scroll", () => {
+          const y = scroller.scrollTop;
+          const shouldCompact = y > 40; // threshold
+          if (shouldCompact !== compact) {
+            compact = shouldCompact;
+            hero.classList.toggle("compact", compact);
+          }
+        });
+      }
+      bindHeroCompaction(mushafA);
+      bindHeroCompaction(mushafB);
+    </script>
+  </body>
+</html>

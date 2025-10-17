@@ -15,19 +15,20 @@ class AppThemeSelector extends StatelessWidget {
       runSpacing: 8,
       alignment: WrapAlignment.center,
       children: [
-        ...AppPalette.values.map((e) => _SingleColorCard(
-              appPalette: e,
-              key: ValueKey(e.key),
-            )),
+        ...AppPalette.values.map(
+          (e) => _SingleColorCard(
+            appPalette: e,
+            key: ValueKey(e.key),
+          ),
+        ),
       ],
     );
   }
 }
 
 class _SingleColorCard extends ConsumerStatefulWidget {
+  const _SingleColorCard({required this.appPalette, super.key});
   final AppPalette appPalette;
-
-  const _SingleColorCard({super.key, required this.appPalette});
 
   @override
   ConsumerState<_SingleColorCard> createState() => _SingleColorCardState();
@@ -40,131 +41,130 @@ class _SingleColorCardState extends ConsumerState<_SingleColorCard> {
     const resolver = resolveColorScheme;
     final lightTheme = resolver(widget.appPalette, ThemeMode.light);
     final darkTheme = resolver(widget.appPalette, ThemeMode.dark);
-    final selectedTheme =
-        ref.watch(themeNotifierProvider).valueOrNull ?? defaultTheme;
+    final selectedTheme = ref.watch(themeProvider).value ?? defaultTheme;
     final isSelected = selectedTheme.appPalette == widget.appPalette;
     final isDarkThemeSelected = selectedTheme.themeMode == ThemeMode.dark;
 
     return AnimatedScale(
-        duration: const Duration(milliseconds: 160),
-        scale: _isHovered ? 1.05 : 1,
-        child: MouseClick(
-          onExit: (p0) {
-            setState(() {
-              _isHovered = false;
-            });
-          },
-          onHover: (p0) {
-            setState(() {
-              _isHovered = true;
-            });
-          },
-          onClick: () {
-            if (isSelected) {
-              ref.read(themeNotifierProvider.notifier).setThemeMode(
+      duration: const Duration(milliseconds: 160),
+      scale: _isHovered ? 1.05 : 1,
+      child: MouseClick(
+        onExit: (p0) {
+          setState(() {
+            _isHovered = false;
+          });
+        },
+        onHover: (p0) {
+          setState(() {
+            _isHovered = true;
+          });
+        },
+        onClick: () {
+          if (isSelected) {
+            ref
+                .read(themeProvider.notifier)
+                .setThemeMode(
                   isSelected && isDarkThemeSelected
                       ? ThemeMode.light
-                      : ThemeMode.dark);
-            } else {
-              ref
-                  .read(themeNotifierProvider.notifier)
-                  .setPalette(widget.appPalette);
-              ref
-                  .read(themeNotifierProvider.notifier)
-                  .setThemeMode(ThemeMode.light);
-            }
-          },
-          child: Container(
-              width: 180,
-              height: 120,
-              decoration: BoxDecoration(
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: selectedTheme.colorScheme.colors.primary
-                              .withAlpha(60),
-                          blurRadius: 12,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-                color: selectedTheme.colorScheme.colors.background,
-                border: Border.all(
-                  color: isSelected
-                      ? selectedTheme.colorScheme.colors.primary
-                      : selectedTheme.colorScheme.colors.secondaryForeground
-                          .withAlpha(100),
-                  width: 1,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              padding: const EdgeInsets.all(8),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      : ThemeMode.dark,
+                );
+          } else {
+            ref.read(themeProvider.notifier).setPalette(widget.appPalette);
+            ref.read(themeProvider.notifier).setThemeMode(ThemeMode.light);
+          }
+        },
+        child: Container(
+          width: 180,
+          height: 120,
+          decoration: BoxDecoration(
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: selectedTheme.colorScheme.colors.primary.withAlpha(
+                        60,
+                      ),
+                      blurRadius: 12,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+            color: selectedTheme.colorScheme.colors.background,
+            border: Border.all(
+              color: isSelected
+                  ? selectedTheme.colorScheme.colors.primary
+                  : selectedTheme.colorScheme.colors.secondaryForeground
+                        .withAlpha(100),
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Text(widget.appPalette.getLocaleName(context.l10n)),
+              Row(
+                spacing: 5,
                 children: [
-                  Text(widget.appPalette.getLocaleName(context.l10n)),
-                  Row(
-                    spacing: 5,
-                    children: [
-                      Expanded(
-                        child: MouseClick(
-                          onClick: () {
-                            ref
-                                .read(themeNotifierProvider.notifier)
-                                .setPalette(widget.appPalette);
-                            ref
-                                .read(themeNotifierProvider.notifier)
-                                .setThemeMode(ThemeMode.light);
-                          },
-                          child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                border: isSelected && !isDarkThemeSelected
-                                    ? Border.all(
-                                        color: lightTheme.colors.primary)
-                                    : null,
-                                color: lightTheme.colors.background,
-                              ),
-                              padding: const EdgeInsets.all(12),
-                              child: Text(
-                                context.l10n.light,
-                                style:
-                                    TextStyle(color: lightTheme.colors.primary),
-                                textAlign: TextAlign.center,
-                              )),
+                  Expanded(
+                    child: MouseClick(
+                      onClick: () {
+                        ref
+                            .read(themeProvider.notifier)
+                            .setPalette(widget.appPalette);
+                        ref
+                            .read(themeProvider.notifier)
+                            .setThemeMode(ThemeMode.light);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: isSelected && !isDarkThemeSelected
+                              ? Border.all(color: lightTheme.colors.primary)
+                              : null,
+                          color: lightTheme.colors.background,
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          context.l10n.light,
+                          style: TextStyle(color: lightTheme.colors.primary),
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                      Expanded(
-                        child: MouseClick(
-                          onClick: () {
-                            ref
-                                .read(themeNotifierProvider.notifier)
-                                .setPalette(widget.appPalette);
-                            ref
-                                .read(themeNotifierProvider.notifier)
-                                .setThemeMode(ThemeMode.dark);
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              border: isSelected && isDarkThemeSelected
-                                  ? Border.all(color: darkTheme.colors.primary)
-                                  : null,
-                              color: darkTheme.colors.background,
-                            ),
-                            padding: const EdgeInsets.all(12),
-                            child: Text(
-                              context.l10n.dark,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: darkTheme.colors.primary),
-                            ),
-                          ),
+                    ),
+                  ),
+                  Expanded(
+                    child: MouseClick(
+                      onClick: () {
+                        ref
+                            .read(themeProvider.notifier)
+                            .setPalette(widget.appPalette);
+                        ref
+                            .read(themeProvider.notifier)
+                            .setThemeMode(ThemeMode.dark);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: isSelected && isDarkThemeSelected
+                              ? Border.all(color: darkTheme.colors.primary)
+                              : null,
+                          color: darkTheme.colors.background,
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        child: Text(
+                          context.l10n.dark,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: darkTheme.colors.primary),
                         ),
                       ),
-                    ],
-                  )
+                    ),
+                  ),
                 ],
-              )),
-        ));
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

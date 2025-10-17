@@ -15,9 +15,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 
 void main() {
-  setUpAll(() {
-    tz.initializeTimeZones();
-  });
+  setUpAll(tz.initializeTimeZones);
 
   group('Prayer Card Decision Tests', () {
     late Location location;

@@ -2,19 +2,39 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
 
-enum DefaultBreakpoint { mobile, tablet, desktop }
+/// The default breakpoint to use if no child is provided for the current
+/// screen size.
+enum DefaultBreakpoint { 
+  /// The mobile breakpoint.
+  mobile, 
+  /// The tablet breakpoint.
+  tablet, 
+  /// The desktop breakpoint.
+  desktop }
 
+/// A widget that displays a different child depending on the screen size.
 class ResponsiveContainer extends ConsumerWidget {
+  /// Creates a responsive container.
+  const ResponsiveContainer({
+    super.key,
+    this.desktopChild,
+    this.mobileChild,
+    this.tabletChild,
+    this.defaultBreakpoint = DefaultBreakpoint.desktop,
+  });
+
+  /// The widget to display on desktop screens.
   final Widget? desktopChild;
+
+  /// The widget to display on mobile screens.
   final Widget? mobileChild;
+
+  /// The widget to display on tablet screens.
   final Widget? tabletChild;
+
+  /// The default breakpoint to use if no child is provided for the current
+  /// screen size.
   final DefaultBreakpoint defaultBreakpoint;
-  const ResponsiveContainer(
-      {super.key,
-      this.desktopChild,
-      this.mobileChild,
-      this.tabletChild,
-      this.defaultBreakpoint = DefaultBreakpoint.desktop});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,17 +49,20 @@ class ResponsiveContainer extends ConsumerWidget {
         DefaultBreakpoint.desktop => desktopChild!,
       };
     } catch (e, stackTrace) {
-      ref.read(talkerNotifierProvider).handle(e, stackTrace);
+      ref.read(talkerProvider).handle(e, stackTrace);
       throw Exception('Default breakpoint child cannot be null');
     }
   }
 
+  /// Whether the current screen size is a desktop screen.
   static bool isDesktop(BuildContext context) =>
       MediaQuery.of(context).size.width >= 1024;
 
+  /// Whether the current screen size is a mobile screen.
   static bool isMobile(BuildContext context) =>
       MediaQuery.of(context).size.width < 767;
 
+  /// Whether the current screen size is a tablet screen.
   static bool isTablet(BuildContext context) =>
       MediaQuery.of(context).size.width >= 768 &&
       MediaQuery.of(context).size.width < 1024;

@@ -14,7 +14,7 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
   /// This method provides an optimistic update to the UI.
   Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
     final service = ref.read(prayerServiceProvider);
-    final log = ref.read(talkerNotifierProvider);
+    final log = ref.read(talkerProvider);
 
     // 1. Optimistic Update: Update the local state immediately for a responsive UI.
     final previousState = state;
@@ -28,10 +28,13 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
       await service.addOrUpdateCompletion(completion);
 
       // 3. Invalidate dependent providers upon success.
-      ref.invalidate(prayerAnalyticsNotifierProvider);
+      ref.invalidate(prayerAnalyticsProvider);
     } catch (e, s) {
-      log.handle(e, s,
-          '[PrayerCompletionNotifier] Error adding or updating completion');
+      log.handle(
+        e,
+        s,
+        '[PrayerCompletionNotifier] Error adding or updating completion',
+      );
       // If the database update fails, revert to the previous state.
       state = previousState;
       // Optionally, show an error message to the user.
@@ -42,8 +45,9 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
   Map<Prayer, PrayerCompletion> build() {
     // Watch the completions for the current date
     final currentTime = ref.watch(currentLocationTimeProvider);
-    final completionsAsync =
-        ref.watch(prayerCompletionsForDateProvider(currentTime));
+    final completionsAsync = ref.watch(
+      prayerCompletionsForDateProvider(currentTime),
+    );
 
     // Transform the list into a map for efficient lookups
     return completionsAsync.when(

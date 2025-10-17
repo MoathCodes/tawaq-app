@@ -56,211 +56,197 @@ FButtonStyle buttonStyle({
   required FStyle style,
   required Color color,
   required Color foregroundColor,
-}) =>
-    FButtonStyle(
-      decoration: FWidgetStateMap({
-        WidgetState.disabled: BoxDecoration(
-          borderRadius: style.borderRadius,
-          color: colors.disable(color),
-        ),
-        WidgetState.hovered | WidgetState.pressed: BoxDecoration(
-          borderRadius: style.borderRadius,
-          color: colors.hover(color),
-          border: Border.all(
-            color: color.withValues(alpha: 1),
-            width: style.borderWidth,
-          ),
-        ),
-        WidgetState.any: BoxDecoration(
-          borderRadius: style.borderRadius,
-          border: Border.all(
-            color: foregroundColor.withValues(alpha: .5),
-            width: style.borderWidth,
-          ),
-          // color: color,
-        ),
-      }),
-      focusedOutlineStyle: style.focusedOutlineStyle,
-      contentStyle: _buttonContentStyle(
-        typography: typography,
-        enabled: foregroundColor,
-        disabled: colors.disable(foregroundColor, colors.disable(color)),
+}) => FButtonStyle(
+  decoration: FWidgetStateMap({
+    WidgetState.disabled: BoxDecoration(
+      borderRadius: style.borderRadius,
+      color: colors.disable(color),
+    ),
+    WidgetState.hovered | WidgetState.pressed: BoxDecoration(
+      borderRadius: style.borderRadius,
+      color: colors.hover(color),
+      border: Border.all(
+        color: color.withValues(alpha: 1),
+        width: style.borderWidth,
       ),
-      iconContentStyle: FButtonIconContentStyle(
-        iconStyle: FWidgetStateMap({
-          WidgetState.disabled: IconThemeData(
-            color: colors.disable(foregroundColor, colors.disable(color)),
-            size: 20,
-          ),
-          WidgetState.any: IconThemeData(color: foregroundColor, size: 20),
-        }),
+    ),
+    WidgetState.any: BoxDecoration(
+      borderRadius: style.borderRadius,
+      border: Border.all(
+        color: foregroundColor.withValues(alpha: .5),
+        width: style.borderWidth,
       ),
-      tappableStyle: style.tappableStyle,
-    );
+      // color: color,
+    ),
+  }),
+  focusedOutlineStyle: style.focusedOutlineStyle,
+  contentStyle: _buttonContentStyle(
+    typography: typography,
+    enabled: foregroundColor,
+    disabled: colors.disable(foregroundColor, colors.disable(color)),
+  ),
+  iconContentStyle: FButtonIconContentStyle(
+    iconStyle: FWidgetStateMap({
+      WidgetState.disabled: IconThemeData(
+        color: colors.disable(foregroundColor, colors.disable(color)),
+        size: 20,
+      ),
+      WidgetState.any: IconThemeData(color: foregroundColor, size: 20),
+    }),
+  ),
+  tappableStyle: style.tappableStyle,
+);
 
 // Window control button styles
 FButtonStyle closeButtonStyle({
   required FColors colors,
   required FTypography typography,
   required FStyle style,
-}) =>
-    FButtonStyle(
-      decoration: FWidgetStateMap({
-        WidgetState.hovered: BoxDecoration(
-          borderRadius: style.borderRadius,
-          color: Colors.red.withValues(
-              alpha: colors.background.computeLuminance() > 0.5 ? 0.1 : 0.2),
-          border: Border.all(
-            color: Colors.red.withValues(
-                alpha: colors.background.computeLuminance() > 0.5 ? 0.2 : 0.3),
-            width: style.borderWidth,
-          ),
-        ),
-        WidgetState.any: BoxDecoration(
-          borderRadius: style.borderRadius,
-          border: Border.all(
-            color: colors.border,
-            width: style.borderWidth,
-          ),
-          color: Colors.transparent,
-        ),
-      }),
-      focusedOutlineStyle: style.focusedOutlineStyle,
-      contentStyle: FButtonContentStyle(
-        textStyle: FWidgetStateMap({
-          WidgetState.hovered: typography.base.copyWith(
-            color: colors.background.computeLuminance() > 0.5
-                ? const Color(0xFFb91c1c) // red-700 for light theme
-                : const Color(0xFFef4444), // red-500 for dark theme
-            fontWeight: FontWeight.w500,
-            height: 1,
-          ),
-          WidgetState.any: typography.base.copyWith(
-            color: colors.mutedForeground,
-            fontWeight: FontWeight.w500,
-            height: 1,
-          ),
-        }),
-        iconStyle: FWidgetStateMap({
-          WidgetState.hovered: IconThemeData(
-            color: colors.background.computeLuminance() > 0.5
-                ? const Color(0xFFb91c1c) // red-700 for light theme
-                : const Color(0xFFef4444), // red-500 for dark theme
-            size: 14,
-          ),
-          WidgetState.any: IconThemeData(
-            color: colors.mutedForeground,
-            size: 14,
-          ),
-        }),
-        padding: const EdgeInsets.all(7),
-        spacing: 0,
+}) => FButtonStyle(
+  decoration: FWidgetStateMap({
+    WidgetState.hovered: BoxDecoration(
+      borderRadius: style.borderRadius,
+      color: Colors.red.withValues(
+        alpha: colors.background.computeLuminance() > 0.5 ? 0.1 : 0.2,
       ),
-      iconContentStyle: FButtonIconContentStyle(
-        iconStyle: FWidgetStateMap({
-          WidgetState.hovered: IconThemeData(
-            color: colors.background.computeLuminance() > 0.5
-                ? const Color(0xFFb91c1c)
-                : const Color(0xFFef4444),
-            size: 14,
-          ),
-          WidgetState.any: IconThemeData(
-            color: colors.mutedForeground,
-            size: 14,
-          ),
-        }),
+      border: Border.all(
+        color: Colors.red.withValues(
+          alpha: colors.background.computeLuminance() > 0.5 ? 0.2 : 0.3,
+        ),
+        width: style.borderWidth,
       ),
-      tappableStyle: style.tappableStyle,
-    );
+    ),
+    WidgetState.any: BoxDecoration(
+      borderRadius: style.borderRadius,
+      border: Border.all(color: colors.border, width: style.borderWidth),
+      color: Colors.transparent,
+    ),
+  }),
+  focusedOutlineStyle: style.focusedOutlineStyle,
+  contentStyle: FButtonContentStyle(
+    circularProgressStyle: FWidgetStateMap({
+      WidgetState.any: FCircularProgressStyle(
+        iconStyle: IconThemeData(color: colors.primary),
+      ),
+    }),
+    textStyle: FWidgetStateMap({
+      WidgetState.hovered: typography.base.copyWith(
+        color: colors.background.computeLuminance() > 0.5
+            ? const Color(0xFFb91c1c) // red-700 for light theme
+            : const Color(0xFFef4444), // red-500 for dark theme
+        fontWeight: FontWeight.w500,
+        height: 1,
+      ),
+      WidgetState.any: typography.base.copyWith(
+        color: colors.mutedForeground,
+        fontWeight: FontWeight.w500,
+        height: 1,
+      ),
+    }),
+    iconStyle: FWidgetStateMap({
+      WidgetState.hovered: IconThemeData(
+        color: colors.background.computeLuminance() > 0.5
+            ? const Color(0xFFb91c1c) // red-700 for light theme
+            : const Color(0xFFef4444), // red-500 for dark theme
+        size: 14,
+      ),
+      WidgetState.any: IconThemeData(color: colors.mutedForeground, size: 14),
+    }),
+    padding: const EdgeInsets.all(7),
+    spacing: 0,
+  ),
+  iconContentStyle: FButtonIconContentStyle(
+    iconStyle: FWidgetStateMap({
+      WidgetState.hovered: IconThemeData(
+        color: colors.background.computeLuminance() > 0.5
+            ? const Color(0xFFb91c1c)
+            : const Color(0xFFef4444),
+        size: 14,
+      ),
+      WidgetState.any: IconThemeData(color: colors.mutedForeground, size: 14),
+    }),
+  ),
+  tappableStyle: style.tappableStyle,
+);
 
 FButtonStyle windowControlButtonStyle({
   required FColors colors,
   required FTypography typography,
   required FStyle style,
-}) =>
-    FButtonStyle(
-      decoration: FWidgetStateMap({
-        WidgetState.hovered: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
-          color: colors.muted.withValues(alpha: 0.7),
-          border: Border.all(
-            color: colors.border,
-            width: style.borderWidth,
-          ),
-        ),
-        WidgetState.any: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: colors.border,
-            width: style.borderWidth,
-          ),
-          color: Colors.transparent,
-        ),
-      }),
-      focusedOutlineStyle: style.focusedOutlineStyle,
-      contentStyle: FButtonContentStyle(
-        textStyle: FWidgetStateMap({
-          WidgetState.hovered: typography.base.copyWith(
-            color: colors.foreground,
-            fontWeight: FontWeight.w500,
-            height: 1,
-          ),
-          WidgetState.any: typography.base.copyWith(
-            color: colors.mutedForeground,
-            fontWeight: FontWeight.w500,
-            height: 1,
-          ),
-        }),
-        iconStyle: FWidgetStateMap({
-          WidgetState.hovered: IconThemeData(
-            color: colors.foreground,
-            size: 14,
-          ),
-          WidgetState.any: IconThemeData(
-            color: colors.mutedForeground,
-            size: 14,
-          ),
-        }),
-        padding: const EdgeInsets.all(7),
-        spacing: 0,
+}) => FButtonStyle(
+  decoration: FWidgetStateMap({
+    WidgetState.hovered: BoxDecoration(
+      borderRadius: BorderRadius.circular(6),
+      color: colors.muted.withValues(alpha: 0.7),
+      border: Border.all(color: colors.border, width: style.borderWidth),
+    ),
+    WidgetState.any: BoxDecoration(
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: colors.border, width: style.borderWidth),
+      color: Colors.transparent,
+    ),
+  }),
+  focusedOutlineStyle: style.focusedOutlineStyle,
+  contentStyle: FButtonContentStyle(
+    circularProgressStyle: FWidgetStateMap({
+      WidgetState.any: FCircularProgressStyle(
+        iconStyle: IconThemeData(color: colors.primary),
       ),
-      iconContentStyle: FButtonIconContentStyle(
-        iconStyle: FWidgetStateMap({
-          WidgetState.hovered: IconThemeData(
-            color: colors.foreground,
-            size: 14,
-          ),
-          WidgetState.any: IconThemeData(
-            color: colors.mutedForeground,
-            size: 14,
-          ),
-        }),
+    }),
+    textStyle: FWidgetStateMap({
+      WidgetState.hovered: typography.base.copyWith(
+        color: colors.foreground,
+        fontWeight: FontWeight.w500,
+        height: 1,
       ),
-      tappableStyle: style.tappableStyle,
-    );
+      WidgetState.any: typography.base.copyWith(
+        color: colors.mutedForeground,
+        fontWeight: FontWeight.w500,
+        height: 1,
+      ),
+    }),
+    iconStyle: FWidgetStateMap({
+      WidgetState.hovered: IconThemeData(color: colors.foreground, size: 14),
+      WidgetState.any: IconThemeData(color: colors.mutedForeground, size: 14),
+    }),
+    padding: const EdgeInsets.all(7),
+    spacing: 0,
+  ),
+  iconContentStyle: FButtonIconContentStyle(
+    iconStyle: FWidgetStateMap({
+      WidgetState.hovered: IconThemeData(color: colors.foreground, size: 14),
+      WidgetState.any: IconThemeData(color: colors.mutedForeground, size: 14),
+    }),
+  ),
+  tappableStyle: style.tappableStyle,
+);
 
 FButtonContentStyle _buttonContentStyle({
   required FTypography typography,
   required Color enabled,
   required Color disabled,
-}) =>
-    FButtonContentStyle(
-      textStyle: FWidgetStateMap({
-        WidgetState.disabled: typography.base.copyWith(
-          color: disabled,
-          fontWeight: FontWeight.w500,
-          height: 1,
-        ),
-        WidgetState.any: typography.base.copyWith(
-          color: enabled,
-          fontWeight: FontWeight.w500,
-          height: 1,
-        ),
-      }),
-      iconStyle: FWidgetStateMap({
-        WidgetState.disabled: IconThemeData(color: disabled, size: 20),
-        WidgetState.any: IconThemeData(color: enabled, size: 20),
-      }),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12.5),
-      spacing: 10,
-    );
+}) => FButtonContentStyle(
+  circularProgressStyle: FWidgetStateMap({
+    WidgetState.any: FCircularProgressStyle(
+      iconStyle: IconThemeData(color: enabled),
+    ),
+  }),
+  textStyle: FWidgetStateMap({
+    WidgetState.disabled: typography.base.copyWith(
+      color: disabled,
+      fontWeight: FontWeight.w500,
+      height: 1,
+    ),
+    WidgetState.any: typography.base.copyWith(
+      color: enabled,
+      fontWeight: FontWeight.w500,
+      height: 1,
+    ),
+  }),
+  iconStyle: FWidgetStateMap({
+    WidgetState.disabled: IconThemeData(color: disabled, size: 20),
+    WidgetState.any: IconThemeData(color: enabled, size: 20),
+  }),
+  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12.5),
+  spacing: 10,
+);

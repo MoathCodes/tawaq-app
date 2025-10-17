@@ -242,6 +242,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get iqamahAfterAdhan => 'Iqamah (minutes after adhan)';
 
   @override
+  String get iqamahSavedDescription =>
+      'Your iqamah adjustments have been saved successfully.';
+
+  @override
+  String get iqamahSavedTitle => 'Iqamah adjustments saved';
+
+  @override
   String iqamahSubtitleMessage(int iqamahMins) {
     final intl.NumberFormat iqamahMinsNumberFormat = intl.NumberFormat.compact(
       locale: localeName,
@@ -302,6 +309,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get locationSectionTitle => 'Location & Calculation';
+
+  @override
+  String get lockToPreventEdits => 'Lock to prevent edits';
 
   @override
   String get longitude => 'Longitude';
@@ -541,6 +551,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ummAlQura => 'Umm Al-Qura University';
+
+  @override
+  String get unlockToEditCoordinates => 'Unlock to edit coordinates';
 
   @override
   String get use24HourFormat => 'Use 24-hour format';

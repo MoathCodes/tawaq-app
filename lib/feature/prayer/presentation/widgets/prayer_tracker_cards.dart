@@ -12,8 +12,8 @@ import 'package:hasanat/feature/prayer/presentation/provider/prayer_tracker/pray
 import 'package:hasanat/feature/prayer/presentation/widgets/clickable_prayer_card.dart';
 
 class PrayerTrackerWidget extends ConsumerWidget {
-  final bool expanded;
   const PrayerTrackerWidget({this.expanded = true, super.key});
+  final bool expanded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,7 +34,7 @@ class PrayerTrackerWidget extends ConsumerWidget {
             expanded: expanded,
             time: time,
             onCompletionChanged: ref
-                .read(prayerCompletionNotifierProvider.notifier)
+                .read(prayerCompletionProvider.notifier)
                 .addOrUpdateCompletion,
           ),
         ],
@@ -44,17 +44,17 @@ class PrayerTrackerWidget extends ConsumerWidget {
 }
 
 class _MainWidget extends StatelessWidget {
-  final List<PrayerTrackerCardModel> data;
-  final Function(PrayerCompletion) onCompletionChanged;
-
-  final bool expanded;
-  final DateTime time;
   const _MainWidget({
     required this.data,
     required this.expanded,
     required this.time,
     required this.onCompletionChanged,
   });
+  final List<PrayerTrackerCardModel> data;
+  final Function(PrayerCompletion) onCompletionChanged;
+
+  final bool expanded;
+  final DateTime time;
 
   @override
   Widget build(BuildContext context) {
@@ -69,7 +69,7 @@ class _MainWidget extends StatelessWidget {
           cardData: card,
           completionTime: time,
           onCompletionChanged: onCompletionChanged,
-          key: ValueKey("clickable-prayer-card-$index"),
+          key: ValueKey('clickable-prayer-card-$index'),
           expanded: expanded,
         );
       }).toList(),

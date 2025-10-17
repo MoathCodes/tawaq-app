@@ -7,8 +7,8 @@ import 'package:hasanat/feature/settings/presentation/widgets/app_theme_selector
 import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/prayer_section.dart';
 import 'package:hasanat/feature/settings/presentation/widgets/settings_section.dart';
 
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,26 +16,26 @@ class SettingsPage extends StatelessWidget {
       builder: (context, controller, physics) => SingleChildScrollView(
         physics: physics,
         controller: controller,
-        child: Column(spacing: 12, children: [
-          AnimationEntry(
-            delay: 100.ms,
-            child: SettingsCard(
-              title: context.l10n.appearance,
-              subtitle: context.l10n.about,
-              sections: [
-                SettingsSection(
-                  title: context.l10n.colorTheme,
-                  subtitle: context.l10n.colorThemeSubtitle,
-                  child: const AppThemeSelector(),
-                ),
-              ],
+        child: Column(
+          spacing: 12,
+          children: [
+            AnimationEntry(
+              delay: 100.ms,
+              child: SettingsCard(
+                title: context.l10n.appearance,
+                subtitle: context.l10n.about,
+                sections: [
+                  SettingsSection(
+                    title: context.l10n.colorTheme,
+                    subtitle: context.l10n.colorThemeSubtitle,
+                    child: const AppThemeSelector(),
+                  ),
+                ],
+              ),
             ),
-          ),
-          AnimationEntry(
-            delay: 250.ms,
-            child: const PrayerSection(),
-          ),
-        ]),
+            AnimationEntry(delay: 250.ms, child: const PrayerSection()),
+          ],
+        ),
       ),
     );
   }

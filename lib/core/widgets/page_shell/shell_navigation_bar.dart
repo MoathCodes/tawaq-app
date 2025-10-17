@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/routing/route_provider.dart';
 
+/// The bottom navigation bar for the main shell.
 class ShellBottomNavigationBar extends ConsumerStatefulWidget {
+  /// Creates a new instance of [ShellBottomNavigationBar].
   const ShellBottomNavigationBar({super.key});
 
   @override
@@ -39,10 +41,11 @@ class _ShellBottomNavigationBarState
     );
   }
 
+  /// Builds a bottom navigation bar item.
   FBottomNavigationBarItem buildButton(
-      String label, IconData icon, String path) {
+      String label, IconData icon, String path,) {
     return FBottomNavigationBarItem(
-      key: ValueKey("$label-$path-button"),
+      key: ValueKey('$label-$path-button'),
       label: Text(label),
       icon: Icon(icon),
     );

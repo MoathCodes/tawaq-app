@@ -13,10 +13,6 @@ import 'package:hasanat/feature/prayer/domain/models/prayer_tracker_card_model.d
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 
 class ClickablePrayerCard extends ConsumerStatefulWidget {
-  final PrayerTrackerCardModel cardData;
-  final DateTime completionTime;
-  final void Function(PrayerCompletion prayerCompletion)? onCompletionChanged;
-  final bool expanded;
   const ClickablePrayerCard({
     required this.cardData,
     required this.completionTime,
@@ -24,6 +20,10 @@ class ClickablePrayerCard extends ConsumerStatefulWidget {
     this.onCompletionChanged,
     super.key,
   });
+  final PrayerTrackerCardModel cardData;
+  final DateTime completionTime;
+  final void Function(PrayerCompletion prayerCompletion)? onCompletionChanged;
+  final bool expanded;
 
   @override
   ConsumerState<ClickablePrayerCard> createState() =>
@@ -44,161 +44,176 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
     final colorScheme = theme.colors;
     return FPopoverMenu(
       menu: [
-        FItemGroup(children: [
-          FItem(
-            prefix: Icon(CompletionStatus.jamaah.getIcon(),
-                color: CompletionStatus.jamaah.getBadgeColor()),
-            title: Text(context.l10n.jamaah),
-            onPress: () {
-              _handleClick(CompletionStatus.jamaah);
-            },
-          ),
-          FItem(
-            // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
-            prefix: Icon(CompletionStatus.onTime.getIcon(),
-                color: CompletionStatus.onTime.getBadgeColor()),
-            title: Text(context.l10n.onTime),
-            onPress: () {
-              _handleClick(CompletionStatus.onTime);
-            },
-          ),
-          FItem(
-            // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
-            prefix: Icon(CompletionStatus.late.getIcon(),
-                color: CompletionStatus.late.getBadgeColor()),
-            title: Text(context.l10n.late),
-            onPress: () {
-              _handleClick(CompletionStatus.late);
-            },
-          ),
-          FItem(
-            // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
-            prefix: Icon(CompletionStatus.missed.getIcon(),
-                color: CompletionStatus.missed.getBadgeColor()),
-            title: Text(context.l10n.missed),
-            onPress: () {
-              _handleClick(CompletionStatus.missed);
-            },
-          ),
-        ])
+        FItemGroup(
+          children: [
+            FItem(
+              prefix: Icon(
+                CompletionStatus.jamaah.getIcon(),
+                color: CompletionStatus.jamaah.getBadgeColor(),
+              ),
+              title: Text(context.l10n.jamaah),
+              onPress: () {
+                _handleClick(CompletionStatus.jamaah);
+              },
+            ),
+            FItem(
+              // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
+              prefix: Icon(
+                CompletionStatus.onTime.getIcon(),
+                color: CompletionStatus.onTime.getBadgeColor(),
+              ),
+              title: Text(context.l10n.onTime),
+              onPress: () {
+                _handleClick(CompletionStatus.onTime);
+              },
+            ),
+            FItem(
+              // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
+              prefix: Icon(
+                CompletionStatus.late.getIcon(),
+                color: CompletionStatus.late.getBadgeColor(),
+              ),
+              title: Text(context.l10n.late),
+              onPress: () {
+                _handleClick(CompletionStatus.late);
+              },
+            ),
+            FItem(
+              // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
+              prefix: Icon(
+                CompletionStatus.missed.getIcon(),
+                color: CompletionStatus.missed.getBadgeColor(),
+              ),
+              title: Text(context.l10n.missed),
+              onPress: () {
+                _handleClick(CompletionStatus.missed);
+              },
+            ),
+          ],
+        ),
       ],
       builder: (context, controller, child) => ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: widget.expanded ? 200.h : 110.h,
-          ),
-          child: MouseClick(
-            disabled: _isDisabled,
-            onClick: () {
-              controller.toggle();
+        constraints: BoxConstraints(
+          maxHeight: widget.expanded ? 200.h : 110.h,
+        ),
+        child: MouseClick(
+          disabled: _isDisabled,
+          onClick: () {
+            controller.toggle();
+          },
+          onExit: (event) {
+            setState(() {
+              _isHover = false;
+            });
+          },
+          onHover: (event) {
+            setState(() {
+              _isHover = true;
+            });
+          },
+          child: AnimatedOpacity(
+            duration: _animationDuration,
+            opacity: _isDisabled ? 0.5 : 1.0,
+            curve: Curves.easeInOut,
+            onEnd: () {
+              if (widget.cardData.isTimePassed) {
+                setState(() {
+                  _isHover = false;
+                });
+              }
             },
-            onExit: (event) {
-              setState(() {
-                _isHover = false;
-              });
-            },
-            onHover: (event) {
-              setState(() {
-                _isHover = true;
-              });
-            },
-            child: AnimatedOpacity(
+            child: AnimatedScale(
               duration: _animationDuration,
-              opacity: _isDisabled ? 0.5 : 1.0,
-              curve: Curves.easeInOut,
-              onEnd: () {
-                if (widget.cardData.isTimePassed) {
-                  setState(() {
-                    _isHover = false;
-                  });
-                }
-              },
-              child: AnimatedScale(
+              scale: _isHover ? 1.05 : 1.0,
+              curve: Curves.bounceInOut,
+              child: AnimatedContainer(
                 duration: _animationDuration,
-                scale: _isHover ? 1.05 : 1.0,
-                curve: Curves.bounceInOut,
-                child: AnimatedContainer(
-                    duration: _animationDuration,
-                    curve: Curves.easeInOut,
-                    width: widget.expanded ? 250.w : 132.w,
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.cardStyle.decoration.color,
-                      border: Border.all(
-                        color: colorScheme.secondary.withAlpha(45),
-                        width: 1,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: _isHover
-                          ? [
-                              BoxShadow(
-                                color: colorScheme.secondaryForeground
-                                    .withAlpha(60),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                curve: Curves.easeInOut,
+                width: widget.expanded ? 250.w : 132.w,
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: theme.cardStyle.decoration.color,
+                  border: Border.all(
+                    color: colorScheme.secondary.withAlpha(45),
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: _isHover
+                      ? [
+                          BoxShadow(
+                            color: colorScheme.secondaryForeground.withAlpha(
+                              60,
+                            ),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Builder(builder: (context) {
-                              final w = (widget.expanded ? 46.w : 30.w);
-                              final h = (widget.expanded ? 46.h : 30.h);
-                              final dpr =
-                                  MediaQuery.of(context).devicePixelRatio;
-                              final provider = ResizeImage(
-                                AssetImage(widget.cardData.prayer.imagePath),
-                                width: (w * dpr).round(),
-                                height: (h * dpr).round(),
-                              );
-                              return Container(
-                                width: w,
-                                height: h,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                    image: provider,
-                                    fit: BoxFit.cover,
-                                    alignment: widget.cardData.prayer.alignment,
-                                    filterQuality: FilterQuality.medium,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
+                        Builder(
+                          builder: (context) {
+                            final w = (widget.expanded ? 46.w : 30.w);
+                            final h = (widget.expanded ? 46.h : 30.h);
+                            final dpr = MediaQuery.of(context).devicePixelRatio;
+                            final provider = ResizeImage(
+                              AssetImage(widget.cardData.prayer.imagePath),
+                              width: (w * dpr).round(),
+                              height: (h * dpr).round(),
+                            );
+                            return Container(
+                              width: w,
+                              height: h,
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                  image: provider,
+                                  fit: BoxFit.cover,
+                                  alignment: widget.cardData.prayer.alignment,
                                 ),
-                              );
-                            }),
-                            _buildStatusChip(
-                                widget.cardData.completion?.status ??
-                                    _isComplete,
-                                theme,
-                                ref
-                                        .watch(themeNotifierProvider)
-                                        .value
-                                        ?.themeMode ==
-                                    ThemeMode.dark),
-                          ],
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            );
+                          },
                         ),
-                        Text(widget.cardData.prayer.getLocaleName(context.l10n),
-                                style: TextStyle(
-                                    fontSize: widget.expanded ? 26.sp : 13.sp))
-                            .bold,
-                        Text(
-                          widget.cardData.adhan,
-                          style: TextStyle(
-                              color: colorScheme.primary,
-                              fontSize: widget.expanded ? 26.sp : 13.sp),
+                        _buildStatusChip(
+                          widget.cardData.completion?.status ?? _isComplete,
+                          theme,
+                          ref.watch(themeProvider).value?.themeMode ==
+                              ThemeMode.dark,
                         ),
-                        Text(widget.cardData.subtitle,
-                            style: TextStyle(
-                                fontSize: widget.expanded ? 16.sp : 10.sp)),
                       ],
-                    )),
+                    ),
+                    Text(
+                      widget.cardData.prayer.getLocaleName(context.l10n),
+                      style: TextStyle(
+                        fontSize: widget.expanded ? 26.sp : 13.sp,
+                      ),
+                    ).bold,
+                    Text(
+                      widget.cardData.adhan,
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontSize: widget.expanded ? 26.sp : 13.sp,
+                      ),
+                    ),
+                    Text(
+                      widget.cardData.subtitle,
+                      style: TextStyle(
+                        fontSize: widget.expanded ? 16.sp : 10.sp,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          )),
+          ),
+        ),
+      ),
     );
   }
 
@@ -222,59 +237,60 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
   }
 
   Widget _buildStatusChip(
-      CompletionStatus status, FThemeData theme, bool isDarkMode) {
+    CompletionStatus status,
+    FThemeData theme,
+    bool isDarkMode,
+  ) {
     final style = theme.typography.sm.copyWith(color: Colors.white);
     return switch (status) {
       CompletionStatus.jamaah => IconBadge(
-          style: (p0) => p0.copyWith(
-            decoration: p0.decoration.copyWith(
-              color: isDarkMode ? Colors.green.shade900 : Colors.green.shade600,
-            ),
-          ),
-          icon: const Icon(FIcons.users, size: 16, color: Colors.white),
-          label: Text(
-            _isComplete.getLocaleName(context.l10n),
-            style: style,
+        style: (p0) => p0.copyWith(
+          decoration: p0.decoration.copyWith(
+            color: isDarkMode ? Colors.green.shade900 : Colors.green.shade600,
           ),
         ),
+        icon: const Icon(FIcons.users, size: 16, color: Colors.white),
+        label: Text(
+          _isComplete.getLocaleName(context.l10n),
+          style: style,
+        ),
+      ),
       CompletionStatus.onTime => IconBadge(
-          style: (p0) => p0.copyWith(
-            decoration: p0.decoration.copyWith(
-              color:
-                  isDarkMode ? Colors.yellow.shade900 : Colors.yellow.shade600,
-            ),
-          ),
-          icon: const Icon(FIcons.checkCheck, size: 16, color: Colors.white),
-          label: Text(
-            _isComplete.getLocaleName(context.l10n),
-            style: style,
+        style: (p0) => p0.copyWith(
+          decoration: p0.decoration.copyWith(
+            color: isDarkMode ? Colors.yellow.shade900 : Colors.yellow.shade600,
           ),
         ),
+        icon: const Icon(FIcons.checkCheck, size: 16, color: Colors.white),
+        label: Text(
+          _isComplete.getLocaleName(context.l10n),
+          style: style,
+        ),
+      ),
       CompletionStatus.late => IconBadge(
-          style: (p0) => p0.copyWith(
-            decoration: p0.decoration.copyWith(
-              color:
-                  isDarkMode ? Colors.orange.shade900 : Colors.orange.shade600,
-            ),
-          ),
-          icon: const Icon(FIcons.clock, size: 16, color: Colors.white),
-          label: Text(
-            _isComplete.getLocaleName(context.l10n),
-            style: style,
+        style: (p0) => p0.copyWith(
+          decoration: p0.decoration.copyWith(
+            color: isDarkMode ? Colors.orange.shade900 : Colors.orange.shade600,
           ),
         ),
+        icon: const Icon(FIcons.clock, size: 16, color: Colors.white),
+        label: Text(
+          _isComplete.getLocaleName(context.l10n),
+          style: style,
+        ),
+      ),
       CompletionStatus.missed => IconBadge(
-          style: (p0) => p0.copyWith(
-            decoration: p0.decoration.copyWith(
-              color: isDarkMode ? Colors.red.shade900 : Colors.red.shade600,
-            ),
-          ),
-          icon: const Icon(FIcons.circleX, size: 16, color: Colors.white),
-          label: Text(
-            _isComplete.getLocaleName(context.l10n),
-            style: style,
+        style: (p0) => p0.copyWith(
+          decoration: p0.decoration.copyWith(
+            color: isDarkMode ? Colors.red.shade900 : Colors.red.shade600,
           ),
         ),
+        icon: const Icon(FIcons.circleX, size: 16, color: Colors.white),
+        label: Text(
+          _isComplete.getLocaleName(context.l10n),
+          style: style,
+        ),
+      ),
       CompletionStatus.none => const SizedBox.shrink(),
     };
   }
