@@ -1,5 +1,4 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:drift/drift.dart' hide Column;
 import 'package:hasanat/core/logging/talker_provider.dart';
 import 'package:hasanat/feature/prayer/data/database/prayer_database.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
@@ -19,32 +18,19 @@ PrayerRepo prayerRepo(Ref ref) {
 
 /// A repository for accessing prayer data.
 class PrayerRepo {
-  /// Creates a new instance of the [PrayerRepo].
-  const PrayerRepo({required this.prayerDatabase, required this.talker});
-
   /// The database for the prayer data.
   final PrayerDatabase prayerDatabase;
 
   /// The logger for the application.
   final Talker talker;
 
+  /// Creates a new instance of the [PrayerRepo].
+  const PrayerRepo({required this.prayerDatabase, required this.talker});
+
   /// Adds or updates a prayer completion.
   Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
-    final companion = completion.id != null
-        ? PrayerCompletionsCompanion(
-            id: Value(completion.id!),
-            status: Value(completion.status),
-            completionTime: Value(completion.completionTime),
-            prayer: Value(completion.prayer),
-          )
-        : PrayerCompletionsCompanion(
-            status: Value(completion.status),
-            completionTime: Value(completion.completionTime),
-            prayer: Value(completion.prayer),
-          );
-
     try {
-      await prayerDatabase.insertOrUpdateCompletion(companion);
+      await prayerDatabase.insertOrUpdateCompletion(completion);
     } catch (e, stackTrace) {
       talker.handle(e, stackTrace);
       rethrow;
@@ -93,6 +79,11 @@ class PrayerRepo {
     return prayerDatabase.getFullyCompletedDays(loc);
   }
 
+  /// Watches for changes to the prayer completions on a specific date.
+  Future<List<PrayerCompletion>> getPrayerCompletionForDate(DateTime date) {
+    return prayerDatabase.getCompletionsForDate(date);
+  }
+
   /// Returns the prayer times for a given date, coordinates, and calculation parameters.
   PrayerTimesData getPrayerTimes(
     DateTime date,
@@ -119,18 +110,5 @@ class PrayerRepo {
     final sunnahTimes = SunnahTimes(prayerTimes);
     // print("in repo getSunnahTime: ${sunnahTimes.middleOfTheNight}");
     return sunnahTimes;
-  }
-
-  /// Watches for changes to the prayer completions on a specific date.
-  Stream<List<PrayerCompletion>> watchPrayerCompletionByDate(
-    int year,
-    int month,
-    int day,
-  ) {
-    return prayerDatabase.watchCompletionsBasedOnDate(
-      day,
-      month,
-      year,
-    );
   }
 }

@@ -12,28 +12,27 @@ import 'package:hasanat/feature/prayer/presentation/provider/prayer_table/prayer
 import 'package:hasanat/l10n/app_localizations.dart';
 
 class PrayerTable extends ConsumerWidget {
-
-  const PrayerTable({super.key});
   // Static constants for performance
   static const double _headerHeight = 48;
   static const Size _imageSize = Size(56, 56);
   static const double _imageBorderRadius = 12;
   static const int _nextPrayerAlpha = 30;
   static const int _currentPrayerAlpha = 50;
-
   // Static objects to avoid repeated creation
   static final BorderRadius _imageBorderRadiusGeometry = BorderRadius.circular(
     _imageBorderRadius,
   );
+
   static const EdgeInsets _cellPadding = EdgeInsets.all(8);
   static const SizedBox _imagePadding = SizedBox(width: 12);
+  const PrayerTable({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final prayerTableStream = ref.watch(prayerTableProvider(l10n));
 
-    return HoverCard(
+    return StaticCard(
       padding: EdgeInsets.zero,
       child: prayerTableStream.when(
         data: (rows) => _PrayerTableContent(rows: rows),
@@ -46,9 +45,8 @@ class PrayerTable extends ConsumerWidget {
 
 /// Error widget for when data loading fails
 class _ErrorWidget extends StatelessWidget {
-
-  const _ErrorWidget({required this.error});
   final Object error;
+  const _ErrorWidget({required this.error});
 
   @override
   Widget build(BuildContext context) {
@@ -156,9 +154,7 @@ class _LoadingWidget extends StatelessWidget {
 
   List<DataColumn> _buildColumns(AppLocalizations l10n, FThemeData theme) {
     return [
-      DataColumn(
-        label: Text(l10n.prayer, style: theme.typography.sm),
-      ),
+      DataColumn(label: Text(l10n.prayer, style: theme.typography.sm)),
       DataColumn(
         label: Text(l10n.adhan, style: theme.typography.sm),
         numeric: true,
@@ -173,14 +169,14 @@ class _LoadingWidget extends StatelessWidget {
 
 /// Main content widget for the prayer table
 class _PrayerTableContent extends StatelessWidget {
-  const _PrayerTableContent({required this.rows});
   // Static cached columns to avoid rebuilding
   static List<DataColumn>? _cachedColumns;
-
   static AppLocalizations? _cachedL10n;
 
   static FThemeData? _cachedTheme;
+
   final List<PrayerTableRow> rows;
+  const _PrayerTableContent({required this.rows});
 
   @override
   Widget build(BuildContext context) {
@@ -217,9 +213,7 @@ class _PrayerTableContent extends StatelessWidget {
     }
 
     _cachedColumns = [
-      DataColumn(
-        label: Text(l10n.prayer, style: theme.typography.sm),
-      ),
+      DataColumn(label: Text(l10n.prayer, style: theme.typography.sm)),
       DataColumn(
         label: Text(l10n.adhan, style: theme.typography.sm),
         numeric: true,

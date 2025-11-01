@@ -32,7 +32,18 @@ extension DurationFormatting on Duration {
         '${(seconds % 60).toString().padLeft(2, '0')}';
 
     // Map Western digits to Arabic-Indic (Hindu-Arabic) numerals.
-    const arabicIndicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const arabicIndicDigits = [
+      '٠',
+      '١',
+      '٢',
+      '٣',
+      '٤',
+      '٥',
+      '٦',
+      '٧',
+      '٨',
+      '٩',
+    ];
     if (!useHinduArabicNumerals) return time;
     return time.replaceAllMapped(RegExp(r'\d'), (m) {
       final idx = int.parse(m[0]!);
@@ -141,6 +152,13 @@ extension PrayerLocaleExtension on PrayerTimesData {
 
 /// Localized display names for [Prayer] values.
 extension PrayerLocaleNameExtension on Prayer {
+  bool get isObligatory => switch (this) {
+    Prayer.sunrise => false,
+    Prayer.ishaBefore => false,
+    Prayer.fajrAfter => false,
+    _ => true,
+  };
+
   /// Returns the localized label for this prayer, including Friday handling
   /// for Jumu'ah.
   String getLocaleName(AppLocalizations locale) {

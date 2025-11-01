@@ -73,7 +73,7 @@ class SettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
-    return HoverCard(
+    return StaticCard(
       padding: const EdgeInsets.all(8),
       child: FCard(
         // titleAlignment:
