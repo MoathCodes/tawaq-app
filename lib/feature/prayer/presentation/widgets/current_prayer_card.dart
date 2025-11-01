@@ -15,11 +15,11 @@ import 'package:hasanat/feature/prayer/domain/models/prayer_card_model.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_completion_provider.dart';
+import 'package:hasanat/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/mini_card.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 
 class CurrentPrayerCard extends ConsumerWidget {
-  const CurrentPrayerCard({super.key});
   // Static constants to avoid recreation on every build
   static const _gradientOverlay = LinearGradient(
     colors: [
@@ -40,7 +40,6 @@ class CurrentPrayerCard extends ConsumerWidget {
     ],
     stops: [0.0, 0.5, 1.0], // Control the gradient distribution
   );
-
   static const _textShadow = [
     Shadow(
       offset: Offset(1, 1),
@@ -52,45 +51,37 @@ class CurrentPrayerCard extends ConsumerWidget {
   static const _borderRadius = BorderRadius.all(Radius.circular(15));
 
   static const _containerPadding = EdgeInsets.all(16);
+
   static const _animationDuration = Duration(milliseconds: 330);
   static TextStyle get _headerTextStyle => TextStyle(
     color: Colors.white,
     fontSize: 14.sp,
     fontWeight: FontWeight.w500,
   );
-
   static TextStyle get _miniCardTextStyle => TextStyle(fontSize: 20.sp);
 
   static TextStyle get _prepareTextStyle =>
       TextStyle(color: Colors.white, fontSize: 16.sp);
 
+  const CurrentPrayerCard({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cardStream = ref.watch(prayerCardProvider);
-    final completion = ref.watch(
-      prayerCompletionProvider.select(
-        (value) => value[cardStream.value?.prayer],
-      ),
-    );
     final appTheme = ref.watch(themeProvider);
     final theme = FTheme.of(context);
 
-    return HoverCard(
+    return StaticCard(
       backgroundColor: Colors.transparent,
       borderColor: Colors.transparent,
       padding: EdgeInsets.zero,
       child: cardStream.when(
-        data: (data) => _PrayerCardContent(
-          data: data,
-          completion: completion,
-          appTheme: appTheme,
-          theme: theme,
-        ),
+        data: (data) =>
+            _PrayerCardContent(data: data, appTheme: appTheme, theme: theme),
         error: (error, stackTrace) => _ErrorCard(error: error),
         loading: () => FSkeletonizer(
           child: _PrayerCardContent(
             data: _MockPrayerData(),
-            completion: null,
             appTheme: appTheme,
             theme: theme,
             isLoading: true,
@@ -111,63 +102,74 @@ class CurrentPrayerCard extends ConsumerWidget {
 
 // Extract completion badge to its own widget
 class _CompletionBadge extends ConsumerWidget {
+  final Future<PrayerCompletion?> completion;
+  final AsyncValue<ThemeSettings?> appTheme;
+
+  final PrayerCardInfo data;
   const _CompletionBadge({
     required this.completion,
     required this.appTheme,
     required this.data,
   });
-  final PrayerCompletion completion;
-
-  final AsyncValue<ThemeSettings?> appTheme;
-  final PrayerCardInfo data;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FPopoverMenu(
-      menu: [
-        FItemGroup(
-          children: CompletionStatus.values
-              .where((e) => e != CompletionStatus.none)
-              .map(
-                (e) => FItem(
-                  title: Text(e.getLocaleName(context.l10n)),
-                  prefix: Icon(
-                    e.getIcon(),
-                    color: e.getBadgeColor(
-                      isDark: appTheme.value?.themeMode == ThemeMode.dark,
+    return FutureBuilder(
+      future: completion,
+      builder: (context, asyncSnapshot) {
+        return (asyncSnapshot.data != null &&
+                asyncSnapshot.data!.status != CompletionStatus.none &&
+                asyncSnapshot.connectionState == ConnectionState.waiting)
+            ? FPopoverMenu(
+                menu: [
+                  FItemGroup(
+                    children: CompletionStatus.values
+                        .where((e) => e != CompletionStatus.none)
+                        .map(
+                          (e) => FItem(
+                            title: Text(e.getLocaleName(context.l10n)),
+                            prefix: Icon(
+                              e.getIcon(),
+                              color: e.getBadgeColor(
+                                isDark:
+                                    appTheme.value?.themeMode == ThemeMode.dark,
+                              ),
+                            ),
+                            onPress: () =>
+                                _updateCompletion(asyncSnapshot.data!, ref),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+                builder: (context, value, child) => MouseClick(
+                  onClick: value.toggle,
+                  child: IconBadge(
+                    style: (p0) => p0.copyWith(
+                      decoration: p0.decoration.copyWith(
+                        color: asyncSnapshot.data!.status.getBadgeColor(
+                          isDark: appTheme.value?.themeMode == ThemeMode.dark,
+                        ),
+                      ),
+                    ),
+                    icon: Icon(
+                      asyncSnapshot.data!.status.getIcon(),
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    label: Text(
+                      asyncSnapshot.data!.status.getLocaleName(context.l10n),
+                      style: const TextStyle(color: Colors.white),
                     ),
                   ),
-                  onPress: () => _updateCompletion(e, ref),
                 ),
               )
-              .toList(),
-        ),
-      ],
-      builder: (context, value, child) => MouseClick(
-        onClick: value.toggle,
-        child: IconBadge(
-          style: (p0) => p0.copyWith(
-            decoration: p0.decoration.copyWith(
-              color: completion.status.getBadgeColor(
-                isDark: appTheme.value?.themeMode == ThemeMode.dark,
-              ),
-            ),
-          ),
-          icon: Icon(
-            completion.status.getIcon(),
-            size: 16,
-            color: Colors.white,
-          ),
-          label: Text(
-            completion.status.getLocaleName(context.l10n),
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
-      ),
+            : const SizedBox.shrink();
+      },
     );
   }
 
-  void _updateCompletion(CompletionStatus status, WidgetRef ref) {
+  void _updateCompletion(PrayerCompletion completion, WidgetRef ref) {
     ref
         .read(prayerCompletionProvider.notifier)
         .addOrUpdateCompletion(
@@ -175,15 +177,15 @@ class _CompletionBadge extends ConsumerWidget {
             id: completion.id,
             prayer: data.prayer,
             completionTime: DateTime.now(),
-            status: status,
+            status: completion.status,
           ),
         );
   }
 }
 
 class _ErrorCard extends StatelessWidget {
-  const _ErrorCard({required this.error});
   final Object error;
+  const _ErrorCard({required this.error});
 
   @override
   Widget build(BuildContext context) {
@@ -196,17 +198,17 @@ class _ErrorCard extends StatelessWidget {
 
 // Optimized header row
 class _HeaderRow extends StatelessWidget {
+  final Future<PrayerCompletion?> completion;
+  final AsyncValue<ThemeSettings?> appTheme;
+
+  final PrayerCardInfo data;
+  final bool isLoading;
   const _HeaderRow({
     required this.completion,
     required this.appTheme,
     required this.data,
     required this.isLoading,
   });
-  final PrayerCompletion? completion;
-
-  final AsyncValue<ThemeSettings?> appTheme;
-  final PrayerCardInfo data;
-  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -217,14 +219,11 @@ class _HeaderRow extends StatelessWidget {
           context.l10n.nextPrayer,
           style: CurrentPrayerCard._headerTextStyle,
         ),
-        if (completion != null &&
-            completion!.status != CompletionStatus.none &&
-            !isLoading)
-          _CompletionBadge(
-            completion: completion!,
-            appTheme: appTheme,
-            data: data,
-          ),
+        _CompletionBadge(
+          completion: completion,
+          appTheme: appTheme,
+          data: data,
+        ),
       ],
     );
   }
@@ -248,22 +247,26 @@ class _MockPrayerData implements PrayerCardInfo {
 
 // Separate widget for the main content to optimize rebuilds
 class _PrayerCardContent extends ConsumerWidget {
+  final PrayerCardInfo data;
+
+  final AsyncValue<ThemeSettings?> appTheme;
+  final FThemeData theme;
+  final bool isLoading;
   const _PrayerCardContent({
     required this.data,
-    required this.completion,
     required this.appTheme,
     required this.theme,
     this.isLoading = false,
   });
-  final PrayerCardInfo data;
-
-  final PrayerCompletion? completion;
-  final AsyncValue<ThemeSettings?> appTheme;
-  final FThemeData theme;
-  final bool isLoading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final completion = ref
+        .read(prayerCompletionProvider.notifier)
+        .getPrayerCompletionForPrayerOnDate(
+          data.prayer,
+          ref.read(currentLocationTimeProvider),
+        );
     final isArabic =
         ref.watch(
           localeProvider.select((value) => value.value?.languageCode),

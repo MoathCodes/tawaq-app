@@ -3,12 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  connectivity_plus
   flutter_timezone
   geolocator_windows
   screen_retriever_windows
   share_plus
-  sqlite3_flutter_libs
   url_launcher_windows
   window_manager
 )

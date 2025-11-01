@@ -16,7 +16,9 @@ import 'package:hasanat/core/routing/route_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/gen/fonts.gen.dart';
+import 'package:hasanat/hive/hive_registrar.g.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
+import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:talker_riverpod_logger/talker_riverpod_logger.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -29,6 +31,8 @@ void main() async {
   runTalkerZonedGuarded(talker, () async {
     // Initialize Flutter bindings inside the zone
     WidgetsFlutterBinding.ensureInitialized();
+    await Hive.initFlutter();
+    Hive.registerAdapters();
 
     // Set up error handling
     FlutterError.onError = (details) {
@@ -52,7 +56,6 @@ void main() async {
 
       windowManager.waitUntilReadyToShow(windowOptions, () async {
         await windowManager.show();
-        await windowManager.focus();
       });
     }
     // Run the app

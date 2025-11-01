@@ -10,12 +10,12 @@ extension FTextSizing on Text {
   /// Applies the base (default) typographic style from the current theme.
   Widget get base => _withStyle((ctx) => FTheme.of(ctx).typography.base);
 
-  /// Applies a bold font weight to the text.
-  Widget get bold => _withStyle(
-    (ctx) =>
-        style?.copyWith(fontWeight: FontWeight.bold) ??
-        FTheme.of(ctx).typography.base.copyWith(fontWeight: FontWeight.bold),
-  );
+  // /// Applies a bold font weight to the text.
+  // Widget get bold => _withStyle(
+  //   (ctx) =>
+  //       style?.copyWith(fontWeight: FontWeight.bold) ??
+  //       FTheme.of(ctx).typography.base.copyWith(fontWeight: FontWeight.bold),
+  // );
 
   /// Applies the large text style from the current theme.
   Widget get lg => _withStyle((ctx) => FTheme.of(ctx).typography.lg);

@@ -173,13 +173,11 @@ class PrayerService {
     return prayerTime.nextPrayer(date: activeDate);
   }
 
-  Stream<List<PrayerCompletion>> watchPrayerCompletionByDate([DateTime? date]) {
+  Future<List<PrayerCompletion>> getPrayerCompletionForDate([DateTime? date]) {
     final activeDate = date ?? _currentTime();
 
-    return _repo.watchPrayerCompletionByDate(
-      activeDate.year,
-      activeDate.month,
-      activeDate.day,
+    return _repo.getPrayerCompletionForDate(
+      activeDate
     );
   }
 

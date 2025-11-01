@@ -1,10 +1,10 @@
+import 'package:flumpose/flumpose.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/core/utils/text_extensions.dart';
 import 'package:hasanat/core/widgets/icon_badge.dart';
 import 'package:hasanat/core/widgets/mouse_click.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
@@ -12,25 +12,25 @@ import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_tracker_card_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 
-class ClickablePrayerCard extends ConsumerStatefulWidget {
-  const ClickablePrayerCard({
+class TrackerCompletionCard extends ConsumerStatefulWidget {
+  final PrayerTrackerCardModel cardData;
+  final DateTime completionTime;
+  final void Function(PrayerCompletion prayerCompletion)? onCompletionChanged;
+  final bool expanded;
+  const TrackerCompletionCard({
     required this.cardData,
     required this.completionTime,
     this.expanded = true,
     this.onCompletionChanged,
     super.key,
   });
-  final PrayerTrackerCardModel cardData;
-  final DateTime completionTime;
-  final void Function(PrayerCompletion prayerCompletion)? onCompletionChanged;
-  final bool expanded;
 
   @override
-  ConsumerState<ClickablePrayerCard> createState() =>
+  ConsumerState<TrackerCompletionCard> createState() =>
       _ClickablePrayerCardState();
 }
 
-class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
+class _ClickablePrayerCardState extends ConsumerState<TrackerCompletionCard> {
   static const Duration _animationDuration = Duration(milliseconds: 200);
 
   bool _isHover = false;
@@ -93,9 +93,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
         ),
       ],
       builder: (context, controller, child) => ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: widget.expanded ? 200.h : 110.h,
-        ),
+        constraints: BoxConstraints(maxHeight: widget.expanded ? 200.h : 110.h),
         child: MouseClick(
           disabled: _isDisabled,
           onClick: () {
@@ -193,7 +191,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
                       style: TextStyle(
                         fontSize: widget.expanded ? 26.sp : 13.sp,
                       ),
-                    ).bold,
+                    ).bold(),
                     Text(
                       widget.cardData.adhan,
                       style: TextStyle(
@@ -218,7 +216,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
   }
 
   @override
-  void didUpdateWidget(covariant ClickablePrayerCard oldWidget) {
+  void didUpdateWidget(covariant TrackerCompletionCard oldWidget) {
     if (oldWidget.cardData != widget.cardData) {
       setState(() {
         _isDisabled = !widget.cardData.isTimePassed;
@@ -250,10 +248,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
           ),
         ),
         icon: const Icon(FIcons.users, size: 16, color: Colors.white),
-        label: Text(
-          _isComplete.getLocaleName(context.l10n),
-          style: style,
-        ),
+        label: Text(_isComplete.getLocaleName(context.l10n), style: style),
       ),
       CompletionStatus.onTime => IconBadge(
         style: (p0) => p0.copyWith(
@@ -262,10 +257,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
           ),
         ),
         icon: const Icon(FIcons.checkCheck, size: 16, color: Colors.white),
-        label: Text(
-          _isComplete.getLocaleName(context.l10n),
-          style: style,
-        ),
+        label: Text(_isComplete.getLocaleName(context.l10n), style: style),
       ),
       CompletionStatus.late => IconBadge(
         style: (p0) => p0.copyWith(
@@ -274,10 +266,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
           ),
         ),
         icon: const Icon(FIcons.clock, size: 16, color: Colors.white),
-        label: Text(
-          _isComplete.getLocaleName(context.l10n),
-          style: style,
-        ),
+        label: Text(_isComplete.getLocaleName(context.l10n), style: style),
       ),
       CompletionStatus.missed => IconBadge(
         style: (p0) => p0.copyWith(
@@ -286,10 +275,7 @@ class _ClickablePrayerCardState extends ConsumerState<ClickablePrayerCard> {
           ),
         ),
         icon: const Icon(FIcons.circleX, size: 16, color: Colors.white),
-        label: Text(
-          _isComplete.getLocaleName(context.l10n),
-          style: style,
-        ),
+        label: Text(_isComplete.getLocaleName(context.l10n), style: style),
       ),
       CompletionStatus.none => const SizedBox.shrink(),
     };

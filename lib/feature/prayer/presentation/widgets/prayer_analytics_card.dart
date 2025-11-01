@@ -1,3 +1,4 @@
+import 'package:flumpose/flumpose.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -44,10 +45,6 @@ class PrayerAnalyticsCard extends ConsumerWidget {
 }
 
 class _PrayerAnalyticsWidget extends StatelessWidget {
-  const _PrayerAnalyticsWidget({
-    required this.data,
-    required this.onPeriodChanged,
-  });
   // Combined constants from both widgets
 
   static const _contentPadding = EdgeInsets.symmetric(
@@ -56,21 +53,25 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
   );
   static const _progressBarRadius = 8.0;
   static const _wrapSpacing = 8.0;
-
   final PrayerAnalytics data;
+
   final void Function(PrayerAnalyticsPeriod) onPeriodChanged;
+  const _PrayerAnalyticsWidget({
+    required this.data,
+    required this.onPeriodChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colors = FTheme.of(context).colors;
     final l10n = context.l10n;
 
-    return HoverCard(
+    return StaticCard(
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(context.l10n.playerAnalytics).bold,
+          Text(context.l10n.playerAnalytics).bold(),
           const SizedBox(height: 8),
           FTabs(
             initialIndex: data.period.index,
