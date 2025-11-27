@@ -8,8 +8,6 @@ import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/core/widgets/f_skeletonizer.dart';
-import 'package:hasanat/core/widgets/icon_badge.dart';
-import 'package:hasanat/core/widgets/mouse_click.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_card_model.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
@@ -100,89 +98,6 @@ class CurrentPrayerCard extends ConsumerWidget {
   );
 }
 
-// Extract completion badge to its own widget
-class _CompletionBadge extends ConsumerWidget {
-  final Future<PrayerCompletion?> completion;
-  final AsyncValue<ThemeSettings?> appTheme;
-
-  final PrayerCardInfo data;
-  const _CompletionBadge({
-    required this.completion,
-    required this.appTheme,
-    required this.data,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder(
-      future: completion,
-      builder: (context, asyncSnapshot) {
-        return (asyncSnapshot.data != null &&
-                asyncSnapshot.data!.status != CompletionStatus.none &&
-                asyncSnapshot.connectionState == ConnectionState.waiting)
-            ? FPopoverMenu(
-                menu: [
-                  FItemGroup(
-                    children: CompletionStatus.values
-                        .where((e) => e != CompletionStatus.none)
-                        .map(
-                          (e) => FItem(
-                            title: Text(e.getLocaleName(context.l10n)),
-                            prefix: Icon(
-                              e.getIcon(),
-                              color: e.getBadgeColor(
-                                isDark:
-                                    appTheme.value?.themeMode == ThemeMode.dark,
-                              ),
-                            ),
-                            onPress: () =>
-                                _updateCompletion(asyncSnapshot.data!, ref),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ],
-                builder: (context, value, child) => MouseClick(
-                  onClick: value.toggle,
-                  child: IconBadge(
-                    style: (p0) => p0.copyWith(
-                      decoration: p0.decoration.copyWith(
-                        color: asyncSnapshot.data!.status.getBadgeColor(
-                          isDark: appTheme.value?.themeMode == ThemeMode.dark,
-                        ),
-                      ),
-                    ),
-                    icon: Icon(
-                      asyncSnapshot.data!.status.getIcon(),
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                    label: Text(
-                      asyncSnapshot.data!.status.getLocaleName(context.l10n),
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              )
-            : const SizedBox.shrink();
-      },
-    );
-  }
-
-  void _updateCompletion(PrayerCompletion completion, WidgetRef ref) {
-    ref
-        .read(prayerCompletionProvider.notifier)
-        .addOrUpdateCompletion(
-          PrayerCompletion(
-            id: completion.id,
-            prayer: data.prayer,
-            completionTime: DateTime.now(),
-            status: completion.status,
-          ),
-        );
-  }
-}
-
 class _ErrorCard extends StatelessWidget {
   final Object error;
   const _ErrorCard({required this.error});
@@ -218,11 +133,6 @@ class _HeaderRow extends StatelessWidget {
         Text(
           context.l10n.nextPrayer,
           style: CurrentPrayerCard._headerTextStyle,
-        ),
-        _CompletionBadge(
-          completion: completion,
-          appTheme: appTheme,
-          data: data,
         ),
       ],
     );
@@ -308,7 +218,7 @@ class _PrayerCardContent extends ConsumerWidget {
               data.prayer.getLocaleName(context.l10n),
               style: CurrentPrayerCard._shadowedTextStyle(42.sp),
             ),
-            Text(data.time, style: CurrentPrayerCard._shadowedTextStyle(32.sp)),
+            Text(data.time, style: CurrentPrayerCard._shadowedTextStyle(32.sp)), 
             Text(
               context.l10n.prepareForPrayer,
               style: CurrentPrayerCard._prepareTextStyle,

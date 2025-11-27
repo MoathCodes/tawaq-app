@@ -1,4 +1,4 @@
-import 'package:flumpose/flumpose.dart';
+import 'package:flumpose/flumpose.dart' hide AnimationExtensions;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -124,6 +124,7 @@ class _PrayerTrackerWidgetState extends ConsumerState<PrayerTrackerWidget> {
               FLineCalendar(
                 controller: controller,
                 onChange: (value) {
+                  
                   if (value != null) {
                     ref.read(prayerCompletionProvider.notifier).setDate(value);
                   }

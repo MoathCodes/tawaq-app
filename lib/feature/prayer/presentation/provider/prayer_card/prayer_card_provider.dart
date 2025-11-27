@@ -36,6 +36,7 @@ class PrayerCard extends _$PrayerCard {
     }
 
     final formatter = ref.watch(timeFormatterProvider);
+    final isArabic = ref.read(localeProvider.notifier).isArabic();
 
     while (true) {
       try {
@@ -61,7 +62,7 @@ class PrayerCard extends _$PrayerCard {
           decision,
           settings.location,
           now,
-          ref.read(localeProvider.notifier).isArabic(),
+          isArabic,
           formatter,
           settings,
         );
@@ -143,6 +144,14 @@ class PrayerCard extends _$PrayerCard {
 
 // Lightweight container for today/yesterday prayer & sunnah times.
 class _PrayerCache {
+  /// Midnight of the day the cache was built (in the active location).
+  final DateTime anchorDate;
+
+  final PrayerTimesData todaysTimes;
+
+  final PrayerTimesData yesterdaysTimes;
+  final SunnahTimes todaysSunnah;
+  final SunnahTimes yesterdaysSunnah;
   const _PrayerCache({
     required this.anchorDate,
     required this.todaysTimes,
@@ -150,12 +159,4 @@ class _PrayerCache {
     required this.todaysSunnah,
     required this.yesterdaysSunnah,
   });
-
-  /// Midnight of the day the cache was built (in the active location).
-  final DateTime anchorDate;
-
-  final PrayerTimesData todaysTimes;
-  final PrayerTimesData yesterdaysTimes;
-  final SunnahTimes todaysSunnah;
-  final SunnahTimes yesterdaysSunnah;
 }

@@ -133,7 +133,6 @@ class PrayerDatabase {
 
   /// Inserts or updates a prayer completion.
   Future<void> insertOrUpdateCompletion(PrayerCompletion completion) async {
-    print("Completion that will be added: $completion");
     if (completion.id == null) {
       // Add new completion (Hivez will auto-assign an ID)
       final id = await _box.add(completion);

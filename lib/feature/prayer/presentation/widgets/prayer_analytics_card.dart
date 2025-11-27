@@ -67,9 +67,9 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     final l10n = context.l10n;
 
     return StaticCard(
-      padding: const EdgeInsets.all(12),
+      padding: const .all(12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: .stretch,
         children: [
           Text(context.l10n.playerAnalytics).bold(),
           const SizedBox(height: 8),
@@ -81,8 +81,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
                 color: colors.secondaryForeground.withAlpha(150),
               ),
             ),
-            onChange: (index) =>
-                onPeriodChanged(PrayerAnalyticsPeriod.values[index]),
+            onChange: (index) => onPeriodChanged(.values[index]),
             children: _buildTabEntries(context, colors, l10n),
           ),
         ],
@@ -96,7 +95,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     AppLocalizations l10n,
   ) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      mainAxisAlignment: .spaceAround,
       children: [_buildProgressSection(colors, l10n), _buildStatsSection(l10n)],
     );
   }

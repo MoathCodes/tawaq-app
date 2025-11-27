@@ -27,43 +27,34 @@ enum CompletionStatus {
   /// Returns the color of the badge for this status.
   Color getBadgeColor({bool isDark = false}) {
     return switch (this) {
-      CompletionStatus.jamaah =>
-        isDark ? Colors.green.shade900 : Colors.green.shade600,
-      CompletionStatus.onTime =>
-        isDark ? Colors.yellow.shade900 : Colors.yellow.shade600,
-      CompletionStatus.late =>
-        isDark ? Colors.orange.shade900 : Colors.orange.shade600,
-      CompletionStatus.missed =>
-        isDark ? Colors.red.shade900 : Colors.red.shade600,
-      CompletionStatus.none => Colors.transparent,
+      .jamaah => isDark ? Colors.green.shade900 : Colors.green.shade600,
+      .onTime => isDark ? Colors.yellow.shade900 : Colors.yellow.shade600,
+      .late => isDark ? Colors.orange.shade900 : Colors.orange.shade600,
+      .missed => isDark ? Colors.red.shade900 : Colors.red.shade600,
+      .none => Colors.transparent,
     };
   }
 
   /// Returns the icon for this status.
   IconData? getIcon() {
     return switch (this) {
-      CompletionStatus.jamaah => FIcons.users,
-      CompletionStatus.onTime => FIcons.checkCheck,
-      CompletionStatus.late => FIcons.clock,
-      CompletionStatus.missed => FIcons.circleX,
-      CompletionStatus.none => null,
+      .jamaah => FIcons.users,
+      .onTime => FIcons.checkCheck,
+      .late => FIcons.clock,
+      .missed => FIcons.circleX,
+      .none => null,
     };
   }
 
   /// Returns the localized name of this status.
   String getLocaleName(AppLocalizations locale) {
-    switch (this) {
-      case CompletionStatus.jamaah:
-        return locale.jamaah;
-      case CompletionStatus.onTime:
-        return locale.onTime;
-      case CompletionStatus.late:
-        return locale.late;
-      case CompletionStatus.missed:
-        return locale.missed;
-      case CompletionStatus.none:
-        return '';
-    }
+    return switch (this) {
+      .jamaah => locale.jamaah,
+      .onTime => locale.onTime,
+      .late => locale.late,
+      .missed => locale.missed,
+      .none => '',
+    };
   }
 }
 

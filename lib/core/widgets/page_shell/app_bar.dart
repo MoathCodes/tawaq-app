@@ -77,29 +77,26 @@ class ShellAppBar extends ConsumerWidget {
       const ThemeModeButton(),
     ];
 
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: FHeader.nested(
-        // prefixes: isArabic ? suffixes : prefixes,
-        suffixes: [
-          Expanded(
-            flex: 2,
-            child: StaticCard(
-              padding: const EdgeInsets.all(8),
-              child: Row(children: nearWidgets),
-            ),
+    return FHeader.nested(
+      // prefixes: isArabic ? suffixes : prefixes,
+      suffixes: [
+        Expanded(
+          flex: 2,
+          child: StaticCard(
+            padding: const EdgeInsets.all(8),
+            child: Row(children: nearWidgets),
           ),
-          Expanded(
-            child: Row(
-              spacing: 4,
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: farWidgets,
-            ),
+        ),
+        Expanded(
+          child: Row(
+            spacing: 4,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: farWidgets,
           ),
-        ],
-        // prefixes: farWidgets,
-        // suffixes: isArabic ? nearWidgets : farWidgets,
-      ),
+        ),
+      ],
+      // prefixes: farWidgets,
+      // suffixes: isArabic ? nearWidgets : farWidgets,
     );
   }
 }

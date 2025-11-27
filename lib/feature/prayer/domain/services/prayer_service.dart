@@ -1,6 +1,5 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hasanat/core/logging/talker_provider.dart';
-import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
@@ -52,31 +51,51 @@ class PrayerService {
       if (completedDays.isEmpty) return (current: 0, best: 0);
 
       var bestStreak = 0;
-      var currentStreak = 0;
-      var consecutiveDays = 0;
+      var currentStreakLength = 0;
       DateTime? previousDay;
 
+      // Process all completed days to find best streak and track current
       for (final currentDay in completedDays) {
-        if (previousDay == null ||
-            currentDay.difference(previousDay).inDays == 1) {
-          consecutiveDays++;
+        if (previousDay == null) {
+          // First day
+          currentStreakLength = 1;
         } else {
-          bestStreak = consecutiveDays > bestStreak
-              ? consecutiveDays
-              : bestStreak;
-          consecutiveDays = 1;
+          final daysDiff = currentDay.difference(previousDay).inDays;
+          if (daysDiff == 1) {
+            // Consecutive day
+            currentStreakLength++;
+          } else {
+            // Gap found - update best streak and reset counter
+            if (currentStreakLength > bestStreak) {
+              bestStreak = currentStreakLength;
+            }
+            currentStreakLength = 1;
+          }
         }
         previousDay = currentDay;
       }
-      bestStreak = consecutiveDays > bestStreak ? consecutiveDays : bestStreak;
 
-      final today = DateTime.now().toLocation(loc);
-      if (previousDay != null && today.difference(previousDay).inDays == 0) {
-        currentStreak = consecutiveDays;
-      } else {
-        currentStreak = 0;
+      // After loop, check if the last streak is the best
+      if (currentStreakLength > bestStreak) {
+        bestStreak = currentStreakLength;
       }
-      return (current: currentStreak, best: bestStreak);
+
+      // Determine current streak:
+      // Current streak only counts if it includes today or yesterday
+      var finalCurrentStreak = 0;
+      if (previousDay != null) {
+        final today = TZDateTime.now(loc);
+        final todayDate = DateTime(today.year, today.month, today.day);
+        final daysSinceLastCompletion = todayDate.difference(previousDay).inDays;
+
+        if (daysSinceLastCompletion == 0 || daysSinceLastCompletion == 1) {
+          // Streak is active (today or yesterday was completed)
+          finalCurrentStreak = currentStreakLength;
+        }
+        // else: streak is broken (last completion was 2+ days ago)
+      }
+
+      return (current: finalCurrentStreak, best: bestStreak);
     } catch (e, stackTrace) {
       _log.handle(e, stackTrace);
       return (current: 0, best: 0);

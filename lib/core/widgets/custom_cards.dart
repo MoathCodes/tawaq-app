@@ -111,7 +111,7 @@ class _HoverCardState extends State<HoverCard> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeOutCubic,
-        padding: widget.padding,
+        padding: widget.padding ,
         decoration: BoxDecoration(
           color: widget.backgroundColor ?? colors.secondary,
           borderRadius: BorderRadius.circular(
