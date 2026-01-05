@@ -23,6 +23,10 @@ migrate_working_dir/
 # The .vscode folder contains launch configuration and tasks which you
 # may keep tracked; comment the line above if you wish to include it.
 
+# Local / test artifacts (do not commit)
+/cache.db
+/analysis.txt
+/scan.txt
 # ---------------------------------------------------------------------------
 # Dart / Flutter
 # ---------------------------------------------------------------------------
