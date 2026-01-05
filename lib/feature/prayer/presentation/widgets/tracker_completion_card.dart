@@ -71,43 +71,17 @@ class TrackerCompletionCard extends HookConsumerWidget {
     return FPopoverMenu(
       menu: [
         FItemGroup(
-          children: [
-            FItem(
-              prefix: Icon(
-                CompletionStatus.jamaah.getIcon(),
-                color: CompletionStatus.jamaah.getBadgeColor(),
-              ),
-              title: Text(context.l10n.jamaah),
-              onPress: () => handleClick(CompletionStatus.jamaah),
-            ),
-            FItem(
-              // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
-              prefix: Icon(
-                CompletionStatus.onTime.getIcon(),
-                color: CompletionStatus.onTime.getBadgeColor(),
-              ),
-              title: Text(context.l10n.onTime),
-              onPress: () => handleClick(CompletionStatus.onTime),
-            ),
-            FItem(
-              // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
-              prefix: Icon(
-                CompletionStatus.late.getIcon(),
-                color: CompletionStatus.late.getBadgeColor(),
-              ),
-              title: Text(context.l10n.late),
-              onPress: () => handleClick(CompletionStatus.late),
-            ),
-            FItem(
-              // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
-              prefix: Icon(
-                CompletionStatus.missed.getIcon(),
-                color: CompletionStatus.missed.getBadgeColor(),
-              ),
-              title: Text(context.l10n.missed),
-              onPress: () => handleClick(CompletionStatus.missed),
-            ),
-          ],
+          children: CompletionStatus.values
+              .map(
+                (e) => FItem(
+                  title: Text(
+                    e.getLocaleName(context.l10n),
+                  ),
+                  prefix: Icon(e.getIcon(), color: e.getBadgeColor()),
+                  onPress: () => handleClick(e),
+                ),
+              )
+              .toList(),
         ),
       ],
       builder: (context, controller, child) => ConstrainedBox(
@@ -134,7 +108,7 @@ class TrackerCompletionCard extends HookConsumerWidget {
                 duration: _animationDuration,
                 curve: Curves.easeInOut,
                 width: 250.w,
-                padding: const EdgeInsets.all(AppSpacing.sm),
+                padding: const .all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: theme.cardStyle.decoration.color,
                   border: Border.all(
@@ -154,11 +128,11 @@ class TrackerCompletionCard extends HookConsumerWidget {
                       : null,
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: .start,
+                  mainAxisAlignment: .spaceEvenly,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: .spaceBetween,
                       children: [
                         Builder(
                           builder: (context) {
@@ -184,14 +158,7 @@ class TrackerCompletionCard extends HookConsumerWidget {
                             );
                           },
                         ),
-                        _buildStatusChip(
-                          cardData.completion?.status ?? completionStatus.value,
-                          theme,
-                          ref.watch(themeProvider).value?.themeMode ==
-                              ThemeMode.dark,
-                          completionStatus.value,
-                          context,
-                        ),
+                        _StatusChip(status: completionStatus.value),
                       ],
                     ),
                     Text(
@@ -223,51 +190,64 @@ class TrackerCompletionCard extends HookConsumerWidget {
   }
 }
 
-Widget _buildStatusChip(
-  CompletionStatus status,
-  FThemeData theme,
-  bool isDarkMode,
-  CompletionStatus completionStatus,
-  BuildContext context,
-) {
-  final style = theme.typography.sm.copyWith(color: Colors.white);
-  return switch (status) {
-    CompletionStatus.jamaah => IconBadge(
-      style: (p0) => p0.copyWith(
-        decoration: p0.decoration.copyWith(
-          color: isDarkMode ? Colors.green.shade900 : Colors.green.shade600,
-        ),
-      ),
-      icon: const Icon(FIcons.users, size: 16, color: Colors.white),
-      label: Text(completionStatus.getLocaleName(context.l10n), style: style),
-    ),
-    CompletionStatus.onTime => IconBadge(
-      style: (p0) => p0.copyWith(
-        decoration: p0.decoration.copyWith(
-          color: isDarkMode ? Colors.yellow.shade900 : Colors.yellow.shade600,
-        ),
-      ),
-      icon: const Icon(FIcons.checkCheck, size: 16, color: Colors.white),
-      label: Text(completionStatus.getLocaleName(context.l10n), style: style),
-    ),
-    CompletionStatus.late => IconBadge(
-      style: (p0) => p0.copyWith(
-        decoration: p0.decoration.copyWith(
-          color: isDarkMode ? Colors.orange.shade900 : Colors.orange.shade600,
-        ),
-      ),
-      icon: const Icon(FIcons.clock, size: 16, color: Colors.white),
-      label: Text(completionStatus.getLocaleName(context.l10n), style: style),
-    ),
-    CompletionStatus.missed => IconBadge(
-      style: (p0) => p0.copyWith(
-        decoration: p0.decoration.copyWith(
-          color: isDarkMode ? Colors.red.shade900 : Colors.red.shade600,
-        ),
-      ),
-      icon: const Icon(FIcons.circleX, size: 16, color: Colors.white),
-      label: Text(completionStatus.getLocaleName(context.l10n), style: style),
-    ),
-    CompletionStatus.none => const SizedBox.shrink(),
-  };
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.status, super.key});
+  final CompletionStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = context.theme.typography.sm.copyWith(color: Colors.white);
+    return HookConsumer(
+      builder: (context, ref, child) {
+        final isDarkMode =
+            ref.watch(themeProvider).value?.themeMode == ThemeMode.dark;
+        final context = useContext();
+        return switch (status) {
+          CompletionStatus.jamaah => IconBadge(
+            style: (p0) => p0.copyWith(
+              decoration: p0.decoration.copyWith(
+                color: isDarkMode
+                    ? Colors.green.shade900
+                    : Colors.green.shade600,
+              ),
+            ),
+            icon: const Icon(FIcons.users, size: 16, color: Colors.white),
+            label: Text(status.getLocaleName(context.l10n), style: style),
+          ),
+          CompletionStatus.onTime => IconBadge(
+            style: (p0) => p0.copyWith(
+              decoration: p0.decoration.copyWith(
+                color: isDarkMode
+                    ? Colors.yellow.shade900
+                    : Colors.yellow.shade600,
+              ),
+            ),
+            icon: const Icon(FIcons.checkCheck, size: 16, color: Colors.white),
+            label: Text(status.getLocaleName(context.l10n), style: style),
+          ),
+          CompletionStatus.late => IconBadge(
+            style: (p0) => p0.copyWith(
+              decoration: p0.decoration.copyWith(
+                color: isDarkMode
+                    ? Colors.orange.shade900
+                    : Colors.orange.shade600,
+              ),
+            ),
+            icon: const Icon(FIcons.clock, size: 16, color: Colors.white),
+            label: Text(status.getLocaleName(context.l10n), style: style),
+          ),
+          CompletionStatus.missed => IconBadge(
+            style: (p0) => p0.copyWith(
+              decoration: p0.decoration.copyWith(
+                color: isDarkMode ? Colors.red.shade900 : Colors.red.shade600,
+              ),
+            ),
+            icon: const Icon(FIcons.circleX, size: 16, color: Colors.white),
+            label: Text(status.getLocaleName(context.l10n), style: style),
+          ),
+          CompletionStatus.none => const SizedBox.shrink(),
+        };
+      },
+    );
+  }
 }
