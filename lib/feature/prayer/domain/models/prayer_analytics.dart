@@ -35,15 +35,15 @@ abstract class PrayerAnalytics with _$PrayerAnalytics {
 
   /// Creates an empty instance of [PrayerAnalytics].
   factory PrayerAnalytics.empty() => const PrayerAnalytics(
-        period: PrayerAnalyticsPeriod.weekly,
-        completionPercentage: 0,
-        currentStreak: 0,
-        bestStreak: 0,
-        jamaahPercentage: 0,
-        onTimePercentage: 0,
-        missedPercentage: 0,
-        latePercentage: 0,
-      );
+    period: PrayerAnalyticsPeriod.weekly,
+    completionPercentage: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    jamaahPercentage: 0,
+    onTimePercentage: 0,
+    missedPercentage: 0,
+    latePercentage: 0,
+  );
 
   // factory PrayerAnalytics.fromJson(Map<String, dynamic> json) =>
   //     _$PrayerAnalyticsFromJson(json);
@@ -61,7 +61,8 @@ enum PrayerAnalyticsPeriod {
   monthly,
 
   /// The analytics for the last 365 days.
-  yearly;
+  yearly
+  ;
 
   /// The duration of the period.
   Duration get duration {

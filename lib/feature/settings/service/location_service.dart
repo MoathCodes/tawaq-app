@@ -2,44 +2,54 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:free_map/free_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:hasanat/core/logging/talker_provider.dart';
+import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tzMapper;
+import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tz_mapper;
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:talker_flutter/talker_flutter.dart';
 import 'package:timezone/timezone.dart';
 
 part 'location_service.g.dart';
 
+/// Provider for the [LocationService].
 @riverpod
 LocationService locationService(Ref ref) {
-  final talker = ref.read(talkerProvider);
+  final log = ref.read(loggerProvider);
   final lang = ref.watch(
-    localeProvider.select(
-      (value) => value.value?.languageCode,
-    ),
+    localeProvider.select((value) => value.value?.languageCode),
   );
   final service = FmService();
-  return LocationService(talker, service, lang);
+  return LocationService(log, service, lang);
 }
 
+/// Exception thrown when a location-related error occurs.
 class LocationException implements Exception {
+  /// Creates a [LocationException] instance.
   LocationException(this.message);
+
+  /// The error message.
   final String message;
 
   @override
   String toString() => message;
 }
 
+/// Service for location-related operations.
 class LocationService {
-  LocationService(this._talker, this._service, this.languageCode);
-  final Talker _talker;
+  /// Creates a [LocationService] instance.
+  LocationService(this._log, this._service, this.languageCode);
+
+  /// The logger instance.
+  final Logger _log;
+
+  /// The language code for localized results.
   final String? languageCode;
   final FmService _service;
 
+  /// Returns the current device position.
   Future<LatLng> getCurrentPosition() async {
     try {
-      _talker.info('[LocationService] Getting current position...');
+      _log.i('[LocationService] Getting current position...');
 
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
@@ -61,39 +71,45 @@ class LocationService {
       }
 
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        locationSettings: const LocationSettings(accuracy: .high),
       );
 
       final result = LatLng(position.latitude, position.longitude);
-      _talker.info('[LocationService] Position obtained: $result');
+      _log.i('[LocationService] Position obtained: $result');
       return result;
     } catch (e, stackTrace) {
-      _talker.handle(e, stackTrace, '[LocationService] Error getting position');
+      _log.e(
+        '[LocationService] Error getting position',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }
 
+  /// Returns the timezone location from coordinates using an offline mapper.
   Location? getLocationFromCoordinatesOffline(Coordinates coordinates) {
     try {
-      final timezoneName = tzMapper.latLngToTimezoneString(
+      final timezoneName = tz_mapper.latLngToTimezoneString(
         coordinates.latitude,
         coordinates.longitude,
       );
 
       return getLocation(timezoneName);
     } catch (e, stack) {
-      _talker.handle(
-        e,
-        stack,
+      _log.e(
         '[LocationService] Error getting location from coordinates',
+        error: e,
+        stackTrace: stack,
       );
       throw LocationException('Error getting location from coordinates');
     }
   }
 
+  /// Returns place details for the given coordinates.
   Future<FmData> getPlaceDetails(Coordinates coords) async {
     try {
-      _talker.info('[LocationService] Getting details for place: $coords');
+      _log.i('[LocationService] Getting details for place: $coords');
       final place = await _service.getAddress(
         lat: coords.latitude,
         lng: coords.longitude,
@@ -101,21 +117,22 @@ class LocationService {
       if (place == null) {
         throw LocationException('No place found for coordinates: $coords');
       }
-      _talker.info('[LocationService] Place details obtained: $place');
+      _log.i('[LocationService] Place details obtained: $place');
       return place;
     } catch (e, stackTrace) {
-      _talker.handle(
-        e,
-        stackTrace,
+      _log.e(
         '[LocationService] Error getting place details',
+        error: e,
+        stackTrace: stackTrace,
       );
       rethrow;
     }
   }
 
+  /// Searches for places matching the given query.
   Future<List<FmData>> searchPlaces(String query) async {
     try {
-      _talker.info('[LocationService] Searching for: $query');
+      _log.i('[LocationService] Searching for: $query');
       final results = await _service.search(
         q: query,
         p: FmSearchParams(
@@ -125,10 +142,14 @@ class LocationService {
           ],
         ),
       );
-      _talker.info('[LocationService] Found ${results.length} results');
+      _log.i('[LocationService] Found ${results.length} results');
       return results;
     } catch (e, stackTrace) {
-      _talker.handle(e, stackTrace, '[LocationService] Error searching places');
+      _log.e(
+        '[LocationService] Error searching places',
+        error: e,
+        stackTrace: stackTrace,
+      );
       return [];
     }
   }

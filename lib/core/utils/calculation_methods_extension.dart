@@ -1,4 +1,3 @@
-
 // import 'package:adhan_dart/adhan_dart.dart';
 
 // extension CalculationMethodParametersExtension on CalculationMethod{

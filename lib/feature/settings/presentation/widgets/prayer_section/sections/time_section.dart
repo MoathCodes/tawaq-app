@@ -1,21 +1,287 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:hasanat/core/hooks/hooks.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/sections/custom_parameters_section.dart';
 import 'package:hasanat/feature/settings/presentation/widgets/settings_section.dart';
+import 'package:hasanat/theme/theme.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class PrayerSettingsTimeSection extends ConsumerStatefulWidget {
+/// Widget for the prayer time settings section.
+class PrayerSettingsTimeSection extends HookConsumerWidget {
+  /// Creates a new [PrayerSettingsTimeSection] instance.
   const PrayerSettingsTimeSection({required this.maxWidth, super.key});
+
+  /// The maximum width of the section.
   final double maxWidth;
 
+  // Prayers that support Iqamah adjustment
+  static const List<Prayer> _kIqamahPrayers = <Prayer>[
+    Prayer.fajr,
+    Prayer.dhuhr,
+    Prayer.asr,
+    Prayer.maghrib,
+    Prayer.isha,
+  ];
+
   @override
-  ConsumerState<PrayerSettingsTimeSection> createState() => _TimeSectionState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final prayerSettings = ref.read(prayerSettingsProvider).value;
+    final values = prayerSettings?.iqamahSettings;
+
+    // Controllers and focus nodes keyed by prayer
+    final controllers = useMemoized(
+      () => {for (final p in _kIqamahPrayers) p: TextEditingController()},
+    );
+    final focusNodes = useMemoized(
+      () => {for (final p in _kIqamahPrayers) p: FocusNode()},
+    );
+
+    // Method controller
+    final methodController = useFSelectController<CalculationMethod>(
+      initialValue: prayerSettings?.method,
+    );
+
+    // Track initial values and unsaved state
+    final initialIqamahValues = useMemoized(() => <Prayer, String>{});
+    final unsavedPrayers = useMemoized(
+      () => ValueNotifier<Set<Prayer>>(<Prayer>{}),
+    );
+
+    // Force rebuild when unsavedPrayers changes (useListenable triggers rebuild)
+    useListenable(unsavedPrayers);
+
+    // Initialize controllers and add listeners
+    useEffect(
+      () {
+        for (final p in _kIqamahPrayers) {
+          final v = (values?[p] ?? 0).toString();
+          controllers[p]!.text = v;
+          initialIqamahValues[p] = v;
+
+          void handleControllerChange() {
+            final controller = controllers[p]!;
+            final initial = initialIqamahValues[p] ?? '';
+            final current = controller.text.trim();
+            final isUnsaved = current != initial;
+            final set = unsavedPrayers.value;
+            final hasUnsavedEntry = set.contains(p);
+
+            if (isUnsaved && !hasUnsavedEntry) {
+              unsavedPrayers.value = {...set}..add(p);
+            } else if (!isUnsaved && hasUnsavedEntry) {
+              unsavedPrayers.value = {...set}..remove(p);
+            }
+          }
+
+          controllers[p]!.addListener(handleControllerChange);
+        }
+
+        return () {
+          for (final c in controllers.values) {
+            c.dispose();
+          }
+          for (final f in focusNodes.values) {
+            f.dispose();
+          }
+          unsavedPrayers.dispose();
+        };
+      },
+      const [],
+    );
+
+    // Add focus listeners for auto-save
+    useEffect(
+      () {
+        void createFocusListener(Prayer p) {
+          focusNodes[p]!.addListener(() {
+            if (!focusNodes[p]!.hasFocus) {
+              _saveTextField(
+                context,
+                ref,
+                p,
+                controllers,
+                initialIqamahValues,
+                unsavedPrayers,
+              );
+            }
+          });
+        }
+
+        for (final p in _kIqamahPrayers) {
+          createFocusListener(p);
+        }
+        return null;
+      },
+      const [],
+    );
+
+    // Listen for external updates to iqamah settings and sync controllers
+    ref.listen<Map<Prayer, int>?>(
+      prayerSettingsProvider.select(
+        (s) => s.value?.iqamahSettings,
+      ),
+      (prev, next) {
+        if (next == null) return;
+        for (final p in _kIqamahPrayers) {
+          final newValue = (next[p] ?? 0).toString();
+          final c = controllers[p]!;
+          if (c.text != newValue) {
+            c.text = newValue;
+          }
+          initialIqamahValues[p] = newValue;
+          // Remove unsaved flag if now in sync
+          final currentUnsaved = unsavedPrayers.value;
+          if (currentUnsaved.contains(p) && c.text.trim() == newValue) {
+            unsavedPrayers.value = {...currentUnsaved}..remove(p);
+          }
+        }
+      },
+    );
+
+    // Keep calculation method selection in sync
+    ref.listen<CalculationMethod?>(
+      prayerSettingsProvider.select((s) => s.value?.method),
+      (prev, next) {
+        if (next != null && methodController.value != next) {
+          methodController.value = next;
+        }
+      },
+    );
+
+    void saveUnsavedPrayers() {
+      final list = List<Prayer>.from(unsavedPrayers.value);
+      for (final p in list) {
+        _saveTextField(
+          context,
+          ref,
+          p,
+          controllers,
+          initialIqamahValues,
+          unsavedPrayers,
+        );
+      }
+    }
+
+    final is24Hours = ref.watch(
+      prayerSettingsProvider.select(
+        (value) => value.value?.is24Hours,
+      ),
+    );
+    return SettingsSection(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      title: context.l10n.timeSectionTitle,
+      subtitle: context.l10n.timeSectionSubtitle,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Column(
+          spacing: 20,
+          children: [
+            FCard(
+              title: Text(context.l10n.calculationMethod),
+              child: Column(
+                children: [
+                  _buildCalculationMethodSelector(
+                    context,
+                    ref,
+                    methodController,
+                  ),
+                  PrayerSettingsCustomParametersCard(maxWidth: maxWidth),
+                ],
+              ),
+            ),
+            FCard(
+              title: Text(context.l10n.timeFormat),
+              child: FSwitch(
+                value: is24Hours ?? false,
+                onChange: (value) {
+                  ref
+                      .read(prayerSettingsProvider.notifier)
+                      .set24HourFormat(value: value);
+                },
+                label: Text(context.l10n.use24HourFormat),
+              ),
+            ),
+            FCard(
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(context.l10n.iqamahAdjustment),
+                  FTooltip(
+                    tipBuilder: (ctx, ctrl) => Text(context.l10n.save),
+                    child: FButton(
+                      prefix: const Icon(FIcons.save),
+                      onPress: unsavedPrayers.value.isEmpty
+                          ? null
+                          : saveUnsavedPrayers,
+                      child: Text(context.l10n.save),
+                    ),
+                  ),
+                ],
+              ),
+              child: FTileGroup(
+                label: Row(
+                  children: [
+                    Icon(
+                      FIcons.info,
+                      size: 14,
+                      color: context.theme.colors.mutedForeground,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Flexible(
+                      child: Text(
+                        context.l10n.iqamahAfterAdhan,
+                        style: context.theme.typography.sm.copyWith(
+                          color: context.theme.colors.mutedForeground,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                children: _kIqamahPrayers
+                    .map(
+                      (p) => _PrayerIqamahTile(
+                        key: ValueKey(p),
+                        prayer: p,
+                        controller: controllers[p]!,
+                        focusNode: focusNodes[p]!,
+                        allowSigned: false,
+                        onDelta: (delta) =>
+                            _changeIqamah(controllers[p]!, delta),
+                        onSave: () => _saveTextField(
+                          context,
+                          ref,
+                          p,
+                          controllers,
+                          initialIqamahValues,
+                          unsavedPrayers,
+                        ),
+                        onReset: () => _resetIqamah(
+                          context,
+                          ref,
+                          p,
+                          controllers[p]!,
+                          controllers,
+                          initialIqamahValues,
+                          unsavedPrayers,
+                        ),
+                      ),
+                    )
+                    .toList()
+                    .cast<FTileMixin>(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _PrayerIqamahTile extends StatelessWidget implements FTileMixin {
@@ -63,14 +329,14 @@ class _PrayerIqamahTile extends StatelessWidget implements FTileMixin {
             onPress: () => onDelta(-1),
             child: const Icon(FIcons.minus),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.xs),
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 64, maxWidth: 120),
             child: FTextField(
-              controller: controller,
+              control: .managed(controller: controller),
               focusNode: focusNode,
               textAlign: TextAlign.center,
-              keyboardType: const TextInputType.numberWithOptions(),
+              keyboardType: TextInputType.number,
               inputFormatters: [
                 if (allowSigned)
                   FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]*$'))
@@ -85,13 +351,13 @@ class _PrayerIqamahTile extends StatelessWidget implements FTileMixin {
               ),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: AppSpacing.xs),
           FButton.icon(
             style: FButtonStyle.ghost(),
             onPress: () => onDelta(1),
             child: const Icon(FIcons.plus),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: AppSpacing.xs),
           FTooltip(
             tipBuilder: (context, controller) =>
                 Text(context.l10n.resetToDefaults),
@@ -107,224 +373,16 @@ class _PrayerIqamahTile extends StatelessWidget implements FTileMixin {
   }
 }
 
-class _TimeSectionState extends ConsumerState<PrayerSettingsTimeSection>
-    with TickerProviderStateMixin {
-  // Prayers that support Iqamah adjustment
-  static const List<Prayer> _kIqamahPrayers = <Prayer>[
-    Prayer.fajr,
-    Prayer.dhuhr,
-    Prayer.asr,
-    Prayer.maghrib,
-    Prayer.isha,
-  ];
+// -- Helper functions for PrayerSettingsTimeSection --
 
-  // Controllers and focus nodes keyed by prayer
-  late final Map<Prayer, TextEditingController> _controllers = {
-    for (final p in _kIqamahPrayers) p: TextEditingController(),
-  };
-  late final Map<Prayer, FocusNode> _focusNodes = {
-    for (final p in _kIqamahPrayers) p: FocusNode(),
-  };
-
-  late FSelectController<CalculationMethod> _methodController;
-  final Map<Prayer, String> _initialIqamahValues = <Prayer, String>{};
-  // Track unsaved state without rebuilding the whole widget
-  final ValueNotifier<Set<Prayer>> _unsavedPrayers = ValueNotifier<Set<Prayer>>(
-    <Prayer>{},
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    // Listen for external updates to iqamah settings and sync controllers
-    ref.listen<Map<Prayer, int>?>(
-      prayerSettingsProvider.select(
-        (s) => s.value?.iqamahSettings,
-      ),
-      (prev, next) {
-        if (next == null) return;
-        for (final p in _kIqamahPrayers) {
-          final newValue = (next[p] ?? 0).toString();
-          final c = _controllers[p]!;
-          if (c.text != newValue) {
-            c.text = newValue;
-          }
-          _initialIqamahValues[p] = newValue;
-          // Remove unsaved flag if now in sync
-          final currentUnsaved = _unsavedPrayers.value;
-          if (currentUnsaved.contains(p) && c.text.trim() == newValue) {
-            _unsavedPrayers.value = {...currentUnsaved}..remove(p);
-          }
-        }
-      },
-    );
-
-    // Keep calculation method selection in sync
-    ref.listen<CalculationMethod?>(
-      prayerSettingsProvider.select((s) => s.value?.method),
-      (prev, next) {
-        if (next != null && _methodController.value != next) {
-          _methodController.value = next;
-        }
-      },
-    );
-
-    final is24Hours = ref.watch(
-      prayerSettingsProvider.select(
-        (value) => value.value?.is24Hours,
-      ),
-    );
-    return SettingsSection(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      title: context.l10n.timeSectionTitle,
-      subtitle: context.l10n.timeSectionSubtitle,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: widget.maxWidth),
-        child: Column(
-          spacing: 20,
-          children: [
-            FCard(
-              title: Text(context.l10n.calculationMethod),
-              child: Column(
-                children: [
-                  _buildCalculationMethodSelector(),
-                  PrayerSettingsCustomParametersCard(maxWidth: widget.maxWidth),
-                ],
-              ),
-            ),
-            FCard(
-              title: Text(context.l10n.timeFormat),
-              child: FSwitch(
-                value: is24Hours ?? false,
-                onChange: (value) {
-                  ref
-                      .read(prayerSettingsProvider.notifier)
-                      .set24HourFormat(value);
-                },
-                label: Text(context.l10n.use24HourFormat),
-              ),
-            ),
-            FCard(
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(context.l10n.iqamahAdjustment),
-                  ValueListenableBuilder<Set<Prayer>>(
-                    valueListenable: _unsavedPrayers,
-                    builder: (_, set, __) => FTooltip(
-                      tipBuilder: (context, controller) =>
-                          Text(context.l10n.save),
-                      child: FButton(
-                        prefix: const Icon(FIcons.save),
-                        onPress: set.isEmpty ? null : _saveUnsavedPrayers,
-                        child: Text(context.l10n.save),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              child: FTileGroup(
-                // Visual grouping of prayers with concise instruction
-                label: Row(
-                  children: [
-                    Icon(
-                      FIcons.info,
-                      size: 14,
-                      color: context.theme.colors.mutedForeground,
-                    ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        context.l10n.iqamahAfterAdhan,
-                        style: context.theme.typography.sm.copyWith(
-                          color: context.theme.colors.mutedForeground,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                children: _kIqamahPrayers
-                    .map(
-                      (p) => _PrayerIqamahTile(
-                        key: ValueKey(p),
-                        prayer: p,
-                        controller: _controllers[p]!,
-                        focusNode: _focusNodes[p]!,
-                        allowSigned: false,
-                        onDelta: (delta) =>
-                            _changeIqamah(p, _controllers[p]!, delta),
-                        onSave: () => _saveTextField(p),
-                        onReset: () => _resetIqamah(p, _controllers[p]!),
-                      ),
-                    )
-                    .toList()
-                    .cast<FTileMixin>(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    for (final c in _controllers.values) {
-      c.dispose();
-    }
-    for (final f in _focusNodes.values) {
-      f.dispose();
-    }
-    _unsavedPrayers.dispose();
-    _methodController.dispose();
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    final prayerSettings = ref.read(prayerSettingsProvider).value;
-    final values = prayerSettings?.iqamahSettings;
-
-    // Seed controllers and initial values
-    for (final p in _kIqamahPrayers) {
-      final v = (values?[p] ?? 0).toString();
-      _controllers[p]!.text = v;
-      _initialIqamahValues[p] = v;
-      _controllers[p]!.addListener(() => _handleControllerChange(p));
-      _focusNodes[p]!.addListener(() {
-        if (!_focusNodes[p]!.hasFocus) _saveTextField(p);
-      });
-    }
-
-    _methodController = FSelectController(
-      vsync: this,
-      value: prayerSettings?.method,
-    );
-  }
-
-  Widget _buildCalculationMethodSelector() {
-    return FSelect<CalculationMethod>.search(
-      items: {
-        for (final method in CalculationMethod.values)
-          method.getLocaleName(context.l10n): method,
-      },
-      controller: _methodController,
-      autofocus: true,
-      label: Text(context.l10n.calculationMethod),
-      // format: (value) => value.getLocaleName(context.l10n),
-      filter: (query) => CalculationMethod.values.where(
-        (method) => method
-            .getLocaleName(context.l10n)
-            .toLowerCase()
-            .contains(query.toLowerCase()),
-      ),
-
-      // builder: (context, data) => data.values
-      //     .map((method) => FSelectItem(
-      //           method.getLocaleName(context.l10n),
-      //           method,
-      //         ))
-      //     .toList(),
+Widget _buildCalculationMethodSelector(
+  BuildContext context,
+  WidgetRef ref,
+  FSelectController<CalculationMethod> methodController,
+) {
+  return FSelect<CalculationMethod>.search(
+    control: .managed(
+      controller: methodController,
       onChange: (value) {
         if (value != null) {
           ref
@@ -337,80 +395,84 @@ class _TimeSectionState extends ConsumerState<PrayerSettingsTimeSection>
               );
         }
       },
-    );
-  }
+    ),
+    items: {
+      for (final method in CalculationMethod.values)
+        method.getLocaleName(context.l10n): method,
+    },
+    autofocus: true,
+    label: Text(context.l10n.calculationMethod),
+    filter: (query) => CalculationMethod.values.where(
+      (method) => method
+          .getLocaleName(context.l10n)
+          .toLowerCase()
+          .contains(query.toLowerCase()),
+    ),
+  );
+}
 
-  // Removed tile/stepper builders; logic moved into PrayerIqamahTile below.
+void _changeIqamah(TextEditingController controller, int delta) {
+  final current = int.tryParse(controller.text.trim()) ?? 0;
+  final next = current + delta;
+  controller.text = next.toString();
+}
 
-  void _changeIqamah(
-    Prayer prayer,
-    TextEditingController controller,
-    int delta,
-  ) {
-    final current = int.tryParse(controller.text.trim()) ?? 0;
-    final next = current + delta;
-    controller.text = next.toString();
-  }
+void _resetIqamah(
+  BuildContext context,
+  WidgetRef ref,
+  Prayer prayer,
+  TextEditingController controller,
+  Map<Prayer, TextEditingController> controllers,
+  Map<Prayer, String> initialIqamahValues,
+  ValueNotifier<Set<Prayer>> unsavedPrayers,
+) {
+  controller.text = '0';
+  _saveTextField(
+    context,
+    ref,
+    prayer,
+    controllers,
+    initialIqamahValues,
+    unsavedPrayers,
+  );
+}
 
-  void _handleControllerChange(Prayer prayer) {
-    final controller = _controllers[prayer]!;
-    final initial = _initialIqamahValues[prayer] ?? '';
-    final current = controller.text.trim();
-    final isUnsaved = current != initial;
-    final set = _unsavedPrayers.value;
-    final hasUnsavedEntry = set.contains(prayer);
+void _saveTextField(
+  BuildContext context,
+  WidgetRef ref,
+  Prayer prayer,
+  Map<Prayer, TextEditingController> controllers,
+  Map<Prayer, String> initialIqamahValues,
+  ValueNotifier<Set<Prayer>> unsavedPrayers,
+) {
+  final controller = controllers[prayer]!;
+  final text = controller.text.trim();
 
-    if (isUnsaved && !hasUnsavedEntry) {
-      _unsavedPrayers.value = {...set}..add(prayer);
-    } else if (!isUnsaved && hasUnsavedEntry) {
-      _unsavedPrayers.value = {...set}..remove(prayer);
+  // If the field is empty, do not update the provider yet.
+  if (text.isEmpty) return;
+
+  final value = int.tryParse(text);
+  if (value != null) {
+    ref
+        .read(prayerSettingsProvider.notifier)
+        .updatePrayerIqamahTime(prayer, value);
+
+    final normalized = value.toString();
+    if (controller.text != normalized) {
+      controller.text = normalized;
+    }
+
+    if (initialIqamahValues[prayer] != normalized ||
+        unsavedPrayers.value.contains(prayer)) {
+      initialIqamahValues[prayer] = normalized;
+      unsavedPrayers.value = {...unsavedPrayers.value}..remove(prayer);
     }
   }
-
-  // _registerPrayerController removed; controllers are now registered in initState.
-
-  void _resetIqamah(Prayer prayer, TextEditingController controller) {
-    controller.text = '0';
-    _saveTextField(prayer);
-  }
-
-  void _saveTextField(Prayer prayer) {
-    final controller = _controllers[prayer]!;
-    final text = controller.text.trim();
-
-    // If the field is empty, do not update the provider yet.
-    if (text.isEmpty) return;
-
-    final value = int.tryParse(text);
-    if (value != null) {
-      ref
-          .read(prayerSettingsProvider.notifier)
-          .updatePrayerIqamahTime(prayer, value);
-
-      final normalized = value.toString();
-      if (controller.text != normalized) {
-        controller.text = normalized;
-      }
-
-      if (_initialIqamahValues[prayer] != normalized ||
-          _unsavedPrayers.value.contains(prayer)) {
-        _initialIqamahValues[prayer] = normalized;
-        _unsavedPrayers.value = {..._unsavedPrayers.value}..remove(prayer);
-      }
-    }
-    showFToast(
-      context: context,
-      title: Text(context.l10n.iqamahSavedTitle),
-      description: Text(
-        "${context.l10n.iqamahSavedDescription} '${prayer.getLocaleName(context.l10n)}'",
-      ),
-    );
-  }
-
-  void _saveUnsavedPrayers() {
-    final unsavedPrayers = List<Prayer>.from(_unsavedPrayers.value);
-    for (final prayer in unsavedPrayers) {
-      _saveTextField(prayer);
-    }
-  }
+  showFToast(
+    context: context,
+    title: Text(context.l10n.iqamahSavedTitle),
+    description: Text(
+      "${context.l10n.iqamahSavedDescription} '${prayer.getLocaleName(context.l10n)}'",
+    ),
+  );
 }

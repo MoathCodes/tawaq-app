@@ -1,4 +1,4 @@
-import 'package:hasanat/core/logging/talker_provider.dart';
+import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
@@ -8,6 +8,7 @@ import 'package:timezone/timezone.dart';
 
 part 'prayer_analytics_provider.g.dart';
 
+/// Notifier for prayer analytics.
 @riverpod
 class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
   @override
@@ -17,16 +18,17 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
       return await _computeAnalytics(period);
     } catch (e, stackTrace) {
       ref
-          .read(talkerProvider)
-          .handle(
-            e,
-            stackTrace,
+          .read(loggerProvider)
+          .e(
             '[PrayerAnalyticsNotifier] Error computing analytics',
+            error: e,
+            stackTrace: stackTrace,
           );
       rethrow;
     }
   }
 
+  /// Changes the analytics period and recomputes the analytics.
   Future<void> changePeriod(PrayerAnalyticsPeriod period) async {
     state = const AsyncValue.loading();
     try {
@@ -34,11 +36,11 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
       state = AsyncValue.data(analytics);
     } catch (e, stackTrace) {
       ref
-          .read(talkerProvider)
-          .handle(
-            e,
-            stackTrace,
+          .read(loggerProvider)
+          .e(
             '[PrayerAnalyticsNotifier] Error while changing period',
+            error: e,
+            stackTrace: stackTrace,
           );
       state = AsyncValue.error(e, stackTrace);
     }
@@ -47,9 +49,12 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
   Future<PrayerAnalytics> _computeAnalytics(
     PrayerAnalyticsPeriod period,
   ) async {
-    final talker = ref.read(talkerProvider);
+    if (!ref.mounted) {
+      return PrayerAnalytics.empty().copyWith(period: period);
+    }
+    final log = ref.read(loggerProvider);
     try {
-      final service = ref.watch(prayerServiceProvider);
+      final service = ref.read(prayerServiceProvider);
       final settings = ref.read(prayerSettingsProvider);
 
       final streaks = await service.computeStreaks(
@@ -86,10 +91,10 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
         bestStreak: streaks.best,
       );
     } catch (e, stackTrace) {
-      talker.handle(
-        e,
-        stackTrace,
+      log.e(
         '[PrayerAnalyticsNotifier] Error computing analytics',
+        error: e,
+        stackTrace: stackTrace,
       );
       // Return zeroed analytics in case of error so UI still renders.
       return PrayerAnalytics(

@@ -8,18 +8,24 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'prayer_completion_provider.g.dart';
 
+/// Notifier for prayer completion records.
 @riverpod
 class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
   /// Adds or updates a prayer completion.
   /// This method provides an optimistic update to the UI.
   Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
+    if (!ref.mounted) return;
     final service = ref.read(prayerServiceProvider);
 
     await service.addOrUpdateCompletion(completion);
+    if (!ref.mounted) return;
 
-    state = AsyncData(
-      await service.getPrayerCompletionForDate(completion.completionTime),
+    final completions = await service.getPrayerCompletionForDate(
+      completion.completionTime,
     );
+    if (!ref.mounted) return;
+
+    state = AsyncData(completions);
     ref.invalidate(prayerAnalyticsProvider);
   }
 
@@ -35,6 +41,7 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
     return completions;
   }
 
+  /// Returns the prayer completion record for a specific prayer on a specific date.
   Future<PrayerCompletion?> getPrayerCompletionForPrayerOnDate(
     Prayer prayer,
     DateTime date,
@@ -60,9 +67,13 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
     }
   }
 
-  void setDate(DateTime date) async {
-    state = AsyncData(
-      await ref.read(prayerServiceProvider).getPrayerCompletionForDate(date),
-    );
+  /// Sets the date for which to fetch prayer completion records.
+  Future<void> setDate(DateTime date) async {
+    if (!ref.mounted) return;
+    final completions = await ref
+        .read(prayerServiceProvider)
+        .getPrayerCompletionForDate(date);
+    if (!ref.mounted) return;
+    state = AsyncData(completions);
   }
 }

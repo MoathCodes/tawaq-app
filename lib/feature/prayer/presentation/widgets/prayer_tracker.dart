@@ -1,8 +1,9 @@
-import 'package:flumpose/flumpose.dart' hide AnimationExtensions;
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:hasanat/core/hooks/hooks.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/date_formatter.dart';
 import 'package:hasanat/core/utils/text_extensions.dart';
@@ -14,73 +15,90 @@ import 'package:hasanat/feature/prayer/presentation/provider/prayer_data_provide
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_tracker/prayer_tracker_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/tracker_completion_card.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:hasanat/theme/theme.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:timezone/timezone.dart';
 
-class PrayerTrackerWidget extends ConsumerStatefulWidget {
-  final bool expanded;
-  const PrayerTrackerWidget({this.expanded = true, super.key});
+/// Widget that displays the prayer tracker.
+class PrayerTrackerWidget extends HookConsumerWidget {
+  /// Creates a [PrayerTrackerWidget] instance.
+  const PrayerTrackerWidget({ super.key});
+
 
   @override
-  ConsumerState<PrayerTrackerWidget> createState() =>
-      _PrayerTrackerWidgetState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final now = ref.watch(currentLocationTimeProvider);
+    final controller = useFCalendarController(
+      initial: now,
+      toggleable: false,
+    );
 
-class _MainWidget extends StatelessWidget {
-  final List<PrayerTrackerCardModel> data;
-  final Function(PrayerCompletion) onCompletionChanged;
-  final bool expanded;
-  final DateTime time;
-
-  const _MainWidget({
-    required this.data,
-    required this.expanded,
-    required this.time,
-    required this.onCompletionChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: expanded ? 14 : 10,
-      runSpacing: expanded ? 14 : 10,
-      alignment: WrapAlignment.center,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      runAlignment: WrapAlignment.center,
-      children: data.asMap().entries.map((entry) {
-        final index = entry.key;
-        final card = entry.value;
-        return TrackerCompletionCard(
-              cardData: card,
-              completionTime: time,
-              onCompletionChanged: onCompletionChanged,
-              key: ValueKey(
-                'clickable-prayer-card-$index-${time.day}-${time.month}-${time.year}',
+    return StaticCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.l10n.prayerTrackerTitle),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(context.l10n.prayerTrackerSubtitle).sm,
+                  ],
+                ),
               ),
-              expanded: expanded,
-            )
-            .animate()
-            .slideY(
-              begin: 0.1,
-              end: 0,
-              duration: const Duration(milliseconds: 260),
-              curve: Curves.easeInOut,
-            )
-            .fadeIn();
-      }).toList(),
+              Expanded(
+                child: FLineCalendar(
+                  control: FLineCalendarControl.managed(
+                    controller: controller,
+                    onChange: (value) {
+                      if (value != null) {
+                        unawaited(
+                          ref
+                              .read(prayerCompletionProvider.notifier)
+                              .setDate(value),
+                        );
+                      }
+                    },
+                  ),
+                  end: now,
+                  start: now.subtract(const Duration(days: 6)),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: AppSpacing.xl),
+          if (controller.value != null)
+            _TrackerCardsWrapper(
+              selectedDay: controller.value!,
+            ),
+        ],
+      ),
     );
   }
 }
 
-class _PrayerTrackerWidgetState extends ConsumerState<PrayerTrackerWidget> {
-  late final FCalendarController<DateTime?> controller;
+/// Wrapper widget that watches providers for tracker cards.
+/// Isolates rebuilds from the parent widget.
+class _TrackerCardsWrapper extends ConsumerWidget {
+  const _TrackerCardsWrapper({
+    required this.selectedDay,
+  });
+
+  final DateTime selectedDay;
+
   @override
-  Widget build(BuildContext context) {
-    final selectedDay = controller.value;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final now = ref.watch(currentLocationTimeProvider);
     final prayerTimes = ref.watch(
       currentPrayerTimesProvider(forDate: selectedDay),
     );
     final formatter = ref.watch(timeFormatterProvider);
-    final now = ref.watch(currentLocationTimeProvider);
     final customLocation = ref.watch(
       prayerSettingsProvider.select((settings) => settings.value?.location),
     );
@@ -105,57 +123,54 @@ class _PrayerTrackerWidgetState extends ConsumerState<PrayerTrackerWidget> {
       location: location,
     );
 
-    return StaticCard(
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(context.l10n.prayerTrackerTitle).bold(),
-                  SizedBox(height: widget.expanded ? 6 : 4),
-                  Text(context.l10n.prayerTrackerSubtitle).sm,
-                ],
-              ).expanded(),
-              FLineCalendar(
-                controller: controller,
-                onChange: (value) {
-                  
-                  if (value != null) {
-                    ref.read(prayerCompletionProvider.notifier).setDate(value);
-                  }
-                },
-                end: now,
-                start: now.subtract(const Duration(days: 6)),
-              ).expanded(),
-            ],
-          ),
-
-          SizedBox(height: widget.expanded ? 14 : 12),
-          if (controller.value != null)
-            _MainWidget(
-              data: cards,
-              expanded: widget.expanded,
-              time: controller.value!,
-              onCompletionChanged: ref
-                  .read(prayerCompletionProvider.notifier)
-                  .addOrUpdateCompletion,
-            ),
-        ],
-      ),
+    return _MainWidget(
+      data: cards,
+      time: selectedDay,
+      onCompletionChanged: ref
+          .read(prayerCompletionProvider.notifier)
+          .addOrUpdateCompletion,
     );
   }
+}
+
+class _MainWidget extends StatelessWidget {
+  const _MainWidget({
+    required this.data,
+    required this.time,
+    required this.onCompletionChanged,
+  });
+  final List<PrayerTrackerCardModel> data;
+  final void Function(PrayerCompletion) onCompletionChanged;
+  final DateTime time;
 
   @override
-  void initState() {
-    super.initState();
-    controller = FCalendarController.date(
-      initialSelection: ref.read(currentLocationTimeProvider),
-      toggleable: false,
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.lg,
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      runAlignment: WrapAlignment.center,
+      children: data.asMap().entries.map((entry) {
+        final index = entry.key;
+        final card = entry.value;
+        return TrackerCompletionCard(
+              cardData: card,
+              completionTime: time,
+              onCompletionChanged: onCompletionChanged,
+              key: ValueKey(
+                'clickable-prayer-card-$index-${time.day}-${time.month}-${time.year}',
+              ),
+            )
+            .animate()
+            .slideY(
+              begin: 0.1,
+              end: 0,
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeInOut,
+            )
+            .fadeIn();
+      }).toList(),
     );
   }
 }

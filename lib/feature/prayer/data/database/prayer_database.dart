@@ -25,10 +25,9 @@ PrayerDatabase prayerDatabase(Ref ref) {
 
 /// The database for the prayer data.
 class PrayerDatabase {
-  final Box<int, PrayerCompletion> _box;
-
   /// Creates a new instance of the [PrayerDatabase].
   PrayerDatabase(this._box);
+  final Box<int, PrayerCompletion> _box;
 
   /// Counts the number of all prayers on a given date.
   Future<int> countAllPrayersOnDate(DateTime from, DateTime to) async {
@@ -88,13 +87,11 @@ class PrayerDatabase {
 
   /// Returns a prayer completion by its ID.
   Future<PrayerCompletion?> getCompletionById(int id) async {
-    return await _box.get(id);
+    return _box.get(id);
   }
 
   /// Returns all prayer completions for a specific date.
-  Future<List<PrayerCompletion>> getCompletionsForDate(
-    DateTime date
-  ) async {
+  Future<List<PrayerCompletion>> getCompletionsForDate(DateTime date) async {
     final completions = await _box.getValuesWhere((value) {
       final ct = value.completionTime;
       return ct.isSameDate(date);
@@ -145,6 +142,6 @@ class PrayerDatabase {
 
   /// Returns whether a prayer completion exists.
   Future<bool> isCompletionExists(int id) async {
-    return await _box.containsKey(id);
+    return _box.containsKey(id);
   }
 }

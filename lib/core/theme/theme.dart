@@ -80,7 +80,8 @@ enum AppPalette {
   yellow('Yellow'),
 
   /// Default zinc palette.
-  zinc('Zinc');
+  zinc('Zinc')
+  ;
 
   const AppPalette(this.key);
 

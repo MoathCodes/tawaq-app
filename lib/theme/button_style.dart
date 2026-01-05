@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
+// These ignores are needed because the generated code might have unnecessary ignores or redundant arguments.
 // ignore_for_file: unnecessary_ignore
 // ignore_for_file: avoid_redundant_argument_values
 
@@ -50,6 +51,7 @@ import 'package:forui/forui.dart';
 /// ```
 ///
 /// See https://forui.dev/docs/themes#customize-themes for more information.
+/// Creates a custom [FButtonStyle] with the given colors and typography.
 FButtonStyle buttonStyle({
   required FColors colors,
   required FTypography typography,
@@ -98,6 +100,7 @@ FButtonStyle buttonStyle({
 );
 
 // Window control button styles
+/// Creates a [FButtonStyle] for a close button.
 FButtonStyle closeButtonStyle({
   required FColors colors,
   required FTypography typography,
@@ -169,6 +172,7 @@ FButtonStyle closeButtonStyle({
   tappableStyle: style.tappableStyle,
 );
 
+/// Creates a [FButtonStyle] for window control buttons (minimize, maximize).
 FButtonStyle windowControlButtonStyle({
   required FColors colors,
   required FTypography typography,

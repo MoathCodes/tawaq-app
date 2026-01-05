@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
+import 'package:hasanat/theme/theme.dart';
 
 /// A screen that is displayed when a route is not found.
 class NotFoundScreen extends StatelessWidget {
@@ -17,13 +18,13 @@ class NotFoundScreen extends StatelessWidget {
     return FScaffold(
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.xl),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Error icon
               Container(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   color: theme.colors.destructive.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
@@ -35,7 +36,7 @@ class NotFoundScreen extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 32),
+              const SizedBox(height: AppSpacing.xxl),
 
               // Main title
               Text(
@@ -47,7 +48,7 @@ class NotFoundScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.lg),
 
               // Description
               Text(
@@ -58,12 +59,12 @@ class NotFoundScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
 
               // Error message if provided
               if (errorMsg.isNotEmpty) ...[
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   margin: const EdgeInsets.symmetric(horizontal: 20),
                   decoration: BoxDecoration(
                     color: context.theme.colors.muted,
@@ -79,7 +80,7 @@ class NotFoundScreen extends StatelessWidget {
                 ),
               ],
 
-              const SizedBox(height: 40),
+              const SizedBox(height: AppSpacing.xxl),
 
               // Action button
               Row(
@@ -92,7 +93,7 @@ class NotFoundScreen extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(FIcons.clock, size: 18),
-                        SizedBox(width: 8),
+                        SizedBox(width: AppSpacing.sm),
                         Text('Go to Prayer Page'),
                       ],
                     ),

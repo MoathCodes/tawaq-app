@@ -8,6 +8,7 @@ import 'package:hasanat/core/utils/hijri_provider.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/core/widgets/theme_mode_button.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:hasanat/theme/theme.dart';
 
 /// The app bar for the main shell.
 class ShellAppBar extends ConsumerWidget {
@@ -37,7 +38,7 @@ class ShellAppBar extends ConsumerWidget {
                 size: 16,
                 color: context.theme.colors.secondaryForeground,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: AppSpacing.xs),
               Text(locationName, overflow: TextOverflow.ellipsis),
             ],
           )
@@ -83,7 +84,7 @@ class ShellAppBar extends ConsumerWidget {
         Expanded(
           flex: 2,
           child: StaticCard(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(AppSpacing.sm),
             child: Row(children: nearWidgets),
           ),
         ),

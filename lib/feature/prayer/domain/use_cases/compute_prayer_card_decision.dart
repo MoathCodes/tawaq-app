@@ -3,6 +3,7 @@ import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_card_decision.dart';
 import 'package:timezone/timezone.dart';
 
+/// Computes which prayer card to display based on the current time and prayer times.
 PrayerCardDecision computePrayerCardDecision({
   required DateTime currentTime,
   required Location location,
@@ -83,6 +84,7 @@ PrayerCardDecision computePrayerCardDecision({
         );
 }
 
+/// Returns the current prayer based on the current time and prayer times.
 Prayer getCurrentPrayer({
   required DateTime currentTime,
   required Location location,

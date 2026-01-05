@@ -1,5 +1,5 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/core/logging/talker_provider.dart';
+import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/utils/date_formatter.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_table_model.dart';
@@ -8,33 +8,32 @@ import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart'
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:talker_flutter/talker_flutter.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_table_provider.g.dart';
 
 const String _prayerTableLogPrefix = '[PrayerTable]';
 
+/// Notifier for the prayer times table.
 @riverpod
 class PrayerTable extends _$PrayerTable {
   _TableCache? _cache;
 
   @override
   Stream<List<PrayerTableRow>> build(AppLocalizations l10n) async* {
-    final log = ref.read(talkerProvider);
+    final log = ref.read(loggerProvider);
     final service = ref.read(prayerServiceProvider);
 
     final settings = ref.watch(prayerSettingsProvider).value;
     if (settings == null) {
-      log.debug(
-        '$_prayerTableLogPrefix No settings yet – emitting empty table.',
-      );
+      log.d('$_prayerTableLogPrefix No settings yet – emitting empty table.');
       yield [];
       return;
     }
 
-    log.info('$_prayerTableLogPrefix Stream started (auto-dispose)');
+    log.i('$_prayerTableLogPrefix Stream started (auto-dispose)');
     final formatter = ref.watch(timeFormatterProvider);
 
     // Emit immediately, then on every minute boundary to keep times fresh
@@ -54,10 +53,10 @@ class PrayerTable extends _$PrayerTable {
           l10n,
         );
       } catch (e, stackTrace) {
-        log.handle(
-          e,
-          stackTrace,
+        log.e(
           '$_prayerTableLogPrefix Error producing table',
+          error: e,
+          stackTrace: stackTrace,
         );
         return <PrayerTableRow>[];
       }
@@ -181,8 +180,8 @@ class PrayerTable extends _$PrayerTable {
             l10n,
           );
 
-          // talker.debug("$_prayerTableLogPrefix Adan Message for $prayer: $adhanMessage");
-          // talker.debug("$_prayerTableLogPrefix Iqamah Message for $prayer: $iqamahMessage");
+          // log.d("$_prayerTableLogPrefix Adan Message for $prayer: $adhanMessage");
+          // log.d("$_prayerTableLogPrefix Iqamah Message for $prayer: $iqamahMessage");
 
           return PrayerTableRow(
             prayer: prayer,
@@ -215,13 +214,13 @@ class PrayerTable extends _$PrayerTable {
     DateTime now,
     PrayerSettings settings,
     PrayerService service,
-    Talker log,
+    Logger log,
   ) {
     final anchor = DateTime(now.year, now.month, now.day);
 
     if (_cache != null && _cache!.anchorDate == anchor) return;
 
-    log.debug('$_prayerTableLogPrefix Refreshing cache …');
+    log.d('$_prayerTableLogPrefix Refreshing cache …');
 
     final todayTimes = service.getTodaysPrayerTimes(now);
     final todaySunnah = service.getSunnahTime(todayTimes);
@@ -245,7 +244,7 @@ class PrayerTable extends _$PrayerTable {
         now.hour,
         now.minute + 1,
       );
-      await Future.delayed(next.difference(now));
+      await Future<void>.delayed(next.difference(now));
       yield DateTime.now();
     }
   }
@@ -258,7 +257,7 @@ class _TableCache {
     required this.todaySunnah,
   });
   final DateTime anchorDate;
-
   final PrayerTimesData today;
+
   final SunnahTimes todaySunnah;
 }

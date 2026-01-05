@@ -1,7 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/theme/theme.dart';
@@ -16,8 +16,12 @@ import 'package:hasanat/feature/prayer/presentation/provider/prayer_completion_p
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/mini_card.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:hasanat/theme/theme.dart';
 
+/// Widget that displays the current prayer information in a card.
 class CurrentPrayerCard extends ConsumerWidget {
+  /// Creates a [CurrentPrayerCard] instance.
+  const CurrentPrayerCard({super.key});
   // Static constants to avoid recreation on every build
   static const _gradientOverlay = LinearGradient(
     colors: [
@@ -46,11 +50,14 @@ class CurrentPrayerCard extends ConsumerWidget {
     ),
   ];
 
-  static const _borderRadius = BorderRadius.all(Radius.circular(15));
+  /// Use context.theme.radii.lg instead - kept for backward compat
+  static const _borderRadius = BorderRadius.all(Radius.circular(12));
 
-  static const _containerPadding = EdgeInsets.all(16);
+  /// Use context.edgeInsets(all: AppSpacing.lg) instead - kept for backward compat
+  static const _containerPadding = EdgeInsets.all(AppSpacing.lg);
 
-  static const _animationDuration = Duration(milliseconds: 330);
+  /// Use context.theme.durations.normal instead - kept for backward compat
+  static const _animationDuration = Duration(milliseconds: 260);
   static TextStyle get _headerTextStyle => TextStyle(
     color: Colors.white,
     fontSize: 14.sp,
@@ -60,8 +67,6 @@ class CurrentPrayerCard extends ConsumerWidget {
 
   static TextStyle get _prepareTextStyle =>
       TextStyle(color: Colors.white, fontSize: 16.sp);
-
-  const CurrentPrayerCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -99,8 +104,8 @@ class CurrentPrayerCard extends ConsumerWidget {
 }
 
 class _ErrorCard extends StatelessWidget {
-  final Object error;
   const _ErrorCard({required this.error});
+  final Object error;
 
   @override
   Widget build(BuildContext context) {
@@ -113,17 +118,17 @@ class _ErrorCard extends StatelessWidget {
 
 // Optimized header row
 class _HeaderRow extends StatelessWidget {
-  final Future<PrayerCompletion?> completion;
-  final AsyncValue<ThemeSettings?> appTheme;
-
-  final PrayerCardInfo data;
-  final bool isLoading;
   const _HeaderRow({
     required this.completion,
     required this.appTheme,
     required this.data,
     required this.isLoading,
   });
+  final Future<PrayerCompletion?> completion;
+  final AsyncValue<ThemeSettings?> appTheme;
+
+  final PrayerCardInfo data;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -157,17 +162,17 @@ class _MockPrayerData implements PrayerCardInfo {
 
 // Separate widget for the main content to optimize rebuilds
 class _PrayerCardContent extends ConsumerWidget {
-  final PrayerCardInfo data;
-
-  final AsyncValue<ThemeSettings?> appTheme;
-  final FThemeData theme;
-  final bool isLoading;
   const _PrayerCardContent({
     required this.data,
     required this.appTheme,
     required this.theme,
     this.isLoading = false,
   });
+  final PrayerCardInfo data;
+
+  final AsyncValue<ThemeSettings?> appTheme;
+  final FThemeData theme;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -213,17 +218,17 @@ class _PrayerCardContent extends ConsumerWidget {
               data: data,
               isLoading: isLoading,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Text(
               data.prayer.getLocaleName(context.l10n),
               style: CurrentPrayerCard._shadowedTextStyle(42.sp),
             ),
-            Text(data.time, style: CurrentPrayerCard._shadowedTextStyle(32.sp)), 
+            Text(data.time, style: CurrentPrayerCard._shadowedTextStyle(32.sp)),
             Text(
               context.l10n.prepareForPrayer,
               style: CurrentPrayerCard._prepareTextStyle,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpacing.xs),
             Wrap(
               alignment: WrapAlignment.spaceEvenly,
               children: [

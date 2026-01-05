@@ -1,9 +1,9 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/core/logging/talker_provider.dart';
+import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/feature/prayer/data/database/prayer_database.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:talker_flutter/talker_flutter.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_repo.g.dart';
@@ -12,27 +12,31 @@ part 'prayer_repo.g.dart';
 @riverpod
 PrayerRepo prayerRepo(Ref ref) {
   final database = ref.read(prayerDatabaseProvider);
-  final talker = ref.read(talkerProvider);
-  return PrayerRepo(prayerDatabase: database, talker: talker);
+  final log = ref.read(loggerProvider);
+  return PrayerRepo(prayerDatabase: database, log: log);
 }
 
 /// A repository for accessing prayer data.
 class PrayerRepo {
+  /// Creates a new instance of the [PrayerRepo].
+  const PrayerRepo({required this.prayerDatabase, required this.log});
+
   /// The database for the prayer data.
   final PrayerDatabase prayerDatabase;
 
   /// The logger for the application.
-  final Talker talker;
-
-  /// Creates a new instance of the [PrayerRepo].
-  const PrayerRepo({required this.prayerDatabase, required this.talker});
+  final Logger log;
 
   /// Adds or updates a prayer completion.
   Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
     try {
       await prayerDatabase.insertOrUpdateCompletion(completion);
     } catch (e, stackTrace) {
-      talker.handle(e, stackTrace);
+      log.e(
+        'Error adding/updating completion',
+        error: e,
+        stackTrace: stackTrace,
+      );
       rethrow;
     }
   }

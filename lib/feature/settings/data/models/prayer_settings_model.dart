@@ -8,6 +8,7 @@ import 'package:timezone/timezone.dart';
 part 'prayer_settings_model.freezed.dart';
 part 'prayer_settings_model.g.dart';
 
+/// Converts a JSON map to a map of [Prayer] to [int] adjustments.
 Map<Prayer, int> adhanAdjustmentsFromJson(Map<String, dynamic> json) {
   return json.map(
     (key, value) =>
@@ -15,18 +16,22 @@ Map<Prayer, int> adhanAdjustmentsFromJson(Map<String, dynamic> json) {
   );
 }
 
+/// Converts a map of [Prayer] to [int] adjustments to a JSON map.
 Map<String, int> adhanAdjustmentsToJson(Map<Prayer, int> settings) {
   return settings.map((key, value) => MapEntry(key.name, value));
 }
 
+/// Converts a string to a [CalculationMethod].
 CalculationMethod calculationMethodFromJson(String method) {
   return CalculationMethod.values.firstWhere((e) => e.name == method);
 }
 
+/// Converts a [CalculationMethod] to a string.
 String calculationMethodToJson(CalculationMethod method) {
   return method.name;
 }
 
+/// Converts a JSON map to [CalculationParameters].
 CalculationParameters? customParametersFromJson(Map<String, dynamic>? json) {
   if (json == null) return null;
   return CalculationParameters(
@@ -83,6 +88,7 @@ CalculationParameters? customParametersFromJson(Map<String, dynamic>? json) {
   );
 }
 
+/// Converts [CalculationParameters] to a JSON map.
 Map<String, dynamic>? customParametersToJson(CalculationParameters? params) {
   if (params == null) return null;
   return {
@@ -102,6 +108,7 @@ Map<String, dynamic>? customParametersToJson(CalculationParameters? params) {
   };
 }
 
+/// Converts a JSON map to a map of [Prayer] to [int] iqamah settings.
 Map<Prayer, int> iqamahSettingsFromJson(Map<String, dynamic> json) {
   return json.map(
     (key, value) =>
@@ -109,20 +116,25 @@ Map<Prayer, int> iqamahSettingsFromJson(Map<String, dynamic> json) {
   );
 }
 
+/// Converts a map of [Prayer] to [int] iqamah settings to a JSON map.
 Map<String, int> iqamahSettingsToJson(Map<Prayer, int> settings) {
   return settings.map((key, value) => MapEntry(key.name, value));
 }
 
+/// Converts a string to a [Location].
 Location locationFromJson(String location) {
   return getLocation(location);
 }
 
+/// Converts a [Location] to a string.
 String locationToJson(Location location) {
   return location.name;
 }
 
+/// Model representing prayer settings.
 @freezed
 abstract class PrayerSettings with _$PrayerSettings {
+  /// Creates a [PrayerSettings] instance.
   const factory PrayerSettings({
     @JsonKey(
       name: 'calculation_method',
@@ -166,6 +178,7 @@ abstract class PrayerSettings with _$PrayerSettings {
     required Location location,
   }) = _PrayerSettings;
 
+  /// Returns the default prayer settings.
   factory PrayerSettings.defaultSettings() {
     return PrayerSettings(
       method: CalculationMethod.ummAlQura,
@@ -179,6 +192,7 @@ abstract class PrayerSettings with _$PrayerSettings {
     );
   }
 
+  /// Creates a [PrayerSettings] instance from a JSON map.
   factory PrayerSettings.fromJson(Map<String, dynamic> json) =>
       _$PrayerSettingsFromJson(json);
 }

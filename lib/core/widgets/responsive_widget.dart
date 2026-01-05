@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hasanat/core/logging/talker_provider.dart';
+import 'package:hasanat/core/logging/logger_provider.dart';
 
 /// The default breakpoint to use if no child is provided for the current
 /// screen size.
-enum DefaultBreakpoint { 
+enum DefaultBreakpoint {
   /// The mobile breakpoint.
-  mobile, 
+  mobile,
+
   /// The tablet breakpoint.
-  tablet, 
+  tablet,
+
   /// The desktop breakpoint.
-  desktop }
+  desktop,
+}
 
 /// A widget that displays a different child depending on the screen size.
 class ResponsiveContainer extends ConsumerWidget {
@@ -49,7 +52,13 @@ class ResponsiveContainer extends ConsumerWidget {
         DefaultBreakpoint.desktop => desktopChild!,
       };
     } catch (e, stackTrace) {
-      ref.read(talkerProvider).handle(e, stackTrace);
+      ref
+          .read(loggerProvider)
+          .e(
+            'Default breakpoint child cannot be null',
+            error: e,
+            stackTrace: stackTrace,
+          );
       throw Exception('Default breakpoint child cannot be null');
     }
   }

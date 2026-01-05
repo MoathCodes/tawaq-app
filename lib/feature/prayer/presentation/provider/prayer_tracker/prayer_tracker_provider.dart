@@ -8,7 +8,7 @@ import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:timezone/timezone.dart';
 
-
+/// Builds the list of prayer tracker card models for a given day.
 List<PrayerTrackerCardModel> buildPrayerTrackerCards({
   required AppLocalizations l10n,
   required DateTime? day,

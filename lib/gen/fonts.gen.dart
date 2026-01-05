@@ -13,7 +13,4 @@ class FontFamily {
 
   /// Font family: IBMPlexSansArabic
   static const String iBMPlexSansArabic = 'IBMPlexSansArabic';
-
-  /// Font family: Zain
-  static const String zain = 'Zain';
 }

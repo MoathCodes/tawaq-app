@@ -1,27 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
+import 'package:hasanat/theme/theme.dart';
 
+/// A card widget for displaying settings.
 class SettingsCard extends StatelessWidget {
-  final String title;
-  final String? subtitle;
-  final double spacing;
-  final List<Widget> sections;
+  /// Creates a new [SettingsCard] instance.
   const SettingsCard({
     required this.title,
     required this.sections,
     super.key,
     this.subtitle,
-    this.spacing = 8,
+    this.spacing = AppSpacing.sm,
   });
+
+  /// The title of the card.
+  final String title;
+
+  /// The subtitle of the card.
+  final String? subtitle;
+
+  /// The spacing between sections.
+  final double spacing;
+
+  /// The sections to display in the card.
+  final List<Widget> sections;
 
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     return ConstrainedBox(
       constraints: BoxConstraints(
-        maxWidth: ScreenUtil().screenWidth >= 1024 ? 0.50.sw : 1.sw,
+        maxWidth: ScreenUtilPlus().screenWidth >= 1024 ? 0.50.sw : 1.sw,
         minHeight: 400,
       ),
       child: FCard(
@@ -52,13 +63,9 @@ class SettingsCard extends StatelessWidget {
   }
 }
 
+/// A section widget for displaying a specific setting.
 class SettingsSection extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Widget? leading;
-  final Widget? suffix;
-  final Widget child;
-  final CrossAxisAlignment crossAxisAlignment;
+  /// Creates a new [SettingsSection] instance.
   const SettingsSection({
     required this.child,
     required this.title,
@@ -69,12 +76,30 @@ class SettingsSection extends StatelessWidget {
     this.suffix,
   });
 
+  /// The title of the section.
+  final String title;
+
+  /// The subtitle of the section.
+  final String subtitle;
+
+  /// The leading widget of the section.
+  final Widget? leading;
+
+  /// The suffix widget of the section.
+  final Widget? suffix;
+
+  /// The child widget of the section.
+  final Widget child;
+
+  /// The cross axis alignment of the section.
+  final CrossAxisAlignment crossAxisAlignment;
+
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
 
     return StaticCard(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(AppSpacing.sm),
       child: FCard(
         // titleAlignment:
         //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
@@ -87,7 +112,7 @@ class SettingsSection extends StatelessWidget {
             color: Colors.transparent,
             border: Border.all(color: Colors.transparent),
           ),
-          contentStyle: (p0) => p0.copyWith(padding: const EdgeInsets.all(0)),
+          contentStyle: (p0) => p0.copyWith(padding: EdgeInsets.zero),
         ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -98,7 +123,7 @@ class SettingsSection extends StatelessWidget {
           crossAxisAlignment: crossAxisAlignment,
           children: [
             Divider(color: theme.colors.foreground, thickness: .5, height: 12),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.md),
             child,
           ],
         ),

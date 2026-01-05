@@ -1,13 +1,13 @@
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
+import 'package:hasanat/theme/theme.dart';
 
-class HadithCard extends StatefulWidget {
-  final DetailedHadith hadith;
-  final bool isHTML;
-  final VoidCallback? onTap;
-
+/// A card widget that displays a Hadith.
+class HadithCard extends HookWidget {
+  /// Creates a [HadithCard] instance.
   const HadithCard({
     required this.hadith,
     this.isHTML = false,
@@ -15,36 +15,54 @@ class HadithCard extends StatefulWidget {
     super.key,
   });
 
-  @override
-  State<HadithCard> createState() => _HadithCardState();
-}
+  /// The Hadith to display.
+  final DetailedHadith hadith;
 
-class _HadithCardState extends State<HadithCard> {
-  final DorarClient _client = DorarClient();
-  String? _loadedSharh;
-  bool _isLoadingSharh = false;
-  String? _sharhError;
+  /// Whether the Hadith content is in HTML format.
+  final bool isHTML;
+
+  /// Callback when the card is tapped.
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final client = useMemoized(DorarClient.new);
+    final loadedSharh = useState<String?>(null);
+    final isLoadingSharh = useState(false);
+    final sharhError = useState<String?>(null);
+
+    Future<void> loadSharh(String sharhId) async {
+      isLoadingSharh.value = true;
+      sharhError.value = null;
+
+      try {
+        final response = await client.sharh.getById(sharhId);
+        loadedSharh.value = response.sharhText;
+        isLoadingSharh.value = false;
+      } catch (e) {
+        sharhError.value = 'فشل تحميل الشرح: $e';
+        isLoadingSharh.value = false;
+      }
+    }
+
     final theme = FTheme.of(context);
     final colors = theme.colors;
 
     return StaticCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 16,
         children: [
-          if (widget.isHTML) _buildHadithHTML(theme),
+          if (isHTML) _buildHadithHTML(theme),
           // Hadith Text
-          if (!widget.isHTML) _buildHadithText(theme),
+          if (!isHTML) _buildHadithText(theme),
 
           // Narrator
           _buildInfoRow(
             icon: FIcons.user,
             label: 'الراوي',
-            value: widget.hadith.rawi,
+            value: hadith.rawi,
             colors: colors,
             theme: theme,
           ),
@@ -56,23 +74,27 @@ class _HadithCardState extends State<HadithCard> {
           _buildGradeSection(theme, colors),
 
           // Additional Info
-          if (widget.hadith.explainGrade != null)
-            _buildExplanation(theme, colors),
+          if (hadith.explainGrade != null) _buildExplanation(theme, colors),
 
           // Takhrij
-          if (widget.hadith.takhrij != null &&
-              widget.hadith.takhrij!.isNotEmpty)
+          if (hadith.takhrij != null && hadith.takhrij!.isNotEmpty)
             _buildTakhrij(theme, colors),
 
           // Sharh (if available)
-          if (widget.hadith.hasSharhMetadata &&
-              widget.hadith.sharhMetadata != null)
-            _buildSharhSection(theme, colors),
+          if (hadith.hasSharhMetadata && hadith.sharhMetadata != null)
+            _buildSharhSection(
+              theme,
+              colors,
+              loadedSharh: loadedSharh.value,
+              isLoadingSharh: isLoadingSharh.value,
+              sharhError: sharhError.value,
+              onLoadSharh: loadSharh,
+            ),
 
           // Related Hadiths Links
-          if (widget.hadith.hasSimilarHadith ||
-              widget.hadith.hasAlternateHadithSahih ||
-              widget.hadith.hasUsulHadith)
+          if (hadith.hasSimilarHadith ||
+              hadith.hasAlternateHadithSahih ||
+              hadith.hasUsulHadith)
             _buildRelatedLinks(theme, colors),
         ],
       ),
@@ -81,7 +103,7 @@ class _HadithCardState extends State<HadithCard> {
 
   Widget _buildBookInfo(FThemeData theme, FColors colors) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         border: Border.all(color: colors.border),
         borderRadius: BorderRadius.circular(8),
@@ -89,7 +111,7 @@ class _HadithCardState extends State<HadithCard> {
       child: Row(
         children: [
           Icon(FIcons.book, size: 20, color: colors.primary),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,9 +122,9 @@ class _HadithCardState extends State<HadithCard> {
                     color: colors.mutedForeground,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpacing.xs),
                 Text(
-                  widget.hadith.book,
+                  hadith.book,
                   style: theme.typography.base.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -117,7 +139,7 @@ class _HadithCardState extends State<HadithCard> {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              widget.hadith.numberOrPage,
+              hadith.numberOrPage,
               style: theme.typography.sm.copyWith(
                 color: colors.primary,
                 fontWeight: FontWeight.bold,
@@ -131,7 +153,7 @@ class _HadithCardState extends State<HadithCard> {
 
   Widget _buildExplanation(FThemeData theme, FColors colors) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: colors.secondary.withAlpha(10),
         borderRadius: BorderRadius.circular(8),
@@ -142,7 +164,7 @@ class _HadithCardState extends State<HadithCard> {
           Row(
             children: [
               Icon(FIcons.info, size: 16, color: colors.primary),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 'شرح الحكم',
                 style: theme.typography.sm.copyWith(
@@ -151,18 +173,18 @@ class _HadithCardState extends State<HadithCard> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(widget.hadith.explainGrade!, style: theme.typography.sm),
+          const SizedBox(height: AppSpacing.sm),
+          Text(hadith.explainGrade!, style: theme.typography.sm),
         ],
       ),
     );
   }
 
   Widget _buildGradeSection(FThemeData theme, FColors colors) {
-    final gradeColor = _getGradeColor(widget.hadith.grade, colors);
+    final gradeColor = _getGradeColor(hadith.grade, colors);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: gradeColor.withAlpha(20),
         borderRadius: BorderRadius.circular(8),
@@ -174,7 +196,7 @@ class _HadithCardState extends State<HadithCard> {
           Row(
             children: [
               Icon(FIcons.check, size: 20, color: gradeColor),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,9 +207,9 @@ class _HadithCardState extends State<HadithCard> {
                         color: colors.mutedForeground,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.xs),
                     Text(
-                      widget.hadith.mohdith,
+                      hadith.mohdith,
                       style: theme.typography.base.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -205,7 +227,7 @@ class _HadithCardState extends State<HadithCard> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  widget.hadith.grade,
+                  hadith.grade,
                   style: theme.typography.sm.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -221,24 +243,24 @@ class _HadithCardState extends State<HadithCard> {
 
   Widget _buildHadithHTML(FThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.colors.secondary.withAlpha(20),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(widget.hadith.hadith),
+      child: Text(hadith.hadith),
     );
   }
 
   Widget _buildHadithText(FThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.colors.secondary.withAlpha(20),
         borderRadius: BorderRadius.circular(12),
       ),
       child: SelectableText(
-        widget.hadith.hadith,
+        hadith.hadith,
         style: theme.typography.xl2.copyWith(
           height: 1.8,
           fontWeight: FontWeight.w500,
@@ -258,14 +280,14 @@ class _HadithCardState extends State<HadithCard> {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           decoration: BoxDecoration(
             color: colors.primary.withAlpha(20),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, size: 20, color: colors.primary),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +298,7 @@ class _HadithCardState extends State<HadithCard> {
                   color: colors.mutedForeground,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: AppSpacing.xs),
               Text(
                 value,
                 style: theme.typography.base.copyWith(
@@ -306,7 +328,7 @@ class _HadithCardState extends State<HadithCard> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 14, color: colors.primary),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             label,
             style: theme.typography.sm.copyWith(color: colors.primary),
@@ -318,7 +340,7 @@ class _HadithCardState extends State<HadithCard> {
 
   Widget _buildRelatedLinks(FThemeData theme, FColors colors) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         border: Border.all(color: colors.border),
         borderRadius: BorderRadius.circular(8),
@@ -331,22 +353,22 @@ class _HadithCardState extends State<HadithCard> {
             'روابط ذات صلة',
             style: theme.typography.sm.copyWith(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 4),
-          if (widget.hadith.hasSimilarHadith)
+          const SizedBox(height: AppSpacing.xs),
+          if (hadith.hasSimilarHadith)
             _buildLinkChip(
               icon: FIcons.copy,
               label: 'أحاديث مشابهة',
               colors: colors,
               theme: theme,
             ),
-          if (widget.hadith.hasAlternateHadithSahih)
+          if (hadith.hasAlternateHadithSahih)
             _buildLinkChip(
               icon: FIcons.check,
               label: 'روايات صحيحة بديلة',
               colors: colors,
               theme: theme,
             ),
-          if (widget.hadith.hasUsulHadith)
+          if (hadith.hasUsulHadith)
             _buildLinkChip(
               icon: FIcons.bookOpen,
               label: 'الأصول',
@@ -358,11 +380,18 @@ class _HadithCardState extends State<HadithCard> {
     );
   }
 
-  Widget _buildSharhSection(FThemeData theme, FColors colors) {
-    final sharh = widget.hadith.sharhMetadata!;
+  Widget _buildSharhSection(
+    FThemeData theme,
+    FColors colors, {
+    required String? loadedSharh,
+    required bool isLoadingSharh,
+    required String? sharhError,
+    required Future<void> Function(String) onLoadSharh,
+  }) {
+    final sharh = hadith.sharhMetadata!;
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: colors.primary.withAlpha(10),
         borderRadius: BorderRadius.circular(8),
@@ -374,7 +403,7 @@ class _HadithCardState extends State<HadithCard> {
           Row(
             children: [
               Icon(FIcons.bookOpen, size: 16, color: colors.primary),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 'الشرح',
                 style: theme.typography.sm.copyWith(
@@ -383,27 +412,27 @@ class _HadithCardState extends State<HadithCard> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          if (_loadedSharh != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          if (loadedSharh != null) ...[
             SelectableText(
-              _loadedSharh!,
+              loadedSharh,
               style: theme.typography.sm.copyWith(height: 1.6),
             ),
-          ] else if (_isLoadingSharh) ...[
+          ] else if (isLoadingSharh) ...[
             const Center(
               child: Padding(
-                padding: EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(AppSpacing.lg),
                 child: CircularProgressIndicator(),
               ),
             ),
-          ] else if (_sharhError != null) ...[
+          ] else if (sharhError != null) ...[
             Text(
-              _sharhError!,
+              sharhError,
               style: theme.typography.sm.copyWith(color: Colors.red),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             FButton(
-              onPress: () => _loadSharh(sharh.id),
+              onPress: () => onLoadSharh(sharh.id),
               child: const Text('إعادة المحاولة'),
             ),
           ] else if (sharh.sharh != null) ...[
@@ -414,12 +443,12 @@ class _HadithCardState extends State<HadithCard> {
           ] else ...[
             Center(
               child: FButton(
-                onPress: () => _loadSharh(sharh.id),
+                onPress: () => onLoadSharh(sharh.id),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(FIcons.download, size: 16),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: AppSpacing.sm),
                     Text('تحميل الشرح', style: theme.typography.sm),
                   ],
                 ),
@@ -433,7 +462,7 @@ class _HadithCardState extends State<HadithCard> {
 
   Widget _buildTakhrij(FThemeData theme, FColors colors) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: colors.secondary.withAlpha(10),
         borderRadius: BorderRadius.circular(8),
@@ -444,7 +473,7 @@ class _HadithCardState extends State<HadithCard> {
           Row(
             children: [
               Icon(FIcons.library, size: 16, color: colors.primary),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 'التخريج',
                 style: theme.typography.sm.copyWith(
@@ -453,8 +482,8 @@ class _HadithCardState extends State<HadithCard> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(widget.hadith.takhrij!, style: theme.typography.sm),
+          const SizedBox(height: AppSpacing.sm),
+          Text(hadith.takhrij!, style: theme.typography.sm),
         ],
       ),
     );
@@ -472,25 +501,5 @@ class _HadithCardState extends State<HadithCard> {
       return Colors.red;
     }
     return colors.primary;
-  }
-
-  Future<void> _loadSharh(String sharhId) async {
-    setState(() {
-      _isLoadingSharh = true;
-      _sharhError = null;
-    });
-
-    try {
-      final response = await _client.sharh.getById(sharhId);
-      setState(() {
-        _loadedSharh = response.sharhText;
-        _isLoadingSharh = false;
-      });
-    } catch (e) {
-      setState(() {
-        _sharhError = 'فشل تحميل الشرح: $e';
-        _isLoadingSharh = false;
-      });
-    }
   }
 }

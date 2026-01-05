@@ -4,9 +4,13 @@ import 'package:hivez_flutter/hivez_flutter.dart';
 
 part 'hive_adapters.g.dart';
 
-@GenerateAdapters([
-  AdapterSpec<PrayerCompletion>(),
-  AdapterSpec<Prayer>(),
-  AdapterSpec<CompletionStatus>(),
-])
+/// Class for generating Hive adapters.
+@GenerateAdapters(
+  [
+    AdapterSpec<PrayerCompletion>(),
+    AdapterSpec<Prayer>(),
+    AdapterSpec<CompletionStatus>(),
+  ],
+  reservedTypeIds: {1, 2, 3, 4, 5},
+)
 class HiveAdapters {}

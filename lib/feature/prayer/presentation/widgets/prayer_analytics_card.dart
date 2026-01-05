@@ -1,4 +1,3 @@
-import 'package:flumpose/flumpose.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -10,8 +9,11 @@ import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/mini_card.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
+import 'package:hasanat/theme/theme.dart';
 
+/// Widget that displays prayer analytics in a card.
 class PrayerAnalyticsCard extends ConsumerWidget {
+  /// Creates a [PrayerAnalyticsCard] instance.
   const PrayerAnalyticsCard({super.key});
 
   @override
@@ -45,6 +47,10 @@ class PrayerAnalyticsCard extends ConsumerWidget {
 }
 
 class _PrayerAnalyticsWidget extends StatelessWidget {
+  const _PrayerAnalyticsWidget({
+    required this.data,
+    required this.onPeriodChanged,
+  });
   // Combined constants from both widgets
 
   static const _contentPadding = EdgeInsets.symmetric(
@@ -56,10 +62,6 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
   final PrayerAnalytics data;
 
   final void Function(PrayerAnalyticsPeriod) onPeriodChanged;
-  const _PrayerAnalyticsWidget({
-    required this.data,
-    required this.onPeriodChanged,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -67,21 +69,22 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     final l10n = context.l10n;
 
     return StaticCard(
-      padding: const .all(12),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
-        crossAxisAlignment: .stretch,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(context.l10n.playerAnalytics).bold(),
-          const SizedBox(height: 8),
+          Text(context.l10n.playerAnalytics),
+          const SizedBox(height: AppSpacing.sm),
           FTabs(
-            initialIndex: data.period.index,
+            control: .managed(initial: data.period.index),
             style: (style) => style.copyWith(
               decoration: style.decoration.copyWith(color: colors.barrier),
               unselectedLabelTextStyle: style.unselectedLabelTextStyle.copyWith(
                 color: colors.secondaryForeground.withAlpha(150),
               ),
             ),
-            onChange: (index) => onPeriodChanged(.values[index]),
+            onPress: (index) =>
+                onPeriodChanged(PrayerAnalyticsPeriod.values[index]),
             children: _buildTabEntries(context, colors, l10n),
           ),
         ],
@@ -95,7 +98,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     AppLocalizations l10n,
   ) {
     return Column(
-      mainAxisAlignment: .spaceAround,
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [_buildProgressSection(colors, l10n), _buildStatsSection(l10n)],
     );
   }

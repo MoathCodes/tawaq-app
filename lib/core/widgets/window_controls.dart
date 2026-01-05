@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:hasanat/core/hooks/hooks.dart';
 import 'package:hasanat/theme/button_style.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -147,7 +149,7 @@ class WindowControls extends StatelessWidget {
   }
 }
 
-class _MacOSControlButton extends StatefulWidget {
+class _MacOSControlButton extends HookWidget {
   const _MacOSControlButton({
     required this.color,
     required this.hoverColor,
@@ -160,25 +162,20 @@ class _MacOSControlButton extends StatefulWidget {
   final VoidCallback? onPressed;
 
   @override
-  State<_MacOSControlButton> createState() => _MacOSControlButtonState();
-}
-
-class _MacOSControlButtonState extends State<_MacOSControlButton> {
-  bool _isHovered = false;
-
-  @override
   Widget build(BuildContext context) {
+    final (:isHovered, :setHovered) = useHoverState();
+
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) => setHovered(true),
+      onExit: (_) => setHovered(false),
       child: GestureDetector(
-        onTap: widget.onPressed,
+        onTap: onPressed,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           width: 13, // Default macOS size
           height: 13,
           decoration: BoxDecoration(
-            color: _isHovered ? widget.hoverColor : widget.color,
+            color: isHovered ? hoverColor : color,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -188,9 +185,7 @@ class _MacOSControlButtonState extends State<_MacOSControlButton> {
               ),
             ],
           ),
-          child: _isHovered
-              ? Icon(widget.icon, size: 8, color: Colors.black87)
-              : null,
+          child: isHovered ? Icon(icon, size: 8, color: Colors.black87) : null,
         ),
       ),
     );

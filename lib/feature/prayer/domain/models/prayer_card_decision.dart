@@ -13,6 +13,7 @@ part 'prayer_card_decision.freezed.dart';
 ///                     `false` ➜ show time *since* [referenceTime].
 @freezed
 abstract class PrayerCardDecision with _$PrayerCardDecision {
+  /// Creates a [PrayerCardDecision] instance.
   const factory PrayerCardDecision({
     required DateTime referenceTime,
     required Prayer prayer,

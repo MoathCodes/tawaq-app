@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/gen/assets.gen.dart';
 
+/// Extension on [Prayer] to provide UI-related assets and properties.
 extension PrayerImageExtension on Prayer {
+  /// Returns the preferred [Alignment] for the background image of this prayer.
   Alignment get alignment {
     return switch (this) {
       Prayer.fajr => Alignment.bottomCenter,
@@ -17,6 +19,7 @@ extension PrayerImageExtension on Prayer {
     };
   }
 
+  /// Returns the [IconData] associated with this prayer.
   IconData get icon {
     return switch (this) {
       Prayer.fajr => FIcons.sunrise,
@@ -30,6 +33,7 @@ extension PrayerImageExtension on Prayer {
     };
   }
 
+  /// Returns the asset path for the background image of this prayer.
   String get imagePath {
     return switch (this) {
       Prayer.fajr => Assets.images.fajr.path,

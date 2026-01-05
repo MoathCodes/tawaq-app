@@ -6,6 +6,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'hijri_provider.g.dart';
 
+/// A provider that emits a formatted Hijri date string every second.
 @riverpod
 Stream<String> hijriClock(Ref ref) async* {
   final locale = ref.watch(localeProvider).value;

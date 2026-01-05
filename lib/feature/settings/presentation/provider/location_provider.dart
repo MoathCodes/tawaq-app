@@ -1,6 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:free_map/free_map.dart';
-import 'package:hasanat/core/logging/talker_provider.dart';
+import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/utils/location_extensions.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/feature/settings/service/location_service.dart';
@@ -9,6 +9,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 part 'location_provider.g.dart';
 
+/// Provider that loads and sorts available timezones.
 @riverpod
 Future<List<tz.Location>> loadTimezones(Ref ref) async {
   final commonTimezones = [
@@ -60,6 +61,7 @@ Future<List<tz.Location>> loadTimezones(Ref ref) async {
   });
 }
 
+/// Provider that searches for places based on a query string.
 @riverpod
 Future<List<FmData>> searchPlaces(Ref ref, String query) async {
   if (query.trim().isEmpty) return [];
@@ -68,42 +70,59 @@ Future<List<FmData>> searchPlaces(Ref ref, String query) async {
   return locationService.searchPlaces(query);
 }
 
+/// Notifier for the location picker state.
 @riverpod
 class LocationPicker extends _$LocationPicker {
   @override
-  (Coordinates coords, String name) build() {
+  ({Coordinates coords, String name}) build() {
     final settings = ref.read(prayerSettingsProvider).value;
     final coords =
         settings?.coordinates ?? const Coordinates(21.4362544, 39.6817387);
     final name = settings?.locationName ?? 'مكة المكرمة';
-    return (coords, name);
+    return (coords: coords, name: name);
   }
 
+  /// Selects a place and updates the state.
   Future<void> selectPlace(FmData place) async {
-    state = (place.coordinates, place.name);
+    state = (coords: place.coordinates, name: place.name);
   }
 
+  /// Updates the location based on coordinates and fetches the place name.
   Future<void> updateLocation(LatLng location) async {
-    state = (location.coordinates, 'Loading...');
+    state = (coords: location.coordinates, name: 'Loading...');
     try {
       final data = await _getSelectedPlace(location);
-      state = (location.coordinates, _getAvailableName(data));
+      if (!ref.mounted) return;
+      state = (coords: location.coordinates, name: _getAvailableName(data));
     } catch (e, stack) {
-      ref.read(talkerProvider).handle(e, stack);
+      if (!ref.mounted) rethrow;
+      ref
+          .read(loggerProvider)
+          .e('Error updating location', error: e, stackTrace: stack);
       rethrow;
     }
   }
 
+  /// Uses the current device location and updates the map controller.
   Future<void> useCurrentLocation(MapController mapController) async {
+    if (!ref.mounted) return;
     try {
       final locationService = ref.read(locationServiceProvider);
       final currentLocation = await locationService.getCurrentPosition();
-      state = (currentLocation.coordinates, 'Loading...');
+      if (!ref.mounted) return;
+      state = (coords: currentLocation.coordinates, name: 'Loading...');
       mapController.move(currentLocation, 14);
       final data = await _getSelectedPlace(currentLocation);
-      state = (currentLocation.coordinates, _getAvailableName(data));
+      if (!ref.mounted) return;
+      state = (
+        coords: currentLocation.coordinates,
+        name: _getAvailableName(data),
+      );
     } catch (e, stack) {
-      ref.read(talkerProvider).handle(e, stack);
+      if (!ref.mounted) rethrow;
+      ref
+          .read(loggerProvider)
+          .e('Error getting current location', error: e, stackTrace: stack);
       rethrow;
     }
   }
@@ -129,6 +148,7 @@ class LocationPicker extends _$LocationPicker {
   }
 
   Future<FmData?> _getSelectedPlace(LatLng location) async {
+    if (!ref.mounted) return null;
     try {
       final locationService = ref.read(locationServiceProvider);
       return locationService.getPlaceDetails(location.coordinates);

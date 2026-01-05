@@ -22,7 +22,8 @@ enum CompletionStatus {
   missed,
 
   /// The prayer has not been performed yet.
-  none;
+  none
+  ;
 
   /// Returns the color of the badge for this status.
   Color getBadgeColor({bool isDark = false}) {

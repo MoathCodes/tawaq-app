@@ -1,13 +1,13 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/core/logging/talker_provider.dart';
+import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hijriyah_indonesia/hijriyah_indonesia.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:talker_flutter/talker_flutter.dart';
 import 'package:timezone/timezone.dart';
 
 export '../use_cases/compute_prayer_card_decision.dart'
@@ -15,36 +15,41 @@ export '../use_cases/compute_prayer_card_decision.dart'
 
 part 'prayer_service.g.dart';
 
+/// Provider for the [PrayerService].
 @riverpod
 PrayerService prayerService(Ref ref) {
   final repo = ref.watch(prayerRepoProvider);
-  final talker = ref.read(talkerProvider);
+  final log = ref.read(loggerProvider);
   final settings = ref.watch(prayerSettingsProvider);
 
   return settings.when(
     data: (data) {
-      return PrayerService(repo, data, talker);
+      return PrayerService(repo, data, log);
     },
     loading: () {
-      return PrayerService(repo, PrayerSettings.defaultSettings(), talker);
+      return PrayerService(repo, PrayerSettings.defaultSettings(), log);
     },
     error: (error, stackTrace) {
-      talker.handle(error, stackTrace);
-      return PrayerService(repo, PrayerSettings.defaultSettings(), talker);
+      log.e('Error loading settings', error: error, stackTrace: stackTrace);
+      return PrayerService(repo, PrayerSettings.defaultSettings(), log);
     },
   );
 }
 
+/// Service class for prayer-related operations.
 class PrayerService {
+  /// Creates a [PrayerService] instance.
   PrayerService(this._repo, this._settings, this._log);
   final PrayerRepo _repo;
   final PrayerSettings _settings;
-  final Talker _log;
+  final Logger _log;
 
+  /// Adds or updates a prayer completion record.
   Future<void> addOrUpdateCompletion(PrayerCompletion completion) {
     return _repo.addOrUpdateCompletion(completion);
   }
 
+  /// Computes the current and best streaks of fully completed prayer days.
   Future<({int current, int best})> computeStreaks(Location loc) async {
     try {
       final completedDays = await _repo.getFullyCompletedDays(loc);
@@ -86,7 +91,9 @@ class PrayerService {
       if (previousDay != null) {
         final today = TZDateTime.now(loc);
         final todayDate = DateTime(today.year, today.month, today.day);
-        final daysSinceLastCompletion = todayDate.difference(previousDay).inDays;
+        final daysSinceLastCompletion = todayDate
+            .difference(previousDay)
+            .inDays;
 
         if (daysSinceLastCompletion == 0 || daysSinceLastCompletion == 1) {
           // Streak is active (today or yesterday was completed)
@@ -97,11 +104,12 @@ class PrayerService {
 
       return (current: finalCurrentStreak, best: bestStreak);
     } catch (e, stackTrace) {
-      _log.handle(e, stackTrace);
+      _log.e('Error computing streaks', error: e, stackTrace: stackTrace);
       return (current: 0, best: 0);
     }
   }
 
+  /// Counts all prayers completed within a given period.
   Future<int> countAllPrayersOnPeriod(
     PrayerAnalyticsPeriod period, [
     DateTime? date,
@@ -112,6 +120,7 @@ class PrayerService {
     return _repo.countAllPrayersOnDate(fromDate, toDate);
   }
 
+  /// Counts all prayer statuses within a given period.
   Future<Map<CompletionStatus, int>> countAllStatusesOnPeriod(
     PrayerAnalyticsPeriod period, [
     DateTime? date,
@@ -122,6 +131,7 @@ class PrayerService {
     return _repo.countAllStatusesOnDate(fromDate, toDate);
   }
 
+  /// Counts prayers with a specific status within a given period.
   Future<int> countPrayerOnPeriod(
     CompletionStatus status,
     PrayerAnalyticsPeriod period, [
@@ -133,31 +143,38 @@ class PrayerService {
     return _repo.countPrayerStatusOnDate(status, fromDate, toDate);
   }
 
+  /// Returns the current prayer based on the provided prayer times.
   Prayer currentPrayer(PrayerTimesData prayerTime) {
     final date = _currentTime();
     return prayerTime.currentPrayer(date: date);
   }
 
+  /// Deletes a prayer completion record by its ID.
   Future<void> deleteCompletion(int id) {
     return _repo.deleteCompletion(id);
   }
 
+  /// Checks if a prayer completion record exists for the given ID.
   Future<bool> doesCompletionExists(int id) {
     return _repo.doesCompletionExists(id);
   }
 
+  /// Returns all prayer completion records.
   Future<List<PrayerCompletion>> getAllCompletions() {
     return _repo.getAllCompletions();
   }
 
+  /// Returns a single prayer completion record by its ID.
   Future<PrayerCompletion?> getSingleCompletion(int id) {
     return _repo.getSingleCompletion(id);
   }
 
+  /// Returns the Sunnah times for the given prayer times.
   SunnahTimes getSunnahTime(PrayerTimesData prayerTimes) {
     return _repo.getSunnahTime(prayerTimes);
   }
 
+  /// Returns the prayer times for today (or a specific date).
   PrayerTimesData getTodaysPrayerTimes([
     DateTime? date,
     bool roundToMinutes = true,
@@ -175,7 +192,7 @@ class PrayerService {
     final isRamadan = Hijriyah.now().hMonth == 9;
 
     if (isRamadan && _settings.method == CalculationMethod.ummAlQura) {
-      _log.debug(
+      _log.d(
         '$logPrefix Method is Umm Al-Qura, and month is Ramadan, '
         'adjusting prayer times accordingly',
       );
@@ -187,17 +204,17 @@ class PrayerService {
     return prayerTimes;
   }
 
+  /// Returns the next prayer based on the provided prayer times.
   Prayer nextPrayerByDate(PrayerTimesData prayerTime, [DateTime? date]) {
     final activeDate = date ?? _currentTime();
     return prayerTime.nextPrayer(date: activeDate);
   }
 
+  /// Returns the prayer completion records for a specific date.
   Future<List<PrayerCompletion>> getPrayerCompletionForDate([DateTime? date]) {
     final activeDate = date ?? _currentTime();
 
-    return _repo.getPrayerCompletionForDate(
-      activeDate
-    );
+    return _repo.getPrayerCompletionForDate(activeDate);
   }
 
   TZDateTime _currentTime() {

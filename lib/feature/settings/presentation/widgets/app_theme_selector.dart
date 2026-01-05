@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hasanat/core/hooks/hooks.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/core/widgets/mouse_click.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:hasanat/theme/theme.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+/// Widget for selecting the application theme palette.
 class AppThemeSelector extends StatelessWidget {
+  /// Creates a new [AppThemeSelector] instance.
   const AppThemeSelector({super.key});
 
   @override
@@ -26,39 +30,26 @@ class AppThemeSelector extends StatelessWidget {
   }
 }
 
-class _SingleColorCard extends ConsumerStatefulWidget {
+class _SingleColorCard extends HookConsumerWidget {
   const _SingleColorCard({required this.appPalette, super.key});
   final AppPalette appPalette;
 
   @override
-  ConsumerState<_SingleColorCard> createState() => _SingleColorCardState();
-}
-
-class _SingleColorCardState extends ConsumerState<_SingleColorCard> {
-  bool _isHovered = false;
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final (:isHovered, :setHovered) = useHoverState();
     const resolver = resolveColorScheme;
-    final lightTheme = resolver(widget.appPalette, ThemeMode.light);
-    final darkTheme = resolver(widget.appPalette, ThemeMode.dark);
+    final lightTheme = resolver(appPalette, ThemeMode.light);
+    final darkTheme = resolver(appPalette, ThemeMode.dark);
     final selectedTheme = ref.watch(themeProvider).value ?? defaultTheme;
-    final isSelected = selectedTheme.appPalette == widget.appPalette;
+    final isSelected = selectedTheme.appPalette == appPalette;
     final isDarkThemeSelected = selectedTheme.themeMode == ThemeMode.dark;
 
     return AnimatedScale(
       duration: const Duration(milliseconds: 160),
-      scale: _isHovered ? 1.05 : 1,
+      scale: isHovered ? 1.05 : 1,
       child: MouseClick(
-        onExit: (p0) {
-          setState(() {
-            _isHovered = false;
-          });
-        },
-        onHover: (p0) {
-          setState(() {
-            _isHovered = true;
-          });
-        },
+        onExit: (p0) => setHovered(false),
+        onHover: (p0) => setHovered(true),
         onClick: () {
           if (isSelected) {
             ref
@@ -69,7 +60,7 @@ class _SingleColorCardState extends ConsumerState<_SingleColorCard> {
                       : ThemeMode.dark,
                 );
           } else {
-            ref.read(themeProvider.notifier).setPalette(widget.appPalette);
+            ref.read(themeProvider.notifier).setPalette(appPalette);
             ref.read(themeProvider.notifier).setThemeMode(ThemeMode.light);
           }
         },
@@ -97,20 +88,18 @@ class _SingleColorCardState extends ConsumerState<_SingleColorCard> {
             ),
             borderRadius: BorderRadius.circular(8),
           ),
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.all(AppSpacing.sm),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Text(widget.appPalette.getLocaleName(context.l10n)),
+              Text(appPalette.getLocaleName(context.l10n)),
               Row(
                 spacing: 5,
                 children: [
                   Expanded(
                     child: MouseClick(
                       onClick: () {
-                        ref
-                            .read(themeProvider.notifier)
-                            .setPalette(widget.appPalette);
+                        ref.read(themeProvider.notifier).setPalette(appPalette);
                         ref
                             .read(themeProvider.notifier)
                             .setThemeMode(ThemeMode.light);
@@ -123,7 +112,7 @@ class _SingleColorCardState extends ConsumerState<_SingleColorCard> {
                               : null,
                           color: lightTheme.colors.background,
                         ),
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         child: Text(
                           context.l10n.light,
                           style: TextStyle(color: lightTheme.colors.primary),
@@ -135,9 +124,7 @@ class _SingleColorCardState extends ConsumerState<_SingleColorCard> {
                   Expanded(
                     child: MouseClick(
                       onClick: () {
-                        ref
-                            .read(themeProvider.notifier)
-                            .setPalette(widget.appPalette);
+                        ref.read(themeProvider.notifier).setPalette(appPalette);
                         ref
                             .read(themeProvider.notifier)
                             .setThemeMode(ThemeMode.dark);
@@ -150,7 +137,7 @@ class _SingleColorCardState extends ConsumerState<_SingleColorCard> {
                               : null,
                           color: darkTheme.colors.background,
                         ),
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         child: Text(
                           context.l10n.dark,
                           textAlign: TextAlign.center,

@@ -6,32 +6,22 @@ import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/routing/route_provider.dart';
 
 /// The bottom navigation bar for the main shell.
-class ShellBottomNavigationBar extends ConsumerStatefulWidget {
+class ShellBottomNavigationBar extends ConsumerWidget {
   /// Creates a new instance of [ShellBottomNavigationBar].
   const ShellBottomNavigationBar({super.key});
 
   @override
-  ConsumerState<ShellBottomNavigationBar> createState() =>
-      _ShellBottomNavigationBarState();
-}
-
-class _ShellBottomNavigationBarState
-    extends ConsumerState<ShellBottomNavigationBar> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final routes = ref.watch(mainRoutesProvider(context.l10n));
 
     return FBottomNavigationBar(
       index: routes.indexWhere(
         (value) => GoRouter.of(context).state.fullPath == value.path,
       ),
-      onChange: (value) {
-        setState(() {});
-        context.go(routes[value].path);
-      },
+      onChange: (value) => context.go(routes[value].path),
       children: [
         ...routes.map(
-          (route) => buildButton(
+          (route) => _buildButton(
             route.label,
             route.icon,
             route.path,
@@ -42,8 +32,11 @@ class _ShellBottomNavigationBarState
   }
 
   /// Builds a bottom navigation bar item.
-  FBottomNavigationBarItem buildButton(
-      String label, IconData icon, String path,) {
+  FBottomNavigationBarItem _buildButton(
+    String label,
+    IconData icon,
+    String path,
+  ) {
     return FBottomNavigationBarItem(
       key: ValueKey('$label-$path-button'),
       label: Text(label),

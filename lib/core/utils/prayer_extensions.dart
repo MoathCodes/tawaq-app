@@ -152,6 +152,7 @@ extension PrayerLocaleExtension on PrayerTimesData {
 
 /// Localized display names for [Prayer] values.
 extension PrayerLocaleNameExtension on Prayer {
+  /// Returns true if this prayer is one of the five obligatory prayers.
   bool get isObligatory => switch (this) {
     Prayer.sunrise => false,
     Prayer.ishaBefore => false,

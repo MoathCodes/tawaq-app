@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hasanat/core/hooks/hooks.dart';
 import 'package:hasanat/core/widgets/mouse_click.dart';
 
 /// A text button that displays a hover effect when the mouse is over it.
-class CustomTextButton extends StatefulWidget {
+class CustomTextButton extends HookWidget {
   /// Creates a custom text button.
-  const CustomTextButton(
-      {required this.label, required this.onPressed, super.key,
-      this.enabled,
-      this.duration = const Duration(milliseconds: 100),});
+  const CustomTextButton({
+    required this.label,
+    required this.onPressed,
+    super.key,
+    this.enabled,
+    this.duration = const Duration(milliseconds: 100),
+  });
 
   /// The text to display on the button.
   final String label;
@@ -22,35 +27,27 @@ class CustomTextButton extends StatefulWidget {
   final Duration duration;
 
   @override
-  _CustomTextButtonState createState() => _CustomTextButtonState();
-}
-
-class _CustomTextButtonState extends State<CustomTextButton> {
-  bool _isHovered = false;
-  @override
   Widget build(BuildContext context) {
+    final (:isHovered, :setHovered) = useHoverState();
     final colorScheme = Theme.of(context).colorScheme;
+
     return MouseClick(
-      onClick: widget.onPressed,
-      onHover: (event) => setState(() {
-        _isHovered = true;
-      }),
-      onExit: (event) => setState(() {
-        _isHovered = false;
-      }),
+      onClick: onPressed,
+      onHover: (event) => setHovered(true),
+      onExit: (event) => setHovered(false),
       child: AnimatedScale(
-        duration: widget.duration,
-        scale: _isHovered ? 1.2 : 1.0,
+        duration: duration,
+        scale: isHovered ? 1.2 : 1.0,
         curve: Curves.easeInOut,
         child: TextButton(
-          onPressed: widget.enabled ?? false ? null : widget.onPressed,
+          onPressed: enabled ?? false ? null : onPressed,
           child: Text(
-            widget.label,
+            label,
             style: TextStyle(
-              color: widget.enabled == false
+              color: enabled == false
                   ? colorScheme.shadow
                   : colorScheme.primary,
-              shadows: _isHovered
+              shadows: isHovered
                   ? [
                       Shadow(
                         color: colorScheme.primary.withAlpha(100),

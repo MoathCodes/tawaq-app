@@ -1,41 +1,47 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:free_map/free_map.dart';
+import 'package:hasanat/core/hooks/hooks.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/location_extensions.dart';
 import 'package:hasanat/feature/settings/presentation/provider/location_provider.dart';
+import 'package:hasanat/theme/theme.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class LocationPickerDialog extends ConsumerStatefulWidget {
-
+/// Dialog for picking a location on a map.
+class LocationPickerDialog extends HookConsumerWidget {
+  /// Creates a new [LocationPickerDialog] instance.
   const LocationPickerDialog({
-    required this.onLocationSelected, required this.style, required this.animation, super.key,
+    required this.onLocationSelected,
+    required this.style,
+    required this.animation,
+    super.key,
   });
+
+  /// The style of the dialog.
   final FDialogStyle Function(FDialogStyle) style;
+
+  /// The animation of the dialog.
   final Animation<double> animation;
+
+  /// Callback when a location is selected.
   final void Function(Coordinates coordinates, String locationName)
   onLocationSelected;
 
   @override
-  ConsumerState<LocationPickerDialog> createState() =>
-      _LocationPickerDialogState();
-}
-
-class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
-  final MapController _mapController = MapController();
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mapController = useMapController();
     final theme = FTheme.of(context);
     final colors = theme.colors;
 
     final selectedLocation = ref.watch(locationPickerProvider);
     final notifierController = ref.read(locationPickerProvider.notifier);
-
+    Future<List<FmData>> searchPlaces(String query) =>
+        ref.read(searchPlacesProvider(query).future);
     return FDialog(
-      animation: widget.animation,
-      style: widget.style,
+      animation: animation,
+      style: style,
       direction: Axis.horizontal,
       constraints: const BoxConstraints(maxWidth: 850),
       title: Text(
@@ -56,9 +62,22 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildHeader(colors, notifierController, selectedLocation),
-            _buildMapSection(colors, selectedLocation, notifierController),
-            _buildTipSection(colors),
+            _buildHeader(
+              context,
+              colors,
+              notifierController,
+              selectedLocation,
+              searchPlaces,
+              mapController,
+            ),
+            _buildMapSection(
+              context,
+              colors,
+              selectedLocation,
+              notifierController,
+              mapController,
+            ),
+            _buildTipSection(context, colors),
           ],
         ),
       ),
@@ -70,7 +89,7 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
         ),
         FButton(
           onPress: () async {
-            widget.onLocationSelected(selectedLocation.$1, selectedLocation.$2);
+            onLocationSelected(selectedLocation.coords, selectedLocation.name);
 
             Navigator.of(context).pop();
           },
@@ -78,12 +97,6 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
         ),
       ],
     );
-  }
-
-  @override
-  void dispose() {
-    _mapController.dispose();
-    super.dispose();
   }
 
   Widget _buildCoordinateField({
@@ -120,11 +133,15 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
     );
   }
 
-  Widget _buildCoordinatesPanel(FColors colors, LatLng selectedLocation) {
+  Widget _buildCoordinatesPanel(
+    BuildContext context,
+    FColors colors,
+    LatLng selectedLocation,
+  ) {
     return Container(
       width: 200,
       margin: const EdgeInsets.only(top: 16, right: 16, bottom: 16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: colors.muted.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
@@ -137,7 +154,7 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
           Row(
             children: [
               Icon(Icons.place_outlined, color: colors.primary, size: 20),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 context.l10n.coordinates,
                 style: TextStyle(
@@ -164,12 +181,15 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
   }
 
   Widget _buildHeader(
+    BuildContext context,
     FColors colors,
     LocationPicker notifierController,
-    (Coordinates coords, String name) selectedLocation,
+    ({Coordinates coords, String name}) selectedLocation,
+    Future<List<FmData>> Function(String) searchPlaces,
+    MapController mapController,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: colors.muted.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.only(
@@ -191,10 +211,10 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
               FButton(
                 onPress: () async {
                   try {
-                    notifierController.useCurrentLocation(_mapController);
+                    notifierController.useCurrentLocation(mapController);
                   } catch (e) {
                     // Show error snackbar
-                    if (mounted) {
+                    if (context.mounted) {
                       showFToast(
                         context: context,
                         title: Text(
@@ -218,21 +238,29 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
               ),
             ],
           ),
-          _buildSearchField(selectedLocation, notifierController),
+          _buildSearchField(
+            context,
+            selectedLocation,
+            notifierController,
+            searchPlaces,
+            mapController,
+          ),
         ],
       ),
     );
   }
 
   Widget _buildMap(
+    BuildContext context,
     FColors colors,
     LatLng selectedLocation,
     LocationPicker notifierController,
+    MapController mapController,
   ) {
     return Expanded(
       flex: 3,
       child: Container(
-        margin: const EdgeInsets.all(16),
+        margin: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: colors.border),
@@ -240,7 +268,7 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: FmMap(
-            mapController: _mapController,
+            mapController: mapController,
             mapOptions: MapOptions(
               initialCenter: selectedLocation,
               initialZoom: 12,
@@ -249,9 +277,9 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
               onTap: (tapPos, latlng) {
                 try {
                   notifierController.updateLocation(latlng);
-                  _mapController.move(latlng, 14);
+                  mapController.move(latlng, 14);
                 } catch (e) {
-                  if (mounted) {
+                  if (context.mounted) {
                     showFToast(
                       context: context,
                       title: Text(context.l10n.errorUpdatingLocationTitle),
@@ -282,29 +310,52 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
   }
 
   Widget _buildMapSection(
+    BuildContext context,
     FColors colors,
-    (Coordinates coords, String name) selectedLocation,
+    ({Coordinates coords, String name}) selectedLocation,
     LocationPicker notifierController,
+    MapController mapController,
   ) {
     return Expanded(
       child: Row(
         children: [
-          _buildMap(colors, selectedLocation.$1.latLng, notifierController),
-          _buildCoordinatesPanel(colors, selectedLocation.$1.latLng),
+          _buildMap(
+            context,
+            colors,
+            selectedLocation.coords.latLng,
+            notifierController,
+            mapController,
+          ),
+          _buildCoordinatesPanel(
+            context,
+            colors,
+            selectedLocation.coords.latLng,
+          ),
         ],
       ),
     );
   }
 
   Widget _buildSearchField(
-    (Coordinates coords, String name) selectedLocation,
+    BuildContext context,
+    ({Coordinates coords, String name}) selectedLocation,
     LocationPicker notifierController,
+    Future<List<FmData>> Function(String) searchPlaces,
+    MapController mapController,
   ) {
     return FSelect<FmData>.searchBuilder(
-      hint: selectedLocation.$2,
+      control: FSelectControl.managed(
+        onChange: (place) {
+          if (place != null) {
+            notifierController.selectPlace(place);
+            mapController.move(place.coordinates.latLng, 14);
+          }
+        },
+      ),
+      hint: selectedLocation.name,
       label: Text(context.l10n.searchPlaceLabel),
       format: (s) => s.name,
-      filter: (query) => ref.read(searchPlacesProvider(query).future),
+      filter: searchPlaces,
       contentBuilder: (context, query, data) {
         return [
           for (final place in data)
@@ -315,18 +366,12 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
             ),
         ];
       },
-      onChange: (place) {
-        if (place != null) {
-          notifierController.selectPlace(place);
-          _mapController.move(place.coordinates.latLng, 14);
-        }
-      },
     );
   }
 
-  Widget _buildTipSection(FColors colors) {
+  Widget _buildTipSection(BuildContext context, FColors colors) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: colors.muted.withValues(alpha: 0.05),
         borderRadius: const BorderRadius.only(
@@ -337,7 +382,7 @@ class _LocationPickerDialogState extends ConsumerState<LocationPickerDialog> {
       child: Row(
         children: [
           Icon(Icons.info_outline, color: colors.mutedForeground, size: 16),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppSpacing.sm),
           Text(
             context.l10n.tipHoldCtrlToRotate,
             style: TextStyle(color: colors.mutedForeground, fontSize: 13),

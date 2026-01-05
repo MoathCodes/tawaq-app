@@ -4,8 +4,12 @@ import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/sec
 import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/sections/time_section.dart';
 import 'package:hasanat/feature/settings/presentation/widgets/settings_section.dart';
 
+/// Widget for the prayer settings section.
 class PrayerSection extends StatelessWidget {
+  /// Creates a new [PrayerSection] instance.
   const PrayerSection({super.key, this.maxWidth = 800});
+
+  /// The maximum width of the section.
   final double maxWidth;
 
   @override

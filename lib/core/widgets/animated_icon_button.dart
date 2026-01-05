@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 
 /// An icon button that animates between a primary and a secondary icon.
@@ -6,7 +9,7 @@ import 'package:forui/forui.dart';
 /// This widget displays an icon button that can be tapped to trigger an action.
 /// It can also be used to indicate a selected state by switching to a
 /// secondary icon.
-class AnimatedIconButton extends StatefulWidget {
+class AnimatedIconButton extends HookWidget {
   /// Creates an animated icon button.
   const AnimatedIconButton({
     required this.primaryIcon,
@@ -45,29 +48,39 @@ class AnimatedIconButton extends StatefulWidget {
   final FBaseButtonStyle Function(FButtonStyle)? buttonStyle;
 
   @override
-  State<AnimatedIconButton> createState() => _AnimatedIconButtonState();
-}
-
-class _AnimatedIconButtonState extends State<AnimatedIconButton>
-    with TickerProviderStateMixin {
-  late AnimationController _animationController;
-
-  @override
   Widget build(BuildContext context) {
+    final animationController = useAnimationController(
+      duration: animationDuration,
+      initialValue: isSecondaryActive ? 1.0 : 0.0,
+    );
+
+    // Handle isSecondaryActive changes (equivalent to didUpdateWidget)
+    useEffect(
+      () {
+        if (isSecondaryActive) {
+          unawaited(animationController.forward());
+        } else {
+          unawaited(animationController.reverse());
+        }
+        return null;
+      },
+      [isSecondaryActive],
+    );
+
     return FButton(
-      style: widget.buttonStyle?.call ?? FButtonStyle.ghost(),
-      onPress: widget.onPressed,
+      style: buttonStyle?.call ?? FButtonStyle.ghost(),
+      onPress: onPressed,
       child: AnimatedBuilder(
-        animation: _animationController,
+        animation: animationController,
         builder: (context, child) {
           final rotationValue =
-              _animationController.value * 3.14159; // 180 degrees
-          final fadeValue = _animationController.value;
+              animationController.value * 3.14159; // 180 degrees
+          final fadeValue = animationController.value;
 
           return Transform.rotate(
             angle: rotationValue,
             child: AnimatedOpacity(
-              opacity: !widget.isSecondaryActive && fadeValue != 1.0
+              opacity: !isSecondaryActive && fadeValue != 1.0
                   ? (1.0 - fadeValue)
                   : fadeValue,
               duration: const Duration(milliseconds: 200),
@@ -76,15 +89,15 @@ class _AnimatedIconButtonState extends State<AnimatedIconButton>
                 children: [
                   // Primary icon
                   AnimatedOpacity(
-                    opacity: widget.isSecondaryActive ? 0.0 : 1.0,
-                    duration: widget.opacityDuration,
-                    child: Icon(widget.primaryIcon, size: widget.iconSize),
+                    opacity: isSecondaryActive ? 0.0 : 1.0,
+                    duration: opacityDuration,
+                    child: Icon(primaryIcon, size: iconSize),
                   ),
                   // Secondary icon
                   AnimatedOpacity(
-                    opacity: widget.isSecondaryActive ? 1.0 : 0.0,
-                    duration: widget.opacityDuration,
-                    child: Icon(widget.secondaryIcon, size: widget.iconSize),
+                    opacity: isSecondaryActive ? 1.0 : 0.0,
+                    duration: opacityDuration,
+                    child: Icon(secondaryIcon, size: iconSize),
                   ),
                 ],
               ),
@@ -92,34 +105,6 @@ class _AnimatedIconButtonState extends State<AnimatedIconButton>
           );
         },
       ),
-    );
-  }
-
-  @override
-  void didUpdateWidget(AnimatedIconButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.isSecondaryActive != widget.isSecondaryActive) {
-      if (widget.isSecondaryActive) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: widget.animationDuration,
-      vsync: this,
-      value: widget.isSecondaryActive ? 1.0 : 0.0,
     );
   }
 }

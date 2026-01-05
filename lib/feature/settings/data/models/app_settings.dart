@@ -6,8 +6,10 @@ import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart'
 
 part 'app_settings.freezed.dart';
 
+/// Model representing the application settings.
 @freezed
 abstract class AppSettings with _$AppSettings {
+  /// Creates an [AppSettings] instance.
   factory AppSettings({
     required ThemeSettings themeSettings,
     required Locale locale,

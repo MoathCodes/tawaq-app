@@ -35,10 +35,10 @@ import 'package:skeletonizer/skeletonizer.dart';
 /// )
 /// ```
 class FSkeletonizer extends StatelessWidget {
-
   /// Creates a Forui-themed skeleton loader.
   const FSkeletonizer({
-    required this.child, super.key,
+    required this.child,
+    super.key,
     this.enabled = true,
     this.effect,
     this.ignoreContainers = false,
@@ -47,6 +47,7 @@ class FSkeletonizer extends StatelessWidget {
     this.textBoneBorderRadius,
     this.containersColor,
   });
+
   /// The widget to be skeletonized when [enabled] is true.
   final Widget child;
 
@@ -111,7 +112,8 @@ class FSkeletonizer extends StatelessWidget {
 
   /// Creates an FSkeletonizer with a fade-like effect using Forui colors.
   static Widget fade({
-    required Widget child, Key? key,
+    required Widget child,
+    Key? key,
     bool enabled = true,
     bool ignoreContainers = false,
     bool ignorePointers = true,
@@ -145,7 +147,8 @@ class FSkeletonizer extends StatelessWidget {
 
   /// Creates an FSkeletonizer with a pulse effect using Forui colors.
   static Widget pulse({
-    required Widget child, Key? key,
+    required Widget child,
+    Key? key,
     bool enabled = true,
     bool ignoreContainers = false,
     bool ignorePointers = true,
@@ -179,7 +182,8 @@ class FSkeletonizer extends StatelessWidget {
 
   /// Creates an FSkeletonizer with a custom shimmer effect using Forui colors.
   static Widget shimmer({
-    required Widget child, Key? key,
+    required Widget child,
+    Key? key,
     bool enabled = true,
     bool ignoreContainers = false,
     bool ignorePointers = true,

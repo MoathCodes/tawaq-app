@@ -1,10 +1,12 @@
-import 'package:flumpose/flumpose.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:hasanat/core/hooks/hooks.dart';
 import 'package:hasanat/core/widgets/mouse_click.dart';
+import 'package:hasanat/theme/theme.dart';
 
 /// A card that displays a hover effect when the mouse is over it.
-class HoverCard extends StatefulWidget {
+class HoverCard extends HookWidget {
   /// Creates a hover card.
   const HoverCard({
     required this.child,
@@ -38,8 +40,61 @@ class HoverCard extends StatefulWidget {
   /// The background color of the card.
   final Color? backgroundColor;
 
+  static const _borderRadius = 15.0;
+  static const _borderOpacity = 100;
+
   @override
-  State<HoverCard> createState() => _HoverCardState();
+  Widget build(BuildContext context) {
+    final (:isHovered, :setHovered) = useHoverState();
+    final colors = FTheme.of(context).colors;
+
+    return MouseClick(
+      disabled: !enableHoverEffect,
+      onExit: (event) => setHovered(false),
+      onHover: (event) => setHovered(true),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        padding: padding,
+        decoration: BoxDecoration(
+          color: backgroundColor ?? colors.secondary,
+          borderRadius: BorderRadius.circular(
+            borderRadius ?? _borderRadius,
+          ),
+          border: Border.all(
+            color: isHovered && enableHoverEffect
+                ? activeBorderColor ?? colors.primary
+                : borderColor ??
+                      colors.secondaryForeground.withAlpha(_borderOpacity),
+          ),
+          boxShadow: isHovered && enableHoverEffect
+              ? <BoxShadow>[
+                  // Soft, wide ambient shadow
+                  BoxShadow(
+                    color: colors.primary.withValues(alpha: 0.18),
+                    blurRadius: 28,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 10),
+                  ),
+                  // Subtle contact shadow for depth
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : <BoxShadow>[
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 12,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: child,
+      ),
+    );
+  }
 }
 
 /// A card that does not have any hover effects.
@@ -75,81 +130,18 @@ class StaticCard extends StatelessWidget {
     const defaultBorderRadius = 15.0;
     const borderOpacity = 100;
 
-    return child.decorateWithPadding(
-      padding: padding ?? const EdgeInsets.all(8),
-      builder: (d) => d
-          .color(backgroundColor ?? colors.secondary)
-          .circular(defaultBorderRadius)
-          .borderAll(
-            color: borderColor ??
-                colors.secondaryForeground.withAlpha(borderOpacity),
-          ),
-    );
-  }
-}
-
-class _HoverCardState extends State<HoverCard> {
-  // static const _cardPadding = EdgeInsets.all(16.0);
-  static const _borderRadius = 15.0;
-  static const _borderOpacity = 100;
-  bool _isHovering = false;
-  @override
-  Widget build(BuildContext context) {
-    final colors = FTheme.of(context).colors;
-    return MouseClick(
-      disabled: !widget.enableHoverEffect,
-      onExit: (event) {
-        setState(() {
-          _isHovering = false;
-        });
-      },
-      onHover: (event) {
-        setState(() {
-          _isHovering = true;
-        });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 260),
-        curve: Curves.easeOutCubic,
-        padding: widget.padding ,
-        decoration: BoxDecoration(
-          color: widget.backgroundColor ?? colors.secondary,
-          borderRadius: BorderRadius.circular(
-            widget.borderRadius ?? _borderRadius,
-          ),
-          border: Border.all(
-            color: _isHovering && widget.enableHoverEffect
-                ? widget.activeBorderColor ?? colors.primary
-                : widget.borderColor ??
-                    colors.secondaryForeground.withAlpha(_borderOpacity),
-          ),
-          boxShadow: _isHovering && widget.enableHoverEffect
-              ? <BoxShadow>[
-                  // Soft, wide ambient shadow
-                  BoxShadow(
-                    color: colors.primary.withValues(alpha: 0.18),
-                    blurRadius: 28,
-                    spreadRadius: 1,
-                    offset: const Offset(0, 10),
-                  ),
-                  // Subtle contact shadow for depth
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : <BoxShadow>[
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 12,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-          // color: widget.backgroundColor ?? colors.secondary,
+    return Container(
+      padding: padding ?? const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? colors.secondary,
+        borderRadius: BorderRadius.circular(defaultBorderRadius),
+        border: Border.all(
+          color:
+              borderColor ??
+              colors.secondaryForeground.withAlpha(borderOpacity),
         ),
-        child: widget.child,
       ),
+      child: child,
     );
   }
 }

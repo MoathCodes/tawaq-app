@@ -10,22 +10,24 @@ import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_table_model.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_table/prayer_table_provider.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
+import 'package:hasanat/theme/theme.dart';
 
+/// Widget that displays prayer times in a table.
 class PrayerTable extends ConsumerWidget {
+  /// Creates a [PrayerTable] instance.
+  const PrayerTable({super.key});
   // Static constants for performance
   static const double _headerHeight = 48;
   static const Size _imageSize = Size(56, 56);
-  static const double _imageBorderRadius = 12;
   static const int _nextPrayerAlpha = 30;
   static const int _currentPrayerAlpha = 50;
-  // Static objects to avoid repeated creation
+  // Static objects to avoid repeated creation - use AppSpacing.lg (12)
   static final BorderRadius _imageBorderRadiusGeometry = BorderRadius.circular(
-    _imageBorderRadius,
+    AppSpacing.md,
   );
 
-  static const EdgeInsets _cellPadding = EdgeInsets.all(8);
-  static const SizedBox _imagePadding = SizedBox(width: 12);
-  const PrayerTable({super.key});
+  static const EdgeInsets _cellPadding = EdgeInsets.all(AppSpacing.sm);
+  static const SizedBox _imagePadding = SizedBox(width: AppSpacing.md);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,8 +47,8 @@ class PrayerTable extends ConsumerWidget {
 
 /// Error widget for when data loading fails
 class _ErrorWidget extends StatelessWidget {
-  final Object error;
   const _ErrorWidget({required this.error});
+  final Object error;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +56,7 @@ class _ErrorWidget extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -63,13 +65,13 @@ class _ErrorWidget extends StatelessWidget {
               size: 48,
               color: theme.colors.destructive,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               'Error loading prayer table',
               style: theme.typography.base,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               error.toString(),
               style: theme.typography.sm.copyWith(
@@ -169,6 +171,7 @@ class _LoadingWidget extends StatelessWidget {
 
 /// Main content widget for the prayer table
 class _PrayerTableContent extends StatelessWidget {
+  const _PrayerTableContent({required this.rows});
   // Static cached columns to avoid rebuilding
   static List<DataColumn>? _cachedColumns;
   static AppLocalizations? _cachedL10n;
@@ -176,7 +179,6 @@ class _PrayerTableContent extends StatelessWidget {
   static FThemeData? _cachedTheme;
 
   final List<PrayerTableRow> rows;
-  const _PrayerTableContent({required this.rows});
 
   @override
   Widget build(BuildContext context) {

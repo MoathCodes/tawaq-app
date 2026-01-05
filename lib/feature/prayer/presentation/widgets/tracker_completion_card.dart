@@ -1,8 +1,8 @@
-import 'package:flumpose/flumpose.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
+import 'package:hasanat/core/hooks/hooks.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/core/widgets/icon_badge.dart';
@@ -11,35 +11,61 @@ import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_tracker_card_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:hasanat/theme/theme.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-class TrackerCompletionCard extends ConsumerStatefulWidget {
-  final PrayerTrackerCardModel cardData;
-  final DateTime completionTime;
-  final void Function(PrayerCompletion prayerCompletion)? onCompletionChanged;
-  final bool expanded;
+/// A card widget that displays prayer completion status and allows changing it.
+class TrackerCompletionCard extends HookConsumerWidget {
+  /// Creates a [TrackerCompletionCard] instance.
   const TrackerCompletionCard({
     required this.cardData,
     required this.completionTime,
-    this.expanded = true,
     this.onCompletionChanged,
     super.key,
   });
 
-  @override
-  ConsumerState<TrackerCompletionCard> createState() =>
-      _ClickablePrayerCardState();
-}
+  /// The data for the prayer card.
+  final PrayerTrackerCardModel cardData;
 
-class _ClickablePrayerCardState extends ConsumerState<TrackerCompletionCard> {
+  /// The time for which the completion is recorded.
+  final DateTime completionTime;
+
+  /// Callback when the completion status is changed.
+  final void Function(PrayerCompletion prayerCompletion)? onCompletionChanged;
+
   static const Duration _animationDuration = Duration(milliseconds: 200);
 
-  bool _isHover = false;
-
-  bool _isDisabled = false;
-
-  late CompletionStatus _isComplete;
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final (:isHovered, :setHovered) = useHoverState();
+    final isDisabled = useState(!cardData.isTimePassed);
+    final completionStatus = useState(
+      cardData.completion?.status ?? CompletionStatus.none,
+    );
+
+    // Sync state when cardData changes (equivalent to didUpdateWidget)
+    useEffect(
+      () {
+        isDisabled.value = !cardData.isTimePassed;
+        completionStatus.value =
+            cardData.completion?.status ?? CompletionStatus.none;
+        return null;
+      },
+      [cardData],
+    );
+
+    void handleClick(CompletionStatus value) {
+      completionStatus.value = value;
+      onCompletionChanged?.call(
+        PrayerCompletion(
+          id: cardData.completion?.id,
+          status: value,
+          prayer: cardData.prayer,
+          completionTime: completionTime,
+        ),
+      );
+    }
+
     final theme = FTheme.of(context);
     final colorScheme = theme.colors;
     return FPopoverMenu(
@@ -52,9 +78,7 @@ class _ClickablePrayerCardState extends ConsumerState<TrackerCompletionCard> {
                 color: CompletionStatus.jamaah.getBadgeColor(),
               ),
               title: Text(context.l10n.jamaah),
-              onPress: () {
-                _handleClick(CompletionStatus.jamaah);
-              },
+              onPress: () => handleClick(CompletionStatus.jamaah),
             ),
             FItem(
               // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
@@ -63,9 +87,7 @@ class _ClickablePrayerCardState extends ConsumerState<TrackerCompletionCard> {
                 color: CompletionStatus.onTime.getBadgeColor(),
               ),
               title: Text(context.l10n.onTime),
-              onPress: () {
-                _handleClick(CompletionStatus.onTime);
-              },
+              onPress: () => handleClick(CompletionStatus.onTime),
             ),
             FItem(
               // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
@@ -74,9 +96,7 @@ class _ClickablePrayerCardState extends ConsumerState<TrackerCompletionCard> {
                 color: CompletionStatus.late.getBadgeColor(),
               ),
               title: Text(context.l10n.late),
-              onPress: () {
-                _handleClick(CompletionStatus.late);
-              },
+              onPress: () => handleClick(CompletionStatus.late),
             ),
             FItem(
               // style: const ButtonStyle.menubar(density: ButtonDensity.icon),
@@ -85,57 +105,43 @@ class _ClickablePrayerCardState extends ConsumerState<TrackerCompletionCard> {
                 color: CompletionStatus.missed.getBadgeColor(),
               ),
               title: Text(context.l10n.missed),
-              onPress: () {
-                _handleClick(CompletionStatus.missed);
-              },
+              onPress: () => handleClick(CompletionStatus.missed),
             ),
           ],
         ),
       ],
       builder: (context, controller, child) => ConstrainedBox(
-        constraints: BoxConstraints(maxHeight: widget.expanded ? 200.h : 110.h),
+        constraints: BoxConstraints(maxHeight: 200.h),
         child: MouseClick(
-          disabled: _isDisabled,
-          onClick: () {
-            controller.toggle();
-          },
-          onExit: (event) {
-            setState(() {
-              _isHover = false;
-            });
-          },
-          onHover: (event) {
-            setState(() {
-              _isHover = true;
-            });
-          },
+          disabled: isDisabled.value,
+          onClick: controller.toggle,
+          onExit: (event) => setHovered(false),
+          onHover: (event) => setHovered(true),
           child: AnimatedOpacity(
             duration: _animationDuration,
-            opacity: _isDisabled ? 0.5 : 1.0,
+            opacity: isDisabled.value ? 0.5 : 1.0,
             curve: Curves.easeInOut,
             onEnd: () {
-              if (widget.cardData.isTimePassed) {
-                setState(() {
-                  _isHover = false;
-                });
+              if (cardData.isTimePassed) {
+                setHovered(false);
               }
             },
             child: AnimatedScale(
               duration: _animationDuration,
-              scale: _isHover ? 1.05 : 1.0,
+              scale: isHovered ? 1.05 : 1.0,
               curve: Curves.bounceInOut,
               child: AnimatedContainer(
                 duration: _animationDuration,
                 curve: Curves.easeInOut,
-                width: widget.expanded ? 250.w : 132.w,
-                padding: const EdgeInsets.all(8),
+                width: 250.w,
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: theme.cardStyle.decoration.color,
                   border: Border.all(
                     color: colorScheme.secondary.withAlpha(45),
                   ),
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: _isHover
+                  boxShadow: isHovered
                       ? [
                           BoxShadow(
                             color: colorScheme.secondaryForeground.withAlpha(
@@ -156,11 +162,11 @@ class _ClickablePrayerCardState extends ConsumerState<TrackerCompletionCard> {
                       children: [
                         Builder(
                           builder: (context) {
-                            final w = (widget.expanded ? 46.w : 30.w);
-                            final h = (widget.expanded ? 46.h : 30.h);
+                            final w = 46.w;
+                            final h = 46.h;
                             final dpr = MediaQuery.of(context).devicePixelRatio;
                             final provider = ResizeImage(
-                              AssetImage(widget.cardData.prayer.imagePath),
+                              AssetImage(cardData.prayer.imagePath),
                               width: (w * dpr).round(),
                               height: (h * dpr).round(),
                             );
@@ -171,7 +177,7 @@ class _ClickablePrayerCardState extends ConsumerState<TrackerCompletionCard> {
                                 image: DecorationImage(
                                   image: provider,
                                   fit: BoxFit.cover,
-                                  alignment: widget.cardData.prayer.alignment,
+                                  alignment: cardData.prayer.alignment,
                                 ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -179,30 +185,31 @@ class _ClickablePrayerCardState extends ConsumerState<TrackerCompletionCard> {
                           },
                         ),
                         _buildStatusChip(
-                          widget.cardData.completion?.status ?? _isComplete,
+                          cardData.completion?.status ?? completionStatus.value,
                           theme,
                           ref.watch(themeProvider).value?.themeMode ==
                               ThemeMode.dark,
+                          completionStatus.value,
+                          context,
                         ),
                       ],
                     ),
                     Text(
-                      widget.cardData.prayer.getLocaleName(context.l10n),
-                      style: TextStyle(
-                        fontSize: widget.expanded ? 26.sp : 13.sp,
-                      ),
-                    ).bold(),
-                    Text(
-                      widget.cardData.adhan,
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontSize: widget.expanded ? 26.sp : 13.sp,
+                      cardData.prayer.getLocaleName(context.l10n),
+                      style: context.theme.typography.lg.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
-                      widget.cardData.subtitle,
-                      style: TextStyle(
-                        fontSize: widget.expanded ? 16.sp : 10.sp,
+                      cardData.adhan,
+                      style: context.theme.typography.xl.copyWith(
+                        color: context.theme.colors.primary,
+                      ),
+                    ),
+                    Text(
+                      cardData.subtitle,
+                      style: context.theme.typography.sm.copyWith(
+                        color: context.theme.colors.mutedForeground,
                       ),
                     ),
                   ],
@@ -214,87 +221,53 @@ class _ClickablePrayerCardState extends ConsumerState<TrackerCompletionCard> {
       ),
     );
   }
+}
 
-  @override
-  void didUpdateWidget(covariant TrackerCompletionCard oldWidget) {
-    if (oldWidget.cardData != widget.cardData) {
-      setState(() {
-        _isDisabled = !widget.cardData.isTimePassed;
-        _isComplete =
-            widget.cardData.completion?.status ?? CompletionStatus.none;
-      });
-    }
-    super.didUpdateWidget(oldWidget);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _isDisabled = !widget.cardData.isTimePassed;
-    _isComplete = widget.cardData.completion?.status ?? CompletionStatus.none;
-  }
-
-  Widget _buildStatusChip(
-    CompletionStatus status,
-    FThemeData theme,
-    bool isDarkMode,
-  ) {
-    final style = theme.typography.sm.copyWith(color: Colors.white);
-    return switch (status) {
-      CompletionStatus.jamaah => IconBadge(
-        style: (p0) => p0.copyWith(
-          decoration: p0.decoration.copyWith(
-            color: isDarkMode ? Colors.green.shade900 : Colors.green.shade600,
-          ),
+Widget _buildStatusChip(
+  CompletionStatus status,
+  FThemeData theme,
+  bool isDarkMode,
+  CompletionStatus completionStatus,
+  BuildContext context,
+) {
+  final style = theme.typography.sm.copyWith(color: Colors.white);
+  return switch (status) {
+    CompletionStatus.jamaah => IconBadge(
+      style: (p0) => p0.copyWith(
+        decoration: p0.decoration.copyWith(
+          color: isDarkMode ? Colors.green.shade900 : Colors.green.shade600,
         ),
-        icon: const Icon(FIcons.users, size: 16, color: Colors.white),
-        label: Text(_isComplete.getLocaleName(context.l10n), style: style),
       ),
-      CompletionStatus.onTime => IconBadge(
-        style: (p0) => p0.copyWith(
-          decoration: p0.decoration.copyWith(
-            color: isDarkMode ? Colors.yellow.shade900 : Colors.yellow.shade600,
-          ),
+      icon: const Icon(FIcons.users, size: 16, color: Colors.white),
+      label: Text(completionStatus.getLocaleName(context.l10n), style: style),
+    ),
+    CompletionStatus.onTime => IconBadge(
+      style: (p0) => p0.copyWith(
+        decoration: p0.decoration.copyWith(
+          color: isDarkMode ? Colors.yellow.shade900 : Colors.yellow.shade600,
         ),
-        icon: const Icon(FIcons.checkCheck, size: 16, color: Colors.white),
-        label: Text(_isComplete.getLocaleName(context.l10n), style: style),
       ),
-      CompletionStatus.late => IconBadge(
-        style: (p0) => p0.copyWith(
-          decoration: p0.decoration.copyWith(
-            color: isDarkMode ? Colors.orange.shade900 : Colors.orange.shade600,
-          ),
+      icon: const Icon(FIcons.checkCheck, size: 16, color: Colors.white),
+      label: Text(completionStatus.getLocaleName(context.l10n), style: style),
+    ),
+    CompletionStatus.late => IconBadge(
+      style: (p0) => p0.copyWith(
+        decoration: p0.decoration.copyWith(
+          color: isDarkMode ? Colors.orange.shade900 : Colors.orange.shade600,
         ),
-        icon: const Icon(FIcons.clock, size: 16, color: Colors.white),
-        label: Text(_isComplete.getLocaleName(context.l10n), style: style),
       ),
-      CompletionStatus.missed => IconBadge(
-        style: (p0) => p0.copyWith(
-          decoration: p0.decoration.copyWith(
-            color: isDarkMode ? Colors.red.shade900 : Colors.red.shade600,
-          ),
+      icon: const Icon(FIcons.clock, size: 16, color: Colors.white),
+      label: Text(completionStatus.getLocaleName(context.l10n), style: style),
+    ),
+    CompletionStatus.missed => IconBadge(
+      style: (p0) => p0.copyWith(
+        decoration: p0.decoration.copyWith(
+          color: isDarkMode ? Colors.red.shade900 : Colors.red.shade600,
         ),
-        icon: const Icon(FIcons.circleX, size: 16, color: Colors.white),
-        label: Text(_isComplete.getLocaleName(context.l10n), style: style),
       ),
-      CompletionStatus.none => const SizedBox.shrink(),
-    };
-  }
-
-  void _handleClick(CompletionStatus value) {
-    if (mounted) {
-      setState(() {
-        _isComplete = value;
-      });
-    }
-    widget.onCompletionChanged?.call(
-      PrayerCompletion(
-        id: widget.cardData.completion?.id,
-        status: value,
-        prayer: widget.cardData.prayer,
-        completionTime: widget.completionTime,
-      ),
-    );
-    // controller.hide();
-  }
+      icon: const Icon(FIcons.circleX, size: 16, color: Colors.white),
+      label: Text(completionStatus.getLocaleName(context.l10n), style: style),
+    ),
+    CompletionStatus.none => const SizedBox.shrink(),
+  };
 }

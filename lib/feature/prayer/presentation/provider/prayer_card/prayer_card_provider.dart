@@ -1,5 +1,7 @@
+// ignore_for_file: avoid_catches_without_on_clauses
+
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/core/logging/talker_provider.dart';
+import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/utils/date_formatter.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_card_decision.dart';
@@ -9,14 +11,15 @@ import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart'
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:talker_flutter/talker_flutter.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_card_provider.g.dart';
 
 const String _prayerCardLogPrefix = '[PrayerCard]';
 
+/// Notifier for the prayer card information.
 @riverpod
 class PrayerCard extends _$PrayerCard {
   _PrayerCache? _cache;
@@ -24,14 +27,15 @@ class PrayerCard extends _$PrayerCard {
 
   @override
   Stream<PrayerCardInfo> build() async* {
-    final log = ref.read(talkerProvider);
-    final service = ref.read(prayerServiceProvider);
+    if (!ref.mounted) return;
+    final log = ref.watch(loggerProvider);
+    final service = ref.watch(prayerServiceProvider);
 
     final settingsState = ref.watch(prayerSettingsProvider);
     final settings = settingsState.value;
 
     if (settings == null) {
-      log.debug('$_prayerCardLogPrefix Settings unavailable – empty stream');
+      log.d('$_prayerCardLogPrefix Settings unavailable – empty stream');
       yield PrayerCardInfo.empty();
     }
 
@@ -67,14 +71,14 @@ class PrayerCard extends _$PrayerCard {
           settings,
         );
       } catch (e, stackTrace) {
-        log.handle(
-          e,
-          stackTrace,
+        log.e(
           '$_prayerCardLogPrefix Error producing prayer card',
+          error: e,
+          stackTrace: stackTrace,
         );
         yield PrayerCardInfo.empty();
       } finally {
-        await Future.delayed(const Duration(seconds: 1));
+        await Future<void>.delayed(const Duration(seconds: 1));
       }
     }
   }
@@ -83,7 +87,7 @@ class PrayerCard extends _$PrayerCard {
     PrayerSettings settings,
     DateTime now,
     PrayerService service,
-    Talker log,
+    Logger log,
   ) {
     final todayAnchor = DateTime(now.year, now.month, now.day);
 
@@ -94,7 +98,7 @@ class PrayerCard extends _$PrayerCard {
 
     if (!needsRefresh) return;
 
-    log.debug('$_prayerCardLogPrefix Building prayer cache …');
+    log.d('$_prayerCardLogPrefix Building prayer cache …');
 
     final todaysTimes = service.getTodaysPrayerTimes(now, false);
     final yesterdaysTimes = service.getTodaysPrayerTimes(
@@ -144,6 +148,14 @@ class PrayerCard extends _$PrayerCard {
 
 // Lightweight container for today/yesterday prayer & sunnah times.
 class _PrayerCache {
+  const _PrayerCache({
+    required this.anchorDate,
+    required this.todaysTimes,
+    required this.yesterdaysTimes,
+    required this.todaysSunnah,
+    required this.yesterdaysSunnah,
+  });
+
   /// Midnight of the day the cache was built (in the active location).
   final DateTime anchorDate;
 
@@ -152,11 +164,4 @@ class _PrayerCache {
   final PrayerTimesData yesterdaysTimes;
   final SunnahTimes todaysSunnah;
   final SunnahTimes yesterdaysSunnah;
-  const _PrayerCache({
-    required this.anchorDate,
-    required this.todaysTimes,
-    required this.yesterdaysTimes,
-    required this.todaysSunnah,
-    required this.yesterdaysSunnah,
-  });
 }
