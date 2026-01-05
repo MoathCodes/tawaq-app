@@ -53,7 +53,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
   });
   // Combined constants from both widgets
 
-  static const _contentPadding = EdgeInsets.symmetric(
+  static const EdgeInsets _contentPadding = .symmetric(
     horizontal: 12,
     vertical: 16,
   );
@@ -69,9 +69,9 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     final l10n = context.l10n;
 
     return StaticCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const .all(AppSpacing.md),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: .stretch,
         children: [
           Text(context.l10n.playerAnalytics),
           const SizedBox(height: AppSpacing.sm),
@@ -98,7 +98,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     AppLocalizations l10n,
   ) {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      mainAxisAlignment: .spaceAround,
       children: [_buildProgressSection(colors, l10n), _buildStatsSection(l10n)],
     );
   }
@@ -107,7 +107,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     return Container(
       padding: _contentPadding,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: .stretch,
         children: [
           Text(
             _formatPercentage(data.completionPercentage),

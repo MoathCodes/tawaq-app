@@ -34,13 +34,13 @@ class ShellSidebar extends HookConsumerWidget {
     );
     return FSidebar(
       style: (p0) => p0.copyWith(
-        headerPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        headerPadding: const .symmetric(horizontal: 10, vertical: 8),
       ),
       header: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: .stretch,
         children: [
           FLabel(
-            axis: Axis.vertical,
+            axis: .vertical,
             child: Text(
               'توّاق',
               style: TextStyle(

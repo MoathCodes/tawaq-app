@@ -84,14 +84,14 @@ class ShellAppBar extends ConsumerWidget {
         Expanded(
           flex: 2,
           child: StaticCard(
-            padding: const EdgeInsets.all(AppSpacing.sm),
+            padding: const .all(AppSpacing.sm),
             child: Row(children: nearWidgets),
           ),
         ),
         Expanded(
           child: Row(
             spacing: 4,
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: .end,
             children: farWidgets,
           ),
         ),

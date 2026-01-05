@@ -155,7 +155,7 @@ FButtonStyle closeButtonStyle({
       ),
       WidgetState.any: IconThemeData(color: colors.mutedForeground, size: 14),
     }),
-    padding: const EdgeInsets.all(7),
+    padding: const .all(7),
     spacing: 0,
   ),
   iconContentStyle: FButtonIconContentStyle(
@@ -213,7 +213,7 @@ FButtonStyle windowControlButtonStyle({
       WidgetState.hovered: IconThemeData(color: colors.foreground, size: 14),
       WidgetState.any: IconThemeData(color: colors.mutedForeground, size: 14),
     }),
-    padding: const EdgeInsets.all(7),
+    padding: const .all(7),
     spacing: 0,
   ),
   iconContentStyle: FButtonIconContentStyle(
@@ -251,6 +251,6 @@ FButtonContentStyle _buttonContentStyle({
     WidgetState.disabled: IconThemeData(color: disabled, size: 20),
     WidgetState.any: IconThemeData(color: enabled, size: 20),
   }),
-  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12.5),
+  padding: const .symmetric(horizontal: 16, vertical: 12.5),
   spacing: 10,
 );

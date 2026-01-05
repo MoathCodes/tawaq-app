@@ -175,7 +175,7 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
       ),
     );
     return SettingsSection(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: .center,
       title: context.l10n.timeSectionTitle,
       subtitle: context.l10n.timeSectionSubtitle,
       child: ConstrainedBox(
@@ -210,7 +210,7 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
             ),
             FCard(
               title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: .spaceBetween,
                 children: [
                   Text(context.l10n.iqamahAdjustment),
                   FTooltip(

@@ -42,7 +42,7 @@ class LocationPickerDialog extends HookConsumerWidget {
     return FDialog(
       animation: animation,
       style: style,
-      direction: Axis.horizontal,
+      direction: .horizontal,
       constraints: const BoxConstraints(maxWidth: 850),
       title: Text(
         context.l10n.chooseLocation,
@@ -60,7 +60,7 @@ class LocationPickerDialog extends HookConsumerWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: .start,
           children: [
             _buildHeader(
               context,
@@ -105,7 +105,7 @@ class LocationPickerDialog extends HookConsumerWidget {
     required FColors colors,
   }) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       spacing: 4,
       children: [
         Text(
@@ -118,7 +118,7 @@ class LocationPickerDialog extends HookConsumerWidget {
         ),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const .symmetric(horizontal: 8, vertical: 6),
           decoration: BoxDecoration(
             color: colors.background,
             borderRadius: BorderRadius.circular(4),
@@ -140,15 +140,15 @@ class LocationPickerDialog extends HookConsumerWidget {
   ) {
     return Container(
       width: 200,
-      margin: const EdgeInsets.only(top: 16, right: 16, bottom: 16),
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      margin: const .only(top: 16, right: 16, bottom: 16),
+      padding: const .all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: colors.muted.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: colors.border),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         spacing: 16,
         children: [
           Row(
@@ -189,7 +189,7 @@ class LocationPickerDialog extends HookConsumerWidget {
     MapController mapController,
   ) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const .all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: colors.muted.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.only(
@@ -198,11 +198,11 @@ class LocationPickerDialog extends HookConsumerWidget {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         spacing: 12,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: .spaceBetween,
             children: [
               Text(
                 context.l10n.dragTheMapTip,
@@ -260,7 +260,7 @@ class LocationPickerDialog extends HookConsumerWidget {
     return Expanded(
       flex: 3,
       child: Container(
-        margin: const EdgeInsets.all(AppSpacing.lg),
+        margin: const .all(AppSpacing.lg),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           border: Border.all(color: colors.border),
@@ -371,7 +371,7 @@ class LocationPickerDialog extends HookConsumerWidget {
 
   Widget _buildTipSection(BuildContext context, FColors colors) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const .all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: colors.muted.withValues(alpha: 0.05),
         borderRadius: const BorderRadius.only(

@@ -22,8 +22,7 @@ import 'package:timezone/timezone.dart';
 /// Widget that displays the prayer tracker.
 class PrayerTrackerWidget extends HookConsumerWidget {
   /// Creates a [PrayerTrackerWidget] instance.
-  const PrayerTrackerWidget({ super.key});
-
+  const PrayerTrackerWidget({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,16 +33,16 @@ class PrayerTrackerWidget extends HookConsumerWidget {
     );
 
     return StaticCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const .all(AppSpacing.md),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: .stretch,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: .spaceBetween,
             children: [
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: .start,
                   children: [
                     Text(context.l10n.prayerTrackerTitle),
                     const SizedBox(height: AppSpacing.xs),

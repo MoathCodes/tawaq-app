@@ -88,9 +88,9 @@ class _SingleColorCard extends HookConsumerWidget {
             ),
             borderRadius: BorderRadius.circular(8),
           ),
-          padding: const EdgeInsets.all(AppSpacing.sm),
+          padding: const .all(AppSpacing.sm),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: .spaceEvenly,
             children: [
               Text(appPalette.getLocaleName(context.l10n)),
               Row(
@@ -112,7 +112,7 @@ class _SingleColorCard extends HookConsumerWidget {
                               : null,
                           color: lightTheme.colors.background,
                         ),
-                        padding: const EdgeInsets.all(AppSpacing.md),
+                        padding: const .all(AppSpacing.md),
                         child: Text(
                           context.l10n.light,
                           style: TextStyle(color: lightTheme.colors.primary),
@@ -137,7 +137,7 @@ class _SingleColorCard extends HookConsumerWidget {
                               : null,
                           color: darkTheme.colors.background,
                         ),
-                        padding: const EdgeInsets.all(AppSpacing.md),
+                        padding: const .all(AppSpacing.md),
                         child: Text(
                           context.l10n.dark,
                           textAlign: TextAlign.center,

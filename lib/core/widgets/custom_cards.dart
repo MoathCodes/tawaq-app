@@ -131,7 +131,7 @@ class StaticCard extends StatelessWidget {
     const borderOpacity = 100;
 
     return Container(
-      padding: padding ?? const EdgeInsets.all(AppSpacing.sm),
+      padding: padding ?? const .all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: backgroundColor ?? colors.secondary,
         borderRadius: BorderRadius.circular(defaultBorderRadius),

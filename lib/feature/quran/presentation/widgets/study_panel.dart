@@ -34,9 +34,9 @@ class StudyPanel extends HookWidget {
     final typography = FTheme.of(context).typography;
 
     return StaticCard(
-      padding: EdgeInsets.zero,
+      padding: .zero,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: .stretch,
         children: [
           // Header
           _buildHeader(colors, typography),
@@ -44,9 +44,9 @@ class StudyPanel extends HookWidget {
           // Content
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.lg),
+              padding: const .all(AppSpacing.lg),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: .stretch,
                 children: [
                   // Tafsir & Translation Accordion
                   _buildAccordion(colors, typography, accordionController),
@@ -66,7 +66,7 @@ class StudyPanel extends HookWidget {
     final hasSelection = selectedAyahId != null;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const .all(AppSpacing.lg),
       child: Row(
         children: [
           Icon(
@@ -77,7 +77,7 @@ class StudyPanel extends HookWidget {
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: .start,
               children: [
                 Text(
                   'Study Mode',
@@ -131,7 +131,7 @@ class StudyPanel extends HookWidget {
       style: (style) => style.copyWith(
         dividerStyle: FDividerStyle(
           color: colors.border,
-          padding: EdgeInsets.zero,
+          padding: .zero,
         ).call,
       ),
       children: [
@@ -184,9 +184,9 @@ class StudyPanel extends HookWidget {
 
   Widget _buildTafsirContent(FColors colors, FTypography typography) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      padding: const .symmetric(vertical: AppSpacing.md),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           // Tafsir source selector
           Row(
@@ -224,9 +224,9 @@ class StudyPanel extends HookWidget {
 
   Widget _buildTranslationContent(FColors colors, FTypography typography) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      padding: const .symmetric(vertical: AppSpacing.md),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Row(
             children: [
@@ -262,9 +262,9 @@ class StudyPanel extends HookWidget {
     FTypography typography,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      padding: const .symmetric(vertical: AppSpacing.md),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Text(
             'Tap on a word in the Mushaf to see its analysis.',
@@ -284,7 +284,7 @@ class StudyPanel extends HookWidget {
     TextEditingController notesController,
   ) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         Row(
           children: [
@@ -310,7 +310,7 @@ class StudyPanel extends HookWidget {
           maxLines: 5,
           hint: 'Write your thoughts about this verse...',
           style: (style) => style.copyWith(
-            contentPadding: const EdgeInsets.all(AppSpacing.md),
+            contentPadding: const .all(AppSpacing.md),
           ),
         ),
         const SizedBox(height: AppSpacing.md),

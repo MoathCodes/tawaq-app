@@ -50,7 +50,7 @@ class SettingsCard extends StatelessWidget {
         subtitle: (subtitle != null) ? Text(subtitle!) : null,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: .stretch,
           spacing: spacing,
           children: [
             // Text(title).h3,
@@ -71,7 +71,7 @@ class SettingsSection extends StatelessWidget {
     required this.title,
     required this.subtitle,
     super.key,
-    this.crossAxisAlignment = CrossAxisAlignment.stretch,
+    this.crossAxisAlignment = .stretch,
     this.leading,
     this.suffix,
   });
@@ -99,7 +99,7 @@ class SettingsSection extends StatelessWidget {
     final theme = FTheme.of(context);
 
     return StaticCard(
-      padding: const EdgeInsets.all(AppSpacing.sm),
+      padding: const .all(AppSpacing.sm),
       child: FCard(
         // titleAlignment:
         //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
@@ -112,10 +112,10 @@ class SettingsSection extends StatelessWidget {
             color: Colors.transparent,
             border: Border.all(color: Colors.transparent),
           ),
-          contentStyle: (p0) => p0.copyWith(padding: EdgeInsets.zero),
+          contentStyle: (p0) => p0.copyWith(padding: .zero),
         ),
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: .spaceBetween,
           children: [Text(title), ?suffix],
         ),
         subtitle: Text(subtitle),

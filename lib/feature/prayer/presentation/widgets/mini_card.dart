@@ -13,7 +13,7 @@ class MiniCard extends StatelessWidget {
     this.height,
     this.width,
     this.spacing = 4,
-    this.padding = const EdgeInsets.all(AppSpacing.sm),
+    this.padding = const .all(AppSpacing.sm),
   });
 
   /// The label displayed at the top of the card.
@@ -49,7 +49,7 @@ class MiniCard extends StatelessWidget {
           color: theme.colors.background,
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: .spaceEvenly,
           children: [
             Text(
               label,

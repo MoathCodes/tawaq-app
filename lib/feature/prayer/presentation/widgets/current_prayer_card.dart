@@ -54,7 +54,7 @@ class CurrentPrayerCard extends ConsumerWidget {
   static const _borderRadius = BorderRadius.all(Radius.circular(12));
 
   /// Use context.edgeInsets(all: AppSpacing.lg) instead - kept for backward compat
-  static const _containerPadding = EdgeInsets.all(AppSpacing.lg);
+  static const EdgeInsets _containerPadding = .all(AppSpacing.lg);
 
   /// Use context.theme.durations.normal instead - kept for backward compat
   static const _animationDuration = Duration(milliseconds: 260);
@@ -77,7 +77,7 @@ class CurrentPrayerCard extends ConsumerWidget {
     return StaticCard(
       backgroundColor: Colors.transparent,
       borderColor: Colors.transparent,
-      padding: EdgeInsets.zero,
+      padding: .zero,
       child: cardStream.when(
         data: (data) =>
             _PrayerCardContent(data: data, appTheme: appTheme, theme: theme),
@@ -133,7 +133,7 @@ class _HeaderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: .spaceBetween,
       children: [
         Text(
           context.l10n.nextPrayer,
@@ -209,8 +209,8 @@ class _PrayerCardContent extends ConsumerWidget {
               : CurrentPrayerCard._gradientOverlay,
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: .stretch,
+          mainAxisAlignment: .spaceBetween,
           children: [
             _HeaderRow(
               completion: completion,

@@ -30,7 +30,7 @@ class PageShell extends ConsumerWidget {
 
     // TODO(moath): make the sidebar collapsible
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         GestureDetector(
           behavior: HitTestBehavior.translucent,
@@ -40,7 +40,7 @@ class PageShell extends ConsumerWidget {
           child: ColoredBox(
             color: context.theme.colors.background,
             child: const Padding(
-              padding: EdgeInsets.all(6),
+              padding: .all(6),
               child: SizedBox(
                 height: 28,
                 child: Row(children: [WindowControls()]),

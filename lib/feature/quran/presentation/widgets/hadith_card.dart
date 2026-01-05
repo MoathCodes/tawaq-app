@@ -49,9 +49,9 @@ class HadithCard extends HookWidget {
     final colors = theme.colors;
 
     return StaticCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const .all(AppSpacing.lg),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: .stretch,
         spacing: 16,
         children: [
           if (isHTML) _buildHadithHTML(theme),
@@ -103,7 +103,7 @@ class HadithCard extends HookWidget {
 
   Widget _buildBookInfo(FThemeData theme, FColors colors) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const .all(AppSpacing.md),
       decoration: BoxDecoration(
         border: Border.all(color: colors.border),
         borderRadius: BorderRadius.circular(8),
@@ -114,7 +114,7 @@ class HadithCard extends HookWidget {
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: .start,
               children: [
                 Text(
                   'المصدر',
@@ -133,7 +133,7 @@ class HadithCard extends HookWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            padding: const .symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: colors.primary.withAlpha(20),
               borderRadius: BorderRadius.circular(6),
@@ -153,13 +153,13 @@ class HadithCard extends HookWidget {
 
   Widget _buildExplanation(FThemeData theme, FColors colors) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const .all(AppSpacing.md),
       decoration: BoxDecoration(
         color: colors.secondary.withAlpha(10),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Row(
             children: [
@@ -184,14 +184,14 @@ class HadithCard extends HookWidget {
     final gradeColor = _getGradeColor(hadith.grade, colors);
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const .all(AppSpacing.md),
       decoration: BoxDecoration(
         color: gradeColor.withAlpha(20),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: gradeColor.withAlpha(40)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: .stretch,
         children: [
           Row(
             children: [
@@ -199,7 +199,7 @@ class HadithCard extends HookWidget {
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: .start,
                   children: [
                     Text(
                       'المحدث',
@@ -218,7 +218,7 @@ class HadithCard extends HookWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
+                padding: const .symmetric(
                   horizontal: 12,
                   vertical: 6,
                 ),
@@ -243,7 +243,7 @@ class HadithCard extends HookWidget {
 
   Widget _buildHadithHTML(FThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const .all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.colors.secondary.withAlpha(20),
         borderRadius: BorderRadius.circular(12),
@@ -254,7 +254,7 @@ class HadithCard extends HookWidget {
 
   Widget _buildHadithText(FThemeData theme) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
+      padding: const .all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: theme.colors.secondary.withAlpha(20),
         borderRadius: BorderRadius.circular(12),
@@ -280,7 +280,7 @@ class HadithCard extends HookWidget {
     return Row(
       children: [
         Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
+          padding: const .all(AppSpacing.sm),
           decoration: BoxDecoration(
             color: colors.primary.withAlpha(20),
             borderRadius: BorderRadius.circular(8),
@@ -290,7 +290,7 @@ class HadithCard extends HookWidget {
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: .start,
             children: [
               Text(
                 label,
@@ -319,7 +319,7 @@ class HadithCard extends HookWidget {
     required FThemeData theme,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const .symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: colors.primary.withAlpha(10),
         borderRadius: BorderRadius.circular(6),
@@ -340,13 +340,13 @@ class HadithCard extends HookWidget {
 
   Widget _buildRelatedLinks(FThemeData theme, FColors colors) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const .all(AppSpacing.md),
       decoration: BoxDecoration(
         border: Border.all(color: colors.border),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         spacing: 8,
         children: [
           Text(
@@ -391,14 +391,14 @@ class HadithCard extends HookWidget {
     final sharh = hadith.sharhMetadata!;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const .all(AppSpacing.md),
       decoration: BoxDecoration(
         color: colors.primary.withAlpha(10),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: colors.primary.withAlpha(40)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Row(
             children: [
@@ -421,7 +421,7 @@ class HadithCard extends HookWidget {
           ] else if (isLoadingSharh) ...[
             const Center(
               child: Padding(
-                padding: EdgeInsets.all(AppSpacing.lg),
+                padding: .all(AppSpacing.lg),
                 child: CircularProgressIndicator(),
               ),
             ),
@@ -462,13 +462,13 @@ class HadithCard extends HookWidget {
 
   Widget _buildTakhrij(FThemeData theme, FColors colors) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const .all(AppSpacing.md),
       decoration: BoxDecoration(
         color: colors.secondary.withAlpha(10),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: .start,
         children: [
           Row(
             children: [

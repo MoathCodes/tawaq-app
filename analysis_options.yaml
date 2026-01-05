@@ -14,6 +14,7 @@ include: package:very_good_analysis/analysis_options.yaml
 analyzer:
   exclude:
     - "**/*.g.dart"
+    - "packages/**"
   errors:
     unused_field: ignore
     avoid_catches_without_on_clauses: ignore

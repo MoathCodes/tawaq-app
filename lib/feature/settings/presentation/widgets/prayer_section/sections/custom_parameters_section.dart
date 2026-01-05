@@ -298,7 +298,7 @@ class PrayerSettingsCustomParametersCard extends HookConsumerWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const .symmetric(horizontal: 2),
       child: FAccordion(
         control: .managed(controller: accordionController),
         style: (style) => style.copyWith(
@@ -402,7 +402,7 @@ Widget _buildActionButtons(
               style: FButtonStyle.secondary(),
               onPress: resetToDefaults,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: .center,
                 children: [
                   const Icon(FIcons.rotateCcw, size: 16),
                   const SizedBox(width: AppSpacing.sm),
@@ -415,7 +415,7 @@ Widget _buildActionButtons(
             child: FButton(
               onPress: saveCustomParameters,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: .center,
                 children: [
                   const Icon(FIcons.save, size: 16),
                   const SizedBox(width: AppSpacing.sm),

@@ -18,13 +18,13 @@ class NotFoundScreen extends StatelessWidget {
     return FScaffold(
       child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
+          padding: const .all(AppSpacing.xl),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: .center,
             children: [
               // Error icon
               Container(
-                padding: const EdgeInsets.all(AppSpacing.xl),
+                padding: const .all(AppSpacing.xl),
                 decoration: BoxDecoration(
                   color: theme.colors.destructive.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
@@ -64,8 +64,8 @@ class NotFoundScreen extends StatelessWidget {
               // Error message if provided
               if (errorMsg.isNotEmpty) ...[
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const .all(AppSpacing.md),
+                  margin: const .symmetric(horizontal: 20),
                   decoration: BoxDecoration(
                     color: context.theme.colors.muted,
                     borderRadius: BorderRadius.circular(8),
@@ -84,7 +84,7 @@ class NotFoundScreen extends StatelessWidget {
 
               // Action button
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: .center,
                 children: [
                   FButton(
                     style: FButtonStyle.primary(),

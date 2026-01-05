@@ -127,7 +127,7 @@ class PrayerSettingsLocationSection extends HookConsumerWidget {
     }
 
     return SettingsSection(
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: .center,
       title: context.l10n.locationSectionTitle,
       subtitle: context.l10n.locationSectionSubtitle,
       child: ConstrainedBox(
@@ -170,7 +170,7 @@ Widget _buildActionButtons(
       FButton(
         onPress: showLocationPicker,
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: .center,
           children: [
             const Icon(FIcons.mapPinPen, size: 16),
             const SizedBox(width: AppSpacing.sm),
@@ -280,9 +280,9 @@ Widget _buildCoordinatesDisplay(
 
 Widget _buildEmptyState(BuildContext context) {
   return Padding(
-    padding: const EdgeInsets.all(AppSpacing.sm),
+    padding: const .all(AppSpacing.sm),
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: .center,
       spacing: 8,
       children: [const Icon(FIcons.searchX), Text(context.l10n.noResults).sm],
     ),
@@ -318,7 +318,7 @@ Widget _buildTimezoneSelector(
       hint: context.l10n.searchForMore,
     ),
     suffixBuilder: (ctx, value, child) => Row(
-      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisAlignment: .end,
       mainAxisSize: MainAxisSize.min,
       spacing: 4,
       children: [

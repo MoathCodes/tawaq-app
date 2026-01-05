@@ -24,7 +24,7 @@ class AudioPlayerBar extends ConsumerWidget {
         color: colors.background,
         border: Border(top: BorderSide(color: colors.border, width: 0.5)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const .symmetric(horizontal: 12, vertical: 6),
       child: SafeArea(
         top: false,
         child: Row(
@@ -116,7 +116,7 @@ class _TrackInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         Text(
           '$surahName • Ayah $ayahNumber',
@@ -157,14 +157,14 @@ class _NavigationControls extends StatelessWidget {
         GestureDetector(
           onTap: onPrevious,
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
+            padding: const .all(AppSpacing.sm),
             child: Icon(FIcons.skipBack, size: 20, color: colors.foreground),
           ),
         ),
         GestureDetector(
           onTap: onNext,
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
+            padding: const .all(AppSpacing.sm),
             child: Icon(FIcons.skipForward, size: 20, color: colors.foreground),
           ),
         ),
@@ -187,7 +187,7 @@ class _CloseButton extends StatelessWidget {
     return GestureDetector(
       onTap: onPressed,
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
+        padding: const .all(AppSpacing.sm),
         child: Icon(FIcons.x, size: 18, color: colors.mutedForeground),
       ),
     );

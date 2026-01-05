@@ -26,7 +26,7 @@ class PrayerTable extends ConsumerWidget {
     AppSpacing.md,
   );
 
-  static const EdgeInsets _cellPadding = EdgeInsets.all(AppSpacing.sm);
+  static const EdgeInsets _cellPadding = .all(AppSpacing.sm);
   static const SizedBox _imagePadding = SizedBox(width: AppSpacing.md);
 
   @override
@@ -35,7 +35,7 @@ class PrayerTable extends ConsumerWidget {
     final prayerTableStream = ref.watch(prayerTableProvider(l10n));
 
     return StaticCard(
-      padding: EdgeInsets.zero,
+      padding: .zero,
       child: prayerTableStream.when(
         data: (rows) => _PrayerTableContent(rows: rows),
         loading: () => const _LoadingWidget(),
@@ -56,9 +56,9 @@ class _ErrorWidget extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const .all(AppSpacing.lg),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: .center,
           children: [
             Icon(
               Icons.error_outline,
@@ -135,13 +135,13 @@ class _LoadingWidget extends StatelessWidget {
                   ),
                   const DataCell(
                     Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: .center,
                       children: [Text('00:00'), Text('Loading')],
                     ),
                   ),
                   const DataCell(
                     Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: .center,
                       children: [Text('00:00'), Text('Loading')],
                     ),
                   ),
@@ -302,7 +302,7 @@ class _PrayerTableContent extends StatelessWidget {
   ) {
     return DataCell(
       Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: .center,
         children: [
           Text(timeInfo.title).sm,
           if (timeInfo.subtitle != null)

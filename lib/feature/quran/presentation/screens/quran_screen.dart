@@ -111,7 +111,7 @@ class QuranScreen extends HookConsumerWidget {
     }
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: .stretch,
       children: [
         // Header bar
         _HeaderWidget(
@@ -203,7 +203,7 @@ class _HeaderWidget extends HookWidget {
         final audioPlayerState = ref.read(audioPlayerProvider);
         final isAudioActive = audioPlayerState.isActive;
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const .symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
               // View mode tabs
@@ -213,7 +213,7 @@ class _HeaderWidget extends HookWidget {
                   control: .managed(initial: viewMode.index),
                   onPress: onViewModeChanged,
                   style: (style) => style.copyWith(
-                    padding: const EdgeInsets.all(2),
+                    padding: const .all(2),
                     indicatorSize: FTabBarIndicatorSize.tab,
                   ),
                   children: const [
@@ -298,7 +298,7 @@ class _SurahSelectorWidget extends StatelessWidget {
     final typography = FTheme.of(context).typography;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const .symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: colors.secondary,
         borderRadius: BorderRadius.circular(8),
@@ -308,7 +308,7 @@ class _SurahSelectorWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            padding: const .symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: colors.primary,
               borderRadius: BorderRadius.circular(4),
@@ -350,7 +350,7 @@ class _JuzSelectorWidget extends StatelessWidget {
     final typography = FTheme.of(context).typography;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const .symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: colors.secondary,
         borderRadius: BorderRadius.circular(8),
@@ -422,7 +422,7 @@ class _SinglePageModeWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 120),
+      padding: const .only(bottom: 120),
       child: StaticCard(
         child: Center(
           child: MushafReader(
@@ -452,7 +452,7 @@ class _TwoPageModeWidget extends StatelessWidget {
 
     return StaticCard(
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: .stretch,
         children: [
           Expanded(
             child: MushafReader(
@@ -461,7 +461,7 @@ class _TwoPageModeWidget extends StatelessWidget {
             ),
           ),
           FDivider(
-            axis: Axis.vertical,
+            axis: .vertical,
             style: (style) => style.copyWith(color: colors.border),
           ),
           Expanded(

@@ -134,10 +134,10 @@ class _StartWizardDialog extends HookWidget {
     }
 
     return FDialog(
-      direction: Axis.horizontal,
+      direction: .horizontal,
       title: Text(stepTitle(step.value)),
       body: Padding(
-        padding: const EdgeInsets.only(top: 4),
+        padding: const .only(top: 4),
         child: _buildBody(
           context,
           step.value,
@@ -220,7 +220,7 @@ Widget _buildIqamahAndAdjustments(
 ) {
   return SingleChildScrollView(
     child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: .start,
       children: [
         Text(context.l10n.iqamahAfterAdhan),
         const SizedBox(height: AppSpacing.sm),
@@ -269,7 +269,7 @@ Widget _buildLocation(
   TextEditingController lngCtrl,
 ) {
   return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+    crossAxisAlignment: .start,
     mainAxisSize: MainAxisSize.min,
     children: [
       FTextFormField(
@@ -338,7 +338,7 @@ Widget _buildMethod(
   TextEditingController maghribAngleCtrl,
 ) {
   return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+    crossAxisAlignment: .start,
     mainAxisSize: MainAxisSize.min,
     children: [
       Text(context.l10n.chooseCalculationMethod),
@@ -407,7 +407,7 @@ Widget _buildMethod(
 Widget _buildTimeFormat(BuildContext context, ValueNotifier<bool> is24Hours) {
   return Material(
     child: SwitchListTile(
-      contentPadding: EdgeInsets.zero,
+      contentPadding: .zero,
       title: Text(context.l10n.use24HourFormat),
       value: is24Hours.value,
       onChanged: (v) => is24Hours.value = v,
@@ -417,7 +417,7 @@ Widget _buildTimeFormat(BuildContext context, ValueNotifier<bool> is24Hours) {
 
 Widget _buildWelcome(BuildContext context) {
   return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+    crossAxisAlignment: .start,
     mainAxisSize: MainAxisSize.min,
     children: [
       Text(
