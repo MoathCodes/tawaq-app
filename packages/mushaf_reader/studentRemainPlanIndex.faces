@@ -1,0 +1,2374 @@
+
+
+
+ 
+  
+ 
+    
+    
+    <!DOCTYPE html>
+
+
+
+
+
+
+                 
+
+
+<script>
+    url='/iu/images/scopeImage.jpg';
+    function openWindow(url){
+            window.open(url,'mywindow','width=800,height=550,resizable=yes,scrollbars=yes');
+       return false;
+    }
+</script>
+
+
+<html>
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=12, IE=11, IE=10; IE=9; IE=8; IE=7; IE=EDGE"/>
+        <meta HTTP-EQUIV="Pragma" CONTENT="no-cache" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge/">
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title >بوابة النظام الأكاديمي</title>
+        <link href="https://cdn.iu.edu.sa/theme/INSPINIA/css/bootstrap.min.css" type="text/css" rel="stylesheet"/>
+        <link href="https://cdn.iu.edu.sa/theme/INSPINIA/font-awesome/css/font-awesome.css" type="text/css" rel="stylesheet"/>
+        <link href="https://cdn.iu.edu.sa/theme/INSPINIA/css/animate.css" type="text/css" rel="stylesheet"/>
+        <link href="https://cdn.iu.edu.sa/theme/INSPINIA/css/style.css" type="text/css" rel="stylesheet"/>
+        <link REL=StyleSheet type="text/css" href="/iu/include/css/custom.css"/>
+        <!--<LINK REL=StyleSheet HREF='/iu/include/css/style.css'  TYPE="text/css"> -->
+        <script type="text/javascript" src='/iu/include/js/table/table.js'></script>
+        <script type="text/javascript" src='/iu/include/js/table/tooltipTable.js'></script>
+        
+        
+        <link rel="stylesheet" href="/iu/include/primeui/jquery-ui.css"/>
+        <link rel="stylesheet" href="/iu/skins/1/primeui/theme_ar.css"/>
+        <link rel="stylesheet" href="/iu/include/primeui/primeui_ar.css"/>
+        <script type="text/javascript" src="/iu/include/primeui/jquery.js"></script>
+        <script type="text/javascript" src="/iu/include/primeui/jquery-ui.js"></script>
+        <script type="text/javascript" src="/iu/include/primeui/primeui.js"></script>
+        <script type="text/javascript" src="/iu/include/js/common/primeUI.js"></script>
+        <script type="text/javascript" src="/iu/include/js/common/validatePrimeUI.js"></script>
+        
+        
+            <script src="/iu/include/menu/c_configAr.js" type="text/javascript"></script>
+        
+        <script src="/iu/include/menu/c_smartmenus.js" type="text/javascript"></script>
+    </head>
+        
+    <body dir='RTL' style="background:#f7f7f7:">
+    
+                 
+
+
+
+
+<div id="dlgPrint" title='&nbsp;طباعة' style="display:none" >
+    <table align="left" cellpadding="0" cellspacing="0">
+        <tr><td><a id="printFrameLink" name="printFrameLink" href="" onclick="javascript:printFrame('framePrint');return false;" class="printButton"></a></td></tr>
+    </table>
+    <iframe id="framePrint" width="1" height="1" frameborder="0"></iframe>
+</div>
+
+<div id="dlgPrintPDF" title='&nbsp;طباعة' style="display:none" >
+    <iframe id="framePrintPDF" width="1" height="1" frameborder="0"></iframe>
+</div>
+
+<div id="msgBar"  style="display:none">
+    <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr><td height="5" ></td></tr>
+        <tr>
+            <td align="center" class="fontText" ><label id="msgLabel"></label></td>
+            <td width="12"></td>
+            <td ><div class="pui-growl-image-warn-image"></div></td>
+        </tr>
+        <tr><td height="5" ></td></tr>
+    </table>
+</div>      
+
+<div id="msgInfoBar"  style="display:none">
+    <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr><td height="5" ></td></tr>
+        <tr>
+            <td align="center" class="fontText" ><label id="msgInfoLabel"></label></td>
+            <td width="12"></td>
+            <td ><div class="pui-growl-image-info-image"></div></td>
+        </tr>
+        <tr><td height="5" ></td></tr>
+    </table>
+</div>      
+
+
+<div id="msgDialog"  title="" style="display:none">
+    <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr><td height="5" ></td></tr>
+        <tr>
+            <td align="center" class="fontText" ><label id="msgDialogLabel"></label></td>
+            <td width="12"></td>
+            <td ><div class="pui-growl-image-warn-image"></div></td>
+        </tr>
+        <tr><td height="5" ></td></tr>
+    </table>
+</div>
+
+<div id="loadMsgDialog"  title="" style="display:none">
+    <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr><td height="5" ></td></tr>
+        <tr>
+            <td align="center" class="fontText" ><label id="loadMsgDialogLabel"></label></td>
+            <td width="12"></td>
+            <td ><img src="/iu/images/load.gif" /></td>
+        </tr>
+        <tr><td height="5" ></td></tr>
+    </table>
+</div>
+
+<div id="doneMsgDialog"  title="" style="display:none">
+    <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr><td height="5" ></td></tr>
+        <tr>
+            <td align="center" class="toolTipText" ><label style="font-color:green" id="doneMsgDialogLabel"></label></td>
+            <td width="12"></td>
+            <td ><div class="pui-growl-image-done-image"></div></td>
+        </tr>
+        <tr><td height="5" ></td></tr>
+    </table>
+</div>
+
+
+<div id="msgLoadDialog"  title="" style="display:none">
+    <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr><td height="5" ></td></tr>
+        <tr>
+            <td align="center" class="fontText" ><label id="msgLoadDialogLabel"></label></td>
+            <td width="12"></td>
+            <td ><img src="/qu/images/loading2.gif" style="border-width: 0pt;"  /></td>
+        </tr>
+        <tr><td height="5" ></td></tr>
+    </table>
+</div>
+
+<div id="confDialog" title=""  style="display: none;">
+  <table align="left" width="100%" cellspacing="0" cellpadding="0" border="0">
+        <tr><td height="5" ></td></tr>
+        <tr>
+            <td><label id="confMsgLable"></label></td>
+        </tr>
+        <tr><td height="5" ></td></tr>
+    </table>
+</div>
+
+<div class="fontText" id="msgGrowl" ></div>
+    <div id="top-bar">
+        <div class="container">
+          <div class="navbar navbar-expand-lg my-hover-menu">
+            
+<form id="headerForm" name="headerForm" method="post" action="/iu/ui/student/offeredCourses/index/offeredCoursesIndex.faces" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="headerForm" value="headerForm" />
+
+              <ul class="nav navbar-nav justify-content-end navbar-left mr-auto">
+              
+                <li class="nav-item">
+                  <a href="/iu/ui/student/homeIndex.faces" class="nav-link">الصفحة الرئيسية</a>
+                </li>
+                 
+                <li class="nav-item">
+                  <a href="http://www.iu.edu.sa/Pages/default.aspx" class="nav-link">بوابة الجامعة</a>
+                </li>
+                 
+                <li class="nav-item">
+                  
+                </li>
+                
+              </ul>
+            <input type="hidden" name="javax.faces.ViewState" id="j_id_id0:javax.faces.ViewState:0" value="-1957068724666714535:-7068673628294214070" autocomplete="off" />
+</form>
+          </div>
+        </div>	
+      </div>
+      
+    
+
+
+
+<script src="/iu/include/js/servcDesc.js" language="javascript" type="text/javascript"></script>
+<script language="javascript" type="text/javascript">   
+    function servicesColor(txt){
+        txt.style.color="rgb(231,231,231)";
+    }
+    function servicesColor2(txt){
+        txt.style.color="white";
+    }
+    function openWindow(url){
+       window.open(url,'mywindow','width=800,height=550,resizable=yes,scrollbars=yes');
+    }
+
+</script>
+
+
+
+        
+
+<div class="navbar-wrapper">
+    <div class="container">
+        
+<form id="menuForm" name="menuForm" method="post" action="/iu/ui/student/offeredCourses/index/offeredCoursesIndex.faces" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="menuForm" value="menuForm" />
+
+            <div class="navbar navbar-expand-lg navbar-light bg-light my-hover-menu"
+                 role="navigation" align="left" style="direction: rtl;">
+                <a class="navbar-brand" href="#">
+                    <img src="/iu/images/uni-logo.png"/></a>
+                 
+                <button class="navbar-toggler" type="button"
+                        data-toggle="collapse" data-target="#mainnavbar"
+                        aria-controls="mainnavbar" aria-expanded="false"
+                        aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="mainnavbar">
+                    <ul class="navbar-nav navbar-right mr-auto" style="margin-left: 0% !important;">
+                    
+                        <!--start new dropdown link -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle"
+                               data-toggle="dropdown" aria-haspopup="true"
+                               aria-expanded="false">
+                                التسجيل الإلكتروني<span class="iud"></span></a>
+                            <ul class="dropdown-menu parent1 animated fadeInUp">
+                               
+                                
+                                    <li>
+                                        <script type="text/javascript" src="/iu/javax.faces.resource/jsf.js.faces?ln=javax.faces"></script><a id="menuForm:instructions" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:instructions':'menuForm:instructions'},'');return false" class="dropdown-item"><span id="menuForm:instructions2">تعليمات و إرشادات</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkOffCourses" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkOffCourses':'menuForm:serLinkOffCourses'},'');return false" class="dropdown-item"><span id="menuForm:serTextOffCourses">المقررات المطروحة وفق الخطة</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudSchedule" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudSchedule':'menuForm:serLinkStudSchedule'},'');return false" class="dropdown-item"><span id="menuForm:serTextStudSchedule">المقررات المسجلة</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkCrsRes" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkCrsRes':'menuForm:serLinkCrsRes'},'');return false" class="dropdown-item"><span id="menuForm:serTextCrsRes">نتائج المقررات</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkDropAdd2" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkDropAdd2':'menuForm:serLinkDropAdd2'},'');return false" class="dropdown-item"><span id="menuForm:serTextDropAdd2">الحذف والإضافة</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                
+                                
+                                 
+                                    <li>
+                                        <a id="menuForm:serLinkDropAddReq2" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkDropAddReq2':'menuForm:serLinkDropAddReq2'},'');return false" class="dropdown-item"><span id="menuForm:serTextDropAddReq2">طلب حذف واضافة مقرر</span></a> 
+                                    </li>
+                                 
+
+                                <li style="display: none;">
+                                    <a id="menuForm:testLink131" href="#" style="display:none; text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:testLink131':'menuForm:testLink131'},'');return false" class="dropdown-item"><span id="menuForm:testid131" style="display:none;"></span></a>
+                                </li>
+                                  
+                            </ul>
+                        </li>
+                         
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle"
+                               data-toggle="dropdown" aria-haspopup="true"
+                               aria-expanded="false">
+                                شخصي<span class="iud"></span></a>
+                            <ul class="dropdown-menu parent1 animated fadeInUp">
+                                 
+                                
+                                    
+                                        <li>
+                                            <a id="menuForm:serUpdateArabicName" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serUpdateArabicName':'menuForm:serUpdateArabicName'},'');return false" class="dropdown-item"><span id="menuForm:serTxtUpdateArabicName">تحديث الاسم باللغة العربية</span></a>
+                                        </li>
+                                    
+                                
+                                 
+                                
+                                    
+                                        <li>
+                                            <a id="menuForm:serUpdateEnglishName" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serUpdateEnglishName':'menuForm:serUpdateEnglishName'},'');return false" class="dropdown-item"><span id="menuForm:serTxtUpdateEnglishName">تحديث الاسم باللغة الانجليزية</span></a>
+                                        </li>
+                                    
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStdInfo" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStdInfo':'menuForm:serLinkStdInfo'},'');return false" class="dropdown-item"><span id="menuForm:serTextStdInfo">المعلومات الشخصية</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkChgePass" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkChgePass':'menuForm:serLinkChgePass'},'');return false" class="dropdown-item"><span id="menuForm:serTextChgePass">تغيير كلمة السر</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                 
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudAbs" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudAbs':'menuForm:serLinkStudAbs'},'');return false" class="dropdown-item"><span id="menuForm:serTextStudAbs">الغياب</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudPunish" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudPunish':'menuForm:serLinkStudPunish'},'');return false" class="dropdown-item"><span id="menuForm:serTextStudPunish">العقوبات</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudRewards" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudRewards':'menuForm:serLinkStudRewards'},'');return false" class="dropdown-item"><span id="menuForm:serTextStudRewards">المكافآت</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudLoans" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudLoans':'menuForm:serLinkStudLoans'},'');return false" class="dropdown-item"><span id="menuForm:serTextStudLoans">السلف و الإعانات</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkSendEmail" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkSendEmail':'menuForm:serLinkSendEmail'},'');return false" class="dropdown-item"><span id="menuForm:serTextSendEmail">إرسال بريد إلكتروني</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:sersLinksVoting" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:sersLinksVoting':'menuForm:sersLinksVoting'},'');return false" class="dropdown-item"><span id="menuForm:sersTextsVoting">رأي الطالب</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:sersLinksstudReports" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:sersLinksstudReports':'menuForm:sersLinksstudReports'},'');return false" class="dropdown-item"><span id="menuForm:sersstudReports">المستندات الرسمية</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serStdIBAN" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serStdIBAN':'menuForm:serStdIBAN'},'');return false" class="dropdown-item"><span id="menuForm:serTextStdIBAN">طلب تحديث الآيبان</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkChangeNationality" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkChangeNationality':'menuForm:serLinkChangeNationality'},'');return false" class="dropdown-item"><span id="menuForm:serTextChangeNationality">طلب تعديل الجنسية ومكان الميلاد</span></a>
+                                    </li>
+                                
+                                
+                                
+                                 
+                                 
+                                <li style="display: none;">
+                                    <a id="menuForm:testLink31" href="#" style="display:none; text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:testLink31':'menuForm:testLink31'},'');return false" class="dropdown-item"><span id="menuForm:testid31" style="display:none;"></span></a>
+                                </li>
+                            </ul>
+                        </li>
+                         
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle"
+                               data-toggle="dropdown" aria-haspopup="true"
+                               aria-expanded="false">
+                                أكاديمي<span class="iud"></span></a>
+                            <ul class="dropdown-menu parent1 animated fadeInUp">
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudTransAll" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudTransAll':'menuForm:serLinkStudTransAll'},'');return false" class="dropdown-item"><span id="menuForm:serTextTransAll">السجل الأكاديمي</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkAcdTrans" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkAcdTrans':'menuForm:serLinkAcdTrans'},'');return false" class="dropdown-item"><span id="menuForm:serTextAcdTrans">حركات أكاديمية سابقة</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudAllPlan" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudAllPlan':'menuForm:serLinkStudAllPlan'},'');return false" class="dropdown-item"><span id="menuForm:serTextAllPlan">خطة الطالب</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudTakPlan" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudTakPlan':'menuForm:serLinkStudTakPlan'},'');return false" class="dropdown-item"><span id="menuForm:serTextTakPlan">المقررات المجتازة في الخطة</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudRemPlan" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudRemPlan':'menuForm:serLinkStudRemPlan'},'');return false" class="dropdown-item"><span id="menuForm:serTextRemPlan">المقررات المتبقية في الخطة</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkEvaluation" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkEvaluation':'menuForm:serLinkEvaluation'},'');return false" class="dropdown-item"><span id="menuForm:serTextEvaluation">تقييم المقررات</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkApologyFinalExam" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkApologyFinalExam':'menuForm:serLinkApologyFinalExam'},'');return false" class="dropdown-item"><span id="menuForm:serTextApology">تقديم الأعذار عن غياب الاختبار النهائي</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkAdmissionChoices" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkAdmissionChoices':'menuForm:serLinkAdmissionChoices'},'');return false" class="dropdown-item"><span id="menuForm:serTextAdmissionChoices">إدخال الرغبات</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudMajor" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudMajor':'menuForm:serLinkStudMajor'},'');return false" class="dropdown-item"><span id="menuForm:serTextStudMajor">طلب تغيير تخصص</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudEntTrans" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudEntTrans':'menuForm:serLinkStudEntTrans'},'');return false" class="dropdown-item"><span id="menuForm:serTextEntTrans">إدخال حركات اكاديمية</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkMainCoursesRequest" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkMainCoursesRequest':'menuForm:serLinkMainCoursesRequest'},'');return false" class="dropdown-item"><span id="menuForm:serTextMainCoursesRequest">طلب مقررات</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkMainWithdrawalCourse" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkMainWithdrawalCourse':'menuForm:serLinkMainWithdrawalCourse'},'');return false" class="dropdown-item"><span id="menuForm:serTextMainWithdrawalCourse">الإعتذار عن مقرر</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudentDisclaimer" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudentDisclaimer':'menuForm:serLinkStudentDisclaimer'},'');return false" class="dropdown-item"><span id="menuForm:serTextStudentDisclaimer">إخلاء طرف</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkStudentFinalExam" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkStudentFinalExam':'menuForm:serLinkStudentFinalExam'},'');return false" class="dropdown-item"><span id="menuForm:serTextStudentFinalExam">الاختبارات النهائية</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                 
+                                
+                                 
+                                
+                                    <li>
+                                        <a id="menuForm:stdMainComincateAdvisorLink" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:stdMainComincateAdvisorLink':'menuForm:stdMainComincateAdvisorLink'},'');return false" class="dropdown-item"><span id="menuForm:stdMainComincateAdvisorText">التواصل مع المرشد الاكاديمي</span></a>
+                                    </li>
+                                
+                                
+                                
+                                
+
+                               
+                            
+                                <li style="display: none;">
+                                    <a id="menuForm:testLink21" href="#" style="display:none;text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:testLink21':'menuForm:testLink21'},'');return false" class="dropdown-item"><span id="menuForm:testid21" style="display:none;"></span></a>
+                                </li>
+                                 
+                            </ul>
+                        </li>
+                         
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle"
+                               data-toggle="dropdown" aria-haspopup="true"
+                               aria-expanded="false">
+                                نظام إدارة السفر<span class="iud"></span></a>
+                            <ul class="dropdown-menu parent1 animated fadeInUp">
+                                
+                                
+                                 
+                                
+                                 
+                                
+                                 
+                                
+                                
+                            </ul>
+                        </li>
+                         
+                          
+                            
+                        
+                         
+                        <li class="nav-item dropdown" style="display: none;">
+                            <a id="menuForm:testLink1" href="#" style="display:none; text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:testLink1':'menuForm:testLink1'},'');return false" class="dropdown-item"><span id="menuForm:testid1" style="display:none;"></span></a>
+                        </li>
+                          
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle"
+                               data-toggle="dropdown" aria-haspopup="true"
+                               aria-expanded="false">
+                                اجراءات التخرج<span class="iud"></span></a>
+                            <ul class="dropdown-menu parent1 animated fadeInUp">
+                                
+                                
+                                    <li>
+                                        <a id="menuForm:serLinkCheckGraduation" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:serLinkCheckGraduation':'menuForm:serLinkCheckGraduation'},'');return false" class="dropdown-item"><span id="menuForm:serTextCheckGraduation">تدقيق بيانات شهادة التخرج</span></a>
+                                    </li>
+                                
+                                 
+                                
+                                 
+                                
+                                 
+                                <li style="display: none;">
+                                    <a id="menuForm:testLink" href="#" style="display:none; text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:testLink':'menuForm:testLink'},'');return false" class="dropdown-item"><span id="menuForm:testid" style="display:none;"></span></a>
+                                </li>
+                                
+                            </ul>
+                        </li>
+                       
+                    </ul>
+                    <ul class="navbar-nav left-menu mr-auto">
+                        <li class="nav-item">
+                            <a id="menuForm:signoutLink" href="#" style="text-align: right" onclick="mojarra.jsfcljs(document.getElementById('menuForm'),{'menuForm:signoutLink':'menuForm:signoutLink'},'');return false" class="nav-link">
+                               <i class="fa fa-sign-out" style=" color: #d2ae00; font-size: 20px; "></i>
+                               <span id="menuForm:signoutText" class="">خروج</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        <input type="hidden" name="javax.faces.ViewState" id="j_id_id0:javax.faces.ViewState:1" value="-1957068724666714535:-7068673628294214070" autocomplete="off" />
+</form>
+    </div>
+</div>
+
+<form id="StudentForm" name="StudentForm" method="post" action="/iu/ui/student/offeredCourses/index/offeredCoursesIndex.faces" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="StudentForm" value="StudentForm" />
+
+    <div class="box">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-12 container_info">
+                    <div class="col-md-2 br_img_info">
+                        <img  style=" border-radius: 100%; width: 100px; display: inline-block; margin: 0 auto; text-align: center; " src="/iu/images/noimage.png"/>
+                    </div>
+                    <div class="col-md-10">
+                        <div class="form-group row" style="direction: rtl;">
+                            <label class="col-lg-12 col-form-label">
+                                <span id="StudentForm:studNameText" class="std_name">معاذ  ابراهيم  عبدالعزيز التميمي</span>
+                            </label>
+                             
+                            <label class="col-lg-12 col-form-label">
+                                <span id="StudentForm:studNameEnText">MOATH IBRAHIM ABEDALAZIZ ALTAMIMI</span>
+                            </label>
+                            <div class="col-lg-6">
+                                <p class="form-control-static">
+                                    
+                                     
+                                    
+                                     
+                                    <span style="color: #d2ae00;"
+                                          class="dropdown-item">
+                                        <span id="StudentForm:currSemHeader">الفصل الثاني للعام الجامعي 1447هـ</span></span>
+                                     
+                                    
+                                </p>
+                            </div>
+                            
+                            <div class="col-lg-6">
+                                    <div id="logo-container">
+                                            <div class="logo-content">
+                                                <div class="logo"></div>
+                                                <div id="scopDiv" style="display: block;">
+                                                     <a href="#" onclick="openWindow(url);"><img id="StudentForm:sayid" src="/iu/temp/" height="80" style="margin-right: 74%; display: inline-block; margin-top: 1px; border: 0;" width="110" class="head-logo" /></a> 
+                                                </div>
+                                         </div>
+                                    </div>  
+                            </div>
+                        </div>
+                        
+                        
+                        
+                        
+                        <div class="form-group row">
+                            
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-3 col-form-label">
+                                        <span id="StudentForm:facName">الكلية</span>
+                                    </label>
+                                    <label class="col-lg-9 col-form-label" align='right'>
+                                        <span id="StudentForm:facNameText" style="color: #015b90; font-weight:bold;">الحاسب الآلي ونظم المعلومات</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-3 col-form-label">
+                                        <span id="StudentForm:studNoText">رقم الطالب</span>
+                                    </label>
+                                    <label class="col-lg-6 col-form-label" align='right'>
+                                        <span id="StudentForm:studNo" style="color: #015b90; font-weight:bold;">461000783</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-3 col-form-label">
+                                        <span id="StudentForm:majorNameText">التخصص</span>
+                                    </label>
+                                    <label class="col-lg-9 col-form-label" align='right'>
+                                        <span id="StudentForm:majorName" style="color: #015b90; font-weight:bold;">علم البيانات</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    <label class="col-lg-3 col-form-label">
+                                        <span id="StudentForm:mobile">رقم الجوال</span>
+                                    </label>
+                                    <label class="col-lg-6 col-form-label" align='right'>
+                                        <span id="StudentForm:mobileText" style="color: #015b90; font-weight:bold;">966570408806</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="box-1">  
+            <span id="StudentForm:title111" class="">النظام الأكاديمي</span>
+        </div>
+        <div class="box-2">
+            <span id="StudentForm:title121" class="">بوابة النظام الأكاديمي</span>
+        </div>
+    </div>
+    <br>
+    <br>
+    <div class="row  border-bottom white-bg" style="margin-top: 130px;">
+        <div class="container">
+            <div class="form-group row">
+                <div class="col-md-6">
+                    <label class="col-lg-4 col-form-label">
+                        <span id="StudentForm:statusDesc">الوضع العام</span>
+                    </label>
+                    <div class="col-lg-4 col-form-label">
+                        <span id="StudentForm:statusDescText" style="color: #015b90; font-weight: 500; font-size: 16px;">منتظم</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="col-lg-4 col-form-label">
+                        <span id="StudentForm:probationCountText">عدد إنذارات المعدل</span>
+                    </label>
+                    <div class="col-lg-6 col-form-label">
+                        <span id="StudentForm:probationCount" style="color: #015b90; font-weight: 500; font-size: 16px;">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<input type="hidden" name="javax.faces.ViewState" id="j_id_id0:javax.faces.ViewState:2" value="-1957068724666714535:-7068673628294214070" autocomplete="off" />
+</form>
+<div class="wrapper wrapper-content">
+    <div class="container">
+        <div class="row justify-content-md-center">
+            <div class="main_content col-md-12">
+            <div class="row justify-content-center">
+           <table width="100%" align="center">
+           <tr>
+           <td>
+   <table  cellSpacing="0" cellPadding="0" width="95%" border="0" align="center" >
+         <tr>
+             <td valign="top"><!-- service BODY CELL -->
+                 <table  align="center" width="70%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td >  
+                            
+
+
+
+<style type="">
+    .COL_REGULAR {
+        max-width: 300px;
+        padding-bottom: 20px;
+    }
+    
+    .COL_MEDIUM {
+        padding-bottom: 20px;
+    }
+    
+    /*fieldset {
+        border: 1px solid lightgrey;
+        background: #f9f9f9;
+    }*/
+    fieldset {
+        padding: 0.35em;
+    }
+    .my-overflow {
+        overflow-y: auto;
+        height: auto;
+        max-height: 200px;
+    }
+    
+    .HEADING, .ROW1, .ROW2 { 
+        text-align: center;
+    }
+</style>
+        
+     <input type="hidden" name="j_id_id254" value="true" />
+<form id="j_id_id257" name="j_id_id257" method="post" action="/iu/ui/student/offeredCourses/index/offeredCoursesIndex.faces" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="j_id_id257" value="j_id_id257" />
+
+     <table border="0" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td height="10" ></td></tr>
+        <tr>
+            <td>
+                <fieldset>
+                      <div class="my-overflow">
+                         <table id="j_id_id257:dataTblMessages" border="1" cellpadding="1" cellspacing="1" width="100%">
+<thead>
+<tr>
+<th class="HEADING" scope="col">عنوان الرسالة</th>
+<th class="HEADING" scope="col">تفاصيل الرسالة</th>
+</tr>
+</thead>
+<tbody>
+<tr class="ROW1">
+<td class="COL_MEDIUM">
+                                    
+                                        
+                                    
+                                    <center>
+                                           <span class="fontText">الرسالة التحفيزية والتنبيهية للطالب</span>
+                                     </center>
+                                </td>
+<td class="COL_REGULAR"><a id="j_id_id257:dataTblMessages:0:messageDetails33" href="#" onclick="mojarra.jsfcljs(document.getElementById('j_id_id257'),{'j_id_id257:dataTblMessages:0:messageDetails33':'j_id_id257:dataTblMessages:0:messageDetails33','index':'0'},'');return false"><span class="fontTextSmall">عزيزي الطالب معاذ التميمي رقم 461000783 أنت في ( مسار الاجتهاد ) بحسب معدلك التراكمي ونتمنى لك رفع معدلك التراكمي والارتقاء إلى مسار التميز</span></a></td>
+</tr>
+</tbody>
+</table>
+
+                    </div>
+                </fieldset>
+            </td>
+        </tr>
+        <tr><td height="10" ></td></tr>
+    </table><br>
+    <input type="hidden" name="javax.faces.ViewState" id="j_id_id0:javax.faces.ViewState:3" value="-1957068724666714535:-7068673628294214070" autocomplete="off" />
+</form> 
+ 
+     
+     
+     
+    
+    
+                        </td>
+                    </tr>
+                </table>  
+    
+
+
+
+ 
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+  
+  <html>
+    <head>
+      <meta http-equiv="Content-Type"
+            content="text/html; charset=UTF-8"/>
+      <title>plans</title>
+      
+      <style type="">
+        #divsData {
+            top: 0px !important;
+        }
+      </style>
+      
+      <script type="text/javascript" src="/iu/include/js/table/table.js"></script>
+      <script type="text/javascript" src="/iu/include/js/table/tooltipTable.js"></script>
+    
+      <link rel="stylesheet" href="/iu/include/js/time_table/tooltip.css" type="text/css"/>
+      <script type="text/javascript" src="/iu/include/js/time_table/tooltip.js"></script> 
+
+      <script type="text/javascript" >
+      
+            function  showToolTip(event,index){
+                document.getElementById("instructorDiv").innerHTML = document.getElementById("myForm:offeredCoursesTable:"+index+":instructor").value;
+                document.getElementById("sectionDiv").innerHTML = splitTime(document.getElementById("myForm:offeredCoursesTable:"+index+":section").value);
+                document.getElementById("examPeriodDiv").innerHTML = document.getElementById("myForm:offeredCoursesTable:"+index+":examPeriod").value;
+
+                popUp(event,"divsData",400,300);
+            }
+            
+            function closeToolTip(event){
+                popUp(event,"divsData",0,0);
+            }
+          
+            function splitTime(timeString){
+                var time = timeString;
+                var element = "<table width='100%' border='0'>";
+                
+                element = element + '<tr><td align="center" class="toolTipText2">اليوم<//td>';
+                element = element + '<td align="center" class="toolTipText2">الوقت<//td>';
+                element = element + '<td align="center" class="toolTipText2">القاعة<//td><//tr>';
+                
+                var arraysTime = new Array();
+                var arraysDay = new Array();
+                var arraysRoms = new Array();
+
+                arraysTime = time.split("@n");
+                if(time != ""){
+                    for( i=0 ; i <arraysTime.length ;i++){
+                        element = element + "<tr>";
+                        
+                        arraysRoms = arraysTime[i].split("@r");
+                        arraysDay = arraysRoms[0].split("@t"); 
+                        element = element + "<td align='center' width='40' class='fontTextSmall'><NOBR>" + arraysDay[0] + "<//NOBR><//td>";
+                        element = element + "<td align='center' width='140' class='fontTextSmall'><NOBR>&nbsp;" + arraysDay[1] + "<//NOBR><//td>";
+                        
+                        if(arraysRoms.length == 1)
+                          arraysRoms[1] = "";  
+                        element = element + "<td dir='LTR' align='center' width='110' class='fontTextSmall'><NOBR>&nbsp;" + arraysRoms[1] + "<//NOBR><//td>";
+                        element = element + "<//tr>";
+                    }
+                }
+                else{
+                    element = element + "<tr>";
+                    element = element + '<td align="center" colspan="3" class="ERR_MSG_SMALL">بالإتفاق<//td>';
+                    element = element + "<//tr>";
+                }
+                element = element + "<//table>";
+                return element;
+          }
+       
+      </script>
+   
+    </head>
+
+    <body >
+    
+<form id="myForm" name="myForm" method="post" action="/iu/ui/student/offeredCourses/index/offeredCoursesIndex.faces" enctype="application/x-www-form-urlencoded">
+<input type="hidden" name="myForm" value="myForm" />
+
+        
+<div class="row" align='right'>
+    <div class="header_title">
+   المقررات المطروحة وفق الخطة
+    </div>
+</div>
+        <div id="tableDiv" class="tip_Table"></div>
+
+        <div id="divsData" class="tip_Ar" style="width: 50%;">
+            <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                    <td width="100%">
+                        <table  align="center" width="100%" cellspacing="0" cellpadding="0" border="0" >
+                            <tr>
+                                <td valign="top" height="62" >
+                                    <table  align="center" width="100%" cellspacing="0" cellpadding="0" border="0" >
+                                        <tr>
+                                            <td height="62"  width="13" ><img src="/iu/images/toolTipMBoxes/part2Ar.gif" height="62" width="13" /></td>
+                                            <td valign="top" class ="toolTipMBoxesPart3Ar" style="background-image: url('/iu/images/toolTipMBoxes/part3Ar.gif')">
+                                                <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0" >
+                                                    <tr>
+                                                        <td align="left" valign="top">
+                                                            &nbsp;<a href="" onclick="javascript:closeToolTip(event);return false;"><img align="bottom" border="0" src="/iu/images/closing.gif"></a>
+                                                        </td>
+                                                    </tr>
+                                                    <tr><td height="10" ></td></tr>
+                                                    <tr>
+                                                        <td align="center" class="toolTipText" >
+                                                            اوقات الشعبة
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                            <td  height="62"  width="35" ><img src="/iu/images/toolTipMBoxes/part1Ar.gif" height="62" width="35" /></td>
+                                        </tr>
+
+                                        <tr >
+                                            <td height="48"  width="13" class="toolTipMBoxesPart7Ar"><img src="/iu/images/toolTipMBoxes/part7Ar.gif" height="100" width="13" /></td>
+                                            <td bgcolor="White"  >
+                                                <table align="center" width="100%" cellspacing="0" cellpadding="0" border="0" >
+                                                    <tr>
+                                                        <td width="95%" class="toolTipText2"><div id="sectionDiv"></div></td>
+                                                        <td width="5%"></td>
+                                                    </tr>
+                                                    <tr><td height="15"></td></tr>
+                                                    <tr>
+                                                        <td width="90%" class="toolTipText">
+                                                            فترة الإختبار&nbsp;:&nbsp;&nbsp;<label class="toolTipText2" id="examPeriodDiv"></label>
+                                                        </td>
+                                                        <td width="10%"></td>
+                                                    </tr>
+                                                    <tr><td height="10"></td></tr>
+                                                    <tr>
+                                                        <td width="90%" class="toolTipText">
+                                                                المحاضر&nbsp;:&nbsp;&nbsp;<label class="toolTipText2" id="instructorDiv"></label>
+                                                        </td>
+                                                        <td width="10%"></td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                            <td  height="48"  width="35" class="toolTipMBoxesPart4Ar"><img src="/iu/images/toolTipMBoxes/part4Ar.gif" height="100" width="35" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td height="16"  width="13" ><img src="/iu/images/toolTipMBoxes/part6Ar.gif" height="16" width="13" /></td>
+                                            <td height="16"  class="toolTipMBoxesPart8Ar"><img src="/iu/images/toolTipMBoxes/part8Ar.gif" height="16" style="width: 100%;" /></td>
+                                            <td height="16"  width="35" ><img src="/iu/images/toolTipMBoxes/part5Ar.gif" height="16" width="35" /></td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+       </div>
+        
+        <table width="100%" align="center" border="0" cellpadding="0" cellspacing="0" style="word-break: keep-all;">    
+            <tr>
+                <td align="center">
+                    <table width="98%" align="center" border="0" cellpadding="0" cellspacing="0" style="word-break: keep-all;">  
+                        <tr>
+                            <td  width="265">
+                                <span class="fontText">مقر التسجيل</span>&nbsp;:&nbsp;
+                                <span class="fontTextMain">الرئيسي</span>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            
+            <tr><td height="20"></td></tr>
+            <tr align='right'>
+	        <td ><span class="fontTextRed">* لا تظهر المقررات التي لها متطلب سابق ولم يجتزهُ الطالب</span></td>
+            </tr>
+
+            <tr>
+                <td align="center" width="100%">
+                <table style="width: 100%;">
+                <tr>
+                <td>
+                    <table id="myForm:offeredCoursesTable" class="rowFlow" border="1" cellpadding="0" cellspacing="0" width="100%">
+<thead>
+<tr>
+<th class="HEADING" scope="col">
+                                    
+                                </th>
+<th class="HEADING" scope="col">
+                                    
+                                </th>
+<th class="HEADING" scope="col">
+                                    
+                                </th>
+<th class="HEADING" scope="col">
+                                    
+                                </th>
+<th class="HEADING" scope="col">
+                                    
+                                </th>
+<th class="HEADING" scope="col">
+                                    
+                                </th>
+<th class="HEADING" scope="col"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="ROW1">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>1441</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'0');return false;">التفاصيل<input id="myForm:offeredCoursesTable:0:instructor" type="hidden" name="myForm:offeredCoursesTable:0:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:0:section" type="hidden" name="myForm:offeredCoursesTable:0:section" value=" 5 @t 10:00 ص - 10:50 ص @r 312 @n  5 @t 11:00 ص - 11:50 ص @r 312" /><input id="myForm:offeredCoursesTable:0:examPeriod" type="hidden" name="myForm:offeredCoursesTable:0:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>1442</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'1');return false;">التفاصيل<input id="myForm:offeredCoursesTable:1:instructor" type="hidden" name="myForm:offeredCoursesTable:1:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:1:section" type="hidden" name="myForm:offeredCoursesTable:1:section" value=" 5 @t 03:00 م - 03:50 م @r 312 @n  5 @t 04:00 م - 04:50 م @r 312" /><input id="myForm:offeredCoursesTable:1:examPeriod" type="hidden" name="myForm:offeredCoursesTable:1:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>1443</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'2');return false;">التفاصيل<input id="myForm:offeredCoursesTable:2:instructor" type="hidden" name="myForm:offeredCoursesTable:2:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:2:section" type="hidden" name="myForm:offeredCoursesTable:2:section" value=" 5 @t 08:00 ص - 08:50 ص @r 318 @n  5 @t 09:00 ص - 09:50 ص @r 318" /><input id="myForm:offeredCoursesTable:2:examPeriod" type="hidden" name="myForm:offeredCoursesTable:2:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>1444</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'3');return false;">التفاصيل<input id="myForm:offeredCoursesTable:3:instructor" type="hidden" name="myForm:offeredCoursesTable:3:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:3:section" type="hidden" name="myForm:offeredCoursesTable:3:section" value=" 5 @t 01:00 م - 01:50 م @r 318 @n  5 @t 02:00 م - 02:50 م @r 318" /><input id="myForm:offeredCoursesTable:3:examPeriod" type="hidden" name="myForm:offeredCoursesTable:3:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>1498</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'4');return false;">التفاصيل<input id="myForm:offeredCoursesTable:4:instructor" type="hidden" name="myForm:offeredCoursesTable:4:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:4:section" type="hidden" name="myForm:offeredCoursesTable:4:section" value=" 2 @t 11:00 ص - 11:50 ص @r 222 @n  2 @t 12:00 م - 12:50 م @r 222" /><input id="myForm:offeredCoursesTable:4:examPeriod" type="hidden" name="myForm:offeredCoursesTable:4:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>1499</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'5');return false;">التفاصيل<input id="myForm:offeredCoursesTable:5:instructor" type="hidden" name="myForm:offeredCoursesTable:5:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:5:section" type="hidden" name="myForm:offeredCoursesTable:5:section" value=" 2 @t 03:00 م - 03:50 م @r 222 @n  2 @t 04:00 م - 04:50 م @r 222" /><input id="myForm:offeredCoursesTable:5:examPeriod" type="hidden" name="myForm:offeredCoursesTable:5:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>1500</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'6');return false;">التفاصيل<input id="myForm:offeredCoursesTable:6:instructor" type="hidden" name="myForm:offeredCoursesTable:6:instructor" value="عبدالهادي ابراهيم مويس العوفي" /><input id="myForm:offeredCoursesTable:6:section" type="hidden" name="myForm:offeredCoursesTable:6:section" value=" 2 @t 08:00 ص - 08:50 ص @r 229 @n  2 @t 09:00 ص - 09:50 ص @r 229" /><input id="myForm:offeredCoursesTable:6:examPeriod" type="hidden" name="myForm:offeredCoursesTable:6:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>1501</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'7');return false;">التفاصيل<input id="myForm:offeredCoursesTable:7:instructor" type="hidden" name="myForm:offeredCoursesTable:7:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:7:section" type="hidden" name="myForm:offeredCoursesTable:7:section" value=" 2 @t 01:00 م - 01:50 م @r 229 @n  2 @t 02:00 م - 02:50 م @r 229" /><input id="myForm:offeredCoursesTable:7:examPeriod" type="hidden" name="myForm:offeredCoursesTable:7:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>1816</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'8');return false;">التفاصيل<input id="myForm:offeredCoursesTable:8:instructor" type="hidden" name="myForm:offeredCoursesTable:8:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:8:section" type="hidden" name="myForm:offeredCoursesTable:8:section" value=" 3 @t 11:00 ص - 11:50 ص @r 101 @n  3 @t 12:00 م - 12:50 م @r 101" /><input id="myForm:offeredCoursesTable:8:examPeriod" type="hidden" name="myForm:offeredCoursesTable:8:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>1817</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'9');return false;">التفاصيل<input id="myForm:offeredCoursesTable:9:instructor" type="hidden" name="myForm:offeredCoursesTable:9:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:9:section" type="hidden" name="myForm:offeredCoursesTable:9:section" value=" 3 @t 08:00 ص - 08:50 ص @r 102 @n  3 @t 09:00 ص - 09:50 ص @r 102" /><input id="myForm:offeredCoursesTable:9:examPeriod" type="hidden" name="myForm:offeredCoursesTable:9:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>2005</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'10');return false;">التفاصيل<input id="myForm:offeredCoursesTable:10:instructor" type="hidden" name="myForm:offeredCoursesTable:10:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:10:section" type="hidden" name="myForm:offeredCoursesTable:10:section" value=" 4 @t 10:00 ص - 10:50 ص @r 107 @n  4 @t 11:00 ص - 11:50 ص @r 107" /><input id="myForm:offeredCoursesTable:10:examPeriod" type="hidden" name="myForm:offeredCoursesTable:10:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>2293</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'11');return false;">التفاصيل<input id="myForm:offeredCoursesTable:11:instructor" type="hidden" name="myForm:offeredCoursesTable:11:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:11:section" type="hidden" name="myForm:offeredCoursesTable:11:section" value=" 3 @t 08:00 ص - 08:50 ص @r 316 @n  3 @t 09:00 ص - 09:50 ص @r 316" /><input id="myForm:offeredCoursesTable:11:examPeriod" type="hidden" name="myForm:offeredCoursesTable:11:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>2826</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'12');return false;">التفاصيل<input id="myForm:offeredCoursesTable:12:instructor" type="hidden" name="myForm:offeredCoursesTable:12:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:12:section" type="hidden" name="myForm:offeredCoursesTable:12:section" value=" 4 @t 10:00 ص - 10:50 ص @r  @n  4 @t 11:00 ص - 11:50 ص @r " /><input id="myForm:offeredCoursesTable:12:examPeriod" type="hidden" name="myForm:offeredCoursesTable:12:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>2827</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'13');return false;">التفاصيل<input id="myForm:offeredCoursesTable:13:instructor" type="hidden" name="myForm:offeredCoursesTable:13:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:13:section" type="hidden" name="myForm:offeredCoursesTable:13:section" value=" 4 @t 09:00 ص - 09:50 ص @r  @n  4 @t 10:00 ص - 10:50 ص @r " /><input id="myForm:offeredCoursesTable:13:examPeriod" type="hidden" name="myForm:offeredCoursesTable:13:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>2828</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'14');return false;">التفاصيل<input id="myForm:offeredCoursesTable:14:instructor" type="hidden" name="myForm:offeredCoursesTable:14:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:14:section" type="hidden" name="myForm:offeredCoursesTable:14:section" value=" 4 @t 01:00 م - 01:50 م @r  @n  4 @t 02:00 م - 02:50 م @r " /><input id="myForm:offeredCoursesTable:14:examPeriod" type="hidden" name="myForm:offeredCoursesTable:14:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>2829</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'15');return false;">التفاصيل<input id="myForm:offeredCoursesTable:15:instructor" type="hidden" name="myForm:offeredCoursesTable:15:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:15:section" type="hidden" name="myForm:offeredCoursesTable:15:section" value=" 4 @t 01:00 م - 01:50 م @r  @n  4 @t 02:00 م - 02:50 م @r " /><input id="myForm:offeredCoursesTable:15:examPeriod" type="hidden" name="myForm:offeredCoursesTable:15:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>2830</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'16');return false;">التفاصيل<input id="myForm:offeredCoursesTable:16:instructor" type="hidden" name="myForm:offeredCoursesTable:16:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:16:section" type="hidden" name="myForm:offeredCoursesTable:16:section" value=" 5 @t 11:00 ص - 11:50 ص @r  @n  5 @t 12:00 م - 12:50 م @r " /><input id="myForm:offeredCoursesTable:16:examPeriod" type="hidden" name="myForm:offeredCoursesTable:16:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>2831</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'17');return false;">التفاصيل<input id="myForm:offeredCoursesTable:17:instructor" type="hidden" name="myForm:offeredCoursesTable:17:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:17:section" type="hidden" name="myForm:offeredCoursesTable:17:section" value=" 5 @t 01:00 م - 01:50 م @r  @n  5 @t 02:00 م - 02:50 م @r " /><input id="myForm:offeredCoursesTable:17:examPeriod" type="hidden" name="myForm:offeredCoursesTable:17:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>أدب 3004</td>
+<td>المهارات اللغوية</td>
+<td>3759</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'18');return false;">التفاصيل<input id="myForm:offeredCoursesTable:18:instructor" type="hidden" name="myForm:offeredCoursesTable:18:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:18:section" type="hidden" name="myForm:offeredCoursesTable:18:section" value=" 2 @t 01:00 م - 01:50 م @r 207 @n  2 @t 02:00 م - 02:50 م @r 207" /><input id="myForm:offeredCoursesTable:18:examPeriod" type="hidden" name="myForm:offeredCoursesTable:18:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ريض 3241</td>
+<td>جبر خطي</td>
+<td>2927</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'19');return false;">التفاصيل<input id="myForm:offeredCoursesTable:19:instructor" type="hidden" name="myForm:offeredCoursesTable:19:instructor" value="محمد أزهار خان" /><input id="myForm:offeredCoursesTable:19:section" type="hidden" name="myForm:offeredCoursesTable:19:section" value=" 4 @t 09:30 ص - 10:50 ص @r 202 @n  1 @t 09:30 ص - 10:50 ص @r 205" /><input id="myForm:offeredCoursesTable:19:examPeriod" type="hidden" name="myForm:offeredCoursesTable:19:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ريض 3241</td>
+<td>جبر خطي</td>
+<td>2929</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'20');return false;">التفاصيل<input id="myForm:offeredCoursesTable:20:instructor" type="hidden" name="myForm:offeredCoursesTable:20:instructor" value="صلاح جمعه احمد علي" /><input id="myForm:offeredCoursesTable:20:section" type="hidden" name="myForm:offeredCoursesTable:20:section" value=" 2 4 @t 01:00 م - 02:20 م @r 210" /><input id="myForm:offeredCoursesTable:20:examPeriod" type="hidden" name="myForm:offeredCoursesTable:20:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ريض 3241</td>
+<td>جبر خطي</td>
+<td>2930</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'21');return false;">التفاصيل<input id="myForm:offeredCoursesTable:21:instructor" type="hidden" name="myForm:offeredCoursesTable:21:instructor" value="صلاح جمعه احمد علي" /><input id="myForm:offeredCoursesTable:21:section" type="hidden" name="myForm:offeredCoursesTable:21:section" value=" 1 3 @t 11:00 ص - 12:20 م @r SCI 104" /><input id="myForm:offeredCoursesTable:21:examPeriod" type="hidden" name="myForm:offeredCoursesTable:21:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ريض 3241</td>
+<td>جبر خطي</td>
+<td>3887</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'22');return false;">التفاصيل<input id="myForm:offeredCoursesTable:22:instructor" type="hidden" name="myForm:offeredCoursesTable:22:instructor" value="محمد أزهار خان" /><input id="myForm:offeredCoursesTable:22:section" type="hidden" name="myForm:offeredCoursesTable:22:section" value=" 2 @t 08:00 ص - 09:20 ص @r SCI 008 @n  3 @t 02:00 م - 03:20 م @r SCI 003" /><input id="myForm:offeredCoursesTable:22:examPeriod" type="hidden" name="myForm:offeredCoursesTable:22:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ريض 3241</td>
+<td>جبر خطي</td>
+<td>3896</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'23');return false;">التفاصيل<input id="myForm:offeredCoursesTable:23:instructor" type="hidden" name="myForm:offeredCoursesTable:23:instructor" value="صلاح جمعه احمد علي" /><input id="myForm:offeredCoursesTable:23:section" type="hidden" name="myForm:offeredCoursesTable:23:section" value=" 4 5 @t 08:00 ص - 09:20 ص @r SCI 007" /><input id="myForm:offeredCoursesTable:23:examPeriod" type="hidden" name="myForm:offeredCoursesTable:23:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>2954</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'24');return false;">التفاصيل<input id="myForm:offeredCoursesTable:24:instructor" type="hidden" name="myForm:offeredCoursesTable:24:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:24:section" type="hidden" name="myForm:offeredCoursesTable:24:section" value=" 1 @t 08:00 ص - 08:50 ص @r 201 @n  1 @t 09:00 ص - 09:50 ص @r 201" /><input id="myForm:offeredCoursesTable:24:examPeriod" type="hidden" name="myForm:offeredCoursesTable:24:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>2955</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'25');return false;">التفاصيل<input id="myForm:offeredCoursesTable:25:instructor" type="hidden" name="myForm:offeredCoursesTable:25:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:25:section" type="hidden" name="myForm:offeredCoursesTable:25:section" value=" 5 @t 08:00 ص - 08:50 ص @r  @n  5 @t 09:00 ص - 09:50 ص @r " /><input id="myForm:offeredCoursesTable:25:examPeriod" type="hidden" name="myForm:offeredCoursesTable:25:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>2956</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'26');return false;">التفاصيل<input id="myForm:offeredCoursesTable:26:instructor" type="hidden" name="myForm:offeredCoursesTable:26:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:26:section" type="hidden" name="myForm:offeredCoursesTable:26:section" value=" 4 @t 10:00 ص - 10:50 ص @r  @n  4 @t 11:00 ص - 11:50 ص @r " /><input id="myForm:offeredCoursesTable:26:examPeriod" type="hidden" name="myForm:offeredCoursesTable:26:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>2957</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'27');return false;">التفاصيل<input id="myForm:offeredCoursesTable:27:instructor" type="hidden" name="myForm:offeredCoursesTable:27:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:27:section" type="hidden" name="myForm:offeredCoursesTable:27:section" value=" 5 @t 10:00 ص - 10:50 ص @r  @n  5 @t 11:00 ص - 11:50 ص @r " /><input id="myForm:offeredCoursesTable:27:examPeriod" type="hidden" name="myForm:offeredCoursesTable:27:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>2958</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'28');return false;">التفاصيل<input id="myForm:offeredCoursesTable:28:instructor" type="hidden" name="myForm:offeredCoursesTable:28:instructor" value="احمد سالم عبدالله الحارثي" /><input id="myForm:offeredCoursesTable:28:section" type="hidden" name="myForm:offeredCoursesTable:28:section" value=" 4 @t 01:00 م - 01:50 م @r  @n  4 @t 02:00 م - 02:50 م @r " /><input id="myForm:offeredCoursesTable:28:examPeriod" type="hidden" name="myForm:offeredCoursesTable:28:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>2959</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'29');return false;">التفاصيل<input id="myForm:offeredCoursesTable:29:instructor" type="hidden" name="myForm:offeredCoursesTable:29:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:29:section" type="hidden" name="myForm:offeredCoursesTable:29:section" value=" 3 @t 08:00 ص - 08:50 ص @r 206 @n  3 @t 09:00 ص - 09:50 ص @r 206" /><input id="myForm:offeredCoursesTable:29:examPeriod" type="hidden" name="myForm:offeredCoursesTable:29:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>2960</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'30');return false;">التفاصيل<input id="myForm:offeredCoursesTable:30:instructor" type="hidden" name="myForm:offeredCoursesTable:30:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:30:section" type="hidden" name="myForm:offeredCoursesTable:30:section" value=" 5 @t 10:00 ص - 10:50 ص @r  @n  5 @t 11:00 ص - 11:50 ص @r " /><input id="myForm:offeredCoursesTable:30:examPeriod" type="hidden" name="myForm:offeredCoursesTable:30:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>2961</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'31');return false;">التفاصيل<input id="myForm:offeredCoursesTable:31:instructor" type="hidden" name="myForm:offeredCoursesTable:31:instructor" value="احمد سالم عبدالله الحارثي" /><input id="myForm:offeredCoursesTable:31:section" type="hidden" name="myForm:offeredCoursesTable:31:section" value=" 1 @t 01:00 م - 01:50 م @r  @n  1 @t 02:00 م - 02:50 م @r " /><input id="myForm:offeredCoursesTable:31:examPeriod" type="hidden" name="myForm:offeredCoursesTable:31:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>2962</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'32');return false;">التفاصيل<input id="myForm:offeredCoursesTable:32:instructor" type="hidden" name="myForm:offeredCoursesTable:32:instructor" value="احمد سالم عبدالله الحارثي" /><input id="myForm:offeredCoursesTable:32:section" type="hidden" name="myForm:offeredCoursesTable:32:section" value=" 4 @t 03:00 م - 03:50 م @r  @n  4 @t 04:00 م - 04:50 م @r " /><input id="myForm:offeredCoursesTable:32:examPeriod" type="hidden" name="myForm:offeredCoursesTable:32:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>3892</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'33');return false;">التفاصيل<input id="myForm:offeredCoursesTable:33:instructor" type="hidden" name="myForm:offeredCoursesTable:33:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:33:section" type="hidden" name="myForm:offeredCoursesTable:33:section" value=" 4 @t 02:00 م - 02:50 م @r 205 @n  4 @t 03:00 م - 03:50 م @r 205" /><input id="myForm:offeredCoursesTable:33:examPeriod" type="hidden" name="myForm:offeredCoursesTable:33:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>3901</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'34');return false;">التفاصيل<input id="myForm:offeredCoursesTable:34:instructor" type="hidden" name="myForm:offeredCoursesTable:34:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:34:section" type="hidden" name="myForm:offeredCoursesTable:34:section" value=" 4 @t 02:00 م - 02:50 م @r 203 @n  4 @t 03:00 م - 03:50 م @r 203" /><input id="myForm:offeredCoursesTable:34:examPeriod" type="hidden" name="myForm:offeredCoursesTable:34:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>3904</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'35');return false;">التفاصيل<input id="myForm:offeredCoursesTable:35:instructor" type="hidden" name="myForm:offeredCoursesTable:35:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:35:section" type="hidden" name="myForm:offeredCoursesTable:35:section" value=" 2 @t 11:00 ص - 11:50 ص @r 311 @n  2 @t 12:00 م - 12:50 م @r 311" /><input id="myForm:offeredCoursesTable:35:examPeriod" type="hidden" name="myForm:offeredCoursesTable:35:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>سنه 3020</td>
+<td>السنة والسيرة</td>
+<td>3907</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'36');return false;">التفاصيل<input id="myForm:offeredCoursesTable:36:instructor" type="hidden" name="myForm:offeredCoursesTable:36:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:36:section" type="hidden" name="myForm:offeredCoursesTable:36:section" value=" 1 @t 02:00 م - 02:50 م @r 211 @n  1 @t 03:00 م - 03:50 م @r 211" /><input id="myForm:offeredCoursesTable:36:examPeriod" type="hidden" name="myForm:offeredCoursesTable:36:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>87</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'37');return false;">التفاصيل<input id="myForm:offeredCoursesTable:37:instructor" type="hidden" name="myForm:offeredCoursesTable:37:instructor" value="حسين هادي محمد العواجي" /><input id="myForm:offeredCoursesTable:37:section" type="hidden" name="myForm:offeredCoursesTable:37:section" value=" 5 @t 08:00 ص - 08:50 ص @r 116 @n  5 @t 09:00 ص - 09:50 ص @r 116" /><input id="myForm:offeredCoursesTable:37:examPeriod" type="hidden" name="myForm:offeredCoursesTable:37:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>88</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'38');return false;">التفاصيل<input id="myForm:offeredCoursesTable:38:instructor" type="hidden" name="myForm:offeredCoursesTable:38:instructor" value="حسين هادي محمد العواجي" /><input id="myForm:offeredCoursesTable:38:section" type="hidden" name="myForm:offeredCoursesTable:38:section" value=" 5 @t 02:00 م - 02:50 م @r 107 @n  5 @t 03:00 م - 03:50 م @r 107" /><input id="myForm:offeredCoursesTable:38:examPeriod" type="hidden" name="myForm:offeredCoursesTable:38:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>89</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'39');return false;">التفاصيل<input id="myForm:offeredCoursesTable:39:instructor" type="hidden" name="myForm:offeredCoursesTable:39:instructor" value="خالد عبدالفتاح احمد فؤاد سيد" /><input id="myForm:offeredCoursesTable:39:section" type="hidden" name="myForm:offeredCoursesTable:39:section" value=" 5 @t 11:00 ص - 11:50 ص @r 117 @n  5 @t 12:00 م - 12:50 م @r 117" /><input id="myForm:offeredCoursesTable:39:examPeriod" type="hidden" name="myForm:offeredCoursesTable:39:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>90</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'40');return false;">التفاصيل<input id="myForm:offeredCoursesTable:40:instructor" type="hidden" name="myForm:offeredCoursesTable:40:instructor" value="حسين هادي محمد العواجي" /><input id="myForm:offeredCoursesTable:40:section" type="hidden" name="myForm:offeredCoursesTable:40:section" value=" 5 @t 05:00 م - 05:50 م @r 108 @n  5 @t 07:00 م - 07:50 م @r 108" /><input id="myForm:offeredCoursesTable:40:examPeriod" type="hidden" name="myForm:offeredCoursesTable:40:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>91</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'41');return false;">التفاصيل<input id="myForm:offeredCoursesTable:41:instructor" type="hidden" name="myForm:offeredCoursesTable:41:instructor" value="فهد علي حامد الحارثي" /><input id="myForm:offeredCoursesTable:41:section" type="hidden" name="myForm:offeredCoursesTable:41:section" value=" 2 @t 08:00 ص - 08:50 ص @r 118 @n  2 @t 09:00 ص - 09:50 ص @r 118" /><input id="myForm:offeredCoursesTable:41:examPeriod" type="hidden" name="myForm:offeredCoursesTable:41:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>92</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'42');return false;">التفاصيل<input id="myForm:offeredCoursesTable:42:instructor" type="hidden" name="myForm:offeredCoursesTable:42:instructor" value="فيصل حمدان سليم العميري الحويطي" /><input id="myForm:offeredCoursesTable:42:section" type="hidden" name="myForm:offeredCoursesTable:42:section" value=" 2 @t 02:00 م - 02:50 م @r 121 @n  2 @t 03:00 م - 03:50 م @r 121" /><input id="myForm:offeredCoursesTable:42:examPeriod" type="hidden" name="myForm:offeredCoursesTable:42:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>93</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'43');return false;">التفاصيل<input id="myForm:offeredCoursesTable:43:instructor" type="hidden" name="myForm:offeredCoursesTable:43:instructor" value="فوزي عناد قزعان العتيبي" /><input id="myForm:offeredCoursesTable:43:section" type="hidden" name="myForm:offeredCoursesTable:43:section" value=" 2 @t 11:00 ص - 11:50 ص @r 119 @n  2 @t 12:00 م - 12:50 م @r 119" /><input id="myForm:offeredCoursesTable:43:examPeriod" type="hidden" name="myForm:offeredCoursesTable:43:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>94</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'44');return false;">التفاصيل<input id="myForm:offeredCoursesTable:44:instructor" type="hidden" name="myForm:offeredCoursesTable:44:instructor" value="فيصل حمدان سليم العميري الحويطي" /><input id="myForm:offeredCoursesTable:44:section" type="hidden" name="myForm:offeredCoursesTable:44:section" value=" 2 @t 04:00 م - 04:50 م @r 120 @n  2 @t 05:00 م - 05:50 م @r 120" /><input id="myForm:offeredCoursesTable:44:examPeriod" type="hidden" name="myForm:offeredCoursesTable:44:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>95</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'45');return false;">التفاصيل<input id="myForm:offeredCoursesTable:45:instructor" type="hidden" name="myForm:offeredCoursesTable:45:instructor" value="خالد عبدالفتاح احمد فؤاد سيد" /><input id="myForm:offeredCoursesTable:45:section" type="hidden" name="myForm:offeredCoursesTable:45:section" value=" 4 @t 10:00 ص - 10:50 ص @r 120 @n  4 @t 11:00 ص - 11:50 ص @r 120" /><input id="myForm:offeredCoursesTable:45:examPeriod" type="hidden" name="myForm:offeredCoursesTable:45:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>96</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'46');return false;">التفاصيل<input id="myForm:offeredCoursesTable:46:instructor" type="hidden" name="myForm:offeredCoursesTable:46:instructor" value="خالد عبدالفتاح احمد فؤاد سيد" /><input id="myForm:offeredCoursesTable:46:section" type="hidden" name="myForm:offeredCoursesTable:46:section" value=" 4 @t 04:00 م - 04:50 م @r 111 @n  4 @t 05:00 م - 05:50 م @r 111" /><input id="myForm:offeredCoursesTable:46:examPeriod" type="hidden" name="myForm:offeredCoursesTable:46:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>97</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'47');return false;">التفاصيل<input id="myForm:offeredCoursesTable:47:instructor" type="hidden" name="myForm:offeredCoursesTable:47:instructor" value="نوار مناور نوار العضياني" /><input id="myForm:offeredCoursesTable:47:section" type="hidden" name="myForm:offeredCoursesTable:47:section" value=" 4 @t 08:00 ص - 08:50 ص @r 121 @n  4 @t 09:00 ص - 09:50 ص @r 121" /><input id="myForm:offeredCoursesTable:47:examPeriod" type="hidden" name="myForm:offeredCoursesTable:47:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>98</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'48');return false;">التفاصيل<input id="myForm:offeredCoursesTable:48:instructor" type="hidden" name="myForm:offeredCoursesTable:48:instructor" value="خالد عبدالفتاح احمد فؤاد سيد" /><input id="myForm:offeredCoursesTable:48:section" type="hidden" name="myForm:offeredCoursesTable:48:section" value=" 4 @t 02:00 م - 02:50 م @r 112 @n  4 @t 03:00 م - 03:50 م @r 112" /><input id="myForm:offeredCoursesTable:48:examPeriod" type="hidden" name="myForm:offeredCoursesTable:48:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>99</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'49');return false;">التفاصيل<input id="myForm:offeredCoursesTable:49:instructor" type="hidden" name="myForm:offeredCoursesTable:49:instructor" value="سعود عبدالعزيز سليمان السلومي" /><input id="myForm:offeredCoursesTable:49:section" type="hidden" name="myForm:offeredCoursesTable:49:section" value=" 1 @t 10:00 ص - 10:50 ص @r 122 @n  1 @t 11:00 ص - 11:50 ص @r 122" /><input id="myForm:offeredCoursesTable:49:examPeriod" type="hidden" name="myForm:offeredCoursesTable:49:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>100</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'50');return false;">التفاصيل<input id="myForm:offeredCoursesTable:50:instructor" type="hidden" name="myForm:offeredCoursesTable:50:instructor" value="عبدالسلام بن محسن محي الدين آل عيسى" /><input id="myForm:offeredCoursesTable:50:section" type="hidden" name="myForm:offeredCoursesTable:50:section" value=" 1 @t 08:00 ص - 08:50 ص @r 123 @n  1 @t 09:00 ص - 09:50 ص @r 123" /><input id="myForm:offeredCoursesTable:50:examPeriod" type="hidden" name="myForm:offeredCoursesTable:50:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>933</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'51');return false;">التفاصيل<input id="myForm:offeredCoursesTable:51:instructor" type="hidden" name="myForm:offeredCoursesTable:51:instructor" value="عبدالسلام بن محسن محي الدين آل عيسى" /><input id="myForm:offeredCoursesTable:51:section" type="hidden" name="myForm:offeredCoursesTable:51:section" value=" 4 @t 08:00 ص - 08:50 ص @r 06 @n  4 @t 09:00 ص - 09:50 ص @r 06" /><input id="myForm:offeredCoursesTable:51:examPeriod" type="hidden" name="myForm:offeredCoursesTable:51:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>997</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'52');return false;">التفاصيل<input id="myForm:offeredCoursesTable:52:instructor" type="hidden" name="myForm:offeredCoursesTable:52:instructor" value="يوسف عبدالعزيز محمد العبداللطيف" /><input id="myForm:offeredCoursesTable:52:section" type="hidden" name="myForm:offeredCoursesTable:52:section" value=" 1 @t 10:00 ص - 10:50 ص @r 218 @n  1 @t 11:00 ص - 11:50 ص @r 218" /><input id="myForm:offeredCoursesTable:52:examPeriod" type="hidden" name="myForm:offeredCoursesTable:52:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>998</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'53');return false;">التفاصيل<input id="myForm:offeredCoursesTable:53:instructor" type="hidden" name="myForm:offeredCoursesTable:53:instructor" value="يوسف عبدالعزيز محمد العبداللطيف" /><input id="myForm:offeredCoursesTable:53:section" type="hidden" name="myForm:offeredCoursesTable:53:section" value=" 1 @t 03:00 م - 03:50 م @r 218 @n  1 @t 04:00 م - 04:50 م @r 218" /><input id="myForm:offeredCoursesTable:53:examPeriod" type="hidden" name="myForm:offeredCoursesTable:53:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>999</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'54');return false;">التفاصيل<input id="myForm:offeredCoursesTable:54:instructor" type="hidden" name="myForm:offeredCoursesTable:54:instructor" value="يوسف عبدالعزيز محمد العبداللطيف" /><input id="myForm:offeredCoursesTable:54:section" type="hidden" name="myForm:offeredCoursesTable:54:section" value=" 1 @t 08:00 ص - 08:50 ص @r 220 @n  1 @t 09:00 ص - 09:50 ص @r 220" /><input id="myForm:offeredCoursesTable:54:examPeriod" type="hidden" name="myForm:offeredCoursesTable:54:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1000</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'55');return false;">التفاصيل<input id="myForm:offeredCoursesTable:55:instructor" type="hidden" name="myForm:offeredCoursesTable:55:instructor" value="يوسف عبدالعزيز محمد العبداللطيف" /><input id="myForm:offeredCoursesTable:55:section" type="hidden" name="myForm:offeredCoursesTable:55:section" value=" 1 @t 01:00 م - 01:50 م @r 220 @n  1 @t 02:00 م - 02:50 م @r 220" /><input id="myForm:offeredCoursesTable:55:examPeriod" type="hidden" name="myForm:offeredCoursesTable:55:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1001</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'56');return false;">التفاصيل<input id="myForm:offeredCoursesTable:56:instructor" type="hidden" name="myForm:offeredCoursesTable:56:instructor" value="عبدالحميد علي محمد فقيهي" /><input id="myForm:offeredCoursesTable:56:section" type="hidden" name="myForm:offeredCoursesTable:56:section" value=" 2 @t 11:00 ص - 11:50 ص @r 306 @n  2 @t 12:00 م - 12:50 م @r 306" /><input id="myForm:offeredCoursesTable:56:examPeriod" type="hidden" name="myForm:offeredCoursesTable:56:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1184</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'57');return false;">التفاصيل<input id="myForm:offeredCoursesTable:57:instructor" type="hidden" name="myForm:offeredCoursesTable:57:instructor" value="عبدالحميد علي محمد فقيهي" /><input id="myForm:offeredCoursesTable:57:section" type="hidden" name="myForm:offeredCoursesTable:57:section" value=" 4 @t 10:00 ص - 10:50 ص @r 202 @n  4 @t 11:00 ص - 11:50 ص @r 202" /><input id="myForm:offeredCoursesTable:57:examPeriod" type="hidden" name="myForm:offeredCoursesTable:57:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1185</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'58');return false;">التفاصيل<input id="myForm:offeredCoursesTable:58:instructor" type="hidden" name="myForm:offeredCoursesTable:58:instructor" value="عبدالحميد علي محمد فقيهي" /><input id="myForm:offeredCoursesTable:58:section" type="hidden" name="myForm:offeredCoursesTable:58:section" value=" 4 @t 03:00 م - 03:50 م @r 202 @n  4 @t 04:00 م - 04:50 م @r 202" /><input id="myForm:offeredCoursesTable:58:examPeriod" type="hidden" name="myForm:offeredCoursesTable:58:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1186</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'59');return false;">التفاصيل<input id="myForm:offeredCoursesTable:59:instructor" type="hidden" name="myForm:offeredCoursesTable:59:instructor" value="حسين هادي محمد العواجي" /><input id="myForm:offeredCoursesTable:59:section" type="hidden" name="myForm:offeredCoursesTable:59:section" value=" 4 @t 08:00 ص - 08:50 ص @r 204 @n  4 @t 09:00 ص - 09:50 ص @r 204" /><input id="myForm:offeredCoursesTable:59:examPeriod" type="hidden" name="myForm:offeredCoursesTable:59:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1187</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'60');return false;">التفاصيل<input id="myForm:offeredCoursesTable:60:instructor" type="hidden" name="myForm:offeredCoursesTable:60:instructor" value="محمد محمد علي عواجي" /><input id="myForm:offeredCoursesTable:60:section" type="hidden" name="myForm:offeredCoursesTable:60:section" value=" 4 @t 01:00 م - 01:50 م @r 204 @n  4 @t 02:00 م - 02:50 م @r 204" /><input id="myForm:offeredCoursesTable:60:examPeriod" type="hidden" name="myForm:offeredCoursesTable:60:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1188</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'61');return false;">التفاصيل<input id="myForm:offeredCoursesTable:61:instructor" type="hidden" name="myForm:offeredCoursesTable:61:instructor" value="عبدالحميد علي محمد فقيهي" /><input id="myForm:offeredCoursesTable:61:section" type="hidden" name="myForm:offeredCoursesTable:61:section" value=" 5 @t 08:00 ص - 08:50 ص @r 206 @n  5 @t 09:00 ص - 09:50 ص @r 206" /><input id="myForm:offeredCoursesTable:61:examPeriod" type="hidden" name="myForm:offeredCoursesTable:61:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1189</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'62');return false;">التفاصيل<input id="myForm:offeredCoursesTable:62:instructor" type="hidden" name="myForm:offeredCoursesTable:62:instructor" value="عبدالحميد علي محمد فقيهي" /><input id="myForm:offeredCoursesTable:62:section" type="hidden" name="myForm:offeredCoursesTable:62:section" value=" 5 @t 01:00 م - 01:50 م @r 206 @n  5 @t 02:00 م - 02:50 م @r 206" /><input id="myForm:offeredCoursesTable:62:examPeriod" type="hidden" name="myForm:offeredCoursesTable:62:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1190</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'63');return false;">التفاصيل<input id="myForm:offeredCoursesTable:63:instructor" type="hidden" name="myForm:offeredCoursesTable:63:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:63:section" type="hidden" name="myForm:offeredCoursesTable:63:section" value=" 5 @t 10:00 ص - 10:50 ص @r 118 @n  5 @t 11:00 ص - 11:50 ص @r 118" /><input id="myForm:offeredCoursesTable:63:examPeriod" type="hidden" name="myForm:offeredCoursesTable:63:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1719</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'64');return false;">التفاصيل<input id="myForm:offeredCoursesTable:64:instructor" type="hidden" name="myForm:offeredCoursesTable:64:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:64:section" type="hidden" name="myForm:offeredCoursesTable:64:section" value=" 5 @t 10:00 ص - 10:50 ص @r 217 @n  5 @t 11:00 ص - 11:50 ص @r 217" /><input id="myForm:offeredCoursesTable:64:examPeriod" type="hidden" name="myForm:offeredCoursesTable:64:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1872</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'65');return false;">التفاصيل<input id="myForm:offeredCoursesTable:65:instructor" type="hidden" name="myForm:offeredCoursesTable:65:instructor" value="عبدالحميد علي محمد فقيهي" /><input id="myForm:offeredCoursesTable:65:section" type="hidden" name="myForm:offeredCoursesTable:65:section" value=" 5 @t 10:00 ص - 10:50 ص @r 103 @n  5 @t 11:00 ص - 11:50 ص @r 103" /><input id="myForm:offeredCoursesTable:65:examPeriod" type="hidden" name="myForm:offeredCoursesTable:65:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1873</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'66');return false;">التفاصيل<input id="myForm:offeredCoursesTable:66:instructor" type="hidden" name="myForm:offeredCoursesTable:66:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:66:section" type="hidden" name="myForm:offeredCoursesTable:66:section" value=" 5 @t 03:00 م - 03:50 م @r 103 @n  5 @t 04:00 م - 04:50 م @r 103" /><input id="myForm:offeredCoursesTable:66:examPeriod" type="hidden" name="myForm:offeredCoursesTable:66:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1952</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'67');return false;">التفاصيل<input id="myForm:offeredCoursesTable:67:instructor" type="hidden" name="myForm:offeredCoursesTable:67:instructor" value="فيصل حمدان سليم العميري الحويطي" /><input id="myForm:offeredCoursesTable:67:section" type="hidden" name="myForm:offeredCoursesTable:67:section" value=" 2 @t 08:00 ص - 08:50 ص @r 101 @n  2 @t 09:00 ص - 09:50 ص @r 101" /><input id="myForm:offeredCoursesTable:67:examPeriod" type="hidden" name="myForm:offeredCoursesTable:67:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>1953</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'68');return false;">التفاصيل<input id="myForm:offeredCoursesTable:68:instructor" type="hidden" name="myForm:offeredCoursesTable:68:instructor" value="عبدالسلام بن محسن محي الدين آل عيسى" /><input id="myForm:offeredCoursesTable:68:section" type="hidden" name="myForm:offeredCoursesTable:68:section" value=" 3 @t 08:00 ص - 08:50 ص @r 102 @n  3 @t 09:00 ص - 09:50 ص @r 102" /><input id="myForm:offeredCoursesTable:68:examPeriod" type="hidden" name="myForm:offeredCoursesTable:68:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>2189</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'69');return false;">التفاصيل<input id="myForm:offeredCoursesTable:69:instructor" type="hidden" name="myForm:offeredCoursesTable:69:instructor" value="فيصل حمدان سليم العميري الحويطي" /><input id="myForm:offeredCoursesTable:69:section" type="hidden" name="myForm:offeredCoursesTable:69:section" value=" 2 @t 11:00 ص - 11:50 ص @r 302 @n  2 @t 12:00 م - 12:50 م @r 302" /><input id="myForm:offeredCoursesTable:69:examPeriod" type="hidden" name="myForm:offeredCoursesTable:69:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>2191</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'70');return false;">التفاصيل<input id="myForm:offeredCoursesTable:70:instructor" type="hidden" name="myForm:offeredCoursesTable:70:instructor" value="فوزي عناد قزعان العتيبي" /><input id="myForm:offeredCoursesTable:70:section" type="hidden" name="myForm:offeredCoursesTable:70:section" value=" 2 @t 03:00 م - 03:50 م @r 302 @n  2 @t 04:00 م - 04:50 م @r 302" /><input id="myForm:offeredCoursesTable:70:examPeriod" type="hidden" name="myForm:offeredCoursesTable:70:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>2319</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'71');return false;">التفاصيل<input id="myForm:offeredCoursesTable:71:instructor" type="hidden" name="myForm:offeredCoursesTable:71:instructor" value="فوزي عناد قزعان العتيبي" /><input id="myForm:offeredCoursesTable:71:section" type="hidden" name="myForm:offeredCoursesTable:71:section" value=" 3 @t 03:00 م - 03:50 م @r 301 @n  3 @t 04:00 م - 04:50 م @r 301" /><input id="myForm:offeredCoursesTable:71:examPeriod" type="hidden" name="myForm:offeredCoursesTable:71:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>2343</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'72');return false;">التفاصيل<input id="myForm:offeredCoursesTable:72:instructor" type="hidden" name="myForm:offeredCoursesTable:72:instructor" value="رجاء عتيق حمود المعيلي الحربي" /><input id="myForm:offeredCoursesTable:72:section" type="hidden" name="myForm:offeredCoursesTable:72:section" value=" 3 @t 10:00 ص - 10:50 ص @r 005 @n  3 @t 11:00 ص - 11:50 ص @r 005" /><input id="myForm:offeredCoursesTable:72:examPeriod" type="hidden" name="myForm:offeredCoursesTable:72:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>2355</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'73');return false;">التفاصيل<input id="myForm:offeredCoursesTable:73:instructor" type="hidden" name="myForm:offeredCoursesTable:73:instructor" value="رجاء عتيق حمود المعيلي الحربي" /><input id="myForm:offeredCoursesTable:73:section" type="hidden" name="myForm:offeredCoursesTable:73:section" value=" 1 @t 08:00 ص - 08:50 ص @r 006 @n  1 @t 09:00 ص - 09:50 ص @r 006" /><input id="myForm:offeredCoursesTable:73:examPeriod" type="hidden" name="myForm:offeredCoursesTable:73:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>3442</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'74');return false;">التفاصيل<input id="myForm:offeredCoursesTable:74:instructor" type="hidden" name="myForm:offeredCoursesTable:74:instructor" value="حسين هادي محمد العواجي" /><input id="myForm:offeredCoursesTable:74:section" type="hidden" name="myForm:offeredCoursesTable:74:section" value=" 1 @t 02:00 م - 02:50 م @r 203 @n  1 @t 03:00 م - 03:50 م @r 203" /><input id="myForm:offeredCoursesTable:74:examPeriod" type="hidden" name="myForm:offeredCoursesTable:74:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>ترخ 3008</td>
+<td>تاريخ المملكة</td>
+<td>3760</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'75');return false;">التفاصيل<input id="myForm:offeredCoursesTable:75:instructor" type="hidden" name="myForm:offeredCoursesTable:75:instructor" value="عبدالسلام بن محسن محي الدين آل عيسى" /><input id="myForm:offeredCoursesTable:75:section" type="hidden" name="myForm:offeredCoursesTable:75:section" value=" 5 @t 10:00 ص - 10:50 ص @r 211 @n  5 @t 11:00 ص - 11:50 ص @r 211" /><input id="myForm:offeredCoursesTable:75:examPeriod" type="hidden" name="myForm:offeredCoursesTable:75:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>احص 3403</td>
+<td>إحصاء متقدم ونظرية الاحتمالات</td>
+<td>3384</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'76');return false;">التفاصيل<input id="myForm:offeredCoursesTable:76:instructor" type="hidden" name="myForm:offeredCoursesTable:76:instructor" value="جمال امين عبدالموجود احمد" /><input id="myForm:offeredCoursesTable:76:section" type="hidden" name="myForm:offeredCoursesTable:76:section" value=" 3 5 @t 11:00 ص - 12:20 م @r 205" /><input id="myForm:offeredCoursesTable:76:examPeriod" type="hidden" name="myForm:offeredCoursesTable:76:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>احص 3403</td>
+<td>إحصاء متقدم ونظرية الاحتمالات</td>
+<td>3385</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'77');return false;">التفاصيل<input id="myForm:offeredCoursesTable:77:instructor" type="hidden" name="myForm:offeredCoursesTable:77:instructor" value="احمد علي محمد هنانده" /><input id="myForm:offeredCoursesTable:77:section" type="hidden" name="myForm:offeredCoursesTable:77:section" value=" 3 5 @t 12:30 م - 01:50 م @r 205" /><input id="myForm:offeredCoursesTable:77:examPeriod" type="hidden" name="myForm:offeredCoursesTable:77:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>احص 3403</td>
+<td>إحصاء متقدم ونظرية الاحتمالات</td>
+<td>3386</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'78');return false;">التفاصيل<input id="myForm:offeredCoursesTable:78:instructor" type="hidden" name="myForm:offeredCoursesTable:78:instructor" value="احمد علي محمد هنانده" /><input id="myForm:offeredCoursesTable:78:section" type="hidden" name="myForm:offeredCoursesTable:78:section" value=" 3 5 @t 08:00 ص - 09:20 ص @r 205" /><input id="myForm:offeredCoursesTable:78:examPeriod" type="hidden" name="myForm:offeredCoursesTable:78:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>احص 3403</td>
+<td>إحصاء متقدم ونظرية الاحتمالات</td>
+<td>3387</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'79');return false;">التفاصيل<input id="myForm:offeredCoursesTable:79:instructor" type="hidden" name="myForm:offeredCoursesTable:79:instructor" value="جمال امين عبدالموجود احمد" /><input id="myForm:offeredCoursesTable:79:section" type="hidden" name="myForm:offeredCoursesTable:79:section" value=" 2 4 @t 11:00 ص - 12:20 م @r 205" /><input id="myForm:offeredCoursesTable:79:examPeriod" type="hidden" name="myForm:offeredCoursesTable:79:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>احص 3403</td>
+<td>إحصاء متقدم ونظرية الاحتمالات</td>
+<td>3388</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'80');return false;">التفاصيل<input id="myForm:offeredCoursesTable:80:instructor" type="hidden" name="myForm:offeredCoursesTable:80:instructor" value="احمد علي محمد هنانده" /><input id="myForm:offeredCoursesTable:80:section" type="hidden" name="myForm:offeredCoursesTable:80:section" value=" 2 4 @t 12:30 م - 01:50 م @r 205" /><input id="myForm:offeredCoursesTable:80:examPeriod" type="hidden" name="myForm:offeredCoursesTable:80:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>تقا 3320</td>
+<td>أساسيات شبكات الحاسب</td>
+<td>3401</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'81');return false;">التفاصيل<input id="myForm:offeredCoursesTable:81:instructor" type="hidden" name="myForm:offeredCoursesTable:81:instructor" value="وليد عبدالله ضيف الله الردادي" /><input id="myForm:offeredCoursesTable:81:section" type="hidden" name="myForm:offeredCoursesTable:81:section" value=" 3 @t 12:00 م - 12:50 م @r 207 @n  3 @t 01:00 م - 01:50 م @r 207" /><input id="myForm:offeredCoursesTable:81:examPeriod" type="hidden" name="myForm:offeredCoursesTable:81:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>تقا 3320</td>
+<td>أساسيات شبكات الحاسب</td>
+<td>3399</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'82');return false;">التفاصيل<input id="myForm:offeredCoursesTable:82:instructor" type="hidden" name="myForm:offeredCoursesTable:82:instructor" value="وليد عبدالله ضيف الله الردادي" /><input id="myForm:offeredCoursesTable:82:section" type="hidden" name="myForm:offeredCoursesTable:82:section" value=" 5 @t 12:00 م - 12:50 م @r 201 @n  5 @t 01:00 م - 01:50 م @r 201" /><input id="myForm:offeredCoursesTable:82:examPeriod" type="hidden" name="myForm:offeredCoursesTable:82:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>تقا 3320</td>
+<td>أساسيات شبكات الحاسب</td>
+<td>3402</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'83');return false;">التفاصيل<input id="myForm:offeredCoursesTable:83:instructor" type="hidden" name="myForm:offeredCoursesTable:83:instructor" value="ياسر احمد صالح الضويان" /><input id="myForm:offeredCoursesTable:83:section" type="hidden" name="myForm:offeredCoursesTable:83:section" value=" 2 @t 08:00 ص - 08:50 ص @r 307 @n  2 @t 09:00 ص - 09:50 ص @r 307" /><input id="myForm:offeredCoursesTable:83:examPeriod" type="hidden" name="myForm:offeredCoursesTable:83:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>تقا 3320</td>
+<td>أساسيات شبكات الحاسب</td>
+<td>3400</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'84');return false;">التفاصيل<input id="myForm:offeredCoursesTable:84:instructor" type="hidden" name="myForm:offeredCoursesTable:84:instructor" value="وليد عبدالله ضيف الله الردادي" /><input id="myForm:offeredCoursesTable:84:section" type="hidden" name="myForm:offeredCoursesTable:84:section" value=" 5 @t 10:00 ص - 10:50 ص @r 210 @n  5 @t 11:00 ص - 11:50 ص @r 210" /><input id="myForm:offeredCoursesTable:84:examPeriod" type="hidden" name="myForm:offeredCoursesTable:84:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>تقا 3320</td>
+<td>أساسيات شبكات الحاسب</td>
+<td>3412</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'85');return false;">التفاصيل<input id="myForm:offeredCoursesTable:85:instructor" type="hidden" name="myForm:offeredCoursesTable:85:instructor" value="ياسر احمد صالح الضويان" /><input id="myForm:offeredCoursesTable:85:section" type="hidden" name="myForm:offeredCoursesTable:85:section" value=" 3 @t 10:00 ص - 10:50 ص @r 102 @n  3 @t 11:00 ص - 11:50 ص @r 102" /><input id="myForm:offeredCoursesTable:85:examPeriod" type="hidden" name="myForm:offeredCoursesTable:85:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>تقا 3320</td>
+<td>أساسيات شبكات الحاسب</td>
+<td>3411</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'86');return false;">التفاصيل<input id="myForm:offeredCoursesTable:86:instructor" type="hidden" name="myForm:offeredCoursesTable:86:instructor" value="وليد عبدالله ضيف الله الردادي" /><input id="myForm:offeredCoursesTable:86:section" type="hidden" name="myForm:offeredCoursesTable:86:section" value=" 5 @t 03:00 م - 03:50 م @r 204 @n  5 @t 04:00 م - 04:50 م @r 204" /><input id="myForm:offeredCoursesTable:86:examPeriod" type="hidden" name="myForm:offeredCoursesTable:86:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>تقا 3320</td>
+<td>أساسيات شبكات الحاسب</td>
+<td>3416</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'87');return false;">التفاصيل<input id="myForm:offeredCoursesTable:87:instructor" type="hidden" name="myForm:offeredCoursesTable:87:instructor" value="ياسر احمد صالح الضويان" /><input id="myForm:offeredCoursesTable:87:section" type="hidden" name="myForm:offeredCoursesTable:87:section" value=" 3 @t 08:00 ص - 08:50 ص @r 202 @n  3 @t 09:00 ص - 09:50 ص @r 202" /><input id="myForm:offeredCoursesTable:87:examPeriod" type="hidden" name="myForm:offeredCoursesTable:87:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>تقا 3320</td>
+<td>أساسيات شبكات الحاسب</td>
+<td>3415</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'88');return false;">التفاصيل<input id="myForm:offeredCoursesTable:88:instructor" type="hidden" name="myForm:offeredCoursesTable:88:instructor" value="وليد عبدالله ضيف الله الردادي" /><input id="myForm:offeredCoursesTable:88:section" type="hidden" name="myForm:offeredCoursesTable:88:section" value=" 2 @t 11:00 ص - 11:50 ص @r 210 @n  2 @t 12:00 م - 12:50 م @r 210" /><input id="myForm:offeredCoursesTable:88:examPeriod" type="hidden" name="myForm:offeredCoursesTable:88:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>نما 3210</td>
+<td>نظم قواعد البيانات</td>
+<td>3409</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'89');return false;">التفاصيل<input id="myForm:offeredCoursesTable:89:instructor" type="hidden" name="myForm:offeredCoursesTable:89:instructor" value="عبدالله زيني زيني الشيبي" /><input id="myForm:offeredCoursesTable:89:section" type="hidden" name="myForm:offeredCoursesTable:89:section" value=" 5 @t 10:00 ص - 10:50 ص @r 102 @n  5 @t 11:00 ص - 11:50 ص @r 102" /><input id="myForm:offeredCoursesTable:89:examPeriod" type="hidden" name="myForm:offeredCoursesTable:89:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>نما 3210</td>
+<td>نظم قواعد البيانات</td>
+<td>3407</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'90');return false;">التفاصيل<input id="myForm:offeredCoursesTable:90:instructor" type="hidden" name="myForm:offeredCoursesTable:90:instructor" value="عثمان سالم محمد صالح الصيعري" /><input id="myForm:offeredCoursesTable:90:section" type="hidden" name="myForm:offeredCoursesTable:90:section" value=" 3 @t 10:00 ص - 10:50 ص @r 205 @n  3 @t 11:00 ص - 11:50 ص @r 205" /><input id="myForm:offeredCoursesTable:90:examPeriod" type="hidden" name="myForm:offeredCoursesTable:90:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>نما 3210</td>
+<td>نظم قواعد البيانات</td>
+<td>3410</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'91');return false;">التفاصيل<input id="myForm:offeredCoursesTable:91:instructor" type="hidden" name="myForm:offeredCoursesTable:91:instructor" value="عثمان سالم محمد صالح الصيعري" /><input id="myForm:offeredCoursesTable:91:section" type="hidden" name="myForm:offeredCoursesTable:91:section" value=" 5 @t 12:00 م - 12:50 م @r 102 @n  5 @t 01:00 م - 01:50 م @r 102" /><input id="myForm:offeredCoursesTable:91:examPeriod" type="hidden" name="myForm:offeredCoursesTable:91:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>نما 3210</td>
+<td>نظم قواعد البيانات</td>
+<td>3408</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'92');return false;">التفاصيل<input id="myForm:offeredCoursesTable:92:instructor" type="hidden" name="myForm:offeredCoursesTable:92:instructor" value="عثمان سالم محمد صالح الصيعري" /><input id="myForm:offeredCoursesTable:92:section" type="hidden" name="myForm:offeredCoursesTable:92:section" value=" 4 @t 08:00 ص - 08:50 ص @r 205 @n  4 @t 09:00 ص - 09:50 ص @r 205" /><input id="myForm:offeredCoursesTable:92:examPeriod" type="hidden" name="myForm:offeredCoursesTable:92:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>نما 3210</td>
+<td>نظم قواعد البيانات</td>
+<td>3458</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'93');return false;">التفاصيل<input id="myForm:offeredCoursesTable:93:instructor" type="hidden" name="myForm:offeredCoursesTable:93:instructor" value="عثمان سالم محمد صالح الصيعري" /><input id="myForm:offeredCoursesTable:93:section" type="hidden" name="myForm:offeredCoursesTable:93:section" value=" 3 @t 02:00 م - 02:50 م @r 102 @n  3 @t 03:00 م - 03:50 م @r 102" /><input id="myForm:offeredCoursesTable:93:examPeriod" type="hidden" name="myForm:offeredCoursesTable:93:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>نما 3210</td>
+<td>نظم قواعد البيانات</td>
+<td>3457</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'94');return false;">التفاصيل<input id="myForm:offeredCoursesTable:94:instructor" type="hidden" name="myForm:offeredCoursesTable:94:instructor" value="عثمان سالم محمد صالح الصيعري" /><input id="myForm:offeredCoursesTable:94:section" type="hidden" name="myForm:offeredCoursesTable:94:section" value=" 5 @t 08:00 ص - 08:50 ص @r 205 @n  5 @t 09:00 ص - 09:50 ص @r 205" /><input id="myForm:offeredCoursesTable:94:examPeriod" type="hidden" name="myForm:offeredCoursesTable:94:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>نما 3210</td>
+<td>نظم قواعد البيانات</td>
+<td>3472</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'95');return false;">التفاصيل<input id="myForm:offeredCoursesTable:95:instructor" type="hidden" name="myForm:offeredCoursesTable:95:instructor" value="عثمان سالم محمد صالح الصيعري" /><input id="myForm:offeredCoursesTable:95:section" type="hidden" name="myForm:offeredCoursesTable:95:section" value=" 3 @t 08:00 ص - 08:50 ص @r 308 @n  3 @t 09:00 ص - 09:50 ص @r 308" /><input id="myForm:offeredCoursesTable:95:examPeriod" type="hidden" name="myForm:offeredCoursesTable:95:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>نما 3210</td>
+<td>نظم قواعد البيانات</td>
+<td>3473</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'96');return false;">التفاصيل<input id="myForm:offeredCoursesTable:96:instructor" type="hidden" name="myForm:offeredCoursesTable:96:instructor" value="عثمان سالم محمد صالح الصيعري" /><input id="myForm:offeredCoursesTable:96:section" type="hidden" name="myForm:offeredCoursesTable:96:section" value=" 4 @t 10:00 ص - 10:50 ص @r 108 @n  4 @t 11:00 ص - 11:50 ص @r 108" /><input id="myForm:offeredCoursesTable:96:examPeriod" type="hidden" name="myForm:offeredCoursesTable:96:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عال 3372</td>
+<td>البرمجة الشيئية</td>
+<td>3403</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'97');return false;">التفاصيل<input id="myForm:offeredCoursesTable:97:instructor" type="hidden" name="myForm:offeredCoursesTable:97:instructor" value="علي اسماعيل مصطفى دوملو" /><input id="myForm:offeredCoursesTable:97:section" type="hidden" name="myForm:offeredCoursesTable:97:section" value=" 5 @t 08:00 ص - 08:50 ص @r 206 @n  5 @t 09:00 ص - 09:50 ص @r 206" /><input id="myForm:offeredCoursesTable:97:examPeriod" type="hidden" name="myForm:offeredCoursesTable:97:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عال 3372</td>
+<td>البرمجة الشيئية</td>
+<td>3405</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'98');return false;">التفاصيل<input id="myForm:offeredCoursesTable:98:instructor" type="hidden" name="myForm:offeredCoursesTable:98:instructor" value="علي اسماعيل مصطفى دوملو" /><input id="myForm:offeredCoursesTable:98:section" type="hidden" name="myForm:offeredCoursesTable:98:section" value=" 4 @t 08:00 ص - 08:50 ص @r 107 @n  4 @t 09:00 ص - 09:50 ص @r 107" /><input id="myForm:offeredCoursesTable:98:examPeriod" type="hidden" name="myForm:offeredCoursesTable:98:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عال 3372</td>
+<td>البرمجة الشيئية</td>
+<td>3406</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'99');return false;">التفاصيل<input id="myForm:offeredCoursesTable:99:instructor" type="hidden" name="myForm:offeredCoursesTable:99:instructor" value="علي اسماعيل مصطفى دوملو" /><input id="myForm:offeredCoursesTable:99:section" type="hidden" name="myForm:offeredCoursesTable:99:section" value=" 3 @t 01:00 م - 01:50 م @r 108 @n  3 @t 02:00 م - 02:50 م @r 108" /><input id="myForm:offeredCoursesTable:99:examPeriod" type="hidden" name="myForm:offeredCoursesTable:99:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عال 3372</td>
+<td>البرمجة الشيئية</td>
+<td>3404</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'100');return false;">التفاصيل<input id="myForm:offeredCoursesTable:100:instructor" type="hidden" name="myForm:offeredCoursesTable:100:instructor" value="علي اسماعيل مصطفى دوملو" /><input id="myForm:offeredCoursesTable:100:section" type="hidden" name="myForm:offeredCoursesTable:100:section" value=" 5 @t 12:00 م - 12:50 م @r 206 @n  5 @t 01:00 م - 01:50 م @r 206" /><input id="myForm:offeredCoursesTable:100:examPeriod" type="hidden" name="myForm:offeredCoursesTable:100:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عال 3372</td>
+<td>البرمجة الشيئية</td>
+<td>3418</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'101');return false;">التفاصيل<input id="myForm:offeredCoursesTable:101:instructor" type="hidden" name="myForm:offeredCoursesTable:101:instructor" value="علي اسماعيل مصطفى دوملو" /><input id="myForm:offeredCoursesTable:101:section" type="hidden" name="myForm:offeredCoursesTable:101:section" value=" 2 @t 08:00 ص - 08:50 ص @r 308 @n  2 @t 09:00 ص - 09:50 ص @r 308" /><input id="myForm:offeredCoursesTable:101:examPeriod" type="hidden" name="myForm:offeredCoursesTable:101:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عال 3372</td>
+<td>البرمجة الشيئية</td>
+<td>3417</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'102');return false;">التفاصيل<input id="myForm:offeredCoursesTable:102:instructor" type="hidden" name="myForm:offeredCoursesTable:102:instructor" value="علي اسماعيل مصطفى دوملو" /><input id="myForm:offeredCoursesTable:102:section" type="hidden" name="myForm:offeredCoursesTable:102:section" value=" 1 @t 08:00 ص - 08:50 ص @r 108 @n  1 @t 09:00 ص - 09:50 ص @r 108" /><input id="myForm:offeredCoursesTable:102:examPeriod" type="hidden" name="myForm:offeredCoursesTable:102:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عال 3372</td>
+<td>البرمجة الشيئية</td>
+<td>3454</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'103');return false;">التفاصيل<input id="myForm:offeredCoursesTable:103:instructor" type="hidden" name="myForm:offeredCoursesTable:103:instructor" value="علي اسماعيل مصطفى دوملو" /><input id="myForm:offeredCoursesTable:103:section" type="hidden" name="myForm:offeredCoursesTable:103:section" value=" 2 @t 01:00 م - 01:50 م @r 308 @n  2 @t 02:00 م - 02:50 م @r 308" /><input id="myForm:offeredCoursesTable:103:examPeriod" type="hidden" name="myForm:offeredCoursesTable:103:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عال 3372</td>
+<td>البرمجة الشيئية</td>
+<td>3453</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'104');return false;">التفاصيل<input id="myForm:offeredCoursesTable:104:instructor" type="hidden" name="myForm:offeredCoursesTable:104:instructor" value="علي اسماعيل مصطفى دوملو" /><input id="myForm:offeredCoursesTable:104:section" type="hidden" name="myForm:offeredCoursesTable:104:section" value=" 3 @t 08:00 ص - 08:50 ص @r 205 @n  3 @t 09:00 ص - 09:50 ص @r 205" /><input id="myForm:offeredCoursesTable:104:examPeriod" type="hidden" name="myForm:offeredCoursesTable:104:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>قرأ 3011</td>
+<td>القرآن الكريم (3)</td>
+<td>3043</td>
+<td>نظري</td>
+<td>1</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'105');return false;">التفاصيل<input id="myForm:offeredCoursesTable:105:instructor" type="hidden" name="myForm:offeredCoursesTable:105:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:105:section" type="hidden" name="myForm:offeredCoursesTable:105:section" value=" 1 @t 01:00 م - 01:50 م @r 203" /><input id="myForm:offeredCoursesTable:105:examPeriod" type="hidden" name="myForm:offeredCoursesTable:105:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>قرأ 3011</td>
+<td>القرآن الكريم (3)</td>
+<td>3044</td>
+<td>نظري</td>
+<td>1</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'106');return false;">التفاصيل<input id="myForm:offeredCoursesTable:106:instructor" type="hidden" name="myForm:offeredCoursesTable:106:instructor" value="محمد ابراهيم عبدالسلام ادريس" /><input id="myForm:offeredCoursesTable:106:section" type="hidden" name="myForm:offeredCoursesTable:106:section" value=" 4 @t 11:00 ص - 11:50 ص @r " /><input id="myForm:offeredCoursesTable:106:examPeriod" type="hidden" name="myForm:offeredCoursesTable:106:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>قرأ 3011</td>
+<td>القرآن الكريم (3)</td>
+<td>3443</td>
+<td>نظري</td>
+<td>1</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'107');return false;">التفاصيل<input id="myForm:offeredCoursesTable:107:instructor" type="hidden" name="myForm:offeredCoursesTable:107:instructor" value="عبدالرحمن حسين حمزه حسين" /><input id="myForm:offeredCoursesTable:107:section" type="hidden" name="myForm:offeredCoursesTable:107:section" value=" 3 @t 01:00 م - 01:50 م @r 104" /><input id="myForm:offeredCoursesTable:107:examPeriod" type="hidden" name="myForm:offeredCoursesTable:107:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>قرأ 3011</td>
+<td>القرآن الكريم (3)</td>
+<td>3756</td>
+<td>نظري</td>
+<td>1</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'108');return false;">التفاصيل<input id="myForm:offeredCoursesTable:108:instructor" type="hidden" name="myForm:offeredCoursesTable:108:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:108:section" type="hidden" name="myForm:offeredCoursesTable:108:section" value=" 3 @t 12:00 م - 12:50 م @r 211" /><input id="myForm:offeredCoursesTable:108:examPeriod" type="hidden" name="myForm:offeredCoursesTable:108:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>قرأ 3011</td>
+<td>القرآن الكريم (3)</td>
+<td>3980</td>
+<td>نظري</td>
+<td>1</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'109');return false;">التفاصيل<input id="myForm:offeredCoursesTable:109:instructor" type="hidden" name="myForm:offeredCoursesTable:109:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:109:section" type="hidden" name="myForm:offeredCoursesTable:109:section" value=" 3 @t 08:00 ص - 08:50 ص @r 201" /><input id="myForm:offeredCoursesTable:109:examPeriod" type="hidden" name="myForm:offeredCoursesTable:109:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>فقه 3010</td>
+<td>الفقه</td>
+<td>2977</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'110');return false;">التفاصيل<input id="myForm:offeredCoursesTable:110:instructor" type="hidden" name="myForm:offeredCoursesTable:110:instructor" value="ظاهر فخري عارف الظاهر" /><input id="myForm:offeredCoursesTable:110:section" type="hidden" name="myForm:offeredCoursesTable:110:section" value=" 2 @t 03:00 م - 03:50 م @r 201 @n  2 @t 04:00 م - 04:50 م @r 201" /><input id="myForm:offeredCoursesTable:110:examPeriod" type="hidden" name="myForm:offeredCoursesTable:110:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>فقه 3010</td>
+<td>الفقه</td>
+<td>2978</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'111');return false;">التفاصيل<input id="myForm:offeredCoursesTable:111:instructor" type="hidden" name="myForm:offeredCoursesTable:111:instructor" value="محمد إبراهيم علي الجماعي" /><input id="myForm:offeredCoursesTable:111:section" type="hidden" name="myForm:offeredCoursesTable:111:section" value=" 4 @t 11:00 ص - 11:50 ص @r  @n  4 @t 12:00 م - 12:50 م @r " /><input id="myForm:offeredCoursesTable:111:examPeriod" type="hidden" name="myForm:offeredCoursesTable:111:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>فقه 3010</td>
+<td>الفقه</td>
+<td>2979</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'112');return false;">التفاصيل<input id="myForm:offeredCoursesTable:112:instructor" type="hidden" name="myForm:offeredCoursesTable:112:instructor" value="محمد إبراهيم علي الجماعي" /><input id="myForm:offeredCoursesTable:112:section" type="hidden" name="myForm:offeredCoursesTable:112:section" value=" 2 @t 01:00 م - 01:50 م @r  @n  2 @t 02:00 م - 02:50 م @r " /><input id="myForm:offeredCoursesTable:112:examPeriod" type="hidden" name="myForm:offeredCoursesTable:112:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>فقه 3010</td>
+<td>الفقه</td>
+<td>2980</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'113');return false;">التفاصيل<input id="myForm:offeredCoursesTable:113:instructor" type="hidden" name="myForm:offeredCoursesTable:113:instructor" value="محمد إبراهيم علي الجماعي" /><input id="myForm:offeredCoursesTable:113:section" type="hidden" name="myForm:offeredCoursesTable:113:section" value=" 4 @t 01:00 م - 01:50 م @r  @n  4 @t 02:00 م - 02:50 م @r " /><input id="myForm:offeredCoursesTable:113:examPeriod" type="hidden" name="myForm:offeredCoursesTable:113:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>فقه 3010</td>
+<td>الفقه</td>
+<td>2981</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'114');return false;">التفاصيل<input id="myForm:offeredCoursesTable:114:instructor" type="hidden" name="myForm:offeredCoursesTable:114:instructor" value="علي محمد لزهر علي بن موسى" /><input id="myForm:offeredCoursesTable:114:section" type="hidden" name="myForm:offeredCoursesTable:114:section" value=" 1 @t 09:00 ص - 09:50 ص @r  @n  1 @t 10:00 ص - 10:50 ص @r " /><input id="myForm:offeredCoursesTable:114:examPeriod" type="hidden" name="myForm:offeredCoursesTable:114:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>فقه 3010</td>
+<td>الفقه</td>
+<td>3758</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'115');return false;">التفاصيل<input id="myForm:offeredCoursesTable:115:instructor" type="hidden" name="myForm:offeredCoursesTable:115:instructor" value="علي محمد لزهر علي بن موسى" /><input id="myForm:offeredCoursesTable:115:section" type="hidden" name="myForm:offeredCoursesTable:115:section" value=" 1 @t 01:00 م - 01:50 م @r 210 @n  1 @t 02:00 م - 02:50 م @r 210" /><input id="myForm:offeredCoursesTable:115:examPeriod" type="hidden" name="myForm:offeredCoursesTable:115:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عقد 3006</td>
+<td>العقيده</td>
+<td>2967</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'116');return false;">التفاصيل<input id="myForm:offeredCoursesTable:116:instructor" type="hidden" name="myForm:offeredCoursesTable:116:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:116:section" type="hidden" name="myForm:offeredCoursesTable:116:section" value=" 1 3 @t 12:30 م - 01:50 م @r " /><input id="myForm:offeredCoursesTable:116:examPeriod" type="hidden" name="myForm:offeredCoursesTable:116:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عقد 3006</td>
+<td>العقيده</td>
+<td>2968</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'117');return false;">التفاصيل<input id="myForm:offeredCoursesTable:117:instructor" type="hidden" name="myForm:offeredCoursesTable:117:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:117:section" type="hidden" name="myForm:offeredCoursesTable:117:section" value=" 2 4 @t 02:00 م - 03:20 م @r 204" /><input id="myForm:offeredCoursesTable:117:examPeriod" type="hidden" name="myForm:offeredCoursesTable:117:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عقد 3006</td>
+<td>العقيده</td>
+<td>2969</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'118');return false;">التفاصيل<input id="myForm:offeredCoursesTable:118:instructor" type="hidden" name="myForm:offeredCoursesTable:118:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:118:section" type="hidden" name="myForm:offeredCoursesTable:118:section" value=" 1 3 @t 03:30 م - 04:50 م @r " /><input id="myForm:offeredCoursesTable:118:examPeriod" type="hidden" name="myForm:offeredCoursesTable:118:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عقد 3006</td>
+<td>العقيده</td>
+<td>2970</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'119');return false;">التفاصيل<input id="myForm:offeredCoursesTable:119:instructor" type="hidden" name="myForm:offeredCoursesTable:119:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:119:section" type="hidden" name="myForm:offeredCoursesTable:119:section" value=" 1 4 @t 09:30 ص - 10:50 ص @r " /><input id="myForm:offeredCoursesTable:119:examPeriod" type="hidden" name="myForm:offeredCoursesTable:119:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عقد 3006</td>
+<td>العقيده</td>
+<td>2971</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'120');return false;">التفاصيل<input id="myForm:offeredCoursesTable:120:instructor" type="hidden" name="myForm:offeredCoursesTable:120:instructor" value="لم يحدد من الكلية" /><input id="myForm:offeredCoursesTable:120:section" type="hidden" name="myForm:offeredCoursesTable:120:section" value=" 1 3 @t 09:30 ص - 10:50 ص @r " /><input id="myForm:offeredCoursesTable:120:examPeriod" type="hidden" name="myForm:offeredCoursesTable:120:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عال 3361</td>
+<td>نظم التشغيل</td>
+<td>3420</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'121');return false;">التفاصيل<input id="myForm:offeredCoursesTable:121:instructor" type="hidden" name="myForm:offeredCoursesTable:121:instructor" value="تنوير علم طاهر حسن" /><input id="myForm:offeredCoursesTable:121:section" type="hidden" name="myForm:offeredCoursesTable:121:section" value=" 3 @t 10:00 ص - 10:50 ص @r 107 @n  3 @t 11:00 ص - 11:50 ص @r 107" /><input id="myForm:offeredCoursesTable:121:examPeriod" type="hidden" name="myForm:offeredCoursesTable:121:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عال 3361</td>
+<td>نظم التشغيل</td>
+<td>3419</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'122');return false;">التفاصيل<input id="myForm:offeredCoursesTable:122:instructor" type="hidden" name="myForm:offeredCoursesTable:122:instructor" value="تنوير علم طاهر حسن" /><input id="myForm:offeredCoursesTable:122:section" type="hidden" name="myForm:offeredCoursesTable:122:section" value=" 1 @t 10:00 ص - 10:50 ص @r 107 @n  1 @t 11:00 ص - 11:50 ص @r 107" /><input id="myForm:offeredCoursesTable:122:examPeriod" type="hidden" name="myForm:offeredCoursesTable:122:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عال 3361</td>
+<td>نظم التشغيل</td>
+<td>3426</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'123');return false;">التفاصيل<input id="myForm:offeredCoursesTable:123:instructor" type="hidden" name="myForm:offeredCoursesTable:123:instructor" value="تنوير علم طاهر حسن" /><input id="myForm:offeredCoursesTable:123:section" type="hidden" name="myForm:offeredCoursesTable:123:section" value=" 3 @t 01:00 م - 01:50 م @r 308 @n  3 @t 02:00 م - 02:50 م @r 308" /><input id="myForm:offeredCoursesTable:123:examPeriod" type="hidden" name="myForm:offeredCoursesTable:123:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عال 3361</td>
+<td>نظم التشغيل</td>
+<td>3425</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'124');return false;">التفاصيل<input id="myForm:offeredCoursesTable:124:instructor" type="hidden" name="myForm:offeredCoursesTable:124:instructor" value="تنوير علم طاهر حسن" /><input id="myForm:offeredCoursesTable:124:section" type="hidden" name="myForm:offeredCoursesTable:124:section" value=" 5 @t 12:00 م - 12:50 م @r 108 @n  5 @t 01:00 م - 01:50 م @r 108" /><input id="myForm:offeredCoursesTable:124:examPeriod" type="hidden" name="myForm:offeredCoursesTable:124:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عال 3361</td>
+<td>نظم التشغيل</td>
+<td>3456</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'125');return false;">التفاصيل<input id="myForm:offeredCoursesTable:125:instructor" type="hidden" name="myForm:offeredCoursesTable:125:instructor" value="تنوير علم طاهر حسن" /><input id="myForm:offeredCoursesTable:125:section" type="hidden" name="myForm:offeredCoursesTable:125:section" value=" 2 @t 03:00 م - 03:50 م @r 308 @n  2 @t 04:00 م - 04:50 م @r 308" /><input id="myForm:offeredCoursesTable:125:examPeriod" type="hidden" name="myForm:offeredCoursesTable:125:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عال 3361</td>
+<td>نظم التشغيل</td>
+<td>3455</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'126');return false;">التفاصيل<input id="myForm:offeredCoursesTable:126:instructor" type="hidden" name="myForm:offeredCoursesTable:126:instructor" value="تنوير علم طاهر حسن" /><input id="myForm:offeredCoursesTable:126:section" type="hidden" name="myForm:offeredCoursesTable:126:section" value=" 5 @t 10:00 ص - 10:50 ص @r 107 @n  5 @t 11:00 ص - 11:50 ص @r 107" /><input id="myForm:offeredCoursesTable:126:examPeriod" type="hidden" name="myForm:offeredCoursesTable:126:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عال 3483</td>
+<td>التطوير القائم على المنصات</td>
+<td>3480</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'127');return false;">التفاصيل<input id="myForm:offeredCoursesTable:127:instructor" type="hidden" name="myForm:offeredCoursesTable:127:instructor" value="تنوير علم طاهر حسن" /><input id="myForm:offeredCoursesTable:127:section" type="hidden" name="myForm:offeredCoursesTable:127:section" value=" 4 @t 08:00 ص - 09:20 ص @r 202 @n  2 @t 11:00 ص - 12:20 م @r 206" /><input id="myForm:offeredCoursesTable:127:examPeriod" type="hidden" name="myForm:offeredCoursesTable:127:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>نما 3473</td>
+<td>تقنيات ريادة الأعمال</td>
+<td>3447</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'128');return false;">التفاصيل<input id="myForm:offeredCoursesTable:128:instructor" type="hidden" name="myForm:offeredCoursesTable:128:instructor" value="فهيد نداء بطاح العنزي" /><input id="myForm:offeredCoursesTable:128:section" type="hidden" name="myForm:offeredCoursesTable:128:section" value=" 1 @t 10:00 ص - 10:50 ص @r 203 @n  1 @t 11:00 ص - 11:50 ص @r 203" /><input id="myForm:offeredCoursesTable:128:examPeriod" type="hidden" name="myForm:offeredCoursesTable:128:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>نما 3473</td>
+<td>تقنيات ريادة الأعمال</td>
+<td>3468</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'129');return false;">التفاصيل<input id="myForm:offeredCoursesTable:129:instructor" type="hidden" name="myForm:offeredCoursesTable:129:instructor" value="فهيد نداء بطاح العنزي" /><input id="myForm:offeredCoursesTable:129:section" type="hidden" name="myForm:offeredCoursesTable:129:section" value=" 2 @t 11:00 ص - 11:50 ص @r 203 @n  2 @t 12:00 م - 12:50 م @r 203" /><input id="myForm:offeredCoursesTable:129:examPeriod" type="hidden" name="myForm:offeredCoursesTable:129:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عال 3302</td>
+<td>الخوارزميات والتعقيد</td>
+<td>3421</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'130');return false;">التفاصيل<input id="myForm:offeredCoursesTable:130:instructor" type="hidden" name="myForm:offeredCoursesTable:130:instructor" value="وقاص نواز كهوكهر راب نواز" /><input id="myForm:offeredCoursesTable:130:section" type="hidden" name="myForm:offeredCoursesTable:130:section" value=" 5 @t 08:00 ص - 09:20 ص @r 203 @n  3 @t 12:30 م - 01:50 م @r 202" /><input id="myForm:offeredCoursesTable:130:examPeriod" type="hidden" name="myForm:offeredCoursesTable:130:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>عال 3302</td>
+<td>الخوارزميات والتعقيد</td>
+<td>3430</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'131');return false;">التفاصيل<input id="myForm:offeredCoursesTable:131:instructor" type="hidden" name="myForm:offeredCoursesTable:131:instructor" value="وقاص نواز كهوكهر راب نواز" /><input id="myForm:offeredCoursesTable:131:section" type="hidden" name="myForm:offeredCoursesTable:131:section" value=" 1 @t 08:00 ص - 09:20 ص @r 308 @n  3 @t 09:30 ص - 10:50 ص @r 307" /><input id="myForm:offeredCoursesTable:131:examPeriod" type="hidden" name="myForm:offeredCoursesTable:131:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>عال 3302</td>
+<td>الخوارزميات والتعقيد</td>
+<td>3938</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:red">مغلقة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'132');return false;">التفاصيل<input id="myForm:offeredCoursesTable:132:instructor" type="hidden" name="myForm:offeredCoursesTable:132:instructor" value="وقاص نواز كهوكهر راب نواز" /><input id="myForm:offeredCoursesTable:132:section" type="hidden" name="myForm:offeredCoursesTable:132:section" value=" 2 @t 11:00 ص - 12:20 م @r 207 @n  3 @t 11:00 ص - 12:20 م @r 208" /><input id="myForm:offeredCoursesTable:132:examPeriod" type="hidden" name="myForm:offeredCoursesTable:132:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>نما 3302</td>
+<td>حوكمة البيانات</td>
+<td>3451</td>
+<td>نظري</td>
+<td>2</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'133');return false;">التفاصيل<input id="myForm:offeredCoursesTable:133:instructor" type="hidden" name="myForm:offeredCoursesTable:133:instructor" value="فهيد نداء بطاح العنزي" /><input id="myForm:offeredCoursesTable:133:section" type="hidden" name="myForm:offeredCoursesTable:133:section" value=" 3 @t 09:00 ص - 09:50 ص @r 201 @n  3 @t 10:00 ص - 10:50 ص @r 201" /><input id="myForm:offeredCoursesTable:133:examPeriod" type="hidden" name="myForm:offeredCoursesTable:133:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW1">
+<td>تقا 3408</td>
+<td>الحوسبة السحابية</td>
+<td>3437</td>
+<td>نظري</td>
+<td>3</td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'134');return false;">التفاصيل<input id="myForm:offeredCoursesTable:134:instructor" type="hidden" name="myForm:offeredCoursesTable:134:instructor" value="ياسر احمد صالح الضويان" /><input id="myForm:offeredCoursesTable:134:section" type="hidden" name="myForm:offeredCoursesTable:134:section" value=" 1 @t 10:00 ص - 10:50 ص @r 202 @n  1 @t 11:00 ص - 11:50 ص @r 202" /><input id="myForm:offeredCoursesTable:134:examPeriod" type="hidden" name="myForm:offeredCoursesTable:134:examPeriod" value="" /></a></td>
+</tr>
+<tr class="ROW2">
+<td>تقا 3408</td>
+<td>الحوسبة السحابية</td>
+<td>3436</td>
+<td>عملي</td>
+<td></td>
+<td><span style="color:">مفتوحة</span></td>
+<td><a href="" onclick="javascript:showToolTip(event,'135');return false;">التفاصيل<input id="myForm:offeredCoursesTable:135:instructor" type="hidden" name="myForm:offeredCoursesTable:135:instructor" value="ياسر احمد صالح الضويان" /><input id="myForm:offeredCoursesTable:135:section" type="hidden" name="myForm:offeredCoursesTable:135:section" value=" 2 @t 11:00 ص - 11:50 ص @r 108 @n  2 @t 12:00 م - 12:50 م @r 108" /><input id="myForm:offeredCoursesTable:135:examPeriod" type="hidden" name="myForm:offeredCoursesTable:135:examPeriod" value="" /></a></td>
+</tr>
+</tbody>
+</table>
+
+                    </td>
+                    </tr>
+                    </table>
+                    
+                </td>
+            </tr>
+            <tr>
+                <td><div id="tableNB"></div></td>
+            </tr>
+        </table>
+        
+        <br><table align="left" border="0" cellpadding="0" cellspacing="0" style="width:10%; word-break: keep-all;">
+            <tr>
+                <td >
+                    <a href="#" onclick="mojarra.jsfcljs(document.getElementById('myForm'),{'myForm:j_id_id334':'myForm:j_id_id334'},'');return false"><span class="BUTTON_LINK">رجوع</span></a>
+                </td>
+            </tr>
+        </table> 
+    
+    <input type="hidden" name="javax.faces.ViewState" id="j_id_id0:javax.faces.ViewState:4" value="-1957068724666714535:-7068673628294214070" autocomplete="off" />
+</form>
+    </body>
+    
+    <script type="text/javascript" language="javascript">
+      tableIndex('myForm:offeredCoursesTable','tableDiv','tableNB','Ar');
+   </script>
+   
+  </html>
+
+    
+
+
+
+
+
+                 
+                </td>
+                </tr>
+                </table>
+            </div>
+         </div>
+    </div>
+</div>
+    <div id="copyright" class="footer fixed">
+        <div class="container">
+          <div class="row">
+            <div class="col-lg-6">
+              <div class="copytxt"><span id="GEN_ALL_RIGHTS_RESERVED_FOR_KKU">جميع الحقوق محفوظة للجامعة الإسلامية 2015</span></div>
+            </div>
+            <div class="col-lg-6">
+              <ul class="socialicons">
+                    <li class="facebook"><a href="http://fb.com/iu.edu.sa" title="facebook"><i class="fa fa-facebook"></i></a></li>
+                    <li class="twitter"><a href="http://twitter.com/iu_edu" title="Twitter"><i class="fa fa-twitter"></i></a></li>
+                    <li class="youtube"><a href="http://youtube.com/IslamicUniversitySA" title="Youtube channel"><i class="fa fa-youtube"></i></a></li>
+                    <li class="flickr"><a href="http://instagram.com/iu_edu_sa/" title="flickr"><i class="fa fa-instagram"></i></a></li>
+                </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+     <script type="text/javascript">
+    function rowOverFlow() {
+            var headertext = [],
+            headers = document.querySelectorAll(".rowFlow th"),
+            tablerows = document.querySelectorAll(".rowFlow th"),
+            tablebody = document.querySelector(".rowFlow tbody");
+    
+            for(var i = 0; i < headers.length; i++) {
+              var current = headers[i];
+              headertext.push(current.textContent.replace(/\r?\n|\r/,""));
+            } 
+            for (var i = 0, row; row = tablebody.rows[i]; i++) {
+              for (var j = 0, col; col = row.cells[j]; j++) {
+                    col.setAttribute("data-th", headertext[j]);
+              } 
+            }
+    }
+    function rowOverFlow2() {
+            var headertext = [],
+            headers = document.querySelectorAll(".rowFlow2 th"),
+            tablerows = document.querySelectorAll(".rowFlow2 th"),
+            tablebody = document.querySelector(".rowFlow2 tbody");
+    
+            for(var i = 0; i < headers.length; i++) {
+              var current = headers[i];
+              headertext.push(current.textContent.replace(/\r?\n|\r/,""));
+            } 
+            for (var i = 0, row; row = tablebody.rows[i]; i++) {
+              for (var j = 0, col; col = row.cells[j]; j++) {
+                    col.setAttribute("data-th", headertext[j]);
+              } 
+            }
+    }
+    </script>
+    <script>
+        window.addEventListener("load", rowOverFlow); window.addEventListener("load", rowOverFlow2);
+    </script>
+    
+      <!-- Mainly scripts -->
+      <script src=' https://cdn.iu.edu.sa/theme/INSPINIA/js/bootstrap.js'></script>
+      <script src=' https://cdn.iu.edu.sa/theme/INSPINIA/js/plugins/slimscroll/jquery.slimscroll.min.js'></script>
+  
+    
+</body>
+</html>
+

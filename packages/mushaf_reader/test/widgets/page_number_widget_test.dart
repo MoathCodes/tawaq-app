@@ -33,7 +33,7 @@ void main() {
       // Build widget multiple times with same page number
       for (int i = 0; i < 5; i++) {
         await tester.pumpWidget(
-          MaterialApp(
+          const MaterialApp(
             home: Scaffold(body: PageNumberWidget(page: page)),
           ),
         );

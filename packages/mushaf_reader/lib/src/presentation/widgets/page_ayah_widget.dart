@@ -2,16 +2,87 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:mushaf_reader/src/data/models/ayah_fragment.dart';
 
-/// Displays part of the page text with per-ayah mouse-over / tap highlight.
-/// Optimized for performance with cached TextSpans and gesture recognizer reuse.
+/// A widget that displays Ayah text with per-Ayah tap and highlight support.
+///
+/// This is the core text rendering widget used by [MushafPage]. It displays
+/// a portion of the page's glyph text and handles:
+///
+/// - Splitting text into individual Ayah spans
+/// - Tap gesture detection for each Ayah
+/// - Highlight styling for the selected Ayah
+///
+/// ## Performance Optimizations
+///
+/// This widget includes several performance optimizations:
+///
+/// - **TextSpan Caching**: Spans are cached and only rebuilt when content changes
+/// - **Gesture Recognizer Reuse**: Tap recognizers are pooled and reused
+/// - **RepaintBoundary**: Isolates repaints for better performance
+///
+/// ## Usage
+///
+/// This widget is typically used internally by [MushafPage], but can be
+/// used directly for custom layouts:
+///
+/// ```dart
+/// PageAyahWidget(
+///   fullText: pageData.glyphText,
+///   ayahs: surahBlock.ayahs,
+///   style: MushafFonts.pageStyle('QCF4_001'),
+///   enableHighlight: true,
+///   activeStyle: highlightStyle,
+///   selectedAyahId: controller.selectedAyahId,
+///   onAyahSelection: (ayahId) {
+///     print('Selected ayah: $ayahId');
+///   },
+/// )
+/// ```
+///
+/// See also:
+/// - [MushafPage], which uses this widget
+/// - [AyahFragment], for text boundary information
+/// - [MushafPageController], for selection state management
 class PageAyahWidget extends StatefulWidget {
+  /// The complete glyph text from which Ayah fragments are extracted.
+  ///
+  /// This is typically [QuranPageModel.glyphText].
   final String fullText;
+
+  /// The Ayah fragments to display from [fullText].
+  ///
+  /// Each fragment specifies the start/end indices and Ayah ID.
   final List<AyahFragment> ayahs;
+
+  /// The default text style for Ayah text.
+  ///
+  /// This style is applied to all non-selected Ayahs.
   final TextStyle style;
+
+  /// Whether to enable tap highlighting for Ayahs.
+  ///
+  /// When `true`, Ayahs can be tapped and highlighted.
+  /// When `false`, the text is non-interactive.
   final bool enableHighlight;
+
+  /// The text style for the currently selected Ayah.
+  ///
+  /// Should include a background color or other visual distinction.
   final TextStyle? activeStyle;
+
+  /// Callback invoked when an Ayah is tapped.
+  ///
+  /// Receives the global Ayah ID (1-6236).
   final Function(int ayahNumber) onAyahSelection;
 
+  /// Callback invoked when an Ayah is long pressed.
+  ///
+  /// Receives the global Ayah ID (1-6236).
+  final Function(int ayahNumber)? onAyahLongPress;
+
+  /// The currently selected Ayah ID, or `null` if none is selected.
+  final int? selectedAyahId;
+
+  /// Creates a PageAyahWidget.
   const PageAyahWidget({
     super.key,
     required this.fullText,
@@ -20,6 +91,8 @@ class PageAyahWidget extends StatefulWidget {
     this.enableHighlight = true,
     required this.activeStyle,
     required this.onAyahSelection,
+    this.onAyahLongPress,
+    this.selectedAyahId,
   });
 
   @override
@@ -27,14 +100,22 @@ class PageAyahWidget extends StatefulWidget {
 }
 
 class _PageAyahWidgetState extends State<PageAyahWidget> {
-  int _selectedAyah = -1;
+  /// Cache for tap gesture recognizers.
+  final Map<int, TapGestureRecognizer> _tapRecognizers = {};
 
-  // Cache for gesture recognizers to avoid recreation
-  final Map<int, TapGestureRecognizer> _recognizers = {};
+  /// Cache for long press gesture recognizers.
+  final Map<int, LongPressGestureRecognizer> _longPressRecognizers = {};
 
-  // Cache for text spans
+  /// Tracks whether a long press was triggered (to differentiate from tap).
+  final Map<int, bool> _longPressTriggered = {};
+
+  /// Cached text spans for the current content.
   List<InlineSpan>? _cachedSpans;
+
+  /// The fullText used to build [_cachedSpans].
   String? _cachedFullText;
+
+  /// The selected Ayah ID used to build [_cachedSpans].
   int? _cachedSelectedAyah;
 
   @override
@@ -42,67 +123,99 @@ class _PageAyahWidgetState extends State<PageAyahWidget> {
     // Check if we need to rebuild spans
     if (_cachedSpans == null ||
         _cachedFullText != widget.fullText ||
-        _cachedSelectedAyah != _selectedAyah) {
+        _cachedSelectedAyah != widget.selectedAyahId) {
       _buildSpans();
     }
 
-    return RichText(
-      textDirection: TextDirection.rtl,
-      textAlign: TextAlign.center,
-      text: TextSpan(children: _cachedSpans!),
+    return RepaintBoundary(
+      child: RichText(
+        textDirection: TextDirection.rtl,
+        textAlign: TextAlign.center,
+        text: TextSpan(children: _cachedSpans!),
+      ),
     );
   }
 
   @override
   void dispose() {
     // Dispose all gesture recognizers to prevent memory leaks
-    for (final recognizer in _recognizers.values) {
+    for (final recognizer in _tapRecognizers.values) {
       recognizer.dispose();
     }
-    _recognizers.clear();
+    _tapRecognizers.clear();
+    for (final recognizer in _longPressRecognizers.values) {
+      recognizer.dispose();
+    }
+    _longPressRecognizers.clear();
+    _longPressTriggered.clear();
     super.dispose();
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _selectedAyah = -1;
-  }
-
+  /// Builds TextSpan children for each Ayah fragment.
+  ///
+  /// Uses TapGestureRecognizer for tap detection and
+  /// LongPressGestureRecognizer for long press detection.
   void _buildSpans() {
     final spans = <InlineSpan>[];
 
     for (final frag in widget.ayahs) {
       final textSlice = widget.fullText.substring(frag.start, frag.end);
 
-      // Reuse or create gesture recognizer
-      final recognizer = _recognizers.putIfAbsent(frag.ayahId, () {
-        return TapGestureRecognizer()
-          ..onTap = () => _handleAyahTap(frag.ayahId);
-      });
+      GestureRecognizer? recognizer;
+
+      if (widget.enableHighlight) {
+        if (widget.onAyahLongPress != null) {
+          // When both tap and long press are needed, use LongPressGestureRecognizer
+          // and treat onLongPressUp (short press release) as a tap
+          final ayahId = frag.ayahId;
+          final longPressRecognizer = _longPressRecognizers.putIfAbsent(
+            ayahId,
+            () => LongPressGestureRecognizer(),
+          );
+
+          longPressRecognizer
+            ..onLongPressDown = (_) {
+              _longPressTriggered[ayahId] = false;
+            }
+            ..onLongPress = () {
+              _longPressTriggered[ayahId] = true;
+              widget.onAyahLongPress!(ayahId);
+            }
+            ..onLongPressUp = () {
+              // If long press wasn't triggered, treat this as a tap
+              if (_longPressTriggered[ayahId] != true) {
+                widget.onAyahSelection(ayahId);
+              }
+            }
+            ..onLongPressCancel = () {
+              _longPressTriggered[ayahId] = false;
+            };
+
+          recognizer = longPressRecognizer;
+        } else {
+          // Only tap needed - use TapGestureRecognizer
+          final tapRecognizer = _tapRecognizers.putIfAbsent(
+            frag.ayahId,
+            () => TapGestureRecognizer(),
+          );
+          tapRecognizer.onTap = () => widget.onAyahSelection(frag.ayahId);
+          recognizer = tapRecognizer;
+        }
+      }
 
       spans.add(
         TextSpan(
           text: textSlice,
-          style: _selectedAyah == frag.ayahId
+          style: widget.selectedAyahId == frag.ayahId
               ? widget.activeStyle ?? widget.style
               : widget.style,
-          recognizer: widget.enableHighlight ? recognizer : null,
+          recognizer: recognizer,
         ),
       );
     }
 
     _cachedSpans = spans;
     _cachedFullText = widget.fullText;
-    _cachedSelectedAyah = _selectedAyah;
-  }
-
-  void _handleAyahTap(int ayahId) {
-    if (widget.enableHighlight) {
-      setState(() {
-        _selectedAyah = _selectedAyah == ayahId ? -1 : ayahId;
-      });
-    }
-    widget.onAyahSelection(ayahId);
+    _cachedSelectedAyah = widget.selectedAyahId;
   }
 }
