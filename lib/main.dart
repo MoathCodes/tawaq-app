@@ -10,75 +10,57 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
+import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/routing/route_provider.dart';
-import 'package:hasanat/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/gen/fonts.gen.dart';
 import 'package:hasanat/hive/hive_registrar.g.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
+import 'package:hasanat/theme/theme.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
-import 'package:talker_flutter/talker_flutter.dart';
-import 'package:talker_riverpod_logger/talker_riverpod_logger.dart';
+import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:window_manager/window_manager.dart';
 
+/// The entry point of the application.
 void main() async {
-  // Initialize Talker first, before any other initialization
+  // Initialize Flutter bindings
+  WidgetsFlutterBinding.ensureInitialized();
+  await MushafReaderLibrary.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapters();
 
-  // Run everything inside the Talker zone from the beginning
-  runTalkerZonedGuarded(talker, () async {
-    // Initialize Flutter bindings inside the zone
-    WidgetsFlutterBinding.ensureInitialized();
-    await Hive.initFlutter();
-    Hive.registerAdapters();
-
-    // Set up error handling
-    FlutterError.onError = (details) {
-      talker.handle(details.exception, details.stack);
-    };
-
-    // Initialize timezone data
-    tz.initializeTimeZones();
-
-    if (!kIsWeb &&
-        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-      // Initialize window manager
-      await windowManager.ensureInitialized();
-
-      const windowOptions = WindowOptions(
-        center: true,
-        backgroundColor: Colors.transparent,
-        skipTaskbar: false,
-        titleBarStyle: TitleBarStyle.hidden,
-      );
-
-      windowManager.waitUntilReadyToShow(windowOptions, () async {
-        await windowManager.show();
-      });
-    }
-    // Run the app
-    runApp(
-      ProviderScope(
-        observers: [
-          TalkerRiverpodObserver(
-            talker: talker,
-            settings: TalkerRiverpodLoggerSettings(
-              providerFilter: (provider) {
-                return provider.name != prayerCardProvider.name;
-              },
-            ),
-          ),
-        ],
-        child: const TawaqApp(),
-      ),
+  // Set up error handling
+  FlutterError.onError = (details) {
+    logger.e(
+      'Flutter error',
+      error: details.exception,
+      stackTrace: details.stack,
     );
-  }, talker.handle);
-}
+  };
+  // Initialize timezone data
+  tz.initializeTimeZones();
 
-/// The Talker instance for logging and error handling.
-final Talker talker = TalkerFlutter.init();
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    // Initialize window manager
+    await windowManager.ensureInitialized();
+
+    const windowOptions = WindowOptions(
+      center: true,
+      backgroundColor: Colors.transparent,
+      skipTaskbar: false,
+      titleBarStyle: TitleBarStyle.hidden,
+    );
+
+    await windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+    });
+  }
+  // Run the app
+  runApp(const ProviderScope(child: TawaqApp()));
+}
 
 /// The root widget of the application.
 ///
@@ -96,12 +78,13 @@ class TawaqApp extends ConsumerWidget {
     final appRouter = ref.watch(appRouterProvider);
     final locale = ref.watch(localeProvider);
     final appTheme = ref.watch(themeProvider);
-    return ScreenUtilInit(
+    return ScreenUtilPlusInit(
       designSize: const Size(1908, 987),
       minTextAdapt: true,
+      autoRebuild: false,
       enableScaleWH: () {
-        if (ScreenUtil().screenWidth < 1908 ||
-            ScreenUtil().screenHeight < 987) {
+        if (ScreenUtilPlus().screenWidth < 1908 ||
+            ScreenUtilPlus().screenHeight < 987) {
           return false;
         }
         return true;
@@ -123,11 +106,23 @@ class TawaqApp extends ConsumerWidget {
               themeData = FThemeData(
                 colors: currentTheme.colors,
                 typography: typo,
+                extensions: const [
+                  AppRadii.standard(),
+                  AppDurations.standard(),
+                ],
+              );
+            } else {
+              themeData = currentTheme.copyWith(
+                extensions: const [
+                  AppRadii.standard(),
+                  AppDurations.standard(),
+                ],
               );
             }
             return FTheme(data: themeData, child: child!);
           },
           themeMode: appTheme.value?.themeMode,
+          // theme: appTheme.value?.colorScheme.toApproximateMaterialTheme(),
           onGenerateTitle: (context) =>
               AppLocalizations.of(context)?.appName ?? '',
           debugShowCheckedModeBanner: false,

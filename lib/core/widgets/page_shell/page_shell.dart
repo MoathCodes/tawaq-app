@@ -1,38 +1,46 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/widgets/page_shell/app_bar.dart';
 import 'package:hasanat/core/widgets/page_shell/shell_navigation_bar.dart';
 import 'package:hasanat/core/widgets/page_shell/shell_sidebar.dart';
 import 'package:hasanat/core/widgets/responsive_widget.dart';
 import 'package:hasanat/core/widgets/window_controls.dart';
+import 'package:hasanat/feature/quran/presentation/providers/audio_player_provider.dart';
+import 'package:hasanat/feature/quran/presentation/widgets/audio_player_bar.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// The main shell of the application.
 ///
 /// This widget is responsible for displaying the main layout of the application,
 /// including the app bar, sidebar, and bottom navigation bar.
-class PageShell extends StatelessWidget {
-  /// The child to display in the shell.
-  final Widget child;
-
+class PageShell extends ConsumerWidget {
   /// Creates a new instance of [PageShell].
   const PageShell({required this.child, super.key});
 
+  /// The child to display in the shell.
+  final Widget child;
+
   @override
-  Widget build(BuildContext context) {
-    // TODO: make the sidebar collapsible
+  Widget build(BuildContext context, WidgetRef ref) {
+    final audioPlayerState = ref.watch(audioPlayerProvider);
+    final isMobile = ResponsiveContainer.isMobile(context);
+
+    // TODO(moath): make the sidebar collapsible
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         GestureDetector(
           behavior: HitTestBehavior.translucent,
           onPanStart: (_) {
-            windowManager.startDragging();
+            unawaited(windowManager.startDragging());
           },
           child: ColoredBox(
             color: context.theme.colors.background,
             child: const Padding(
-              padding: EdgeInsets.all(6.0),
+              padding: EdgeInsets.all(6),
               child: SizedBox(
                 height: 28,
                 child: Row(children: [WindowControls()]),
@@ -48,13 +56,34 @@ class PageShell extends StatelessWidget {
                     ResponsiveContainer.isTablet(context)
                 ? const ShellSidebar()
                 : null,
-            footer: ResponsiveContainer.isMobile(context)
-                ? const ShellBottomNavigationBar()
-                : null,
+            footer: _buildFooter(isMobile, audioPlayerState.isActive),
             child: child,
           ),
         ),
       ],
     );
+  }
+
+  Widget? _buildFooter(bool isMobile, bool isAudioPlayerActive) {
+    // On mobile, show bottom nav bar, with audio player stacked above if active
+    if (isMobile) {
+      if (isAudioPlayerActive) {
+        return const Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            AudioPlayerBar(),
+            ShellBottomNavigationBar(),
+          ],
+        );
+      }
+      return const ShellBottomNavigationBar();
+    }
+
+    // On desktop/tablet, only show audio player if active
+    if (isAudioPlayerActive) {
+      return const AudioPlayerBar();
+    }
+
+    return null;
   }
 }
