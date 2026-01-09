@@ -106,6 +106,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chooseLocation => 'Choose Location';
 
   @override
+  String get collapse => 'Collapse';
+
+  @override
   String get colorTheme => 'Color Theme';
 
   @override
@@ -135,6 +138,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get customParametersTitle => 'Custom Parameters';
+
+  @override
+  String get daily => 'Daily';
 
   @override
   String get dark => 'Dark';
@@ -384,6 +390,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onTimePrayersLast7Days => 'On time prayers (last 7 days)';
+
+  @override
+  String get onTimePrayersToday => 'On time prayers (today)';
 
   @override
   String get onTimeRate => 'On Time Rate';

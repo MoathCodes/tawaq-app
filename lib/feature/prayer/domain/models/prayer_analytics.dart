@@ -35,7 +35,7 @@ abstract class PrayerAnalytics with _$PrayerAnalytics {
 
   /// Creates an empty instance of [PrayerAnalytics].
   factory PrayerAnalytics.empty() => const PrayerAnalytics(
-    period: PrayerAnalyticsPeriod.weekly,
+    period: .weekly,
     completionPercentage: 0,
     currentStreak: 0,
     bestStreak: 0,
@@ -53,7 +53,9 @@ abstract class PrayerAnalytics with _$PrayerAnalytics {
 
 /// The period of the prayer analytics.
 enum PrayerAnalyticsPeriod {
-  // daily,
+  /// The analytics for a single day.
+  daily,
+
   /// The analytics for the last 7 days.
   weekly,
 
@@ -67,18 +69,20 @@ enum PrayerAnalyticsPeriod {
   /// The duration of the period.
   Duration get duration {
     return switch (this) {
-      PrayerAnalyticsPeriod.weekly => const Duration(days: 7),
-      PrayerAnalyticsPeriod.monthly => const Duration(days: 30),
-      PrayerAnalyticsPeriod.yearly => const Duration(days: 365),
+      .daily => const Duration(days: 1),
+      .weekly => const Duration(days: 7),
+      .monthly => const Duration(days: 30),
+      .yearly => const Duration(days: 365),
     };
   }
 
   /// Returns the localized name of the period.
   String getLocaleName(AppLocalizations l10n) {
     return switch (this) {
-      PrayerAnalyticsPeriod.weekly => l10n.weekly,
-      PrayerAnalyticsPeriod.monthly => l10n.monthly,
-      PrayerAnalyticsPeriod.yearly => l10n.yearly,
+      .daily => l10n.daily,
+      .weekly => l10n.weekly,
+      .monthly => l10n.monthly,
+      .yearly => l10n.yearly,
     };
   }
 }

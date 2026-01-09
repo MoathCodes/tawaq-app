@@ -41,11 +41,6 @@ class PrayerRepo {
     }
   }
 
-  /// Counts the number of all prayers on a given date.
-  Future<int> countAllPrayersOnDate(DateTime from, DateTime to) {
-    return prayerDatabase.countAllPrayersOnDate(from, to);
-  }
-
   /// Counts the number of prayers for each completion status on a given date.
   Future<Map<CompletionStatus, int>> countAllStatusesOnDate(
     DateTime from,

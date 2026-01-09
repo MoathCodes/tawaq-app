@@ -12,6 +12,7 @@ include: package:very_good_analysis/analysis_options.yaml
 
 
 analyzer:
+
   exclude:
     - "**/*.g.dart"
     - "packages/**"
@@ -19,7 +20,11 @@ analyzer:
     unused_field: ignore
     avoid_catches_without_on_clauses: ignore
   plugins:
-    - custom_lint
+    # - custom_lint
+    - riverpod_lint
+
+plugins:
+  riverpod_lint: 3.1.0
 
 linter:
   # The lint rules applied to this project can be customized in the

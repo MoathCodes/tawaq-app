@@ -109,17 +109,6 @@ class PrayerService {
     }
   }
 
-  /// Counts all prayers completed within a given period.
-  Future<int> countAllPrayersOnPeriod(
-    PrayerAnalyticsPeriod period, [
-    DateTime? date,
-  ]) {
-    final activeDate = date ?? _currentTime();
-    final fromDate = activeDate.subtract(period.duration);
-    final toDate = activeDate;
-    return _repo.countAllPrayersOnDate(fromDate, toDate);
-  }
-
   /// Counts all prayer statuses within a given period.
   Future<Map<CompletionStatus, int>> countAllStatusesOnPeriod(
     PrayerAnalyticsPeriod period, [

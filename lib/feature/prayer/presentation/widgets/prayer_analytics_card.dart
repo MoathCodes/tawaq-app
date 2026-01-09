@@ -29,7 +29,7 @@ class PrayerAnalyticsCard extends ConsumerWidget {
       loading: () => FSkeletonizer(
         child: _PrayerAnalyticsWidget(
           data: const PrayerAnalytics(
-            period: PrayerAnalyticsPeriod.weekly,
+            period: .weekly,
             completionPercentage: 0.75,
             currentStreak: 5,
             bestStreak: 12,
@@ -41,7 +41,7 @@ class PrayerAnalyticsCard extends ConsumerWidget {
           onPeriodChanged: (p0) {},
         ),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -68,7 +68,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     final colors = FTheme.of(context).colors;
     final l10n = context.l10n;
 
-    return StaticCard(
+    return HoverCard(
       padding: const .all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: .stretch,
@@ -83,8 +83,7 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
                 color: colors.secondaryForeground.withAlpha(150),
               ),
             ),
-            onPress: (index) =>
-                onPeriodChanged(PrayerAnalyticsPeriod.values[index]),
+            onPress: (index) => onPeriodChanged(.values[index]),
             children: _buildTabEntries(context, colors, l10n),
           ),
         ],
@@ -170,9 +169,10 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
 
   String _getPeriodText(AppLocalizations l10n) {
     return switch (data.period) {
-      PrayerAnalyticsPeriod.weekly => l10n.onTimePrayersLast7Days,
-      PrayerAnalyticsPeriod.monthly => l10n.onTimePrayersLast30Days,
-      PrayerAnalyticsPeriod.yearly => l10n.onTimePrayersLast365Days,
+      .daily => l10n.onTimePrayersToday,
+      .weekly => l10n.onTimePrayersLast7Days,
+      .monthly => l10n.onTimePrayersLast30Days,
+      .yearly => l10n.onTimePrayersLast365Days,
     };
   }
 

@@ -402,7 +402,7 @@ Widget _buildCalculationMethodSelector(
     },
     autofocus: true,
     label: Text(context.l10n.calculationMethod),
-    filter: (query) => CalculationMethod.values.where(
+  filter: (query) => CalculationMethod.values.where(
       (method) => method
           .getLocaleName(context.l10n)
           .toLowerCase()

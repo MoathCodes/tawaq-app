@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/theme/theme.dart';
 
 /// A card widget for displaying settings.
@@ -96,37 +95,32 @@ class SettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
 
-    return StaticCard(
-      padding: const .all(AppSpacing.sm),
-      child: FCard(
-        // titleAlignment:
-        //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
-        // subtitleAlignment:
-        //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
-        image: leading,
-        style: (p0) => p0.copyWith(
-          decoration: p0.decoration.copyWith(
-            // color: theme.colors.secondary,
-            color: Colors.transparent,
-            border: Border.all(color: Colors.transparent),
-          ),
-          contentStyle: (p0) => p0.copyWith(padding: .zero),
+    return FCard(
+      // titleAlignment:
+      //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
+      // subtitleAlignment:
+      //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
+      image: leading,
+      style: (p0) => p0.copyWith(
+        decoration: p0.decoration.copyWith(
+          // color: theme.colors.secondary,
+          color: Colors.transparent,
+          border: Border.all(color: Colors.transparent),
         ),
-        title: Row(
-          mainAxisAlignment: .spaceBetween,
-          children: [Text(title), ?suffix],
-        ),
-        subtitle: Text(subtitle),
-        child: Column(
-          crossAxisAlignment: crossAxisAlignment,
-          children: [
-            Divider(color: theme.colors.foreground, thickness: .5, height: 12),
-            const SizedBox(height: AppSpacing.md),
-            child,
-          ],
-        ),
+        contentStyle: (p0) => p0.copyWith(padding: .zero),
+      ),
+      title: Row(
+        mainAxisAlignment: .spaceBetween,
+        children: [Text(title), ?suffix],
+      ),
+      subtitle: Text(subtitle),
+      child: Column(
+        crossAxisAlignment: crossAxisAlignment,
+        children: [
+          const SizedBox(height: AppSpacing.md),
+          child,
+        ],
       ),
     );
   }

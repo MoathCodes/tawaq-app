@@ -7,6 +7,7 @@ import 'package:forui/forui.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/feature/quran/presentation/providers/audio_player_provider.dart';
 import 'package:hasanat/feature/quran/presentation/widgets/study_panel.dart';
+import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/theme/theme.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
@@ -423,7 +424,7 @@ class _SinglePageModeWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const .only(bottom: 120),
-      child: StaticCard(
+      child: HoverCard(
         child: Center(
           child: MushafReader(
             controller: controller,
@@ -450,7 +451,7 @@ class _TwoPageModeWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = FTheme.of(context).colors;
 
-    return StaticCard(
+    return HoverCard(
       child: Row(
         crossAxisAlignment: .stretch,
         children: [
@@ -488,45 +489,56 @@ class _StudyModeWidget extends StatelessWidget {
     // final resizeController = useFResizableController();
     const double studyPanelWidth = 350;
     const double spacer = 20;
+    final content = HoverCard(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: MushafReader(
+            onAyahTap: onAyahTap,
+          ),
+        ),
+      ),
+    );
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final quranWidth = constraints.maxWidth - studyPanelWidth - spacer;
-        return FResizable(
-          // control: .managed(controller: resizeController),
-          axis: .horizontal,
-          hitRegionExtent: 20,
-          children: [
-            // Study panel (left side)
-            .region(
-              initialExtent: studyPanelWidth,
-              minExtent: 250,
-              builder: (context, value, child) => const Align(
-                child: Padding(
-                  padding: .fromSTEB(0, 0, 8, 0),
-                  child: _StudyPanelWrapper(),
-                ),
-              ),
-            ),
-            // Mushaf reader (right side, main area)
-            .region(
-              initialExtent: quranWidth,
-              builder: (context, value, child) => Align(
-                child: Padding(
-                  padding: const .fromSTEB(8, 0, 0, 0),
-                  child: StaticCard(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 500),
-                        child: MushafReader(
-                          onAyahTap: onAyahTap,
-                        ),
+        return Consumer(
+          builder: (context, ref, child) {
+            final isArabic =
+                ref.watch(localeProvider).value?.languageCode == 'ar';
+            return Directionality(
+              textDirection: .ltr,
+              child: FResizable(
+                // control: .managed(controller: resizeController),
+                axis: .horizontal,
+                children: [
+                  // Study panel (left side)
+                  .region(
+                    initialExtent: isArabic ? quranWidth : studyPanelWidth,
+                    minExtent: isArabic ? null : 250,
+                    builder: (context, value, child) => Align(
+                      child: Padding(
+                        padding: const .fromSTEB(0, 0, 8, 0),
+                        child: isArabic ? content : const _StudyPanelWrapper(),
                       ),
                     ),
                   ),
-                ),
+                  // Mushaf reader (right side, main area)
+                  .region(
+                    initialExtent: isArabic ? studyPanelWidth : quranWidth,
+                    minExtent: isArabic ? 250 : null,
+                    builder: (context, value, child) => Align(
+                      child: Padding(
+                        padding: const .fromSTEB(8, 0, 0, 0),
+                        child: isArabic ? const _StudyPanelWrapper() : content,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+            );
+          },
         );
       },
     );

@@ -43,6 +43,31 @@ class SettingsRepo {
     fromJson: PrayerSettings.fromJson,
     toJson: (object) => object.toJson(),
   );
+  final Prf<DateTime?> _firstPrayerRecordedDate = Prf.cast<DateTime?, String>(
+    'first_prayer_recorded_date',
+    encode: (date) => date?.toIso8601String() ?? '',
+    decode: (string) =>
+        string == null || string.isEmpty ? null : DateTime.parse(string),
+  );
+
+  /// Returns the date of the first recorded prayer.
+  Future<DateTime?> getFirstPrayerRecordedDate() async {
+    return _firstPrayerRecordedDate.get();
+  }
+
+  /// Sets the date of the first recorded prayer (only if not already set).
+  Future<void> setFirstPrayerRecordedDateIfNull(DateTime date) async {
+    const logPrefix = '[SettingsRepo.setFirstPrayerRecordedDateIfNull] ';
+    try {
+      final existing = await _firstPrayerRecordedDate.get();
+      if (existing == null) {
+        _log.d('$logPrefix Setting first prayer recorded date to: $date');
+        await _firstPrayerRecordedDate.set(date);
+      }
+    } catch (e, stackTrace) {
+      _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
+    }
+  }
 
   /// Returns the current application palette.
   Future<AppPalette> getAppPalette() async {

@@ -18,287 +18,157 @@ class PrayerSettingsCustomParametersCard extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final prayerSettings = ref.read(prayerSettingsProvider);
-    final customParams = prayerSettings.value?.customParameters;
-    final defaultParams = CalculationMethod.other.parameters;
+    final defaults = CalculationMethod.other.parameters;
+
+    // Read once on mount, don't watch (to avoid rebuilds)
+    final initialParams = useMemoized(
+      () => ref.read(prayerSettingsProvider).value?.customParameters,
+      const [],
+    );
 
     // Controllers
     final accordionController = useFAccordionController();
 
-    // Text controllers for angles
-    final fajrAngleController = useMemoized(
+    // Angle controllers - created once with initial values
+    final fajrAngle = useMemoized(
       () => TextEditingController(
-        text:
-            customParams?.fajrAngle.toString() ??
-            defaultParams.fajrAngle.toString(),
+        text: (initialParams?.fajrAngle ?? defaults.fajrAngle).toString(),
       ),
+      const [],
     );
-    final ishaAngleController = useMemoized(
+    final ishaAngle = useMemoized(
       () => TextEditingController(
-        text:
-            customParams?.ishaAngle.toString() ??
-            defaultParams.ishaAngle.toString(),
+        text: (initialParams?.ishaAngle ?? defaults.ishaAngle).toString(),
       ),
+      const [],
     );
-    final ishaIntervalController = useMemoized(
+    final ishaInterval = useMemoized(
       () => TextEditingController(
-        text:
-            customParams?.ishaInterval?.toString() ??
-            defaultParams.ishaInterval?.toString() ??
-            '',
+        text: initialParams?.ishaInterval?.toString() ?? '',
       ),
+      const [],
     );
-    final maghribAngleController = useMemoized(
+    final maghribAngle = useMemoized(
       () => TextEditingController(
-        text:
-            customParams?.maghribAngle?.toString() ??
-            defaultParams.maghribAngle?.toString() ??
-            '',
+        text: initialParams?.maghribAngle?.toString() ?? '',
       ),
+      const [],
     );
 
-    // Select controllers (need vsync)
-    final madhabController = useFSelectController<Madhab>(
-      initialValue: customParams?.madhab ?? defaultParams.madhab,
-    );
-    final highLatitudeRuleController = useFSelectController<HighLatitudeRule>(
-      initialValue:
-          customParams?.highLatitudeRule ?? defaultParams.highLatitudeRule,
-    );
-
-    // Adjustment controllers
-    final fajrAdjustmentController = useMemoized(
-      () => TextEditingController(
-        text:
-            (customParams?.adjustments[Prayer.fajr] ??
-                    defaultParams.adjustments[Prayer.fajr] ??
-                    0)
-                .toString(),
-      ),
-    );
-    final sunriseAdjustmentController = useMemoized(
-      () => TextEditingController(
-        text:
-            (customParams?.adjustments[Prayer.sunrise] ??
-                    defaultParams.adjustments[Prayer.sunrise] ??
-                    0)
-                .toString(),
-      ),
-    );
-    final dhuhrAdjustmentController = useMemoized(
-      () => TextEditingController(
-        text:
-            (customParams?.adjustments[Prayer.dhuhr] ??
-                    defaultParams.adjustments[Prayer.dhuhr] ??
-                    0)
-                .toString(),
-      ),
-    );
-    final asrAdjustmentController = useMemoized(
-      () => TextEditingController(
-        text:
-            (customParams?.adjustments[Prayer.asr] ??
-                    defaultParams.adjustments[Prayer.asr] ??
-                    0)
-                .toString(),
-      ),
-    );
-    final maghribAdjustmentController = useMemoized(
-      () => TextEditingController(
-        text:
-            (customParams?.adjustments[Prayer.maghrib] ??
-                    defaultParams.adjustments[Prayer.maghrib] ??
-                    0)
-                .toString(),
-      ),
-    );
-    final ishaAdjustmentController = useMemoized(
-      () => TextEditingController(
-        text:
-            (customParams?.adjustments[Prayer.isha] ??
-                    defaultParams.adjustments[Prayer.isha] ??
-                    0)
-                .toString(),
-      ),
-    );
-
-    // Dispose all memoized controllers
+    // Dispose angle controllers
     useEffect(
-      () {
-        return () {
-          fajrAngleController.dispose();
-          ishaAngleController.dispose();
-          ishaIntervalController.dispose();
-          maghribAngleController.dispose();
-          fajrAdjustmentController.dispose();
-          sunriseAdjustmentController.dispose();
-          dhuhrAdjustmentController.dispose();
-          asrAdjustmentController.dispose();
-          maghribAdjustmentController.dispose();
-          ishaAdjustmentController.dispose();
-        };
+      () => () {
+        fajrAngle.dispose();
+        ishaAngle.dispose();
+        ishaInterval.dispose();
+        maghribAngle.dispose();
       },
       const [],
     );
 
-    void updateControllers(CalculationParameters? params) {
-      final dp = CalculationMethod.other.parameters;
+    // Select controllers
+    final madhab = useFSelectController<Madhab>(
+      initialValue: initialParams?.madhab ?? defaults.madhab,
+    );
+    final highLatRule = useFSelectController<HighLatitudeRule>(
+      initialValue:
+          initialParams?.highLatitudeRule ?? defaults.highLatitudeRule,
+    );
 
-      fajrAngleController.text =
-          params?.fajrAngle.toString() ?? dp.fajrAngle.toString();
+    // Adjustment controllers
+    final adjustments = useMemoized(
+      () => {
+        for (final prayer in Prayer.values)
+          prayer: TextEditingController(
+            text: (initialParams?.adjustments[prayer] ?? 0).toString(),
+          ),
+      },
+      const [],
+    );
 
-      ishaAngleController.text =
-          params?.ishaAngle.toString() ?? dp.ishaAngle.toString();
+    useEffect(
+      () =>
+          () => adjustments.values.forEach((c) => c.dispose()),
+      const [],
+    );
 
-      ishaIntervalController.text =
-          params?.ishaInterval?.toString() ?? dp.ishaInterval?.toString() ?? '';
-
-      maghribAngleController.text =
-          params?.maghribAngle?.toString() ?? dp.maghribAngle?.toString() ?? '';
-
-      madhabController.value = params?.madhab ?? dp.madhab;
-
-      highLatitudeRuleController.value =
-          params?.highLatitudeRule ?? dp.highLatitudeRule;
-
-      fajrAdjustmentController.text =
-          (params?.adjustments[Prayer.fajr] ?? dp.adjustments[Prayer.fajr] ?? 0)
-              .toString();
-
-      sunriseAdjustmentController.text =
-          (params?.adjustments[Prayer.sunrise] ??
-                  dp.adjustments[Prayer.sunrise] ??
-                  0)
-              .toString();
-
-      dhuhrAdjustmentController.text =
-          (params?.adjustments[Prayer.dhuhr] ??
-                  dp.adjustments[Prayer.dhuhr] ??
-                  0)
-              .toString();
-
-      asrAdjustmentController.text =
-          (params?.adjustments[Prayer.asr] ?? dp.adjustments[Prayer.asr] ?? 0)
-              .toString();
-
-      maghribAdjustmentController.text =
-          (params?.adjustments[Prayer.maghrib] ??
-                  dp.adjustments[Prayer.maghrib] ??
-                  0)
-              .toString();
-
-      ishaAdjustmentController.text =
-          (params?.adjustments[Prayer.isha] ?? dp.adjustments[Prayer.isha] ?? 0)
-              .toString();
+    CalculationParameters buildParams() {
+      final currentParams = ref
+          .read(prayerSettingsProvider)
+          .value
+          ?.customParameters;
+      return CalculationParameters(
+        method: currentParams?.method ?? CalculationMethod.other,
+        fajrAngle: double.tryParse(fajrAngle.text) ?? 18.0,
+        ishaAngle: double.tryParse(ishaAngle.text) ?? 18.0,
+        ishaInterval: int.tryParse(ishaInterval.text),
+        maghribAngle: double.tryParse(maghribAngle.text),
+        madhab: madhab.value ?? Madhab.shafi,
+        highLatitudeRule:
+            highLatRule.value ?? HighLatitudeRule.middleOfTheNight,
+        adjustments: {
+          for (final e in adjustments.entries)
+            e.key: int.tryParse(e.value.text) ?? 0,
+        },
+        methodAdjustments: currentParams?.methodAdjustments ?? const {},
+      );
     }
 
-    void updateCustomParameters() {
+    void syncControllers(CalculationParameters? p) {
+      final d = defaults;
+      fajrAngle.text = (p?.fajrAngle ?? d.fajrAngle).toString();
+      ishaAngle.text = (p?.ishaAngle ?? d.ishaAngle).toString();
+      ishaInterval.text = p?.ishaInterval?.toString() ?? '';
+      maghribAngle.text = p?.maghribAngle?.toString() ?? '';
+      madhab.value = p?.madhab ?? d.madhab;
+      highLatRule.value = p?.highLatitudeRule ?? d.highLatitudeRule;
+      for (final prayer in Prayer.values) {
+        adjustments[prayer]?.text = (p?.adjustments[prayer] ?? 0).toString();
+      }
+    }
+
+    // Listen for external changes (e.g., calculation method change) to sync controllers
+    ref.listen(prayerSettingsProvider, (previous, next) {
+      final newParams = next.value?.customParameters;
+      if (newParams != null) {
+        syncControllers(newParams);
+      }
+    });
+
+    void save() {
       try {
-        final params = ref.read(prayerSettingsProvider).value?.customParameters;
-        final fajrAngle = double.tryParse(fajrAngleController.text) ?? 18.0;
-        final ishaAngle = double.tryParse(ishaAngleController.text) ?? 18.0;
-        final ishaInterval = ishaIntervalController.text.isEmpty
-            ? null
-            : int.tryParse(ishaIntervalController.text);
-        final maghribAngle = maghribAngleController.text.isEmpty
-            ? null
-            : double.tryParse(maghribAngleController.text);
-
-        final adjustments = {
-          Prayer.fajr: int.tryParse(fajrAdjustmentController.text) ?? 0,
-          Prayer.sunrise: int.tryParse(sunriseAdjustmentController.text) ?? 0,
-          Prayer.dhuhr: int.tryParse(dhuhrAdjustmentController.text) ?? 0,
-          Prayer.asr: int.tryParse(asrAdjustmentController.text) ?? 0,
-          Prayer.maghrib: int.tryParse(maghribAdjustmentController.text) ?? 0,
-          Prayer.isha: int.tryParse(ishaAdjustmentController.text) ?? 0,
-        };
-
-        final customParameters = CalculationParameters(
-          method: params?.method ?? CalculationMethod.other,
-          fajrAngle: fajrAngle,
-          ishaAngle: ishaAngle,
-          ishaInterval: ishaInterval,
-          maghribAngle: maghribAngle,
-          madhab: madhabController.value ?? Madhab.shafi,
-          highLatitudeRule:
-              highLatitudeRuleController.value ??
-              HighLatitudeRule.middleOfTheNight,
-          adjustments: adjustments,
-          methodAdjustments:
-              params?.methodAdjustments ??
-              const {
-                Prayer.fajr: 0,
-                Prayer.sunrise: 0,
-                Prayer.dhuhr: 0,
-                Prayer.asr: 0,
-                Prayer.maghrib: 0,
-                Prayer.isha: 0,
-              },
-        );
-
         ref
             .read(prayerSettingsProvider.notifier)
             .update(
-              (settings) =>
-                  settings.copyWith(customParameters: customParameters),
+              (s) => s.copyWith(customParameters: buildParams()),
             );
+        showFToast(
+          context: context,
+          title: Text(context.l10n.parametersSavedTitle),
+          description: Text(context.l10n.parametersSavedDescription),
+        );
       } catch (e) {
         showFToast(
           context: context,
           title: Text(context.l10n.invalidParametersTitle),
-          description: Text(
-            '${context.l10n.invalidParametersDescription} $e',
-          ),
+          description: Text('${context.l10n.invalidParametersDescription} $e'),
         );
       }
     }
 
-    void resetToDefaults() {
-      updateControllers(
-        ref.read(prayerSettingsProvider).value?.method.parameters,
-      );
-
-      updateCustomParameters();
-
+    void reset() {
+      final currentSettings = ref.read(prayerSettingsProvider);
+      syncControllers(currentSettings.value?.method.parameters);
+      save();
       showFToast(
         context: context,
         title: Text(context.l10n.resetCompleteTitle),
         description: Text(context.l10n.resetCompleteDescription),
       );
     }
-
-    void saveCustomParameters() {
-      updateCustomParameters();
-      showFToast(
-        context: context,
-        title: Text(context.l10n.parametersSavedTitle),
-        description: Text(context.l10n.parametersSavedDescription),
-      );
-    }
-
-    // Listen for external updates
-    ref.listen(
-      prayerSettingsProvider,
-      (previous, next) {
-        updateControllers(next.value?.customParameters);
-      },
-      onError: (error, stackTrace) {
-        showFToast(
-          context: context,
-          title: Text(
-            context.l10n.errorOccurredWhile(
-              context.l10n.errorOccurredWhile(
-                context.l10n.customParametersTitle,
-              ),
-            ),
-          ),
-          description: Text(error.toString()),
-        );
-      },
-    );
-
+  
     return Padding(
-      padding: const .symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: FAccordion(
         control: .managed(controller: accordionController),
         style: (style) => style.copyWith(
@@ -310,24 +180,16 @@ class PrayerSettingsCustomParametersCard extends HookConsumerWidget {
         children: [
           FAccordionItem(
             title: Text(context.l10n.customParametersTitle),
-            child: _buildCustomParametersContent(
-              context,
-              ref,
-              fajrAngleController,
-              ishaAngleController,
-              ishaIntervalController,
-              maghribAngleController,
-              madhabController,
-              highLatitudeRuleController,
-              fajrAdjustmentController,
-              sunriseAdjustmentController,
-              dhuhrAdjustmentController,
-              asrAdjustmentController,
-              maghribAdjustmentController,
-              ishaAdjustmentController,
-              updateCustomParameters,
-              resetToDefaults,
-              saveCustomParameters,
+            child: _Content(
+              fajrAngle: fajrAngle,
+              ishaAngle: ishaAngle,
+              ishaInterval: ishaInterval,
+              maghribAngle: maghribAngle,
+              madhab: madhab,
+              highLatRule: highLatRule,
+              adjustments: adjustments,
+              onSave: save,
+              onReset: reset,
             ),
           ),
         ],
@@ -336,361 +198,250 @@ class PrayerSettingsCustomParametersCard extends HookConsumerWidget {
   }
 }
 
-Widget _buildCustomParametersContent(
-  BuildContext context,
-  WidgetRef ref,
-  TextEditingController fajrAngleController,
-  TextEditingController ishaAngleController,
-  TextEditingController ishaIntervalController,
-  TextEditingController maghribAngleController,
-  FSelectController<Madhab> madhabController,
-  FSelectController<HighLatitudeRule> highLatitudeRuleController,
-  TextEditingController fajrAdjustmentController,
-  TextEditingController sunriseAdjustmentController,
-  TextEditingController dhuhrAdjustmentController,
-  TextEditingController asrAdjustmentController,
-  TextEditingController maghribAdjustmentController,
-  TextEditingController ishaAdjustmentController,
-  VoidCallback updateCustomParameters,
-  VoidCallback resetToDefaults,
-  VoidCallback saveCustomParameters,
-) {
-  return Column(
-    spacing: 16,
-    children: [
-      const SizedBox(height: AppSpacing.sm),
-      _buildBasicParametersCard(
-        context,
-        fajrAngleController,
-        ishaAngleController,
-        ishaIntervalController,
-        maghribAngleController,
-      ),
-      _buildAdvancedParametersCard(
-        context,
-        madhabController,
-        highLatitudeRuleController,
-        updateCustomParameters,
-      ),
-      _buildAdjustmentsCard(
-        context,
-        fajrAdjustmentController,
-        sunriseAdjustmentController,
-        dhuhrAdjustmentController,
-        asrAdjustmentController,
-        maghribAdjustmentController,
-        ishaAdjustmentController,
-      ),
-      _buildActionButtons(context, resetToDefaults, saveCustomParameters),
-    ],
-  );
-}
+class _Content extends StatelessWidget {
+  const _Content({
+    required this.fajrAngle,
+    required this.ishaAngle,
+    required this.ishaInterval,
+    required this.maghribAngle,
+    required this.madhab,
+    required this.highLatRule,
+    required this.adjustments,
+    required this.onSave,
+    required this.onReset,
+  });
 
-Widget _buildActionButtons(
-  BuildContext context,
-  VoidCallback resetToDefaults,
-  VoidCallback saveCustomParameters,
-) {
-  return Column(
-    spacing: 12,
-    children: [
-      Row(
-        spacing: 12,
-        children: [
-          Expanded(
-            child: FButton(
-              style: FButtonStyle.secondary(),
-              onPress: resetToDefaults,
-              child: Row(
-                mainAxisAlignment: .center,
-                children: [
-                  const Icon(FIcons.rotateCcw, size: 16),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(context.l10n.resetToDefaults),
-                ],
-              ),
-            ),
-          ),
-          Expanded(
-            child: FButton(
-              onPress: saveCustomParameters,
-              child: Row(
-                mainAxisAlignment: .center,
-                children: [
-                  const Icon(FIcons.save, size: 16),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(context.l10n.saveParameters),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    ],
-  );
-}
+  final TextEditingController fajrAngle;
+  final TextEditingController ishaAngle;
+  final TextEditingController ishaInterval;
+  final TextEditingController maghribAngle;
+  final FSelectController<Madhab> madhab;
+  final FSelectController<HighLatitudeRule> highLatRule;
+  final Map<Prayer, TextEditingController> adjustments;
+  final VoidCallback onSave;
+  final VoidCallback onReset;
 
-Widget _buildAdjustmentField(
-  BuildContext context,
-  String label,
-  TextEditingController controller,
-) {
-  return FTextField(
-    control: .managed(controller: controller),
-    label: Text(label),
-    keyboardType: const TextInputType.numberWithOptions(signed: true),
-    hint: '0',
-  );
-}
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
 
-Widget _buildAdjustmentsCard(
-  BuildContext context,
-  TextEditingController fajrAdjustmentController,
-  TextEditingController sunriseAdjustmentController,
-  TextEditingController dhuhrAdjustmentController,
-  TextEditingController asrAdjustmentController,
-  TextEditingController maghribAdjustmentController,
-  TextEditingController ishaAdjustmentController,
-) {
-  return FCard(
-    title: Text(context.l10n.prayerTimeAdjustmentsTitle),
-    child: Column(
-      spacing: 12,
-      children: [
-        Row(
-          spacing: 12,
-          children: [
-            Expanded(
-              child: _buildAdjustmentField(
-                context,
-                context.l10n.fajr,
-                fajrAdjustmentController,
-              ),
-            ),
-            Expanded(
-              child: _buildAdjustmentField(
-                context,
-                context.l10n.sunrise,
-                sunriseAdjustmentController,
-              ),
-            ),
-            Expanded(
-              child: _buildAdjustmentField(
-                context,
-                context.l10n.dhuhr,
-                dhuhrAdjustmentController,
-              ),
-            ),
-          ],
-        ),
-        Row(
-          spacing: 12,
-          children: [
-            Expanded(
-              child: _buildAdjustmentField(
-                context,
-                context.l10n.asr,
-                asrAdjustmentController,
-              ),
-            ),
-            Expanded(
-              child: _buildAdjustmentField(
-                context,
-                context.l10n.maghrib,
-                maghribAdjustmentController,
-              ),
-            ),
-            Expanded(
-              child: _buildAdjustmentField(
-                context,
-                context.l10n.isha,
-                ishaAdjustmentController,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _buildAdvancedParametersCard(
-  BuildContext context,
-  FSelectController<Madhab> madhabController,
-  FSelectController<HighLatitudeRule> highLatitudeRuleController,
-  VoidCallback updateCustomParameters,
-) {
-  return FCard(
-    title: Text(context.l10n.advancedSettingsTitle),
-    child: Column(
+    return Column(
       spacing: 16,
       children: [
+        const SizedBox(height: AppSpacing.sm),
+        // Basic parameters
+        FCard(
+          title: Text(l10n.basicParametersTitle),
+          child: Column(
+            spacing: 16,
+            children: [
+              Row(
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: _AngleField(
+                      label: l10n.fajrAngleLabel,
+                      controller: fajrAngle,
+                    ),
+                  ),
+                  Expanded(
+                    child: _AngleField(
+                      label: l10n.ishaAngleLabel,
+                      controller: ishaAngle,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: _IntervalField(
+                      label: l10n.ishaIntervalLabel,
+                      controller: ishaInterval,
+                    ),
+                  ),
+                  Expanded(
+                    child: _AngleField(
+                      label: l10n.maghribAngleLabel,
+                      controller: maghribAngle,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        // Advanced settings
+        FCard(
+          title: Text(l10n.advancedSettingsTitle),
+          child: Row(
+            spacing: 12,
+            children: [
+              Expanded(
+                child: FSelect<Madhab>(
+                  control: .managed(controller: madhab),
+                  items: {
+                    l10n.madhab_shafi: Madhab.shafi,
+                    l10n.madhab_hanafi: Madhab.hanafi,
+                  },
+                  label: Text(l10n.madhabLabel),
+                ),
+              ),
+              Expanded(
+                child: FSelect<HighLatitudeRule>(
+                  control: .managed(controller: highLatRule),
+                  items: {
+                    l10n.highLatitudeRule_middleOfTheNight:
+                        HighLatitudeRule.middleOfTheNight,
+                    l10n.highLatitudeRule_seventhOfTheNight:
+                        HighLatitudeRule.seventhOfTheNight,
+                    l10n.highLatitudeRule_twilightAngle:
+                        HighLatitudeRule.twilightAngle,
+                  },
+                  label: Text(l10n.highLatitudeRuleLabel),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Adjustments
+        FCard(
+          title: Text(l10n.prayerTimeAdjustmentsTitle),
+          child: Column(
+            spacing: 12,
+            children: [
+              Row(
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: _AdjustmentField(
+                      label: l10n.fajr,
+                      controller: adjustments[Prayer.fajr]!,
+                    ),
+                  ),
+                  Expanded(
+                    child: _AdjustmentField(
+                      label: l10n.sunrise,
+                      controller: adjustments[Prayer.sunrise]!,
+                    ),
+                  ),
+                  Expanded(
+                    child: _AdjustmentField(
+                      label: l10n.dhuhr,
+                      controller: adjustments[Prayer.dhuhr]!,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                spacing: 12,
+                children: [
+                  Expanded(
+                    child: _AdjustmentField(
+                      label: l10n.asr,
+                      controller: adjustments[Prayer.asr]!,
+                    ),
+                  ),
+                  Expanded(
+                    child: _AdjustmentField(
+                      label: l10n.maghrib,
+                      controller: adjustments[Prayer.maghrib]!,
+                    ),
+                  ),
+                  Expanded(
+                    child: _AdjustmentField(
+                      label: l10n.isha,
+                      controller: adjustments[Prayer.isha]!,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        // Action buttons
         Row(
           spacing: 12,
           children: [
             Expanded(
-              child: _buildMadhabSelector(
-                context,
-                madhabController,
-                updateCustomParameters,
+              child: FButton(
+                style: FButtonStyle.secondary(),
+                onPress: onReset,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(FIcons.rotateCcw, size: 16),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(l10n.resetToDefaults),
+                  ],
+                ),
               ),
             ),
             Expanded(
-              child: _buildHighLatitudeRuleSelector(
-                context,
-                highLatitudeRuleController,
-                updateCustomParameters,
+              child: FButton(
+                onPress: onSave,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(FIcons.save, size: 16),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(l10n.saveParameters),
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ],
-    ),
-  );
+    );
+  }
 }
 
-Widget _buildAngleField(
-  BuildContext context,
-  String label,
-  TextEditingController controller,
-) {
-  return FTextField(
-    control: .managed(controller: controller),
-    label: Text(label),
-    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    hint: '0.0',
-  );
+class _AngleField extends StatelessWidget {
+  const _AngleField({required this.label, required this.controller});
+  final String label;
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return FTextField(
+      control: .managed(controller: controller),
+      label: Text(label),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      hint: '0.0',
+    );
+  }
 }
 
-Widget _buildBasicParametersCard(
-  BuildContext context,
-  TextEditingController fajrAngleController,
-  TextEditingController ishaAngleController,
-  TextEditingController ishaIntervalController,
-  TextEditingController maghribAngleController,
-) {
-  return FCard(
-    title: Text(context.l10n.basicParametersTitle),
-    child: Column(
-      spacing: 16,
-      children: [
-        Row(
-          spacing: 12,
-          children: [
-            Expanded(
-              child: _buildAngleField(
-                context,
-                context.l10n.fajrAngleLabel,
-                fajrAngleController,
-              ),
-            ),
-            Expanded(
-              child: _buildAngleField(
-                context,
-                context.l10n.ishaAngleLabel,
-                ishaAngleController,
-              ),
-            ),
-          ],
-        ),
-        Row(
-          spacing: 12,
-          children: [
-            Expanded(
-              child: _buildIntervalField(
-                context,
-                context.l10n.ishaIntervalLabel,
-                ishaIntervalController,
-              ),
-            ),
-            Expanded(
-              child: _buildAngleField(
-                context,
-                context.l10n.maghribAngleLabel,
-                maghribAngleController,
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
+class _IntervalField extends StatelessWidget {
+  const _IntervalField({required this.label, required this.controller});
+  final String label;
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return FTextField(
+      control: .managed(controller: controller),
+      label: Text(label),
+      keyboardType: TextInputType.number,
+      hint: context.l10n.optionalHint,
+    );
+  }
 }
 
-Widget _buildHighLatitudeRuleSelector(
-  BuildContext context,
-  FSelectController<HighLatitudeRule> highLatitudeRuleController,
-  VoidCallback updateCustomParameters,
-) {
-  return FSelect<HighLatitudeRule>(
-    control: .managed(
-      controller: highLatitudeRuleController,
-      onChange: (value) {
-        if (value != null) {
-          updateCustomParameters();
-        }
-      },
-    ),
-    items: {
-      for (final rule in HighLatitudeRule.values)
-        _getHighLatitudeRuleDisplayName(context, rule): rule,
-    },
-    label: Text(context.l10n.highLatitudeRuleLabel),
-  );
-}
+class _AdjustmentField extends StatelessWidget {
+  const _AdjustmentField({required this.label, required this.controller});
+  final String label;
+  final TextEditingController controller;
 
-Widget _buildIntervalField(
-  BuildContext context,
-  String label,
-  TextEditingController controller,
-) {
-  return FTextField(
-    control: .managed(controller: controller),
-    label: Text(label),
-    keyboardType: TextInputType.number,
-    hint: context.l10n.optionalHint,
-  );
-}
-
-Widget _buildMadhabSelector(
-  BuildContext context,
-  FSelectController<Madhab> madhabController,
-  VoidCallback updateCustomParameters,
-) {
-  return FSelect<Madhab>(
-    control: .managed(
-      controller: madhabController,
-      onChange: (value) {
-        if (value != null) {
-          updateCustomParameters();
-        }
-      },
-    ),
-    items: {
-      for (final madhab in Madhab.values)
-        _getMadhabDisplayName(context, madhab): madhab,
-    },
-    label: Text(context.l10n.madhabLabel),
-  );
-}
-
-String _getHighLatitudeRuleDisplayName(
-  BuildContext context,
-  HighLatitudeRule rule,
-) {
-  return switch (rule) {
-    HighLatitudeRule.middleOfTheNight =>
-      context.l10n.highLatitudeRule_middleOfTheNight,
-    HighLatitudeRule.seventhOfTheNight =>
-      context.l10n.highLatitudeRule_seventhOfTheNight,
-    HighLatitudeRule.twilightAngle =>
-      context.l10n.highLatitudeRule_twilightAngle,
-  };
-}
-
-String _getMadhabDisplayName(BuildContext context, Madhab madhab) {
-  return switch (madhab) {
-    Madhab.shafi => context.l10n.madhab_shafi,
-    Madhab.hanafi => context.l10n.madhab_hanafi,
-  };
+  @override
+  Widget build(BuildContext context) {
+    return FTextField(
+      control: .managed(controller: controller),
+      label: Text(label),
+      keyboardType: const TextInputType.numberWithOptions(signed: true),
+      hint: '0',
+    );
+  }
 }

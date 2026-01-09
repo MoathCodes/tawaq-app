@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:hasanat/feature/settings/service/settings_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart';
 
@@ -56,6 +59,7 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
     try {
       final service = ref.read(prayerServiceProvider);
       final settings = ref.read(prayerSettingsProvider);
+      final settingsService = ref.read(settingsServiceProvider);
 
       final streaks = await service.computeStreaks(
         settings.when(
@@ -67,16 +71,25 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
 
       final countsMap = await service.countAllStatusesOnPeriod(period);
 
-      final allPrayers = countsMap.values.fold<int>(0, (prev, e) => prev + e);
+      // Calculate expected prayers based on days since first recorded
+      final firstRecordedDate = await settingsService
+          .getFirstPrayerRecordedDate();
+      final expectedPrayers = _calculateExpectedPrayers(
+        period,
+        firstRecordedDate,
+      );
 
-      double pct(int count) => allPrayers == 0 ? 0 : count / allPrayers;
+      double pct(int count) =>
+          expectedPrayers == 0 ? 0 : count / expectedPrayers;
 
       final jamaahPrayers = countsMap[CompletionStatus.jamaah] ?? 0;
       final onTimePrayers = countsMap[CompletionStatus.onTime] ?? 0;
       final latePrayers = countsMap[CompletionStatus.late] ?? 0;
       final missedPrayers = countsMap[CompletionStatus.missed] ?? 0;
 
-      final completionPercentage = pct(jamaahPrayers + onTimePrayers);
+      final completionPercentage = pct(
+        jamaahPrayers + onTimePrayers,
+      ).clamp(0, 1);
 
       return PrayerAnalytics(
         period: period,
@@ -108,5 +121,28 @@ class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
         bestStreak: 0,
       );
     }
+  }
+
+  /// Calculates the expected number of prayers for a given period.
+  /// Clamps to days since first recorded prayer if that's less than the period.
+  int _calculateExpectedPrayers(
+    PrayerAnalyticsPeriod period,
+    DateTime? firstRecordedDate,
+  ) {
+    const prayersPerDay = 5;
+
+    if (firstRecordedDate == null) {
+      // No prayers recorded yet
+      return 0;
+    }
+
+    final now = DateTime.now();
+    final daysSinceFirst = now.difference(firstRecordedDate).inDays + 1;
+    final periodDays = period.duration.inDays;
+
+    // Clamp to the minimum of period days or days since first recorded
+    final effectiveDays = math.min(periodDays, daysSinceFirst);
+
+    return effectiveDays * prayersPerDay;
   }
 }
