@@ -31,8 +31,9 @@ class PrayerTrackerWidget extends HookConsumerWidget {
       initial: now,
       toggleable: false,
     );
+    ref.watch(prayerCompletionProvider);
 
-    return StaticCard(
+    return HoverCard(
       padding: const .all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: .stretch,

@@ -72,6 +72,7 @@ class TrackerCompletionCard extends HookConsumerWidget {
       menu: [
         FItemGroup(
           children: CompletionStatus.values
+              .where((value) => value != .none)
               .map(
                 (e) => FItem(
                   title: Text(
@@ -153,7 +154,7 @@ class TrackerCompletionCard extends HookConsumerWidget {
                                   fit: BoxFit.cover,
                                   alignment: cardData.prayer.alignment,
                                 ),
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: context.theme.radii.md,
                               ),
                             );
                           },
@@ -191,7 +192,7 @@ class TrackerCompletionCard extends HookConsumerWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status, super.key});
+  const _StatusChip({required this.status});
   final CompletionStatus status;
 
   @override

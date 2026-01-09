@@ -48,7 +48,7 @@ class HadithCard extends HookWidget {
     final theme = FTheme.of(context);
     final colors = theme.colors;
 
-    return StaticCard(
+    return HoverCard(
       padding: const .all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: .stretch,

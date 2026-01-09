@@ -126,6 +126,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chooseLocation => 'اختر الموقع';
 
   @override
+  String get collapse => 'طي';
+
+  @override
   String get colorTheme => 'نمط الألوان';
 
   @override
@@ -155,6 +158,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get customParametersTitle => 'إعدادات مخصصة';
+
+  @override
+  String get daily => 'يومي';
 
   @override
   String get dark => 'داكن';
@@ -406,6 +412,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onTimePrayersLast7Days => 'الصلاة المنتظمة (ﻷخر 7 أيام)';
+
+  @override
+  String get onTimePrayersToday => 'On time prayers (today)';
 
   @override
   String get onTimeRate => 'الصلاة في وقتها';

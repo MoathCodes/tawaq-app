@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/widgets/page_shell/app_bar.dart';
 import 'package:hasanat/core/widgets/page_shell/shell_navigation_bar.dart';
 import 'package:hasanat/core/widgets/page_shell/shell_sidebar.dart';
-import 'package:hasanat/core/widgets/responsive_widget.dart';
 import 'package:hasanat/core/widgets/window_controls.dart';
 import 'package:hasanat/feature/quran/presentation/providers/audio_player_provider.dart';
 import 'package:hasanat/feature/quran/presentation/widgets/audio_player_bar.dart';
@@ -26,9 +26,8 @@ class PageShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final audioPlayerState = ref.watch(audioPlayerProvider);
-    final isMobile = ResponsiveContainer.isMobile(context);
+    final isMobile = ResponsiveQuery.of(context).isLessThan(.sm);
 
-    // TODO(moath): make the sidebar collapsible
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -51,13 +50,11 @@ class PageShell extends ConsumerWidget {
         Expanded(
           child: FScaffold(
             header: const ShellAppBar(),
-            sidebar:
-                ResponsiveContainer.isDesktop(context) ||
-                    ResponsiveContainer.isTablet(context)
+            sidebar: ResponsiveQuery.of(context).isAtLeast(.sm)
                 ? const ShellSidebar()
                 : null,
             footer: _buildFooter(isMobile, audioPlayerState.isActive),
-            child: child,
+            child: FToaster(child: child),
           ),
         ),
       ],

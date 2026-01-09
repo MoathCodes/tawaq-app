@@ -33,7 +33,7 @@ class StudyPanel extends HookWidget {
     final colors = FTheme.of(context).colors;
     final typography = FTheme.of(context).typography;
 
-    return StaticCard(
+    return HoverCard(
       padding: .zero,
       child: Column(
         crossAxisAlignment: .stretch,

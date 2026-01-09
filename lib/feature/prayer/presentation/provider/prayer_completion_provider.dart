@@ -4,6 +4,7 @@ import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:hasanat/feature/settings/service/settings_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'prayer_completion_provider.g.dart';
@@ -16,6 +17,12 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
   Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
     if (!ref.mounted) return;
     final service = ref.read(prayerServiceProvider);
+    final settingsService = ref.read(settingsServiceProvider);
+
+    // Set the first prayer recorded date if not already set
+    await settingsService.setFirstPrayerRecordedDateIfNull(
+      completion.completionTime,
+    );
 
     await service.addOrUpdateCompletion(completion);
     if (!ref.mounted) return;

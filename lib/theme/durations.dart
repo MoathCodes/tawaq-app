@@ -23,7 +23,7 @@ class AppDurations extends ThemeExtension<AppDurations> {
 
   /// Default duration values.
   const AppDurations.standard()
-    : instant = const Duration(milliseconds: 50),
+    : instant = const Duration(milliseconds: 100),
       fast = const Duration(milliseconds: 150),
       normal = const Duration(milliseconds: 260),
       slow = const Duration(milliseconds: 400),

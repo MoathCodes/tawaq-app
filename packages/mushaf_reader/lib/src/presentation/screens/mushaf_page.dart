@@ -250,7 +250,7 @@ class _MushafPageState extends State<MushafPage>
     return SizedBox(
       width: width,
       child: Row(
-        mainAxisAlignment: .spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           if (data.surahs.isNotEmpty)
             SurahNameWidget(

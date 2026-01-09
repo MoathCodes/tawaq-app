@@ -86,4 +86,14 @@ class SettingsService {
       _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
     }
   }
+
+  /// Retrieves the date of the first recorded prayer.
+  Future<DateTime?> getFirstPrayerRecordedDate() async {
+    return _settingsRepository.getFirstPrayerRecordedDate();
+  }
+
+  /// Sets the date of the first recorded prayer (only if not already set).
+  Future<void> setFirstPrayerRecordedDateIfNull(DateTime date) async {
+    await _settingsRepository.setFirstPrayerRecordedDateIfNull(date);
+  }
 }

@@ -29,14 +29,6 @@ class PrayerDatabase {
   PrayerDatabase(this._box);
   final Box<int, PrayerCompletion> _box;
 
-  /// Counts the number of all prayers on a given date.
-  Future<int> countAllPrayersOnDate(DateTime from, DateTime to) async {
-    final values = await _box.getValuesWhere(
-      (value) => value.completionTime.isBetween(from, to),
-    );
-    return values.length;
-  }
-
   /// Counts the number of prayers for each completion status on a given date.
   Future<Map<CompletionStatus, int>> countAllPrayerStatusOnDate(
     DateTime from,

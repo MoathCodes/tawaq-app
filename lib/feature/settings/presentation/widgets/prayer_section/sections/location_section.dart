@@ -98,13 +98,15 @@ class PrayerSettingsLocationSection extends HookConsumerWidget {
         );
         ref.read(prayerSettingsProvider.notifier).setLocation(location);
       } catch (e) {
-        showFToast(
-          context: context,
-          title: Text(
-            context.l10n.errorOccurredWhile(context.l10n.changingTimezone),
-          ),
-          description: Text(e.toString()),
-        );
+        if (context.mounted) {
+          showFToast(
+            context: context,
+            title: Text(
+              context.l10n.errorOccurredWhile(context.l10n.changingTimezone),
+            ),
+            description: Text(e.toString()),
+          );
+        }
       }
     }
 

@@ -236,6 +236,12 @@ abstract class AppLocalizations {
   /// **'Choose Location'**
   String get chooseLocation;
 
+  /// No description provided for @collapse.
+  ///
+  /// In en, this message translates to:
+  /// **'Collapse'**
+  String get collapse;
+
   /// No description provided for @colorTheme.
   ///
   /// In en, this message translates to:
@@ -295,6 +301,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Custom Parameters'**
   String get customParametersTitle;
+
+  /// No description provided for @daily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get daily;
 
   /// No description provided for @dark.
   ///
@@ -757,6 +769,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'On time prayers (last 7 days)'**
   String get onTimePrayersLast7Days;
+
+  /// No description provided for @onTimePrayersToday.
+  ///
+  /// In en, this message translates to:
+  /// **'On time prayers (today)'**
+  String get onTimePrayersToday;
 
   /// No description provided for @onTimeRate.
   ///

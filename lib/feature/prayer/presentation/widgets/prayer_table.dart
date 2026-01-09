@@ -34,7 +34,7 @@ class PrayerTable extends ConsumerWidget {
     final l10n = context.l10n;
     final prayerTableStream = ref.watch(prayerTableProvider(l10n));
 
-    return StaticCard(
+    return HoverCard(
       padding: .zero,
       child: prayerTableStream.when(
         data: (rows) => _PrayerTableContent(rows: rows),
