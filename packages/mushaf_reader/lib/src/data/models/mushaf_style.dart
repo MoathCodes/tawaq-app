@@ -189,6 +189,15 @@ class MushafStyle {
   /// appropriate page-specific QCF4 font.
   final TextStyle? activeAyahStyle;
 
+  /// The text style applied to the currently selected word.
+  ///
+  /// Use this to change the word color (e.g., blue) while leaving the Ayah
+  /// highlight as a background marker.
+  ///
+  /// The `fontFamily` and `package` properties are always overridden with the
+  /// appropriate page-specific QCF4 font.
+  final TextStyle? selectedWordStyle;
+
   /// The text style applied to Basmalah (Bismillah) text.
   ///
   /// Uses the shared QCF4_BSML font. Customize color, weight, etc.
@@ -232,6 +241,11 @@ class MushafStyle {
   ///
   /// See [ayahStyleModifier] for usage pattern.
   final StyleModifier? activeAyahStyleModifier;
+
+  /// A function to modify the default selected word style.
+  ///
+  /// See [ayahStyleModifier] for usage pattern.
+  final StyleModifier? selectedWordStyleModifier;
 
   /// A function to modify the default Basmalah text style.
   ///
@@ -282,6 +296,8 @@ class MushafStyle {
     this.ayahStyleModifier,
     this.activeAyahStyle,
     this.activeAyahStyleModifier,
+    this.selectedWordStyle,
+    this.selectedWordStyleModifier,
     this.basmalahStyle,
     this.basmalahStyleModifier,
     this.surahNameStyle,
@@ -304,6 +320,8 @@ class MushafStyle {
     StyleModifier? ayahStyleModifier,
     TextStyle? activeAyahStyle,
     StyleModifier? activeAyahStyleModifier,
+    TextStyle? selectedWordStyle,
+    StyleModifier? selectedWordStyleModifier,
     TextStyle? basmalahStyle,
     StyleModifier? basmalahStyleModifier,
     TextStyle? surahNameStyle,
@@ -322,6 +340,9 @@ class MushafStyle {
       activeAyahStyle: activeAyahStyle ?? this.activeAyahStyle,
       activeAyahStyleModifier:
           activeAyahStyleModifier ?? this.activeAyahStyleModifier,
+      selectedWordStyle: selectedWordStyle ?? this.selectedWordStyle,
+      selectedWordStyleModifier:
+          selectedWordStyleModifier ?? this.selectedWordStyleModifier,
       basmalahStyle: basmalahStyle ?? this.basmalahStyle,
       basmalahStyleModifier:
           basmalahStyleModifier ?? this.basmalahStyleModifier,

@@ -111,6 +111,13 @@ class MushafReader extends StatefulWidget {
   /// Provides rich [AyahInfo] for context menus, sharing, etc.
   final void Function(AyahInfo info)? onAyahLongPress;
 
+  /// Callback invoked when a word inside an Ayah is tapped.
+  ///
+  /// Provides the tapped Ayah info, the word index (0-based), and the glyph
+  /// text for that word.
+  final void Function(AyahInfo info, int wordIndex, String wordGlyph)?
+  onAyahWordTap;
+
   /// Callback invoked when the page changes.
   ///
   /// Provides the new [MushafPageInfo] with page metadata.
@@ -147,6 +154,7 @@ class MushafReader extends StatefulWidget {
     this.reverse = true,
     this.onAyahTap,
     this.onAyahLongPress,
+    this.onAyahWordTap,
     this.onPageChanged,
     this.onPageNumberChanged,
     this.style,
@@ -199,6 +207,7 @@ class _MushafReaderState extends State<MushafReader> {
         final page = index + 1;
         return MushafPage(
           page: page,
+          controller: _controller,
           style: widget.style,
           loadingWidget: widget.pageLoadingWidget,
           hideHeader: widget.hideHeader,
@@ -207,6 +216,10 @@ class _MushafReaderState extends State<MushafReader> {
               : null,
           onLongPressAyah: widget.onAyahLongPress != null
               ? (ayahId) => _handleAyahLongPress(ayahId)
+              : null,
+          onTapAyahWord: widget.onAyahWordTap != null
+              ? (ayahId, wordIndex, wordGlyph) =>
+                    _handleAyahWordTap(ayahId, wordIndex, wordGlyph)
               : null,
         );
       },
@@ -246,6 +259,16 @@ class _MushafReaderState extends State<MushafReader> {
     if (widget.onAyahTap == null) return;
     final info = await _controller.getAyahInfo(ayahId);
     widget.onAyahTap!(info);
+  }
+
+  Future<void> _handleAyahWordTap(
+    int ayahId,
+    int wordIndex,
+    String wordGlyph,
+  ) async {
+    if (widget.onAyahWordTap == null) return;
+    final info = await _controller.getAyahInfo(ayahId);
+    widget.onAyahWordTap!(info, wordIndex, wordGlyph);
   }
 
   Future<void> _initController() async {

@@ -5,7 +5,7 @@ homepage:
 
 environment:
   sdk: ^3.10.0
-  flutter: ">=3.38.5"
+  flutter: ">=1.17.0"
 
 dependencies:
   flutter:
@@ -40,6 +40,9 @@ flutter:
     - assets/hive/
 
   fonts:
+    - family: arsura
+      fonts:
+        - asset: assets/otf_fonts/arsura.ttf
     - family: QCF4_BSML
       fonts:
         - asset: assets/otf_fonts/QCF4_BSML.otf

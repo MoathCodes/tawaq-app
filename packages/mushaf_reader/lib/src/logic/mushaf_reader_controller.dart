@@ -116,6 +116,9 @@ class MushafReaderController extends ChangeNotifier {
   /// The currently selected Ayah ID, or null if none selected.
   int? _selectedAyahId;
 
+  /// The currently selected word (within an Ayah), or null if none selected.
+  SelectedWord? _selectedWord;
+
   /// Whether the controller is initialized.
   bool _isInitialized = false;
 
@@ -210,6 +213,9 @@ class MushafReaderController extends ChangeNotifier {
   /// The currently selected Ayah ID, or null if none.
   int? get selectedAyahId => _selectedAyahId;
 
+  /// The currently selected word, or null if none.
+  SelectedWord? get selectedWord => _selectedWord;
+
   // ============================================================
   // Initialization
   // ============================================================
@@ -232,6 +238,22 @@ class MushafReaderController extends ChangeNotifier {
   /// Clears the current Ayah selection.
   void clearSelection() {
     selectAyah(null);
+  }
+
+  /// Clears the current word selection.
+  void clearWordSelection() {
+    selectWord(null);
+  }
+
+  /// Selects a word inside an Ayah.
+  ///
+  /// Selecting a word also selects its parent Ayah.
+  void selectWord(SelectedWord? word) {
+    _selectedWord = word;
+    if (word != null) {
+      _selectedAyahId = word.ayahId;
+    }
+    notifyListeners();
   }
 
   // ============================================================
@@ -499,10 +521,16 @@ class MushafReaderController extends ChangeNotifier {
   ///
   /// Pass null to clear the selection.
   void selectAyah(int? ayahId) {
-    if (_selectedAyahId != ayahId) {
-      _selectedAyahId = ayahId;
-      notifyListeners();
+    if (_selectedAyahId == ayahId) return;
+
+    _selectedAyahId = ayahId;
+
+    // Clear any selected word if it's not in the newly selected ayah.
+    if (ayahId == null || _selectedWord?.ayahId != ayahId) {
+      _selectedWord = null;
     }
+
+    notifyListeners();
   }
 
   MushafPageInfo _buildPageInfo(QuranPageModel page) {

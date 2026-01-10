@@ -414,7 +414,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onTimePrayersLast7Days => 'الصلاة المنتظمة (ﻷخر 7 أيام)';
 
   @override
-  String get onTimePrayersToday => 'On time prayers (today)';
+  String get onTimePrayersToday => 'الصلاة المنتظمة (اليوم)';
 
   @override
   String get onTimeRate => 'الصلاة في وقتها';

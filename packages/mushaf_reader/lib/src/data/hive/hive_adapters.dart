@@ -3,12 +3,13 @@ import 'package:mushaf_reader/src/data/models/ayah_model.dart';
 import 'package:mushaf_reader/src/data/models/juz_model.dart';
 import 'package:mushaf_reader/src/data/models/page_layouts.dart';
 import 'package:mushaf_reader/src/data/models/surah_model.dart';
+import 'package:mushaf_reader/src/data/models/word_range.dart';
 
 @GenerateAdapters([
   AdapterSpec<AyahModel>(),
+  AdapterSpec<WordRange>(),
   AdapterSpec<PageLayouts>(),
   AdapterSpec<JuzModel>(),
   AdapterSpec<SurahModel>(),
 ], firstTypeId: 100)
-
 part 'hive_adapters.g.dart';

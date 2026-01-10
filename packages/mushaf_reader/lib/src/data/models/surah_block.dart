@@ -59,11 +59,10 @@ abstract class SurahBlock with _$SurahBlock {
     /// Marks where this Surah's content ends on the page.
     required int end,
 
-    /// Whether to display the Basmalah before this Surah's content.
+    /// Whether this block starts with the first Ayah of the Surah.
     ///
-    /// `true` if:
-    /// - This is the start of the Surah (verse 1) on this page
-    /// - The Surah is not At-Tawbah (Surah 9)
+    /// `true` if the first Ayah in this block is verse 1 of the Surah.
+    /// Used to determine whether to show the Surah header and Basmalah.
     required bool hasBasmalah,
 
     /// The Ayah fragments from this Surah that appear on this page.
