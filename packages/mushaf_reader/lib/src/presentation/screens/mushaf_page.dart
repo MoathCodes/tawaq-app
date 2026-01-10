@@ -101,6 +101,13 @@ class MushafPage extends StatefulWidget {
   /// Use this to show Ayah details, play audio, etc.
   final Function(int ayahId)? onTapAyah;
 
+  /// Callback invoked when a word inside an Ayah is tapped.
+  ///
+  /// Provides the global Ayah ID, the word index (0-based), and the glyph text
+  /// for that word.
+  final void Function(int ayahId, int wordIndex, String wordGlyph)?
+  onTapAyahWord;
+
   /// Callback invoked when an Ayah is long-pressed.
   ///
   /// The callback receives the global Ayah ID (1-6236).
@@ -155,6 +162,7 @@ class MushafPage extends StatefulWidget {
     this.controller,
     this.loadingWidget,
     this.onTapAyah,
+    this.onTapAyahWord,
     this.style,
     this.onTapSurahHeader,
     this.onLongPressSurahHeader,
@@ -177,6 +185,9 @@ class _MushafPageState extends State<MushafPage>
 
   /// Tracks which ayah is currently selected for highlighting
   int? _selectedAyahId;
+
+  /// Tracks which word is currently selected when no controller is provided.
+  SelectedWord? _selectedWord;
 
   // State for data loading
   QuranPageModel? _pageData;
@@ -326,6 +337,22 @@ class _MushafPageState extends State<MushafPage>
               )
             : defaultAyahStyle.copyWith(backgroundColor: style.highlightColor);
 
+        final selectedWordStyle =
+            style.selectedWordStyle != null ||
+                style.selectedWordStyleModifier != null
+            ? MushafTextStyleMerger.mergeAyahStyle(
+                userStyle: style.selectedWordStyle,
+                modifier: style.selectedWordStyleModifier,
+                pageNumber: widget.page,
+                baseSize: style.selectedWordStyle?.fontSize ?? ayahFontSize,
+                scaleFactor: style.selectedWordStyle?.fontSize != null
+                    ? scale
+                    : 1.0,
+              )
+            : defaultAyahStyle.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              );
+
         return Center(
           child: SizedBox(
             width: contentWidth,
@@ -342,6 +369,7 @@ class _MushafPageState extends State<MushafPage>
                   fontFamily,
                   defaultAyahStyle,
                   activeStyle,
+                  selectedWordStyle,
                   style,
                   basmalahFontSize,
                 ),
@@ -366,11 +394,13 @@ class _MushafPageState extends State<MushafPage>
     String fontFamily,
     TextStyle defaultAyahStyle,
     TextStyle activeStyle,
+    TextStyle selectedWordStyle,
     MushafStyle mushafStyle,
     double basmalahFontSize,
   ) {
     return data.surahs.expand(
       (block) => [
+        // Show header when this block starts a new surah (first ayah is verse 1)
         if (block.hasBasmalah) ...[
           SurahHeaderWidget(
             surahData: block.toSurahModel(),
@@ -381,6 +411,7 @@ class _MushafPageState extends State<MushafPage>
             onLongPress: widget.onLongPressSurahHeader,
           ),
           SizedBox(height: 8 * scale),
+          // Show basmalah for all surahs except Al-Fatiha (1) and At-Tawbah (9)
           if (block.surahNumber != 9 && block.surahNumber != 1)
             BasmalahWidget(
               fontSize: basmalahFontSize,
@@ -392,6 +423,8 @@ class _MushafPageState extends State<MushafPage>
           enableHighlight: true,
           activeStyle: activeStyle,
           selectedAyahId: _controller?.selectedAyahId ?? _selectedAyahId,
+          selectedWord: _controller?.selectedWord ?? _selectedWord,
+          selectedWordStyle: selectedWordStyle,
           ayahs: block.ayahs,
           style: defaultAyahStyle,
           onAyahSelection: (ayahId) {
@@ -411,6 +444,37 @@ class _MushafPageState extends State<MushafPage>
               }
             }
             widget.onTapAyah?.call(ayahId);
+          },
+          onAyahWordTap: (ayahId, wordIndex, wordGlyph) {
+            if (_controller != null) {
+              final current = _controller!.selectedWord;
+              if (current?.ayahId == ayahId &&
+                  current?.wordIndex == wordIndex) {
+                // Second tap on the selected word clears both word + ayah highlight.
+                _controller!.clearSelection();
+              } else {
+                _controller!.selectWord(
+                  SelectedWord(ayahId: ayahId, wordIndex: wordIndex),
+                );
+              }
+            } else {
+              final current = _selectedWord;
+              setState(() {
+                if (current?.ayahId == ayahId &&
+                    current?.wordIndex == wordIndex) {
+                  // Second tap on the selected word clears both word + ayah highlight.
+                  _selectedWord = null;
+                  _selectedAyahId = null;
+                } else {
+                  _selectedWord = SelectedWord(
+                    ayahId: ayahId,
+                    wordIndex: wordIndex,
+                  );
+                  _selectedAyahId = ayahId;
+                }
+              });
+            }
+            widget.onTapAyahWord?.call(ayahId, wordIndex, wordGlyph);
           },
           onAyahLongPress: widget.onLongPressAyah,
         ),

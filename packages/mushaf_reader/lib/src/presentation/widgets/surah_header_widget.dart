@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
 
 /// A decorative banner widget displaying a Surah name.
 ///
-/// This widget renders an ornate SVG banner with the Surah name centered
+/// This widget renders an ornate PNG banner with the Surah name centered
 /// on top, matching the traditional Mushaf surah header design.
 ///
 /// ## Appearance
@@ -41,11 +40,6 @@ import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
 /// - [SurahNameWidget], used internally for the text
 /// - [MushafFonts.basmalahFamily], the font used for Surah names
 class SurahHeaderWidget extends StatelessWidget {
-  /// Cache for SVG widgets keyed by asset path and width.
-  ///
-  /// Avoids redundant SVG parsing for repeated renders.
-  static final Map<String, Widget> _svgCache = {};
-
   /// The Surah data to display.
   ///
   /// If provided, the widget renders directly.
@@ -119,21 +113,19 @@ class SurahHeaderWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final assetPath = isDark
-        ? 'assets/images/surah_banner_dark.svg'
-        : 'assets/images/surah_banner.svg';
-
-    // Get cached SVG or create new one
-    final svg = _svgCache.putIfAbsent(
-      '${assetPath}_$width',
-      () => SvgPicture.asset(assetPath, package: 'mushaf_reader', width: width),
+    // Use PNG mainframe image for surah header banner
+    final bannerImage = Image.asset(
+      'assets/images/mainframe.png',
+      package: 'mushaf_reader',
+      width: width,
+      fit: BoxFit.contain,
     );
 
     final effectiveFontSize = fontSize ?? 25.0;
 
     // If we have surah data, render directly
     if (_surahData != null) {
-      return _buildStack(svg, effectiveFontSize, _surahData);
+      return _buildStack(bannerImage, effectiveFontSize, _surahData);
     }
 
     // Otherwise, load asynchronously
@@ -143,16 +135,16 @@ class SurahHeaderWidget extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting ||
             !snapshot.hasData ||
             snapshot.data == null) {
-          // Show just the SVG banner while loading
-          return svg;
+          // Show just the banner while loading
+          return bannerImage;
         }
-        return _buildStack(svg, effectiveFontSize, snapshot.data!);
+        return _buildStack(bannerImage, effectiveFontSize, snapshot.data!);
       },
     );
   }
 
   Widget _buildStack(
-    Widget svg,
+    Widget bannerImage,
     double effectiveFontSize,
     SurahModel surahData,
   ) {
@@ -162,7 +154,7 @@ class SurahHeaderWidget extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          svg,
+          bannerImage,
           SurahNameWidget(
             surahData: surahData,
             fontSize: effectiveFontSize,
@@ -172,10 +164,4 @@ class SurahHeaderWidget extends StatelessWidget {
       ),
     );
   }
-
-  /// Clears the SVG widget cache.
-  ///
-  /// Call this when disposing the Mushaf widget tree or when
-  /// switching between light and dark themes to release memory.
-  static void clearCache() => _svgCache.clear();
 }

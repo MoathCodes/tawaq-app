@@ -82,6 +82,8 @@ export 'src/core/fonts.dart'
 // Core models
 export 'src/data/models/ayah_info.dart';
 export 'src/data/models/ayah_model.dart';
+export 'src/data/models/selected_word.dart';
+export 'src/data/models/word_range.dart';
 export 'src/data/models/juz_model.dart';
 export 'src/data/models/mushaf_page_info.dart';
 export 'src/data/models/mushaf_style.dart';

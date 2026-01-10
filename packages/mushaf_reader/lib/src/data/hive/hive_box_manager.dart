@@ -144,6 +144,7 @@ class HiveBoxManager {
     Hive
       ..registerAdapter(JuzModelAdapter())
       ..registerAdapter(AyahModelAdapter())
+      ..registerAdapter(WordRangeAdapter())
       ..registerAdapter(PageLayoutsAdapter())
       ..registerAdapter(SurahModelAdapter());
 

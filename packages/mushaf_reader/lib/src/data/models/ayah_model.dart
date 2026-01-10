@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:mushaf_reader/src/data/models/word_range.dart';
 
 part 'ayah_model.freezed.dart';
 
@@ -69,6 +70,12 @@ abstract class AyahModel with _$AyahModel {
     /// This text uses special Unicode Private Use Area characters
     /// that map to glyphs in the QCF4 page-specific fonts.
     required String text,
+
+    /// Per-word character ranges inside [text].
+    ///
+    /// This enables fast word-level tapping/highlighting without parsing.
+    /// Offsets are measured in Dart string code units.
+    @Default(<WordRange>[]) List<WordRange> wordRanges,
   }) = _AyahModel;
 
   const AyahModel._();

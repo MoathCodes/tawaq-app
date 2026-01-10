@@ -307,9 +307,13 @@ class HiveQuranRepository implements IQuranRepository {
       }
     }
 
-    // Sort layouts by lineStart
+    // Sort layouts by lineStart, then by ayahId for stable ordering
     final sortedLayouts = List<PageLayouts>.from(layouts)
-      ..sort((a, b) => a.lineStart.compareTo(b.lineStart));
+      ..sort((a, b) {
+        final lineCompare = a.lineStart.compareTo(b.lineStart);
+        if (lineCompare != 0) return lineCompare;
+        return a.ayahId.compareTo(b.ayahId);
+      });
 
     // Build concatenated glyph text and fragments
     final buf = StringBuffer();
@@ -323,7 +327,12 @@ class HiveQuranRepository implements IQuranRepository {
       final end = buf.length;
 
       ayahFragments.add(
-        AyahFragment(ayahId: layout.ayahId, start: start, end: end),
+        AyahFragment(
+          ayahId: layout.ayahId,
+          start: start,
+          end: end,
+          wordRanges: ayah?.wordRanges ?? const [],
+        ),
       );
     }
 
@@ -377,8 +386,7 @@ class HiveQuranRepository implements IQuranRepository {
               glyph: currentSurah?.glyph ?? '',
               start: currentStart,
               end: frag.start,
-              hasBasmalah:
-                  (currentSurah?.hasBasmalah ?? true) && firstNumInSurah == 1,
+              hasBasmalah: firstNumInSurah == 1,
               ayahs: List.from(currentBlockFragments),
             ),
           );
@@ -400,8 +408,7 @@ class HiveQuranRepository implements IQuranRepository {
           glyph: currentSurah?.glyph ?? '',
           start: currentStart,
           end: buf.length,
-          hasBasmalah:
-              (currentSurah?.hasBasmalah ?? true) && firstNumInSurah == 1,
+          hasBasmalah: firstNumInSurah == 1,
           ayahs: List.from(currentBlockFragments),
         ),
       );

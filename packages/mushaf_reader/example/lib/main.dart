@@ -44,6 +44,8 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   late final MushafReaderController _controller;
   bool _showControls = true;
 
+  String? _lastWordTapDebug;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,6 +59,18 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
               controller: _controller,
               onAyahTap: _handleAyahTap,
               onAyahLongPress: _handleAyahLongPress,
+              onAyahWordTap: (info, wordIndex, wordGlyph) {
+                setState(() {
+                  _lastWordTapDebug =
+                      '${info.reference} • word#$wordIndex • "$wordGlyph"';
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Word: ${info.reference} (#$wordIndex)'),
+                    duration: const Duration(milliseconds: 700),
+                  ),
+                );
+              },
               // Example: Customize text styles using modifiers for easy
               // customization. Use copyWith on the default style to change
               // only what you need while preserving the library defaults.
@@ -70,6 +84,9 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                   color: const Color(0xFFFFFFFF),
                   backgroundColor: const Color(0xFF2D6A4F),
                 ),
+                // Selected word color (word-by-word highlighting)
+                selectedWordStyleModifier: (style) =>
+                    style.copyWith(color: Colors.blue),
                 // Basmalah with custom color
                 basmalahStyleModifier: (style) =>
                     style.copyWith(color: const Color(0xFF40916C)),
@@ -98,6 +115,14 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
               listenable: _controller,
               builder: (context, _) {
                 final pageInfo = _controller.currentPageInfo;
+                final selectedWord = _controller.selectedWord;
+
+                final subtitleParts = <String>[
+                  'Page ${_controller.currentPage}',
+                  'Juz ${_controller.currentPageInfo?.juzNumber ?? "?"}',
+                  if (selectedWord != null)
+                    'Word ${selectedWord.ayahId}#${selectedWord.wordIndex}',
+                ];
 
                 return AppBar(
                   backgroundColor: Theme.of(
@@ -110,12 +135,28 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                         style: const TextStyle(fontSize: 16),
                       ),
                       Text(
-                        'Page ${_controller.currentPage} • Juz ${_controller.currentPageInfo?.juzNumber}',
+                        subtitleParts.join(' • '),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
+                      if (_lastWordTapDebug != null)
+                        Text(
+                          _lastWordTapDebug!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                     ],
                   ),
                   actions: [
+                    if (_controller.selectedAyahId != null ||
+                        _controller.selectedWord != null)
+                      IconButton(
+                        icon: const Icon(Icons.highlight_off),
+                        tooltip: 'Clear highlight',
+                        onPressed: () {
+                          _controller.clearSelection();
+                        },
+                      ),
                     IconButton(
                       icon: const Icon(Icons.list),
                       onPressed: _showSurahIndex,
@@ -144,10 +185,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
                   color: Theme.of(
                     context,
                   ).colorScheme.surface.withValues(alpha: 0.95),
-                  padding: const .symmetric(
-                    vertical: 8,
-                    horizontal: 16,
-                  ),
+                  padding: const .symmetric(vertical: 8, horizontal: 16),
                   child: Row(
                     mainAxisAlignment: .spaceBetween,
                     children: [
@@ -196,7 +234,6 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
 
   void _handleAyahLongPress(AyahInfo info) async {
     if (!mounted) return;
-
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -217,6 +254,15 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
             AyahWidget.fromId(
               ayahId: info.ayahId,
               style: const TextStyle(fontSize: 28, color: Color(0xFF1B4332)),
+              selectedWordIndex: _controller.selectedWord?.ayahId == info.ayahId
+                  ? _controller.selectedWord?.wordIndex
+                  : null,
+              selectedWordStyle: const TextStyle(color: Colors.blue),
+              onWordTap: (wordIndex, wordGlyph) {
+                _controller.selectWord(
+                  SelectedWord(ayahId: info.ayahId, wordIndex: wordIndex),
+                );
+              },
             ),
             const SizedBox(height: 24),
             Row(
@@ -251,7 +297,6 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
   }
 
   void _handleAyahTap(AyahInfo info) {
-    print("Ayah Tapped");
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Tapped: ${info.reference}'),
