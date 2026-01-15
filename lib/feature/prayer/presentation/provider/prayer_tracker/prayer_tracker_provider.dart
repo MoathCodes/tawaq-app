@@ -1,5 +1,5 @@
 // import 'package:adhan_dart/adhan_dart.dart';
-import 'package:adhan_dart/adhan_dart.dart' show Prayer, PrayerTimesData;
+import 'package:adhan_dart/adhan_dart.dart' show Prayer, PrayerTimes;
 import 'package:hasanat/core/utils/date_extensions.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
@@ -13,7 +13,7 @@ List<PrayerTrackerCardModel> buildPrayerTrackerCards({
   required AppLocalizations l10n,
   required DateTime? day,
   required DateFormat formatter,
-  required PrayerTimesData prayerTimes,
+  required PrayerTimes prayerTimes,
   required Map<Prayer, PrayerCompletion> completionByPrayer,
   required DateTime now,
   required Location location,
@@ -21,7 +21,7 @@ List<PrayerTrackerCardModel> buildPrayerTrackerCards({
   final isPastDay = day?.isBeforeByDate(now) ?? false;
   final dayInLocation = day?.toLocation(location);
   final referenceMoment = isPastDay ? dayInLocation ?? now : now;
-  final currentPrayer = prayerTimes.currentPrayer(date: referenceMoment);
+  final currentPrayer = prayerTimes.currentPrayer(time: referenceMoment);
 
   return Prayer.values
       .where((prayer) => prayer.isObligatory)

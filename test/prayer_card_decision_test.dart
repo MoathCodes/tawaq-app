@@ -32,7 +32,8 @@ void main() {
     });
 
     test(
-      'Prayer decision at 11:15 PM should show midnight as next prayer with correct time source',
+      'Prayer decision at 11:15 PM should show midnight as next prayer '
+      'with correct time source',
       () {
         // Create specific time for 11:15 PM (matching the original bug report)
         final testTime = TZDateTime(location, 2024, 1, 15, 23, 15);
@@ -58,15 +59,6 @@ void main() {
         );
 
         // Debug output
-        print(
-          'Test time: ${testTime.hour}:${testTime.minute.toString().padLeft(2, '0')}',
-        );
-        print('Decision prayer: ${decision.prayer}');
-        print('Reference time: ${decision.referenceTime}');
-        print('Is countdown: ${decision.isCountdown}');
-        print(
-          'Expected midnight time: ${TZDateTime.from(todaysSunnahTimes.middleOfTheNight, location)}',
-        );
 
         // At 11:15 PM, next prayer should be fajrAfter (midnight)
         expect(decision.prayer, equals(Prayer.fajrAfter));
@@ -84,7 +76,8 @@ void main() {
         expect(duration.isNegative, isFalse);
         expect(duration.inHours, greaterThan(0));
 
-        // Verify the midnight time is sourced from SunnahTimes, not PrayerTimesData
+        // Verify the midnight time is sourced from SunnahTimes,
+        // not PrayerTimesData
         // This is the key fix - ensuring we use the correct time source
         expect(
           decision.referenceTime,

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
-// These ignores are needed because the generated code might have unnecessary ignores or redundant arguments.
+// These ignores are needed because the generated code might have
+// unnecessary ignores or redundant arguments.
 // ignore_for_file: unnecessary_ignore
 // ignore_for_file: avoid_redundant_argument_values
 

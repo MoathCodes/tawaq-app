@@ -4,6 +4,7 @@ import 'package:mushaf_reader/src/data/models/juz_model.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_style.dart'
     show StyleModifier;
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
+import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 
 /// A widget that displays the Juz (part) glyph marker.
 ///
@@ -44,7 +45,7 @@ import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
 /// See also:
 /// - [MushafPage], which displays the Juz widget in the header
 /// - [JuzModel], the data model for Juz information
-class JuzWidget extends StatelessWidget {
+class JuzWidget extends StatefulWidget {
   /// The Juz number to display (1-30).
   final int number;
 
@@ -86,6 +87,9 @@ class JuzWidget extends StatelessWidget {
   /// the data from the repository.
   final JuzModel? juzData;
 
+  /// Optional repository for testing.
+  final IQuranRepository? repository;
+
   /// Creates a JuzWidget for the specified Juz number.
   ///
   /// [number] must be in the range 1-30.
@@ -98,24 +102,56 @@ class JuzWidget extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.juzData,
+    this.repository,
   });
+
+  @override
+  State<JuzWidget> createState() => _JuzWidgetState();
+}
+
+class _JuzWidgetState extends State<JuzWidget> {
+  Future<JuzModel?>? _future;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.juzData == null) {
+      _loadFuture();
+    }
+  }
+
+  @override
+  void didUpdateWidget(JuzWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.number != oldWidget.number) {
+      _loadFuture();
+    }
+  }
+
+  void _loadFuture() {
+    _future = (widget.repository ?? HiveQuranRepository()).getJuz(
+      widget.number,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     // If data provided, use it directly
-    if (juzData != null) {
-      return _buildContent(juzData!);
+    if (widget.juzData != null) {
+      return _buildContent(widget.juzData!);
     }
 
     // Try to get from repository cache
-    final cachedJuz = HiveQuranRepository().getJuzSync(number);
+    // Note: getJuzSync is on the Interface, so we can use widget.repository if present
+    final repo = widget.repository ?? HiveQuranRepository();
+    final cachedJuz = repo.getJuzSync(widget.number);
     if (cachedJuz != null) {
       return _buildContent(cachedJuz);
     }
 
     // Fallback: load asynchronously
     return FutureBuilder<JuzModel?>(
-      future: HiveQuranRepository().getJuz(number),
+      future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasData && snapshot.data != null) {
           return _buildContent(snapshot.data!);
@@ -127,18 +163,19 @@ class JuzWidget extends StatelessWidget {
 
   Widget _buildContent(JuzModel juz) {
     // fontSize priority: fontSize param → textStyle.fontSize → 40.0
-    final effectiveFontSize = fontSize ?? textStyle?.fontSize ?? 40.0;
+    final effectiveFontSize =
+        widget.fontSize ?? widget.textStyle?.fontSize ?? 40.0;
     final effectiveStyle = MushafTextStyleMerger.mergeBasmalahStyle(
-      userStyle: textStyle,
-      modifier: styleModifier,
+      userStyle: widget.textStyle,
+      modifier: widget.styleModifier,
       baseSize: effectiveFontSize,
       scaleFactor: 1.0,
     );
 
-    return onTap != null || onLongPress != null
+    return widget.onTap != null || widget.onLongPress != null
         ? GestureDetector(
-            onTap: () => onTap?.call(number),
-            onLongPress: () => onLongPress?.call(number),
+            onTap: () => widget.onTap?.call(widget.number),
+            onLongPress: () => widget.onLongPress?.call(widget.number),
             child: Text(
               juz.codeV4,
               textDirection: TextDirection.rtl,

@@ -133,9 +133,9 @@ class PrayerService {
   }
 
   /// Returns the current prayer based on the provided prayer times.
-  Prayer currentPrayer(PrayerTimesData prayerTime) {
+  Prayer currentPrayer(PrayerTimes prayerTime) {
     final date = _currentTime();
-    return prayerTime.currentPrayer(date: date);
+    return prayerTime.currentPrayer(time: date);
   }
 
   /// Deletes a prayer completion record by its ID.
@@ -159,28 +159,28 @@ class PrayerService {
   }
 
   /// Returns the Sunnah times for the given prayer times.
-  SunnahTimes getSunnahTime(PrayerTimesData prayerTimes) {
+  SunnahTimes getSunnahTime(PrayerTimes prayerTimes) {
     return _repo.getSunnahTime(prayerTimes);
   }
 
   /// Returns the prayer times for today (or a specific date).
-  PrayerTimesData getTodaysPrayerTimes([
-    DateTime? date,
+  PrayerTimes getTodaysPrayerTimes(
+    DateTime? date, {
     bool roundToMinutes = true,
-  ]) {
+  }) {
     const logPrefix = '[PrayerService.getTodaysPrayerTimes] ';
     final activeDate = date ?? _currentTime();
-    final params = _settings.customParameters ?? _settings.method.parameters;
+    final params = _settings.method;
     var prayerTimes = _repo.getPrayerTimes(
       activeDate,
       _settings.coordinates,
       params,
-      roundToMinutes,
+      roundToMinutes: roundToMinutes,
     );
 
     final isRamadan = Hijriyah.now().hMonth == 9;
 
-    if (isRamadan && _settings.method == CalculationMethod.ummAlQura) {
+    if (isRamadan && _settings.method is UmmAlQura) {
       _log.d(
         '$logPrefix Method is Umm Al-Qura, and month is Ramadan, '
         'adjusting prayer times accordingly',
@@ -194,9 +194,9 @@ class PrayerService {
   }
 
   /// Returns the next prayer based on the provided prayer times.
-  Prayer nextPrayerByDate(PrayerTimesData prayerTime, [DateTime? date]) {
+  Prayer nextPrayerByDate(PrayerTimes prayerTime, [DateTime? date]) {
     final activeDate = date ?? _currentTime();
-    return prayerTime.nextPrayer(date: activeDate);
+    return prayerTime.nextPrayer(time: activeDate);
   }
 
   /// Returns the prayer completion records for a specific date.

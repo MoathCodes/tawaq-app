@@ -4,7 +4,10 @@ import 'package:flutter/widgets.dart' show MouseRegion;
 import 'package:flutter_hooks/flutter_hooks.dart';
 
 /// A record type representing hover state and its setter.
-typedef HoverState = ({bool isHovered, void Function(bool) setHovered});
+typedef HoverState = ({
+  bool isHovered,
+  void Function({required bool value}) setHovered,
+});
 
 /// Creates a hover state that can be used with [MouseRegion] or similar
 /// widgets to track hover status.
@@ -21,8 +24,8 @@ typedef HoverState = ({bool isHovered, void Function(bool) setHovered});
 ///     final (:isHovered, :setHovered) = useHoverState();
 ///
 ///     return MouseRegion(
-///       onEnter: (_) => setHovered(true),
-///       onExit: (_) => setHovered(false),
+///       onEnter: (_) => setHovered(value: true),
+///       onExit: (_) => setHovered(value: false),
 ///       child: Container(
 ///         color: isHovered ? Colors.blue : Colors.grey,
 ///       ),
@@ -34,6 +37,6 @@ HoverState useHoverState({bool initialValue = false}) {
   final state = useState(initialValue);
   return (
     isHovered: state.value,
-    setHovered: (bool value) => state.value = value,
+    setHovered: ({required bool value}) => state.value = value,
   );
 }

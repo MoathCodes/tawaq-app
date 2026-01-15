@@ -37,7 +37,8 @@ Future<List<tz.Location>> loadTimezones(Ref ref) async {
     final allLocations = database.locations.values.toList();
     final currentLocation = ref.read(prayerSettingsProvider).value?.location;
 
-    // Sort with selected location first, then common timezones, then alphabetically
+    // Sort with selected location first, then common timezones, then
+    // alphabetically
     allLocations.sort((a, b) {
       // Selected location always comes first
       if (currentLocation != null) {

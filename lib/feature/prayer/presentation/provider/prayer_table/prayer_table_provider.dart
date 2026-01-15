@@ -95,7 +95,7 @@ class PrayerTable extends _$PrayerTable {
 
   List<PrayerTableRow> _buildPrayerTableRows(
     DateFormat formatter,
-    PrayerTimesData prayerTimes,
+    PrayerTimes prayerTimes,
     SunnahTimes sunnahTimes,
     DateTime currentTime,
     PrayerSettings settings,
@@ -104,7 +104,7 @@ class PrayerTable extends _$PrayerTable {
   ) {
     final midnightTime = sunnahTimes.middleOfTheNight.toLocation(location);
     final lastThirdTime = sunnahTimes.lastThirdOfTheNight.toLocation(location);
-    final currentPrayer = prayerTimes.currentPrayer(date: currentTime);
+    final currentPrayer = prayerTimes.currentPrayer(time: currentTime);
     final sunnahPrayers = <PrayerTableRow>[
       // Prayer.fajrAfter is used as midnight
       PrayerTableRow(
@@ -171,7 +171,8 @@ class PrayerTable extends _$PrayerTable {
             iqamahTime = '------';
           }
 
-          // logic to write a message on how long ago or left for adhan or iqamah
+          // logic to write a message on how long ago or
+          // left for adhan or iqamah
           // either in hours or minutes
           adhanMessage = _adhanMessage(
             isCurrentPrayer,
@@ -179,9 +180,6 @@ class PrayerTable extends _$PrayerTable {
             times,
             l10n,
           );
-
-          // log.d("$_prayerTableLogPrefix Adan Message for $prayer: $adhanMessage");
-          // log.d("$_prayerTableLogPrefix Iqamah Message for $prayer: $iqamahMessage");
 
           return PrayerTableRow(
             prayer: prayer,
@@ -202,7 +200,8 @@ class PrayerTable extends _$PrayerTable {
         allRows[currentPrayerIndex + 1] = allRows[currentPrayerIndex + 1]
             .copyWith(isNextPrayer: true);
       } else {
-        // If current prayer is the last one, we can set the first prayer as next
+        // If current prayer is the last one, we can
+        // set the first prayer as next
         allRows[0] = allRows[0].copyWith(isNextPrayer: true);
       }
     }
@@ -257,7 +256,6 @@ class _TableCache {
     required this.todaySunnah,
   });
   final DateTime anchorDate;
-  final PrayerTimesData today;
-
+  final PrayerTimes today;
   final SunnahTimes todaySunnah;
 }

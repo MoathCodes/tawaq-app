@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:mushaf_reader/src/data/models/word_range.dart';
 
 part 'ayah_model.freezed.dart';
 
@@ -16,6 +15,12 @@ part 'ayah_model.freezed.dart';
 /// - [surah]: The Surah (chapter) number (1-114)
 /// - [numberInSurah]: The Ayah number within its Surah
 /// - [text]: The QCF4-encoded glyph text for rendering
+/// - [textPlain]: Plain Arabic text without tajweed marks
+/// - [manzil]: The Manzil number (1-7, dividing Quran for weekly reading)
+/// - [ruku]: The Ruku (section) number for prayer divisions
+/// - [hizbQuarter]: The Hizb quarter number (1-240)
+/// - [sajda]: Whether this Ayah contains a prostration (Sajdah)
+/// - [pageInSurah]: The page number within the Surah
 ///
 /// ## Example
 ///
@@ -30,6 +35,7 @@ part 'ayah_model.freezed.dart';
 /// );
 ///
 /// print('Surah ${ayah.surah}, Ayah ${ayah.numberInSurah}');
+/// if (ayah.sajda == true) print('This ayah has a sajdah');
 /// ```
 @freezed
 abstract class AyahModel with _$AyahModel {
@@ -71,11 +77,39 @@ abstract class AyahModel with _$AyahModel {
     /// that map to glyphs in the QCF4 page-specific fonts.
     required String text,
 
-    /// Per-word character ranges inside [text].
+    /// Plain Arabic text without tajweed marks (Imlaei script).
     ///
-    /// This enables fast word-level tapping/highlighting without parsing.
-    /// Offsets are measured in Dart string code units.
-    @Default(<WordRange>[]) List<WordRange> wordRanges,
+    /// Useful for text-to-speech, search, and accessibility features.
+    String? textPlain,
+
+    /// The Manzil number this Ayah belongs to (1-7).
+    ///
+    /// The Quran is divided into 7 Manzils for weekly reading,
+    /// completing the entire Quran in one week.
+    int? manzil,
+
+    /// The Ruku (section) number for this Ayah.
+    ///
+    /// Rukus are thematic sections used in some traditions to
+    /// organize recitation during prayers.
+    int? ruku,
+
+    /// The Hizb quarter number (1-240).
+    ///
+    /// Each Juz is divided into 2 Hizbs, and each Hizb into 4 quarters,
+    /// giving 240 quarters for detailed progress tracking.
+    int? hizbQuarter,
+
+    /// Whether this Ayah contains a Sajdah (prostration).
+    ///
+    /// There are 15 Sajdah verses in the Quran where prostration
+    /// is recommended upon recitation.
+    bool? sajda,
+
+    /// The page number within the Surah (1-indexed).
+    ///
+    /// Useful for tracking progress within a Surah.
+    int? pageInSurah,
   }) = _AyahModel;
 
   const AyahModel._();

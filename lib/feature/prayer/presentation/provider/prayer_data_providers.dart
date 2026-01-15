@@ -38,7 +38,7 @@ DateTime currentLocationTime(Ref ref) {
 /// Provides the prayer times for the current day.
 /// It automatically recalculates if the date changes or settings are updated.
 @riverpod
-PrayerTimesData currentPrayerTimes(Ref ref, {DateTime? forDate}) {
+PrayerTimes currentPrayerTimes(Ref ref, {DateTime? forDate}) {
   // Depend on the service to get the prayer times.
   final service = ref.watch(prayerServiceProvider);
   return service.getTodaysPrayerTimes(forDate);

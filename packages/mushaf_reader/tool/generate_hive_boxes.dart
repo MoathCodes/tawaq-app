@@ -9,18 +9,20 @@
 /// - `juzs.hive` - All 30 juzs keyed by juz number
 /// - `pageLayouts.hive` - Page layouts keyed by page number (1-604)
 /// - `metadata.hive` - Key-value metadata (e.g., basmalah glyph)
+/// - `manifest.json` - MD5 hashes for versioning
 library;
 
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mushaf_reader/src/data/hive/hive_adapters.dart';
 import 'package:mushaf_reader/src/data/models/ayah_model.dart';
 import 'package:mushaf_reader/src/data/models/juz_model.dart';
 import 'package:mushaf_reader/src/data/models/page_layouts.dart';
+import 'package:mushaf_reader/src/data/models/revelation_type.dart';
 import 'package:mushaf_reader/src/data/models/surah_model.dart';
-import 'package:mushaf_reader/src/data/models/word_range.dart';
 import 'package:mushaf_reader/src/data/surah_metadata.dart';
 import 'package:path/path.dart' as p;
 
@@ -55,9 +57,9 @@ Future<void> main() async {
   Hive
     ..registerAdapter(JuzModelAdapter())
     ..registerAdapter(AyahModelAdapter())
-    ..registerAdapter(WordRangeAdapter())
     ..registerAdapter(PageLayoutsAdapter())
-    ..registerAdapter(SurahModelAdapter());
+    ..registerAdapter(SurahModelAdapter())
+    ..registerAdapter(RevelationTypeAdapter());
 
   print('Reading JSON files...');
   final quranJson =
@@ -86,9 +88,9 @@ Future<void> main() async {
   print('Generating ayahs.hive...');
   await _generateAyahsBox(surahsData, pagesData);
 
-  // Generate Juzs box
+  // Generate Juzs box (needs surahsData to calculate start page/ayah)
   print('Generating juzs.hive...');
-  await _generateJuzsBox(juzsData);
+  await _generateJuzsBox(juzsData, surahsData);
 
   // Generate PageLayouts box
   print('Generating pageLayouts.hive...');
@@ -104,11 +106,45 @@ Future<void> main() async {
   print('');
   print('Generated files:');
   for (final file in outputDir.listSync()) {
-    final size = (file as File).lengthSync();
+    if (file is! File) continue;
+    final size = file.lengthSync();
     print(
       '  - ${p.basename(file.path)}: ${(size / 1024).toStringAsFixed(1)} KB',
     );
   }
+
+  // Generate manifest.json with MD5 hashes for versioning
+  print('');
+  print('Generating manifest.json...');
+  await _generateManifest(hiveOutputDir);
+}
+
+/// Generates a manifest.json file with MD5 hashes of all .hive files.
+///
+/// This manifest is used at runtime to detect when boxes need to be
+/// re-copied from assets (e.g., after library update).
+Future<void> _generateManifest(String hiveDir) async {
+  final manifest = <String, String>{};
+  final dir = Directory(hiveDir);
+
+  for (final file in dir.listSync()) {
+    if (file is! File) continue;
+    final name = p.basename(file.path);
+    if (!name.endsWith('.hive')) continue;
+
+    // Compute MD5 hash
+    final bytes = await file.readAsBytes();
+    final hash = md5.convert(bytes).toString();
+    manifest[name] = hash;
+
+    print('  - $name: $hash');
+  }
+
+  final manifestPath = p.join(hiveDir, 'manifest.json');
+  await File(
+    manifestPath,
+  ).writeAsString(const JsonEncoder.withIndent('  ').convert(manifest));
+  print('  - manifest.json written');
 }
 
 /// Converts a U+XXXX code point string to the actual character.
@@ -123,34 +159,19 @@ String _stripHtml(String word) {
   return word.replaceAll(RegExp(r'<span[^>]*>'), '').replaceAll('</span>', '');
 }
 
-/// Builds glyph text from a `words` array and also computes per-word ranges.
-({String glyph, List<WordRange> ranges}) _buildGlyphAndRangesFromWords(
-  List<dynamic> words,
-) {
+/// Builds glyph text from words array, replacing <br> with newlines.
+String _buildGlyphFromWords(List<dynamic> words) {
   final buffer = StringBuffer();
-  final ranges = <WordRange>[];
-  var wordIndex = 0;
-
   for (final word in words) {
     final w = word as String;
     if (w.isEmpty) continue;
-
     if (w == '<br>') {
       buffer.write('\n');
-      continue;
+    } else {
+      buffer.write(_stripHtml(w));
     }
-
-    final stripped = _stripHtml(w);
-    if (stripped.isEmpty) continue;
-
-    final start = buffer.length;
-    buffer.write(stripped);
-    final end = buffer.length;
-
-    ranges.add(WordRange(index: wordIndex++, start: start, end: end));
   }
-
-  return (glyph: buffer.toString(), ranges: ranges);
+  return buffer.toString();
 }
 
 Future<void> _generateAyahsBox(
@@ -160,7 +181,7 @@ Future<void> _generateAyahsBox(
   final box = await Hive.openBox<AyahModel>('ayahs');
 
   // Build a map of ayah ID -> glyph text from quran_full.json
-  final ayahGlyphs = <int, ({String glyph, List<WordRange> ranges})>{};
+  final ayahGlyphs = <int, String>{};
   for (final page in pagesData) {
     final ayas = page['ayas'] as List<dynamic>;
     for (final aya in ayas) {
@@ -171,8 +192,8 @@ Future<void> _generateAyahsBox(
       if (aya['isBasmala'] == true) continue;
 
       final words = aya['words'] as List<dynamic>;
-      final built = _buildGlyphAndRangesFromWords(words);
-      ayahGlyphs[id] = built;
+      final glyph = _buildGlyphFromWords(words);
+      ayahGlyphs[id] = glyph;
     }
   }
 
@@ -184,12 +205,21 @@ Future<void> _generateAyahsBox(
     for (final a in ayahs) {
       final ayahId = a['number'] as int;
       // Use glyph from quran_full.json, fallback to code_v4/glyph from quran.json
-      final built = ayahGlyphs[ayahId];
       final glyph =
-          built?.glyph ??
+          ayahGlyphs[ayahId] ??
           a['glyph'] as String? ??
           a['code_v4'] as String? ??
           '';
+
+      // Extract new fields
+      final textPlain = a['aya_text_emlaey'] as String?;
+      final manzil = a['manzil'] as int?;
+      final ruku = a['ruku'] as int?;
+      final hizbQuarter = a['hizbQuarter'] as int?;
+      // sajda can be false (bool) or an object with details (means true)
+      final sajdaValue = a['sajda'];
+      final sajda = sajdaValue is bool ? sajdaValue : (sajdaValue != null);
+      final pageInSurah = a['pageInSurah'] as int?;
 
       final ayah = AyahModel(
         id: ayahId,
@@ -198,7 +228,12 @@ Future<void> _generateAyahsBox(
         surah: surahNumber,
         numberInSurah: a['numberInSurah'] as int,
         text: glyph,
-        wordRanges: built?.ranges ?? const [],
+        textPlain: textPlain,
+        manzil: manzil,
+        ruku: ruku,
+        hizbQuarter: hizbQuarter,
+        sajda: sajda,
+        pageInSurah: pageInSurah,
       );
 
       await box.put(ayahId, ayah);
@@ -210,15 +245,39 @@ Future<void> _generateAyahsBox(
   print('  - $count ayahs written');
 }
 
-Future<void> _generateJuzsBox(List<dynamic> juzsData) async {
+Future<void> _generateJuzsBox(
+  List<dynamic> juzsData,
+  List<dynamic> surahsData,
+) async {
   final box = await Hive.openBox<JuzModel>('juzs');
+
+  // Build a map of juz number -> first ayah info (for startPage, startAyahId)
+  final juzFirstAyah = <int, Map<String, int>>{};
+  for (final s in surahsData) {
+    final ayahs = s['ayahs'] as List<dynamic>;
+    for (final a in ayahs) {
+      final juzNum = a['juz'] as int;
+      final ayahId = a['number'] as int;
+      final page = a['page'] as int;
+      // Only store if this is the first ayah we've seen for this juz
+      if (!juzFirstAyah.containsKey(juzNum)) {
+        juzFirstAyah[juzNum] = {'ayahId': ayahId, 'page': page};
+      }
+    }
+  }
 
   for (final j in juzsData) {
     final number = j['number'] as int;
     final codeV4 = j['code_v4'] as String?;
     final glyph = codeV4 != null ? codePointToChar(codeV4) : '';
 
-    final juz = JuzModel(number: number, glyph: glyph);
+    final firstAyahInfo = juzFirstAyah[number];
+    final juz = JuzModel(
+      number: number,
+      glyph: glyph,
+      startPage: firstAyahInfo?['page'],
+      startAyahId: firstAyahInfo?['ayahId'],
+    );
     await box.put(number, juz);
   }
 
@@ -297,6 +356,22 @@ Future<void> _generateSurahsBox(List<dynamic> surahsData) async {
     final hasBasmalah =
         s['hasBasmallah'] as bool? ?? (surahNumber != 9 || surahNumber != 1);
 
+    // Parse revelationType from JSON string to enum
+    final revelationTypeStr = s['revelationType'] as String?;
+    RevelationType? revelationType;
+    if (revelationTypeStr != null) {
+      revelationType = revelationTypeStr.toLowerCase() == 'meccan'
+          ? RevelationType.meccan
+          : RevelationType.medinan;
+    }
+
+    // Get ayah count from the ayahs array length
+    final ayahsList = s['ayahs'] as List<dynamic>?;
+    final ayahCount = ayahsList?.length;
+
+    // Get English translation of surah name meaning
+    final englishNameTranslation = s['englishNameTranslation'] as String?;
+
     final surah = SurahModel(
       number: surahNumber,
       glyph: glyph,
@@ -304,6 +379,9 @@ Future<void> _generateSurahsBox(List<dynamic> surahsData) async {
       nameArabic: meta['nameArabic'] as String?,
       nameEnglish: meta['nameEnglish'] as String?,
       startPage: meta['startPage'] as int?,
+      revelationType: revelationType,
+      englishNameTranslation: englishNameTranslation,
+      ayahCount: ayahCount,
     );
 
     await box.put(surahNumber, surah);

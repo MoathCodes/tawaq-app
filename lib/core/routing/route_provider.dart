@@ -23,8 +23,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'route_provider.g.dart';
 
-
-
 /// Configures the root [GoRouter] used by the application shell.
 @riverpod
 GoRouter appRouter(Ref ref) {

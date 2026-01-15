@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:mushaf_reader/src/core/fonts.dart';
-import 'package:mushaf_reader/src/data/models/mushaf_style.dart'
-    show StyleModifier;
+import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
+import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 
 /// A widget that displays the Basmalah (بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ).
 ///
@@ -43,7 +42,7 @@ import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
 /// - [SurahHeaderWidget], which is typically shown with the Basmalah
 /// - [MushafPage], which handles Basmalah display logic
 /// - [MushafFonts], for font constants
-class BasmalahWidget extends StatelessWidget {
+class BasmalahWidget extends StatefulWidget {
   /// The font size for the Basmalah text.
   ///
   /// If not provided, uses the base Basmalah font size (21).
@@ -71,6 +70,9 @@ class BasmalahWidget extends StatelessWidget {
   /// the glyph from the repository.
   final String? glyph;
 
+  /// Optional repository for testing.
+  final IQuranRepository? repository;
+
   /// Creates a BasmalahWidget.
   ///
   /// [fontSize] and [textStyle] optionally customize the text appearance.
@@ -81,24 +83,47 @@ class BasmalahWidget extends StatelessWidget {
     this.textStyle,
     this.styleModifier,
     this.glyph,
+    this.repository,
   });
+
+  @override
+  State<BasmalahWidget> createState() => _BasmalahWidgetState();
+}
+
+class _BasmalahWidgetState extends State<BasmalahWidget> {
+  Future<String?>? _future;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.glyph == null) {
+      _loadFuture();
+    }
+  }
+
+  void _loadFuture() {
+    _future = (widget.repository ?? HiveQuranRepository()).getBasmalah().then(
+      (value) => value,
+    ); // getBasmalah returns String, we want String? for FutureBuilder logic consistency
+  }
 
   @override
   Widget build(BuildContext context) {
     // If glyph provided, use it directly
-    if (glyph != null && glyph!.isNotEmpty) {
-      return _buildText(glyph!);
+    if (widget.glyph != null && widget.glyph!.isNotEmpty) {
+      return _buildText(widget.glyph!);
     }
 
     // Try to get from repository cache
-    final cachedGlyph = HiveQuranRepository().getBasmalahSync();
+    final repo = widget.repository ?? HiveQuranRepository();
+    final cachedGlyph = repo.getBasmalahSync();
     if (cachedGlyph != null && cachedGlyph.isNotEmpty) {
       return _buildText(cachedGlyph);
     }
 
     // Fallback: load asynchronously
     return FutureBuilder<String?>(
-      future: HiveQuranRepository().getBasmalah(),
+      future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasData && snapshot.data!.isNotEmpty) {
           return _buildText(snapshot.data!);
@@ -110,9 +135,12 @@ class BasmalahWidget extends StatelessWidget {
 
   Widget _buildText(String glyphText) {
     final effectiveStyle = MushafTextStyleMerger.mergeBasmalahStyle(
-      userStyle: textStyle,
-      modifier: styleModifier,
-      baseSize: fontSize ?? textStyle?.fontSize ?? MushafBaseFontSizes.basmalah,
+      userStyle: widget.textStyle,
+      modifier: widget.styleModifier,
+      baseSize:
+          widget.fontSize ??
+          widget.textStyle?.fontSize ??
+          MushafBaseFontSizes.basmalah,
       scaleFactor: 1.0,
     );
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
@@ -34,20 +36,33 @@ class ShellSidebar extends HookConsumerWidget {
     final isTablet =
         MediaQuery.sizeOf(context).width <= Breakpoints.bootstrap.lg;
 
+    // Riverpod is the single source of truth
+    final isCollapsed =
+        ref.watch(stateSettingsProvider).value?.sidebarCollapsed ?? isTablet;
+
     useListenable(router.routeInformationProvider);
 
-    final controller = useAnimationController(
-      duration: duration,
-      initialValue: 1,
-    );
-
+    final controller = useAnimationController(duration: duration);
     final animation = CurveTween(curve: Curves.easeInOut).animate(controller);
 
+    // Animation follows Riverpod state
+    useEffect(() {
+      if (isCollapsed) {
+        unawaited(controller.reverse());
+      } else {
+        unawaited(controller.forward());
+      }
+      return null;
+    }, [isCollapsed]);
+
+    // Auto-collapse on tablet
     useEffect(() {
       if (isTablet) {
-        controller.reverse();
-      } else {
-        controller.forward();
+        unawaited(
+          ref
+              .read(stateSettingsProvider.notifier)
+              .setSidebarCollapsed(collapsed: true),
+        );
       }
       return null;
     }, [isTablet]);
@@ -71,6 +86,14 @@ class ShellSidebar extends HookConsumerWidget {
           position: Tween(begin: _kSlideOffset, end: Offset.zero).animate(anim),
           child: FadeTransition(opacity: anim, child: child),
         );
+
+    void toggleSidebar() {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await ref
+            .read(stateSettingsProvider.notifier)
+            .setSidebarCollapsed(collapsed: !isCollapsed);
+      });
+    }
 
     return AnimatedBuilder(
       animation: animation,
@@ -112,29 +135,42 @@ class ShellSidebar extends HookConsumerWidget {
             child: AnimatedSwitcher(
               duration: duration,
               transitionBuilder: slideTransition,
-              child: isExpanded
-                  ? FButton(
-                      key: const ValueKey('expanded'),
-                      style: (style) => style.copyWith(
-                        iconContentStyle:
-                            theme.buttonStyles.outline.iconContentStyle.call,
-                        decoration: theme.buttonStyles.outline.decoration,
-                        contentStyle: theme.buttonStyles.outline.contentStyle
-                            .copyWith(
-                              padding: const EdgeInsets.all(AppSpacing.sm),
-                            )
-                            .call,
-                      ),
-                      onPress: controller.toggle,
-                      prefix: const Icon(FIcons.panelRightOpen),
-                      child: Text(context.l10n.collapse),
-                    )
-                  : FButton.icon(
-                      key: const ValueKey('collapsed'),
-                      style: FButtonStyle.outline(),
-                      onPress: controller.toggle,
-                      child: const Icon(FIcons.panelRightOpen),
-                    ),
+              child: Row(
+                key: ValueKey(isExpanded),
+                children: [
+                  Expanded(
+                    child: isExpanded
+                        ? FButton(
+                            style: (style) => style.copyWith(
+                              iconContentStyle: theme
+                                  .buttonStyles
+                                  .outline
+                                  .iconContentStyle
+                                  .call,
+                              decoration: theme.buttonStyles.outline.decoration,
+                              contentStyle: theme
+                                  .buttonStyles
+                                  .outline
+                                  .contentStyle
+                                  .copyWith(
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.sm,
+                                    ),
+                                  )
+                                  .call,
+                            ),
+                            onPress: toggleSidebar,
+                            prefix: const Icon(FIcons.panelRightOpen),
+                            child: Text(context.l10n.collapse, overflow: .clip),
+                          )
+                        : FButton.icon(
+                            style: FButtonStyle.outline(),
+                            onPress: toggleSidebar,
+                            child: const Icon(FIcons.panelRightOpen),
+                          ),
+                  ),
+                ],
+              ),
             ),
           ),
           children: [

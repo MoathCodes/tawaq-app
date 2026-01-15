@@ -126,15 +126,8 @@ class TawaqApp extends ConsumerWidget {
           onGenerateTitle: (context) =>
               AppLocalizations.of(context)?.appName ?? '',
           debugShowCheckedModeBanner: false,
-          // theme: ThemeData(
-          //     colorScheme:
-          //         appTheme.mapOrNull(data: (data) => data.value.colorScheme) ??
-          //             IslamicTheme.lightIslamic(),
-          //     radius: 0.5,
-          //     typography: _typography),
-          // typography: locale.value?.languageCode == 'ar'
-          //     ? const Typography.geist().copyWith(sans: GoogleFonts.readexPro())
-          //     : const Typography.geist()),
+          // theme: ThemeData(...)
+          // typography: ...
           localizationsDelegates: const [
             AppLocalizations.delegate,
             FLocalizations.delegate,

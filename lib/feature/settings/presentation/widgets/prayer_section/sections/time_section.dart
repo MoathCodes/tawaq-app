@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/hooks/hooks.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
@@ -32,7 +31,7 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final prayerSettings = ref.read(prayerSettingsProvider).value;
+    final prayerSettings = ref.watch(prayerSettingsProvider).value;
     final values = prayerSettings?.iqamahSettings;
 
     // Controllers and focus nodes keyed by prayer
@@ -44,9 +43,7 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
     );
 
     // Method controller
-    final methodController = useFSelectController<CalculationMethod>(
-      initialValue: prayerSettings?.method,
-    );
+    final method = prayerSettings?.method ?? CalculationMethod.ummAlQura;
 
     // Track initial values and unsaved state
     final initialIqamahValues = useMemoized(() => <Prayer, String>{});
@@ -54,7 +51,7 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
       () => ValueNotifier<Set<Prayer>>(<Prayer>{}),
     );
 
-    // Force rebuild when unsavedPrayers changes (useListenable triggers rebuild)
+    // Force rebuild when unsavedPrayers changes (useListenable works)
     useListenable(unsavedPrayers);
 
     // Initialize controllers and add listeners
@@ -114,9 +111,7 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
           });
         }
 
-        for (final p in _kIqamahPrayers) {
-          createFocusListener(p);
-        }
+        _kIqamahPrayers.forEach(createFocusListener);
         return null;
       },
       const [],
@@ -141,16 +136,6 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
           if (currentUnsaved.contains(p) && c.text.trim() == newValue) {
             unsavedPrayers.value = {...currentUnsaved}..remove(p);
           }
-        }
-      },
-    );
-
-    // Keep calculation method selection in sync
-    ref.listen<CalculationMethod?>(
-      prayerSettingsProvider.select((s) => s.value?.method),
-      (prev, next) {
-        if (next != null && methodController.value != next) {
-          methodController.value = next;
         }
       },
     );
@@ -190,7 +175,7 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
                   _buildCalculationMethodSelector(
                     context,
                     ref,
-                    methodController,
+                    method,
                   ),
                   PrayerSettingsCustomParametersCard(maxWidth: maxWidth),
                 ],
@@ -378,36 +363,53 @@ class _PrayerIqamahTile extends StatelessWidget implements FTileMixin {
 Widget _buildCalculationMethodSelector(
   BuildContext context,
   WidgetRef ref,
-  FSelectController<CalculationMethod> methodController,
+  CalculationMethod methodValue,
 ) {
-  return FSelect<CalculationMethod>.search(
-    control: .managed(
-      controller: methodController,
-      onChange: (value) {
+  return FSelect<CalculationMethod>.searchBuilder(
+    control: .lifted(
+      value: methodValue,
+      onChange: (value) async {
         if (value != null) {
-          ref
+          await ref
               .read(prayerSettingsProvider.notifier)
               .update(
-                (settings) => settings.copyWith(
-                  method: value,
-                  customParameters: value.parameters,
-                ),
+                (settings) => settings.copyWith(method: value),
               );
         }
       },
     ),
-    items: {
-      for (final method in CalculationMethod.values)
-        method.getLocaleName(context.l10n): method,
-    },
-    autofocus: true,
     label: Text(context.l10n.calculationMethod),
-  filter: (query) => CalculationMethod.values.where(
-      (method) => method
-          .getLocaleName(context.l10n)
-          .toLowerCase()
-          .contains(query.toLowerCase()),
+    format: (method) => method.getLocaleName(context.l10n),
+    filter: (query) async {
+      return query.isEmpty
+          ? CalculationMethod.values
+          : CalculationMethod.values.where(
+              (method) => method
+                  .getLocaleName(context.l10n)
+                  .toLowerCase()
+                  .contains(query.toLowerCase()),
+            );
+    },
+    contentBuilder: (_, _, data) => data
+        .map(
+          (method) => FSelectItem(
+            title: Text(method.getLocaleName(context.l10n)),
+            value: method,
+          ),
+        )
+        .toList(),
+    contentEmptyBuilder: (_, _) => Padding(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: 8,
+        children: [
+          const Icon(FIcons.searchX),
+          Text(context.l10n.noResults),
+        ],
+      ),
     ),
+    contentLoadingBuilder: (_, _) => const FCircularProgress(),
   );
 }
 
@@ -472,7 +474,8 @@ void _saveTextField(
     context: context,
     title: Text(context.l10n.iqamahSavedTitle),
     description: Text(
-      "${context.l10n.iqamahSavedDescription} '${prayer.getLocaleName(context.l10n)}'",
+      '${context.l10n.iqamahSavedDescription} '
+      "'${prayer.getLocaleName(context.l10n)}'",
     ),
   );
 }

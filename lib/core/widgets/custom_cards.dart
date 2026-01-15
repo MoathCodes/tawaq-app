@@ -50,8 +50,8 @@ class HoverCard extends HookWidget {
 
     return MouseClick(
       disabled: !enableHoverEffect,
-      onExit: (event) => setHovered(false),
-      onHover: (event) => setHovered(true),
+      onExit: (event) => setHovered(value: false),
+      onHover: (event) => setHovered(value: true),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeOutCubic,

@@ -37,7 +37,7 @@ class AnimationEntry extends StatelessWidget {
                 .fadeIn(duration: 280.ms, curve: Curves.easeOut)
                 .moveY(
                   begin: 20,
-                  end: 0, 
+                  end: 0,
                   duration: 420.ms,
                   curve: Curves.easeOutCubic,
                 )

@@ -2,9 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:hasanat/core/hooks/use_mushaf_controller.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
+import 'package:hasanat/feature/quran/domain/models/quran_layouts.dart';
 import 'package:hasanat/feature/quran/presentation/providers/audio_player_provider.dart';
 import 'package:hasanat/feature/quran/presentation/widgets/study_panel.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
@@ -12,52 +15,17 @@ import 'package:hasanat/theme/theme.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 
-/// View modes for the Quran screen.
-enum QuranViewMode {
-  /// Single page mode - shows one Mushaf page.
-  singlePage,
-
-  /// Two page mode - shows two Mushaf pages side by side.
-  twoPage,
-
-  /// Study mode - shows Mushaf with Study Panel.
-  study,
-}
-
 /// Screen that displays the Quran with various view modes.
 class QuranScreen extends HookConsumerWidget {
   /// Creates a [QuranScreen] instance.
   const QuranScreen({super.key});
 
-  // Mock data for current page ayahs
-  static const List<int> _currentPageAyahIds = [1, 2, 3, 4, 5, 6, 7];
-  static const String _currentSurahName = 'Al-Fatihah';
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Controllers with auto-dispose
-    final page1Controller = useMemoized(MushafReaderController.new);
-    final page2Controller = useMemoized(
-      () => MushafReaderController(initialPage: 2),
+    final controller = useMushafController(
+      initialPage: ref.read(stateSettingsProvider).value?.lastQuranPage ?? 1,
     );
-
-    // Dispose controllers on unmount
-    useEffect(
-      () {
-        return () {
-          page1Controller.dispose();
-          page2Controller.dispose();
-        };
-      },
-      const [],
-    );
-
-    // State
-    final viewMode = useState(QuranViewMode.twoPage);
-
-    void onViewModeChanged(int index) {
-      viewMode.value = QuranViewMode.values[index];
-    }
 
     void onAyahTapped(AyahInfo info) {
       // Update the global audio player state
@@ -69,46 +37,16 @@ class QuranScreen extends HookConsumerWidget {
           );
     }
 
-    void toggleAudioPlayer() {
-      final notifier = ref.read(audioPlayerProvider.notifier);
-      final state = ref.read(audioPlayerProvider);
-
-      if (state.isActive) {
-        notifier.hidePlayer();
-      } else {
-        notifier.showPlayer(
-          surahName: _currentSurahName,
-          currentAyahNumber: state.currentAyahNumber,
-          currentPage: page1Controller.currentPage,
-          ayahIds: _currentPageAyahIds,
-        );
-      }
-    }
-
     void goBackAPage() {
       unawaited(
-        page1Controller.animateToPage(page1Controller.currentPage - 2),
+        controller.animateToPage(controller.currentPage - 1),
       );
-      if (viewMode.value == QuranViewMode.twoPage) {
-        unawaited(
-          page2Controller.animateToPage(page1Controller.currentPage + 1),
-        );
-      }
     }
 
     void moveAPage() {
-      if (viewMode.value == QuranViewMode.twoPage) {
-        unawaited(
-          page1Controller.animateToPage(page2Controller.currentPage + 1),
-        );
-        unawaited(
-          page2Controller.animateToPage(page1Controller.currentPage + 1),
-        );
-      } else {
-        unawaited(
-          page1Controller.animateToPage(page1Controller.currentPage + 1),
-        );
-      }
+      unawaited(
+        controller.animateToPage(controller.currentPage + 1),
+      );
     }
 
     return Column(
@@ -116,67 +54,28 @@ class QuranScreen extends HookConsumerWidget {
       children: [
         // Header bar
         _HeaderWidget(
-          viewMode: viewMode.value,
-          onViewModeChanged: onViewModeChanged,
-          toggleAudioPlayer: toggleAudioPlayer,
+          mushafController: controller,
+          // toggleAudioPlayer: toggleAudioPlayer,
         ),
-        const FDivider(),
         // Main content
         Expanded(
-          child: Row(
-            spacing: 12,
-            children: [
-              // Left navigation button
-              FButton.icon(
-                onPress: goBackAPage,
-                style: FButtonStyle.ghost(),
-                child: const Icon(
-                  FIcons.chevronLeft,
-                  size: 24,
+          child: Padding(
+            padding: const .only(bottom: AppSpacing.sm),
+            child: CallbackShortcuts(
+              bindings: <ShortcutActivator, VoidCallback>{
+                const SingleActivator(LogicalKeyboardKey.arrowLeft): moveAPage,
+                const SingleActivator(LogicalKeyboardKey.arrowRight):
+                    goBackAPage,
+                const SingleActivator(LogicalKeyboardKey.space): moveAPage,
+              },
+              child: Focus(
+                autofocus: true,
+                child: _MainContentWidget(
+                  controller: controller,
+                  onAyahTapped: onAyahTapped,
                 ),
               ),
-              // Main reading area
-              Expanded(
-                child: CallbackShortcuts(
-                  bindings: <ShortcutActivator, VoidCallback>{
-                    const SingleActivator(LogicalKeyboardKey.arrowLeft):
-                        moveAPage,
-                    const SingleActivator(LogicalKeyboardKey.arrowRight):
-                        goBackAPage,
-                    const SingleActivator(LogicalKeyboardKey.space): moveAPage,
-                  },
-                  child: Focus(
-                    autofocus: true,
-                    child: _MainContentWidget(
-                      viewMode: viewMode.value,
-                      page1Controller: page1Controller,
-                      page2Controller: page2Controller,
-                      onAyahTapped: onAyahTapped,
-                    ),
-                  ),
-                ),
-              ),
-              // Right navigation button
-              FButton.icon(
-                onPress: moveAPage,
-                style: FButtonStyle.ghost(),
-                child: const Icon(
-                  FIcons.chevronRight,
-                  size: 24,
-                ),
-              ),
-            ],
-          ),
-        ),
-        FSlider(
-          control: const .managedDiscrete(),
-          onEnd: (value) =>
-              page1Controller.jumpToPage((value.max * 604).round()),
-          tooltipBuilder: (controller, value) =>
-              Text('Page ${(value * 604).round()}'),
-          marks: List.generate(
-            604,
-            (index) => .mark(value: (index + 1) / 604),
+            ),
           ),
         ),
       ],
@@ -185,15 +84,9 @@ class QuranScreen extends HookConsumerWidget {
 }
 
 class _HeaderWidget extends HookWidget {
-  const _HeaderWidget({
-    required this.viewMode,
-    required this.onViewModeChanged,
-    required this.toggleAudioPlayer,
-  });
+  const _HeaderWidget({required this.mushafController});
 
-  final QuranViewMode viewMode;
-  final void Function(int) onViewModeChanged;
-  final VoidCallback toggleAudioPlayer;
+  final MushafReaderController mushafController;
 
   @override
   Widget build(BuildContext context) {
@@ -203,6 +96,11 @@ class _HeaderWidget extends HookWidget {
       builder: (context, ref, child) {
         final audioPlayerState = ref.read(audioPlayerProvider);
         final isAudioActive = audioPlayerState.isActive;
+        final layout = ref.watch(
+          stateSettingsProvider.select(
+            (value) => value.value?.lastLayout ?? QuranReadingLayout.studyMode,
+          ),
+        );
         return Padding(
           padding: const .symmetric(horizontal: 16, vertical: 8),
           child: Row(
@@ -211,25 +109,22 @@ class _HeaderWidget extends HookWidget {
               SizedBox(
                 width: 140,
                 child: FTabs(
-                  control: .managed(initial: viewMode.index),
-                  onPress: onViewModeChanged,
+                  control: .lifted(
+                    index: layout.index,
+                    onChange: (value) => ref
+                        .read(stateSettingsProvider.notifier)
+                        .setLastLayout(QuranReadingLayout.values[value]),
+                  ),
                   style: (style) => style.copyWith(
                     padding: const .all(2),
                     indicatorSize: FTabBarIndicatorSize.tab,
                   ),
-                  children: const [
-                    FTabEntry(
-                      label: Icon(FIcons.book, size: 14),
-                      child: SizedBox.shrink(),
-                    ),
-                    FTabEntry(
-                      label: Icon(FIcons.columns2, size: 14),
-                      child: SizedBox.shrink(),
-                    ),
-                    FTabEntry(
-                      label: Icon(FIcons.panelRight, size: 14),
-                      child: SizedBox.shrink(),
-                    ),
+                  children: [
+                    for (final mode in QuranReadingLayout.values)
+                      FTabEntry(
+                        label: Icon(mode.icon, size: 14),
+                        child: const SizedBox.shrink(),
+                      ),
                   ],
                 ),
               ),
@@ -238,11 +133,46 @@ class _HeaderWidget extends HookWidget {
               const _SurahSelectorWidget(),
               const SizedBox(width: AppSpacing.sm),
               // Juz selector
-              const _JuzSelectorWidget(),
+              SizedBox(
+                width: 200,
+                height: 50,
+                child: FSelect<int>.searchBuilder(
+                  control: .managed(
+                    initial: mushafController.currentPageInfo?.juzNumber,
+                    onChange: (value) async {
+                      if (value != null) {
+                        await mushafController.jumpToJuz(value);
+                      }
+                    },
+                  ),
+                  format: (value) => value.toString(),
+                  filter: (query) {
+                    final syncValues = mushafController.getJuzsSync();
+                    return (syncValues.isNotEmpty
+                            ? Future.value(syncValues)
+                            : mushafController.getJuzs())
+                        .then(
+                          (value) => value
+                              .where((e) => e.number.toString().contains(query))
+                              .map(
+                                (e) => e.number,
+                              ),
+                        );
+                  },
+                  contentBuilder: (context, query, values) => values
+                      .map(
+                        (value) => FSelectItem<int>(
+                          value: value,
+                          title: Text('Juz $value'),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
               const Spacer(),
               // Play/Stop audio button
               FButton.icon(
-                onPress: toggleAudioPlayer,
+                onPress: () {},
                 style: isAudioActive
                     ? FButtonStyle.primary()
                     : FButtonStyle.secondary(),
@@ -342,77 +272,45 @@ class _SurahSelectorWidget extends StatelessWidget {
   }
 }
 
-class _JuzSelectorWidget extends StatelessWidget {
-  const _JuzSelectorWidget();
+// class _JuzSelectorWidget extends StatelessWidget {
+//   const _JuzSelectorWidget();
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = FTheme.of(context).colors;
-    final typography = FTheme.of(context).typography;
+//   @override
+//   Widget build(BuildContext context) {
+//     final colors = FTheme.of(context).colors;
+//     final typography = FTheme.of(context).typography;
 
-    return Container(
-      padding: const .symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: colors.secondary,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Juz 1',
-            style: typography.sm.copyWith(
-              fontWeight: FontWeight.w500,
-              color: colors.foreground,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Icon(
-            FIcons.chevronDown,
-            size: 14,
-            color: colors.mutedForeground,
-          ),
-        ],
-      ),
-    );
-  }
-}
+//     return Container(
+//       padding: const .symmetric(horizontal: 12, vertical: 6),
+//       decoration: BoxDecoration(
+//         color: colors.secondary,
+//         borderRadius: BorderRadius.circular(8),
+//         border: Border.all(color: colors.border),
+//       ),
+//       child: Row(
+//         mainAxisSize: MainAxisSize.min,
+//         children: [
+//           Text(
+//             'Juz 1',
+//             style: typography.sm.copyWith(
+//               fontWeight: FontWeight.w500,
+//               color: colors.foreground,
+//             ),
+//           ),
+//           const SizedBox(width: AppSpacing.xs),
+//           Icon(
+//             FIcons.chevronDown,
+//             size: 14,
+//             color: colors.mutedForeground,
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
-class _MainContentWidget extends StatelessWidget {
+class _MainContentWidget extends ConsumerWidget {
   const _MainContentWidget({
-    required this.viewMode,
-    required this.page1Controller,
-    required this.page2Controller,
-    required this.onAyahTapped,
-  });
-
-  final QuranViewMode viewMode;
-  final MushafReaderController page1Controller;
-  final MushafReaderController page2Controller;
-  final void Function(AyahInfo) onAyahTapped;
-
-  @override
-  Widget build(BuildContext context) {
-    return switch (viewMode) {
-      QuranViewMode.singlePage => _SinglePageModeWidget(
-        controller: page1Controller,
-        onAyahTapped: onAyahTapped,
-      ),
-      QuranViewMode.twoPage => _TwoPageModeWidget(
-        page1Controller: page1Controller,
-        page2Controller: page2Controller,
-        onAyahTapped: onAyahTapped,
-      ),
-      QuranViewMode.study => _StudyModeWidget(
-        onAyahTap: onAyahTapped,
-      ),
-    };
-  }
-}
-
-class _SinglePageModeWidget extends StatelessWidget {
-  const _SinglePageModeWidget({
     required this.controller,
     required this.onAyahTapped,
   });
@@ -421,16 +319,102 @@ class _SinglePageModeWidget extends StatelessWidget {
   final void Function(AyahInfo) onAyahTapped;
 
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const .only(bottom: 120),
-      child: HoverCard(
-        child: Center(
-          child: MushafReader(
-            controller: controller,
-            onAyahTap: onAyahTapped,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = FTheme.of(context);
+    final viewMode = ref.watch(
+      stateSettingsProvider.select(
+        (value) => value.value?.lastLayout ?? QuranReadingLayout.studyMode,
+      ),
+    );
+
+    final mushafStyle = MushafStyle(
+      ayahStyleModifier: (defaultStyle) =>
+          defaultStyle.copyWith(color: theme.colors.foreground),
+      juzStyleModifier: (defaultStyle) => defaultStyle.copyWith(
+        color: theme.colors.mutedForeground,
+      ),
+      pageNumberStyleModifier: (defaultStyle) => defaultStyle.copyWith(
+        color: theme.colors.mutedForeground,
+      ),
+      surahNameStyleModifier: (defaultStyle) => defaultStyle.copyWith(
+        color: theme.colors.mutedForeground,
+      ),
+      basmalahStyleModifier: (defaultStyle) => defaultStyle.copyWith(
+        color: theme.colors.foreground,
+      ),
+
+      activeAyahStyleModifier: (defaultStyle) => defaultStyle.copyWith(
+        backgroundColor: theme.colors.primary,
+        color: theme.colors.primaryForeground,
+      ),
+      headerSurahNameStyleModifier: (defaultStyle) =>
+          defaultStyle.copyWith(fontSize: 22, color: Colors.brown.shade800),
+
+      // selectedAyahTextColor: theme.colors.primaryForeground,
+      // surahHeaderBorderColor: theme.colors.border,
+    );
+    void onPageNumberChanged(int page) {
+      unawaited(
+        ref.read(stateSettingsProvider.notifier).setLastQuranPage(page),
+      );
+    }
+
+    final child = switch (viewMode) {
+      .singlePage => _SinglePageModeWidget(
+        controller: controller,
+        onAyahTapped: onAyahTapped,
+        mushafStyle: mushafStyle,
+        onPageNumberChanged: onPageNumberChanged,
+      ),
+      .doublePage => _TwoPageModeWidget(
+        controller: controller,
+        onAyahTapped: onAyahTapped,
+        mushafStyle: mushafStyle,
+        onPageNumberChanged: ((int, int) v) => onPageNumberChanged(v.$1),
+      ),
+      .studyMode => _StudyModeWidget(
+        mushafStyle: mushafStyle,
+        controller: controller,
+        onPageNumberChanged: onPageNumberChanged,
+      ),
+    };
+
+    return KeyedSubtree(
+      key: ValueKey(viewMode),
+      child: child
+          .animate()
+          .fadeIn(duration: context.theme.durations.fast, curve: Curves.easeOut)
+          .scale(
+            begin: const Offset(0.98, 0.98),
+            end: const Offset(1, 1),
+            duration: context.theme.durations.normal,
+            curve: Curves.easeOutCubic,
           ),
-        ),
+    );
+  }
+}
+
+class _SinglePageModeWidget extends StatelessWidget {
+  const _SinglePageModeWidget({
+    required this.controller,
+    required this.onAyahTapped,
+    required this.mushafStyle,
+    required this.onPageNumberChanged,
+  });
+
+  final MushafReaderController controller;
+  final MushafStyle mushafStyle;
+  final void Function(AyahInfo) onAyahTapped;
+  final void Function(int) onPageNumberChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return HoverCard(
+      child: MushafReader(
+        controller: controller,
+        onAyahTap: onAyahTapped,
+        style: mushafStyle,
+        onPageNumberChanged: onPageNumberChanged,
       ),
     );
   }
@@ -438,40 +422,30 @@ class _SinglePageModeWidget extends StatelessWidget {
 
 class _TwoPageModeWidget extends StatelessWidget {
   const _TwoPageModeWidget({
-    required this.page1Controller,
-    required this.page2Controller,
+    required this.controller,
     required this.onAyahTapped,
+    required this.mushafStyle,
+    required this.onPageNumberChanged,
   });
 
-  final MushafReaderController page1Controller;
-  final MushafReaderController page2Controller;
+  final MushafReaderController controller;
+  final MushafStyle mushafStyle;
   final void Function(AyahInfo) onAyahTapped;
+  final void Function((int, int)) onPageNumberChanged;
 
   @override
   Widget build(BuildContext context) {
     final colors = FTheme.of(context).colors;
 
     return HoverCard(
-      child: Row(
-        crossAxisAlignment: .stretch,
-        children: [
-          Expanded(
-            child: MushafReader(
-              controller: page1Controller,
-              onAyahTap: onAyahTapped,
-            ),
-          ),
-          FDivider(
-            axis: .vertical,
-            style: (style) => style.copyWith(color: colors.border),
-          ),
-          Expanded(
-            child: MushafReader(
-              controller: page2Controller,
-              onAyahTap: onAyahTapped,
-            ),
-          ),
-        ],
+      child: MushafTwoPageReader(
+        key: ValueKey(
+          'two-page-reader-${colors.secondaryForeground.hashCode}',
+        ),
+        controller: controller,
+        style: mushafStyle,
+        onAyahTap: onAyahTapped,
+        onPageNumberChanged: onPageNumberChanged,
       ),
     );
   }
@@ -479,10 +453,14 @@ class _TwoPageModeWidget extends StatelessWidget {
 
 class _StudyModeWidget extends StatelessWidget {
   const _StudyModeWidget({
-    this.onAyahTap,
+    required this.mushafStyle,
+    required this.controller,
+    required this.onPageNumberChanged,
   });
 
-  final void Function(AyahInfo)? onAyahTap;
+  final MushafStyle mushafStyle;
+  final MushafReaderController controller;
+  final void Function(int) onPageNumberChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -494,7 +472,9 @@ class _StudyModeWidget extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 500),
           child: MushafReader(
-            onAyahTap: onAyahTap,
+            controller: controller,
+            style: mushafStyle,
+            onPageNumberChanged: onPageNumberChanged,
           ),
         ),
       ),
@@ -545,7 +525,8 @@ class _StudyModeWidget extends StatelessWidget {
   }
 }
 
-/// Wrapper that watches ayah state via Riverpod, isolating rebuilds from FResizable.
+/// Wrapper that watches ayah state via Riverpod,
+/// isolating rebuilds from FResizable.
 class _StudyPanelWrapper extends ConsumerWidget {
   const _StudyPanelWrapper();
 

@@ -4,6 +4,7 @@ import 'package:mushaf_reader/src/data/models/mushaf_style.dart'
     show StyleModifier;
 import 'package:mushaf_reader/src/data/models/surah_model.dart';
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
+import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 
 /// A widget that displays a Surah name using the QCF4 Basmalah font.
 ///
@@ -37,7 +38,7 @@ import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
 /// See also:
 /// - [SurahHeaderWidget], which uses this with an SVG banner
 /// - [MushafFonts.basmalahFamily], the font used for rendering
-class SurahNameWidget extends StatelessWidget {
+class SurahNameWidget extends StatefulWidget {
   /// The Surah data to display.
   ///
   /// If provided, the widget renders directly.
@@ -77,6 +78,9 @@ class SurahNameWidget extends StatelessWidget {
   /// Callback triggered when the surah name widget is long pressed.
   final void Function(int surahNumber)? onLongPress;
 
+  /// Optional repository for testing.
+  final IQuranRepository? repository;
+
   /// Creates a SurahNameWidget with surah data.
   const SurahNameWidget({
     super.key,
@@ -86,6 +90,7 @@ class SurahNameWidget extends StatelessWidget {
     this.styleModifier,
     this.onTap,
     this.onLongPress,
+    this.repository,
   }) : _surahData = surahData,
        _surahNumber = null;
 
@@ -100,19 +105,49 @@ class SurahNameWidget extends StatelessWidget {
     this.styleModifier,
     this.onTap,
     this.onLongPress,
+    this.repository,
   }) : _surahData = null,
        _surahNumber = surahNumber;
 
   @override
+  State<SurahNameWidget> createState() => _SurahNameWidgetState();
+}
+
+class _SurahNameWidgetState extends State<SurahNameWidget> {
+  Future<SurahModel?>? _future;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget._surahData == null && widget._surahNumber != null) {
+      _loadFuture();
+    }
+  }
+
+  @override
+  void didUpdateWidget(SurahNameWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget._surahNumber != oldWidget._surahNumber) {
+      _loadFuture();
+    }
+  }
+
+  void _loadFuture() {
+    _future = (widget.repository ?? HiveQuranRepository()).getSurah(
+      widget._surahNumber!,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     // If we have surah data, render directly
-    if (_surahData != null) {
-      return _buildContent(_surahData);
+    if (widget._surahData != null) {
+      return _buildContent(widget._surahData!);
     }
 
     // Otherwise, load asynchronously
     return FutureBuilder<SurahModel?>(
-      future: HiveQuranRepository().getSurah(_surahNumber!),
+      future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting ||
             !snapshot.hasData ||
@@ -126,16 +161,19 @@ class SurahNameWidget extends StatelessWidget {
 
   Widget _buildContent(SurahModel surahData) {
     final effectiveStyle = MushafTextStyleMerger.mergeBasmalahStyle(
-      userStyle: textStyle,
-      modifier: styleModifier,
-      baseSize: fontSize ?? textStyle?.fontSize ?? MushafBaseFontSizes.basmalah,
+      userStyle: widget.textStyle,
+      modifier: widget.styleModifier,
+      baseSize:
+          widget.fontSize ??
+          widget.textStyle?.fontSize ??
+          MushafBaseFontSizes.basmalah,
       scaleFactor: 1.0,
     );
 
-    if (onTap != null || onLongPress != null) {
+    if (widget.onTap != null || widget.onLongPress != null) {
       return GestureDetector(
-        onTap: () => onTap?.call(surahData.number),
-        onLongPress: () => onLongPress?.call(surahData.number),
+        onTap: () => widget.onTap?.call(surahData.number),
+        onLongPress: () => widget.onLongPress?.call(surahData.number),
         child: Text(surahData.glyph, style: effectiveStyle),
       );
     }

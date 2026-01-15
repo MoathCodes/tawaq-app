@@ -11,6 +11,5 @@ part 'hive_adapters.g.dart';
     AdapterSpec<Prayer>(),
     AdapterSpec<CompletionStatus>(),
   ],
-  reservedTypeIds: {1, 2, 3, 4, 5},
 )
 class HiveAdapters {}

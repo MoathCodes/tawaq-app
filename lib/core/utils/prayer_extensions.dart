@@ -57,56 +57,31 @@ extension MethodLocaleExtension on CalculationMethod {
   /// Returns the localized name for this calculation method.
   String getLocaleName(AppLocalizations locale) {
     return switch (this) {
-      CalculationMethod.dubai => locale.dubai,
-      CalculationMethod.egyptian => locale.egyptian,
-      CalculationMethod.karachi => locale.karachi,
-      CalculationMethod.kuwait => locale.kuwait,
-      CalculationMethod.moonsightingCommittee => locale.moonsightingCommittee,
-      CalculationMethod.morocco => locale.morocco,
-      CalculationMethod.muslimWorldLeague => locale.muslimWorldLeague,
-      CalculationMethod.northAmerica => locale.northAmerica,
-      CalculationMethod.other => locale.other,
-      CalculationMethod.qatar => locale.qatar,
-      CalculationMethod.singapore => locale.singapore,
-      CalculationMethod.tehran => locale.tehran,
-      CalculationMethod.turkiye => locale.turkiye,
-      CalculationMethod.ummAlQura => locale.ummAlQura,
+      OtherCalculationMethod() => locale.other,
+      MuslimWorldLeague() => locale.muslimWorldLeague,
+      Egyptian() => locale.egyptian,
+      Karachi() => locale.karachi,
+      UmmAlQura() => locale.ummAlQura,
+      Dubai() => locale.dubai,
+      MoonsightingCommittee() => locale.moonsightingCommittee,
+      NorthAmerica() => locale.northAmerica,
+      Kuwait() => locale.kuwait,
+      Qatar() => locale.qatar,
+      Singapore() => locale.singapore,
+      Tehran() => locale.tehran,
+      Turkiye() => locale.turkiye,
+      Morocco() => locale.morocco,
+      CustomCalculationMethod() => locale.other,
     };
   }
 }
 
-/// Factory helpers for obtaining the canonical parameters of each method.
-extension MethodParamsExtension on CalculationMethod {
-  /// Returns the canonical [CalculationParameters] for this method.
-  CalculationParameters getParams() {
-    return switch (this) {
-      CalculationMethod.dubai => CalculationMethodParameters.dubai(),
-      CalculationMethod.egyptian => CalculationMethodParameters.egyptian(),
-      CalculationMethod.karachi => CalculationMethodParameters.karachi(),
-      CalculationMethod.kuwait => CalculationMethodParameters.kuwait(),
-      CalculationMethod.moonsightingCommittee =>
-        CalculationMethodParameters.moonsightingCommittee(),
-      CalculationMethod.morocco => CalculationMethodParameters.morocco(),
-      CalculationMethod.muslimWorldLeague =>
-        CalculationMethodParameters.muslimWorldLeague(),
-      CalculationMethod.northAmerica =>
-        CalculationMethodParameters.northAmerica(),
-      CalculationMethod.other => CalculationMethodParameters.other(),
-      CalculationMethod.qatar => CalculationMethodParameters.qatar(),
-      CalculationMethod.singapore => CalculationMethodParameters.singapore(),
-      CalculationMethod.tehran => CalculationMethodParameters.tehran(),
-      CalculationMethod.turkiye => CalculationMethodParameters.turkiye(),
-      CalculationMethod.ummAlQura => CalculationMethodParameters.ummAlQura(),
-    };
-  }
-}
-
-/// Utilities for reading localized prayer times from [PrayerTimesData].
-extension PrayerLocaleExtension on PrayerTimesData {
+/// Utilities for reading localized prayer times from [PrayerTimes].
+extension PrayerLocaleExtension on PrayerTimes {
   /// Returns the [DateTime] of the currently active prayer in the [location].
   DateTime getCurrentPrayerDateTime(Location location) {
     return switch (currentPrayer(
-      date: TZDateTime.from(DateTime.now(), location),
+      time: TZDateTime.from(DateTime.now(), location),
     )) {
       Prayer.fajr => TZDateTime.from(fajr, location),
       Prayer.sunrise => TZDateTime.from(sunrise, location),
@@ -122,7 +97,7 @@ extension PrayerLocaleExtension on PrayerTimesData {
   /// Returns the [DateTime] of the next prayer in the given [location].
   DateTime getNextPrayerDateTime(Location location) {
     return switch (nextPrayer(
-      date: TZDateTime.from(DateTime.now(), location),
+      time: TZDateTime.from(DateTime.now(), location),
     )) {
       Prayer.fajr => TZDateTime.from(fajr, location),
       Prayer.sunrise => TZDateTime.from(sunrise, location),

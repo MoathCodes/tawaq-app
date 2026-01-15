@@ -110,14 +110,16 @@ class MushafReaderController extends ChangeNotifier {
   /// The initial page to display (1-604).
   final int initialPage;
 
+  /// Number of pages to display per viewport (1 or 2).
+  int _pagesPerViewport;
+
   /// Current page number (1-604).
+  ///
+  /// In 2-page mode, this is always the start page of the viewport.
   int _currentPage = 1;
 
   /// The currently selected Ayah ID, or null if none selected.
   int? _selectedAyahId;
-
-  /// The currently selected word (within an Ayah), or null if none selected.
-  SelectedWord? _selectedWord;
 
   /// Whether the controller is initialized.
   bool _isInitialized = false;
@@ -134,6 +136,9 @@ class MushafReaderController extends ChangeNotifier {
   /// Cached page info for the current page.
   MushafPageInfo? _currentPageInfo;
 
+  /// Cached page info for the next page (in 2-page mode).
+  MushafPageInfo? _nextPageInfo;
+
   /// Creates a MushafReaderController.
   ///
   /// [pageController] - Optional external PageController. If not provided,
@@ -141,16 +146,43 @@ class MushafReaderController extends ChangeNotifier {
   ///
   /// [initialPage] - The page to start on (1-604). Defaults to 1.
   ///
-  /// [repository] - Optional custom repository for testing.
-  MushafReaderController({PageController? pageController, this.initialPage = 1})
-    : _pageController = pageController,
-      _ownsPageController = pageController == null,
-      _repo = HiveQuranRepository(),
-      _currentPage = initialPage {
+  /// [pagesPerViewport] - How many pages to show at once. Defaults to 1.
+  MushafReaderController({
+    PageController? pageController,
+    this.initialPage = 1,
+    int pagesPerViewport = 1,
+  }) : _pageController = pageController,
+       _ownsPageController = pageController == null,
+       _repo = HiveQuranRepository(),
+       _pagesPerViewport = pagesPerViewport,
+       _currentPage =
+           ((initialPage - 1) ~/ pagesPerViewport) * pagesPerViewport + 1 {
+    _init(checkInit: true);
+  }
+
+  /// Creates a MushafReaderController with a custom repository.
+  ///
+  /// Use this constructor for testing or when using a custom data source.
+  @visibleForTesting
+  MushafReaderController.withRepository({
+    required IQuranRepository repository,
+    PageController? pageController,
+    this.initialPage = 1,
+    int pagesPerViewport = 1,
+  }) : _pageController = pageController,
+       _ownsPageController = pageController == null,
+       _repo = repository,
+       _pagesPerViewport = pagesPerViewport,
+       _currentPage =
+           ((initialPage - 1) ~/ pagesPerViewport) * pagesPerViewport + 1 {
+    _init(checkInit: false);
+  }
+
+  void _init({required bool checkInit}) {
     if (_isInitialized) return;
 
-    // Ensure the library was initialized
-    if (!MushafReaderLibrary.isInitialized) {
+    // Ensure the library was initialized (only if using default repo)
+    if (checkInit && !MushafReaderLibrary.isInitialized) {
       throw StateError(
         'MushafReaderLibrary.ensureInitialized() must be called before using '
         'MushafReaderController. Add it to your main() function:\n\n'
@@ -189,10 +221,22 @@ class MushafReaderController extends ChangeNotifier {
   String? get basmalah => _cachedBasmalah;
 
   /// The current page number (1-604).
+  ///
+  /// In 2-page mode, this is the first page of the viewport.
   int get currentPage => _currentPage;
+
+  /// The current pages numbers.
+  ///
+  /// Returns a record `(first, second)`. In 1-page mode, `second` is `first + 1`
+  /// but typically only `first` is displayed.
+  (int, int) get currentPages => (_currentPage, _currentPage + 1);
 
   /// The current page info (sync access, may be null before first page load).
   MushafPageInfo? get currentPageInfo => _currentPageInfo;
+
+  /// The current pages info (sync access).
+  (MushafPageInfo?, MushafPageInfo?) get currentPagesInfo =>
+      (_currentPageInfo, _nextPageInfo);
 
   /// Whether the controller is initialized and ready for use.
   bool get isInitialized => _isInitialized;
@@ -201,7 +245,10 @@ class MushafReaderController extends ChangeNotifier {
   ///
   /// Created lazily on first access.
   PageController get pageController {
-    _pageController ??= PageController(initialPage: initialPage - 1);
+    if (_pageController == null) {
+      final viewportIndex = (_currentPage - 1) ~/ pagesPerViewport;
+      _pageController = PageController(initialPage: viewportIndex);
+    }
     return _pageController!;
   }
 
@@ -213,8 +260,28 @@ class MushafReaderController extends ChangeNotifier {
   /// The currently selected Ayah ID, or null if none.
   int? get selectedAyahId => _selectedAyahId;
 
-  /// The currently selected word, or null if none.
-  SelectedWord? get selectedWord => _selectedWord;
+  /// Number of pages displayed per viewport (1 or 2).
+  ///
+  /// Use this setter when switching between single-page and two-page modes.
+  int get pagesPerViewport => _pagesPerViewport;
+  set pagesPerViewport(int value) {
+    if (_pagesPerViewport != value && (value == 1 || value == 2)) {
+      // Remember the current page before changing viewport mode
+      final currentPage = _currentPage;
+      _pagesPerViewport = value;
+      // Recalculate current page position for the new viewport mode
+      final normalizedPage = ((currentPage - 1) ~/ value) * value + 1;
+      _currentPage = normalizedPage;
+      // Jump the PageController to the correct viewport index after frame completes
+      final viewportIndex = (normalizedPage - 1) ~/ value;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_pageController?.hasClients ?? false) {
+          _pageController!.jumpToPage(viewportIndex);
+        }
+      });
+      notifyListeners();
+    }
+  }
 
   // ============================================================
   // Initialization
@@ -227,33 +294,24 @@ class MushafReaderController extends ChangeNotifier {
     Curve curve = Curves.easeInOut,
   }) async {
     if (page < 1 || page > 604) return;
-    _setCurrentPage(page);
-    await pageController.animateToPage(
-      page - 1,
-      duration: duration,
-      curve: curve,
-    );
+
+    final normalizedPage =
+        ((page - 1) ~/ pagesPerViewport) * pagesPerViewport + 1;
+    _setCurrentPage(normalizedPage);
+
+    final viewportIndex = (normalizedPage - 1) ~/ pagesPerViewport;
+    if (pageController.hasClients) {
+      await pageController.animateToPage(
+        viewportIndex,
+        duration: duration,
+        curve: curve,
+      );
+    }
   }
 
   /// Clears the current Ayah selection.
   void clearSelection() {
     selectAyah(null);
-  }
-
-  /// Clears the current word selection.
-  void clearWordSelection() {
-    selectWord(null);
-  }
-
-  /// Selects a word inside an Ayah.
-  ///
-  /// Selecting a word also selects its parent Ayah.
-  void selectWord(SelectedWord? word) {
-    _selectedWord = word;
-    if (word != null) {
-      _selectedAyahId = word.ayahId;
-    }
-    notifyListeners();
   }
 
   // ============================================================
@@ -346,6 +404,16 @@ class MushafReaderController extends ChangeNotifier {
   Future<MushafPageInfo> getPageInfo(int page) async {
     final pageModel = await getPage(page);
     return _buildPageInfo(pageModel);
+  }
+
+  /// Gets the info for two pages (starting from [page]).
+  Future<(MushafPageInfo, MushafPageInfo?)> getTwoPagesInfo(int page) async {
+    final first = await getPageInfo(page);
+    MushafPageInfo? second;
+    if (page + 1 <= 604) {
+      second = await getPageInfo(page + 1);
+    }
+    return (first, second);
   }
 
   /// Gets the start page for a Surah.
@@ -444,8 +512,15 @@ class MushafReaderController extends ChangeNotifier {
   /// Updates the current page and navigates the PageView.
   void jumpToPage(int page) {
     if (page < 1 || page > 604) return;
-    _setCurrentPage(page);
-    pageController.jumpToPage(page - 1);
+
+    final normalizedPage =
+        ((page - 1) ~/ pagesPerViewport) * pagesPerViewport + 1;
+    _setCurrentPage(normalizedPage);
+
+    final viewportIndex = (normalizedPage - 1) ~/ pagesPerViewport;
+    if (pageController.hasClients) {
+      pageController.jumpToPage(viewportIndex);
+    }
   }
 
   /// Jumps to the start of a Surah.
@@ -459,13 +534,17 @@ class MushafReaderController extends ChangeNotifier {
   /// Call this after navigation to update [currentPageInfo].
   Future<MushafPageInfo> loadCurrentPageInfo() async {
     _currentPageInfo = await getPageInfo(_currentPage);
+    if (pagesPerViewport == 2 && _currentPage + 1 <= 604) {
+      _nextPageInfo = await getPageInfo(_currentPage + 1);
+    }
     return _currentPageInfo!;
   }
 
   /// Navigates to the next page.
   void nextPage() {
-    if (_currentPage < 604) {
-      jumpToPage(_currentPage + 1);
+    final next = _currentPage + pagesPerViewport;
+    if (next <= 604) {
+      jumpToPage(next);
     }
   }
 
@@ -480,7 +559,8 @@ class MushafReaderController extends ChangeNotifier {
   /// )
   /// ```
   void onPageChanged(int pageIndex) {
-    _setCurrentPage(pageIndex + 1);
+    final page = pageIndex * pagesPerViewport + 1;
+    _setCurrentPage(page);
   }
 
   // ============================================================
@@ -508,8 +588,9 @@ class MushafReaderController extends ChangeNotifier {
 
   /// Navigates to the previous page.
   void previousPage() {
-    if (_currentPage > 1) {
-      jumpToPage(_currentPage - 1);
+    final prev = _currentPage - pagesPerViewport;
+    if (prev >= 1) {
+      jumpToPage(prev);
     }
   }
 
@@ -521,16 +602,10 @@ class MushafReaderController extends ChangeNotifier {
   ///
   /// Pass null to clear the selection.
   void selectAyah(int? ayahId) {
-    if (_selectedAyahId == ayahId) return;
-
-    _selectedAyahId = ayahId;
-
-    // Clear any selected word if it's not in the newly selected ayah.
-    if (ayahId == null || _selectedWord?.ayahId != ayahId) {
-      _selectedWord = null;
+    if (_selectedAyahId != ayahId) {
+      _selectedAyahId = ayahId;
+      notifyListeners();
     }
-
-    notifyListeners();
   }
 
   MushafPageInfo _buildPageInfo(QuranPageModel page) {
@@ -568,9 +643,15 @@ class MushafReaderController extends ChangeNotifier {
   Future<void> _loadPageInfoAsync() async {
     final page = _currentPage;
     final info = await getPageInfo(page);
+    MushafPageInfo? nextInfo;
+    if (pagesPerViewport == 2 && page + 1 <= 604) {
+      nextInfo = await getPageInfo(page + 1);
+    }
+
     // Only update if we're still on the same page
     if (_currentPage == page) {
       _currentPageInfo = info;
+      _nextPageInfo = nextInfo;
       notifyListeners();
     }
   }
@@ -579,6 +660,7 @@ class MushafReaderController extends ChangeNotifier {
     if (_currentPage != page) {
       _currentPage = page;
       _currentPageInfo = null; // Invalidate cache
+      _nextPageInfo = null;
       notifyListeners();
       // Load page info asynchronously
       _loadPageInfoAsync();

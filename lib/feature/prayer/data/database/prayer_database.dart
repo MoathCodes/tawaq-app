@@ -53,7 +53,8 @@ class PrayerDatabase {
     return counts;
   }
 
-  /// Counts the number of prayers with a specific completion status on a given date.
+  /// Counts the number of prayers with a specific completion status on a given
+  /// date.
   Future<int> countPrayerStatusOnDate(
     CompletionStatus status,
     DateTime from,

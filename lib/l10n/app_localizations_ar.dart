@@ -81,10 +81,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get advancedSettingsTitle => 'إعدادات متقدمة';
 
   @override
-  String get appearance => 'خصائص العرض';
+  String get appearance => 'المظهر';
 
   @override
-  String get appearanceSubtitle => 'تخصيص مظهر التطبيق.';
+  String get appearanceSubtitle => 'تخصيص سمة التطبيق وألوانه.';
 
   @override
   String get appName => 'حسانات';
@@ -333,10 +333,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get locationSectionSubtitle =>
-      'تحديد الموقع الجغرافي وطريقة حساب مواقيت الصلاة.';
+      'حدد موقعك الجغرافي والمنطقة الزمنية لأوقات صلاة دقيقة.';
 
   @override
-  String get locationSectionTitle => 'الموقع والحساب';
+  String get locationSectionTitle => 'الموقع';
 
   @override
   String get lockToPreventEdits => 'اقفل لمنع التعديل';
@@ -570,10 +570,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get timeFormat => 'تنسيق الوقت';
 
   @override
-  String get timeSectionSubtitle => 'تنسيق عرض الوقت وأوقات الإقامة لكل صلاة.';
+  String get timeSectionSubtitle => 'إعداد طريقة الحساب وتنسيق الوقت والإقامة.';
 
   @override
-  String get timeSectionTitle => 'عرض الأوقات والإقامة';
+  String get timeSectionTitle => 'مواقيت الصلاة';
 
   @override
   String get timezone => 'المنطقة الزمنية';
@@ -602,6 +602,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get useMyLocation => 'استخدم موقعي الحالي';
+
+  @override
+  String get autoLocationEnabled => 'يتم تحديث الموقع تلقائيًا';
+
+  @override
+  String get autoLocationDisabled => 'اضغط لتفعيل الموقع التلقائي';
 
   @override
   String get useSystemTimezone => 'استخدام المنطقة الزمنية للنظام';

@@ -76,8 +76,9 @@ import 'package:mushaf_reader/src/presentation/screens/mushaf_page.dart';
 ///
 /// ## RTL Support
 ///
-/// The Mushaf is read right-to-left. Set [reverse] to `true` (default) for
-/// authentic reading experience where swiping left goes to the next page.
+/// The Mushaf is read right-to-left. By default, [textDirection] is set to
+/// [TextDirection.rtl], providing an authentic reading experience where
+/// swiping right goes to the next page.
 ///
 /// See also:
 /// - [MushafReaderController], for programmatic control
@@ -95,11 +96,16 @@ class MushafReader extends StatefulWidget {
   /// Only used when [controller] is not provided.
   final int initialPage;
 
-  /// Whether to reverse page order for RTL reading.
+  /// Whether to reverse page order within the [textDirection].
   ///
-  /// When `true` (default), swiping left goes to the next page,
-  /// which matches the natural reading direction of Arabic text.
+  /// Defaults to `false`.
   final bool reverse;
+
+  /// The reading direction for the Mushaf.
+  ///
+  /// Defaults to [TextDirection.rtl], which matches the natural reading
+  /// direction of Arabic text (swiping right goes to the next page).
+  final TextDirection textDirection;
 
   /// Callback invoked when an Ayah is tapped.
   ///
@@ -110,13 +116,6 @@ class MushafReader extends StatefulWidget {
   ///
   /// Provides rich [AyahInfo] for context menus, sharing, etc.
   final void Function(AyahInfo info)? onAyahLongPress;
-
-  /// Callback invoked when a word inside an Ayah is tapped.
-  ///
-  /// Provides the tapped Ayah info, the word index (0-based), and the glyph
-  /// text for that word.
-  final void Function(AyahInfo info, int wordIndex, String wordGlyph)?
-  onAyahWordTap;
 
   /// Callback invoked when the page changes.
   ///
@@ -151,10 +150,10 @@ class MushafReader extends StatefulWidget {
     super.key,
     this.controller,
     this.initialPage = 1,
-    this.reverse = true,
+    this.reverse = false,
+    this.textDirection = TextDirection.rtl,
     this.onAyahTap,
     this.onAyahLongPress,
-    this.onAyahWordTap,
     this.onPageChanged,
     this.onPageNumberChanged,
     this.style,
@@ -181,48 +180,31 @@ class _MushafReaderState extends State<MushafReader> {
           const Center(child: CircularProgressIndicator());
     }
 
-    return PageView.builder(
-      controller: _controller.pageController,
-      reverse: widget.reverse,
-      clipBehavior: widget.clipBehavior,
-      physics: widget.physics,
-      itemCount: 604,
-      onPageChanged: _onPageChanged,
-      // children: List.generate(
-      //   604,
-      //   (index) => MushafPage(
-      //     page: index + 1,
-      //     style: widget.style,
-      //     loadingWidget: widget.pageLoadingWidget,
-      //     hideHeader: widget.hideHeader,
-      //     onTapAyah: widget.onAyahTap != null
-      //         ? (ayahId) => _handleAyahTap(ayahId)
-      //         : null,
-      //     onLongPressAyah: widget.onAyahLongPress != null
-      //         ? (ayahId) => _handleAyahLongPress(ayahId)
-      //         : null,
-      //   ),
-      // ),
-      itemBuilder: (context, index) {
-        final page = index + 1;
-        return MushafPage(
-          page: page,
-          controller: _controller,
-          style: widget.style,
-          loadingWidget: widget.pageLoadingWidget,
-          hideHeader: widget.hideHeader,
-          onTapAyah: widget.onAyahTap != null
-              ? (ayahId) => _handleAyahTap(ayahId)
-              : null,
-          onLongPressAyah: widget.onAyahLongPress != null
-              ? (ayahId) => _handleAyahLongPress(ayahId)
-              : null,
-          onTapAyahWord: widget.onAyahWordTap != null
-              ? (ayahId, wordIndex, wordGlyph) =>
-                    _handleAyahWordTap(ayahId, wordIndex, wordGlyph)
-              : null,
-        );
-      },
+    return Directionality(
+      textDirection: widget.textDirection,
+      child: PageView.builder(
+        controller: _controller.pageController,
+        reverse: widget.reverse,
+        clipBehavior: widget.clipBehavior,
+        physics: widget.physics,
+        itemCount: 604,
+        onPageChanged: _onPageChanged,
+        itemBuilder: (context, index) {
+          final page = index + 1;
+          return MushafPage(
+            page: page,
+            style: widget.style,
+            loadingWidget: widget.pageLoadingWidget,
+            hideHeader: widget.hideHeader,
+            onTapAyah: widget.onAyahTap != null
+                ? (ayahId) => _handleAyahTap(ayahId)
+                : null,
+            onLongPressAyah: widget.onAyahLongPress != null
+                ? (ayahId) => _handleAyahLongPress(ayahId)
+                : null,
+          );
+        },
+      ),
     );
   }
 
@@ -240,6 +222,8 @@ class _MushafReaderState extends State<MushafReader> {
     super.initState();
     if (widget.controller != null) {
       _controller = widget.controller!;
+      // Ensure controller is configured for single-page mode
+      _controller.pagesPerViewport = 1;
       _isInitialized = _controller.isInitialized;
     } else {
       _controller = MushafReaderController(initialPage: widget.initialPage);
@@ -259,16 +243,6 @@ class _MushafReaderState extends State<MushafReader> {
     if (widget.onAyahTap == null) return;
     final info = await _controller.getAyahInfo(ayahId);
     widget.onAyahTap!(info);
-  }
-
-  Future<void> _handleAyahWordTap(
-    int ayahId,
-    int wordIndex,
-    String wordGlyph,
-  ) async {
-    if (widget.onAyahWordTap == null) return;
-    final info = await _controller.getAyahInfo(ayahId);
-    widget.onAyahWordTap!(info, wordIndex, wordGlyph);
   }
 
   Future<void> _initController() async {

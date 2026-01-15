@@ -90,15 +90,15 @@ class TrackerCompletionCard extends HookConsumerWidget {
         child: MouseClick(
           disabled: isDisabled.value,
           onClick: controller.toggle,
-          onExit: (event) => setHovered(false),
-          onHover: (event) => setHovered(true),
+          onExit: (event) => setHovered(value: false),
+          onHover: (event) => setHovered(value: true),
           child: AnimatedOpacity(
             duration: _animationDuration,
             opacity: isDisabled.value ? 0.5 : 1.0,
             curve: Curves.easeInOut,
             onEnd: () {
               if (cardData.isTimePassed) {
-                setHovered(false);
+                setHovered(value: false);
               }
             },
             child: AnimatedScale(

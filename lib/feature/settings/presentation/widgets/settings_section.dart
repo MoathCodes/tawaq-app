@@ -95,7 +95,6 @@ class SettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return FCard(
       // titleAlignment:
       //     isArabic ? Alignment.centerRight : Alignment.centerLeft,

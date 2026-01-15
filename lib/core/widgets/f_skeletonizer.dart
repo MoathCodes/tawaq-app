@@ -73,7 +73,8 @@ class FSkeletonizer extends StatelessWidget {
 
   /// Whether to justify multi-line text in skeleton mode.
   ///
-  /// When true, multi-line text will be justified for a more realistic skeleton appearance.
+  /// When true, multi-line text will be justified for a more 
+  /// realistic skeleton appearance.
   final bool justifyMultiLineText;
 
   /// The border radius for text bone elements.

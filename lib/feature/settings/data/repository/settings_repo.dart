@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:hasanat/feature/settings/data/models/state_settings.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:logger/logger.dart';
 import 'package:prf/prf.dart';
@@ -49,10 +50,36 @@ class SettingsRepo {
     decode: (string) =>
         string == null || string.isEmpty ? null : DateTime.parse(string),
   );
+  final Prf<StateSettings> _appStateSettings = Prf.json(
+    'app_state_settings',
+    fromJson: StateSettings.fromJson,
+    toJson: (object) => object.toJson(),
+    defaultValue: StateSettings(
+      sidebarCollapsed: false,
+      lastQuranPage: 1,
+      lastLayout: .studyMode,
+    ),
+  );
 
   /// Returns the date of the first recorded prayer.
   Future<DateTime?> getFirstPrayerRecordedDate() async {
     return _firstPrayerRecordedDate.get();
+  }
+
+  /// Returns the current app state settings.
+  Future<StateSettings> getAppStateSettings() async {
+    return _appStateSettings.getOrDefault();
+  }
+
+  /// Sets the app state settings.
+  Future<void> setAppStateSettings(StateSettings settings) async {
+    const logPrefix = '[SettingsRepo.setAppStateSettings] ';
+    try {
+      _log.d('$logPrefix Setting app state settings: ${settings.toJson()}');
+      await _appStateSettings.set(settings);
+    } catch (e, stackTrace) {
+      _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
+    }
   }
 
   /// Sets the date of the first recorded prayer (only if not already set).

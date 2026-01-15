@@ -16,8 +16,9 @@ void main() {
 
   setUpAll(() async {
     // Initialize Hive for tests with a temp directory
-    Hive.init('./test/hive_test_db');
-    Hive.registerAdapters();
+    Hive
+      ..init('./test/hive_test_db')
+      ..registerAdapters();
   });
 
   group('Prayer streak calculation', () {

@@ -82,18 +82,18 @@ export 'src/core/fonts.dart'
 // Core models
 export 'src/data/models/ayah_info.dart';
 export 'src/data/models/ayah_model.dart';
-export 'src/data/models/selected_word.dart';
-export 'src/data/models/word_range.dart';
 export 'src/data/models/juz_model.dart';
 export 'src/data/models/mushaf_page_info.dart';
 export 'src/data/models/mushaf_style.dart';
 export 'src/data/models/quran_page_model.dart';
+export 'src/data/models/revelation_type.dart';
 export 'src/data/models/surah_model.dart';
 // Controller
 export 'src/logic/mushaf_reader_controller.dart';
 // Screens
 export 'src/presentation/screens/mushaf_page.dart';
 export 'src/presentation/screens/mushaf_reader.dart';
+export 'src/presentation/screens/mushaf_two_page_reader.dart';
 // Widgets
 export 'src/presentation/widgets/ayah_widget.dart';
 export 'src/presentation/widgets/basmalah_widget.dart';

@@ -149,13 +149,13 @@ abstract class AppLocalizations {
   /// No description provided for @appearance.
   ///
   /// In en, this message translates to:
-  /// **'Display Settings'**
+  /// **'Appearance'**
   String get appearance;
 
   /// No description provided for @appearanceSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Customize the app\'s appearance.'**
+  /// **'Customize the app\'s theme and colors.'**
   String get appearanceSubtitle;
 
   /// No description provided for @appName.
@@ -611,13 +611,13 @@ abstract class AppLocalizations {
   /// No description provided for @locationSectionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Set geographical location and prayer time calculation method.'**
+  /// **'Set your geographical location and timezone for accurate prayer times.'**
   String get locationSectionSubtitle;
 
   /// No description provided for @locationSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Location & Calculation'**
+  /// **'Location'**
   String get locationSectionTitle;
 
   /// No description provided for @lockToPreventEdits.
@@ -1049,13 +1049,13 @@ abstract class AppLocalizations {
   /// No description provided for @timeSectionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Configure time display format and Iqamah times for each prayer.'**
+  /// **'Configure calculation method, time format, and Iqamah settings.'**
   String get timeSectionSubtitle;
 
   /// No description provided for @timeSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Time Display & Iqamah'**
+  /// **'Prayer Times'**
   String get timeSectionTitle;
 
   /// No description provided for @timezone.
@@ -1111,6 +1111,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use My Location'**
   String get useMyLocation;
+
+  /// No description provided for @autoLocationEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Location updates automatically'**
+  String get autoLocationEnabled;
+
+  /// No description provided for @autoLocationDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to enable automatic location'**
+  String get autoLocationDisabled;
 
   /// No description provided for @useSystemTimezone.
   ///

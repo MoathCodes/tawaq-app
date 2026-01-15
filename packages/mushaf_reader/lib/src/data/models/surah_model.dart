@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:mushaf_reader/src/data/models/revelation_type.dart';
 
 part 'surah_model.freezed.dart';
 
@@ -16,6 +17,7 @@ part 'surah_model.freezed.dart';
 /// // Async fetch
 /// final surah = await controller.getSurah(1);
 /// print('Surah ${surah.number}: ${surah.nameArabic}');
+/// print('Revelation: ${surah.revelationType}'); // meccan or medinan
 ///
 /// // From SurahBlock
 /// final block = page.surahs.first;
@@ -57,6 +59,19 @@ abstract class SurahModel with _$SurahModel {
 
     /// The page number where this Surah begins (1-604).
     int? startPage,
+
+    /// The revelation type of this Surah.
+    ///
+    /// Indicates whether the Surah was revealed in Mecca or Medina.
+    RevelationType? revelationType,
+
+    /// The English translation of the Surah name meaning.
+    ///
+    /// For example, "The Opening" for Al-Fatiha.
+    String? englishNameTranslation,
+
+    /// The total number of Ayahs (verses) in this Surah.
+    int? ayahCount,
   }) = _SurahModel;
 
   const SurahModel._();

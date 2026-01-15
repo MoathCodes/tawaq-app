@@ -13,8 +13,8 @@ class StartedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      showFDialog<void>(
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await showFDialog<void>(
         context: context,
         builder: (context, style, animation) => const _StartWizardDialog(),
       );

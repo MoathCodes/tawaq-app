@@ -61,10 +61,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get advancedSettingsTitle => 'Advanced Settings';
 
   @override
-  String get appearance => 'Display Settings';
+  String get appearance => 'Appearance';
 
   @override
-  String get appearanceSubtitle => 'Customize the app\'s appearance.';
+  String get appearanceSubtitle => 'Customize the app\'s theme and colors.';
 
   @override
   String get appName => 'Hasanat';
@@ -311,10 +311,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get locationSectionSubtitle =>
-      'Set geographical location and prayer time calculation method.';
+      'Set your geographical location and timezone for accurate prayer times.';
 
   @override
-  String get locationSectionTitle => 'Location & Calculation';
+  String get locationSectionTitle => 'Location';
 
   @override
   String get lockToPreventEdits => 'Lock to prevent edits';
@@ -540,10 +540,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get timeSectionSubtitle =>
-      'Configure time display format and Iqamah times for each prayer.';
+      'Configure calculation method, time format, and Iqamah settings.';
 
   @override
-  String get timeSectionTitle => 'Time Display & Iqamah';
+  String get timeSectionTitle => 'Prayer Times';
 
   @override
   String get timezone => 'Timezone';
@@ -572,6 +572,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get useMyLocation => 'Use My Location';
+
+  @override
+  String get autoLocationEnabled => 'Location updates automatically';
+
+  @override
+  String get autoLocationDisabled => 'Tap to enable automatic location';
 
   @override
   String get useSystemTimezone => 'Use System Timezone';

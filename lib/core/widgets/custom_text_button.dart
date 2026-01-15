@@ -33,8 +33,8 @@ class CustomTextButton extends HookWidget {
 
     return MouseClick(
       onClick: onPressed,
-      onHover: (event) => setHovered(true),
-      onExit: (event) => setHovered(false),
+      onHover: (event) => setHovered(value: true),
+      onExit: (event) => setHovered(value: false),
       child: AnimatedScale(
         duration: duration,
         scale: isHovered ? 1.2 : 1.0,

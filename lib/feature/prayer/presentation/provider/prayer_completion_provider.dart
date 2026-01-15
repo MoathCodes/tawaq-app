@@ -48,7 +48,8 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
     return completions;
   }
 
-  /// Returns the prayer completion record for a specific prayer on a specific date.
+  /// Returns the prayer completion record for a
+  ///  specific prayer on a specific date.
   Future<PrayerCompletion?> getPrayerCompletionForPrayerOnDate(
     Prayer prayer,
     DateTime date,

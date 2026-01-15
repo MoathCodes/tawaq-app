@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
-import 'package:mushaf_reader/src/presentation/gestures/tap_and_long_press_gesture_recognizer.dart';
+import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 
 /// A widget that displays a single Ayah (verse) with the correct QCF4 font.
 ///
@@ -90,25 +90,6 @@ class AyahWidget extends StatefulWidget {
   /// ```
   final StyleModifier? styleModifier;
 
-  /// Callback invoked when a word inside this Ayah is tapped.
-  ///
-  /// Provides the word index (0-based) and the glyph text for that word.
-  final void Function(int wordIndex, String wordGlyph)? onWordTap;
-
-  /// The currently selected word index for word-level highlighting.
-  ///
-  /// If provided, the selected word will use [selectedWordStyle] (or a default
-  /// theme-derived color).
-  final int? selectedWordIndex;
-
-  /// Text style to apply to the selected word.
-  ///
-  /// Usually you only set a color here.
-  final TextStyle? selectedWordStyle;
-
-  /// Modifier for the selected word style.
-  final StyleModifier? selectedWordStyleModifier;
-
   /// Widget to display while loading the Ayah data.
   ///
   /// Defaults to a centered [CircularProgressIndicator].
@@ -124,6 +105,9 @@ class AyahWidget extends StatefulWidget {
   /// Set to `true` (default) for inline display.
   /// Set to `false` to preserve original line breaks.
   final bool removeNewLines;
+
+  /// Optional repository for testing.
+  final IQuranRepository? repository;
 
   /// Creates an AyahWidget that fetches by unique Ayah ID (1-6236).
   ///
@@ -144,13 +128,10 @@ class AyahWidget extends StatefulWidget {
     this.fontSize,
     this.style,
     this.styleModifier,
-    this.onWordTap,
-    this.selectedWordIndex,
-    this.selectedWordStyle,
-    this.selectedWordStyleModifier,
     this.loadingWidget,
     this.errorWidget,
     this.removeNewLines = true,
+    this.repository,
   }) : _ayahId = ayahId,
        _surah = null,
        _ayah = null;
@@ -176,13 +157,10 @@ class AyahWidget extends StatefulWidget {
     this.fontSize,
     this.style,
     this.styleModifier,
-    this.onWordTap,
-    this.selectedWordIndex,
-    this.selectedWordStyle,
-    this.selectedWordStyleModifier,
     this.loadingWidget,
     this.errorWidget,
     this.removeNewLines = true,
+    this.repository,
   }) : _surah = surah,
        _ayah = ayah,
        _ayahId = null;
@@ -193,8 +171,6 @@ class AyahWidget extends StatefulWidget {
 
 class _AyahWidgetState extends State<AyahWidget> {
   Future<AyahModel>? _future;
-
-  final Map<int, TapAndLongPressGestureRecognizer> _wordRecognizers = {};
 
   @override
   Widget build(BuildContext context) {
@@ -224,97 +200,13 @@ class _AyahWidgetState extends State<AyahWidget> {
           scaleFactor: 1.0,
         );
 
-        final wantsWordSpans =
-            widget.onWordTap != null || widget.selectedWordIndex != null;
-        final hasWordRanges = ayah.wordRanges.isNotEmpty;
-
-        if (!wantsWordSpans || !hasWordRanges) {
-          return Text(
-            ayah.codeV4,
-            textAlign: TextAlign.right,
-            style: effectiveStyle,
-          );
-        }
-
-        final selectedWordStyle =
-            widget.selectedWordStyle != null ||
-                widget.selectedWordStyleModifier != null
-            ? MushafTextStyleMerger.mergeAyahStyle(
-                userStyle: widget.selectedWordStyle,
-                modifier: widget.selectedWordStyleModifier,
-                pageNumber: ayah.page,
-                baseSize:
-                    widget.selectedWordStyle?.fontSize ?? effectiveFontSize,
-                scaleFactor: 1.0,
-              )
-            : effectiveStyle.copyWith(
-                color: Theme.of(context).colorScheme.primary,
-              );
-
-        final spans = <InlineSpan>[];
-        var cursor = 0;
-        for (final range in ayah.wordRanges) {
-          final start = range.start.clamp(0, ayah.text.length);
-          final end = range.end.clamp(0, ayah.text.length);
-          if (end <= start) continue;
-
-          if (cursor < start) {
-            spans.add(
-              TextSpan(
-                text: ayah.text.substring(cursor, start),
-                style: effectiveStyle,
-              ),
-            );
-          }
-
-          final wordGlyph = ayah.text.substring(start, end);
-          final isSelected = widget.selectedWordIndex == range.index;
-
-          final recognizer = _wordRecognizers.putIfAbsent(
-            range.index,
-            () => TapAndLongPressGestureRecognizer(debugOwner: this),
-          );
-          recognizer.configure(
-            onTap: widget.onWordTap != null
-                ? () => widget.onWordTap!(range.index, wordGlyph)
-                : null,
-            onLong: null,
-          );
-
-          spans.add(
-            TextSpan(
-              text: wordGlyph,
-              style: isSelected ? selectedWordStyle : effectiveStyle,
-              recognizer: recognizer,
-            ),
-          );
-
-          cursor = end;
-        }
-
-        if (cursor < ayah.text.length) {
-          spans.add(
-            TextSpan(text: ayah.text.substring(cursor), style: effectiveStyle),
-          );
-        }
-
-        return RichText(
-          textDirection: TextDirection.rtl,
+        return Text(
+          ayah.codeV4,
           textAlign: TextAlign.right,
-          locale: const Locale('ar'),
-          text: TextSpan(children: spans),
+          style: effectiveStyle,
         );
       },
     );
-  }
-
-  @override
-  void dispose() {
-    for (final r in _wordRecognizers.values) {
-      r.dispose();
-    }
-    _wordRecognizers.clear();
-    super.dispose();
   }
 
   @override
@@ -335,7 +227,7 @@ class _AyahWidgetState extends State<AyahWidget> {
 
   /// Initiates the async fetch of Ayah data.
   void _loadAyah() {
-    final repo = HiveQuranRepository();
+    final repo = widget.repository ?? HiveQuranRepository();
     _future = widget._ayahId != null
         ? repo.getAyah(widget._ayahId!, widget.removeNewLines)
         : repo.getAyahBySurah(

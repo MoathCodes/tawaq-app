@@ -59,7 +59,6 @@ void main() {
       final hivePath = p.join(projectRoot, 'assets', 'hive');
       Hive.init(hivePath);
       Hive.registerAdapter(AyahModelAdapter());
-      Hive.registerAdapter(WordRangeAdapter());
       ayahsBox = await Hive.openBox<AyahModel>('ayahs');
     });
 

@@ -211,7 +211,12 @@ class HiveQuranRepository implements IQuranRepository {
   @override
   Future<int> getJuzStartPage(int juzNumber) async {
     await _ensureReady();
-    // Find the first ayah of this juz
+    // Use pre-computed startPage from JuzModel (O(1))
+    final juz = _juzCache[juzNumber];
+    if (juz?.startPage != null) {
+      return juz!.startPage!;
+    }
+    // Fallback: find the first ayah of this juz (O(n))
     for (int id = 1; id <= 6236; id++) {
       final ayah = await _boxManager!.ayahsBox.get(id);
       if (ayah != null && ayah.juz == juzNumber) {
@@ -327,12 +332,7 @@ class HiveQuranRepository implements IQuranRepository {
       final end = buf.length;
 
       ayahFragments.add(
-        AyahFragment(
-          ayahId: layout.ayahId,
-          start: start,
-          end: end,
-          wordRanges: ayah?.wordRanges ?? const [],
-        ),
+        AyahFragment(ayahId: layout.ayahId, start: start, end: end),
       );
     }
 

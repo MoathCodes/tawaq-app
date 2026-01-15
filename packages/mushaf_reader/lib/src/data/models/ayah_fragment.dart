@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:mushaf_reader/src/data/models/word_range.dart';
 
 part 'ayah_fragment.freezed.dart';
 
@@ -47,12 +46,5 @@ abstract class AyahFragment with _$AyahFragment {
     ///
     /// Use with [start] to extract this fragment: `glyphText.substring(start, end)`
     required int end,
-
-    /// Per-word character ranges inside this fragment's text slice.
-    ///
-    /// For this package's current page building logic, each fragment matches
-    /// a full Ayah, so these ranges are offsets into
-    /// `glyphText.substring(start, end)`.
-    @Default(<WordRange>[]) List<WordRange> wordRanges,
   }) = _AyahFragment;
 }

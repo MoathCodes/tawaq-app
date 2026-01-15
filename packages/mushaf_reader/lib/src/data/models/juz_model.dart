@@ -15,7 +15,7 @@ part 'juz_model.freezed.dart';
 /// ```dart
 /// // Get Juz information
 /// final juz = await MushafController.instance.getJuz(1);
-/// print('Juz ${juz.number}');
+/// print('Juz ${juz.number} starts on page ${juz.startPage}');
 ///
 /// // Synchronous access (after init)
 /// final juzSync = MushafController.instance.getJuzSync(1);
@@ -38,6 +38,16 @@ abstract class JuzModel with _$JuzModel {
     /// This glyph should be rendered using the Basmalah font family
     /// (QCF4_BSML) for correct display.
     required String glyph,
+
+    /// The page number where this Juz begins (1-604).
+    ///
+    /// Useful for quick navigation to the start of a Juz.
+    int? startPage,
+
+    /// The global Ayah ID where this Juz begins (1-6236).
+    ///
+    /// This is the ID of the first Ayah in the Juz.
+    int? startAyahId,
   }) = _JuzModel;
 
   const JuzModel._();

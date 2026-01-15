@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/hooks/hooks.dart';
+import 'package:forui_hooks/forui_hooks.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/theme/theme.dart';
 

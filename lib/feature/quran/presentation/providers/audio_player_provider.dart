@@ -79,7 +79,7 @@ class AudioPlayerNotifier extends Notifier<AudioPlayerState> {
   }
 
   /// Sets playing state.
-  void setPlaying(bool isPlaying) {
+  void setPlaying({required bool isPlaying}) {
     state = state.copyWith(isPlaying: isPlaying);
   }
 

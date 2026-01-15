@@ -49,7 +49,8 @@ class PrayerRepo {
     return prayerDatabase.countAllPrayerStatusOnDate(from, to);
   }
 
-  /// Counts the number of prayers with a specific completion status on a given date.
+  /// Counts the number of prayers with a specific
+  ///  completion status on a given date.
   Future<int> countPrayerStatusOnDate(
     CompletionStatus status,
     DateTime from,
@@ -83,17 +84,18 @@ class PrayerRepo {
     return prayerDatabase.getCompletionsForDate(date);
   }
 
-  /// Returns the prayer times for a given date, coordinates, and calculation parameters.
-  PrayerTimesData getPrayerTimes(
+  /// Returns the prayer times for a given date, coordinates, and calculation
+  /// parameters.
+  PrayerTimes getPrayerTimes(
     DateTime date,
     Coordinates coordinates,
-    CalculationParameters calculationParameters,
-    bool roundToMinutes,
-  ) {
-    final prayerTimes = PrayerTimesData.calculate(
+    CalculationMethod calculationMethod, {
+    bool roundToMinutes = true,
+  }) {
+    final prayerTimes = PrayerTimes(
       date: date,
       coordinates: coordinates,
-      calculationParameters: calculationParameters,
+      calculationMethod: calculationMethod,
       roundToMinutes: roundToMinutes,
     );
     return prayerTimes;
@@ -105,7 +107,7 @@ class PrayerRepo {
   }
 
   /// Returns the sunnah times for a given prayer times.
-  SunnahTimes getSunnahTime(PrayerTimesData prayerTimes) {
+  SunnahTimes getSunnahTime(PrayerTimes prayerTimes) {
     final sunnahTimes = SunnahTimes(prayerTimes);
     // print("in repo getSunnahTime: ${sunnahTimes.middleOfTheNight}");
     return sunnahTimes;

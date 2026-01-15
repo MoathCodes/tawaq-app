@@ -2,9 +2,13 @@ import 'dart:async';
 
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/theme/theme.dart';
+import 'package:hasanat/core/utils/location_extensions.dart';
+import 'package:hasanat/feature/quran/domain/models/quran_layouts.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:hasanat/feature/settings/data/models/state_settings.dart';
 import 'package:hasanat/feature/settings/service/location_service.dart';
 import 'package:hasanat/feature/settings/service/settings_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -21,8 +25,8 @@ const String _themeNotifierLogPrefix = '[ThemeNotifier]';
 class LocaleNotifier extends _$LocaleNotifier {
   @override
   FutureOr<Locale> build() {
-    final log = ref.read(loggerProvider);
-    log.i('$_localeNotifierLogPrefix Building Locale...');
+    final log = ref.read(loggerProvider)
+      ..i('$_localeNotifierLogPrefix Building Locale...');
     final services = ref.read(settingsServiceProvider);
     final locale = services.getLocale();
     log.i('$_localeNotifierLogPrefix Locale loaded: $locale');
@@ -37,10 +41,9 @@ class LocaleNotifier extends _$LocaleNotifier {
   /// Sets the application locale.
   void setLocale(Locale newLocale) {
     if (newLocale == state.value || state.value == null) return;
-    final log = ref.read(loggerProvider);
-    log.i('$_localeNotifierLogPrefix Setting locale to: $newLocale');
-    final service = ref.read(settingsServiceProvider);
-    service.setLocale(newLocale);
+    final log = ref.read(loggerProvider)
+      ..i('$_localeNotifierLogPrefix Setting locale to: $newLocale');
+    ref.read(settingsServiceProvider).setLocale(newLocale);
     state = AsyncData(newLocale);
     log.i('$_localeNotifierLogPrefix Locale set to: $newLocale');
   }
@@ -48,8 +51,7 @@ class LocaleNotifier extends _$LocaleNotifier {
   /// Toggles the application locale between English and Arabic.
   void toggleLocale() {
     if (state.value == null) return;
-    final log = ref.read(loggerProvider);
-    log.i('$_localeNotifierLogPrefix Toggling locale...');
+    ref.read(loggerProvider).i('$_localeNotifierLogPrefix Toggling locale...');
     final currentLocale = state.value!;
     final newLocale = currentLocale.languageCode == 'ar'
         ? const Locale('en')
@@ -63,12 +65,13 @@ class LocaleNotifier extends _$LocaleNotifier {
 class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   @override
   FutureOr<PrayerSettings> build() {
-    final log = ref.read(loggerProvider);
-    log.i('$_prayerSettingsNotifierLogPrefix Building PrayerSettings...');
+    final log = ref.read(loggerProvider)
+      ..i('$_prayerSettingsNotifierLogPrefix Building PrayerSettings...');
     final services = ref.read(settingsServiceProvider);
     final prayerSettings = services.getPrayerSettings();
     log.i(
-      '$_prayerSettingsNotifierLogPrefix PrayerSettings loaded: $prayerSettings',
+      '$_prayerSettingsNotifierLogPrefix PrayerSettings loaded: '
+      '$prayerSettings',
     );
     return prayerSettings;
   }
@@ -76,13 +79,14 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   /// Sets whether to use 24-hour time format.
   void set24HourFormat({required bool value}) {
     if (state.value == null) return;
-    final log = ref.read(loggerProvider);
-    log.i(
-      '$_prayerSettingsNotifierLogPrefix Setting 24 hour format to: $value',
-    );
+    final log = ref.read(loggerProvider)
+      ..i(
+        '$_prayerSettingsNotifierLogPrefix Setting 24 hour format to: $value',
+      );
     if (state.value!.is24Hours == value) {
       log.w(
-        '$_prayerSettingsNotifierLogPrefix 24 format settings are the same, not updating.',
+        '$_prayerSettingsNotifierLogPrefix 24 format settings are the same, '
+        'not updating.',
       );
       return;
     }
@@ -98,15 +102,16 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   /// Sets the coordinates for prayer time calculations.
   void setCoordinates(Coordinates coordinates) {
     if (state.value == null) return;
-    final log = ref.read(loggerProvider);
-    log.i(
-      '$_prayerSettingsNotifierLogPrefix Setting coordinates to: $coordinates',
-    );
+    final log = ref.read(loggerProvider)
+      ..i(
+        '$_prayerSettingsNotifierLogPrefix Setting coordinates to: $coordinates',
+      );
     final service = ref.read(settingsServiceProvider);
     final newSettings = state.value!.copyWith(coordinates: coordinates);
     if (state.value == newSettings) {
       log.w(
-        '$_prayerSettingsNotifierLogPrefix Coordinates are the same, not updating.',
+        '$_prayerSettingsNotifierLogPrefix Coordinates are the same, '
+        'not updating.',
       );
       return;
     }
@@ -120,15 +125,16 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   /// Sets the iqamah times for prayers.
   void setIqamahTimes(Map<Prayer, int> iqamahTimes) {
     if (state.value == null) return;
-    final log = ref.read(loggerProvider);
-    log.i(
-      '$_prayerSettingsNotifierLogPrefix Setting Iqamah times to: $iqamahTimes',
-    );
+    final log = ref.read(loggerProvider)
+      ..i(
+        '$_prayerSettingsNotifierLogPrefix Setting Iqamah times to: $iqamahTimes',
+      );
     final service = ref.read(settingsServiceProvider);
     final newSettings = state.value!.copyWith(iqamahSettings: iqamahTimes);
     if (state.value == newSettings) {
       log.w(
-        '$_prayerSettingsNotifierLogPrefix Iqamah times are the same, not updating.',
+        '$_prayerSettingsNotifierLogPrefix Iqamah times are the same, '
+        'not updating.',
       );
       return;
     }
@@ -142,10 +148,10 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   /// Sets the timezone location for prayer time calculations.
   void setLocation(Location location) {
     if (state.value == null) return;
-    final log = ref.read(loggerProvider);
-    log.i(
-      '$_prayerSettingsNotifierLogPrefix Setting location to: $location',
-    );
+    final log = ref.read(loggerProvider)
+      ..i(
+        '$_prayerSettingsNotifierLogPrefix Setting location to: $location',
+      );
     final service = ref.read(settingsServiceProvider);
     final newSettings = state.value!.copyWith(location: location);
     if (state.value == newSettings) {
@@ -159,18 +165,43 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     log.i('$_prayerSettingsNotifierLogPrefix Location set to: $location');
   }
 
+  /// Sets whether to use automatic location detection.
+  void setAutoLocation({required bool value}) {
+    if (state.value == null) return;
+    final log = ref.read(loggerProvider)
+      ..i(
+        '$_prayerSettingsNotifierLogPrefix Setting auto location to: $value',
+      );
+    if (state.value!.autoLocation == value) {
+      log.w(
+        '$_prayerSettingsNotifierLogPrefix Auto location is the same, '
+        'not updating.',
+      );
+      return;
+    }
+    final service = ref.read(settingsServiceProvider);
+    final newSettings = state.value!.copyWith(autoLocation: value);
+    service.setPrayerSettings(newSettings);
+    state = AsyncData(newSettings);
+    log.i(
+      '$_prayerSettingsNotifierLogPrefix Auto location set to: $value',
+    );
+  }
+
   /// Sets the display name for the current location.
   void setLocationName(String locationName) {
     if (state.value == null) return;
-    final log = ref.read(loggerProvider);
-    log.i(
-      '$_prayerSettingsNotifierLogPrefix Setting location name to: $locationName',
-    );
+    final log = ref.read(loggerProvider)
+      ..i(
+        '$_prayerSettingsNotifierLogPrefix Setting location name to: '
+        '$locationName',
+      );
     final service = ref.read(settingsServiceProvider);
     final newSettings = state.value!.copyWith(locationName: locationName);
     if (state.value == newSettings) {
       log.w(
-        '$_prayerSettingsNotifierLogPrefix Location name is the same, not updating.',
+        '$_prayerSettingsNotifierLogPrefix Location name is the same, '
+        'not updating.',
       );
       return;
     }
@@ -184,18 +215,18 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   /// Sets the complete prayer settings object.
   void setPrayerSettings(PrayerSettings settings) {
     if (state.value == null) return;
-    final log = ref.read(loggerProvider);
-    log.i(
-      '$_prayerSettingsNotifierLogPrefix Setting prayer settings to: $settings',
-    );
+    final log = ref.read(loggerProvider)
+      ..i(
+        '$_prayerSettingsNotifierLogPrefix Setting prayer settings to: $settings',
+      );
     if (state.value == settings) {
       log.w(
-        '$_prayerSettingsNotifierLogPrefix Prayer settings are the same, not updating.',
+        '$_prayerSettingsNotifierLogPrefix Prayer settings are the same, '
+        'not updating.',
       );
       return;
     }
-    final service = ref.read(settingsServiceProvider);
-    service.setPrayerSettings(settings);
+    ref.read(settingsServiceProvider).setPrayerSettings(settings);
     state = AsyncData(settings);
     log.i(
       '$_prayerSettingsNotifierLogPrefix Prayer settings set to: $settings',
@@ -208,17 +239,18 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     FutureOr<PrayerSettings> Function(Object err, StackTrace stackTrace)?
     onError,
   }) {
-    final log = ref.read(loggerProvider);
-    log.i(
-      '$_prayerSettingsNotifierLogPrefix Updating prayer settings...',
-    );
+    final log = ref.read(loggerProvider)
+      ..i(
+        '$_prayerSettingsNotifierLogPrefix Updating prayer settings...',
+      );
     final previous = state.value;
     return super
         .update(
           cb,
           onError: (err, stackTrace) {
             log.e(
-              '$_prayerSettingsNotifierLogPrefix Error updating prayer settings',
+              '$_prayerSettingsNotifierLogPrefix Error updating prayer '
+              'settings',
               error: err,
               stackTrace: stackTrace,
             );
@@ -226,7 +258,7 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
               return onError(err, stackTrace);
             }
             // Re-throw the error if no custom onError is provided to maintain original behavior
-            throw err;
+            throw Exception(err);
           },
         )
         .then((value) {
@@ -235,11 +267,13 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
             final service = ref.read(settingsServiceProvider);
             service.setPrayerSettings(value);
             log.i(
-              '$_prayerSettingsNotifierLogPrefix Prayer settings updated and persisted: $value',
+              '$_prayerSettingsNotifierLogPrefix Prayer settings updated and '
+              'persisted: $value',
             );
           } else {
             log.i(
-              '$_prayerSettingsNotifierLogPrefix No changes detected after update; skipping persistence.',
+              '$_prayerSettingsNotifierLogPrefix No changes detected '
+              'after update; skipping persistence.',
             );
           }
           return value;
@@ -256,7 +290,9 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     final log = ref.read(loggerProvider);
 
     log.i(
-      '$_prayerSettingsNotifierLogPrefix Updating location data - coordinates: $coordinates, locationName: $locationName, location: $location',
+      '$_prayerSettingsNotifierLogPrefix Updating location data - '
+      'coordinates: $coordinates, locationName: $locationName, '
+      'location: $location',
     );
 
     final finalCoordinates = coordinates;
@@ -270,7 +306,8 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
             .read(locationServiceProvider)
             .getLocationFromCoordinatesOffline(finalCoordinates);
         log.i(
-          '$_prayerSettingsNotifierLogPrefix Auto-resolved location from coordinates: $finalLocation',
+          '$_prayerSettingsNotifierLogPrefix Auto-resolved location from '
+          'coordinates: $finalLocation',
         );
       } catch (e) {
         log.e(
@@ -293,12 +330,60 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
       return;
     }
 
-    final service = ref.read(settingsServiceProvider);
-    service.setPrayerSettings(newSettings);
+    await ref.read(settingsServiceProvider).setPrayerSettings(newSettings);
     state = AsyncData(newSettings);
 
     log.i(
-      '$_prayerSettingsNotifierLogPrefix Location data updated successfully - coordinates: ${newSettings.coordinates}, locationName: ${newSettings.locationName}, location: ${newSettings.location}',
+      '$_prayerSettingsNotifierLogPrefix Location data updated successfully - '
+      'coordinates: ${newSettings.coordinates}, '
+      'locationName: ${newSettings.locationName}, '
+      'location: ${newSettings.location}',
+    );
+  }
+
+  /// Fetches and sets the current device location.
+  ///
+  /// This will request location permissions if needed, get the current
+  /// GPS position, fetch place details for the location name, and
+  /// update all location-related settings.
+  Future<void> useCurrentLocation() async {
+    final log = ref.read(loggerProvider)
+      ..i('$_prayerSettingsNotifierLogPrefix Using current location...');
+
+    final locationService = ref.read(locationServiceProvider);
+    final currentLocation = await locationService.getCurrentPosition();
+    final placeDetails = await locationService.getPlaceDetails(
+      currentLocation.coordinates,
+    );
+    final name = placeDetails.name.isNotEmpty
+        ? placeDetails.name
+        : 'Unknown Location';
+
+    await updateLocationData(
+      coordinates: currentLocation.coordinates,
+      locationName: name,
+    );
+
+    log.i(
+      '$_prayerSettingsNotifierLogPrefix Current location set: $name at '
+      '$currentLocation',
+    );
+  }
+
+  /// Sets the timezone from the system's current timezone.
+  ///
+  /// Optionally accepts a [Location] to set directly. If not provided,
+  /// the system timezone will be detected and used.
+  Future<void> setSystemTimezone([Location? loc]) async {
+    final log = ref.read(loggerProvider)
+      ..i('$_prayerSettingsNotifierLogPrefix Setting system timezone...');
+
+    final timezone = await FlutterTimezone.getLocalTimezone();
+    loc ??= getLocation(timezone.identifier);
+    setLocation(loc);
+
+    log.i(
+      '$_prayerSettingsNotifierLogPrefix System timezone set: ${loc.name}',
     );
   }
 
@@ -316,7 +401,8 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     }
 
     log.i(
-      '$_prayerSettingsNotifierLogPrefix Updating $prayer iqamah time to: $iqamahTime',
+      '$_prayerSettingsNotifierLogPrefix Updating $prayer iqamah time to: '
+      '$iqamahTime',
     );
 
     // Create a new map to avoid mutating the existing one.
@@ -329,12 +415,12 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     );
 
     // Persist via service and update state.
-    final service = ref.read(settingsServiceProvider);
-    service.setPrayerSettings(newSettings);
+    ref.read(settingsServiceProvider).setPrayerSettings(newSettings);
     state = AsyncData(newSettings);
 
     log.i(
-      '$_prayerSettingsNotifierLogPrefix Iqamah time for $prayer set to: $iqamahTime',
+      '$_prayerSettingsNotifierLogPrefix Iqamah time for $prayer set to: '
+      '$iqamahTime',
     );
   }
 }
@@ -344,7 +430,7 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
 class ThemeNotifier extends _$ThemeNotifier {
   @override
   FutureOr<ThemeSettings> build() async {
-    final log = ref.watch(loggerProvider);
+    final log = ref.read(loggerProvider);
     log.i('$_themeNotifierLogPrefix Building ThemeSettings...');
     final services = ref.watch(settingsServiceProvider);
     final appPalette = await services.getAppPalette();
@@ -363,11 +449,10 @@ class ThemeNotifier extends _$ThemeNotifier {
     if (newPalette == state.value?.appPalette || state.value == null) {
       return;
     }
-    final log = ref.read(loggerProvider);
-    log.i('$_themeNotifierLogPrefix Setting palette to: $newPalette');
+    final log = ref.read(loggerProvider)
+      ..i('$_themeNotifierLogPrefix Setting palette to: $newPalette');
 
-    final service = ref.read(settingsServiceProvider);
-    service.setAppPalette(newPalette);
+    ref.read(settingsServiceProvider).setAppPalette(newPalette);
     final newColorScheme = resolveColorScheme(
       newPalette,
       state.value!.themeMode,
@@ -396,8 +481,7 @@ class ThemeNotifier extends _$ThemeNotifier {
       newThemeMode,
     );
 
-    final service = ref.read(settingsServiceProvider);
-    service.setThemeMode(newThemeMode);
+    ref.read(settingsServiceProvider).setThemeMode(newThemeMode);
     state = AsyncData(
       state.value!.copyWith(
         themeMode: newThemeMode,
@@ -409,11 +493,76 @@ class ThemeNotifier extends _$ThemeNotifier {
 
   /// Toggles the theme mode between light and dark.
   void toggleThemeMode() {
-    final log = ref.read(loggerProvider);
-    log.i('$_themeNotifierLogPrefix Toggling theme mode...');
+    ref
+        .read(loggerProvider)
+        .i('$_themeNotifierLogPrefix Toggling theme mode...');
     final newThemeMode = state.value?.themeMode == ThemeMode.dark
         ? ThemeMode.light
         : ThemeMode.dark;
     setThemeMode(newThemeMode);
+  }
+}
+
+@riverpod
+/// Notifier for application state settings.
+///
+/// Can be used to manage settings like sidebar collapsed state,
+/// last Quran page, reading layout, etc.
+class StateSettingsNotifier extends _$StateSettingsNotifier {
+  @override
+  Future<StateSettings> build() async {
+    final stateSettings = await ref
+        .read(settingsServiceProvider)
+        .getAppStateSettings();
+    // log.d('State Settings: $stateSettings');
+    return stateSettings;
+  }
+
+  Future<void> setSidebarCollapsed({required bool collapsed}) async {
+    if (!state.hasValue) return;
+    final log = ref.read(loggerProvider)
+      ..i(
+        '[StateSettingsNotifier] Setting sidebar collapsed to: $collapsed',
+      );
+    final newState = state.value!.copyWith(
+      sidebarCollapsed: collapsed,
+    );
+    state = AsyncData(newState);
+    await ref.read(settingsServiceProvider).setAppStateSettings(newState);
+    log.i(
+      '[StateSettingsNotifier] Sidebar collapsed set to: $collapsed',
+    );
+  }
+
+  Future<void> setLastQuranPage(int page) async {
+    if (!state.hasValue) return;
+    final log = ref.read(loggerProvider)
+      ..i(
+        '[StateSettingsNotifier] Setting last Quran page to: $page',
+      );
+    final newState = state.value!.copyWith(
+      lastQuranPage: page,
+    );
+    state = AsyncData(newState);
+    await ref.read(settingsServiceProvider).setAppStateSettings(newState);
+    log.i(
+      '[StateSettingsNotifier] Last Quran page set to: $page',
+    );
+  }
+
+  Future<void> setLastLayout(QuranReadingLayout layout) async {
+    if (!state.hasValue) return;
+    final log = ref.read(loggerProvider)
+      ..i(
+        '[StateSettingsNotifier] Setting reading layout to: $layout',
+      );
+    final newState = state.value!.copyWith(
+      lastLayout: layout,
+    );
+    state = AsyncData(newState);
+    await ref.read(settingsServiceProvider).setAppStateSettings(newState);
+    log.i(
+      '[StateSettingsNotifier] Reading layout set to: $layout',
+    );
   }
 }

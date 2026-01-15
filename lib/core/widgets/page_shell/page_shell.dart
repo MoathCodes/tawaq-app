@@ -14,7 +14,8 @@ import 'package:window_manager/window_manager.dart';
 
 /// The main shell of the application.
 ///
-/// This widget is responsible for displaying the main layout of the application,
+/// This widget is responsible for displaying the
+///  main layout of the application,
 /// including the app bar, sidebar, and bottom navigation bar.
 class PageShell extends ConsumerWidget {
   /// Creates a new instance of [PageShell].

@@ -18,7 +18,8 @@ LocationService locationService(Ref ref) {
   final lang = ref.watch(
     localeProvider.select((value) => value.value?.languageCode),
   );
-  final service = FmService();
+  final service = FmService()
+    ..setData(userAgent: 'Tawaq/1.0 (contact: moathaltamimidev@gmail.com)');
   return LocationService(log, service, lang);
 }
 
@@ -66,7 +67,8 @@ class LocationService {
 
       if (permission == LocationPermission.deniedForever) {
         throw LocationException(
-          'Location permissions are permanently denied, we cannot request permissions.',
+          'Location permissions are permanently denied, '
+          'we cannot request permissions.',
         );
       }
 

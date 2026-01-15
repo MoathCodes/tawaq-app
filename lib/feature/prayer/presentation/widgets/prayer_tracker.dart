@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/hooks/hooks.dart';
+import 'package:forui_hooks/forui_hooks.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/date_formatter.dart';
 import 'package:hasanat/core/utils/text_extensions.dart';
@@ -27,7 +27,7 @@ class PrayerTrackerWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = ref.watch(currentLocationTimeProvider);
-    final controller = useFCalendarController(
+    final controller = useFDateCalendarController(
       initial: now,
       toggleable: false,
     );
@@ -159,7 +159,8 @@ class _MainWidget extends StatelessWidget {
               completionTime: time,
               onCompletionChanged: onCompletionChanged,
               key: ValueKey(
-                'clickable-prayer-card-$index-${time.day}-${time.month}-${time.year}',
+                'clickable-prayer-card-$index-${time.day}-'
+                '${time.month}-${time.year}',
               ),
             )
             .animate()

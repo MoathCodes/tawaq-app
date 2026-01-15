@@ -1,3 +1,4 @@
+// Need to catch all errors to ensure stream continues.
 // ignore_for_file: avoid_catches_without_on_clauses
 
 import 'package:adhan_dart/adhan_dart.dart';
@@ -100,10 +101,13 @@ class PrayerCard extends _$PrayerCard {
 
     log.d('$_prayerCardLogPrefix Building prayer cache …');
 
-    final todaysTimes = service.getTodaysPrayerTimes(now, false);
+    final todaysTimes = service.getTodaysPrayerTimes(
+      now,
+      roundToMinutes: false,
+    );
     final yesterdaysTimes = service.getTodaysPrayerTimes(
       now.subtract(const Duration(days: 1)),
-      false,
+      roundToMinutes: false,
     );
 
     _cache = _PrayerCache(
@@ -129,7 +133,8 @@ class PrayerCard extends _$PrayerCard {
         ? decision.referenceTime
               .difference(currentTime)
               .toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)
-        : '+${currentTime.difference(decision.referenceTime).toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)}';
+        : '+${currentTime.difference(decision.referenceTime)
+            .toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)}';
 
     final iqamahMinutes =
         activeSettingsForIqamah.iqamahSettings[decision.prayer] ?? 0;
@@ -159,9 +164,9 @@ class _PrayerCache {
   /// Midnight of the day the cache was built (in the active location).
   final DateTime anchorDate;
 
-  final PrayerTimesData todaysTimes;
+  final PrayerTimes todaysTimes;
 
-  final PrayerTimesData yesterdaysTimes;
+  final PrayerTimes yesterdaysTimes;
   final SunnahTimes todaysSunnah;
   final SunnahTimes yesterdaysSunnah;
 }

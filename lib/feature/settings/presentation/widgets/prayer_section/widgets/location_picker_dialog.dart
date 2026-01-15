@@ -211,7 +211,7 @@ class LocationPickerDialog extends HookConsumerWidget {
               FButton(
                 onPress: () async {
                   try {
-                    notifierController.useCurrentLocation(mapController);
+                    await notifierController.useCurrentLocation(mapController);
                   } catch (e) {
                     // Show error snackbar
                     if (context.mounted) {
@@ -274,9 +274,9 @@ class LocationPickerDialog extends HookConsumerWidget {
               initialZoom: 12,
               minZoom: 2,
               maxZoom: 18,
-              onTap: (tapPos, latlng) {
+              onTap: (tapPos, latlng) async {
                 try {
-                  notifierController.updateLocation(latlng);
+                  await notifierController.updateLocation(latlng);
                   mapController.move(latlng, 14);
                 } catch (e) {
                   if (context.mounted) {
@@ -345,9 +345,9 @@ class LocationPickerDialog extends HookConsumerWidget {
   ) {
     return FSelect<FmData>.searchBuilder(
       control: FSelectControl.managed(
-        onChange: (place) {
+        onChange: (place) async {
           if (place != null) {
-            notifierController.selectPlace(place);
+            await notifierController.selectPlace(place);
             mapController.move(place.coordinates.latLng, 14);
           }
         },

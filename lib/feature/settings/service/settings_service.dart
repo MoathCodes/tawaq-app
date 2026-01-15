@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:hasanat/feature/settings/data/models/state_settings.dart';
 import 'package:hasanat/feature/settings/data/repository/settings_repo.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -85,6 +86,22 @@ class SettingsService {
     } catch (e, stackTrace) {
       _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
     }
+  }
+
+  /// Updates the application state settings.
+  Future<void> setAppStateSettings(StateSettings settings) async {
+    const logPrefix = '[SettingsService.setAppStateSettings] ';
+    try {
+      _log.d('$logPrefix Setting app state settings: ${settings.toJson()}');
+      await _settingsRepository.setAppStateSettings(settings);
+    } catch (e, stackTrace) {
+      _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
+    }
+  }
+
+  /// Retrieves the current application state settings.
+  Future<StateSettings> getAppStateSettings() async {
+    return _settingsRepository.getAppStateSettings();
   }
 
   /// Retrieves the date of the first recorded prayer.

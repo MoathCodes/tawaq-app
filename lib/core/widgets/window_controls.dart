@@ -166,8 +166,8 @@ class _MacOSControlButton extends HookWidget {
     final (:isHovered, :setHovered) = useHoverState();
 
     return MouseRegion(
-      onEnter: (_) => setHovered(true),
-      onExit: (_) => setHovered(false),
+      onEnter: (_) => setHovered(value: true),
+      onExit: (_) => setHovered(value: false),
       child: GestureDetector(
         onTap: onPressed,
         child: AnimatedContainer(

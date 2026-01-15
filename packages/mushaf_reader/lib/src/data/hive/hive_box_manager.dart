@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/adapters.dart';
-import 'package:mushaf_reader/src/data/hive/hive_adapters.dart';
+import 'package:mushaf_reader/src/data/hive/hive_registrar.g.dart';
 // import 'package:mushaf_reader/src/data/hive/hive_registrar.g.dart';
 import 'package:mushaf_reader/src/data/models/ayah_model.dart';
 import 'package:mushaf_reader/src/data/models/juz_model.dart';
@@ -141,12 +142,7 @@ class HiveBoxManager {
     Hive.init(_hivePath);
 
     // Register all adapters
-    Hive
-      ..registerAdapter(JuzModelAdapter())
-      ..registerAdapter(AyahModelAdapter())
-      ..registerAdapter(WordRangeAdapter())
-      ..registerAdapter(PageLayoutsAdapter())
-      ..registerAdapter(SurahModelAdapter());
+    Hive.registerAdapters();
 
     // Copy pre-populated boxes from assets if needed
     await _copyBoxesFromAssets();
@@ -182,42 +178,78 @@ class HiveBoxManager {
 
   /// Copies pre-populated Hive boxes from assets to the app directory.
   ///
-  /// Only copies if the destination files don't exist or have different sizes.
+  /// Uses manifest.json (containing MD5 hashes) to detect which boxes
+  /// need to be updated. This is fast at runtime since it only compares
+  /// pre-computed hashes, not file contents.
   Future<void> _copyBoxesFromAssets() async {
     // On web, we can't copy files - Hive CE uses IndexedDB
     if (kIsWeb) return;
 
     const boxNames = ['surahs', 'ayahs', 'juzs', 'pagelayouts', 'metadata'];
 
+    // Load asset manifest (pre-computed MD5 hashes)
+    Map<String, dynamic> assetManifest;
+    try {
+      final manifestJson = await rootBundle.loadString(
+        'packages/mushaf_reader/assets/hive/manifest.json',
+      );
+      assetManifest = json.decode(manifestJson) as Map<String, dynamic>;
+    } catch (e) {
+      // No manifest = copy all boxes (first run or legacy install)
+      debugPrint('No manifest found, copying all boxes...');
+      for (final name in boxNames) {
+        await _copyBoxFromAssets(name);
+      }
+      return;
+    }
+
+    // Load local manifest (hashes of currently installed boxes)
+    final localManifestPath = p.join(_hivePath, 'manifest.json');
+    final localManifestFile = File(localManifestPath);
+    Map<String, dynamic> localManifest = {};
+    if (localManifestFile.existsSync()) {
+      try {
+        localManifest =
+            json.decode(localManifestFile.readAsStringSync())
+                as Map<String, dynamic>;
+      } catch (_) {
+        // Corrupted manifest, will re-copy all
+      }
+    }
+
+    // Compare hashes and copy only changed boxes
+    var needsUpdate = false;
     for (final name in boxNames) {
-      await _copyBoxIfNeeded(name);
+      final assetHash = assetManifest['$name.hive'];
+      final localHash = localManifest['$name.hive'];
+
+      if (assetHash != localHash) {
+        debugPrint('$name.hive changed, copying...');
+        await _copyBoxFromAssets(name);
+        needsUpdate = true;
+      }
+    }
+
+    // Update local manifest if any boxes were copied
+    if (needsUpdate || !localManifestFile.existsSync()) {
+      await localManifestFile.writeAsString(json.encode(assetManifest));
     }
   }
 
-  /// Copies a single box file from assets if needed.
-  Future<void> _copyBoxIfNeeded(String boxName) async {
+  /// Copies a single box file from assets.
+  Future<void> _copyBoxFromAssets(String boxName) async {
     final destPath = p.join(_hivePath, '$boxName.hive');
     final destFile = File(destPath);
 
     try {
-      // Load from assets
       final assetPath = 'packages/mushaf_reader/assets/hive/$boxName.hive';
       final data = await rootBundle.load(assetPath);
       final assetBytes = data.buffer.asUint8List(
         data.offsetInBytes,
         data.lengthInBytes,
       );
-
-      // Copy if file doesn't exist or size differs
-      final exists = destFile.existsSync();
-      final sizeMatch = exists && destFile.lengthSync() == data.lengthInBytes;
-
-      if (!exists || !sizeMatch) {
-        debugPrint('Copying $boxName.hive to $_hivePath');
-        await destFile.writeAsBytes(assetBytes, flush: true);
-      }
+      await destFile.writeAsBytes(assetBytes, flush: true);
     } catch (e) {
-      // Asset might not exist in test environment or first build
       debugPrint('Warning: Could not copy $boxName.hive: $e');
     }
   }
