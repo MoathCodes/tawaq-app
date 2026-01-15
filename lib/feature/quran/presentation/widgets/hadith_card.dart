@@ -34,15 +34,13 @@ class HadithCard extends HookWidget {
     Future<void> loadSharh(String sharhId) async {
       isLoadingSharh.value = true;
       sharhError.value = null;
-
       try {
         final response = await client.sharh.getById(sharhId);
         loadedSharh.value = response.sharhText;
-        isLoadingSharh.value = false;
       } catch (e) {
         sharhError.value = 'فشل تحميل الشرح: $e';
-        isLoadingSharh.value = false;
       }
+      isLoadingSharh.value = false;
     }
 
     final theme = FTheme.of(context);
@@ -54,54 +52,201 @@ class HadithCard extends HookWidget {
         crossAxisAlignment: .stretch,
         spacing: 16,
         children: [
-          if (isHTML) _buildHadithHTML(theme),
-          // Hadith Text
-          if (!isHTML) _buildHadithText(theme),
-
-          // Narrator
-          _buildInfoRow(
+          _HadithText(hadith: hadith, theme: theme, isHTML: isHTML),
+          _InfoRow(
             icon: FIcons.user,
             label: 'الراوي',
             value: hadith.rawi,
-            colors: colors,
             theme: theme,
           ),
-
-          // Book and Reference
-          _buildBookInfo(theme, colors),
-
-          // Scholar (Mohdith) and Grade
-          _buildGradeSection(theme, colors),
-
-          // Additional Info
-          if (hadith.explainGrade != null) _buildExplanation(theme, colors),
-
-          // Takhrij
-          if (hadith.takhrij != null && hadith.takhrij!.isNotEmpty)
-            _buildTakhrij(theme, colors),
-
-          // Sharh (if available)
-          if (hadith.hasSharhMetadata && hadith.sharhMetadata != null)
-            _buildSharhSection(
-              theme,
-              colors,
-              loadedSharh: loadedSharh.value,
-              isLoadingSharh: isLoadingSharh.value,
-              sharhError: sharhError.value,
-              onLoadSharh: loadSharh,
+          _BookInfo(hadith: hadith, theme: theme, colors: colors),
+          _GradeSection(hadith: hadith, theme: theme, colors: colors),
+          if (hadith.explainGrade != null)
+            _StyledSection(
+              colors: colors,
+              theme: theme,
+              icon: FIcons.info,
+              title: 'شرح الحكم',
+              child: Text(hadith.explainGrade!, style: theme.typography.sm),
             ),
-
-          // Related Hadiths Links
+          if (hadith.takhrij?.isNotEmpty ?? false)
+            _StyledSection(
+              colors: colors,
+              theme: theme,
+              icon: FIcons.library,
+              title: 'التخريج',
+              child: Text(hadith.takhrij!, style: theme.typography.sm),
+            ),
+          if (hadith.hasSharhMetadata && hadith.sharhMetadata != null)
+            _SharhSection(
+              hadith: hadith,
+              theme: theme,
+              colors: colors,
+              loadedSharh: loadedSharh.value,
+              isLoading: isLoadingSharh.value,
+              error: sharhError.value,
+              onLoad: loadSharh,
+            ),
           if (hadith.hasSimilarHadith ||
               hadith.hasAlternateHadithSahih ||
               hadith.hasUsulHadith)
-            _buildRelatedLinks(theme, colors),
+            _RelatedLinks(hadith: hadith, theme: theme, colors: colors),
         ],
       ),
     );
   }
+}
 
-  Widget _buildBookInfo(FThemeData theme, FColors colors) {
+// =============================================================================
+// Reusable styled section container
+// =============================================================================
+
+class _StyledSection extends StatelessWidget {
+  const _StyledSection({
+    required this.colors,
+    required this.theme,
+    required this.icon,
+    required this.title,
+    required this.child,
+    this.backgroundColor,
+  });
+  final FColors colors;
+  final FThemeData theme;
+  final IconData icon;
+  final String title;
+  final Widget child;
+  final Color? backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const .all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: backgroundColor ?? colors.secondary.withAlpha(10),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: .start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: colors.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                title,
+                style: theme.typography.sm.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Sub-widgets
+// =============================================================================
+
+class _HadithText extends StatelessWidget {
+  const _HadithText({
+    required this.hadith,
+    required this.theme,
+    required this.isHTML,
+  });
+  final DetailedHadith hadith;
+  final FThemeData theme;
+  final bool isHTML;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const .all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: theme.colors.secondary.withAlpha(20),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: isHTML
+          ? Text(hadith.hadith)
+          : SelectableText(
+              hadith.hadith,
+              style: theme.typography.xl2.copyWith(
+                height: 1.8,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.right,
+            ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.theme,
+  });
+  final IconData icon;
+  final String label;
+  final String value;
+  final FThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = theme.colors;
+    return Row(
+      children: [
+        Container(
+          padding: const .all(AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: colors.primary.withAlpha(20),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 20, color: colors.primary),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: .start,
+            children: [
+              Text(
+                label,
+                style: theme.typography.sm.copyWith(
+                  color: colors.mutedForeground,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                value,
+                style: theme.typography.base.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BookInfo extends StatelessWidget {
+  const _BookInfo({
+    required this.hadith,
+    required this.theme,
+    required this.colors,
+  });
+  final DetailedHadith hadith;
+  final FThemeData theme;
+  final FColors colors;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const .all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -150,39 +295,30 @@ class HadithCard extends HookWidget {
       ),
     );
   }
+}
 
-  Widget _buildExplanation(FThemeData theme, FColors colors) {
-    return Container(
-      padding: const .all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: colors.secondary.withAlpha(10),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: .start,
-        children: [
-          Row(
-            children: [
-              Icon(FIcons.info, size: 16, color: colors.primary),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'شرح الحكم',
-                style: theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(hadith.explainGrade!, style: theme.typography.sm),
-        ],
-      ),
-    );
+class _GradeSection extends StatelessWidget {
+  const _GradeSection({
+    required this.hadith,
+    required this.theme,
+    required this.colors,
+  });
+  final DetailedHadith hadith;
+  final FThemeData theme;
+  final FColors colors;
+
+  Color _gradeColor() {
+    final g = hadith.grade.toLowerCase();
+    if (g.contains('صحيح')) return Colors.green;
+    if (g.contains('حسن')) return Colors.blue;
+    if (g.contains('ضعيف')) return Colors.orange;
+    if (g.contains('موضوع') || g.contains('منكر')) return Colors.red;
+    return colors.primary;
   }
 
-  Widget _buildGradeSection(FThemeData theme, FColors colors) {
-    final gradeColor = _getGradeColor(hadith.grade, colors);
-
+  @override
+  Widget build(BuildContext context) {
+    final gradeColor = _gradeColor();
     return Container(
       padding: const .all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -190,205 +326,116 @@ class HadithCard extends HookWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: gradeColor.withAlpha(40)),
       ),
-      child: Column(
-        crossAxisAlignment: .stretch,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(FIcons.check, size: 20, color: gradeColor),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: .start,
-                  children: [
-                    Text(
-                      'المحدث',
-                      style: theme.typography.sm.copyWith(
-                        color: colors.mutedForeground,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      hadith.mohdith,
-                      style: theme.typography.base.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const .symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: gradeColor,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  hadith.grade,
+          Icon(FIcons.check, size: 20, color: gradeColor),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: .start,
+              children: [
+                Text(
+                  'المحدث',
                   style: theme.typography.sm.copyWith(
-                    color: Colors.white,
+                    color: colors.mutedForeground,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  hadith.mohdith,
+                  style: theme.typography.base.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const .symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: gradeColor,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              hadith.grade,
+              style: theme.typography.sm.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildHadithHTML(FThemeData theme) {
-    return Container(
-      padding: const .all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: theme.colors.secondary.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(hadith.hadith),
-    );
-  }
+class _SharhSection extends StatelessWidget {
+  const _SharhSection({
+    required this.hadith,
+    required this.theme,
+    required this.colors,
+    required this.loadedSharh,
+    required this.isLoading,
+    required this.error,
+    required this.onLoad,
+  });
+  final DetailedHadith hadith;
+  final FThemeData theme;
+  final FColors colors;
+  final String? loadedSharh;
+  final bool isLoading;
+  final String? error;
+  final Future<void> Function(String) onLoad;
 
-  Widget _buildHadithText(FThemeData theme) {
-    return Container(
-      padding: const .all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: theme.colors.secondary.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: SelectableText(
-        hadith.hadith,
-        style: theme.typography.xl2.copyWith(
-          height: 1.8,
-          fontWeight: FontWeight.w500,
-        ),
-        textAlign: TextAlign.right,
-      ),
-    );
-  }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required FColors colors,
-    required FThemeData theme,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const .all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: colors.primary.withAlpha(20),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, size: 20, color: colors.primary),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: .start,
-            children: [
-              Text(
-                label,
-                style: theme.typography.sm.copyWith(
-                  color: colors.mutedForeground,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                value,
-                style: theme.typography.base.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLinkChip({
-    required IconData icon,
-    required String label,
-    required FColors colors,
-    required FThemeData theme,
-  }) {
-    return Container(
-      padding: const .symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: colors.primary.withAlpha(10),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: colors.primary),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            label,
-            style: theme.typography.sm.copyWith(color: colors.primary),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRelatedLinks(FThemeData theme, FColors colors) {
-    return Container(
-      padding: const .all(AppSpacing.md),
-      decoration: BoxDecoration(
-        border: Border.all(color: colors.border),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: .start,
-        spacing: 8,
-        children: [
-          Text(
-            'روابط ذات صلة',
-            style: theme.typography.sm.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          if (hadith.hasSimilarHadith)
-            _buildLinkChip(
-              icon: FIcons.copy,
-              label: 'أحاديث مشابهة',
-              colors: colors,
-              theme: theme,
-            ),
-          if (hadith.hasAlternateHadithSahih)
-            _buildLinkChip(
-              icon: FIcons.check,
-              label: 'روايات صحيحة بديلة',
-              colors: colors,
-              theme: theme,
-            ),
-          if (hadith.hasUsulHadith)
-            _buildLinkChip(
-              icon: FIcons.bookOpen,
-              label: 'الأصول',
-              colors: colors,
-              theme: theme,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSharhSection(
-    FThemeData theme,
-    FColors colors, {
-    required String? loadedSharh,
-    required bool isLoadingSharh,
-    required String? sharhError,
-    required Future<void> Function(String) onLoadSharh,
-  }) {
+  @override
+  Widget build(BuildContext context) {
     final sharh = hadith.sharhMetadata!;
+    Widget content;
+
+    if (loadedSharh != null) {
+      content = SelectableText(
+        loadedSharh!,
+        style: theme.typography.sm.copyWith(height: 1.6),
+      );
+    } else if (isLoading) {
+      content = const Center(
+        child: Padding(
+          padding: .all(AppSpacing.lg),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    } else if (error != null) {
+      content = Column(
+        children: [
+          Text(error!, style: theme.typography.sm.copyWith(color: Colors.red)),
+          const SizedBox(height: AppSpacing.sm),
+          FButton(
+            onPress: () => onLoad(sharh.id),
+            child: const Text('إعادة المحاولة'),
+          ),
+        ],
+      );
+    } else if (sharh.sharh != null) {
+      content = SelectableText(
+        sharh.sharh!,
+        style: theme.typography.sm.copyWith(height: 1.6),
+      );
+    } else {
+      content = Center(
+        child: FButton(
+          onPress: () => onLoad(sharh.id),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(FIcons.download, size: 16),
+              const SizedBox(width: AppSpacing.sm),
+              Text('تحميل الشرح', style: theme.typography.sm),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Container(
       padding: const .all(AppSpacing.md),
@@ -413,93 +460,62 @@ class HadithCard extends HookWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          if (loadedSharh != null) ...[
-            SelectableText(
-              loadedSharh,
-              style: theme.typography.sm.copyWith(height: 1.6),
-            ),
-          ] else if (isLoadingSharh) ...[
-            const Center(
-              child: Padding(
-                padding: .all(AppSpacing.lg),
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          ] else if (sharhError != null) ...[
-            Text(
-              sharhError,
-              style: theme.typography.sm.copyWith(color: Colors.red),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            FButton(
-              onPress: () => onLoadSharh(sharh.id),
-              child: const Text('إعادة المحاولة'),
-            ),
-          ] else if (sharh.sharh != null) ...[
-            SelectableText(
-              sharh.sharh!,
-              style: theme.typography.sm.copyWith(height: 1.6),
-            ),
-          ] else ...[
-            Center(
-              child: FButton(
-                onPress: () => onLoadSharh(sharh.id),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(FIcons.download, size: 16),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text('تحميل الشرح', style: theme.typography.sm),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          content,
         ],
       ),
     );
   }
+}
 
-  Widget _buildTakhrij(FThemeData theme, FColors colors) {
+class _RelatedLinks extends StatelessWidget {
+  const _RelatedLinks({
+    required this.hadith,
+    required this.theme,
+    required this.colors,
+  });
+  final DetailedHadith hadith;
+  final FThemeData theme;
+  final FColors colors;
+
+  Widget _chip(IconData icon, String label) => Container(
+    padding: const .symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: colors.primary.withAlpha(10),
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: colors.primary),
+        const SizedBox(width: AppSpacing.sm),
+        Text(label, style: theme.typography.sm.copyWith(color: colors.primary)),
+      ],
+    ),
+  );
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       padding: const .all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: colors.secondary.withAlpha(10),
+        border: Border.all(color: colors.border),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
         crossAxisAlignment: .start,
+        spacing: 8,
         children: [
-          Row(
-            children: [
-              Icon(FIcons.library, size: 16, color: colors.primary),
-              const SizedBox(width: AppSpacing.sm),
-              Text(
-                'التخريج',
-                style: theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          Text(
+            'روابط ذات صلة',
+            style: theme.typography.sm.copyWith(fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(hadith.takhrij!, style: theme.typography.sm),
+          const SizedBox(height: AppSpacing.xs),
+          if (hadith.hasSimilarHadith) _chip(FIcons.copy, 'أحاديث مشابهة'),
+          if (hadith.hasAlternateHadithSahih)
+            _chip(FIcons.check, 'روايات صحيحة بديلة'),
+          if (hadith.hasUsulHadith) _chip(FIcons.bookOpen, 'الأصول'),
         ],
       ),
     );
-  }
-
-  Color _getGradeColor(String grade, FColors colors) {
-    final gradeLower = grade.toLowerCase();
-    if (gradeLower.contains('صحيح')) {
-      return Colors.green;
-    } else if (gradeLower.contains('حسن')) {
-      return Colors.blue;
-    } else if (gradeLower.contains('ضعيف')) {
-      return Colors.orange;
-    } else if (gradeLower.contains('موضوع') || gradeLower.contains('منكر')) {
-      return Colors.red;
-    }
-    return colors.primary;
   }
 }

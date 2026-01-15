@@ -8,12 +8,9 @@ import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/core/widgets/f_skeletonizer.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_card_model.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
-import 'package:hasanat/feature/prayer/presentation/provider/prayer_completion_provider.dart';
-import 'package:hasanat/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/mini_card.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/theme/theme.dart';
@@ -22,51 +19,35 @@ import 'package:hasanat/theme/theme.dart';
 class CurrentPrayerCard extends ConsumerWidget {
   /// Creates a [CurrentPrayerCard] instance.
   const CurrentPrayerCard({super.key});
-  // Static constants to avoid recreation on every build
-  static const _gradientOverlay = LinearGradient(
+
+  static const _gradient = LinearGradient(
     colors: [
-      Color.from(alpha: 0.6, red: 0, green: 0, blue: 0), // Strongest at top
-      Color.from(alpha: 0.4, red: 0, green: 0, blue: 0), // Medium in middle
-      Color.from(alpha: 0.1, red: 0, green: 0, blue: 0), // Weakest at bottom
+      Color.fromRGBO(0, 0, 0, 0.6),
+      Color.fromRGBO(0, 0, 0, 0.4),
+      Color.fromRGBO(0, 0, 0, 0.1),
     ],
-    stops: [0.0, 0.5, 1.0], // Control the gradient distribution
+    stops: [0.0, 0.5, 1.0],
   );
-  // Static constants for the gradient above but for RTL
-  static const _gradientOverlayRLT = LinearGradient(
+  static const _gradientRTL = LinearGradient(
     begin: Alignment.centerRight,
     end: Alignment.centerLeft,
     colors: [
-      Color.from(alpha: 0.6, red: 0, green: 0, blue: 0), // Strongest at top
-      Color.from(alpha: 0.4, red: 0, green: 0, blue: 0), // Medium in middle
-      Color.from(alpha: 0.1, red: 0, green: 0, blue: 0), // Weakest at bottom
+      Color.fromRGBO(0, 0, 0, 0.6),
+      Color.fromRGBO(0, 0, 0, 0.4),
+      Color.fromRGBO(0, 0, 0, 0.1),
     ],
-    stops: [0.0, 0.5, 1.0], // Control the gradient distribution
+    stops: [0.0, 0.5, 1.0],
   );
-  static const _textShadow = [
+  static const _shadow = [
     Shadow(
       offset: Offset(1, 1),
       blurRadius: 2,
-      color: Color.from(alpha: 0.6, red: 0, green: 0, blue: 0),
+      color: Color.fromRGBO(0, 0, 0, 0.6),
     ),
   ];
-
-  /// Use context.theme.radii.lg instead - kept for backward compat
   static const _borderRadius = BorderRadius.all(Radius.circular(12));
-
-  /// Use context.edgeInsets(all: AppSpacing.lg) instead - kept for backward compat
-  static const EdgeInsets _containerPadding = .all(AppSpacing.lg);
-
-  /// Use context.theme.durations.normal instead - kept for backward compat
-  static const _animationDuration = Duration(milliseconds: 260);
-  static TextStyle get _headerTextStyle => TextStyle(
-    color: Colors.white,
-    fontSize: 14.sp,
-    fontWeight: FontWeight.w500,
-  );
-  static TextStyle get _miniCardTextStyle => TextStyle(fontSize: 20.sp);
-
-  static TextStyle get _prepareTextStyle =>
-      TextStyle(color: Colors.white, fontSize: 16.sp);
+  static const _padding = EdgeInsets.all(AppSpacing.lg);
+  static const _animDuration = Duration(milliseconds: 260);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -79,154 +60,97 @@ class CurrentPrayerCard extends ConsumerWidget {
       borderColor: Colors.transparent,
       padding: .zero,
       child: cardStream.when(
-        data: (data) =>
-            _PrayerCardContent(data: data, appTheme: appTheme, theme: theme),
-        error: (error, stackTrace) => _ErrorCard(error: error),
-        loading: () => FSkeletonizer(
-          child: _PrayerCardContent(
-            data: _MockPrayerData(),
-            appTheme: appTheme,
-            theme: theme,
-            isLoading: true,
+        data: (data) => _Content(data: data, appTheme: appTheme, theme: theme),
+        error: (e, _) => FAlert(
+          title: Text(
+            context.l10n.errorOccurredWhile('Calculating Prayer Times'),
           ),
+          subtitle: Text(e.toString()),
+        ),
+        loading: () => FSkeletonizer(
+          child: _Content(data: _MockData(), appTheme: appTheme, theme: theme),
         ),
       ),
     );
   }
-
-  // Cached style getters
-  static TextStyle _shadowedTextStyle(double fontSize) => TextStyle(
-    color: Colors.white,
-    fontSize: fontSize,
-    fontWeight: FontWeight.bold,
-    shadows: _textShadow,
-  );
 }
 
-class _ErrorCard extends StatelessWidget {
-  const _ErrorCard({required this.error});
-  final Object error;
-
-  @override
-  Widget build(BuildContext context) {
-    return FAlert(
-      title: Text(context.l10n.errorOccurredWhile('Calculating Prayer Times')),
-      subtitle: Text(error.toString()),
-    );
-  }
-}
-
-// Optimized header row
-class _HeaderRow extends StatelessWidget {
-  const _HeaderRow({
-    required this.completion,
-    required this.appTheme,
-    required this.data,
-    required this.isLoading,
-  });
-  final Future<PrayerCompletion?> completion;
-  final AsyncValue<ThemeSettings?> appTheme;
-
-  final PrayerCardInfo data;
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: .spaceBetween,
-      children: [
-        Text(
-          context.l10n.nextPrayer,
-          style: CurrentPrayerCard._headerTextStyle,
-        ),
-      ],
-    );
-  }
-}
-
-// Mock data for loading state
-class _MockPrayerData implements PrayerCardInfo {
+class _MockData implements PrayerCardInfo {
   @override
   String get adhanTime => '--:--';
-  @override
-  $PrayerCardInfoCopyWith<PrayerCardInfo> get copyWith =>
-      throw UnimplementedError();
   @override
   String get iqamahTime => '--:--';
   @override
   Prayer get prayer => Prayer.fajr;
-
   @override
   String get time => 'Loading...';
+  @override
+  $PrayerCardInfoCopyWith<PrayerCardInfo> get copyWith =>
+      throw UnimplementedError();
 }
 
-// Separate widget for the main content to optimize rebuilds
-class _PrayerCardContent extends ConsumerWidget {
-  const _PrayerCardContent({
+class _Content extends ConsumerWidget {
+  const _Content({
     required this.data,
     required this.appTheme,
     required this.theme,
-    this.isLoading = false,
   });
   final PrayerCardInfo data;
-
   final AsyncValue<ThemeSettings?> appTheme;
   final FThemeData theme;
-  final bool isLoading;
+
+  TextStyle _shadowedStyle(double size) => TextStyle(
+    color: Colors.white,
+    fontSize: size,
+    fontWeight: FontWeight.bold,
+    shadows: CurrentPrayerCard._shadow,
+  );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final completion = ref
-        .read(prayerCompletionProvider.notifier)
-        .getPrayerCompletionForPrayerOnDate(
-          data.prayer,
-          ref.read(currentLocationTimeProvider),
-        );
     final isArabic =
-        ref.watch(
-          localeProvider.select((value) => value.value?.languageCode),
-        ) ==
-        'ar';
+        ref.watch(localeProvider.select((v) => v.value?.languageCode)) == 'ar';
+
     return AnimatedContainer(
-      duration: CurrentPrayerCard._animationDuration,
+      duration: CurrentPrayerCard._animDuration,
       decoration: BoxDecoration(
         image: DecorationImage(
           image: AssetImage(data.prayer.imagePath),
-
           alignment: data.prayer.alignment,
           fit: BoxFit.fitWidth,
-          // filterQuality: FilterQuality.medium,
         ),
         color: theme.colors.secondary,
         borderRadius: CurrentPrayerCard._borderRadius,
       ),
       child: Container(
-        padding: CurrentPrayerCard._containerPadding,
+        padding: CurrentPrayerCard._padding,
         decoration: BoxDecoration(
           borderRadius: CurrentPrayerCard._borderRadius,
           gradient: isArabic
-              ? CurrentPrayerCard._gradientOverlayRLT
-              : CurrentPrayerCard._gradientOverlay,
+              ? CurrentPrayerCard._gradientRTL
+              : CurrentPrayerCard._gradient,
         ),
         child: Column(
           crossAxisAlignment: .stretch,
           mainAxisAlignment: .spaceBetween,
           children: [
-            _HeaderRow(
-              completion: completion,
-              appTheme: appTheme,
-              data: data,
-              isLoading: isLoading,
+            Text(
+              context.l10n.nextPrayer,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
+              ),
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               data.prayer.getLocaleName(context.l10n),
-              style: CurrentPrayerCard._shadowedTextStyle(42.sp),
+              style: _shadowedStyle(42.sp),
             ),
-            Text(data.time, style: CurrentPrayerCard._shadowedTextStyle(32.sp)),
+            Text(data.time, style: _shadowedStyle(32.sp)),
             Text(
               context.l10n.prepareForPrayer,
-              style: CurrentPrayerCard._prepareTextStyle,
+              style: TextStyle(color: Colors.white, fontSize: 16.sp),
             ),
             const SizedBox(height: AppSpacing.xs),
             Wrap(
@@ -236,14 +160,14 @@ class _PrayerCardContent extends ConsumerWidget {
                   label: context.l10n.adhan,
                   child: Text(
                     data.adhanTime,
-                    style: CurrentPrayerCard._miniCardTextStyle,
+                    style: TextStyle(fontSize: 20.sp),
                   ),
                 ),
                 MiniCard(
                   label: context.l10n.iqamah,
                   child: Text(
                     data.iqamahTime,
-                    style: CurrentPrayerCard._miniCardTextStyle,
+                    style: TextStyle(fontSize: 20.sp),
                   ),
                 ),
               ],
@@ -253,6 +177,4 @@ class _PrayerCardContent extends ConsumerWidget {
       ),
     );
   }
-
-  // Note: DecorationImage provider is now sized via ResizeImage in build.
 }

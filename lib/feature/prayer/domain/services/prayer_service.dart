@@ -23,14 +23,10 @@ PrayerService prayerService(Ref ref) {
   final settings = ref.watch(prayerSettingsProvider);
 
   return settings.when(
-    data: (data) {
-      return PrayerService(repo, data, log);
-    },
-    loading: () {
-      return PrayerService(repo, PrayerSettings.defaultSettings(), log);
-    },
-    error: (error, stackTrace) {
-      log.e('Error loading settings', error: error, stackTrace: stackTrace);
+    data: (d) => PrayerService(repo, d, log),
+    loading: () => PrayerService(repo, PrayerSettings.defaultSettings(), log),
+    error: (e, st) {
+      log.e('Error loading settings', error: e, stackTrace: st);
       return PrayerService(repo, PrayerSettings.defaultSettings(), log);
     },
   );
@@ -44,67 +40,47 @@ class PrayerService {
   final PrayerSettings _settings;
   final Logger _log;
 
+  TZDateTime _now() => TZDateTime.from(DateTime.now(), _settings.location);
+
   /// Adds or updates a prayer completion record.
-  Future<void> addOrUpdateCompletion(PrayerCompletion completion) {
-    return _repo.addOrUpdateCompletion(completion);
-  }
+  Future<void> addOrUpdateCompletion(PrayerCompletion c) =>
+      _repo.addOrUpdateCompletion(c);
 
   /// Computes the current and best streaks of fully completed prayer days.
   Future<({int current, int best})> computeStreaks(Location loc) async {
     try {
-      final completedDays = await _repo.getFullyCompletedDays(loc);
-      if (completedDays.isEmpty) return (current: 0, best: 0);
+      final days = await _repo.getFullyCompletedDays(loc);
+      if (days.isEmpty) return (current: 0, best: 0);
 
-      var bestStreak = 0;
-      var currentStreakLength = 0;
-      DateTime? previousDay;
+      var best = 0, streak = 0;
+      DateTime? prev;
 
-      // Process all completed days to find best streak and track current
-      for (final currentDay in completedDays) {
-        if (previousDay == null) {
-          // First day
-          currentStreakLength = 1;
+      for (final day in days) {
+        if (prev == null) {
+          streak = 1;
+        } else if (day.difference(prev).inDays == 1) {
+          streak++;
         } else {
-          final daysDiff = currentDay.difference(previousDay).inDays;
-          if (daysDiff == 1) {
-            // Consecutive day
-            currentStreakLength++;
-          } else {
-            // Gap found - update best streak and reset counter
-            if (currentStreakLength > bestStreak) {
-              bestStreak = currentStreakLength;
-            }
-            currentStreakLength = 1;
-          }
+          if (streak > best) best = streak;
+          streak = 1;
         }
-        previousDay = currentDay;
+        prev = day;
       }
+      if (streak > best) best = streak;
 
-      // After loop, check if the last streak is the best
-      if (currentStreakLength > bestStreak) {
-        bestStreak = currentStreakLength;
-      }
-
-      // Determine current streak:
-      // Current streak only counts if it includes today or yesterday
-      var finalCurrentStreak = 0;
-      if (previousDay != null) {
+      var current = 0;
+      if (prev != null) {
         final today = TZDateTime.now(loc);
-        final todayDate = DateTime(today.year, today.month, today.day);
-        final daysSinceLastCompletion = todayDate
-            .difference(previousDay)
-            .inDays;
-
-        if (daysSinceLastCompletion == 0 || daysSinceLastCompletion == 1) {
-          // Streak is active (today or yesterday was completed)
-          finalCurrentStreak = currentStreakLength;
-        }
-        // else: streak is broken (last completion was 2+ days ago)
+        final diff = DateTime(
+          today.year,
+          today.month,
+          today.day,
+        ).difference(prev).inDays;
+        if (diff <= 1) current = streak;
       }
-
-      return (current: finalCurrentStreak, best: bestStreak);
-    } catch (e, stackTrace) {
-      _log.e('Error computing streaks', error: e, stackTrace: stackTrace);
+      return (current: current, best: best);
+    } catch (e, st) {
+      _log.e('Error computing streaks', error: e, stackTrace: st);
       return (current: 0, best: 0);
     }
   }
@@ -114,10 +90,8 @@ class PrayerService {
     PrayerAnalyticsPeriod period, [
     DateTime? date,
   ]) {
-    final activeDate = date ?? _currentTime();
-    final fromDate = activeDate.subtract(period.duration);
-    final toDate = activeDate;
-    return _repo.countAllStatusesOnDate(fromDate, toDate);
+    final d = date ?? _now();
+    return _repo.countAllStatusesOnDate(d.subtract(period.duration), d);
   }
 
   /// Counts prayers with a specific status within a given period.
@@ -126,87 +100,57 @@ class PrayerService {
     PrayerAnalyticsPeriod period, [
     DateTime? date,
   ]) {
-    final activeDate = date ?? _currentTime();
-    final fromDate = activeDate.subtract(period.duration);
-    final toDate = activeDate;
-    return _repo.countPrayerStatusOnDate(status, fromDate, toDate);
+    final d = date ?? _now();
+    return _repo.countPrayerStatusOnDate(
+      status,
+      d.subtract(period.duration),
+      d,
+    );
   }
 
   /// Returns the current prayer based on the provided prayer times.
-  Prayer currentPrayer(PrayerTimes prayerTime) {
-    final date = _currentTime();
-    return prayerTime.currentPrayer(time: date);
-  }
+  Prayer currentPrayer(PrayerTimes t) => t.currentPrayer(time: _now());
 
   /// Deletes a prayer completion record by its ID.
-  Future<void> deleteCompletion(int id) {
-    return _repo.deleteCompletion(id);
-  }
+  Future<void> deleteCompletion(int id) => _repo.deleteCompletion(id);
 
   /// Checks if a prayer completion record exists for the given ID.
-  Future<bool> doesCompletionExists(int id) {
-    return _repo.doesCompletionExists(id);
-  }
+  Future<bool> doesCompletionExists(int id) => _repo.doesCompletionExists(id);
 
   /// Returns all prayer completion records.
-  Future<List<PrayerCompletion>> getAllCompletions() {
-    return _repo.getAllCompletions();
-  }
+  Future<List<PrayerCompletion>> getAllCompletions() =>
+      _repo.getAllCompletions();
 
   /// Returns a single prayer completion record by its ID.
-  Future<PrayerCompletion?> getSingleCompletion(int id) {
-    return _repo.getSingleCompletion(id);
-  }
+  Future<PrayerCompletion?> getSingleCompletion(int id) =>
+      _repo.getSingleCompletion(id);
 
   /// Returns the Sunnah times for the given prayer times.
-  SunnahTimes getSunnahTime(PrayerTimes prayerTimes) {
-    return _repo.getSunnahTime(prayerTimes);
-  }
+  SunnahTimes getSunnahTime(PrayerTimes t) => _repo.getSunnahTime(t);
 
   /// Returns the prayer times for today (or a specific date).
   PrayerTimes getTodaysPrayerTimes(
     DateTime? date, {
     bool roundToMinutes = true,
   }) {
-    const logPrefix = '[PrayerService.getTodaysPrayerTimes] ';
-    final activeDate = date ?? _currentTime();
-    final params = _settings.method;
-    var prayerTimes = _repo.getPrayerTimes(
-      activeDate,
+    var times = _repo.getPrayerTimes(
+      date ?? _now(),
       _settings.coordinates,
-      params,
+      _settings.method,
       roundToMinutes: roundToMinutes,
     );
-
-    final isRamadan = Hijriyah.now().hMonth == 9;
-
-    if (isRamadan && _settings.method is UmmAlQura) {
-      _log.d(
-        '$logPrefix Method is Umm Al-Qura, and month is Ramadan, '
-        'adjusting prayer times accordingly',
-      );
-      prayerTimes = prayerTimes.copyWith(
-        isha: prayerTimes.isha.add(const Duration(minutes: 30)),
-      );
+    if (Hijriyah.now().hMonth == 9 && _settings.method is UmmAlQura) {
+      _log.d('Adjusting Isha for Ramadan');
+      times = times.copyWith(isha: times.isha.add(const Duration(minutes: 30)));
     }
-
-    return prayerTimes;
+    return times;
   }
 
   /// Returns the next prayer based on the provided prayer times.
-  Prayer nextPrayerByDate(PrayerTimes prayerTime, [DateTime? date]) {
-    final activeDate = date ?? _currentTime();
-    return prayerTime.nextPrayer(time: activeDate);
-  }
+  Prayer nextPrayerByDate(PrayerTimes t, [DateTime? date]) =>
+      t.nextPrayer(time: date ?? _now());
 
   /// Returns the prayer completion records for a specific date.
-  Future<List<PrayerCompletion>> getPrayerCompletionForDate([DateTime? date]) {
-    final activeDate = date ?? _currentTime();
-
-    return _repo.getPrayerCompletionForDate(activeDate);
-  }
-
-  TZDateTime _currentTime() {
-    return TZDateTime.from(DateTime.now(), _settings.location);
-  }
+  Future<List<PrayerCompletion>> getPrayerCompletionForDate([DateTime? date]) =>
+      _repo.getPrayerCompletionForDate(date ?? _now());
 }

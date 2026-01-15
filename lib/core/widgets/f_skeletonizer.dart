@@ -2,37 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
+/// Skeleton effect type for [FSkeletonizer].
+enum SkeletonEffectType { shimmer, pulse, fade }
+
 /// A Forui-themed wrapper around the Skeletonizer widget.
 ///
-/// This widget provides a themed skeleton loading experience that integrates
-/// seamlessly with the Forui design system, using FColors for consistent
-/// skeleton appearance across the application.
+/// Provides a themed skeleton loading experience that integrates
+/// seamlessly with the Forui design system.
 ///
-/// ## Usage Examples:
-///
-/// ### Basic usage:
+/// ## Usage:
 /// ```dart
-/// FSkeletonizer(
-///   enabled: isLoading,
-///   child: MyWidget(),
-/// )
-/// ```
-///
-/// ### With custom effect:
-/// ```dart
-/// FSkeletonizer.shimmer(
-///   enabled: isLoading,
-///   duration: Duration(milliseconds: 800),
-///   child: MyWidget(),
-/// )
-/// ```
-///
-/// ### Pulse effect:
-/// ```dart
-/// FSkeletonizer.pulse(
-///   enabled: isLoading,
-///   child: MyWidget(),
-/// )
+/// FSkeletonizer(enabled: isLoading, child: MyWidget())
+/// FSkeletonizer.withEffect(SkeletonEffectType.pulse, child: MyWidget())
 /// ```
 class FSkeletonizer extends StatelessWidget {
   /// Creates a Forui-themed skeleton loader.
@@ -52,57 +33,34 @@ class FSkeletonizer extends StatelessWidget {
   final Widget child;
 
   /// Whether the skeleton effect is enabled.
-  ///
-  /// When false, the original [child] is displayed without any skeleton effect.
   final bool enabled;
 
   /// The skeleton effect to apply.
-  ///
-  /// If null, a default shimmer effect using Forui colors will be created.
   final PaintingEffect? effect;
 
   /// Whether to ignore container widgets when applying the skeleton effect.
-  ///
-  /// When true, containers (like Container, Card, etc.) won't be skeletonized.
   final bool ignoreContainers;
 
   /// Whether to ignore pointer events on the skeletonized widget.
-  ///
-  /// When true, the skeleton widget won't respond to touch events.
   final bool ignorePointers;
 
   /// Whether to justify multi-line text in skeleton mode.
-  ///
-  /// When true, multi-line text will be justified for a more 
-  /// realistic skeleton appearance.
   final bool justifyMultiLineText;
 
   /// The border radius for text bone elements.
-  ///
-  /// If null, a default border radius will be used.
   final BorderRadiusGeometry? textBoneBorderRadius;
 
   /// The color to use for container elements in skeleton mode.
-  ///
-  /// If null, the Forui theme's muted color will be used.
   final Color? containersColor;
 
   @override
   Widget build(BuildContext context) {
-    if (!enabled) {
-      return child;
-    }
+    if (!enabled) return child;
 
-    final theme = FTheme.of(context);
-    final colors = theme.colors;
-
-    // Create a default shimmer effect if none provided
-    final skeletonizerEffect =
-        effect ?? ShimmerEffect(baseColor: colors.secondary);
-
+    final colors = FTheme.of(context).colors;
     return Skeletonizer(
       enabled: enabled,
-      effect: skeletonizerEffect,
+      effect: effect ?? ShimmerEffect(baseColor: colors.secondary),
       ignoreContainers: ignoreContainers,
       ignorePointers: ignorePointers,
       justifyMultiLineText: justifyMultiLineText,
@@ -111,8 +69,9 @@ class FSkeletonizer extends StatelessWidget {
     );
   }
 
-  /// Creates an FSkeletonizer with a fade-like effect using Forui colors.
-  static Widget fade({
+  /// Creates an FSkeletonizer with a specific effect type.
+  static Widget withEffect(
+    SkeletonEffectType type, {
     required Widget child,
     Key? key,
     bool enabled = true,
@@ -121,93 +80,38 @@ class FSkeletonizer extends StatelessWidget {
     bool justifyMultiLineText = true,
     BorderRadiusGeometry? textBoneBorderRadius,
     Color? containersColor,
-    Duration duration = const Duration(milliseconds: 800),
-  }) {
-    return Builder(
-      builder: (context) {
-        final colors = FTheme.of(context).colors;
-
-        return FSkeletonizer(
-          key: key,
-          enabled: enabled,
-          effect: ShimmerEffect(
-            baseColor: colors.muted,
-            highlightColor: colors.mutedForeground.withValues(alpha: 0.1),
-            duration: duration,
-          ),
-          ignoreContainers: ignoreContainers,
-          ignorePointers: ignorePointers,
-          justifyMultiLineText: justifyMultiLineText,
-          textBoneBorderRadius: textBoneBorderRadius,
-          containersColor: containersColor,
-          child: child,
-        );
-      },
-    );
-  }
-
-  /// Creates an FSkeletonizer with a pulse effect using Forui colors.
-  static Widget pulse({
-    required Widget child,
-    Key? key,
-    bool enabled = true,
-    bool ignoreContainers = false,
-    bool ignorePointers = true,
-    bool justifyMultiLineText = true,
-    BorderRadiusGeometry? textBoneBorderRadius,
-    Color? containersColor,
-    Duration duration = const Duration(milliseconds: 1000),
-  }) {
-    return Builder(
-      builder: (context) {
-        final colors = FTheme.of(context).colors;
-
-        return FSkeletonizer(
-          key: key,
-          enabled: enabled,
-          effect: PulseEffect(
-            from: colors.muted,
-            to: colors.mutedForeground.withValues(alpha: 0.2),
-            duration: duration,
-          ),
-          ignoreContainers: ignoreContainers,
-          ignorePointers: ignorePointers,
-          justifyMultiLineText: justifyMultiLineText,
-          textBoneBorderRadius: textBoneBorderRadius,
-          containersColor: containersColor,
-          child: child,
-        );
-      },
-    );
-  }
-
-  /// Creates an FSkeletonizer with a custom shimmer effect using Forui colors.
-  static Widget shimmer({
-    required Widget child,
-    Key? key,
-    bool enabled = true,
-    bool ignoreContainers = false,
-    bool ignorePointers = true,
-    bool justifyMultiLineText = true,
-    BorderRadiusGeometry? textBoneBorderRadius,
-    Color? containersColor,
-    Duration duration = const Duration(milliseconds: 1200),
+    Duration? duration,
     Color? baseColor,
     Color? highlightColor,
   }) {
     return Builder(
       builder: (context) {
         final colors = FTheme.of(context).colors;
+        final base = baseColor ?? colors.muted;
+        final highlight = highlightColor ?? colors.mutedForeground;
+
+        final effect = switch (type) {
+          SkeletonEffectType.shimmer => ShimmerEffect(
+            baseColor: base,
+            highlightColor: highlight.withValues(alpha: 0.3),
+            duration: duration ?? const Duration(milliseconds: 1200),
+          ),
+          SkeletonEffectType.pulse => PulseEffect(
+            from: base,
+            to: highlight.withValues(alpha: 0.2),
+            duration: duration ?? const Duration(milliseconds: 1000),
+          ),
+          SkeletonEffectType.fade => ShimmerEffect(
+            baseColor: base,
+            highlightColor: highlight.withValues(alpha: 0.1),
+            duration: duration ?? const Duration(milliseconds: 800),
+          ),
+        };
 
         return FSkeletonizer(
           key: key,
           enabled: enabled,
-          effect: ShimmerEffect(
-            baseColor: baseColor ?? colors.muted,
-            highlightColor:
-                highlightColor ?? colors.mutedForeground.withValues(alpha: 0.3),
-            duration: duration,
-          ),
+          effect: effect,
           ignoreContainers: ignoreContainers,
           ignorePointers: ignorePointers,
           justifyMultiLineText: justifyMultiLineText,
@@ -218,4 +122,34 @@ class FSkeletonizer extends StatelessWidget {
       },
     );
   }
+
+  /// Shorthand for shimmer effect.
+  static Widget shimmer({
+    required Widget child,
+    Key? key,
+    bool enabled = true,
+  }) => withEffect(
+    SkeletonEffectType.shimmer,
+    child: child,
+    key: key,
+    enabled: enabled,
+  );
+
+  /// Shorthand for pulse effect.
+  static Widget pulse({required Widget child, Key? key, bool enabled = true}) =>
+      withEffect(
+        SkeletonEffectType.pulse,
+        child: child,
+        key: key,
+        enabled: enabled,
+      );
+
+  /// Shorthand for fade effect.
+  static Widget fade({required Widget child, Key? key, bool enabled = true}) =>
+      withEffect(
+        SkeletonEffectType.fade,
+        child: child,
+        key: key,
+        enabled: enabled,
+      );
 }
