@@ -19,33 +19,26 @@ class LocationPickerDialog extends HookConsumerWidget {
     super.key,
   });
 
-  /// The style of the dialog.
   final FDialogStyle Function(FDialogStyle) style;
-
-  /// The animation of the dialog.
   final Animation<double> animation;
-
-  /// Callback when a location is selected.
   final void Function(Coordinates coordinates, String locationName)
   onLocationSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mapController = useMapController();
-    final theme = FTheme.of(context);
-    final colors = theme.colors;
+    final mapCtrl = useMapController();
+    final colors = FTheme.of(context).colors;
+    final loc = ref.watch(locationPickerProvider);
+    final notifier = ref.read(locationPickerProvider.notifier);
+    final l10n = context.l10n;
 
-    final selectedLocation = ref.watch(locationPickerProvider);
-    final notifierController = ref.read(locationPickerProvider.notifier);
-    Future<List<FmData>> searchPlaces(String query) =>
-        ref.read(searchPlacesProvider(query).future);
     return FDialog(
       animation: animation,
       style: style,
       direction: .horizontal,
       constraints: const BoxConstraints(maxWidth: 850),
       title: Text(
-        context.l10n.chooseLocation,
+        l10n.chooseLocation,
         style: TextStyle(
           color: colors.foreground,
           fontSize: 18,
@@ -62,22 +55,27 @@ class LocationPickerDialog extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: .start,
           children: [
-            _buildHeader(
-              context,
-              colors,
-              notifierController,
-              selectedLocation,
-              searchPlaces,
-              mapController,
+            _Header(
+              colors: colors,
+              notifier: notifier,
+              loc: loc,
+              mapCtrl: mapCtrl,
+              searchPlaces: (q) => ref.read(searchPlacesProvider(q).future),
             ),
-            _buildMapSection(
-              context,
-              colors,
-              selectedLocation,
-              notifierController,
-              mapController,
+            Expanded(
+              child: Row(
+                children: [
+                  _Map(
+                    colors: colors,
+                    loc: loc.coords.latLng,
+                    notifier: notifier,
+                    mapCtrl: mapCtrl,
+                  ),
+                  _CoordsPanel(colors: colors, loc: loc.coords.latLng),
+                ],
+              ),
             ),
-            _buildTipSection(context, colors),
+            _Tip(colors: colors),
           ],
         ),
       ),
@@ -85,59 +83,212 @@ class LocationPickerDialog extends HookConsumerWidget {
         FButton(
           style: FButtonStyle.secondary(),
           onPress: () => Navigator.of(context).pop(),
-          child: Text(context.l10n.cancel),
+          child: Text(l10n.cancel),
         ),
         FButton(
-          onPress: () async {
-            onLocationSelected(selectedLocation.coords, selectedLocation.name);
-
+          onPress: () {
+            onLocationSelected(loc.coords, loc.name);
             Navigator.of(context).pop();
           },
-          child: Text(context.l10n.save),
+          child: Text(l10n.save),
         ),
       ],
     );
   }
+}
 
-  Widget _buildCoordinateField({
-    required String label,
-    required String value,
-    required FColors colors,
-  }) {
-    return Column(
-      crossAxisAlignment: .start,
-      spacing: 4,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: colors.mutedForeground,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.colors,
+    required this.notifier,
+    required this.loc,
+    required this.searchPlaces,
+    required this.mapCtrl,
+  });
+  final FColors colors;
+  final LocationPicker notifier;
+  final ({Coordinates coords, String name}) loc;
+  final Future<List<FmData>> Function(String) searchPlaces;
+  final MapController mapCtrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Container(
+      padding: const .all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: colors.muted.withValues(alpha: 0.1),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
         ),
-        Container(
-          width: double.infinity,
-          padding: const .symmetric(horizontal: 8, vertical: 6),
-          decoration: BoxDecoration(
-            color: colors.background,
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: colors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: .start,
+        spacing: 12,
+        children: [
+          Row(
+            mainAxisAlignment: .spaceBetween,
+            children: [
+              Text(
+                l10n.dragTheMapTip,
+                style: TextStyle(color: colors.mutedForeground, fontSize: 14),
+              ),
+              FButton(
+                onPress: () async {
+                  try {
+                    await notifier.useCurrentLocation(mapCtrl);
+                  } catch (e) {
+                    if (context.mounted)
+                      showFToast(
+                        context: context,
+                        title: Text(
+                          l10n.errorOccurredWhile(l10n.gettingLocation),
+                        ),
+                        description: Text(e.toString()),
+                      );
+                  }
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 8,
+                  children: [
+                    const Icon(Icons.my_location, size: 16),
+                    Text(l10n.useMyLocation),
+                  ],
+                ),
+              ),
+            ],
           ),
-          child: Text(
-            value,
-            style: TextStyle(color: colors.foreground, fontSize: 13),
+          FSelect<FmData>.searchBuilder(
+            control: FSelectControl.managed(
+              onChange: (p) async {
+                if (p != null) {
+                  await notifier.selectPlace(p);
+                  mapCtrl.move(p.coordinates.latLng, 14);
+                }
+              },
+            ),
+            hint: loc.name,
+            label: Text(l10n.searchPlaceLabel),
+            format: (s) => s.name,
+            filter: searchPlaces,
+            contentBuilder: (_, _, data) => [
+              for (final p in data)
+                FSelectItem(
+                  title: Text(p.name),
+                  subtitle: Text(p.address),
+                  value: p,
+                ),
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+}
 
-  Widget _buildCoordinatesPanel(
-    BuildContext context,
-    FColors colors,
-    LatLng selectedLocation,
-  ) {
+class _Map extends StatelessWidget {
+  const _Map({
+    required this.colors,
+    required this.loc,
+    required this.notifier,
+    required this.mapCtrl,
+  });
+  final FColors colors;
+  final LatLng loc;
+  final LocationPicker notifier;
+  final MapController mapCtrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Expanded(
+      flex: 3,
+      child: Container(
+        margin: const .all(AppSpacing.lg),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: colors.border),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: FmMap(
+            mapController: mapCtrl,
+            mapOptions: MapOptions(
+              initialCenter: loc,
+              initialZoom: 12,
+              minZoom: 2,
+              maxZoom: 18,
+              onTap: (_, ll) async {
+                try {
+                  await notifier.updateLocation(ll);
+                  mapCtrl.move(ll, 14);
+                } catch (_) {
+                  if (context.mounted)
+                    showFToast(
+                      context: context,
+                      title: Text(l10n.errorUpdatingLocationTitle),
+                      description: Text(l10n.errorUpdatingLocationDescription),
+                    );
+                }
+              },
+            ),
+            markers: [
+              Marker(
+                point: loc,
+                width: 40,
+                height: 40,
+                child: Icon(
+                  Icons.location_on,
+                  size: 40,
+                  color: colors.destructive,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CoordsPanel extends StatelessWidget {
+  const _CoordsPanel({required this.colors, required this.loc});
+  final FColors colors;
+  final LatLng loc;
+
+  Widget _field(String label, String value) => Column(
+    crossAxisAlignment: .start,
+    spacing: 4,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          color: colors.mutedForeground,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      Container(
+        width: double.infinity,
+        padding: const .symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: colors.background,
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: colors.border),
+        ),
+        child: Text(
+          value,
+          style: TextStyle(color: colors.foreground, fontSize: 13),
+        ),
+      ),
+    ],
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       width: 200,
       margin: const .only(top: 16, right: 16, bottom: 16),
@@ -156,7 +307,7 @@ class LocationPickerDialog extends HookConsumerWidget {
               Icon(Icons.place_outlined, color: colors.primary, size: 20),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                context.l10n.coordinates,
+                l10n.coordinates,
                 style: TextStyle(
                   color: colors.foreground,
                   fontSize: 16,
@@ -165,230 +316,37 @@ class LocationPickerDialog extends HookConsumerWidget {
               ),
             ],
           ),
-          _buildCoordinateField(
-            label: '${context.l10n.latitude}: ',
-            value: selectedLocation.latitude.toStringAsFixed(5),
-            colors: colors,
-          ),
-          _buildCoordinateField(
-            label: '${context.l10n.longitude}: ',
-            value: selectedLocation.longitude.toStringAsFixed(5),
-            colors: colors,
-          ),
+          _field('${l10n.latitude}: ', loc.latitude.toStringAsFixed(5)),
+          _field('${l10n.longitude}: ', loc.longitude.toStringAsFixed(5)),
         ],
       ),
     );
   }
+}
 
-  Widget _buildHeader(
-    BuildContext context,
-    FColors colors,
-    LocationPicker notifierController,
-    ({Coordinates coords, String name}) selectedLocation,
-    Future<List<FmData>> Function(String) searchPlaces,
-    MapController mapController,
-  ) {
-    return Container(
-      padding: const .all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: colors.muted.withValues(alpha: 0.1),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
+class _Tip extends StatelessWidget {
+  const _Tip({required this.colors});
+  final FColors colors;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const .all(AppSpacing.lg),
+    decoration: BoxDecoration(
+      color: colors.muted.withValues(alpha: 0.05),
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(12),
+        bottomRight: Radius.circular(12),
+      ),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.info_outline, color: colors.mutedForeground, size: 16),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          context.l10n.tipHoldCtrlToRotate,
+          style: TextStyle(color: colors.mutedForeground, fontSize: 13),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: .start,
-        spacing: 12,
-        children: [
-          Row(
-            mainAxisAlignment: .spaceBetween,
-            children: [
-              Text(
-                context.l10n.dragTheMapTip,
-                style: TextStyle(color: colors.mutedForeground, fontSize: 14),
-              ),
-              FButton(
-                onPress: () async {
-                  try {
-                    await notifierController.useCurrentLocation(mapController);
-                  } catch (e) {
-                    // Show error snackbar
-                    if (context.mounted) {
-                      showFToast(
-                        context: context,
-                        title: Text(
-                          context.l10n.errorOccurredWhile(
-                            context.l10n.gettingLocation,
-                          ),
-                        ),
-                        description: Text(e.toString()),
-                      );
-                    }
-                  }
-                },
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 8,
-                  children: [
-                    const Icon(Icons.my_location, size: 16),
-                    Text(context.l10n.useMyLocation),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          _buildSearchField(
-            context,
-            selectedLocation,
-            notifierController,
-            searchPlaces,
-            mapController,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMap(
-    BuildContext context,
-    FColors colors,
-    LatLng selectedLocation,
-    LocationPicker notifierController,
-    MapController mapController,
-  ) {
-    return Expanded(
-      flex: 3,
-      child: Container(
-        margin: const .all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: colors.border),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: FmMap(
-            mapController: mapController,
-            mapOptions: MapOptions(
-              initialCenter: selectedLocation,
-              initialZoom: 12,
-              minZoom: 2,
-              maxZoom: 18,
-              onTap: (tapPos, latlng) async {
-                try {
-                  await notifierController.updateLocation(latlng);
-                  mapController.move(latlng, 14);
-                } catch (e) {
-                  if (context.mounted) {
-                    showFToast(
-                      context: context,
-                      title: Text(context.l10n.errorUpdatingLocationTitle),
-                      description: Text(
-                        context.l10n.errorUpdatingLocationDescription,
-                      ),
-                    );
-                  }
-                }
-              },
-            ),
-            markers: [
-              Marker(
-                point: selectedLocation,
-                width: 40,
-                height: 40,
-                child: Icon(
-                  Icons.location_on,
-                  size: 40,
-                  color: colors.destructive,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMapSection(
-    BuildContext context,
-    FColors colors,
-    ({Coordinates coords, String name}) selectedLocation,
-    LocationPicker notifierController,
-    MapController mapController,
-  ) {
-    return Expanded(
-      child: Row(
-        children: [
-          _buildMap(
-            context,
-            colors,
-            selectedLocation.coords.latLng,
-            notifierController,
-            mapController,
-          ),
-          _buildCoordinatesPanel(
-            context,
-            colors,
-            selectedLocation.coords.latLng,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchField(
-    BuildContext context,
-    ({Coordinates coords, String name}) selectedLocation,
-    LocationPicker notifierController,
-    Future<List<FmData>> Function(String) searchPlaces,
-    MapController mapController,
-  ) {
-    return FSelect<FmData>.searchBuilder(
-      control: FSelectControl.managed(
-        onChange: (place) async {
-          if (place != null) {
-            await notifierController.selectPlace(place);
-            mapController.move(place.coordinates.latLng, 14);
-          }
-        },
-      ),
-      hint: selectedLocation.name,
-      label: Text(context.l10n.searchPlaceLabel),
-      format: (s) => s.name,
-      filter: searchPlaces,
-      contentBuilder: (context, query, data) {
-        return [
-          for (final place in data)
-            FSelectItem(
-              title: Text(place.name),
-              subtitle: Text(place.address),
-              value: place,
-            ),
-        ];
-      },
-    );
-  }
-
-  Widget _buildTipSection(BuildContext context, FColors colors) {
-    return Container(
-      padding: const .all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: colors.muted.withValues(alpha: 0.05),
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(12),
-          bottomRight: Radius.circular(12),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.info_outline, color: colors.mutedForeground, size: 16),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            context.l10n.tipHoldCtrlToRotate,
-            style: TextStyle(color: colors.mutedForeground, fontSize: 13),
-          ),
-        ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
 }

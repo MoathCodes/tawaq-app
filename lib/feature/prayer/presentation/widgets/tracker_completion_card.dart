@@ -24,42 +24,32 @@ class TrackerCompletionCard extends HookConsumerWidget {
     super.key,
   });
 
-  /// The data for the prayer card.
   final PrayerTrackerCardModel cardData;
-
-  /// The time for which the completion is recorded.
   final DateTime completionTime;
+  final void Function(PrayerCompletion)? onCompletionChanged;
 
-  /// Callback when the completion status is changed.
-  final void Function(PrayerCompletion prayerCompletion)? onCompletionChanged;
-
-  static const Duration _animationDuration = Duration(milliseconds: 200);
+  static const _animDuration = Duration(milliseconds: 200);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final (:isHovered, :setHovered) = useHoverState();
     final isDisabled = useState(!cardData.isTimePassed);
-    final completionStatus = useState(
+    final status = useState(
       cardData.completion?.status ?? CompletionStatus.none,
     );
 
-    // Sync state when cardData changes (equivalent to didUpdateWidget)
-    useEffect(
-      () {
-        isDisabled.value = !cardData.isTimePassed;
-        completionStatus.value =
-            cardData.completion?.status ?? CompletionStatus.none;
-        return null;
-      },
-      [cardData],
-    );
+    useEffect(() {
+      isDisabled.value = !cardData.isTimePassed;
+      status.value = cardData.completion?.status ?? CompletionStatus.none;
+      return null;
+    }, [cardData]);
 
-    void handleClick(CompletionStatus value) {
-      completionStatus.value = value;
+    void handleClick(CompletionStatus v) {
+      status.value = v;
       onCompletionChanged?.call(
         PrayerCompletion(
           id: cardData.completion?.id,
-          status: value,
+          status: v,
           prayer: cardData.prayer,
           completionTime: completionTime,
         ),
@@ -67,17 +57,16 @@ class TrackerCompletionCard extends HookConsumerWidget {
     }
 
     final theme = FTheme.of(context);
-    final colorScheme = theme.colors;
+    final colors = theme.colors;
+
     return FPopoverMenu(
       menu: [
         FItemGroup(
           children: CompletionStatus.values
-              .where((value) => value != .none)
+              .where((v) => v != .none)
               .map(
                 (e) => FItem(
-                  title: Text(
-                    e.getLocaleName(context.l10n),
-                  ),
+                  title: Text(e.getLocaleName(context.l10n)),
                   prefix: Icon(e.getIcon(), color: e.getBadgeColor()),
                   onPress: () => handleClick(e),
                 ),
@@ -85,43 +74,37 @@ class TrackerCompletionCard extends HookConsumerWidget {
               .toList(),
         ),
       ],
-      builder: (context, controller, child) => ConstrainedBox(
+      builder: (_, controller, _) => ConstrainedBox(
         constraints: BoxConstraints(maxHeight: 200.h),
         child: MouseClick(
           disabled: isDisabled.value,
           onClick: controller.toggle,
-          onExit: (event) => setHovered(value: false),
-          onHover: (event) => setHovered(value: true),
+          onExit: (_) => setHovered(value: false),
+          onHover: (_) => setHovered(value: true),
           child: AnimatedOpacity(
-            duration: _animationDuration,
+            duration: _animDuration,
             opacity: isDisabled.value ? 0.5 : 1.0,
             curve: Curves.easeInOut,
             onEnd: () {
-              if (cardData.isTimePassed) {
-                setHovered(value: false);
-              }
+              if (cardData.isTimePassed) setHovered(value: false);
             },
             child: AnimatedScale(
-              duration: _animationDuration,
+              duration: _animDuration,
               scale: isHovered ? 1.05 : 1.0,
               curve: Curves.bounceInOut,
               child: AnimatedContainer(
-                duration: _animationDuration,
+                duration: _animDuration,
                 curve: Curves.easeInOut,
                 width: 250.w,
                 padding: const .all(AppSpacing.sm),
                 decoration: BoxDecoration(
                   color: theme.cardStyle.decoration.color,
-                  border: Border.all(
-                    color: colorScheme.secondary.withAlpha(45),
-                  ),
+                  border: Border.all(color: colors.secondary.withAlpha(45)),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: isHovered
                       ? [
                           BoxShadow(
-                            color: colorScheme.secondaryForeground.withAlpha(
-                              60,
-                            ),
+                            color: colors.secondaryForeground.withAlpha(60),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -136,21 +119,20 @@ class TrackerCompletionCard extends HookConsumerWidget {
                       mainAxisAlignment: .spaceBetween,
                       children: [
                         Builder(
-                          builder: (context) {
-                            final w = 46.w;
-                            final h = 46.h;
-                            final dpr = MediaQuery.of(context).devicePixelRatio;
-                            final provider = ResizeImage(
-                              AssetImage(cardData.prayer.imagePath),
-                              width: (w * dpr).round(),
-                              height: (h * dpr).round(),
-                            );
+                          builder: (ctx) {
+                            final w = 46.w,
+                                h = 46.h,
+                                dpr = MediaQuery.of(ctx).devicePixelRatio;
                             return Container(
                               width: w,
                               height: h,
                               decoration: BoxDecoration(
                                 image: DecorationImage(
-                                  image: provider,
+                                  image: ResizeImage(
+                                    AssetImage(cardData.prayer.imagePath),
+                                    width: (w * dpr).round(),
+                                    height: (h * dpr).round(),
+                                  ),
                                   fit: BoxFit.cover,
                                   alignment: cardData.prayer.alignment,
                                 ),
@@ -159,7 +141,7 @@ class TrackerCompletionCard extends HookConsumerWidget {
                             );
                           },
                         ),
-                        _StatusChip(status: completionStatus.value),
+                        _StatusChip(status: status.value),
                       ],
                     ),
                     Text(
@@ -171,13 +153,13 @@ class TrackerCompletionCard extends HookConsumerWidget {
                     Text(
                       cardData.adhan,
                       style: context.theme.typography.xl.copyWith(
-                        color: context.theme.colors.primary,
+                        color: colors.primary,
                       ),
                     ),
                     Text(
                       cardData.subtitle,
                       style: context.theme.typography.sm.copyWith(
-                        color: context.theme.colors.mutedForeground,
+                        color: colors.mutedForeground,
                       ),
                     ),
                   ],
@@ -197,50 +179,46 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = context.theme.typography.sm.copyWith(color: Colors.white);
     return HookConsumer(
-      builder: (context, ref, child) {
-        final isDarkMode =
+      builder: (_, ref, _) {
+        final isDark =
             ref.watch(themeProvider).value?.themeMode == ThemeMode.dark;
-        final context = useContext();
+        final style = context.theme.typography.sm.copyWith(color: Colors.white);
+
+        Color bgColor(Color light, Color dark) => isDark ? dark : light;
+
         return switch (status) {
           CompletionStatus.jamaah => IconBadge(
-            style: (p0) => p0.copyWith(
-              decoration: p0.decoration.copyWith(
-                color: isDarkMode
-                    ? Colors.green.shade900
-                    : Colors.green.shade600,
+            style: (s) => s.copyWith(
+              decoration: s.decoration.copyWith(
+                color: bgColor(Colors.green.shade600, Colors.green.shade900),
               ),
             ),
             icon: const Icon(FIcons.users, size: 16, color: Colors.white),
             label: Text(status.getLocaleName(context.l10n), style: style),
           ),
           CompletionStatus.onTime => IconBadge(
-            style: (p0) => p0.copyWith(
-              decoration: p0.decoration.copyWith(
-                color: isDarkMode
-                    ? Colors.yellow.shade900
-                    : Colors.yellow.shade600,
+            style: (s) => s.copyWith(
+              decoration: s.decoration.copyWith(
+                color: bgColor(Colors.yellow.shade600, Colors.yellow.shade900),
               ),
             ),
             icon: const Icon(FIcons.checkCheck, size: 16, color: Colors.white),
             label: Text(status.getLocaleName(context.l10n), style: style),
           ),
           CompletionStatus.late => IconBadge(
-            style: (p0) => p0.copyWith(
-              decoration: p0.decoration.copyWith(
-                color: isDarkMode
-                    ? Colors.orange.shade900
-                    : Colors.orange.shade600,
+            style: (s) => s.copyWith(
+              decoration: s.decoration.copyWith(
+                color: bgColor(Colors.orange.shade600, Colors.orange.shade900),
               ),
             ),
             icon: const Icon(FIcons.clock, size: 16, color: Colors.white),
             label: Text(status.getLocaleName(context.l10n), style: style),
           ),
           CompletionStatus.missed => IconBadge(
-            style: (p0) => p0.copyWith(
-              decoration: p0.decoration.copyWith(
-                color: isDarkMode ? Colors.red.shade900 : Colors.red.shade600,
+            style: (s) => s.copyWith(
+              decoration: s.decoration.copyWith(
+                color: bgColor(Colors.red.shade600, Colors.red.shade900),
               ),
             ),
             icon: const Icon(FIcons.circleX, size: 16, color: Colors.white),

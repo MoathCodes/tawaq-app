@@ -14,8 +14,8 @@ import 'package:hasanat/theme/spacing.dart';
 import 'package:hasanat/theme/theme_extensions.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-const _kCollapsedWidth = 100.0;
-const _kExpandedWidth = 250.0;
+const _kCollapsed = 100.0;
+const _kExpanded = 250.0;
 const _kSlideOffset = Offset(-0.2, 0);
 
 /// The sidebar for the main shell.
@@ -31,12 +31,9 @@ class ShellSidebar extends HookConsumerWidget {
     final router = GoRouter.of(context);
     final isRtl = ref.watch(localeProvider).value?.languageCode == 'ar';
     final duration = context.theme.durations.fast;
-    final textDirection = isRtl ? TextDirection.rtl : TextDirection.ltr;
-
+    final textDir = isRtl ? TextDirection.rtl : TextDirection.ltr;
     final isTablet =
         MediaQuery.sizeOf(context).width <= Breakpoints.bootstrap.lg;
-
-    // Riverpod is the single source of truth
     final isCollapsed =
         ref.watch(stateSettingsProvider).value?.sidebarCollapsed ?? isTablet;
 
@@ -45,31 +42,25 @@ class ShellSidebar extends HookConsumerWidget {
     final controller = useAnimationController(duration: duration);
     final animation = CurveTween(curve: Curves.easeInOut).animate(controller);
 
-    // Animation follows Riverpod state
     useEffect(() {
-      if (isCollapsed) {
-        unawaited(controller.reverse());
-      } else {
-        unawaited(controller.forward());
-      }
+      isCollapsed
+          ? unawaited(controller.reverse())
+          : unawaited(controller.forward());
       return null;
     }, [isCollapsed]);
-
-    // Auto-collapse on tablet
     useEffect(() {
-      if (isTablet) {
+      if (isTablet)
         unawaited(
           ref
               .read(stateSettingsProvider.notifier)
               .setSidebarCollapsed(collapsed: true),
         );
-      }
       return null;
     }, [isTablet]);
 
     final itemStyle = useMemoized(
       () =>
-          (FSidebarItemStyle p0) => p0.copyWith(
+          (FSidebarItemStyle s) => s.copyWith(
             backgroundColor: FWidgetStateMap({
               WidgetState.disabled: Colors.transparent,
               WidgetState.selected | WidgetState.hovered | WidgetState.pressed:
@@ -82,30 +73,27 @@ class ShellSidebar extends HookConsumerWidget {
 
     Widget slideTransition(Widget child, Animation<double> anim) =>
         SlideTransition(
-          textDirection: textDirection,
+          textDirection: textDir,
           position: Tween(begin: _kSlideOffset, end: Offset.zero).animate(anim),
           child: FadeTransition(opacity: anim, child: child),
         );
 
-    void toggleSidebar() {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await ref
-            .read(stateSettingsProvider.notifier)
-            .setSidebarCollapsed(collapsed: !isCollapsed);
-      });
-    }
+    void toggle() => WidgetsBinding.instance.addPostFrameCallback(
+      (_) async => ref
+          .read(stateSettingsProvider.notifier)
+          .setSidebarCollapsed(collapsed: !isCollapsed),
+    );
 
     return AnimatedBuilder(
       animation: animation,
-      builder: (context, _) {
+      builder: (_, _) {
         final isExpanded = animation.isForwardOrCompleted;
         final currentPath = router.state.fullPath;
         final width =
-            _kCollapsedWidth +
-            (animation.value * (_kExpandedWidth - _kCollapsedWidth));
+            _kCollapsed + (animation.value * (_kExpanded - _kCollapsed));
 
         return FSidebar(
-          style: (p0) => p0.copyWith(
+          style: (s) => s.copyWith(
             headerPadding: const EdgeInsets.symmetric(
               horizontal: 10,
               vertical: 8,
@@ -141,7 +129,7 @@ class ShellSidebar extends HookConsumerWidget {
                   Expanded(
                     child: isExpanded
                         ? FButton(
-                            style: (style) => style.copyWith(
+                            style: (s) => s.copyWith(
                               iconContentStyle: theme
                                   .buttonStyles
                                   .outline
@@ -159,13 +147,13 @@ class ShellSidebar extends HookConsumerWidget {
                                   )
                                   .call,
                             ),
-                            onPress: toggleSidebar,
+                            onPress: toggle,
                             prefix: const Icon(FIcons.panelRightOpen),
                             child: Text(context.l10n.collapse, overflow: .clip),
                           )
                         : FButton.icon(
                             style: FButtonStyle.outline(),
-                            onPress: toggleSidebar,
+                            onPress: toggle,
                             child: const Icon(FIcons.panelRightOpen),
                           ),
                   ),
@@ -206,7 +194,6 @@ class _RouteGroup extends StatelessWidget {
     required this.itemStyle,
     required this.onNavigate,
   });
-
   final List<AppRoute> routes;
   final String groupKey;
   final bool isExpanded;
@@ -224,25 +211,24 @@ class _RouteGroup extends StatelessWidget {
       child: FSidebarGroup(
         key: ValueKey('$groupKey-${isExpanded ? 'expanded' : 'collapsed'}'),
         children: [
-          for (final route in routes)
-            if (isExpanded)
-              FSidebarItem(
-                key: ValueKey(route.path),
-                style: itemStyle,
-                onPress: () => onNavigate(route.path),
-                icon: Icon(route.icon),
-                selected: currentPath == route.path,
-                label: Text(route.label),
-              )
-            else
-              FButton.icon(
-                key: ValueKey(route.path),
-                onPress: () => onNavigate(route.path),
-                style: currentPath == route.path
-                    ? FButtonStyle.secondary()
-                    : FButtonStyle.ghost(),
-                child: Center(child: Icon(route.icon)),
-              ),
+          for (final r in routes)
+            isExpanded
+                ? FSidebarItem(
+                    key: ValueKey(r.path),
+                    style: itemStyle,
+                    onPress: () => onNavigate(r.path),
+                    icon: Icon(r.icon),
+                    selected: currentPath == r.path,
+                    label: Text(r.label),
+                  )
+                : FButton.icon(
+                    key: ValueKey(r.path),
+                    onPress: () => onNavigate(r.path),
+                    style: currentPath == r.path
+                        ? FButtonStyle.secondary()
+                        : FButtonStyle.ghost(),
+                    child: Center(child: Icon(r.icon)),
+                  ),
         ],
       ),
     );
