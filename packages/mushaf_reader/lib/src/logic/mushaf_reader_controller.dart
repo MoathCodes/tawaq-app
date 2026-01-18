@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
 import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
@@ -80,8 +81,8 @@ import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 /// ## Data Access
 ///
 /// ```dart
-/// // Get all surahs (sync after init)
-/// final surahs = controller.getSurahsSync();
+/// // Get all surahs (cached after first call)
+/// final surahs = await controller.getAllSurahs();
 ///
 /// // Get page info
 /// final info = await controller.getPageInfo(1);
@@ -93,7 +94,7 @@ import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 /// See also:
 /// - [MushafReader], the convenience widget that uses this controller
 /// - [MushafPage], the single-page widget
-/// - [AyahInfo], for ayah tap callback info
+/// - [Ayah], for ayah data in tap callbacks
 /// - [MushafPageInfo], for current page info
 class MushafReaderController extends ChangeNotifier {
   /// The underlying repository for data access.
@@ -128,16 +129,19 @@ class MushafReaderController extends ChangeNotifier {
   String? _cachedBasmalah;
 
   /// Cached Juz data (populated during init).
-  Map<int, JuzModel>? _juzCache;
+  Map<int, Juz>? _juzCache;
 
   /// Cached Surah data (populated during init).
-  List<SurahModel>? _surahCache;
+  List<Surah>? _surahCache;
 
   /// Cached page info for the current page.
   MushafPageInfo? _currentPageInfo;
 
   /// Cached page info for the next page (in 2-page mode).
   MushafPageInfo? _nextPageInfo;
+
+  /// Whether a notification is already scheduled.
+  bool _notificationScheduled = false;
 
   /// Creates a MushafReaderController.
   ///
@@ -210,7 +214,31 @@ class MushafReaderController extends ChangeNotifier {
     });
 
     _isInitialized = true;
-    notifyListeners();
+    _safeNotifyListeners();
+  }
+
+  /// Safely notifies listeners, deferring if in build phase.
+  ///
+  /// This prevents "setState during build" errors by checking if
+  /// the scheduler is currently building and deferring notification.
+  void _safeNotifyListeners() {
+    final phase = SchedulerBinding.instance.schedulerPhase;
+    final isBuildPhase =
+        phase == SchedulerPhase.persistentCallbacks ||
+        phase == SchedulerPhase.midFrameMicrotasks;
+
+    if (isBuildPhase) {
+      // Defer notification to after the frame
+      if (!_notificationScheduled) {
+        _notificationScheduled = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _notificationScheduled = false;
+          notifyListeners();
+        });
+      }
+    } else {
+      notifyListeners();
+    }
   }
 
   // ============================================================
@@ -232,7 +260,13 @@ class MushafReaderController extends ChangeNotifier {
   (int, int) get currentPages => (_currentPage, _currentPage + 1);
 
   /// The current page info (sync access, may be null before first page load).
-  MushafPageInfo? get currentPageInfo => _currentPageInfo;
+  ///
+  /// In 2-page mode, returns the second (left) page's info when available,
+  /// since that's typically the page the user navigated to (e.g., juz start).
+  MushafPageInfo? get currentPageInfo =>
+      pagesPerViewport == 2 && _nextPageInfo != null
+      ? _nextPageInfo
+      : _currentPageInfo;
 
   /// The current pages info (sync access).
   (MushafPageInfo?, MushafPageInfo?) get currentPagesInfo =>
@@ -279,7 +313,7 @@ class MushafReaderController extends ChangeNotifier {
           _pageController!.jumpToPage(viewportIndex);
         }
       });
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
@@ -331,32 +365,25 @@ class MushafReaderController extends ChangeNotifier {
   }
 
   /// Gets all Surahs.
-  Future<List<SurahModel>> getAllSurahs() => _repo.getAllSurahs();
+  ///
+  /// Returns cached surahs if available, otherwise fetches from repo
+  /// and caches the result.
+  Future<List<Surah>> getAllSurahs() async {
+    if (_surahCache != null) return _surahCache!;
+    _surahCache = await _repo.getAllSurahs();
+    return _surahCache!;
+  }
 
   /// Gets an Ayah by its global ID.
-  Future<AyahModel> getAyah(int ayahId, [bool removeNewLines = true]) =>
+  Future<Ayah> getAyah(int ayahId, [bool removeNewLines = true]) =>
       _repo.getAyah(ayahId, removeNewLines);
 
   /// Gets an Ayah by Surah and verse number.
-  Future<AyahModel> getAyahBySurah(
+  Future<Ayah> getAyahBySurah(
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
   ]) => _repo.getAyahBySurah(surah, ayahInSurah, removeNewLines);
-
-  /// Creates an [AyahInfo] from an ayah ID.
-  ///
-  /// Useful for building rich callback data.
-  Future<AyahInfo> getAyahInfo(int ayahId) async {
-    final ayah = await getAyah(ayahId);
-    return AyahInfo(
-      ayahId: ayah.id,
-      surahNumber: ayah.surah,
-      verseNumber: ayah.numberInSurah,
-      page: ayah.page,
-      juz: ayah.juz,
-    );
-  }
 
   /// Gets the Basmalah glyph.
   Future<String> getBasmalah() async {
@@ -365,16 +392,20 @@ class MushafReaderController extends ChangeNotifier {
   }
 
   /// Gets a Juz by number.
-  Future<JuzModel> getJuz(int number) => _repo.getJuz(number);
+  Future<Juz> getJuz(int number) => _repo.getJuz(number);
 
   /// Gets all Juzs.
-  Future<List<JuzModel>> getJuzs() => _repo.getJuzs();
-
-  /// Gets all 30 Juzs (sync, requires init).
-  List<JuzModel> getJuzsSync() {
-    if (_juzCache == null) return [];
-    return _juzCache!.values.toList()
-      ..sort((a, b) => a.number.compareTo(b.number));
+  ///
+  /// Returns cached juzs if available, otherwise fetches from repo
+  /// and caches the result.
+  Future<List<Juz>> getJuzs() async {
+    if (_juzCache != null) {
+      return _juzCache!.values.toList()
+        ..sort((a, b) => a.number.compareTo(b.number));
+    }
+    final juzs = await _repo.getJuzs();
+    _juzCache = {for (var j in juzs) j.number: j};
+    return juzs;
   }
 
   // ============================================================
@@ -386,14 +417,14 @@ class MushafReaderController extends ChangeNotifier {
       _repo.getJuzStartPage(juzNumber);
 
   /// Gets a Juz by number (sync, requires init).
-  JuzModel? getJuzSync(int juzNumber) => _juzCache?[juzNumber];
+  Juz? getJuzSync(int juzNumber) => _juzCache?[juzNumber];
 
   // ============================================================
   // Data Access - Sync (after init)
   // ============================================================
 
   /// Gets a complete page model.
-  Future<QuranPageModel> getPage(int page) => _repo.getPage(page);
+  Future<QuranPage> getPage(int page) => _repo.getPage(page);
 
   /// Gets the page number for a specific Ayah.
   Future<int> getPageForAyah(int ayahId) => _repo.getPageForAyah(ayahId);
@@ -431,17 +462,50 @@ class MushafReaderController extends ChangeNotifier {
   // ============================================================
 
   /// Gets a Surah by number.
-  Future<SurahModel?> getSurah(int surahNumber) => _repo.getSurah(surahNumber);
-
-  /// Gets all 114 Surahs (sync, requires init).
-  List<SurahModel> getSurahsSync() => _surahCache ?? [];
+  Future<Surah?> getSurah(int surahNumber) => _repo.getSurah(surahNumber);
 
   /// Gets a Surah by number (sync, requires init).
-  SurahModel? getSurahSync(int surahNumber) {
+  Surah? getSurahSync(int surahNumber) {
     if (_surahCache == null) return null;
     return _surahCache!.firstWhere(
       (s) => s.number == surahNumber,
       orElse: () => throw ArgumentError('Surah $surahNumber not found'),
+    );
+  }
+
+  /// Searches for Ayahs containing the given query text.
+  ///
+  /// This method searches through all ayahs using the plain Arabic text
+  /// (without diacritics) for more flexible matching.
+  ///
+  /// [query] - The text to search for (can be partial).
+  /// [surahNumber] - Optional filter to search within a specific Surah.
+  /// [maxResults] - Maximum number of results to return (default: 100).
+  ///
+  /// Returns a list of matching [Ayah] objects sorted by ayah ID.
+  ///
+  /// Example:
+  /// ```dart
+  /// // Search entire Quran
+  /// final results = await controller.searchAyahs('الرحمن');
+  ///
+  /// // Search within Al-Baqarah
+  /// final results = await controller.searchAyahs('الله', surahNumber: 2);
+  ///
+  /// // Navigate to first result
+  /// if (results.isNotEmpty) {
+  ///   await controller.jumpToAyah(results.first.ayahId, select: true);
+  /// }
+  /// ```
+  Future<List<Ayah>> searchAyahs(
+    String query, {
+    int? surahNumber,
+    int maxResults = 100,
+  }) {
+    return _repo.searchAyahs(
+      query,
+      surahNumber: surahNumber,
+      maxResults: maxResults,
     );
   }
 
@@ -604,11 +668,11 @@ class MushafReaderController extends ChangeNotifier {
   void selectAyah(int? ayahId) {
     if (_selectedAyahId != ayahId) {
       _selectedAyahId = ayahId;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
-  MushafPageInfo _buildPageInfo(QuranPageModel page) {
+  MushafPageInfo _buildPageInfo(QuranPage page) {
     final surahNumbers = <int>[];
     final surahNames = <String>[];
     final ayahIds = <int>[];
@@ -652,7 +716,7 @@ class MushafReaderController extends ChangeNotifier {
     if (_currentPage == page) {
       _currentPageInfo = info;
       _nextPageInfo = nextInfo;
-      notifyListeners();
+      _safeNotifyListeners();
     }
   }
 
@@ -661,7 +725,7 @@ class MushafReaderController extends ChangeNotifier {
       _currentPage = page;
       _currentPageInfo = null; // Invalidate cache
       _nextPageInfo = null;
-      notifyListeners();
+      _safeNotifyListeners();
       // Load page info asynchronously
       _loadPageInfoAsync();
     }

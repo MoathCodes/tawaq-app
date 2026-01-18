@@ -1,18 +1,19 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'ayah_model.freezed.dart';
+part 'ayah.freezed.dart';
 
 /// Represents a single Ayah (verse) from the Holy Quran.
 ///
 /// This model contains all the metadata and glyph text needed to display
-/// an Ayah using the QCF4 (Quran Complex Fonts) encoding.
+/// an Ayah using the QCF4 (Quran Complex Fonts) encoding, as well as
+/// context information for callbacks and navigation.
 ///
 /// ## Properties
 ///
-/// - [id]: Global unique identifier for the Ayah (1-6236)
+/// - [ayahId]: Global unique identifier for the Ayah (1-6236)
 /// - [juz]: The Juz (part) number this Ayah belongs to (1-30)
 /// - [page]: The Mushaf page number where this Ayah appears (1-604)
-/// - [surah]: The Surah (chapter) number (1-114)
+/// - [surahNumber]: The Surah (chapter) number (1-114)
 /// - [numberInSurah]: The Ayah number within its Surah
 /// - [text]: The QCF4-encoded glyph text for rendering
 /// - [textPlain]: Plain Arabic text without tajweed marks
@@ -25,30 +26,31 @@ part 'ayah_model.freezed.dart';
 /// ## Example
 ///
 /// ```dart
-/// final ayah = AyahModel(
-///   id: 1,
+/// final ayah = Ayah(
+///   ayahId: 1,
 ///   juz: 1,
 ///   page: 1,
-///   surah: 1,
+///   surahNumber: 1,
 ///   numberInSurah: 1,
 ///   text: '...',
 /// );
 ///
-/// print('Surah ${ayah.surah}, Ayah ${ayah.numberInSurah}');
+/// print('Surah ${ayah.surahNumber}, Ayah ${ayah.numberInSurah}');
+/// print('Reference: ${ayah.reference}'); // "1:1"
 /// if (ayah.sajda == true) print('This ayah has a sajdah');
 /// ```
 @freezed
-abstract class AyahModel with _$AyahModel {
-  /// Creates an [AyahModel] with all required properties.
+abstract class Ayah with _$Ayah {
+  /// Creates an [Ayah] with all required properties.
   ///
   /// All parameters are required to ensure data integrity when working
   /// with Quran data.
-  factory AyahModel({
+  factory Ayah({
     /// The global unique identifier for this Ayah (1-6236).
     ///
     /// This ID is sequential across the entire Quran, starting from
-    /// Al-Fatiha verse 1 (id=1) to An-Nas verse 6 (id=6236).
-    required int id,
+    /// Al-Fatiha verse 1 (ayahId=1) to An-Nas verse 6 (ayahId=6236).
+    required int ayahId,
 
     /// The Juz (part) number this Ayah belongs to (1-30).
     ///
@@ -62,7 +64,7 @@ abstract class AyahModel with _$AyahModel {
     required int page,
 
     /// The Surah (chapter) number this Ayah belongs to (1-114).
-    required int surah,
+    required int surahNumber,
 
     /// The Ayah number within its Surah.
     ///
@@ -110,13 +112,17 @@ abstract class AyahModel with _$AyahModel {
     ///
     /// Useful for tracking progress within a Surah.
     int? pageInSurah,
-  }) = _AyahModel;
+  }) = _Ayah;
 
-  const AyahModel._();
+  const Ayah._();
 
   /// Returns the QCF4 glyph text for rendering with the appropriate font.
   ///
   /// This is an alias for [text] for semantic clarity when working
   /// with font rendering code.
   String get codeV4 => text;
+
+  /// Returns a formatted reference string like "2:255" (Al-Baqarah, Ayat
+  /// Al-Kursi).
+  String get reference => '$surahNumber:$numberInSurah';
 }

@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:mushaf_reader/src/data/models/ayah_fragment.dart';
 
-part 'line_model.freezed.dart';
+part 'page_line.freezed.dart';
 
 /// Represents a single line of text on a Mushaf page.
 ///
@@ -28,12 +28,13 @@ part 'line_model.freezed.dart';
 /// ```
 ///
 /// See also:
-/// - [QuranPageModel], which contains the list of lines
+/// - [QuranPage], which contains the list of lines
 /// - [AyahFragment], for individual Ayah portions within a line
 @freezed
-abstract class LineModel with _$LineModel {
-  /// Creates a [LineModel] with the line index, text boundaries, and fragments.
-  factory LineModel({
+abstract class PageLine with _$PageLine {
+  /// Creates a [PageLine] with the line index, text boundaries, and
+  /// fragments.
+  factory PageLine({
     /// The zero-based index of this line on the page.
     ///
     /// Lines are ordered from top to bottom.
@@ -56,5 +57,5 @@ abstract class LineModel with _$LineModel {
     /// - Multiple complete Ayahs
     /// - Parts of multiple Ayahs (end of one, start of another)
     required List<AyahFragment> fragments,
-  }) = _LineModel;
+  }) = _PageLine;
 }

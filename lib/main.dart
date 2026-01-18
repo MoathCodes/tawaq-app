@@ -12,7 +12,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/routing/route_provider.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/gen/fonts.gen.dart';
@@ -33,13 +32,13 @@ void main() async {
   Hive.registerAdapters();
 
   // Set up error handling
-  FlutterError.onError = (details) {
-    logger.e(
-      'Flutter error',
-      error: details.exception,
-      stackTrace: details.stack,
-    );
-  };
+  // FlutterError.onError = (details) {
+  //   logger.e(
+  //     'Flutter error',
+  //     error: details.exception,
+  //     stackTrace: details.stack,
+  //   );
+  // };
   // Initialize timezone data
   tz.initializeTimeZones();
 

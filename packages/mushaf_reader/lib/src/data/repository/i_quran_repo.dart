@@ -1,7 +1,7 @@
-import 'package:mushaf_reader/src/data/models/ayah_model.dart';
-import 'package:mushaf_reader/src/data/models/juz_model.dart';
-import 'package:mushaf_reader/src/data/models/quran_page_model.dart';
-import 'package:mushaf_reader/src/data/models/surah_model.dart';
+import 'package:mushaf_reader/src/data/models/ayah.dart';
+import 'package:mushaf_reader/src/data/models/juz.dart';
+import 'package:mushaf_reader/src/data/models/quran_page.dart';
+import 'package:mushaf_reader/src/data/models/surah.dart';
 
 /// Abstract interface for Quran data access.
 ///
@@ -27,7 +27,7 @@ import 'package:mushaf_reader/src/data/models/surah_model.dart';
 ///   }
 ///
 ///   @override
-///   Future<QuranPageModel> getPage(int page) async {
+///   Future<QuranPage> getPage(int page) async {
 ///     // Fetch and return page data
 ///   }
 ///
@@ -61,9 +61,9 @@ abstract class IQuranRepository {
 
   /// Retrieves all 114 Surahs.
   ///
-  /// Returns a list of [SurahModel] objects ordered by Surah number.
+  /// Returns a list of [Surah] objects ordered by Surah number.
   /// Useful for building surah index navigation.
-  Future<List<SurahModel>> getAllSurahs();
+  Future<List<Surah>> getAllSurahs();
 
   /// Retrieves an Ayah by its global unique ID.
   ///
@@ -73,7 +73,7 @@ abstract class IQuranRepository {
   /// text are removed. Defaults to `true` for inline display.
   ///
   /// Throws an [ArgumentError] if the Ayah is not found.
-  Future<AyahModel> getAyah(int ayahId, [bool removeNewLines = true]);
+  Future<Ayah> getAyah(int ayahId, [bool removeNewLines = true]);
 
   /// Retrieves an Ayah by its Surah and verse number.
   ///
@@ -84,7 +84,7 @@ abstract class IQuranRepository {
   /// text are removed. Defaults to `true` for inline display.
   ///
   /// Throws an [ArgumentError] if the Ayah is not found.
-  Future<AyahModel> getAyahBySurah(
+  Future<Ayah> getAyahBySurah(
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
@@ -107,19 +107,19 @@ abstract class IQuranRepository {
   ///
   /// [number] must be in the range 1-30.
   ///
-  /// Returns the [JuzModel] with the display glyph.
-  Future<JuzModel> getJuz(int number);
+  /// Returns the [Juz] with the display glyph.
+  Future<Juz> getJuz(int number);
 
   /// Retrieves all 30 Juzs.
   ///
-  /// Returns a list of [JuzModel] objects ordered by Juz number.
+  /// Returns a list of [Juz] objects ordered by Juz number.
   /// Useful for building navigation or index views.
-  Future<List<JuzModel>> getJuzs();
+  Future<List<Juz>> getJuzs();
 
   /// Gets all Juzs synchronously from cache.
   ///
   /// Returns empty map if not cached. Call [ensureReady] first.
-  Map<int, JuzModel> getJuzsSync();
+  Map<int, Juz> getJuzsSync();
 
   /// Gets the first page of a specific Juz.
   ///
@@ -131,18 +131,18 @@ abstract class IQuranRepository {
   /// Gets a Juz synchronously from cache.
   ///
   /// Returns null if not cached. Call [ensureReady] first.
-  JuzModel? getJuzSync(int number);
+  Juz? getJuzSync(int number);
 
   /// Retrieves a complete Mushaf page with all content and layout data.
   ///
   /// [page] must be in the range 1-604.
   ///
-  /// Returns a [QuranPageModel] containing:
+  /// Returns a [QuranPage] containing:
   /// - The concatenated glyph text
   /// - Line layout information
   /// - Surah blocks with Ayah fragments
   /// - Juz number
-  Future<QuranPageModel> getPage(int page);
+  Future<QuranPage> getPage(int page);
 
   // ============================================================
   // Sync methods for cached data access
@@ -167,10 +167,36 @@ abstract class IQuranRepository {
   /// [surahNumber] must be in the range 1-114.
   ///
   /// Returns null if the Surah is not found.
-  Future<SurahModel?> getSurah(int surahNumber);
+  Future<Surah?> getSurah(int surahNumber);
 
   /// Gets all Surahs synchronously from cache.
   ///
   /// Returns empty list if not cached. Call [ensureReady] first.
-  List<SurahModel> getSurahsSync();
+  List<Surah> getSurahsSync();
+
+  /// Searches for Ayahs containing the given query text.
+  ///
+  /// The search uses the [Ayah.textPlain] property which contains
+  /// plain Arabic text without diacritics (tashkeel), providing more
+  /// flexible matching.
+  ///
+  /// [query] - The text to search for (can be partial).
+  /// [surahNumber] - Optional filter to search within a specific Surah.
+  /// [maxResults] - Maximum number of results to return (default: 100).
+  ///
+  /// Returns a list of matching [Ayah] objects sorted by ayah ID.
+  ///
+  /// Example:
+  /// ```dart
+  /// // Search entire Quran
+  /// final results = await repository.searchAyahs('الرحمن');
+  ///
+  /// // Search within a specific Surah
+  /// final results = await repository.searchAyahs('الله', surahNumber: 1);
+  /// ```
+  Future<List<Ayah>> searchAyahs(
+    String query, {
+    int? surahNumber,
+    int maxResults = 100,
+  });
 }

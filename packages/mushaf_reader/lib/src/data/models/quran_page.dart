@@ -1,10 +1,11 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:mushaf_reader/src/data/models/line_model.dart';
+import 'package:mushaf_reader/src/data/models/page_line.dart';
 import 'package:mushaf_reader/src/data/models/surah_block.dart';
 
-part 'quran_page_model.freezed.dart';
+part 'quran_page.freezed.dart';
 
-/// Represents a complete Quran page with all its content and layout information.
+/// Represents a complete Quran page with all its content and layout
+/// information.
 ///
 /// This model contains everything needed to render a Mushaf page, including:
 /// - The concatenated glyph text for all Ayahs on the page
@@ -36,13 +37,13 @@ part 'quran_page_model.freezed.dart';
 /// ```
 ///
 /// See also:
-/// - [LineModel], for line layout details
+/// - [PageLine], for line layout details
 /// - [SurahBlock], for Surah-level organization
 /// - [MushafPage], the widget that renders this model
 @freezed
-abstract class QuranPageModel with _$QuranPageModel {
-  /// Creates a [QuranPageModel] with all page content and layout data.
-  factory QuranPageModel({
+abstract class QuranPage with _$QuranPage {
+  /// Creates a [QuranPage] with all page content and layout data.
+  factory QuranPage({
     /// The page number in the Mushaf (1-604).
     ///
     /// Based on the Madinah Mushaf standard which has 604 pages total.
@@ -59,12 +60,12 @@ abstract class QuranPageModel with _$QuranPageModel {
 
     /// Line-by-line layout information for the page.
     ///
-    /// Each [LineModel] contains:
+    /// Each [PageLine] contains:
     /// - Character start/end indices into [glyphText]
     /// - Ayah fragments that appear on that line
     ///
     /// Lines are ordered from top to bottom of the page.
-    required List<LineModel> lines,
+    required List<PageLine> lines,
 
     /// Surah blocks present on this page.
     ///
@@ -81,5 +82,5 @@ abstract class QuranPageModel with _$QuranPageModel {
     /// Determined by the first Ayah on the page. Note that Juz boundaries
     /// may occur mid-page, but this represents the primary Juz.
     required int juzNumber,
-  }) = _QuranPageModel;
+  }) = _QuranPage;
 }

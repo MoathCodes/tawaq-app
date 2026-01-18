@@ -52,25 +52,89 @@ import 'package:forui/forui.dart';
 /// ```
 ///
 /// See https://forui.dev/docs/themes#customize-themes for more information.
-/// Creates a ghost [FSelectStyle] with the given colors and typography.
-FSelectStyle selectGhostStyle({
+/// Creates a [FSelectStyle] themed like the _SurahSelector.
+FSelectStyle selectStyle({
   required FColors colors,
   required FTypography typography,
   required FStyle style,
+  bool useQuranFont = false,
+  double? customFontSize,
 }) {
+  // Match _SurahSelector theming:
+  // - secondary background with border
+  // - 8px border radius
+  // - compact padding (horizontal: 12, vertical: 6)
+  // - foreground text with medium weight
+  // - muted foreground icon at 14px
+  final textStyle = typography.sm.copyWith(
+    fontWeight: FontWeight.w500,
+    fontFamily: typography.defaultFontFamily,
+  );
+
   return FSelectStyle(
-    selectFieldStyle: .inherit(
-      colors: colors.copyWith(border: Colors.transparent),
-      typography: typography,
-      style: style,
-    ),
-    iconStyle: IconThemeData(color: colors.mutedForeground, size: 18),
+    selectFieldStyle:
+        FTextFieldStyle.inherit(
+          colors: colors,
+          typography: typography,
+          style: style,
+        ).copyWith(
+          // Secondary background like _SurahSelector
+          filled: true,
+          fillColor: colors.secondary,
+          // Compact padding
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: customFontSize ?? (useQuranFont ? 2 : 12),
+            vertical: customFontSize ?? (useQuranFont ? 1 : 6),
+          ),
+          // Medium weight text
+          contentTextStyle: FWidgetStateMap({
+            WidgetState.disabled: textStyle.copyWith(
+              color: colors.disable(colors.foreground),
+              fontFamily: useQuranFont ? 'QCF4_BSML' : null,
+              package: useQuranFont ? 'mushaf_reader' : null,
+              height: useQuranFont ? 0.8 : null,
+              fontSize: customFontSize ?? (useQuranFont ? 18 : null),
+            ),
+            WidgetState.any: textStyle.copyWith(
+              color: colors.foreground,
+              fontFamily: useQuranFont ? 'QCF4_BSML' : null,
+              package: useQuranFont ? 'mushaf_reader' : null,
+              fontSize: customFontSize ?? (useQuranFont ? 22 : null),
+            ),
+          }),
+          // 8px border radius with themed borders
+          border: FWidgetStateMap({
+            WidgetState.error: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: colors.error,
+                width: style.borderWidth,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            WidgetState.focused: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: colors.primary,
+                width: style.borderWidth,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            WidgetState.any: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: colors.border,
+                width: style.borderWidth,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+          }),
+        ),
+    // Smaller icon matching _SurahSelector (size 14)
+    iconStyle: IconThemeData(color: colors.mutedForeground, size: 14),
     searchStyle: .inherit(colors: colors, typography: typography, style: style),
     contentStyle: .inherit(
       colors: colors,
       typography: typography,
       style: style,
     ),
-    emptyTextStyle: typography.sm,
+    emptyTextStyle: typography.sm.copyWith(color: colors.mutedForeground),
   );
 }

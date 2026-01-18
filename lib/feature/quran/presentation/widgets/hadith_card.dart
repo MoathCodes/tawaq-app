@@ -108,21 +108,19 @@ class _StyledSection extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.child,
-    this.backgroundColor,
   });
   final FColors colors;
   final FThemeData theme;
   final IconData icon;
   final String title;
   final Widget child;
-  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const .all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: backgroundColor ?? colors.secondary.withAlpha(10),
+        color: colors.secondary.withAlpha(10),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(

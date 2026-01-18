@@ -76,7 +76,9 @@ class _StartWizardDialog extends HookWidget {
 
     useEffect(
       () => () {
-        for (final c in [...iqamah.values, ...adjust.values]) c.dispose();
+        for (final c in [...iqamah.values, ...adjust.values]) {
+          c.dispose();
+        }
       },
       const [],
     );

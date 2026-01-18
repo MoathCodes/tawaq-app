@@ -54,11 +54,7 @@ class SettingsRepo {
     'app_state_settings',
     fromJson: StateSettings.fromJson,
     toJson: (object) => object.toJson(),
-    defaultValue: StateSettings(
-      sidebarCollapsed: false,
-      lastQuranPage: 1,
-      lastLayout: .studyMode,
-    ),
+    defaultValue: StateSettings.initial(),
   );
 
   /// Returns the date of the first recorded prayer.

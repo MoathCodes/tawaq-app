@@ -33,7 +33,7 @@ class PrayerTable extends ConsumerWidget {
       padding: .zero,
       child: data.when(
         data: (rows) => _TableContent(rows: rows),
-        loading: () => _LoadingTable(),
+        loading: _LoadingTable.new,
         error: (e, _) => _ErrorWidget(error: e),
       ),
     );
@@ -174,9 +174,9 @@ class _TableContent extends StatelessWidget {
     AppLocalizations l10n,
   ) {
     Color? bgColor;
-    if (row.isCurrentPrayer)
+    if (row.isCurrentPrayer) {
       bgColor = theme.colors.primary.withAlpha(50);
-    else if (row.isNextPrayer)
+    } else if (row.isNextPrayer)
       bgColor = theme.colors.primary.withAlpha(30);
 
     return DataRow(

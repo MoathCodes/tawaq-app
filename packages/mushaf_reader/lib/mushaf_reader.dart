@@ -27,7 +27,7 @@
 ///   @override
 ///   Widget build(BuildContext context) {
 ///     return MushafReader(
-///       onAyahTap: (info) => print('Tapped: ${info.reference}'),
+///       onAyahTap: (ayah) => print('Tapped: ${ayah.reference}'),
 ///     );
 ///   }
 /// }
@@ -62,7 +62,7 @@
 /// ## Architecture
 ///
 /// The package follows a clean architecture pattern:
-/// - **Models**: Data classes for Ayahs, Pages, Surahs, Juzs, and AyahInfo
+/// - **Models**: Data classes for Ayahs, Pages, Surahs, and Juzs
 /// - **Repository**: Data access layer with pre-populated Hive boxes
 /// - **Controller**: [MushafReaderController] for navigation, selection, and data
 /// - **Widgets**: UI components including [MushafReader] and [MushafPage]
@@ -80,14 +80,13 @@ import 'package:mushaf_reader/src/data/hive/hive_box_manager.dart';
 export 'src/core/fonts.dart'
     show MushafFonts, MushafBaseFontSizes, MushafTextStyleMerger;
 // Core models
-export 'src/data/models/ayah_info.dart';
-export 'src/data/models/ayah_model.dart';
-export 'src/data/models/juz_model.dart';
+export 'src/data/models/ayah.dart';
+export 'src/data/models/juz.dart';
 export 'src/data/models/mushaf_page_info.dart';
 export 'src/data/models/mushaf_style.dart';
-export 'src/data/models/quran_page_model.dart';
+export 'src/data/models/quran_page.dart';
 export 'src/data/models/revelation_type.dart';
-export 'src/data/models/surah_model.dart';
+export 'src/data/models/surah.dart';
 // Controller
 export 'src/logic/mushaf_reader_controller.dart';
 // Screens

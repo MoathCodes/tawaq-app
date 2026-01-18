@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mushaf_reader/src/core/fonts.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_style.dart'
     show StyleModifier;
-import 'package:mushaf_reader/src/data/models/surah_model.dart';
+import 'package:mushaf_reader/src/data/models/surah.dart';
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
 import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 
@@ -43,7 +43,7 @@ class SurahNameWidget extends StatefulWidget {
   ///
   /// If provided, the widget renders directly.
   /// If null, [_surahNumber] must be set to load data asynchronously.
-  final SurahModel? _surahData;
+  final Surah? _surahData;
 
   /// The Surah number to load asynchronously.
   ///
@@ -84,7 +84,7 @@ class SurahNameWidget extends StatefulWidget {
   /// Creates a SurahNameWidget with surah data.
   const SurahNameWidget({
     super.key,
-    required SurahModel surahData,
+    required Surah surahData,
     this.fontSize,
     this.textStyle,
     this.styleModifier,
@@ -114,7 +114,7 @@ class SurahNameWidget extends StatefulWidget {
 }
 
 class _SurahNameWidgetState extends State<SurahNameWidget> {
-  Future<SurahModel?>? _future;
+  Future<Surah?>? _future;
 
   @override
   void initState() {
@@ -146,7 +146,7 @@ class _SurahNameWidgetState extends State<SurahNameWidget> {
     }
 
     // Otherwise, load asynchronously
-    return FutureBuilder<SurahModel?>(
+    return FutureBuilder<Surah?>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting ||
@@ -159,7 +159,7 @@ class _SurahNameWidgetState extends State<SurahNameWidget> {
     );
   }
 
-  Widget _buildContent(SurahModel surahData) {
+  Widget _buildContent(Surah surahData) {
     final effectiveStyle = MushafTextStyleMerger.mergeBasmalahStyle(
       userStyle: widget.textStyle,
       modifier: widget.styleModifier,

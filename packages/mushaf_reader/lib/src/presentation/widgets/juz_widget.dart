@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mushaf_reader/src/core/fonts.dart';
-import 'package:mushaf_reader/src/data/models/juz_model.dart';
+import 'package:mushaf_reader/src/data/models/juz.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_style.dart'
     show StyleModifier;
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
@@ -44,7 +44,7 @@ import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 ///
 /// See also:
 /// - [MushafPage], which displays the Juz widget in the header
-/// - [JuzModel], the data model for Juz information
+/// - [Juz], the data model for Juz information
 class JuzWidget extends StatefulWidget {
   /// The Juz number to display (1-30).
   final int number;
@@ -85,7 +85,7 @@ class JuzWidget extends StatefulWidget {
   ///
   /// If provided, this is used directly. Otherwise, the widget loads
   /// the data from the repository.
-  final JuzModel? juzData;
+  final Juz? juzData;
 
   /// Optional repository for testing.
   final IQuranRepository? repository;
@@ -110,7 +110,7 @@ class JuzWidget extends StatefulWidget {
 }
 
 class _JuzWidgetState extends State<JuzWidget> {
-  Future<JuzModel?>? _future;
+  Future<Juz?>? _future;
 
   @override
   void initState() {
@@ -150,7 +150,7 @@ class _JuzWidgetState extends State<JuzWidget> {
     }
 
     // Fallback: load asynchronously
-    return FutureBuilder<JuzModel?>(
+    return FutureBuilder<Juz?>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.hasData && snapshot.data != null) {
@@ -161,7 +161,7 @@ class _JuzWidgetState extends State<JuzWidget> {
     );
   }
 
-  Widget _buildContent(JuzModel juz) {
+  Widget _buildContent(Juz juz) {
     // fontSize priority: fontSize param → textStyle.fontSize → 40.0
     final effectiveFontSize =
         widget.fontSize ?? widget.textStyle?.fontSize ?? 40.0;

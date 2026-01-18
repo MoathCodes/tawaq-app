@@ -34,8 +34,12 @@ class ShellSidebar extends HookConsumerWidget {
     final textDir = isRtl ? TextDirection.rtl : TextDirection.ltr;
     final isTablet =
         MediaQuery.sizeOf(context).width <= Breakpoints.bootstrap.lg;
-    final isCollapsed =
-        ref.watch(stateSettingsProvider).value?.sidebarCollapsed ?? isTablet;
+    // Use .select() to only rebuild when sidebarCollapsed changes
+    final isCollapsed = ref.watch(
+      stateSettingsProvider.select(
+        (v) => v.value?.sidebarCollapsed ?? isTablet,
+      ),
+    );
 
     useListenable(router.routeInformationProvider);
 
@@ -49,12 +53,13 @@ class ShellSidebar extends HookConsumerWidget {
       return null;
     }, [isCollapsed]);
     useEffect(() {
-      if (isTablet)
+      if (isTablet) {
         unawaited(
           ref
               .read(stateSettingsProvider.notifier)
               .setSidebarCollapsed(collapsed: true),
         );
+      }
       return null;
     }, [isTablet]);
 

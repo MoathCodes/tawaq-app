@@ -5,10 +5,10 @@ import '../test_utils.dart';
 
 class SlowMockQuranRepository extends MockQuranRepository {
   @override
-  JuzModel? getJuzSync(int number) => null; // Simulate cache miss
+  Juz? getJuzSync(int number) => null; // Simulate cache miss
 
   @override
-  Future<JuzModel> getJuz(int number) async {
+  Future<Juz> getJuz(int number) async {
     await Future.delayed(const Duration(milliseconds: 50));
     return super.getJuz(number);
   }

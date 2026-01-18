@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mushaf_reader/src/data/models/ayah_info.dart';
+import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_page_info.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_style.dart';
 import 'package:mushaf_reader/src/logic/mushaf_reader_controller.dart';
@@ -31,10 +31,10 @@ class MushafTwoPageReader extends StatefulWidget {
   final TextDirection textDirection;
 
   /// Callback invoked when an Ayah is tapped.
-  final void Function(AyahInfo info)? onAyahTap;
+  final void Function(Ayah ayah)? onAyahTap;
 
   /// Callback invoked when an Ayah is long-pressed.
-  final void Function(AyahInfo info)? onAyahLongPress;
+  final void Function(Ayah ayah)? onAyahLongPress;
 
   /// Callback invoked when the page changes.
   ///
@@ -187,14 +187,14 @@ class _MushafTwoPageReaderState extends State<MushafTwoPageReader> {
 
   Future<void> _handleAyahLongPress(int ayahId) async {
     if (widget.onAyahLongPress == null) return;
-    final info = await _controller.getAyahInfo(ayahId);
-    widget.onAyahLongPress!(info);
+    final ayah = await _controller.getAyah(ayahId);
+    widget.onAyahLongPress!(ayah);
   }
 
   Future<void> _handleAyahTap(int ayahId) async {
     if (widget.onAyahTap == null) return;
-    final info = await _controller.getAyahInfo(ayahId);
-    widget.onAyahTap!(info);
+    final ayah = await _controller.getAyah(ayahId);
+    widget.onAyahTap!(ayah);
   }
 
   Future<void> _initController() async {

@@ -3,17 +3,17 @@
 # Check in to version control
 nextTypeId: 384
 types:
-  AyahModel:
+  Ayah:
     typeId: 379
     nextIndex: 12
     fields:
-      id:
+      ayahId:
         index: 0
       juz:
         index: 1
       page:
         index: 2
-      surah:
+      surahNumber:
         index: 3
       numberInSurah:
         index: 4
@@ -43,7 +43,7 @@ types:
         index: 2
       lineEnd:
         index: 3
-  JuzModel:
+  Juz:
     typeId: 381
     nextIndex: 4
     fields:
@@ -55,7 +55,7 @@ types:
         index: 2
       startAyahId:
         index: 3
-  SurahModel:
+  Surah:
     typeId: 382
     nextIndex: 9
     fields:

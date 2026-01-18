@@ -71,7 +71,7 @@ class _QuranScreenState extends State<QuranScreen> {
   Widget build(BuildContext context) {
     return MushafReader(
       controller: _controller,
-      onAyahTap: (info) => print('Tapped ${info.reference}'),
+      onAyahTap: (ayah) => print('Tapped ${ayah.reference}'),
     );
   }
 }
@@ -94,7 +94,7 @@ MushafPage(
 final controller = MushafReaderController();
 
 final ayah = await controller.getAyah(ayahId);
-print('Surah ${ayah.surah}, Ayah ${ayah.numberInSurah}');
+print('Surah ${ayah.surahNumber}, Ayah ${ayah.numberInSurah}');
 print('Text: ${ayah.text}');
 ```
 
@@ -135,7 +135,7 @@ Unified controller for navigation, state, and data access. Provides:
 - `selectAyah(int)` - Highlight specific ayah
 - `getPageInfo(int)` - Returns `MushafPageInfo`
 
-### QuranPageModel
+### QuranPage
 Contains everything needed to render a page:
 - `pageNumber`, `glyphText` (the full page glyph string)
 - `surahs` - List of Surah blocks on this page

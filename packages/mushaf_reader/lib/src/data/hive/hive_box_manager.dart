@@ -5,11 +5,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/adapters.dart';
 import 'package:mushaf_reader/src/data/hive/hive_registrar.g.dart';
-// import 'package:mushaf_reader/src/data/hive/hive_registrar.g.dart';
-import 'package:mushaf_reader/src/data/models/ayah_model.dart';
-import 'package:mushaf_reader/src/data/models/juz_model.dart';
+import 'package:mushaf_reader/src/data/models/ayah.dart';
+import 'package:mushaf_reader/src/data/models/juz.dart';
 import 'package:mushaf_reader/src/data/models/page_layouts.dart';
-import 'package:mushaf_reader/src/data/models/surah_model.dart';
+import 'package:mushaf_reader/src/data/models/surah.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -45,11 +44,11 @@ class HiveBoxManager {
   late String _hivePath;
 
   // Opened boxes
-  Box<SurahModel>? _surahsBox;
+  Box<Surah>? _surahsBox;
 
-  LazyBox<AyahModel>? _ayahsBox;
+  LazyBox<Ayah>? _ayahsBox;
 
-  Box<JuzModel>? _juzsBox;
+  Box<Juz>? _juzsBox;
   Box<PageLayouts>? _pageLayoutsBox;
   Box<String>? _metadataBox;
 
@@ -63,13 +62,13 @@ class HiveBoxManager {
   /// The ayahs lazy box (6236 ayahs keyed by ID).
   ///
   /// Uses LazyBox to avoid loading all ayahs into memory.
-  LazyBox<AyahModel> get ayahsBox {
+  LazyBox<Ayah> get ayahsBox {
     _ensureInitialized();
     return _ayahsBox!;
   }
 
   /// The juzs box (30 juzs keyed by number).
-  Box<JuzModel> get juzsBox {
+  Box<Juz> get juzsBox {
     _ensureInitialized();
     return _juzsBox!;
   }
@@ -90,7 +89,7 @@ class HiveBoxManager {
   }
 
   /// The surahs box (114 surahs keyed by number).
-  Box<SurahModel> get surahsBox {
+  Box<Surah> get surahsBox {
     _ensureInitialized();
     return _surahsBox!;
   }
@@ -148,9 +147,9 @@ class HiveBoxManager {
     await _copyBoxesFromAssets();
 
     // Open all boxes
-    _surahsBox = await Hive.openBox<SurahModel>('surahs');
-    _ayahsBox = await Hive.openLazyBox<AyahModel>('ayahs');
-    _juzsBox = await Hive.openBox<JuzModel>('juzs');
+    _surahsBox = await Hive.openBox<Surah>('surahs');
+    _ayahsBox = await Hive.openLazyBox<Ayah>('ayahs');
+    _juzsBox = await Hive.openBox<Juz>('juzs');
     _pageLayoutsBox = await Hive.openBox<PageLayouts>('pagelayouts');
     _metadataBox = await Hive.openBox<String>('metadata');
 

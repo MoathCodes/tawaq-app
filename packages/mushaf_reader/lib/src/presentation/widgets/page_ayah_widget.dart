@@ -45,7 +45,7 @@ import 'package:mushaf_reader/src/data/models/ayah_fragment.dart';
 class PageAyahWidget extends StatefulWidget {
   /// The complete glyph text from which Ayah fragments are extracted.
   ///
-  /// This is typically [QuranPageModel.glyphText].
+  /// This is typically [QuranPage.glyphText].
   final String fullText;
 
   /// The Ayah fragments to display from [fullText].

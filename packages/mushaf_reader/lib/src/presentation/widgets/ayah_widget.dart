@@ -170,11 +170,11 @@ class AyahWidget extends StatefulWidget {
 }
 
 class _AyahWidgetState extends State<AyahWidget> {
-  Future<AyahModel>? _future;
+  Future<Ayah>? _future;
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<AyahModel>(
+    return FutureBuilder<Ayah>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {

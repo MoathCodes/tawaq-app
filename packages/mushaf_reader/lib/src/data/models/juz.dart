@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'juz_model.freezed.dart';
+part 'juz.freezed.dart';
 
 /// Represents a Juz (part) of the Holy Quran.
 ///
@@ -25,9 +25,9 @@ part 'juz_model.freezed.dart';
 /// - [JuzWidget], which displays the Juz glyph
 /// - [MushafController], for retrieving Juz data
 @freezed
-abstract class JuzModel with _$JuzModel {
-  /// Creates a [JuzModel] with the Juz number and display glyph.
-  factory JuzModel({
+abstract class Juz with _$Juz {
+  /// Creates a [Juz] with the Juz number and display glyph.
+  factory Juz({
     /// The Juz number (1-30).
     ///
     /// Juz 1 starts with Al-Fatiha, and Juz 30 ends with An-Nas.
@@ -48,9 +48,9 @@ abstract class JuzModel with _$JuzModel {
     ///
     /// This is the ID of the first Ayah in the Juz.
     int? startAyahId,
-  }) = _JuzModel;
+  }) = _Juz;
 
-  const JuzModel._();
+  const Juz._();
 
   /// Returns the QCF4 glyph text for the Juz marker.
   ///

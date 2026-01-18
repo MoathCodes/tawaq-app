@@ -191,7 +191,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     _controller = MushafReaderController();
   }
 
-  void _handleAyahLongPress(AyahInfo info) async {
+  void _handleAyahLongPress(Ayah info) async {
     if (!mounted) return;
     showModalBottomSheet(
       context: context,
@@ -246,7 +246,7 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     );
   }
 
-  void _handleAyahTap(AyahInfo info) {
+  void _handleAyahTap(Ayah info) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Tapped: ${info.reference}'),
@@ -255,9 +255,10 @@ class _QuranReaderScreenState extends State<QuranReaderScreen> {
     );
   }
 
-  void _showSurahIndex() {
-    final surahs = _controller.getSurahsSync();
+  void _showSurahIndex() async {
+    final surahs = await _controller.getAllSurahs();
 
+    if (!mounted) return;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

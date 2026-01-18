@@ -45,7 +45,7 @@ class SurahHeaderWidget extends StatefulWidget {
   ///
   /// If provided, the widget renders directly.
   /// If null, [_surahNumber] must be set to load data asynchronously.
-  final SurahModel? _surahData;
+  final Surah? _surahData;
 
   /// The Surah number to load asynchronously.
   ///
@@ -99,7 +99,7 @@ class SurahHeaderWidget extends StatefulWidget {
 
   const SurahHeaderWidget({
     super.key,
-    required SurahModel surahData,
+    required Surah surahData,
     this.fontSize,
     this.textStyle,
     this.styleModifier,
@@ -132,7 +132,7 @@ class SurahHeaderWidget extends StatefulWidget {
 }
 
 class _SurahHeaderWidgetState extends State<SurahHeaderWidget> {
-  Future<SurahModel?>? _future;
+  Future<Surah?>? _future;
 
   @override
   void initState() {
@@ -174,7 +174,7 @@ class _SurahHeaderWidgetState extends State<SurahHeaderWidget> {
     }
 
     // Otherwise, load asynchronously
-    return FutureBuilder<SurahModel?>(
+    return FutureBuilder<Surah?>(
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting ||
@@ -191,7 +191,7 @@ class _SurahHeaderWidgetState extends State<SurahHeaderWidget> {
   Widget _buildStack(
     Widget bannerImage,
     double effectiveFontSize,
-    SurahModel surahData,
+    Surah surahData,
   ) {
     return GestureDetector(
       onTap: () => widget.onTap?.call(surahData.number),

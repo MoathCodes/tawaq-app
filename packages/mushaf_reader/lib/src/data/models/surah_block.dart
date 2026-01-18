@@ -34,7 +34,7 @@ part 'surah_block.freezed.dart';
 /// ```
 ///
 /// See also:
-/// - [QuranPageModel], which contains the list of Surah blocks
+/// - [QuranPage], which contains the list of Surah blocks
 /// - [SurahHeaderWidget], which displays the Surah header
 /// - [BasmalahWidget], which displays the Basmalah
 @freezed

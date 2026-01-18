@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mushaf_reader/src/data/models/ayah_info.dart';
+import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_page_info.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_style.dart';
 import 'package:mushaf_reader/src/logic/mushaf_reader_controller.dart';
@@ -18,7 +18,7 @@ import 'package:mushaf_reader/src/presentation/screens/mushaf_page.dart';
 /// ```dart
 /// // Minimal setup - just add to your widget tree
 /// MushafReader(
-///   onAyahTap: (info) => print('Tapped ${info.reference}'),
+///   onAyahTap: (ayah) => print('Tapped ${ayah.reference}'),
 /// )
 /// ```
 ///
@@ -64,8 +64,8 @@ import 'package:mushaf_reader/src/presentation/screens/mushaf_page.dart';
 ///         Expanded(
 ///           child: MushafReader(
 ///             controller: _controller,
-///             onAyahTap: (info) => _showAyahDetails(info),
-///             onAyahLongPress: (info) => _showContextMenu(info),
+///             onAyahTap: (ayah) => _showAyahDetails(ayah),
+///             onAyahLongPress: (ayah) => _showContextMenu(ayah),
 ///           ),
 ///         ),
 ///       ],
@@ -83,7 +83,7 @@ import 'package:mushaf_reader/src/presentation/screens/mushaf_page.dart';
 /// See also:
 /// - [MushafReaderController], for programmatic control
 /// - [MushafPage], for single-page display
-/// - [AyahInfo], for tap callback info
+/// - [Ayah], for tap callback info
 /// - [MushafPageInfo], for current page info
 class MushafReader extends StatefulWidget {
   /// The controller for managing navigation and state.
@@ -109,13 +109,13 @@ class MushafReader extends StatefulWidget {
 
   /// Callback invoked when an Ayah is tapped.
   ///
-  /// Provides rich [AyahInfo] with surah, verse, page, and juz context.
-  final void Function(AyahInfo info)? onAyahTap;
+  /// Provides the full [Ayah] with surah, verse, page, juz, and text content.
+  final void Function(Ayah ayah)? onAyahTap;
 
   /// Callback invoked when an Ayah is long-pressed.
   ///
-  /// Provides rich [AyahInfo] for context menus, sharing, etc.
-  final void Function(AyahInfo info)? onAyahLongPress;
+  /// Provides the full [Ayah] for context menus, sharing, etc.
+  final void Function(Ayah ayah)? onAyahLongPress;
 
   /// Callback invoked when the page changes.
   ///
@@ -193,6 +193,7 @@ class _MushafReaderState extends State<MushafReader> {
           final page = index + 1;
           return MushafPage(
             page: page,
+            controller: _controller,
             style: widget.style,
             loadingWidget: widget.pageLoadingWidget,
             hideHeader: widget.hideHeader,
@@ -235,14 +236,14 @@ class _MushafReaderState extends State<MushafReader> {
 
   Future<void> _handleAyahLongPress(int ayahId) async {
     if (widget.onAyahLongPress == null) return;
-    final info = await _controller.getAyahInfo(ayahId);
-    widget.onAyahLongPress!(info);
+    final ayah = await _controller.getAyah(ayahId);
+    widget.onAyahLongPress!(ayah);
   }
 
   Future<void> _handleAyahTap(int ayahId) async {
     if (widget.onAyahTap == null) return;
-    final info = await _controller.getAyahInfo(ayahId);
-    widget.onAyahTap!(info);
+    final ayah = await _controller.getAyah(ayahId);
+    widget.onAyahTap!(ayah);
   }
 
   Future<void> _initController() async {

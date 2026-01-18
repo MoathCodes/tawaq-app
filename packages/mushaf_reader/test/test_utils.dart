@@ -1,6 +1,6 @@
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:mushaf_reader/src/data/models/ayah_fragment.dart';
-import 'package:mushaf_reader/src/data/models/line_model.dart';
+import 'package:mushaf_reader/src/data/models/page_line.dart';
 import 'package:mushaf_reader/src/data/models/surah_block.dart';
 import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 
@@ -12,10 +12,10 @@ class MockQuranRepository implements IQuranRepository {
   Future<void> ensureReady() async {}
 
   @override
-  Future<List<SurahModel>> getAllSurahs() async {
+  Future<List<Surah>> getAllSurahs() async {
     return List.generate(
       114,
-      (i) => SurahModel(
+      (i) => Surah(
         number: i + 1,
         nameArabic: 'Surah ${i + 1}',
         nameEnglish: 'Surah ${i + 1}',
@@ -26,10 +26,10 @@ class MockQuranRepository implements IQuranRepository {
   }
 
   @override
-  Future<AyahModel> getAyah(int ayahId, [bool removeNewLines = true]) async {
-    return AyahModel(
-      id: ayahId,
-      surah: 1,
+  Future<Ayah> getAyah(int ayahId, [bool removeNewLines = true]) async {
+    return Ayah(
+      ayahId: ayahId,
+      surahNumber: 1,
       numberInSurah: ayahId,
       juz: 1,
       page: 1,
@@ -38,14 +38,14 @@ class MockQuranRepository implements IQuranRepository {
   }
 
   @override
-  Future<AyahModel> getAyahBySurah(
+  Future<Ayah> getAyahBySurah(
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
   ]) async {
-    return AyahModel(
-      id: 1,
-      surah: surah,
+    return Ayah(
+      ayahId: 1,
+      surahNumber: surah,
       numberInSurah: ayahInSurah,
       juz: 1,
       page: 1,
@@ -60,40 +60,34 @@ class MockQuranRepository implements IQuranRepository {
   String? getBasmalahSync() => 'Basmalah';
 
   @override
-  Future<JuzModel> getJuz(int number) async {
-    return JuzModel(number: number, glyph: 'Juz $number');
+  Future<Juz> getJuz(int number) async {
+    return Juz(number: number, glyph: 'Juz $number');
   }
 
   @override
-  Future<List<JuzModel>> getJuzs() async {
-    return List.generate(
-      30,
-      (i) => JuzModel(number: i + 1, glyph: 'Juz ${i + 1}'),
-    );
+  Future<List<Juz>> getJuzs() async {
+    return List.generate(30, (i) => Juz(number: i + 1, glyph: 'Juz ${i + 1}'));
   }
 
   @override
-  Map<int, JuzModel> getJuzsSync() {
-    return {
-      for (var i = 1; i <= 30; i++) i: JuzModel(number: i, glyph: 'Juz $i'),
-    };
+  Map<int, Juz> getJuzsSync() {
+    return {for (var i = 1; i <= 30; i++) i: Juz(number: i, glyph: 'Juz $i')};
   }
 
   @override
   Future<int> getJuzStartPage(int juzNumber) async => (juzNumber - 1) * 20 + 2;
 
   @override
-  JuzModel? getJuzSync(int number) =>
-      JuzModel(number: number, glyph: 'Juz $number');
+  Juz? getJuzSync(int number) => Juz(number: number, glyph: 'Juz $number');
 
   @override
-  Future<QuranPageModel> getPage(int page) async {
+  Future<QuranPage> getPage(int page) async {
     // Generate dummy page content
     // Page 1: Surah 1, Ayahs 1-7
     // Page 2: Surah 2, Ayahs 1-5
 
     List<SurahBlock> blocks = [];
-    List<LineModel> lines = [];
+    List<PageLine> lines = [];
     String glyphText = 'Page $page content';
 
     if (page == 1) {
@@ -123,7 +117,7 @@ class MockQuranRepository implements IQuranRepository {
       );
     }
 
-    return QuranPageModel(
+    return QuranPage(
       pageNumber: page,
       juzNumber: 1,
       glyphText: glyphText,
@@ -139,8 +133,8 @@ class MockQuranRepository implements IQuranRepository {
   Future<int> getStartPageForSurah(int surahNumber) async => surahNumber;
 
   @override
-  Future<SurahModel?> getSurah(int surahNumber) async {
-    return SurahModel(
+  Future<Surah?> getSurah(int surahNumber) async {
+    return Surah(
       number: surahNumber,
       nameArabic: 'Surah $surahNumber',
       nameEnglish: 'Surah $surahNumber',
@@ -150,10 +144,10 @@ class MockQuranRepository implements IQuranRepository {
   }
 
   @override
-  List<SurahModel> getSurahsSync() {
+  List<Surah> getSurahsSync() {
     return List.generate(
       114,
-      (i) => SurahModel(
+      (i) => Surah(
         number: i + 1,
         nameArabic: 'Surah ${i + 1}',
         nameEnglish: 'Surah ${i + 1}',
@@ -161,5 +155,15 @@ class MockQuranRepository implements IQuranRepository {
         hasBasmalah: (i + 1) != 9,
       ),
     );
+  }
+
+  @override
+  Future<List<Ayah>> searchAyahs(
+    String query, {
+    int? surahNumber,
+    int maxResults = 100,
+  }) async {
+    // Return mock results for testing
+    return [];
   }
 }

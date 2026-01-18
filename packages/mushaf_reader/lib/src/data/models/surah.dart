@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:mushaf_reader/src/data/models/revelation_type.dart';
 
-part 'surah_model.freezed.dart';
+part 'surah.freezed.dart';
 
 /// Represents metadata for a Surah (chapter) of the Quran.
 ///
@@ -11,7 +11,7 @@ part 'surah_model.freezed.dart';
 /// ## Usage
 ///
 /// Typically obtained from [MushafReaderController.getSurah] or by
-/// converting a [SurahBlock] via [SurahConvertor.toSurahModel]:
+/// converting a [SurahBlock] via [SurahConvertor.toSurah]:
 ///
 /// ```dart
 /// // Async fetch
@@ -21,7 +21,7 @@ part 'surah_model.freezed.dart';
 ///
 /// // From SurahBlock
 /// final block = page.surahs.first;
-/// final surahModel = block.toSurahModel();
+/// final surah = block.toSurah();
 /// ```
 ///
 /// See also:
@@ -29,12 +29,12 @@ part 'surah_model.freezed.dart';
 /// - [SurahNameWidget], which displays the Surah name
 /// - [SurahHeaderWidget], which displays the decorative banner
 @freezed
-abstract class SurahModel with _$SurahModel {
-  /// Creates a [SurahModel] with all required properties.
+abstract class Surah with _$Surah {
+  /// Creates a [Surah] with all required properties.
   ///
   /// All parameters are required to ensure data integrity when working
   /// with Quran data.
-  factory SurahModel({
+  factory Surah({
     /// The Surah (chapter) number (1-114).
     required int number,
 
@@ -72,10 +72,25 @@ abstract class SurahModel with _$SurahModel {
 
     /// The total number of Ayahs (verses) in this Surah.
     int? ayahCount,
-  }) = _SurahModel;
+  }) = _Surah;
 
-  const SurahModel._();
+  const Surah._();
 
   /// Returns the display name, preferring Arabic if available, then English.
   String get displayName => nameArabic ?? nameEnglish ?? 'Surah $number';
+
+  /// Returns the Arabic name without diacritics (Imlaei/simplified script).
+  ///
+  /// Removes tashkeel (harakat) like fatha, damma, kasra, sukun, shadda,
+  /// and other Arabic punctuation marks for cleaner display or search.
+  ///
+  /// Example: "سُورَةُ ٱلْفَاتِحَةِ" → "سورة الفاتحة"
+  String? get nameArabicSimplified {
+    if (nameArabic == null) return null;
+    // Arabic diacritics Unicode range: U+064B to U+0652, plus others
+    return nameArabic!.replaceAll(
+      RegExp(r'[\u064B-\u065F\u0670\u06D6-\u06ED]'),
+      '',
+    );
+  }
 }

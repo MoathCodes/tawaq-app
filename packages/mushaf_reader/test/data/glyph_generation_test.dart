@@ -5,12 +5,19 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mushaf_reader/src/data/hive/hive_adapters.dart';
-import 'package:mushaf_reader/src/data/models/ayah_model.dart';
+import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:path/path.dart' as p;
 
 /// Strips HTML tags from a word (e.g., <span class="marker">ﭕ</span> -> ﭕ)
+/// Also converts <br> to newline.
 String _stripHtml(String word) {
-  return word.replaceAll(RegExp(r'<span[^>]*>'), '').replaceAll('</span>', '');
+  // First, replace <br> with newline
+  var result = word.replaceAll('<br>', '\n');
+  // Remove <span...> and </span> tags
+  result = result
+      .replaceAll(RegExp(r'<span[^>]*>'), '')
+      .replaceAll('</span>', '');
+  return result;
 }
 
 /// Builds glyph text from words array, replacing <br> with newlines.
@@ -32,7 +39,7 @@ void main() {
   group('Glyph Generation Tests', () {
     late Map<String, dynamic> quranFullJson;
     late List<dynamic> pagesData;
-    late Box<AyahModel> ayahsBox;
+    late Box<Ayah> ayahsBox;
 
     setUpAll(() async {
       // Find project root (navigate up from test directory)
@@ -58,8 +65,8 @@ void main() {
       // Initialize Hive
       final hivePath = p.join(projectRoot, 'assets', 'hive');
       Hive.init(hivePath);
-      Hive.registerAdapter(AyahModelAdapter());
-      ayahsBox = await Hive.openBox<AyahModel>('ayahs');
+      Hive.registerAdapter(AyahAdapter());
+      ayahsBox = await Hive.openBox<Ayah>('ayahs');
     });
 
     tearDownAll(() async {

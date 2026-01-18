@@ -18,11 +18,11 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mushaf_reader/src/data/hive/hive_adapters.dart';
-import 'package:mushaf_reader/src/data/models/ayah_model.dart';
-import 'package:mushaf_reader/src/data/models/juz_model.dart';
+import 'package:mushaf_reader/src/data/models/ayah.dart';
+import 'package:mushaf_reader/src/data/models/juz.dart';
 import 'package:mushaf_reader/src/data/models/page_layouts.dart';
 import 'package:mushaf_reader/src/data/models/revelation_type.dart';
-import 'package:mushaf_reader/src/data/models/surah_model.dart';
+import 'package:mushaf_reader/src/data/models/surah.dart';
 import 'package:mushaf_reader/src/data/surah_metadata.dart';
 import 'package:path/path.dart' as p;
 
@@ -55,10 +55,10 @@ Future<void> main() async {
 
   // Register adapters
   Hive
-    ..registerAdapter(JuzModelAdapter())
-    ..registerAdapter(AyahModelAdapter())
+    ..registerAdapter(JuzAdapter())
+    ..registerAdapter(AyahAdapter())
     ..registerAdapter(PageLayoutsAdapter())
-    ..registerAdapter(SurahModelAdapter())
+    ..registerAdapter(SurahAdapter())
     ..registerAdapter(RevelationTypeAdapter());
 
   print('Reading JSON files...');
@@ -154,9 +154,15 @@ String codePointToChar(String code) {
 }
 
 /// Strips HTML tags from a word (e.g., <span class="marker">ﭕ</span> -> ﭕ)
+/// Also converts <br> to newline.
 String _stripHtml(String word) {
+  // First, replace <br> with newline
+  var result = word.replaceAll('<br>', '\n');
   // Remove <span...> and </span> tags
-  return word.replaceAll(RegExp(r'<span[^>]*>'), '').replaceAll('</span>', '');
+  result = result
+      .replaceAll(RegExp(r'<span[^>]*>'), '')
+      .replaceAll('</span>', '');
+  return result;
 }
 
 /// Builds glyph text from words array, replacing <br> with newlines.
@@ -178,7 +184,7 @@ Future<void> _generateAyahsBox(
   List<dynamic> surahsData,
   List<dynamic> pagesData,
 ) async {
-  final box = await Hive.openBox<AyahModel>('ayahs');
+  final box = await Hive.openBox<Ayah>('ayahs');
 
   // Build a map of ayah ID -> glyph text from quran_full.json
   final ayahGlyphs = <int, String>{};
@@ -221,11 +227,11 @@ Future<void> _generateAyahsBox(
       final sajda = sajdaValue is bool ? sajdaValue : (sajdaValue != null);
       final pageInSurah = a['pageInSurah'] as int?;
 
-      final ayah = AyahModel(
-        id: ayahId,
+      final ayah = Ayah(
+        ayahId: ayahId,
         juz: a['juz'] as int,
         page: a['page'] as int,
-        surah: surahNumber,
+        surahNumber: surahNumber,
         numberInSurah: a['numberInSurah'] as int,
         text: glyph,
         textPlain: textPlain,
@@ -249,7 +255,7 @@ Future<void> _generateJuzsBox(
   List<dynamic> juzsData,
   List<dynamic> surahsData,
 ) async {
-  final box = await Hive.openBox<JuzModel>('juzs');
+  final box = await Hive.openBox<Juz>('juzs');
 
   // Build a map of juz number -> first ayah info (for startPage, startAyahId)
   final juzFirstAyah = <int, Map<String, int>>{};
@@ -271,12 +277,12 @@ Future<void> _generateJuzsBox(
     final codeV4 = j['code_v4'] as String?;
     final glyph = codeV4 != null ? codePointToChar(codeV4) : '';
 
-    final firstAyahInfo = juzFirstAyah[number];
-    final juz = JuzModel(
+    final firstAyah = juzFirstAyah[number];
+    final juz = Juz(
       number: number,
       glyph: glyph,
-      startPage: firstAyahInfo?['page'],
-      startAyahId: firstAyahInfo?['ayahId'],
+      startPage: firstAyah?['page'],
+      startAyahId: firstAyah?['ayahId'],
     );
     await box.put(number, juz);
   }
@@ -337,7 +343,7 @@ Future<void> _generatePageLayoutsBox(List<dynamic> hafsData) async {
 }
 
 Future<void> _generateSurahsBox(List<dynamic> surahsData) async {
-  final box = await Hive.openBox<SurahModel>('surahs');
+  final box = await Hive.openBox<Surah>('surahs');
 
   for (final s in surahsData) {
     final surahNumber = s['number'] as int;
@@ -372,7 +378,7 @@ Future<void> _generateSurahsBox(List<dynamic> surahsData) async {
     // Get English translation of surah name meaning
     final englishNameTranslation = s['englishNameTranslation'] as String?;
 
-    final surah = SurahModel(
+    final surah = Surah(
       number: surahNumber,
       glyph: glyph,
       hasBasmalah: hasBasmalah,

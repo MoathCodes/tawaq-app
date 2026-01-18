@@ -3,46 +3,45 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:forui_hooks/forui_hooks.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
+import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/theme/theme.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mushaf_reader/mushaf_reader.dart';
 
 /// A study companion panel for the Quran screen.
-class StudyPanel extends HookWidget {
+class StudyPanel extends HookConsumerWidget {
   /// Creates a study panel.
   const StudyPanel({
+    required this.controller,
     super.key,
-    this.selectedAyahId,
-    this.surahName,
-    this.ayahNumber,
   });
-
-  /// The currently selected ayah ID.
-  final int? selectedAyahId;
-
-  /// The name of the current surah.
-  final String? surahName;
-
-  /// The current ayah number within the surah.
-  final int? ayahNumber;
+  final MushafReaderController controller;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final accordionController = useFAccordionController();
     final notesController = useTextEditingController();
     final theme = FTheme.of(context);
     final colors = theme.colors;
     final typography = theme.typography;
 
+    // Read quranState from provider - contains both pageInfo and selectedAyah
+    final quranState = ref.watch(
+      stateSettingsProvider.select((value) => value.value?.quranState),
+    );
+    final pageInfo = quranState?.pageInfo;
+    final selectedAyah = quranState?.selectedAyah;
+
     return HoverCard(
-      padding: .zero,
+      padding: EdgeInsets.zero,
       child: Column(
-        crossAxisAlignment: .stretch,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _Header(
             colors: colors,
             typography: typography,
-            surahName: surahName,
-            ayahNumber: ayahNumber,
-            hasSelection: selectedAyahId != null,
+            surahName: pageInfo?.primarySurahName,
+            ayahNumber: selectedAyah?.numberInSurah,
           ),
           const FDivider(),
           Expanded(
@@ -62,6 +61,26 @@ class StudyPanel extends HookWidget {
                     typography: typography,
                     controller: notesController,
                   ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      FButton.icon(
+                        onPress: () => controller.selectAyah(
+                          (selectedAyah?.ayahId ?? 2) - 1,
+                        ),
+                        style: FButtonStyle.secondary(),
+                        child: const Icon(FIcons.arrowLeft),
+                      ),
+                      FButton.icon(
+                        onPress: () => controller.selectAyah(
+                          (selectedAyah?.ayahId ?? 0) + 1,
+                        ),
+                        style: FButtonStyle.secondary(),
+                        child: const Icon(FIcons.arrowRight),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -78,13 +97,11 @@ class _Header extends StatelessWidget {
     required this.typography,
     this.surahName,
     this.ayahNumber,
-    required this.hasSelection,
   });
   final FColors colors;
   final FTypography typography;
   final String? surahName;
   final int? ayahNumber;
-  final bool hasSelection;
 
   @override
   Widget build(BuildContext context) {
@@ -105,23 +122,17 @@ class _Header extends StatelessWidget {
                     color: colors.foreground,
                   ),
                 ),
-                if (hasSelection) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    '${surahName ?? 'Al-Fatihah'} • Ayah ${ayahNumber ?? 1}',
-                    style: typography.sm.copyWith(
-                      color: colors.mutedForeground,
-                    ),
+                const SizedBox(height: 2),
+                // if ()
+                Text(
+                  ayahNumber != null
+                      ? '${surahName ?? 'Al-Fatihah'} • Ayah ${ayahNumber!}'
+                      : surahName ?? 'Al-Fatihah',
+                  style: typography.sm.copyWith(
+                    color: colors.mutedForeground,
                   ),
-                ],
+                ),
               ],
-            ),
-          ),
-          ...[FIcons.search, FIcons.ellipsisVertical].map(
-            (icon) => FButton.icon(
-              onPress: () {},
-              style: FButtonStyle.ghost(),
-              child: Icon(icon, size: 16, color: colors.mutedForeground),
             ),
           ),
         ],

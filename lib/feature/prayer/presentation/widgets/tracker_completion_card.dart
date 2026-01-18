@@ -120,9 +120,9 @@ class TrackerCompletionCard extends HookConsumerWidget {
                       children: [
                         Builder(
                           builder: (ctx) {
-                            final w = 46.w,
-                                h = 46.h,
-                                dpr = MediaQuery.of(ctx).devicePixelRatio;
+                            final w = 46.w;
+                            final h = 46.h;
+                            final dpr = MediaQuery.of(ctx).devicePixelRatio;
                             return Container(
                               width: w,
                               height: h,

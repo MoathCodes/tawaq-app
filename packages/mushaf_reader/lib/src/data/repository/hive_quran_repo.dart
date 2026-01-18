@@ -1,14 +1,14 @@
 import 'dart:async';
 
 import 'package:mushaf_reader/src/data/hive/hive_box_manager.dart';
+import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:mushaf_reader/src/data/models/ayah_fragment.dart';
-import 'package:mushaf_reader/src/data/models/ayah_model.dart';
-import 'package:mushaf_reader/src/data/models/juz_model.dart';
-import 'package:mushaf_reader/src/data/models/line_model.dart';
+import 'package:mushaf_reader/src/data/models/juz.dart';
 import 'package:mushaf_reader/src/data/models/page_layouts.dart';
-import 'package:mushaf_reader/src/data/models/quran_page_model.dart';
+import 'package:mushaf_reader/src/data/models/page_line.dart';
+import 'package:mushaf_reader/src/data/models/quran_page.dart';
+import 'package:mushaf_reader/src/data/models/surah.dart';
 import 'package:mushaf_reader/src/data/models/surah_block.dart';
-import 'package:mushaf_reader/src/data/models/surah_model.dart';
 import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 
 /// Hive-based implementation of [IQuranRepository].
@@ -19,9 +19,9 @@ import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 ///
 /// ## Box Structure
 ///
-/// - **surahs**: `Box<SurahModel>` keyed by surah number (1-114)
-/// - **ayahs**: `LazyBox<AyahModel>` keyed by ayah ID (1-6236)
-/// - **juzs**: `Box<JuzModel>` keyed by juz number (1-30)
+/// - **surahs**: `Box<Surah>` keyed by surah number (1-114)
+/// - **ayahs**: `LazyBox<Ayah>` keyed by ayah ID (1-6236)
+/// - **juzs**: `Box<Juz>` keyed by juz number (1-30)
 /// - **pageLayouts**: `Box<List<PageLayouts>>` keyed by page number (1-604)
 /// - **metadata**: `Box<String>` for key-value data (e.g., "basmalah")
 ///
@@ -64,13 +64,13 @@ class HiveQuranRepository implements IQuranRepository {
   Completer<void>? _initCompleter;
 
   /// LRU cache for recently accessed page models.
-  final _pageCache = <int, QuranPageModel>{};
+  final _pageCache = <int, QuranPage>{};
 
   /// Cached Surah data for quick access.
-  final _surahCache = <int, SurahModel>{};
+  final _surahCache = <int, Surah>{};
 
   /// Cached Juz data for quick access.
-  final _juzCache = <int, JuzModel>{};
+  final _juzCache = <int, Juz>{};
 
   /// Cached Basmalah glyph.
   String? _basmalahCache;
@@ -137,14 +137,14 @@ class HiveQuranRepository implements IQuranRepository {
   }
 
   @override
-  Future<List<SurahModel>> getAllSurahs() async {
+  Future<List<Surah>> getAllSurahs() async {
     await _ensureReady();
     return _surahCache.values.toList()
       ..sort((a, b) => a.number.compareTo(b.number));
   }
 
   @override
-  Future<AyahModel> getAyah(int ayahId, [bool removeNewLines = true]) async {
+  Future<Ayah> getAyah(int ayahId, [bool removeNewLines = true]) async {
     await _ensureReady();
     final ayah = await _boxManager!.ayahsBox.get(ayahId);
     if (ayah == null) throw ArgumentError('Ayah $ayahId not found');
@@ -155,7 +155,7 @@ class HiveQuranRepository implements IQuranRepository {
   }
 
   @override
-  Future<AyahModel> getAyahBySurah(
+  Future<Ayah> getAyahBySurah(
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
@@ -170,7 +170,7 @@ class HiveQuranRepository implements IQuranRepository {
     for (int id = 1; id <= 6236; id++) {
       final ayah = await _boxManager!.ayahsBox.get(id);
       if (ayah != null &&
-          ayah.surah == surah &&
+          ayah.surahNumber == surah &&
           ayah.numberInSurah == ayahInSurah) {
         if (removeNewLines) {
           return ayah.copyWith(text: ayah.text.replaceAll('\n', ''));
@@ -191,7 +191,7 @@ class HiveQuranRepository implements IQuranRepository {
   String? getBasmalahSync() => _basmalahCache;
 
   @override
-  Future<JuzModel> getJuz(int number) async {
+  Future<Juz> getJuz(int number) async {
     await _ensureReady();
     final juz = _juzCache[number];
     if (juz == null) throw ArgumentError('Juz $number not found');
@@ -199,19 +199,19 @@ class HiveQuranRepository implements IQuranRepository {
   }
 
   @override
-  Future<List<JuzModel>> getJuzs() async {
+  Future<List<Juz>> getJuzs() async {
     await _ensureReady();
     return _juzCache.values.toList()
       ..sort((a, b) => a.number.compareTo(b.number));
   }
 
   @override
-  Map<int, JuzModel> getJuzsSync() => Map.unmodifiable(_juzCache);
+  Map<int, Juz> getJuzsSync() => Map.unmodifiable(_juzCache);
 
   @override
   Future<int> getJuzStartPage(int juzNumber) async {
     await _ensureReady();
-    // Use pre-computed startPage from JuzModel (O(1))
+    // Use pre-computed startPage from Juz (O(1))
     final juz = _juzCache[juzNumber];
     if (juz?.startPage != null) {
       return juz!.startPage!;
@@ -227,10 +227,10 @@ class HiveQuranRepository implements IQuranRepository {
   }
 
   @override
-  JuzModel? getJuzSync(int number) => _juzCache[number];
+  Juz? getJuzSync(int number) => _juzCache[number];
 
   @override
-  Future<QuranPageModel> getPage(int page) async {
+  Future<QuranPage> getPage(int page) async {
     await _ensureReady();
 
     // Check cache first (LRU)
@@ -270,7 +270,7 @@ class HiveQuranRepository implements IQuranRepository {
     // Fallback: find first ayah of this surah
     for (int id = 1; id <= 6236; id++) {
       final ayah = await _boxManager!.ayahsBox.get(id);
-      if (ayah != null && ayah.surah == surahNumber) {
+      if (ayah != null && ayah.surahNumber == surahNumber) {
         return ayah.page;
       }
     }
@@ -278,23 +278,23 @@ class HiveQuranRepository implements IQuranRepository {
   }
 
   @override
-  Future<SurahModel?> getSurah(int surahNumber) async {
+  Future<Surah?> getSurah(int surahNumber) async {
     await _ensureReady();
     return _surahCache[surahNumber];
   }
 
   @override
-  List<SurahModel> getSurahsSync() {
+  List<Surah> getSurahsSync() {
     return _surahCache.values.toList()
       ..sort((a, b) => a.number.compareTo(b.number));
   }
 
-  /// Builds a complete [QuranPageModel] from Hive data.
-  Future<QuranPageModel> _buildPage(int page) async {
+  /// Builds a complete [QuranPage] from Hive data.
+  Future<QuranPage> _buildPage(int page) async {
     // Get page layouts using the helper method
     final layouts = _boxManager!.getLayoutsForPage(page);
     if (layouts.isEmpty) {
-      return QuranPageModel(
+      return QuranPage(
         pageNumber: page,
         glyphText: '',
         lines: [],
@@ -304,7 +304,7 @@ class HiveQuranRepository implements IQuranRepository {
     }
 
     // Fetch all ayahs for this page
-    final ayahMap = <int, AyahModel>{};
+    final ayahMap = <int, Ayah>{};
     for (final layout in layouts) {
       final ayah = await _boxManager!.ayahsBox.get(layout.ayahId);
       if (ayah != null) {
@@ -343,7 +343,7 @@ class HiveQuranRepository implements IQuranRepository {
     }
 
     final sortedLineStarts = lineMap.keys.toList()..sort();
-    final lines = <LineModel>[];
+    final lines = <PageLine>[];
     var lineIndex = 0;
 
     for (final lineStart in sortedLineStarts) {
@@ -356,7 +356,7 @@ class HiveQuranRepository implements IQuranRepository {
           .toList();
 
       lines.add(
-        LineModel(
+        PageLine(
           index: lineIndex++,
           start: lineStart,
           end: lineEnd,
@@ -370,7 +370,7 @@ class HiveQuranRepository implements IQuranRepository {
     if (ayahFragments.isNotEmpty) {
       var currentStart = 0;
       var firstAyah = ayahMap[ayahFragments.first.ayahId]!;
-      var currentSurahId = firstAyah.surah;
+      var currentSurahId = firstAyah.surahNumber;
       var firstNumInSurah = firstAyah.numberInSurah;
       var currentBlockFragments = <AyahFragment>[];
       var currentSurah = _surahCache[currentSurahId];
@@ -378,7 +378,7 @@ class HiveQuranRepository implements IQuranRepository {
       for (final frag in ayahFragments) {
         final ayah = ayahMap[frag.ayahId]!;
 
-        if (ayah.surah != currentSurahId) {
+        if (ayah.surahNumber != currentSurahId) {
           // Close previous block
           surahBlocks.add(
             SurahBlock(
@@ -392,7 +392,7 @@ class HiveQuranRepository implements IQuranRepository {
           );
 
           // Start new block
-          currentSurahId = ayah.surah;
+          currentSurahId = ayah.surahNumber;
           currentStart = frag.start;
           firstNumInSurah = ayah.numberInSurah;
           currentBlockFragments.clear();
@@ -419,13 +419,66 @@ class HiveQuranRepository implements IQuranRepository {
     final firstAyah = ayahMap[firstAyahId];
     final juz = firstAyah?.juz ?? 1;
 
-    return QuranPageModel(
+    return QuranPage(
       pageNumber: page,
       glyphText: buf.toString(),
       lines: lines,
       surahs: surahBlocks,
       juzNumber: juz,
     );
+  }
+
+  @override
+  Future<List<Ayah>> searchAyahs(
+    String query, {
+    int? surahNumber,
+    int maxResults = 100,
+  }) async {
+    await _ensureReady();
+
+    if (query.isEmpty) return [];
+
+    final results = <Ayah>[];
+    final normalizedQuery = _normalizeArabic(query);
+
+    // Iterate through all 6236 ayahs
+    for (int id = 1; id <= 6236 && results.length < maxResults; id++) {
+      final ayah = await _boxManager!.ayahsBox.get(id);
+      if (ayah == null) continue;
+
+      // Filter by surah if specified
+      if (surahNumber != null && ayah.surahNumber != surahNumber) continue;
+
+      // Search in textPlain (normalized Arabic without diacritics)
+      final textToSearch = ayah.textPlain ?? '';
+      if (textToSearch.isEmpty) continue;
+
+      // Normalize and check for match
+      final normalizedText = _normalizeArabic(textToSearch);
+      if (normalizedText.contains(normalizedQuery)) {
+        results.add(ayah);
+      }
+    }
+
+    return results;
+  }
+
+  /// Normalizes Arabic text for search by removing common variations.
+  ///
+  /// This handles:
+  /// - Alef variations (أ إ آ ا)
+  /// - Teh marbuta vs heh (ة ه)
+  /// - Yeh variations (ي ى)
+  String _normalizeArabic(String text) {
+    return text
+        // Normalize alef variations
+        .replaceAll(RegExp('[أإآٱ]'), 'ا')
+        // Normalize teh marbuta to heh
+        .replaceAll('ة', 'ه')
+        // Normalize yeh variations
+        .replaceAll('ى', 'ي')
+        // Remove tatweel (kashida)
+        .replaceAll('ـ', '');
   }
 
   void _closeAndReset() {

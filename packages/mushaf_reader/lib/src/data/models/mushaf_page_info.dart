@@ -1,11 +1,12 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'mushaf_page_info.freezed.dart';
+part 'mushaf_page_info.g.dart';
 
 /// Lightweight summary of a Mushaf page for quick access to current page state.
 ///
 /// This model provides synchronous access to commonly needed page metadata
-/// without requiring async database queries. It's computed from [QuranPageModel]
+/// without requiring async database queries. It's computed from [QuranPage]
 /// and cached by [MushafReaderController].
 ///
 /// ## Example
@@ -22,7 +23,7 @@ part 'mushaf_page_info.freezed.dart';
 /// ```
 ///
 /// See also:
-/// - [QuranPageModel], the full page model with glyph text
+/// - [QuranPage], the full page model with glyph text
 /// - [MushafReaderController], which provides this via [currentPageInfo]
 @freezed
 abstract class MushafPageInfo with _$MushafPageInfo {
@@ -57,6 +58,10 @@ abstract class MushafPageInfo with _$MushafPageInfo {
 
   const MushafPageInfo._();
 
+  /// Creates a [MushafPageInfo] from a JSON map.
+  factory MushafPageInfo.fromJson(Map<String, dynamic> json) =>
+      _$MushafPageInfoFromJson(json);
+
   /// The total number of Ayahs on this page.
   int get ayahCount => ayahIds.length;
 
@@ -67,5 +72,5 @@ abstract class MushafPageInfo with _$MushafPageInfo {
   String get primarySurahName => surahNames.first;
 
   /// The primary (first) Surah number on this page.
-  int get primarySurahNumber => surahNumbers.first;
+  int get primarySurahNumber => surahNumbers.isEmpty ? 0 : surahNumbers.first;
 }

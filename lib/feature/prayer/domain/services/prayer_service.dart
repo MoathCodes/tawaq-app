@@ -52,7 +52,8 @@ class PrayerService {
       final days = await _repo.getFullyCompletedDays(loc);
       if (days.isEmpty) return (current: 0, best: 0);
 
-      var best = 0, streak = 0;
+      var best = 0;
+      var streak = 0;
       DateTime? prev;
 
       for (final day in days) {

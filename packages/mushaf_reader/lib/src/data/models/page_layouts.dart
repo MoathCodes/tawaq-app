@@ -7,7 +7,7 @@ part 'page_layouts.freezed.dart';
 /// This model maps database layout records to the rendering system,
 /// storing the line boundaries for each Ayah's appearance on a page.
 ///
-/// Used internally by the repository to construct [QuranPageModel]
+/// Used internally by the repository to construct [QuranPage]
 /// with proper line and Ayah fragment information.
 ///
 /// ## Database Mapping
@@ -17,8 +17,7 @@ part 'page_layouts.freezed.dart';
 /// - The line range for each Ayah's text on that page
 ///
 /// See also:
-/// - [QuranPageModel], which is built from these layouts
-/// - [DriftQuranRepository], which queries and processes layouts
+/// - [QuranPage], which is built from these layouts
 @freezed
 abstract class PageLayouts with _$PageLayouts {
   /// Creates a [PageLayouts] record.

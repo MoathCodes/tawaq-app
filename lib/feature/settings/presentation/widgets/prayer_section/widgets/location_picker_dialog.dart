@@ -139,7 +139,7 @@ class _Header extends StatelessWidget {
                   try {
                     await notifier.useCurrentLocation(mapCtrl);
                   } catch (e) {
-                    if (context.mounted)
+                    if (context.mounted) {
                       showFToast(
                         context: context,
                         title: Text(
@@ -147,6 +147,7 @@ class _Header extends StatelessWidget {
                         ),
                         description: Text(e.toString()),
                       );
+                    }
                   }
                 },
                 child: Row(
@@ -225,12 +226,13 @@ class _Map extends StatelessWidget {
                   await notifier.updateLocation(ll);
                   mapCtrl.move(ll, 14);
                 } catch (_) {
-                  if (context.mounted)
+                  if (context.mounted) {
                     showFToast(
                       context: context,
                       title: Text(l10n.errorUpdatingLocationTitle),
                       description: Text(l10n.errorUpdatingLocationDescription),
                     );
+                  }
                 }
               },
             ),

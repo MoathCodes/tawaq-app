@@ -66,7 +66,7 @@ import 'package:mushaf_reader/src/presentation/widgets/page_ayah_widget.dart';
 /// ```dart
 /// MushafReader(
 ///   controller: controller,
-///   onTapAyah: (ayahInfo) => print('Tapped: ${ayahInfo.reference}'),
+///   onTapAyah: (Ayah) => print('Tapped: ${Ayah.reference}'),
 /// )
 /// ```
 ///
@@ -179,7 +179,7 @@ class _MushafPageState extends State<MushafPage>
   int? _selectedAyahId;
 
   // State for data loading
-  QuranPageModel? _pageData;
+  QuranPage? _pageData;
   bool _isLoading = true;
 
   @override
@@ -242,7 +242,7 @@ class _MushafPageState extends State<MushafPage>
 
   /// Builds the page header with Surah name and Juz indicator.
   Widget _buildHeader(
-    QuranPageModel data,
+    QuranPage data,
     double width,
     double fontSize,
     MushafStyle style,
@@ -254,7 +254,7 @@ class _MushafPageState extends State<MushafPage>
         children: [
           if (data.surahs.isNotEmpty)
             SurahNameWidget(
-              surahData: data.surahs.first.toSurahModel(),
+              surahData: data.surahs.first.toSurah(),
               fontSize: fontSize,
               textStyle: style.surahNameStyle,
               styleModifier: style.surahNameStyleModifier,
@@ -275,7 +275,7 @@ class _MushafPageState extends State<MushafPage>
   }
 
   /// Builds the complete page content with responsive scaling.
-  Widget _buildPageContent(QuranPageModel data) {
+  Widget _buildPageContent(QuranPage data) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final style = widget.style ?? const MushafStyle();
@@ -363,7 +363,7 @@ class _MushafPageState extends State<MushafPage>
 
   /// Builds all Surah blocks with headers, Basmalah, and Ayah text.
   Iterable<Widget> _buildSurahBlocks(
-    QuranPageModel data,
+    QuranPage data,
     double width,
     double scale,
     String fontFamily,
@@ -377,7 +377,7 @@ class _MushafPageState extends State<MushafPage>
         // Show header when this block starts a new surah (first ayah is verse 1)
         if (block.hasBasmalah) ...[
           SurahHeaderWidget(
-            surahData: block.toSurahModel(),
+            surahData: block.toSurah(),
             width: width,
             fontSize: basmalahFontSize,
             textStyle:
@@ -389,7 +389,7 @@ class _MushafPageState extends State<MushafPage>
             onTap: widget.onTapSurahHeader,
             onLongPress: widget.onLongPressSurahHeader,
           ),
-          SizedBox(height: 8 * scale),
+          SizedBox(height: 4 * scale),
           // Show basmalah for all surahs except Al-Fatiha (1) and At-Tawbah (9)
           if (block.surahNumber != 9 && block.surahNumber != 1)
             BasmalahWidget(

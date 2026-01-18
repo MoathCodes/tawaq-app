@@ -9,7 +9,7 @@ part 'ayah_fragment.freezed.dart';
 /// glyph text back to their source Ayahs.
 ///
 /// The [start] and [end] indices are character positions within
-/// the [QuranPageModel.glyphText] string, allowing extraction of
+/// the [QuranPage.glyphText] string, allowing extraction of
 /// the specific text segment for this Ayah fragment.
 ///
 /// ## Usage
@@ -25,8 +25,8 @@ part 'ayah_fragment.freezed.dart';
 /// ```
 ///
 /// See also:
-/// - [QuranPageModel], which contains the full glyph text
-/// - [LineModel], which groups fragments by line
+/// - [QuranPage], which contains the full glyph text
+/// - [PageLine], which groups fragments by line
 /// - [SurahBlock], which groups fragments by Surah
 @freezed
 abstract class AyahFragment with _$AyahFragment {

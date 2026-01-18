@@ -1,5 +1,5 @@
+import 'package:mushaf_reader/src/data/models/surah.dart';
 import 'package:mushaf_reader/src/data/models/surah_block.dart';
-import 'package:mushaf_reader/src/data/models/surah_model.dart';
 
 /// Extension on [int] to convert to Hindu-Arabic (Eastern Arabic) numerals.
 ///
@@ -52,24 +52,20 @@ extension IntHinduArabicExtension on int {
   }
 }
 
-/// Extension to convert [SurahBlock] to [SurahModel].
+/// Extension to convert [SurahBlock] to [Surah].
 ///
 /// Used by presentation widgets that need Surah metadata
 /// without the page-specific Ayah fragment data.
 ///
 /// See also:
 /// - [SurahBlock], the source model with page layout data
-/// - [SurahModel], the simplified Surah metadata model
+/// - [Surah], the simplified Surah metadata model
 extension SurahConvertor on SurahBlock {
-  /// Converts this [SurahBlock] to a [SurahModel].
+  /// Converts this [SurahBlock] to a [Surah].
   ///
   /// Extracts the Surah metadata (number, glyph, hasBasmalah)
   /// from the page-specific block data.
-  SurahModel toSurahModel() {
-    return SurahModel(
-      number: surahNumber,
-      glyph: glyph,
-      hasBasmalah: hasBasmalah,
-    );
+  Surah toSurah() {
+    return Surah(number: surahNumber, glyph: glyph, hasBasmalah: hasBasmalah);
   }
 }

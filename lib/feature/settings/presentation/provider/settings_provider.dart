@@ -6,11 +6,14 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/core/utils/location_extensions.dart';
+import 'package:hasanat/feature/quran/domain/models/font_sizes.dart';
 import 'package:hasanat/feature/quran/domain/models/quran_layouts.dart';
+import 'package:hasanat/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/data/models/state_settings.dart';
 import 'package:hasanat/feature/settings/service/location_service.dart';
 import 'package:hasanat/feature/settings/service/settings_service.dart';
+import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart';
 
@@ -243,17 +246,41 @@ class StateSettingsNotifier extends _$StateSettingsNotifier {
     StateSettings Function(StateSettings) fn,
     String field,
   ) async {
-    if (!state.hasValue) return;
-    final newState = fn(state.value!);
-    state = AsyncData(newState);
-    await ref.read(settingsServiceProvider).setAppStateSettings(newState);
-    ref.read(loggerProvider).i('[StateSettingsNotifier] $field updated');
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!state.hasValue) return;
+      final newState = fn(state.value!);
+      state = AsyncData(newState);
+      await ref.read(settingsServiceProvider).setAppStateSettings(newState);
+      ref.read(loggerProvider).i('[StateSettingsNotifier] $field updated');
+    });
   }
 
+  /// Updates the quran state with a transform function.
+  Future<void> _updateQuranState(
+    QuranScreenState Function(QuranScreenState) fn,
+    String field,
+  ) => _update(
+    (s) => s.copyWith(quranState: fn(s.quranState)),
+    field,
+  );
+
+  /// Sets the sidebar collapsed state.
   Future<void> setSidebarCollapsed({required bool collapsed}) =>
       _update((s) => s.copyWith(sidebarCollapsed: collapsed), 'Sidebar');
-  Future<void> setLastQuranPage(int page) =>
-      _update((s) => s.copyWith(lastQuranPage: page), 'Last Quran page');
+
+  /// Sets the last Quran page info.
+  Future<void> setLastQuranPageInfo(MushafPageInfo info) =>
+      _updateQuranState((s) => s.copyWith(pageInfo: info), 'Last Quran page');
+
+  /// Sets the reading layout.
   Future<void> setLastLayout(QuranReadingLayout layout) =>
-      _update((s) => s.copyWith(lastLayout: layout), 'Layout');
+      _updateQuranState((s) => s.copyWith(layout: layout), 'Layout');
+
+  /// Sets the font size.
+  Future<void> setFontSize(FontSizes size) =>
+      _updateQuranState((s) => s.copyWith(fontSize: size), 'Font size');
+
+  /// Sets the selected ayah.
+  Future<void> selectAyah(Ayah? ayah) =>
+      _updateQuranState((s) => s.copyWith(selectedAyah: ayah), 'Selected ayah');
 }
