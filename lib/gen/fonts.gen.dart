@@ -13,4 +13,10 @@ class FontFamily {
 
   /// Font family: IBMPlexSansArabic
   static const String iBMPlexSansArabic = 'IBMPlexSansArabic';
+
+  /// Font family: UthmanTN
+  static const String uthmanTN = 'UthmanTN';
+
+  /// Font family: UthmanicHafs
+  static const String uthmanicHafs = 'UthmanicHafs';
 }

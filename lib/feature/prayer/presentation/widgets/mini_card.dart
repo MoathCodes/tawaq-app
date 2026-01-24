@@ -12,8 +12,8 @@ class MiniCard extends StatelessWidget {
     super.key,
     this.height,
     this.width,
-    this.spacing = 4,
-    this.padding = const .all(AppSpacing.sm),
+    this.spacing = AppSpacing.xs,
+    this.padding = const EdgeInsets.all(AppSpacing.sm),
   });
 
   /// The label displayed at the top of the card.
@@ -37,26 +37,39 @@ class MiniCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final colors = theme.colors;
     final typography = theme.typography;
 
     return SizedBox(
-      height: height ?? 80.h,
-      width: width ?? 110.w,
+      height: height ?? 70.h,
+      width: width ?? 100.w,
       child: Container(
         padding: padding,
         decoration: BoxDecoration(
-          borderRadius: .circular(8),
-          color: theme.colors.background,
+          borderRadius: BorderRadius.circular(8),
+          color: colors.background,
         ),
         child: Column(
-          mainAxisAlignment: .spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          spacing: spacing,
           children: [
+            // Label - muted and smaller for visual hierarchy
             Text(
               label,
               textAlign: TextAlign.center,
-              style: typography.xs.copyWith(fontWeight: .bold),
+              style: typography.xs.copyWith(
+                fontWeight: FontWeight.w500,
+                color: colors.mutedForeground,
+              ),
             ),
-            child,
+            // Value - larger and prominent
+            DefaultTextStyle.merge(
+              style: typography.base.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colors.foreground,
+              ),
+              child: child,
+            ),
           ],
         ),
       ),

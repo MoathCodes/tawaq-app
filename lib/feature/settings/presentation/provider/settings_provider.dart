@@ -283,4 +283,17 @@ class StateSettingsNotifier extends _$StateSettingsNotifier {
   /// Sets the selected ayah.
   Future<void> selectAyah(Ayah? ayah) =>
       _updateQuranState((s) => s.copyWith(selectedAyah: ayah), 'Selected ayah');
+
+  /// Sets the tafsir accordion expanded state.
+  Future<void> setTafsirEnabled({required bool enabled}) => _updateQuranState(
+    (s) => s.copyWith(tafsirEnabled: enabled),
+    'Tafsir enabled',
+  );
+
+  /// Sets the translation accordion expanded state.
+  Future<void> setTranslationEnabled({required bool enabled}) =>
+      _updateQuranState(
+        (s) => s.copyWith(translationEnabled: enabled),
+        'Translation enabled',
+      );
 }

@@ -647,4 +647,136 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get zinc => 'زنك';
+
+  @override
+  String hadithLoadSharhFailed(String error) {
+    return 'فشل تحميل الشرح: $error';
+  }
+
+  @override
+  String get hadithNarrator => 'الراوي';
+
+  @override
+  String get hadithGradeExplanation => 'شرح الحكم';
+
+  @override
+  String get hadithTakhrij => 'التخريج';
+
+  @override
+  String get hadithSource => 'المصدر';
+
+  @override
+  String get hadithMuhaddith => 'المحدث';
+
+  @override
+  String get hadithSharh => 'الشرح';
+
+  @override
+  String get hadithRetry => 'إعادة المحاولة';
+
+  @override
+  String get hadithLoadSharh => 'تحميل الشرح';
+
+  @override
+  String get hadithRelatedLinks => 'روابط ذات صلة';
+
+  @override
+  String get hadithSimilar => 'أحاديث مشابهة';
+
+  @override
+  String get hadithAlternativeAuthentic => 'روايات صحيحة بديلة';
+
+  @override
+  String get hadithFoundations => 'الأصول';
+
+  @override
+  String get studyMode => 'وضع الدراسة';
+
+  @override
+  String get defaultSurahName => 'الفاتحة';
+
+  @override
+  String get ayahLabel => 'الآية';
+
+  @override
+  String get tafsir => 'التفسير';
+
+  @override
+  String get translation => 'الترجمة';
+
+  @override
+  String get loading => 'جاري التحميل...';
+
+  @override
+  String get selectAyahToSeeContent => 'اختر آية لعرض المحتوى.';
+
+  @override
+  String get errorLoadingTafsir => 'خطأ في تحميل التفسير';
+
+  @override
+  String get noTafsirAvailable => 'لا يوجد تفسير متاح لهذه الآية';
+
+  @override
+  String get errorLoadingTranslation => 'خطأ في تحميل الترجمة';
+
+  @override
+  String get noTranslationAvailable => 'لا توجد ترجمة متاحة لهذه الآية';
+
+  @override
+  String get sourceLabel => 'المصدر:';
+
+  @override
+  String get tafsirAlMuyassar => 'التفسير الميسر';
+
+  @override
+  String get languageLabel => 'اللغة';
+
+  @override
+  String get englishLanguage => 'الإنجليزية';
+
+  @override
+  String get addReflection => 'أضف تأملاً...';
+
+  @override
+  String get reflectionPlaceholder => 'اكتب أفكارك حول هذه الآية...';
+
+  @override
+  String get saveNote => 'حفظ الملاحظة';
+
+  @override
+  String juzLabel(int number) {
+    return 'الجزء $number';
+  }
+
+  @override
+  String get searchQuran => 'ابحث في القرآن...';
+
+  @override
+  String get noResultsFound => 'لا توجد نتائج';
+
+  @override
+  String get tryDifferentSearchTerm => 'جرب مصطلح بحث مختلف';
+
+  @override
+  String pageLabel(int page) {
+    return 'صفحة $page';
+  }
+
+  @override
+  String surahAyahInfo(String surahName, int ayahNumber) {
+    return '$surahName • الآية $ayahNumber';
+  }
+
+  @override
+  String pageJuzInfo(int page, int juz) {
+    return 'صفحة $page • الجزء $juz';
+  }
+
+  @override
+  String surahNameDefault(int number) {
+    return 'سورة $number';
+  }
+
+  @override
+  String get footnote => 'الحاشية';
 }

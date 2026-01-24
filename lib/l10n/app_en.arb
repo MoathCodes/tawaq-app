@@ -237,5 +237,96 @@
   "wizardStep_welcome": "Welcome",
   "yearly": "Yearly",
   "yellow": "Yellow",
-  "zinc": "Zinc"
+  "zinc": "Zinc",
+
+  "hadithLoadSharhFailed": "Failed to load sharh: {error}",
+  "@hadithLoadSharhFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hadithNarrator": "Narrator",
+  "hadithGradeExplanation": "Grade Explanation",
+  "hadithTakhrij": "Takhrij",
+  "hadithSource": "Source",
+  "hadithMuhaddith": "Muhaddith",
+  "hadithSharh": "Explanation",
+  "hadithRetry": "Retry",
+  "hadithLoadSharh": "Load Explanation",
+  "hadithRelatedLinks": "Related Links",
+  "hadithSimilar": "Similar Hadiths",
+  "hadithAlternativeAuthentic": "Alternative Authentic Narrations",
+  "hadithFoundations": "Foundations",
+
+  "studyMode": "Study Mode",
+  "defaultSurahName": "Al-Fatihah",
+  "ayahLabel": "Ayah",
+  "tafsir": "Tafsir",
+  "translation": "Translation",
+  "loading": "Loading...",
+  "selectAyahToSeeContent": "Select an ayah to see the content.",
+  "errorLoadingTafsir": "Error loading tafsir",
+  "noTafsirAvailable": "No tafsir available for this ayah",
+  "errorLoadingTranslation": "Error loading translation",
+  "noTranslationAvailable": "No translation available for this ayah",
+  "sourceLabel": "Source:",
+  "tafsirAlMuyassar": "Tafsir Al-Muyassar",
+  "languageLabel": "Language",
+  "englishLanguage": "English",
+  "addReflection": "Add a reflection...",
+  "reflectionPlaceholder": "Write your thoughts about this verse...",
+  "saveNote": "Save Note",
+
+  "juzLabel": "Juz {number}",
+  "@juzLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "searchQuran": "Search Quran...",
+  "noResultsFound": "No results found",
+  "tryDifferentSearchTerm": "Try a different search term",
+  "pageLabel": "Page {page}",
+  "@pageLabel": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "surahAyahInfo": "{surahName} • Ayah {ayahNumber}",
+  "@surahAyahInfo": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      },
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "pageJuzInfo": "Page {page} • Juz {juz}",
+  "@pageJuzInfo": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "juz": {
+        "type": "int"
+      }
+    }
+  },
+  "surahNameDefault": "Surah {number}",
+  "@surahNameDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "footnote": "Footnote"
 }

@@ -22,13 +22,21 @@ class ColorThemeSelector extends ConsumerWidget {
       themeProvider.select((t) => t.value?.themeMode),
     );
 
+    final theme = FTheme.of(context);
     return FCard(
       child: Column(
-        spacing: AppSpacing.sm,
+        spacing: AppSpacing.md,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(
+            context.l10n.appearance,
+            style: theme.typography.lg.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           FTabs(
-            control: .lifted(
+            control: FTabControl.lifted(
               index: selectedMode == ThemeMode.light ? 0 : 1,
               onChange: (value) => ref
                   .read(themeProvider.notifier)
@@ -59,14 +67,21 @@ class ColorThemeSelector extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            context.l10n.colorTheme,
+            style: theme.typography.base.copyWith(
+              fontWeight: FontWeight.w500,
+              color: theme.colors.mutedForeground,
+            ),
+          ),
           GridView.extent(
             physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
             maxCrossAxisExtent: 200,
             childAspectRatio: 2,
-            mainAxisSpacing: AppSpacing.sm,
-            crossAxisSpacing: AppSpacing.sm,
+            mainAxisSpacing: AppSpacing.md,
+            crossAxisSpacing: AppSpacing.md,
             children: [
               for (final palette in AppPalette.values)
                 _PaletteItem(

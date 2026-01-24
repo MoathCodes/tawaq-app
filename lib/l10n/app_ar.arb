@@ -236,5 +236,96 @@
   "wizardStep_welcome": "مرحبًا",
   "yearly": "سنوي",
   "yellow": "أصفر",
-  "zinc": "زنك"
+  "zinc": "زنك",
+
+  "hadithLoadSharhFailed": "فشل تحميل الشرح: {error}",
+  "@hadithLoadSharhFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hadithNarrator": "الراوي",
+  "hadithGradeExplanation": "شرح الحكم",
+  "hadithTakhrij": "التخريج",
+  "hadithSource": "المصدر",
+  "hadithMuhaddith": "المحدث",
+  "hadithSharh": "الشرح",
+  "hadithRetry": "إعادة المحاولة",
+  "hadithLoadSharh": "تحميل الشرح",
+  "hadithRelatedLinks": "روابط ذات صلة",
+  "hadithSimilar": "أحاديث مشابهة",
+  "hadithAlternativeAuthentic": "روايات صحيحة بديلة",
+  "hadithFoundations": "الأصول",
+
+  "studyMode": "وضع الدراسة",
+  "defaultSurahName": "الفاتحة",
+  "ayahLabel": "الآية",
+  "tafsir": "التفسير",
+  "translation": "الترجمة",
+  "loading": "جاري التحميل...",
+  "selectAyahToSeeContent": "اختر آية لعرض المحتوى.",
+  "errorLoadingTafsir": "خطأ في تحميل التفسير",
+  "noTafsirAvailable": "لا يوجد تفسير متاح لهذه الآية",
+  "errorLoadingTranslation": "خطأ في تحميل الترجمة",
+  "noTranslationAvailable": "لا توجد ترجمة متاحة لهذه الآية",
+  "sourceLabel": "المصدر:",
+  "tafsirAlMuyassar": "التفسير الميسر",
+  "languageLabel": "اللغة",
+  "englishLanguage": "الإنجليزية",
+  "addReflection": "أضف تأملاً...",
+  "reflectionPlaceholder": "اكتب أفكارك حول هذه الآية...",
+  "saveNote": "حفظ الملاحظة",
+
+  "juzLabel": "الجزء {number}",
+  "@juzLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "searchQuran": "ابحث في القرآن...",
+  "noResultsFound": "لا توجد نتائج",
+  "tryDifferentSearchTerm": "جرب مصطلح بحث مختلف",
+  "pageLabel": "صفحة {page}",
+  "@pageLabel": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "surahAyahInfo": "{surahName} • الآية {ayahNumber}",
+  "@surahAyahInfo": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      },
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "pageJuzInfo": "صفحة {page} • الجزء {juz}",
+  "@pageJuzInfo": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "juz": {
+        "type": "int"
+      }
+    }
+  },
+  "surahNameDefault": "سورة {number}",
+  "@surahNameDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "footnote": "الحاشية"
 }

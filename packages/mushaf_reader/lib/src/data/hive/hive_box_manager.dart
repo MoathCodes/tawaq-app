@@ -131,13 +131,24 @@ class HiveBoxManager {
   /// This copies the pre-populated boxes from assets on first run,
   /// registers adapters, and opens all required boxes.
   ///
+  /// [subDirectory] - Optional subdirectory within the app documents folder
+  /// where Hive boxes should be stored. If provided, boxes will be stored at
+  /// `documents/<subDirectory>/` instead of directly in `documents/`.
+  /// This is useful for organizing app data in an app-specific folder.
+  ///
   /// Safe to call multiple times - subsequent calls return immediately.
-  Future<void> init() async {
+  Future<void> init({String? subDirectory}) async {
     if (_initialized) return;
 
     // Initialize Hive with Flutter's application documents directory
     final appDir = await getApplicationDocumentsDirectory();
-    _hivePath = appDir.path;
+    _hivePath = subDirectory != null
+        ? p.join(appDir.path, subDirectory)
+        : appDir.path;
+
+    // Ensure the directory exists
+    await Directory(_hivePath).create(recursive: true);
+
     Hive.init(_hivePath);
 
     // Register all adapters

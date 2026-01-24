@@ -83,7 +83,7 @@ class ShellAppBar extends ConsumerWidget {
       suffixes: [
         Expanded(
           flex: 2,
-          child: HoverCard(
+          child: StaticCard(
             padding: const .all(AppSpacing.sm),
             child: Row(children: nearWidgets),
           ),

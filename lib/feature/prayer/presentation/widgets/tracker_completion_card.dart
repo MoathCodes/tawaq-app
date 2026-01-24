@@ -96,7 +96,7 @@ class TrackerCompletionCard extends HookConsumerWidget {
                 duration: _animDuration,
                 curve: Curves.easeInOut,
                 width: 250.w,
-                padding: const .all(AppSpacing.sm),
+                padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   color: theme.cardStyle.decoration.color,
                   border: Border.all(color: colors.secondary.withAlpha(45)),
@@ -112,11 +112,12 @@ class TrackerCompletionCard extends HookConsumerWidget {
                       : null,
                 ),
                 child: Column(
-                  crossAxisAlignment: .start,
-                  mainAxisAlignment: .spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  spacing: AppSpacing.xs,
                   children: [
                     Row(
-                      mainAxisAlignment: .spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Builder(
                           builder: (ctx) {

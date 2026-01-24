@@ -11,7 +11,7 @@ class SettingsCard extends StatelessWidget {
     required this.sections,
     super.key,
     this.subtitle,
-    this.spacing = AppSpacing.sm,
+    this.spacing = AppSpacing.lg,
   });
 
   /// The title of the card.
@@ -35,25 +35,35 @@ class SettingsCard extends StatelessWidget {
         minHeight: 400,
       ),
       child: FCard(
-        // titleAlignment:
-        //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
-        // subtitleAlignment:
-        //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
-        // leading: const Icon(Icons.settings),
-        title: Text(title),
+        title: Text(
+          title,
+          style: theme.typography.xl.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         style: (p0) => p0.copyWith(
           decoration: p0.decoration.copyWith(
             border: Border.all(color: theme.colors.border, width: 2),
           ),
         ),
-        subtitle: (subtitle != null) ? Text(subtitle!) : null,
+        subtitle: (subtitle != null)
+            ? Text(
+                subtitle!,
+                style: theme.typography.sm.copyWith(
+                  color: theme.colors.mutedForeground,
+                ),
+              )
+            : null,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: .stretch,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: spacing,
           children: [
-            // Text(title).h3,
-            Divider(color: theme.colors.foreground, thickness: .5, height: 16),
+            Divider(
+              color: theme.colors.border,
+              thickness: 1,
+              height: AppSpacing.lg,
+            ),
             ...sections,
           ],
         ),
@@ -95,25 +105,34 @@ class SettingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return FCard(
-      // titleAlignment:
-      //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
-      // subtitleAlignment:
-      //     isArabic ? Alignment.centerRight : Alignment.centerLeft,
       image: leading,
       style: (p0) => p0.copyWith(
         decoration: p0.decoration.copyWith(
-          // color: theme.colors.secondary,
           color: Colors.transparent,
           border: Border.all(color: Colors.transparent),
         ),
-        contentStyle: (p0) => p0.copyWith(padding: .zero),
+        contentStyle: (p0) => p0.copyWith(padding: EdgeInsets.zero),
       ),
       title: Row(
-        mainAxisAlignment: .spaceBetween,
-        children: [Text(title), ?suffix],
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: theme.typography.base.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          ?suffix,
+        ],
       ),
-      subtitle: Text(subtitle),
+      subtitle: Text(
+        subtitle,
+        style: theme.typography.sm.copyWith(
+          color: theme.colors.mutedForeground,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: crossAxisAlignment,
         children: [

@@ -1,7 +1,4 @@
 /// The entry point of the application.
-///
-/// This function initializes the necessary bindings, sets up error handling,
-/// initializes timezone data, and runs the application.
 library;
 
 import 'dart:io';
@@ -23,122 +20,100 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:window_manager/window_manager.dart';
 
+/// Whether running on desktop platform.
+bool get _isDesktop =>
+    !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+
 /// The entry point of the application.
 void main() async {
-  // Initialize Flutter bindings
   WidgetsFlutterBinding.ensureInitialized();
-  await MushafReaderLibrary.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapters();
 
-  // Set up error handling
-  // FlutterError.onError = (details) {
-  //   logger.e(
-  //     'Flutter error',
-  //     error: details.exception,
-  //     stackTrace: details.stack,
-  //   );
-  // };
-  // Initialize timezone data
+  await Future.wait([
+    MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq'),
+    Hive.initFlutter(),
+  ]);
+  Hive.registerAdapters();
   tz.initializeTimeZones();
 
-  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
-    // Initialize window manager
-    await windowManager.ensureInitialized();
+  if (_isDesktop) await _initDesktopWindow();
 
-    const windowOptions = WindowOptions(
+  runApp(const ProviderScope(child: TawaqApp()));
+}
+
+Future<void> _initDesktopWindow() async {
+  await windowManager.ensureInitialized();
+  await windowManager.waitUntilReadyToShow(
+    const WindowOptions(
       center: true,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.hidden,
-    );
-
-    await windowManager.waitUntilReadyToShow(windowOptions, () async {
-      await windowManager.show();
-    });
-  }
-  // Run the app
-  runApp(const ProviderScope(child: TawaqApp()));
+    ),
+    windowManager.show,
+  );
 }
 
 /// The root widget of the application.
-///
-/// This widget is responsible for setting up the application's theme,
-/// localization, and routing.
 class TawaqApp extends ConsumerWidget {
   /// Creates a new instance of [TawaqApp].
   const TawaqApp({super.key});
 
-  // 1910x990
+  static const _designSize = Size(1908, 987);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Get the localization instance
     final appRouter = ref.watch(appRouterProvider);
     final locale = ref.watch(localeProvider);
     final appTheme = ref.watch(themeProvider);
+
     return ScreenUtilPlusInit(
-      designSize: const Size(1908, 987),
+      designSize: _designSize,
       minTextAdapt: true,
       autoRebuild: false,
-      enableScaleWH: () {
-        if (ScreenUtilPlus().screenWidth < 1908 ||
-            ScreenUtilPlus().screenHeight < 987) {
-          return false;
-        }
-        return true;
-      },
       splitScreenMode: true,
-      builder: (context, child) {
-        return MaterialApp.router(
-          builder: (context, child) {
-            final isArabic = locale.value?.languageCode == 'ar';
-            final currentTheme =
-                appTheme.value?.colorScheme ?? FThemes.zinc.light;
-            var themeData = currentTheme;
-            if (isArabic) {
-              final typo = FTypography.inherit(
-                colors: currentTheme.colors,
-                defaultFontFamily: FontFamily.iBMPlexSansArabic,
-              );
-              // .scale(sizeScalar: 1.285);
-              themeData = FThemeData(
-                colors: currentTheme.colors,
-                typography: typo,
-                extensions: const [
-                  AppRadii.standard(),
-                  AppDurations.standard(),
-                ],
-              );
-            } else {
-              themeData = currentTheme.copyWith(
-                extensions: const [
-                  AppRadii.standard(),
-                  AppDurations.standard(),
-                ],
-              );
-            }
-            return FTheme(data: themeData, child: child!);
-          },
-          themeMode: appTheme.value?.themeMode,
-          // theme: appTheme.value?.colorScheme.toApproximateMaterialTheme(),
-          onGenerateTitle: (context) =>
-              AppLocalizations.of(context)?.appName ?? '',
-          debugShowCheckedModeBanner: false,
-          // theme: ThemeData(...)
-          // typography: ...
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            FLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          locale: locale.value,
-          supportedLocales: AppLocalizations.supportedLocales,
-          routerConfig: appRouter,
-        );
-      },
+      enableScaleWH: () =>
+          ScreenUtilPlus().screenWidth >= _designSize.width &&
+          ScreenUtilPlus().screenHeight >= _designSize.height,
+      builder: (_, _) => MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        themeMode: appTheme.value?.themeMode,
+        locale: locale.value,
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: appRouter,
+        onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? '',
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          FLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        builder: (_, child) => FTheme(
+          data: _buildTheme(
+            appTheme.value?.colorScheme ?? FThemes.zinc.light,
+            isArabic: locale.value?.languageCode == 'ar',
+          ),
+          child: child!,
+        ),
+      ),
+    );
+  }
+
+  FThemeData _buildTheme(FThemeData base, {required bool isArabic}) {
+    const extensions = <ThemeExtension<dynamic>>[
+      AppRadii.standard(),
+      AppDurations.standard(),
+    ];
+
+    if (!isArabic) return base.copyWith(extensions: extensions);
+
+    return FThemeData(
+      colors: base.colors,
+      typography: FTypography.inherit(
+        colors: base.colors,
+        defaultFontFamily: FontFamily.iBMPlexSansArabic,
+      ),
+      extensions: extensions,
     );
   }
 }

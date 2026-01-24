@@ -17,7 +17,6 @@ class PrayerSection extends StatelessWidget {
     return SettingsCard(
       title: context.l10n.prayerSettingsTitle,
       subtitle: context.l10n.prayerSettingsSubtitle,
-      spacing: 16,
       sections: [
         PrayerSettingsLocationSection(
           maxWidth: maxWidth,

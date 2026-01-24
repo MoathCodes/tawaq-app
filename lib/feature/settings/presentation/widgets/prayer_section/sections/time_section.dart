@@ -160,13 +160,13 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
       ),
     );
     return SettingsSection(
-      crossAxisAlignment: .center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       title: context.l10n.timeSectionTitle,
       subtitle: context.l10n.timeSectionSubtitle,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: Column(
-          spacing: 20,
+          spacing: AppSpacing.xl,
           children: [
             FCard(
               title: Text(context.l10n.calculationMethod),

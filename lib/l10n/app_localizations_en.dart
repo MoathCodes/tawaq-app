@@ -617,4 +617,136 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get zinc => 'Zinc';
+
+  @override
+  String hadithLoadSharhFailed(String error) {
+    return 'Failed to load sharh: $error';
+  }
+
+  @override
+  String get hadithNarrator => 'Narrator';
+
+  @override
+  String get hadithGradeExplanation => 'Grade Explanation';
+
+  @override
+  String get hadithTakhrij => 'Takhrij';
+
+  @override
+  String get hadithSource => 'Source';
+
+  @override
+  String get hadithMuhaddith => 'Muhaddith';
+
+  @override
+  String get hadithSharh => 'Explanation';
+
+  @override
+  String get hadithRetry => 'Retry';
+
+  @override
+  String get hadithLoadSharh => 'Load Explanation';
+
+  @override
+  String get hadithRelatedLinks => 'Related Links';
+
+  @override
+  String get hadithSimilar => 'Similar Hadiths';
+
+  @override
+  String get hadithAlternativeAuthentic => 'Alternative Authentic Narrations';
+
+  @override
+  String get hadithFoundations => 'Foundations';
+
+  @override
+  String get studyMode => 'Study Mode';
+
+  @override
+  String get defaultSurahName => 'Al-Fatihah';
+
+  @override
+  String get ayahLabel => 'Ayah';
+
+  @override
+  String get tafsir => 'Tafsir';
+
+  @override
+  String get translation => 'Translation';
+
+  @override
+  String get loading => 'Loading...';
+
+  @override
+  String get selectAyahToSeeContent => 'Select an ayah to see the content.';
+
+  @override
+  String get errorLoadingTafsir => 'Error loading tafsir';
+
+  @override
+  String get noTafsirAvailable => 'No tafsir available for this ayah';
+
+  @override
+  String get errorLoadingTranslation => 'Error loading translation';
+
+  @override
+  String get noTranslationAvailable => 'No translation available for this ayah';
+
+  @override
+  String get sourceLabel => 'Source:';
+
+  @override
+  String get tafsirAlMuyassar => 'Tafsir Al-Muyassar';
+
+  @override
+  String get languageLabel => 'Language';
+
+  @override
+  String get englishLanguage => 'English';
+
+  @override
+  String get addReflection => 'Add a reflection...';
+
+  @override
+  String get reflectionPlaceholder => 'Write your thoughts about this verse...';
+
+  @override
+  String get saveNote => 'Save Note';
+
+  @override
+  String juzLabel(int number) {
+    return 'Juz $number';
+  }
+
+  @override
+  String get searchQuran => 'Search Quran...';
+
+  @override
+  String get noResultsFound => 'No results found';
+
+  @override
+  String get tryDifferentSearchTerm => 'Try a different search term';
+
+  @override
+  String pageLabel(int page) {
+    return 'Page $page';
+  }
+
+  @override
+  String surahAyahInfo(String surahName, int ayahNumber) {
+    return '$surahName • Ayah $ayahNumber';
+  }
+
+  @override
+  String pageJuzInfo(int page, int juz) {
+    return 'Page $page • Juz $juz';
+  }
+
+  @override
+  String surahNameDefault(int number) {
+    return 'Surah $number';
+  }
+
+  @override
+  String get footnote => 'Footnote';
 }

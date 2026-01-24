@@ -55,7 +55,7 @@ class CurrentPrayerCard extends ConsumerWidget {
     final appTheme = ref.watch(themeProvider);
     final theme = FTheme.of(context);
 
-    return HoverCard(
+    return StaticCard(
       backgroundColor: Colors.transparent,
       borderColor: Colors.transparent,
       padding: .zero,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
+import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:hasanat/theme/theme.dart';
 
 /// A card widget that displays a Hadith.
@@ -38,7 +39,9 @@ class HadithCard extends HookWidget {
         final response = await client.sharh.getById(sharhId);
         loadedSharh.value = response.sharhText;
       } catch (e) {
-        sharhError.value = 'فشل تحميل الشرح: $e';
+        sharhError.value = AppLocalizations.of(
+          context,
+        )!.hadithLoadSharhFailed(e.toString());
       }
       isLoadingSharh.value = false;
     }
@@ -46,7 +49,7 @@ class HadithCard extends HookWidget {
     final theme = FTheme.of(context);
     final colors = theme.colors;
 
-    return HoverCard(
+    return StaticCard(
       padding: const .all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: .stretch,
@@ -55,7 +58,7 @@ class HadithCard extends HookWidget {
           _HadithText(hadith: hadith, theme: theme, isHTML: isHTML),
           _InfoRow(
             icon: FIcons.user,
-            label: 'الراوي',
+            label: AppLocalizations.of(context)!.hadithNarrator,
             value: hadith.rawi,
             theme: theme,
           ),
@@ -66,7 +69,7 @@ class HadithCard extends HookWidget {
               colors: colors,
               theme: theme,
               icon: FIcons.info,
-              title: 'شرح الحكم',
+              title: AppLocalizations.of(context)!.hadithGradeExplanation,
               child: Text(hadith.explainGrade!, style: theme.typography.sm),
             ),
           if (hadith.takhrij?.isNotEmpty ?? false)
@@ -74,7 +77,7 @@ class HadithCard extends HookWidget {
               colors: colors,
               theme: theme,
               icon: FIcons.library,
-              title: 'التخريج',
+              title: AppLocalizations.of(context)!.hadithTakhrij,
               child: Text(hadith.takhrij!, style: theme.typography.sm),
             ),
           if (hadith.hasSharhMetadata && hadith.sharhMetadata != null)
@@ -260,7 +263,7 @@ class _BookInfo extends StatelessWidget {
               crossAxisAlignment: .start,
               children: [
                 Text(
-                  'المصدر',
+                  AppLocalizations.of(context)!.hadithSource,
                   style: theme.typography.sm.copyWith(
                     color: colors.mutedForeground,
                   ),
@@ -333,7 +336,7 @@ class _GradeSection extends StatelessWidget {
               crossAxisAlignment: .start,
               children: [
                 Text(
-                  'المحدث',
+                  AppLocalizations.of(context)!.hadithMuhaddith,
                   style: theme.typography.sm.copyWith(
                     color: colors.mutedForeground,
                   ),
@@ -410,7 +413,7 @@ class _SharhSection extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           FButton(
             onPress: () => onLoad(sharh.id),
-            child: const Text('إعادة المحاولة'),
+            child: Text(AppLocalizations.of(context)!.hadithRetry),
           ),
         ],
       );
@@ -428,7 +431,10 @@ class _SharhSection extends StatelessWidget {
             children: [
               const Icon(FIcons.download, size: 16),
               const SizedBox(width: AppSpacing.sm),
-              Text('تحميل الشرح', style: theme.typography.sm),
+              Text(
+                AppLocalizations.of(context)!.hadithLoadSharh,
+                style: theme.typography.sm,
+              ),
             ],
           ),
         ),
@@ -450,7 +456,7 @@ class _SharhSection extends StatelessWidget {
               Icon(FIcons.bookOpen, size: 16, color: colors.primary),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                'الشرح',
+                AppLocalizations.of(context)!.hadithSharh,
                 style: theme.typography.sm.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -504,14 +510,22 @@ class _RelatedLinks extends StatelessWidget {
         spacing: 8,
         children: [
           Text(
-            'روابط ذات صلة',
+            AppLocalizations.of(context)!.hadithRelatedLinks,
             style: theme.typography.sm.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppSpacing.xs),
-          if (hadith.hasSimilarHadith) _chip(FIcons.copy, 'أحاديث مشابهة'),
+          if (hadith.hasSimilarHadith)
+            _chip(FIcons.copy, AppLocalizations.of(context)!.hadithSimilar),
           if (hadith.hasAlternateHadithSahih)
-            _chip(FIcons.check, 'روايات صحيحة بديلة'),
-          if (hadith.hasUsulHadith) _chip(FIcons.bookOpen, 'الأصول'),
+            _chip(
+              FIcons.check,
+              AppLocalizations.of(context)!.hadithAlternativeAuthentic,
+            ),
+          if (hadith.hasUsulHadith)
+            _chip(
+              FIcons.bookOpen,
+              AppLocalizations.of(context)!.hadithFoundations,
+            ),
         ],
       ),
     );

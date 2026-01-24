@@ -11,6 +11,19 @@
 
 import 'package:flutter/widgets.dart';
 
+class $AssetsDatabaseGen {
+  const $AssetsDatabaseGen();
+
+  /// File path: assets/database/saheeh_international.db
+  String get saheehInternational => 'assets/database/saheeh_international.db';
+
+  /// File path: assets/database/tafseer_mouaser.db
+  String get tafseerMouaser => 'assets/database/tafseer_mouaser.db';
+
+  /// List of all assets
+  List<String> get values => [saheehInternational, tafseerMouaser];
+}
+
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
@@ -61,6 +74,7 @@ class $AssetsImagesGen {
 class Assets {
   const Assets._();
 
+  static const $AssetsDatabaseGen database = $AssetsDatabaseGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
 }
 

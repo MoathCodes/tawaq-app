@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/utils/text_extensions.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/core/widgets/f_skeletonizer.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
@@ -68,22 +67,28 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     final colors = FTheme.of(context).colors;
     final l10n = context.l10n;
 
-    return HoverCard(
-      padding: const .all(AppSpacing.md),
+    return StaticCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
-        crossAxisAlignment: .stretch,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(context.l10n.playerAnalytics),
-          const SizedBox(height: AppSpacing.sm),
+          Text(
+            context.l10n.playerAnalytics,
+            style: FTheme.of(context).typography.lg.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
           FTabs(
-            control: .managed(initial: data.period.index),
+            control: FTabControl.managed(initial: data.period.index),
             style: (style) => style.copyWith(
               decoration: style.decoration.copyWith(color: colors.barrier),
               unselectedLabelTextStyle: style.unselectedLabelTextStyle.copyWith(
                 color: colors.secondaryForeground.withAlpha(150),
               ),
             ),
-            onPress: (index) => onPeriodChanged(.values[index]),
+            onPress: (index) =>
+                onPeriodChanged(PrayerAnalyticsPeriod.values[index]),
             children: _buildTabEntries(context, colors, l10n),
           ),
         ],
@@ -96,23 +101,44 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     FColors colors,
     AppLocalizations l10n,
   ) {
-    return Column(
-      mainAxisAlignment: .spaceAround,
-      children: [_buildProgressSection(colors, l10n), _buildStatsSection(l10n)],
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        spacing: AppSpacing.sm,
+        children: [
+          _buildProgressSection(colors, l10n),
+          const FDivider(),
+          _buildStatsSection(l10n, colors),
+        ],
+      ),
     );
   }
 
   Widget _buildProgressSection(FColors colors, AppLocalizations l10n) {
-    return Container(
-      padding: _contentPadding,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
       child: Column(
-        crossAxisAlignment: .stretch,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.xs,
         children: [
           Text(
             _formatPercentage(data.completionPercentage),
             textAlign: TextAlign.center,
-          ).xl2,
-          Text(_getPeriodText(l10n), textAlign: TextAlign.center),
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: _getProgressColor(data.completionPercentage, colors),
+            ),
+          ),
+          Text(
+            _getPeriodText(l10n),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: colors.mutedForeground,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
           FDeterminateProgress(
             value: data.completionPercentage,
             style: (style) => style.copyWith(
@@ -131,23 +157,41 @@ class _PrayerAnalyticsWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildStatsSection(AppLocalizations l10n) {
-    final stats = [
+  Widget _buildStatsSection(AppLocalizations l10n, FColors colors) {
+    // Group related stats together
+    final streakStats = [
       (l10n.currentStreak, l10n.streakInDays(data.currentStreak)),
       (l10n.bestStreak, l10n.streakInDays(data.bestStreak)),
+    ];
+    final rateStats = [
       (l10n.jamaahRate, _formatPercentage(data.jamaahPercentage)),
       (l10n.onTimeRate, _formatPercentage(data.onTimePercentage)),
       (l10n.lateRate, _formatPercentage(data.latePercentage)),
       (l10n.missedRate, _formatPercentage(data.missedPercentage)),
     ];
 
-    return Wrap(
-      spacing: _wrapSpacing,
-      runSpacing: _wrapSpacing,
-      alignment: WrapAlignment.spaceEvenly,
-      children: stats
-          .map((stat) => MiniCard(label: stat.$1, child: Text(stat.$2)))
-          .toList(),
+    return Column(
+      spacing: AppSpacing.sm,
+      children: [
+        // Streak stats row
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          alignment: WrapAlignment.center,
+          children: streakStats
+              .map((stat) => MiniCard(label: stat.$1, child: Text(stat.$2)))
+              .toList(),
+        ),
+        // Rate stats row
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          alignment: WrapAlignment.spaceEvenly,
+          children: rateStats
+              .map((stat) => MiniCard(label: stat.$1, child: Text(stat.$2)))
+              .toList(),
+        ),
+      ],
     );
   }
 

@@ -1201,6 +1201,246 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Zinc'**
   String get zinc;
+
+  /// No description provided for @hadithLoadSharhFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load sharh: {error}'**
+  String hadithLoadSharhFailed(String error);
+
+  /// No description provided for @hadithNarrator.
+  ///
+  /// In en, this message translates to:
+  /// **'Narrator'**
+  String get hadithNarrator;
+
+  /// No description provided for @hadithGradeExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Grade Explanation'**
+  String get hadithGradeExplanation;
+
+  /// No description provided for @hadithTakhrij.
+  ///
+  /// In en, this message translates to:
+  /// **'Takhrij'**
+  String get hadithTakhrij;
+
+  /// No description provided for @hadithSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get hadithSource;
+
+  /// No description provided for @hadithMuhaddith.
+  ///
+  /// In en, this message translates to:
+  /// **'Muhaddith'**
+  String get hadithMuhaddith;
+
+  /// No description provided for @hadithSharh.
+  ///
+  /// In en, this message translates to:
+  /// **'Explanation'**
+  String get hadithSharh;
+
+  /// No description provided for @hadithRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get hadithRetry;
+
+  /// No description provided for @hadithLoadSharh.
+  ///
+  /// In en, this message translates to:
+  /// **'Load Explanation'**
+  String get hadithLoadSharh;
+
+  /// No description provided for @hadithRelatedLinks.
+  ///
+  /// In en, this message translates to:
+  /// **'Related Links'**
+  String get hadithRelatedLinks;
+
+  /// No description provided for @hadithSimilar.
+  ///
+  /// In en, this message translates to:
+  /// **'Similar Hadiths'**
+  String get hadithSimilar;
+
+  /// No description provided for @hadithAlternativeAuthentic.
+  ///
+  /// In en, this message translates to:
+  /// **'Alternative Authentic Narrations'**
+  String get hadithAlternativeAuthentic;
+
+  /// No description provided for @hadithFoundations.
+  ///
+  /// In en, this message translates to:
+  /// **'Foundations'**
+  String get hadithFoundations;
+
+  /// No description provided for @studyMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Mode'**
+  String get studyMode;
+
+  /// No description provided for @defaultSurahName.
+  ///
+  /// In en, this message translates to:
+  /// **'Al-Fatihah'**
+  String get defaultSurahName;
+
+  /// No description provided for @ayahLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Ayah'**
+  String get ayahLabel;
+
+  /// No description provided for @tafsir.
+  ///
+  /// In en, this message translates to:
+  /// **'Tafsir'**
+  String get tafsir;
+
+  /// No description provided for @translation.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation'**
+  String get translation;
+
+  /// No description provided for @loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get loading;
+
+  /// No description provided for @selectAyahToSeeContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an ayah to see the content.'**
+  String get selectAyahToSeeContent;
+
+  /// No description provided for @errorLoadingTafsir.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading tafsir'**
+  String get errorLoadingTafsir;
+
+  /// No description provided for @noTafsirAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No tafsir available for this ayah'**
+  String get noTafsirAvailable;
+
+  /// No description provided for @errorLoadingTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading translation'**
+  String get errorLoadingTranslation;
+
+  /// No description provided for @noTranslationAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No translation available for this ayah'**
+  String get noTranslationAvailable;
+
+  /// No description provided for @sourceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Source:'**
+  String get sourceLabel;
+
+  /// No description provided for @tafsirAlMuyassar.
+  ///
+  /// In en, this message translates to:
+  /// **'Tafsir Al-Muyassar'**
+  String get tafsirAlMuyassar;
+
+  /// No description provided for @languageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get languageLabel;
+
+  /// No description provided for @englishLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get englishLanguage;
+
+  /// No description provided for @addReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a reflection...'**
+  String get addReflection;
+
+  /// No description provided for @reflectionPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your thoughts about this verse...'**
+  String get reflectionPlaceholder;
+
+  /// No description provided for @saveNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Note'**
+  String get saveNote;
+
+  /// No description provided for @juzLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Juz {number}'**
+  String juzLabel(int number);
+
+  /// No description provided for @searchQuran.
+  ///
+  /// In en, this message translates to:
+  /// **'Search Quran...'**
+  String get searchQuran;
+
+  /// No description provided for @noResultsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get noResultsFound;
+
+  /// No description provided for @tryDifferentSearchTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search term'**
+  String get tryDifferentSearchTerm;
+
+  /// No description provided for @pageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page}'**
+  String pageLabel(int page);
+
+  /// No description provided for @surahAyahInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'{surahName} • Ayah {ayahNumber}'**
+  String surahAyahInfo(String surahName, int ayahNumber);
+
+  /// No description provided for @pageJuzInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} • Juz {juz}'**
+  String pageJuzInfo(int page, int juz);
+
+  /// No description provided for @surahNameDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Surah {number}'**
+  String surahNameDefault(int number);
+
+  /// No description provided for @footnote.
+  ///
+  /// In en, this message translates to:
+  /// **'Footnote'**
+  String get footnote;
 }
 
 class _AppLocalizationsDelegate

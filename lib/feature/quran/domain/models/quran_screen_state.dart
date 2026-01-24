@@ -26,6 +26,12 @@ abstract class QuranScreenState with _$QuranScreenState {
     /// Currently selected ayah for highlighting and search sync.
     /// Not persisted to JSON (ephemeral state).
     @JsonKey(includeFromJson: false, includeToJson: false) Ayah? selectedAyah,
+
+    /// The state of the tafsir according.
+    @Default(true) bool tafsirEnabled,
+
+    /// The state of the translation according.
+    @Default(true) bool translationEnabled,
   }) = _QuranScreenState;
   const QuranScreenState._();
 

@@ -132,22 +132,28 @@ abstract final class MushafReaderLibrary {
   /// the [MushafReaderController]. It initializes the Hive database,
   /// registers type adapters, and copies pre-populated data from assets.
   ///
-  /// This method is idempotent - subsequent calls return immediately.
+  /// [subDirectory] - Optional subdirectory within the app documents folder
+  /// where data should be stored. If provided, data will be stored at
+  /// `documents/<subDirectory>/` instead of directly in `documents/`.
+  /// This is useful for organizing app data in an app-specific folder.
   ///
+  /// Example with app-specific subdirectory:
   /// ```dart
   /// void main() async {
   ///   WidgetsFlutterBinding.ensureInitialized();
-  ///   await MushafReaderLibrary.ensureInitialized();
+  ///   await MushafReaderLibrary.ensureInitialized(subDirectory: 'my_app');
   ///   runApp(MyApp());
   /// }
   /// ```
   ///
+  /// This method is idempotent - subsequent calls return immediately.
+  ///
   /// Throws if database initialization fails (e.g., missing assets).
-  static Future<void> ensureInitialized() async {
+  static Future<void> ensureInitialized({String? subDirectory}) async {
     if (_initialized) return;
 
     final boxManager = HiveBoxManager();
-    await boxManager.init();
+    await boxManager.init(subDirectory: subDirectory);
 
     _initialized = true;
   }

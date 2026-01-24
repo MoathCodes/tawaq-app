@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/core/utils/text_extensions.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/core/widgets/f_skeletonizer.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
@@ -22,14 +21,14 @@ class PrayerTable extends ConsumerWidget {
   static final BorderRadius _imageBorderRadius = BorderRadius.circular(
     AppSpacing.md,
   );
-  static const EdgeInsets _cellPadding = .all(AppSpacing.sm);
+  static const EdgeInsets _cellPadding = EdgeInsets.all(AppSpacing.md);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final data = ref.watch(prayerTableProvider(l10n));
 
-    return HoverCard(
+    return StaticCard(
       padding: .zero,
       child: data.when(
         data: (rows) => _TableContent(rows: rows),
@@ -49,9 +48,9 @@ class _ErrorWidget extends StatelessWidget {
     final theme = FTheme.of(context);
     return Center(
       child: Padding(
-        padding: const .all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
-          mainAxisAlignment: .center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.error_outline,
@@ -121,13 +120,13 @@ class _LoadingTable extends StatelessWidget {
                   ),
                   const DataCell(
                     Column(
-                      mainAxisAlignment: .center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [Text('00:00'), Text('Loading')],
                     ),
                   ),
                   const DataCell(
                     Column(
-                      mainAxisAlignment: .center,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [Text('00:00'), Text('Loading')],
                     ),
                   ),
@@ -192,8 +191,14 @@ class _TableContent extends StatelessWidget {
                   width: PrayerTable._imageSize.width,
                   height: PrayerTable._imageSize.height,
                   decoration: BoxDecoration(
-                    color: theme.colors.mutedForeground,
                     borderRadius: PrayerTable._imageBorderRadius,
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colors.foreground.withAlpha(30),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: ClipRRect(
                     borderRadius: PrayerTable._imageBorderRadius,
@@ -227,13 +232,20 @@ class _TableContent extends StatelessWidget {
   ) {
     return DataCell(
       Column(
-        mainAxisAlignment: .center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: 2,
         children: [
-          Text(info.title).sm,
+          Text(
+            info.title,
+            style: theme.typography.base.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colors.primary,
+            ),
+          ),
           if (info.subtitle != null)
             Text(
               info.subtitle!,
-              style: theme.typography.sm.copyWith(
+              style: theme.typography.xs.copyWith(
                 color: theme.colors.mutedForeground,
               ),
             ),
@@ -244,13 +256,24 @@ class _TableContent extends StatelessWidget {
 }
 
 List<DataColumn> _buildColumns(AppLocalizations l10n, FThemeData theme) => [
-  DataColumn(label: Text(l10n.prayer, style: theme.typography.sm)),
   DataColumn(
-    label: Text(l10n.adhan, style: theme.typography.sm),
+    label: Text(
+      l10n.prayer,
+      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600),
+    ),
+  ),
+  DataColumn(
+    label: Text(
+      l10n.adhan,
+      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600),
+    ),
     numeric: true,
   ),
   DataColumn(
-    label: Text(l10n.iqamah, style: theme.typography.sm),
+    label: Text(
+      l10n.iqamah,
+      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600),
+    ),
     numeric: true,
   ),
 ];

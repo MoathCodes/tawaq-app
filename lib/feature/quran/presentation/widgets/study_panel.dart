@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:forui_hooks/forui_hooks.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
+import 'package:hasanat/feature/quran/presentation/widgets/content_accordion.dart';
+import 'package:hasanat/feature/quran/presentation/widgets/notes_section.dart';
+import 'package:hasanat/feature/quran/presentation/widgets/study_panel_header.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/theme/theme.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -15,12 +20,46 @@ class StudyPanel extends HookConsumerWidget {
     required this.controller,
     super.key,
   });
+
+  /// The mushaf reader controller.
   final MushafReaderController controller;
+
+  /// Maximum ayah ID in the Quran.
+  static const int _maxAyahId = 6236;
+
+  void _navigateAyah(WidgetRef ref, int delta) {
+    final current = ref.read(
+      stateSettingsProvider.select(
+        (v) => v.value?.quranState.selectedAyah,
+      ),
+    );
+    if (current == null) {
+      // If no ayah selected, select first ayah on current page
+      controller.getPage(controller.currentPage).then((page) {
+        if (page.surahs.isNotEmpty) {
+          final firstFragment = page.surahs.first.ayahs.firstOrNull;
+          if (firstFragment != null) {
+            controller.getAyah(firstFragment.ayahId).then((ayah) {
+              ref.read(stateSettingsProvider.notifier).selectAyah(ayah);
+              unawaited(controller.jumpToAyah(ayah.ayahId, select: true));
+            });
+          }
+        }
+      });
+      return;
+    }
+
+    final newAyahId = (current.ayahId + delta).clamp(1, _maxAyahId);
+    if (newAyahId == current.ayahId) return;
+
+    controller.getAyah(newAyahId).then((ayah) {
+      ref.read(stateSettingsProvider.notifier).selectAyah(ayah);
+      unawaited(controller.jumpToAyah(ayah.ayahId, select: true));
+    });
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final accordionController = useFAccordionController();
-    final notesController = useTextEditingController();
     final theme = FTheme.of(context);
     final colors = theme.colors;
     final typography = theme.typography;
@@ -32,257 +71,129 @@ class StudyPanel extends HookConsumerWidget {
     final pageInfo = quranState?.pageInfo;
     final selectedAyah = quranState?.selectedAyah;
 
-    return HoverCard(
+    // Get surah and ayah numbers for fetching content
+    final sura = selectedAyah?.surahNumber ?? 1;
+    final aya = selectedAyah?.numberInSurah ?? 1;
+    final ayaId = selectedAyah?.ayahId;
+
+    // Track previous ayahId to determine animation direction
+    final prevAyahId = usePrevious(ayaId);
+    final slideDirection = useState(0); // -1 = left (next), 1 = right (prev)
+
+    // Update slide direction when ayahId changes
+    useEffect(
+      () {
+        if (prevAyahId != null && ayaId != null && prevAyahId != ayaId) {
+          slideDirection.value = ayaId > prevAyahId ? -1 : 1;
+        }
+        return null;
+      },
+      [ayaId],
+    );
+
+    final scrollContent = SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ContentAccordion(
+            colors: colors,
+            typography: typography,
+            sura: sura,
+            aya: aya,
+            hasSelectedAyah: selectedAyah != null,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          NotesSection(
+            colors: colors,
+            typography: typography,
+            ayahId: ayaId,
+          ),
+          const SizedBox(height: AppSpacing.xl),
+        ],
+      ),
+    );
+
+    final panelContent = StaticCard(
       padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Header(
+          StudyPanelHeader(
             colors: colors,
             typography: typography,
+            controller: controller,
             surahName: pageInfo?.primarySurahName,
             ayahNumber: selectedAyah?.numberInSurah,
+            currentAyahId: ayaId,
           ),
-          const FDivider(),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const .all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: .stretch,
-                children: [
-                  _ContentAccordion(
-                    colors: colors,
-                    typography: typography,
-                    controller: accordionController,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 250),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                // Check if this is the incoming or outgoing widget
+                final isIncoming = child.key == ValueKey(ayaId);
+                final direction = slideDirection.value.toDouble();
+
+                // Incoming slides from opposite direction, outgoing slides out
+                final beginOffset = isIncoming
+                    ? Offset(-direction * 0.15, 0)
+                    : Offset(direction * 0.15, 0);
+
+                final slideOffset = Tween<Offset>(
+                  begin: beginOffset,
+                  end: Offset.zero,
+                ).animate(animation);
+
+                return SlideTransition(
+                  position: slideOffset,
+                  child: FadeTransition(
+                    opacity: animation,
+                    child: child,
                   ),
-                  const SizedBox(height: AppSpacing.xl),
-                  _NotesSection(
-                    colors: colors,
-                    typography: typography,
-                    controller: notesController,
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      FButton.icon(
-                        onPress: () => controller.selectAyah(
-                          (selectedAyah?.ayahId ?? 2) - 1,
-                        ),
-                        style: FButtonStyle.secondary(),
-                        child: const Icon(FIcons.arrowLeft),
-                      ),
-                      FButton.icon(
-                        onPress: () => controller.selectAyah(
-                          (selectedAyah?.ayahId ?? 0) + 1,
-                        ),
-                        style: FButtonStyle.secondary(),
-                        child: const Icon(FIcons.arrowRight),
-                      ),
-                    ],
-                  ),
-                ],
+                );
+              },
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: KeyedSubtree(
+                  key: ValueKey(ayaId),
+                  child: scrollContent,
+                ),
               ),
             ),
           ),
         ],
       ),
     );
-  }
-}
 
-class _Header extends StatelessWidget {
-  const _Header({
-    required this.colors,
-    required this.typography,
-    this.surahName,
-    this.ayahNumber,
-  });
-  final FColors colors;
-  final FTypography typography;
-  final String? surahName;
-  final int? ayahNumber;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const .all(AppSpacing.lg),
-      child: Row(
-        children: [
-          Icon(FIcons.bookOpen, size: 20, color: colors.primary),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: .start,
-              children: [
-                Text(
-                  'Study Mode',
-                  style: typography.base.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colors.foreground,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                // if ()
-                Text(
-                  ayahNumber != null
-                      ? '${surahName ?? 'Al-Fatihah'} • Ayah ${ayahNumber!}'
-                      : surahName ?? 'Al-Fatihah',
-                  style: typography.sm.copyWith(
-                    color: colors.mutedForeground,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+    // Wrap with keyboard shortcuts and gesture navigation
+    return CallbackShortcuts(
+      bindings: <ShortcutActivator, VoidCallback>{
+        // Arrow keys for ayah navigation
+        const SingleActivator(LogicalKeyboardKey.arrowLeft): () =>
+            _navigateAyah(ref, 1), // Next ayah (RTL Quran)
+        const SingleActivator(LogicalKeyboardKey.arrowRight): () =>
+            _navigateAyah(ref, -1), // Previous ayah (RTL Quran)
+        const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+            _navigateAyah(ref, 1),
+        const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+            _navigateAyah(ref, -1),
+      },
+      child: Focus(
+        autofocus: true,
+        child: GestureDetector(
+          // Horizontal swipe for ayah navigation
+          onHorizontalDragEnd: (details) {
+            final velocity = details.primaryVelocity ?? 0;
+            if (velocity.abs() < 100) return; // Threshold
+            // Swipe left = next ayah, swipe right = previous (RTL)
+            _navigateAyah(ref, velocity < 0 ? 1 : -1);
+          },
+          child: panelContent,
+        ),
       ),
-    );
-  }
-}
-
-class _ContentAccordion extends StatelessWidget {
-  const _ContentAccordion({
-    required this.colors,
-    required this.typography,
-    required this.controller,
-  });
-  final FColors colors;
-  final FTypography typography;
-  final FAccordionController controller;
-
-  Widget _sectionTitle(IconData icon, String text) => Row(
-    children: [
-      Icon(icon, size: 16, color: colors.primary),
-      const SizedBox(width: AppSpacing.sm),
-      Text(text),
-    ],
-  );
-
-  Widget _labeledContent(
-    String label,
-    String badge,
-    String content, {
-    bool italic = false,
-  }) => Padding(
-    padding: const .symmetric(vertical: AppSpacing.md),
-    child: Column(
-      crossAxisAlignment: .start,
-      children: [
-        Row(
-          children: [
-            Text(
-              '$label:',
-              style: typography.sm.copyWith(color: colors.mutedForeground),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            FBadge(style: FBadgeStyle.secondary(), child: Text(badge)),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          content,
-          style: typography.sm.copyWith(
-            color: colors.foreground,
-            height: 1.6,
-            fontStyle: italic ? FontStyle.italic : null,
-          ),
-        ),
-      ],
-    ),
-  );
-
-  @override
-  Widget build(BuildContext context) {
-    return FAccordion(
-      control: FAccordionControl.managed(controller: controller),
-      style: (style) => style.copyWith(
-        dividerStyle: FDividerStyle(color: colors.border, padding: .zero).call,
-      ),
-      children: [
-        FAccordionItem(
-          initiallyExpanded: true,
-          title: _sectionTitle(FIcons.messageSquare, 'Tafsir'),
-          child: _labeledContent(
-            'Source',
-            'Ibn Kathir',
-            'This verse emphasizes patience and gratitude. It serves as a reminder for believers during times of difficulty. The scholars have noted that this ayah connects to the broader theme of steadfastness in faith, encouraging Muslims to maintain their trust in Allah through all circumstances.',
-          ),
-        ),
-        FAccordionItem(
-          title: _sectionTitle(FIcons.languages, 'Translation'),
-          child: _labeledContent(
-            'Language',
-            'English',
-            '"In the name of Allah, the Most Gracious, the Most Merciful."',
-            italic: true,
-          ),
-        ),
-        FAccordionItem(
-          title: _sectionTitle(FIcons.info, 'Word Analysis'),
-          child: Padding(
-            padding: const .symmetric(vertical: AppSpacing.md),
-            child: Text(
-              'Tap on a word in the Mushaf to see its analysis.',
-              style: typography.sm.copyWith(
-                color: colors.mutedForeground,
-                height: 1.6,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _NotesSection extends StatelessWidget {
-  const _NotesSection({
-    required this.colors,
-    required this.typography,
-    required this.controller,
-  });
-  final FColors colors;
-  final FTypography typography;
-  final TextEditingController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: .start,
-      children: [
-        Row(
-          children: [
-            Icon(FIcons.penLine, size: 16, color: colors.primary),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              'Add a reflection...',
-              style: typography.sm.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colors.foreground,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        FTextField(
-          control: FTextFieldControl.managed(controller: controller),
-          minLines: 3,
-          maxLines: 5,
-          hint: 'Write your thoughts about this verse...',
-          style: (style) =>
-              style.copyWith(contentPadding: const .all(AppSpacing.md)),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Align(
-          alignment: Alignment.centerRight,
-          child: FButton(
-            onPress: () {},
-            style: FButtonStyle.secondary(),
-            child: const Text('Save Note'),
-          ),
-        ),
-      ],
     );
   }
 }

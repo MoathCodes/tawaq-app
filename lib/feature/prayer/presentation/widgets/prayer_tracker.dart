@@ -6,7 +6,6 @@ import 'package:forui/forui.dart';
 import 'package:forui_hooks/forui_hooks.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/date_formatter.dart';
-import 'package:hasanat/core/utils/text_extensions.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_tracker_card_model.dart';
@@ -33,21 +32,31 @@ class PrayerTrackerWidget extends HookConsumerWidget {
     );
     ref.watch(prayerCompletionProvider);
 
-    return HoverCard(
-      padding: const .all(AppSpacing.md),
+    return StaticCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
-        crossAxisAlignment: .stretch,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            mainAxisAlignment: .spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Column(
-                  crossAxisAlignment: .start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(context.l10n.prayerTrackerTitle),
+                    Text(
+                      context.l10n.prayerTrackerTitle,
+                      style: FTheme.of(context).typography.lg.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.xs),
-                    Text(context.l10n.prayerTrackerSubtitle).sm,
+                    Text(
+                      context.l10n.prayerTrackerSubtitle,
+                      style: FTheme.of(context).typography.sm.copyWith(
+                        color: FTheme.of(context).colors.mutedForeground,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -71,8 +80,9 @@ class PrayerTrackerWidget extends HookConsumerWidget {
               ),
             ],
           ),
-
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
+          const FDivider(),
+          const SizedBox(height: AppSpacing.lg),
           if (controller.value != null)
             _TrackerCardsWrapper(
               selectedDay: controller.value!,
@@ -146,8 +156,8 @@ class _MainWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.lg,
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.xl,
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       runAlignment: WrapAlignment.center,
