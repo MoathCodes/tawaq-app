@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hasanat/core/theme/custom_themes.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
+import 'package:hasanat/theme/custom_themes.dart';
 
 part 'theme_model.freezed.dart';
 

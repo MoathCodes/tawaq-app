@@ -1,9 +1,9 @@
 import 'dart:ui';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/data/models/state_settings.dart';
+import 'package:hasanat/theme/theme_model.dart';
 
 part 'app_settings.freezed.dart';
 

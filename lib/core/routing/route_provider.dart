@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/routing/route.dart';
-import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/core/widgets/not_found_screen.dart';
 import 'package:hasanat/core/widgets/page_shell/page_shell.dart';
 import 'package:hasanat/feature/prayer/presentation/screens/prayer_screen.dart';
@@ -18,6 +17,7 @@ import 'package:hasanat/feature/settings/presentation/provider/settings_provider
 import 'package:hasanat/feature/settings/presentation/screens/settings_screen.dart';
 import 'package:hasanat/feature/settings/presentation/screens/start_wizard.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
+import 'package:hasanat/theme/theme_model.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

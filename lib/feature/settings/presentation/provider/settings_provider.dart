@@ -4,7 +4,6 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
-import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/core/utils/location_extensions.dart';
 import 'package:hasanat/feature/quran/domain/models/font_sizes.dart';
 import 'package:hasanat/feature/quran/domain/models/quran_layouts.dart';
@@ -13,6 +12,7 @@ import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart'
 import 'package:hasanat/feature/settings/data/models/state_settings.dart';
 import 'package:hasanat/feature/settings/service/location_service.dart';
 import 'package:hasanat/feature/settings/service/settings_service.dart';
+import 'package:hasanat/theme/theme_model.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart';

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/core/widgets/mouse_click.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/theme/theme.dart';
+import 'package:hasanat/theme/theme_model.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 /// Widget for selecting the application color theme.
