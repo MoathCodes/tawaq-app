@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
-import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/data/models/state_settings.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
+import 'package:hasanat/theme/theme_model.dart';
 import 'package:logger/logger.dart';
 import 'package:prf/prf.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

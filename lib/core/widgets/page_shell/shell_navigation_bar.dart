@@ -12,7 +12,10 @@ class ShellBottomNavigationBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final routes = ref.watch(mainRoutesProvider(context.l10n));
+    final routes = [
+      ...ref.read(mainRoutesProvider(context.l10n)),
+      ...ref.read(secondaryRoutesProvider(context.l10n)),
+    ];
 
     return FBottomNavigationBar(
       index: routes.indexWhere(

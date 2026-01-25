@@ -1,8 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/core/utils/hijri_provider.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
@@ -54,19 +52,8 @@ class ShellAppBar extends ConsumerWidget {
       },
     ];
 
-    final Widget? debugButton = kDebugMode
-        ? FButton(
-            style: FButtonStyle.primary(),
-            child: const Icon(FIcons.bug),
-            onPress: () {
-              context.go('/wizard');
-            },
-          )
-        : null;
-
     // Widgets displayed at the end from of the Sidebar
     final farWidgets = [
-      ?debugButton,
       FButton(
         style: FButtonStyle.ghost(),
         onPress: () {

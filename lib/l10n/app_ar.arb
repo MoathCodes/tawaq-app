@@ -328,12 +328,13 @@
     }
   },
   "footnote": "الحاشية",
-  "todaysSchedule": "جدول اليوم",
-  "selectPrayerToLog": "اختر صلاة لتسجيل",
+  "aiInsight": "رؤية",
+  "isActive": "نشط",
   "logPrayerStatus": "سجل حالة الصلاة",
+  "nowActive": "نشط الآن",
   "qadaOwed": "قضاء (مستحق)",
-  "aiInsight": "تحليل ذكي",
-  "weeklyQuality": "الجودة الأسبوعية",
-  "nowActive": "نشطة الآن",
-  "upcoming": "القادمة"
+  "selectPrayerToLog": "اختر صلاة لتسجيل",
+  "todaysSchedule": "جدول اليوم",
+  "upcoming": "القادمة",
+  "weeklyQuality": "جودة أسبوعية"
 }

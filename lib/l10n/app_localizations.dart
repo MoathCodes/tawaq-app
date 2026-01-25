@@ -1442,6 +1442,12 @@ abstract class AppLocalizations {
   /// **'Footnote'**
   String get footnote;
 
+  /// No description provided for @isActive.
+  ///
+  /// In en, this message translates to:
+  /// **'is Active'**
+  String get isActive;
+
   /// No description provided for @todaysSchedule.
   ///
   /// In en, this message translates to:
@@ -1451,14 +1457,26 @@ abstract class AppLocalizations {
   /// No description provided for @selectPrayerToLog.
   ///
   /// In en, this message translates to:
-  /// **'Select prayer to log'**
+  /// **'Select a prayer to log status'**
   String get selectPrayerToLog;
 
   /// No description provided for @logPrayerStatus.
   ///
   /// In en, this message translates to:
-  /// **'Log Prayer Status'**
+  /// **'Log Status'**
   String get logPrayerStatus;
+
+  /// No description provided for @nowActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Now Active'**
+  String get nowActive;
+
+  /// No description provided for @upcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get upcoming;
 
   /// No description provided for @qadaOwed.
   ///
@@ -1469,7 +1487,7 @@ abstract class AppLocalizations {
   /// No description provided for @aiInsight.
   ///
   /// In en, this message translates to:
-  /// **'AI Insight'**
+  /// **'Insight'**
   String get aiInsight;
 
   /// No description provided for @weeklyQuality.
@@ -1477,18 +1495,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weekly Quality'**
   String get weeklyQuality;
-
-  /// No description provided for @nowActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Now active'**
-  String get nowActive;
-
-  /// No description provided for @upcoming.
-  ///
-  /// In en, this message translates to:
-  /// **'Upcoming'**
-  String get upcoming;
 }
 
 class _AppLocalizationsDelegate

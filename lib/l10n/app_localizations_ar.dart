@@ -781,6 +781,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get footnote => 'الحاشية';
 
   @override
+  String get isActive => 'نشط';
+
+  @override
   String get todaysSchedule => 'جدول اليوم';
 
   @override
@@ -790,17 +793,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logPrayerStatus => 'سجل حالة الصلاة';
 
   @override
-  String get qadaOwed => 'قضاء (مستحق)';
-
-  @override
-  String get aiInsight => 'تحليل ذكي';
-
-  @override
-  String get weeklyQuality => 'الجودة الأسبوعية';
-
-  @override
-  String get nowActive => 'نشطة الآن';
+  String get nowActive => 'نشط الآن';
 
   @override
   String get upcoming => 'القادمة';
+
+  @override
+  String get qadaOwed => 'قضاء (مستحق)';
+
+  @override
+  String get aiInsight => 'رؤية';
+
+  @override
+  String get weeklyQuality => 'جودة أسبوعية';
 }

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/theme/theme.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/core/widgets/f_skeletonizer.dart';
@@ -14,6 +13,7 @@ import 'package:hasanat/feature/prayer/presentation/provider/prayer_card/prayer_
 import 'package:hasanat/feature/prayer/presentation/widgets/mini_card.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/theme/theme.dart';
+import 'package:hasanat/theme/theme_model.dart';
 
 /// Widget that displays the current prayer information in a card.
 class CurrentPrayerCard extends ConsumerWidget {
