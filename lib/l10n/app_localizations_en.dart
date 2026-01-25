@@ -749,4 +749,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get footnote => 'Footnote';
+
+  @override
+  String get todaysSchedule => 'Today\'s Schedule';
+
+  @override
+  String get selectPrayerToLog => 'Select prayer to log';
+
+  @override
+  String get logPrayerStatus => 'Log Prayer Status';
+
+  @override
+  String get qadaOwed => 'Qada (Owed)';
+
+  @override
+  String get aiInsight => 'AI Insight';
+
+  @override
+  String get weeklyQuality => 'Weekly Quality';
+
+  @override
+  String get nowActive => 'Now active';
+
+  @override
+  String get upcoming => 'Upcoming';
 }

@@ -328,5 +328,13 @@
       }
     }
   },
-  "footnote": "Footnote"
+  "footnote": "Footnote",
+  "todaysSchedule": "Today's Schedule",
+  "selectPrayerToLog": "Select prayer to log",
+  "logPrayerStatus": "Log Prayer Status",
+  "qadaOwed": "Qada (Owed)",
+  "aiInsight": "AI Insight",
+  "weeklyQuality": "Weekly Quality",
+  "nowActive": "Now active",
+  "upcoming": "Upcoming"
 }

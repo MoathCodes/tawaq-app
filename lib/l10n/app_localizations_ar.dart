@@ -779,4 +779,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get footnote => 'الحاشية';
+
+  @override
+  String get todaysSchedule => 'جدول اليوم';
+
+  @override
+  String get selectPrayerToLog => 'اختر صلاة لتسجيل';
+
+  @override
+  String get logPrayerStatus => 'سجل حالة الصلاة';
+
+  @override
+  String get qadaOwed => 'قضاء (مستحق)';
+
+  @override
+  String get aiInsight => 'تحليل ذكي';
+
+  @override
+  String get weeklyQuality => 'الجودة الأسبوعية';
+
+  @override
+  String get nowActive => 'نشطة الآن';
+
+  @override
+  String get upcoming => 'القادمة';
 }
