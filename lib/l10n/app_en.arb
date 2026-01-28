@@ -328,5 +328,10 @@
       }
     }
   },
-  "footnote": "Footnote"
+  "footnote": "Footnote",
+  "logPrayerStatus": "Log Prayer Status",
+  "nowActive": "Now Active",
+  "todaysSchedule": "Today's Schedule",
+  "selectPrayerToLog": "Select a prayer to log status",
+  "sunnahTimes": "Sunnah Times"
 }

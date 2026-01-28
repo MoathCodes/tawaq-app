@@ -1441,6 +1441,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Footnote'**
   String get footnote;
+
+  /// No description provided for @logPrayerStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Prayer Status'**
+  String get logPrayerStatus;
+
+  /// No description provided for @nowActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Now Active'**
+  String get nowActive;
+
+  /// No description provided for @todaysSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Schedule'**
+  String get todaysSchedule;
+
+  /// No description provided for @selectPrayerToLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a prayer to log status'**
+  String get selectPrayerToLog;
+
+  /// No description provided for @sunnahTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunnah Times'**
+  String get sunnahTimes;
 }
 
 class _AppLocalizationsDelegate

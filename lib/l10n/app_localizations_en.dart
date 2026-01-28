@@ -749,4 +749,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get footnote => 'Footnote';
+
+  @override
+  String get logPrayerStatus => 'Log Prayer Status';
+
+  @override
+  String get nowActive => 'Now Active';
+
+  @override
+  String get todaysSchedule => 'Today\'s Schedule';
+
+  @override
+  String get selectPrayerToLog => 'Select a prayer to log status';
+
+  @override
+  String get sunnahTimes => 'Sunnah Times';
 }

@@ -327,5 +327,10 @@
       }
     }
   },
-  "footnote": "الحاشية"
+  "footnote": "الحاشية",
+  "logPrayerStatus": "تسجيل حالة الصلاة",
+  "nowActive": "نشط الآن",
+  "todaysSchedule": "جدول اليوم",
+  "selectPrayerToLog": "اختر صلاة لتسجيل الحالة",
+  "sunnahTimes": "أوقات السنن"
 }

@@ -1,114 +1,112 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:hasanat/core/widgets/animation_entry.dart';
-import 'package:hasanat/feature/prayer/presentation/widgets/current_prayer_card.dart';
-import 'package:hasanat/feature/prayer/presentation/widgets/prayer_analytics_card.dart';
-import 'package:hasanat/feature/prayer/presentation/widgets/prayer_table.dart';
-import 'package:hasanat/feature/prayer/presentation/widgets/prayer_tracker.dart';
+import 'package:hasanat/feature/prayer/presentation/widgets/prayer_hero_header.dart';
+import 'package:hasanat/feature/prayer/presentation/widgets/prayer_schedule_list.dart';
+import 'package:hasanat/feature/prayer/presentation/widgets/prayer_stats_sidebar.dart';
+import 'package:hasanat/theme/theme.dart';
 
-/// Screen that displays prayer times, tracker, and analytics.
+/// Screen that displays prayer times with hero header, schedule, and stats.
 class PrayerScreen extends ConsumerWidget {
   /// Creates a [PrayerScreen] instance.
   const PrayerScreen({super.key});
 
-  static final double _mainAxisExtent = 350.0.h;
-  static final double _trackerCardsMainAxisExtent = 541.5.h;
+  static const double _breakpoint = 900;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return SingleChildScrollView(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Determine if we should stack or place side by side
-          final shouldStack = constraints.maxWidth.w < 900.w;
-
-          if (shouldStack) {
-            return const _VerticalLayout();
-          } else {
-            return StaggeredGrid.count(
-              crossAxisCount: 7,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              // Important: animate the tile CHILDREN, not the tiles themselves,
-              // otherwise StaggeredGrid can't read sizing and layout info.
-              children: [
-                StaggeredGridTile.extent(
-                  crossAxisCellCount: 3,
-                  mainAxisExtent: _mainAxisExtent,
-                  child: AnimationEntry(
-                    delay: 100.ms,
-                    child: const CurrentPrayerCard(
-                      key: ValueKey('current_prayer_card'),
-                    ),
-                  ), // CurrentPrayerCard
-                ),
-                StaggeredGridTile.extent(
-                  crossAxisCellCount: 4,
-                  mainAxisExtent: _mainAxisExtent,
-                  child: AnimationEntry(
-                    delay: 250.ms,
-                    child: const PrayerAnalyticsCard(
-                      key: ValueKey('prayer_analytics_card'),
-                    ),
-                  ), // PrayerAnalyticsCard
-                ),
-                StaggeredGridTile.extent(
-                  crossAxisCellCount: 3,
-                  mainAxisExtent: _trackerCardsMainAxisExtent,
-                  child: AnimationEntry(
-                    delay: 400.ms,
-                    child: const PrayerTable(key: ValueKey('prayer_table')),
-                  ), // PrayerTable
-                ),
-                StaggeredGridTile.fit(
-                  crossAxisCellCount: 4,
-                  // mainAxisExtent: _trackerCardsMainAxisExtent,
-                  child: AnimationEntry(
-                    delay: 550.ms,
-                    child: const PrayerTrackerWidget(
-                      key: ValueKey('prayer_tracker_widget'),
-                    ),
-                  ), // PrayerTrackerCards
-                ),
-              ],
-            );
-          }
-        },
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < _breakpoint) {
+                return const _VerticalLayout();
+              } else {
+                return const _HorizontalLayout();
+              }
+            },
+          ),
+        ),
       ),
     );
   }
 }
 
+class _HorizontalLayout extends StatelessWidget {
+  const _HorizontalLayout();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        AnimationEntry(
+          delay: 100.ms,
+          child: const PrayerHeroHeader(key: ValueKey('prayer_hero_header')),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 6,
+                child: AnimationEntry(
+                  delay: 250.ms,
+                  child: const PrayerScheduleList(
+                    key: ValueKey('prayer_schedule_list'),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              // Stats sidebar - 40%
+              Expanded(
+                flex: 4,
+                child: AnimationEntry(
+                  delay: 400.ms,
+                  child: const PrayerStatsSidebar(
+                    key: ValueKey('prayer_stats_sidebar'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Narrow stacked layout for smaller screens.
 class _VerticalLayout extends StatelessWidget {
   const _VerticalLayout();
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      spacing: 12,
       children: [
-        // Staggered, per-item entry for better control and performance
+        // Hero header
         AnimationEntry(
           delay: 100.ms,
-          child: const CurrentPrayerCard(key: ValueKey('current_prayer_card')),
+          child: const PrayerHeroHeader(key: ValueKey('prayer_hero_header')),
         ),
+        const SizedBox(height: AppSpacing.lg),
+        // Schedule list
         AnimationEntry(
           delay: 250.ms,
-          child: const PrayerAnalyticsCard(
-            key: ValueKey('prayer_analytics_card'),
+          child: const PrayerScheduleList(
+            key: ValueKey('prayer_schedule_list'),
           ),
         ),
+        const SizedBox(height: AppSpacing.lg),
+        // Stats sidebar
         AnimationEntry(
           delay: 400.ms,
-          child: const PrayerTable(key: ValueKey('prayer_table')),
-        ),
-        AnimationEntry(
-          delay: 550.ms,
-          child: const PrayerTrackerWidget(
-            key: ValueKey('prayer_tracker_widget'),
+          child: const PrayerStatsSidebar(
+            key: ValueKey('prayer_stats_sidebar'),
           ),
         ),
       ],
