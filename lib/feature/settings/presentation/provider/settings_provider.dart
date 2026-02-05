@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/utils/location_extensions.dart';
+import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/quran/domain/models/font_sizes.dart';
 import 'package:hasanat/feature/quran/domain/models/quran_layouts.dart';
 import 'package:hasanat/feature/quran/domain/models/quran_screen_state.dart';
@@ -267,6 +268,13 @@ class StateSettingsNotifier extends _$StateSettingsNotifier {
   /// Sets the sidebar collapsed state.
   Future<void> setSidebarCollapsed({required bool collapsed}) =>
       _update((s) => s.copyWith(sidebarCollapsed: collapsed), 'Sidebar');
+
+  /// Sets the prayer analytics period.
+  Future<void> setPrayerAnalyticsPeriod(PrayerAnalyticsPeriod period) =>
+      _update(
+        (s) => s.copyWith(prayerAnalyticsPeriod: period),
+        'Prayer analytics period',
+      );
 
   /// Sets the last Quran page info.
   Future<void> setLastQuranPageInfo(MushafPageInfo info) =>

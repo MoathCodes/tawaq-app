@@ -84,6 +84,14 @@ class PrayerRepo {
     return prayerDatabase.getCompletionsForDate(date);
   }
 
+  /// Returns all prayer completions between [from] and [to] (inclusive).
+  Future<List<PrayerCompletion>> getCompletionsBetween(
+    DateTime from,
+    DateTime to,
+  ) {
+    return prayerDatabase.getCompletionsBetween(from, to);
+  }
+
   /// Returns the prayer times for a given date, coordinates, and calculation
   /// parameters.
   PrayerTimes getPrayerTimes(

@@ -131,8 +131,7 @@ class _HeroContent extends ConsumerWidget {
                   ),
                 ),
                 const Spacer(),
-                const SizedBox(height: AppSpacing.lg),
-                // Status Button
+                // Adhan/Iqamah boxes - larger and aligned left
                 Row(
                   children: [
                     _TimeSquare(
@@ -140,13 +139,13 @@ class _HeroContent extends ConsumerWidget {
                       label: context.l10n.adhan,
                     ),
                     if (data.showIqamah) ...[
-                      const SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.lg),
                       _TimeSquare(
                         time: data.iqamahTime,
                         label: context.l10n.iqamah,
                       ),
                     ],
-                    const SizedBox(width: AppSpacing.md),
+                    const Spacer(),
                     _StatusSelectorButton(
                       prayer: data.prayer,
                       canSetStatus: data.canSetStatus,
@@ -221,8 +220,8 @@ class _TimeSquare extends StatelessWidget {
     final theme = FTheme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.sm,
+        horizontal: AppSpacing.xl,
+        vertical: AppSpacing.lg,
       ),
       decoration: BoxDecoration(
         color: theme.colors.background.withValues(alpha: 0.2),
@@ -242,12 +241,12 @@ class _TimeSquare extends StatelessWidget {
               letterSpacing: 1,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             time,
             style: TextStyle(
               color: theme.colors.foreground,
-              fontSize: 18.sp,
+              fontSize: 24.sp,
               fontWeight: FontWeight.w600,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
@@ -366,7 +365,7 @@ class _StatusSelectorButton extends ConsumerWidget {
                               color: theme.colors.foreground,
                               fontWeight: FontWeight.w600,
                               fontSize: 14.sp,
-                            ), 
+                            ),
                           ),
                         ],
                       ],

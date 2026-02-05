@@ -93,6 +93,18 @@ class PrayerDatabase {
     return completions.toList();
   }
 
+  /// Returns all prayer completions between [from] and [to] (inclusive).
+  Future<List<PrayerCompletion>> getCompletionsBetween(
+    DateTime from,
+    DateTime to,
+  ) async {
+    final completions = await _box.getValuesWhere(
+      (value) => value.completionTime.isBetween(from, to),
+    );
+
+    return completions.toList();
+  }
+
   /// Returns a list of dates on which all prayers were completed.
   Future<List<DateTime>> getFullyCompletedDays(Location loc) async {
     // Get all completions that are not missed or none

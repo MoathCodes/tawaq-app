@@ -28,10 +28,10 @@ enum CompletionStatus {
   /// Returns the color of the badge for this status.
   Color getBadgeColor({bool isDark = false}) {
     return switch (this) {
-      .jamaah => isDark ? Colors.green.shade900 : Colors.green.shade600,
-      .onTime => isDark ? Colors.yellow.shade900 : Colors.yellow.shade600,
-      .late => isDark ? Colors.orange.shade900 : Colors.orange.shade600,
-      .missed => isDark ? Colors.red.shade900 : Colors.red.shade600,
+      .jamaah => isDark ? const Color(0xFF0F766E) : const Color(0xFF14B8A6),
+      .onTime => isDark ? const Color(0xFF1E40AF) : const Color(0xFF60A5FA),
+      .late => isDark ? const Color(0xFF92400E) : const Color(0xFFF59E0B),
+      .missed => isDark ? const Color(0xFF9F1239) : const Color(0xFFFB7185),
       .none => Colors.transparent,
     };
   }

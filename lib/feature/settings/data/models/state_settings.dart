@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/quran/domain/models/quran_screen_state.dart';
 
 part 'state_settings.freezed.dart';
@@ -12,6 +13,9 @@ abstract class StateSettings with _$StateSettings {
     /// Whether the sidebar is collapsed.
     required bool sidebarCollapsed,
 
+    /// Selected analytics period for the prayer analysis section.
+    required PrayerAnalyticsPeriod prayerAnalyticsPeriod,
+
     /// Quran screen state including page info, font size, layout, etc.
     required QuranScreenState quranState,
   }) = _StateSettings;
@@ -24,5 +28,6 @@ abstract class StateSettings with _$StateSettings {
   factory StateSettings.initial() => StateSettings(
     sidebarCollapsed: false,
     quranState: QuranScreenState.initial(),
+    prayerAnalyticsPeriod: PrayerAnalyticsPeriod.weekly,
   );
 }

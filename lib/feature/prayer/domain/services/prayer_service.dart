@@ -154,4 +154,10 @@ class PrayerService {
   /// Returns the prayer completion records for a specific date.
   Future<List<PrayerCompletion>> getPrayerCompletionForDate([DateTime? date]) =>
       _repo.getPrayerCompletionForDate(date ?? _now());
+
+  /// Returns prayer completion records between [from] and [to] (inclusive).
+  Future<List<PrayerCompletion>> getCompletionsBetween(
+    DateTime from,
+    DateTime to,
+  ) => _repo.getCompletionsBetween(from, to);
 }
