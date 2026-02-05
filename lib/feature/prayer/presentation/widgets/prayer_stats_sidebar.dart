@@ -94,7 +94,6 @@ class _StatCard extends StatelessWidget {
 
     return StaticCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
-      backgroundColor: theme.colors.foreground.withValues(alpha: 0.1),
       child: Row(
         children: [
           Expanded(

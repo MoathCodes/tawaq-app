@@ -1,4 +1,3 @@
-import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
@@ -68,25 +67,15 @@ class CurrentPrayerCard extends ConsumerWidget {
           subtitle: Text(e.toString()),
         ),
         loading: () => FSkeletonizer(
-          child: _Content(data: _MockData(), appTheme: appTheme, theme: theme),
+          child: _Content(
+            data: PrayerCardInfo.empty(),
+            appTheme: appTheme,
+            theme: theme,
+          ),
         ),
       ),
     );
   }
-}
-
-class _MockData implements PrayerCardInfo {
-  @override
-  String get adhanTime => '--:--';
-  @override
-  String get iqamahTime => '--:--';
-  @override
-  Prayer get prayer => Prayer.fajr;
-  @override
-  String get time => 'Loading...';
-  @override
-  $PrayerCardInfoCopyWith<PrayerCardInfo> get copyWith =>
-      throw UnimplementedError();
 }
 
 class _Content extends ConsumerWidget {

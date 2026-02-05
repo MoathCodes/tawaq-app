@@ -1445,7 +1445,7 @@ abstract class AppLocalizations {
   /// No description provided for @logPrayerStatus.
   ///
   /// In en, this message translates to:
-  /// **'Log Prayer Status'**
+  /// **'Prayer Status'**
   String get logPrayerStatus;
 
   /// No description provided for @nowActive.

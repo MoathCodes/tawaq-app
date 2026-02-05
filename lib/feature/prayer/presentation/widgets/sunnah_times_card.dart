@@ -24,7 +24,6 @@ class SunnahTimesCard extends ConsumerWidget {
     final formatter = ref.watch(timeFormatterProvider);
 
     return StaticCard(
-      backgroundColor: theme.colors.foreground.withValues(alpha: 0.1),
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,31 +109,6 @@ class _SunnahTimesList extends StatelessWidget {
           ),
         );
       }).toList(),
-    );
-  }
-}
-
-class _SunnahTimesSkeleton extends StatelessWidget {
-  const _SunnahTimesSkeleton();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: List.generate(
-        3,
-        (index) => Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.md),
-          child: Row(
-            children: [
-              Container(width: 36, height: 36, color: Colors.grey),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(child: Container(height: 16, color: Colors.grey)),
-              const SizedBox(width: AppSpacing.md),
-              Container(width: 60, height: 16, color: Colors.grey),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
@@ -7,9 +8,8 @@ import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/core/widgets/mouse_click.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
+import 'package:hasanat/feature/prayer/domain/models/prayer_schedule_row.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_completion_provider.dart';
-import 'package:hasanat/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/theme/theme.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -17,29 +17,14 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 class SchedulePrayerRow extends ConsumerWidget {
   /// Creates a [SchedulePrayerRow] instance.
   const SchedulePrayerRow({
-    required this.prayer,
-    required this.adhanTime,
-    required this.prayerTime,
-    required this.isActive,
+    required this.row,
     required this.isExpanded,
-    required this.isCompleted,
-    required this.currentStatus,
-    required this.completionTime,
     required this.onToggle,
     super.key,
   });
 
-  /// The prayer this row represents.
-  final Prayer prayer;
-
-  /// Formatted adhan time string.
-  final String adhanTime;
-
-  /// The actual DateTime for this prayer (for relative time calculation).
-  final DateTime prayerTime;
-
-  /// Whether this is the currently active prayer.
-  final bool isActive;
+  /// The prayer schedule row data.
+  final PrayerScheduleRow row;
 
   /// Whether this row is expanded.
   final bool isExpanded;
@@ -47,25 +32,17 @@ class SchedulePrayerRow extends ConsumerWidget {
   /// Callback to toggle expansion.
   final VoidCallback onToggle;
 
-  /// Whether this prayer has been completed.
-  final bool isCompleted;
-
-  /// Current completion status.
-  final CompletionStatus currentStatus;
-
-  /// The date for this prayer completion.
-  final DateTime completionTime;
-
   static const _animDuration = Duration(milliseconds: 260);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
     final colors = theme.colors;
-    final now = ref.watch(currentLocationTimeProvider);
+    final isActive = row.isCurrentPrayer;
+    final canLogStatus = row.prayerTime.isBefore(DateTime.now());
 
     return MouseClick(
-      disabled: false, //  Row itself is always clickable for toggling
+      disabled: false,
       onClick: onToggle,
       child: AnimatedContainer(
         duration: _animDuration,
@@ -74,7 +51,7 @@ class SchedulePrayerRow extends ConsumerWidget {
         decoration: BoxDecoration(
           color: isActive
               ? colors.primary.withValues(alpha: 0.2)
-              : colors.foreground.withValues(alpha: 0.1),
+              : colors.secondary,
           border: Border.all(
             color: isActive ? colors.primary : colors.border,
             width: isActive ? 2 : 1,
@@ -85,25 +62,17 @@ class SchedulePrayerRow extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Main row content
-            _MainRowContent(
-              prayer: prayer,
-              adhanTime: adhanTime,
-              prayerTime: prayerTime,
-              isActive: isActive,
-              currentStatus: currentStatus,
-              colors: colors,
-              theme: theme,
-            ),
+            _MainRowContent(row: row, theme: theme, colors: colors),
             // Expandable status selector
             AnimatedSize(
               duration: _animDuration,
               curve: Curves.easeInOut,
               child: isExpanded
                   ? _StatusSelector(
-                      prayer: prayer,
-                      enable: prayerTime.isBefore(now),
-                      currentStatus: currentStatus,
-                      completionTime: completionTime,
+                      prayer: row.prayer,
+                      enable: canLogStatus,
+                      currentStatus: row.completionStatus,
+                      completionTime: row.completionDate ?? DateTime.now(),
                       onStatusSelected: (status) {
                         ref
                             .read(prayerCompletionProvider.notifier)
@@ -111,8 +80,9 @@ class SchedulePrayerRow extends ConsumerWidget {
                               PrayerCompletion(
                                 id: null,
                                 status: status,
-                                prayer: prayer,
-                                completionTime: completionTime,
+                                prayer: row.prayer,
+                                completionTime:
+                                    row.completionDate ?? DateTime.now(),
                               ),
                             );
                       },
@@ -126,95 +96,26 @@ class SchedulePrayerRow extends ConsumerWidget {
   }
 }
 
-class _MainRowContent extends ConsumerWidget {
+class _MainRowContent extends StatelessWidget {
   const _MainRowContent({
-    required this.prayer,
-    required this.adhanTime,
-    required this.prayerTime,
-    required this.isActive,
-    required this.currentStatus,
-    required this.colors,
+    required this.row,
     required this.theme,
+    required this.colors,
   });
 
-  final Prayer prayer;
-  final String adhanTime;
-  final DateTime prayerTime;
-  final bool isActive;
-  final CompletionStatus currentStatus;
-  final FColors colors;
+  final PrayerScheduleRow row;
   final FThemeData theme;
-
-  /// Computes the relative time subtitle for this prayer.
-  // No need to pass prayerTime here as we use the local variable derived from it
-  String _computeSubtitle(
-    BuildContext context,
-    DateTime now,
-    DateTime localPrayerTime,
-  ) {
-    if (isActive) {
-      return context.l10n.currentPrayer;
-    }
-
-    // Check if the prayer time is in the future or past
-    // Special handling for ishaBefore (Last Third) which might be calculated
-    // for the previous night in the PrayerTimes object.
-    var displayTime = localPrayerTime;
-    if (prayer == Prayer.ishaBefore && localPrayerTime.isBefore(now)) {
-      displayTime = localPrayerTime.add(const Duration(days: 1));
-    }
-
-    final isFuture = displayTime.isAfter(now);
-    final difference = now.difference(displayTime).abs();
-    final hours = difference.inHours;
-    // Use total minutes for the "X minutes" case
-    final totalMinutes = difference.inMinutes;
-
-    if (currentStatus != CompletionStatus.none) {
-      // Completed / Logged
-      // Even if completed, if the Time is in future (e.g. user logged early),
-      // we should probably not say "ago".
-      // If it is future, show "Completed". Or "Completed (Early)".
-      if (isFuture) {
-        return context.l10n.completed;
-      }
-      final timeAgo = hours > 0
-          ? context.l10n.adhanHoursAgo(hours)
-          : context.l10n.adhanMinsAgo(totalMinutes);
-      return '${context.l10n.completed} - $timeAgo';
-    }
-
-    if (isFuture) {
-      return hours > 0
-          ? context.l10n.adhanHoursLeft(hours)
-          : context.l10n.adhanMinsLeft(totalMinutes);
-    } else {
-      // Past
-      return hours > 0
-          ? context.l10n.adhanHoursAgo(hours)
-          : context.l10n.adhanMinsAgo(totalMinutes);
-    }
-  }
+  final FColors colors;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Watch location from settings to ensure correct timezone conversion
-    final location = ref.watch(
-      prayerSettingsProvider.select((s) => s.value?.location),
-    );
-    final now = ref.watch(currentLocationTimeProvider);
-
-    // Ensure prayer time is in the correct timezone before diffing
-    final localPrayerTime = location != null
-        ? prayerTime.toLocation(location)
-        : prayerTime;
-
-    final subtitle = _computeSubtitle(context, now, localPrayerTime);
+  Widget build(BuildContext context) {
+    final isActive = row.isCurrentPrayer;
+    final status = row.completionStatus;
 
     return Row(
       children: [
         // Prayer icon
-        _PrayerIcon(prayer: prayer, isActive: isActive, colors: colors),
+        _PrayerIcon(prayer: row.prayer, isActive: isActive, colors: colors),
         const SizedBox(width: AppSpacing.md),
         // Prayer name and status
         Expanded(
@@ -224,46 +125,52 @@ class _MainRowContent extends ConsumerWidget {
               Row(
                 children: [
                   Text(
-                    prayer.getLocaleName(context.l10n),
+                    row.prayer.getLocaleName(context.l10n),
                     style: theme.typography.lg.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (currentStatus != CompletionStatus.none) ...[
+                  if (status != CompletionStatus.none) ...[
                     const SizedBox(width: AppSpacing.sm),
-                    _StatusBadge(status: currentStatus),
+                    _StatusBadge(status: status),
                   ],
                 ],
               ),
-              Text(
-                subtitle,
-                style: theme.typography.sm.copyWith(
-                  color: isActive ? colors.primary : colors.mutedForeground,
+              if (row.relativeTimeSubtitle != null)
+                Text(
+                  row.relativeTimeSubtitle!,
+                  style: theme.typography.sm.copyWith(
+                    color: isActive ? colors.primary : colors.mutedForeground,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
         // Time display
-        Text(
-          adhanTime,
-          style: theme.typography.xl.copyWith(
-            fontWeight: FontWeight.w600,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
+        Row(
+          children: [
+            if (row.formattedIqamahTime != null) ...[
+              // Iqamah time column
+              _TimeColumn(
+                label: context.l10n.iqamah.toUpperCase(),
+                time: row.formattedIqamahTime!,
+                theme: theme,
+                colors: colors,
+              ),
+            ],
+            const SizedBox(width: AppSpacing.lg),
+            // Adhan time column
+            _TimeColumn(
+              label: context.l10n.adhan.toUpperCase(),
+              time: row.formattedAdhanTime,
+              theme: theme,
+              colors: colors,
+            ),
+          ],
         ),
-        const SizedBox(width: AppSpacing.sm),
-        // Notification bell (placeholder)
-        IconButton(
-          onPressed: () {
-            // TODO(notifications): Implement notification toggle
-          },
-          icon: Icon(
-            FIcons.bell,
-            color: colors.mutedForeground,
-            size: 20.sp,
-          ),
-        ),
+        const SizedBox(width: AppSpacing.md),
+        // Notification bell
+        _NotificationButton(colors: colors),
       ],
     );
   }
@@ -298,6 +205,77 @@ class _PrayerIcon extends StatelessWidget {
           size: 24.sp,
         ),
       ),
+    );
+  }
+}
+
+/// Displays a time column with label (e.g., "ADHAN" / "IQAMAH") and time value.
+class _TimeColumn extends StatelessWidget {
+  const _TimeColumn({
+    required this.label,
+    required this.time,
+    required this.theme,
+    required this.colors,
+  });
+
+  final String label;
+  final String time;
+  final FThemeData theme;
+  final FColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Label (ADHAN / IQAMAH)
+        Text(
+          label,
+          style: theme.typography.xs.copyWith(
+            color: colors.mutedForeground,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        // Time value
+        Text(
+          time,
+          style: theme.typography.sm.copyWith(
+            fontWeight: FontWeight.w600,
+            color: colors.foreground,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Notification bell button for prayer reminders.
+class _NotificationButton extends StatelessWidget {
+  const _NotificationButton({required this.colors});
+
+  final FColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return HookBuilder(
+      builder: (context) {
+        final isEnabled = useState(true);
+        return FButton.icon(
+          style: isEnabled.value
+              ? FButtonStyle.primary()
+              : FButtonStyle.secondary(),
+          onPress: () {
+            isEnabled.value = !isEnabled.value;
+          },
+          child: Icon(
+            isEnabled.value ? FIcons.bell : FIcons.bellOff,
+            size: 20.sp,
+          ),
+        );
+      },
     );
   }
 }
@@ -414,7 +392,7 @@ class _StatusButton extends StatelessWidget {
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: isSelected ? status.getBadgeColor() : colors.secondary,
+            color: isSelected ? status.getBadgeColor() : colors.background,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isSelected ? status.getBadgeColor() : colors.border,

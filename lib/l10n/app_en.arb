@@ -329,7 +329,7 @@
     }
   },
   "footnote": "Footnote",
-  "logPrayerStatus": "Log Prayer Status",
+  "logPrayerStatus": "Prayer Status",
   "nowActive": "Now Active",
   "todaysSchedule": "Today's Schedule",
   "selectPrayerToLog": "Select a prayer to log status",

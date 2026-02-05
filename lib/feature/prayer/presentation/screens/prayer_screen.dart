@@ -48,32 +48,30 @@ class _HorizontalLayout extends StatelessWidget {
           child: const PrayerHeroHeader(key: ValueKey('prayer_hero_header')),
         ),
         const SizedBox(height: AppSpacing.lg),
-        IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 6,
-                child: AnimationEntry(
-                  delay: 250.ms,
-                  child: const PrayerScheduleList(
-                    key: ValueKey('prayer_schedule_list'),
-                  ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 6,
+              child: AnimationEntry(
+                delay: 250.ms,
+                child: const PrayerScheduleList(
+                  key: ValueKey('prayer_schedule_list'),
                 ),
               ),
-              const SizedBox(width: AppSpacing.lg),
-              // Stats sidebar - 40%
-              Expanded(
-                flex: 4,
-                child: AnimationEntry(
-                  delay: 400.ms,
-                  child: const PrayerStatsSidebar(
-                    key: ValueKey('prayer_stats_sidebar'),
-                  ),
+            ),
+            const SizedBox(width: AppSpacing.lg),
+            // Stats sidebar - 40%
+            Expanded(
+              flex: 4,
+              child: AnimationEntry(
+                delay: 400.ms,
+                child: const PrayerStatsSidebar(
+                  key: ValueKey('prayer_stats_sidebar'),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );

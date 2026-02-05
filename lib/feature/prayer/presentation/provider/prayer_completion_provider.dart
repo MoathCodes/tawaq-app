@@ -13,12 +13,37 @@ part 'prayer_completion_provider.g.dart';
 @riverpod
 class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
   /// Adds or updates a prayer completion.
-  /// This method provides an optimistic update to the UI.
+  /// This method provides an **optimistic update** to the UI for instant feedback.
   Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
     if (!ref.mounted) return;
     final service = ref.read(prayerServiceProvider);
     final settingsService = ref.read(settingsServiceProvider);
 
+    // --- Optimistic UI Update ---
+    // Update the state immediately so the UI reflects the change instantly
+    final currentCompletions = state.value ?? [];
+    final existingIndex = currentCompletions.indexWhere(
+      (c) =>
+          c.prayer == completion.prayer &&
+          c.completionTime.isSameDate(completion.completionTime),
+    );
+
+    final List<PrayerCompletion> updatedCompletions;
+    if (existingIndex != -1) {
+      // Update existing completion with the new status (preserve ID)
+      final existingId = currentCompletions[existingIndex].id;
+      updatedCompletions = [
+        ...currentCompletions.sublist(0, existingIndex),
+        completion.copyWith(id: existingId),
+        ...currentCompletions.sublist(existingIndex + 1),
+      ];
+    } else {
+      // Add new completion
+      updatedCompletions = [...currentCompletions, completion];
+    }
+    state = AsyncData(updatedCompletions);
+
+    // --- Persist to Database ---
     // Set the first prayer recorded date if not already set
     await settingsService.setFirstPrayerRecordedDateIfNull(
       completion.completionTime,
@@ -27,6 +52,7 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
     await service.addOrUpdateCompletion(completion);
     if (!ref.mounted) return;
 
+    // Refresh from database to get the actual persisted data with IDs
     final completions = await service.getPrayerCompletionForDate(
       completion.completionTime,
     );

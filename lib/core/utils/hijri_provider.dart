@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hijriyah_indonesia/hijriyah_indonesia.dart';
+import 'package:hijri_date/hijri.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'hijri_provider.g.dart';
@@ -18,9 +18,9 @@ Stream<String> hijriClock(Ref ref) async* {
 }
 
 String _formatHijri(Locale? locale) {
-  Hijriyah.setLocal(locale?.languageCode ?? 'en');
-  final hijriDate = Hijriyah.fromDate(
+  HijriDate.setLocal(locale?.languageCode ?? 'en');
+  final hijriDate = HijriDate.fromDate(
     DateTime.now().toLocal(),
-  ).toFormat('EEEE, dd MMMM yyyy');
+  ).toFormat('DDDD, dd MMMM yyyy');
   return hijriDate;
 }

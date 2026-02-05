@@ -5,7 +5,7 @@ import 'package:hasanat/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hijriyah_indonesia/hijriyah_indonesia.dart';
+import 'package:hijri_date/hijri.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart';
@@ -140,7 +140,7 @@ class PrayerService {
       _settings.method,
       roundToMinutes: roundToMinutes,
     );
-    if (Hijriyah.now().hMonth == 9 && _settings.method is UmmAlQura) {
+    if (HijriDate.now().hMonth == 9 && _settings.method is UmmAlQura) {
       _log.d('Adjusting Isha for Ramadan');
       times = times.copyWith(isha: times.isha.add(const Duration(minutes: 30)));
     }

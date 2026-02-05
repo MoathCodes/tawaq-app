@@ -1,19 +1,21 @@
+import 'dart:async';
+
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/utils/date_formatter.dart';
-import 'package:hasanat/core/widgets/f_skeletonizer.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:hasanat/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/widgets/schedule_prayer_row.dart';
 import 'package:hasanat/theme/theme.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:intl/intl.dart';
 
 /// Today's prayer schedule with expandable status selectors.
+/// Users can navigate back up to a week to view and edit prayer statuses.
 class PrayerScheduleList extends HookConsumerWidget {
   /// Creates a [PrayerScheduleList] instance.
   const PrayerScheduleList({super.key});
@@ -21,126 +23,142 @@ class PrayerScheduleList extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
-    final service = ref.watch(prayerServiceProvider);
-    final prayerTimes = ref.watch(currentPrayerTimesProvider());
+    final l10n = context.l10n;
     final now = ref.watch(currentLocationTimeProvider);
-    final formatter = ref.watch(timeFormatterProvider);
+    final dateFormat = DateFormat.yMMMd(l10n.localeName);
 
-    final completions = ref.watch(prayerCompletionProvider);
-    final completionMap = completions.maybeWhen(
-      data: (list) => {for (final c in list) c.prayer: c},
-      orElse: () => <Prayer, PrayerCompletion>{},
+    // Track the selected date (defaults to today) - this is the source of truth
+    final selectedDate = useState<DateTime>(now);
+
+    final scheduleAsync = ref.watch(
+      prayerScheduleProvider(l10n, selectedDate.value),
     );
 
-    final currentPrayer = service.currentPrayer(prayerTimes);
-    final today = DateTime(now.year, now.month, now.day);
-
     // State to track the currently expanded prayer
-    final expandedPrayer = useState<Prayer?>(currentPrayer);
+    final expandedPrayer = useState<Prayer?>(null);
 
-    // Update expanded prayer if current prayer changes (and user hasn't manually collapsed it?)
-    // Or just let it be. Just initializing with currentPrayer is redundant if we depend on `service.currentPrayer`
-    // which might change.
-    // Let's use useEffect to sync initial state or updates if critical, but for now simple useState is fine.
-    // If the day changes, `currentPrayer` changes, we might want to update the expansion.
-    useEffect(() {
-      expandedPrayer.value = currentPrayer;
-      return null;
-    }, [currentPrayer]);
+    // Update expanded prayer when we get data with a current prayer
+    useEffect(
+      () {
+        scheduleAsync.whenData((rows) {
+          final currentRow = rows.where((r) => r.isCurrentPrayer).firstOrNull;
+          if (currentRow != null && expandedPrayer.value == null) {
+            expandedPrayer.value = currentRow.prayer;
+          }
+        });
+        return null;
+      },
+      [scheduleAsync],
+    );
 
-    // List of prayers to display
-    const prayers = [
-      Prayer.fajr,
-      Prayer.dhuhr,
-      Prayer.asr,
-      Prayer.maghrib,
-      Prayer.isha,
-    ];
+    // Determine if selected date is today
+    final isToday =
+        selectedDate.value.year == now.year &&
+        selectedDate.value.month == now.month &&
+        selectedDate.value.day == now.day;
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
+          // Header with date navigation
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  context.l10n.todaysSchedule,
-                  style: theme.typography.lg.copyWith(
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isToday
+                            ? l10n.todaysSchedule
+                            : dateFormat.format(selectedDate.value),
+                        style: theme.typography.lg.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        l10n.selectPrayerToLog,
+                        style: theme.typography.sm.copyWith(
+                          color: theme.colors.mutedForeground,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Text(
-                  context.l10n.selectPrayerToLog,
-                  style: theme.typography.sm.copyWith(
-                    color: theme.colors.mutedForeground,
+                // Week date selector - uses lifted control pattern
+                Expanded(
+                  flex: 2,
+                  child: FLineCalendar(
+                    control: FLineCalendarControl.lifted(
+                      date: selectedDate.value,
+                      onChange: (value) {
+                        if (value != null) {
+                          selectedDate.value = value;
+                          unawaited(
+                            ref
+                                .read(prayerCompletionProvider.notifier)
+                                .setDate(value),
+                          );
+                        }
+                      },
+                    ),
+                    start: now.subtract(const Duration(days: 6)),
+                    end: now,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          // Prayer rows
-          completions.when(
-            data: (_) => Column(
-              children: prayers.map((prayer) {
-                final time = prayerTimes.timeForPrayer(prayer);
-                final isActive = currentPrayer.isObligatory
-                    ? prayer == currentPrayer
-                    : currentPrayer == .ishaBefore ||
-                          currentPrayer == .fajrAfter
-                    ? prayer == .fajr
-                    : prayer == .dhuhr;
-                final completion = completionMap[prayer];
-                final status = completion?.status ?? CompletionStatus.none;
-                final isExpanded = expandedPrayer.value == prayer;
-
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: SchedulePrayerRow(
-                    prayer: prayer,
-                    adhanTime: formatter.format(time),
-                    prayerTime: time,
-                    isActive: isActive,
-                    isExpanded: isExpanded,
-                    onToggle: () {
-                      if (isExpanded) {
-                        expandedPrayer.value = null;
-                      } else {
-                        expandedPrayer.value = prayer;
-                      }
-                    },
-                    isCompleted: status != CompletionStatus.none,
-                    currentStatus: status,
-                    completionTime: today,
-                  ),
-                );
-              }).toList(),
-            ),
-            loading: () => FSkeletonizer(
-              child: Column(
-                children: List.generate(
-                  8,
-                  (i) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                    child: Container(
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: theme.colors.secondary,
-                        borderRadius: context.theme.radii.md,
+          // Prayer rows with smooth animation on date change
+          scheduleAsync.when(
+            data: (rows) => Column(
+              key: ValueKey(selectedDate.value),
+              children: rows
+                  .map(
+                    (row) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: SchedulePrayerRow(
+                        row: row,
+                        isExpanded: expandedPrayer.value == row.prayer,
+                        onToggle: () {
+                          if (expandedPrayer.value == row.prayer) {
+                            expandedPrayer.value = null;
+                          } else {
+                            expandedPrayer.value = row.prayer;
+                          }
+                        },
                       ),
                     ),
-                  ),
-                ),
-              ),
-            ),
+                  )
+                  .toList(),
+            ).animate().fadeIn(duration: 200.ms),
+            // loading: () => FSkeletonizer(
+            //   child: Column(
+            //     children: List.generate(
+            //       5,
+            //       (i) => Padding(
+            //         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            //         child: Container(
+            //           height: 80,
+            //           decoration: BoxDecoration(
+            //             color: theme.colors.secondary,
+            //             borderRadius: context.theme.radii.md,
+            //           ),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             error: (e, _) => FAlert(
-              title: Text(context.l10n.errorOccurredWhile('Loading schedule')),
+              title: Text(l10n.errorOccurredWhile('Loading schedule')),
               subtitle: Text(e.toString()),
             ),
+            loading: () => const SizedBox.shrink(),
           ),
         ],
       ),

@@ -51,25 +51,11 @@ class PrayerHeroHeader extends ConsumerWidget {
           subtitle: Text(e.toString()),
         ),
         loading: () => FSkeletonizer(
-          child: _HeroContent(data: _MockData(), theme: theme),
+          child: _HeroContent(data: PrayerCardInfo.empty(), theme: theme),
         ),
       ),
     );
   }
-}
-
-class _MockData implements PrayerCardInfo {
-  @override
-  String get adhanTime => '--:--';
-  @override
-  String get iqamahTime => '--:--';
-  @override
-  Prayer get prayer => Prayer.fajr;
-  @override
-  String get time => 'Loading...';
-  @override
-  $PrayerCardInfoCopyWith<PrayerCardInfo> get copyWith =>
-      throw UnimplementedError();
 }
 
 class _HeroContent extends ConsumerWidget {
@@ -109,7 +95,7 @@ class _HeroContent extends ConsumerWidget {
               child: Icon(
                 data.prayer.icon,
                 size: 200.sp,
-                color: Colors.white.withValues(alpha: 0.1),
+                color: theme.colors.foreground.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -128,21 +114,44 @@ class _HeroContent extends ConsumerWidget {
                 ),
                 const Spacer(),
                 // Prayer Info
-                _PrayerNameSection(data: data),
+                Text(
+                  data.prayer.getLocaleName(context.l10n),
+                  style: TextStyle(
+                    color: theme.colors.foreground,
+                    fontSize: 36.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   '${context.l10n.nextPrayer}: ${data.time}',
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontSize: 16.sp,
+                    color: theme.colors.foreground.withValues(alpha: 0.9),
+                    fontSize: 18.sp,
                   ),
                 ),
                 const Spacer(),
                 const SizedBox(height: AppSpacing.lg),
                 // Status Button
-                SizedBox(
-                  width: double.infinity,
-                  child: _StatusSelectorButton(prayer: data.prayer),
+                Row(
+                  children: [
+                    _TimeSquare(
+                      time: data.adhanTime,
+                      label: context.l10n.adhan,
+                    ),
+                    if (data.showIqamah) ...[
+                      const SizedBox(width: AppSpacing.md),
+                      _TimeSquare(
+                        time: data.iqamahTime,
+                        label: context.l10n.iqamah,
+                      ),
+                    ],
+                    const SizedBox(width: AppSpacing.md),
+                    _StatusSelectorButton(
+                      prayer: data.prayer,
+                      canSetStatus: data.canSetStatus,
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -160,13 +169,14 @@ class _HijriDatePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
+        color: theme.colors.background.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -174,7 +184,7 @@ class _HijriDatePill extends StatelessWidget {
         children: [
           Icon(
             FIcons.calendar,
-            color: Colors.white.withValues(alpha: 0.8),
+            color: theme.colors.foreground.withValues(alpha: 0.8),
             size: 14.sp,
           ),
           const SizedBox(width: AppSpacing.xs),
@@ -182,14 +192,14 @@ class _HijriDatePill extends StatelessWidget {
             AsyncData<String>(:final value) => Text(
               value,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: theme.colors.foreground.withValues(alpha: 0.9),
                 fontSize: 12.sp,
               ),
             ),
             _ => Text(
               '...',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.9),
+                color: theme.colors.foreground.withValues(alpha: 0.9),
                 fontSize: 12.sp,
               ),
             ),
@@ -200,105 +210,172 @@ class _HijriDatePill extends StatelessWidget {
   }
 }
 
-class _PrayerNameSection extends StatelessWidget {
-  const _PrayerNameSection({required this.data});
+class _TimeSquare extends StatelessWidget {
+  const _TimeSquare({required this.time, required this.label});
 
-  final PrayerCardInfo data;
+  final String time;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      data.prayer.getLocaleName(context.l10n),
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 36.sp,
-        fontWeight: FontWeight.bold,
+    final theme = FTheme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colors.background.withValues(alpha: 0.2),
+        borderRadius: context.theme.radii.md,
+        border: Border.all(
+          color: theme.colors.border.withValues(alpha: 0.1),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: context.theme.typography.xs.copyWith(
+              color: theme.colors.foreground.withValues(alpha: 0.7),
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            time,
+            style: TextStyle(
+              color: theme.colors.foreground,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _StatusSelectorButton extends ConsumerWidget {
-  const _StatusSelectorButton({required this.prayer});
+  const _StatusSelectorButton({
+    required this.prayer,
+    required this.canSetStatus,
+  });
 
   final Prayer prayer;
+  final bool canSetStatus;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final completions = ref.watch(prayerCompletionProvider);
-    final currentStatus = completions.maybeWhen(
-      data: (list) {
-        final match = list.where((c) => c.prayer == prayer).firstOrNull;
-        return match?.status ?? CompletionStatus.none;
-      },
-      orElse: () => CompletionStatus.none,
-    );
-
-    return FPopoverMenu(
-      menu: [
-        FItemGroup(
-          children: CompletionStatus.values
-              .where((v) => v != CompletionStatus.none)
-              .map(
-                (e) => FItem(
-                  title: Text(e.getLocaleName(context.l10n)),
-                  prefix: Icon(e.getIcon(), color: e.getBadgeColor()),
-                  onPress: () {
-                    ref
-                        .read(prayerCompletionProvider.notifier)
-                        .addOrUpdateCompletion(
-                          PrayerCompletion(
-                            id: null,
-                            status: e,
-                            prayer: prayer,
-                            completionTime: DateTime.now(),
-                          ),
-                        );
-                  },
-                ),
-              )
-              .toList(),
-        ),
-      ],
-      builder: (context, controller, _) => MouseClick(
-        onClick: controller.toggle,
-        child: Container(
-          width: 140.w,
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (currentStatus != CompletionStatus.none) ...[
-                Icon(
-                  currentStatus.getIcon(),
-                  color: Colors.white,
-                  size: 16.sp,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  currentStatus.getLocaleName(context.l10n),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ] else ...[
-                Text(
-                  context.l10n.logPrayerStatus,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
+    final status = ref.watch(
+      prayerCompletionProvider.select(
+        (value) => value.value
+            ?.firstWhere(
+              (c) => c.prayer == prayer,
+              orElse: () => PrayerCompletion(
+                prayer: prayer,
+                status: CompletionStatus.none,
+                completionTime: DateTime.now(),
+                id: null,
+              ),
+            )
+            .status,
       ),
     );
+
+    return canSetStatus
+        ? FPopoverMenu(
+            menu: [
+              FItemGroup(
+                children: CompletionStatus.values
+                    .where((v) => v != CompletionStatus.none)
+                    .map(
+                      (e) => FItem(
+                        title: Text(e.getLocaleName(context.l10n)),
+                        prefix: Icon(e.getIcon(), color: e.getBadgeColor()),
+                        onPress: () async {
+                          await ref
+                              .read(prayerCompletionProvider.notifier)
+                              .addOrUpdateCompletion(
+                                PrayerCompletion(
+                                  id: null,
+                                  status: e,
+                                  prayer: prayer,
+                                  completionTime: DateTime.now(),
+                                ),
+                              );
+                        },
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+            builder: (context, controller, _) {
+              final isSet = status != CompletionStatus.none && status != null;
+              final theme = FTheme.of(context);
+              return MouseClick(
+                onClick: controller.toggle,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSet
+                        ? theme.colors.secondary
+                        : theme.colors.background.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSet
+                          ? theme.colors.secondary
+                          : theme.colors.border.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isSet) ...[
+                          Icon(
+                            status.getIcon(),
+                            color: theme.colors.secondaryForeground,
+                            size: 16.sp,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            status.getLocaleName(context.l10n),
+                            style: TextStyle(
+                              color: theme.colors.secondaryForeground,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14.sp,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Icon(
+                            FIcons.chevronDown,
+                            color: theme.colors.secondaryForeground,
+                            size: 14.sp,
+                          ),
+                        ] else ...[
+                          Text(
+                            context.l10n.logPrayerStatus,
+                            style: TextStyle(
+                              color: theme.colors.foreground,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14.sp,
+                            ), 
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          )
+        : const SizedBox.shrink();
   }
 }

@@ -133,13 +133,14 @@ class PrayerCard extends _$PrayerCard {
         ? decision.referenceTime
               .difference(currentTime)
               .toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)
-        : '+${currentTime.difference(decision.referenceTime)
-            .toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)}';
+        : '+${currentTime.difference(decision.referenceTime).toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)}';
 
     final iqamahMinutes =
         activeSettingsForIqamah.iqamahSettings[decision.prayer] ?? 0;
 
     final cardInfo = PrayerCardInfo(
+      canSetStatus: currentTime.isAfter(decision.referenceTime),
+      showIqamah: iqamahMinutes > 0,
       time: time,
       prayer: decision.prayer,
       adhanTime: formatter.format(decision.referenceTime),

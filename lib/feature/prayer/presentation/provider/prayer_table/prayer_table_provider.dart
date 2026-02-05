@@ -2,7 +2,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/utils/date_formatter.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_table_model.dart';
+import 'package:hasanat/feature/prayer/domain/models/prayer_schedule_row.dart';
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
@@ -15,13 +15,26 @@ part 'prayer_table_provider.g.dart';
 
 const _logPrefix = '[PrayerTable]';
 
+/// All prayers to display in the table (including sunnah times).
+const List<Prayer> _allPrayers = [
+  Prayer.fajr,
+  Prayer.sunrise,
+  Prayer.dhuhr,
+  Prayer.asr,
+  Prayer.maghrib,
+  Prayer.isha,
+];
+
 /// Notifier for the prayer times table.
+///
+/// This provides all prayers (obligatory + sunnah) with adhan/iqamah times
+/// formatted for display in a table view.
 @riverpod
 class PrayerTable extends _$PrayerTable {
   _Cache? _cache;
 
   @override
-  Stream<List<PrayerTableRow>> build(AppLocalizations l10n) async* {
+  Stream<List<PrayerScheduleRow>> build(AppLocalizations l10n) async* {
     final log = ref.read(loggerProvider);
     final service = ref.read(prayerServiceProvider);
     final settings = ref.watch(prayerSettingsProvider).value;
@@ -36,7 +49,7 @@ class PrayerTable extends _$PrayerTable {
         final now = DateTime.now().toLocation(settings.location);
         _ensureCache(now, settings, service, log);
         return _cache == null
-            ? <PrayerTableRow>[]
+            ? <PrayerScheduleRow>[]
             : _buildRows(
                 fmt,
                 _cache!.today,
@@ -47,7 +60,7 @@ class PrayerTable extends _$PrayerTable {
               );
       } catch (e, st) {
         log.e('$_logPrefix Error', error: e, stackTrace: st);
-        return <PrayerTableRow>[];
+        return <PrayerScheduleRow>[];
       }
     });
   }
@@ -86,7 +99,7 @@ class PrayerTable extends _$PrayerTable {
     }
   }
 
-  String? _adhanMsg(
+  String? _relativeTimeMsg(
     bool isCurrent,
     DateTime now,
     DateTime t,
@@ -104,7 +117,7 @@ class PrayerTable extends _$PrayerTable {
               : l10n.adhanMinsLeft(diff.inMinutes));
   }
 
-  List<PrayerTableRow> _buildRows(
+  List<PrayerScheduleRow> _buildRows(
     DateFormat fmt,
     PrayerTimes times,
     SunnahTimes sunnah,
@@ -115,51 +128,53 @@ class PrayerTable extends _$PrayerTable {
     final loc = settings.location;
     final current = times.currentPrayer(time: now);
 
+    // Build sunnah rows
     final sunnahRows =
         [
           (Prayer.fajrAfter, sunnah.middleOfTheNight),
           (Prayer.ishaBefore, sunnah.lastThirdOfTheNight),
         ].map((e) {
           final t = e.$2.toLocation(loc);
-          return PrayerTableRow(
+          final isCurrent = current == e.$1;
+          return PrayerScheduleRow(
             prayer: e.$1,
-            isNextPrayer: false,
-            isCurrentPrayer: current == e.$1,
-            adhan: (
-              title: fmt.format(t),
-              subtitle: _adhanMsg(current == e.$1, now, t, l10n),
-            ),
-            iqamah: (title: '------', subtitle: null),
+            prayerTime: t,
+            formattedAdhanTime: fmt.format(t),
+            relativeTimeSubtitle: _relativeTimeMsg(isCurrent, now, t, l10n),
+            isCurrentPrayer: isCurrent,
           );
         }).toList();
 
-    final prayerRows = Prayer.values
-        .where((p) => p != Prayer.fajrAfter && p != Prayer.ishaBefore)
-        .map((p) {
-          final t = times.getTimesForPrayer(p, loc);
-          final iqamahMins = settings.iqamahSettings[p] ?? 0;
-          final adhan = fmt.format(t);
-          var iqamah = iqamahMins == 0
-              ? '------'
-              : fmt.format(t.add(Duration(minutes: iqamahMins)));
-          if (adhan == iqamah || p == Prayer.sunrise) iqamah = '------';
-          final iqamahSub = (p != Prayer.sunrise && iqamahMins != 0)
-              ? l10n.iqamahSubtitleMessage(iqamahMins)
-              : null;
-          return PrayerTableRow(
-            prayer: p,
-            isNextPrayer: false,
-            isCurrentPrayer: current == p,
-            adhan: (
-              title: adhan,
-              subtitle: _adhanMsg(current == p, now, t, l10n),
-            ),
-            iqamah: (title: iqamah, subtitle: iqamahSub),
-          );
-        })
-        .toList();
+    // Build prayer rows
+    final prayerRows = _allPrayers.map((p) {
+      final t = times.getTimesForPrayer(p, loc);
+      final iqamahMins = settings.iqamahSettings[p] ?? 0;
+      final formattedAdhan = fmt.format(t);
+
+      String? formattedIqamah;
+      if (iqamahMins > 0 && p != Prayer.sunrise) {
+        final iqamahTime = t.add(Duration(minutes: iqamahMins));
+        final formatted = fmt.format(iqamahTime);
+        // Don't show iqamah if it's the same as adhan
+        if (formatted != formattedAdhan) {
+          formattedIqamah = formatted;
+        }
+      }
+
+      final isCurrent = current == p;
+      return PrayerScheduleRow(
+        prayer: p,
+        prayerTime: t,
+        formattedAdhanTime: formattedAdhan,
+        formattedIqamahTime: formattedIqamah,
+        relativeTimeSubtitle: _relativeTimeMsg(isCurrent, now, t, l10n),
+        isCurrentPrayer: isCurrent,
+      );
+    }).toList();
 
     final all = [...prayerRows, ...sunnahRows];
+
+    // Mark next prayer
     final idx = all.indexWhere((r) => r.isCurrentPrayer);
     if (idx != -1) {
       final nextIdx = (idx + 1) % all.length;

@@ -12,6 +12,8 @@ abstract class PrayerCardInfo with _$PrayerCardInfo {
     required Prayer prayer,
     required String adhanTime,
     required String iqamahTime,
+    required bool canSetStatus,
+    required bool showIqamah,
   }) = _PrayerCardInfo;
 
   /// Creates an empty [PrayerCardInfo] instance with default values.
@@ -20,5 +22,7 @@ abstract class PrayerCardInfo with _$PrayerCardInfo {
     prayer: Prayer.fajrAfter,
     adhanTime: '00:00',
     iqamahTime: '00:00',
+    canSetStatus: false,
+    showIqamah: false,
   );
 }

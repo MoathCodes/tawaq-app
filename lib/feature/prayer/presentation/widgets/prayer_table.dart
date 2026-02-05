@@ -6,7 +6,7 @@ import 'package:hasanat/core/utils/prayer_extensions.dart';
 import 'package:hasanat/core/widgets/custom_cards.dart';
 import 'package:hasanat/core/widgets/f_skeletonizer.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_table_model.dart';
+import 'package:hasanat/feature/prayer/domain/models/prayer_schedule_row.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_table/prayer_table_provider.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:hasanat/theme/theme.dart';
@@ -29,7 +29,7 @@ class PrayerTable extends ConsumerWidget {
     final data = ref.watch(prayerTableProvider(l10n));
 
     return StaticCard(
-      padding: .zero,
+      padding: EdgeInsets.zero,
       child: data.when(
         data: (rows) => _TableContent(rows: rows),
         loading: _LoadingTable.new,
@@ -142,7 +142,7 @@ class _LoadingTable extends StatelessWidget {
 
 class _TableContent extends StatelessWidget {
   const _TableContent({required this.rows});
-  final List<PrayerTableRow> rows;
+  final List<PrayerScheduleRow> rows;
 
   @override
   Widget build(BuildContext context) {
@@ -168,15 +168,16 @@ class _TableContent extends StatelessWidget {
   }
 
   DataRow _buildRow(
-    PrayerTableRow row,
+    PrayerScheduleRow row,
     FThemeData theme,
     AppLocalizations l10n,
   ) {
     Color? bgColor;
     if (row.isCurrentPrayer) {
       bgColor = theme.colors.primary.withAlpha(50);
-    } else if (row.isNextPrayer)
+    } else if (row.isNextPrayer) {
       bgColor = theme.colors.primary.withAlpha(30);
+    }
 
     return DataRow(
       color: WidgetStateProperty.all(bgColor),
@@ -220,31 +221,40 @@ class _TableContent extends StatelessWidget {
             ),
           ),
         ),
-        _timeCell(row.adhan, theme),
-        _timeCell(row.iqamah, theme),
+        _timeCell(
+          title: row.formattedAdhanTime,
+          subtitle: row.relativeTimeSubtitle,
+          theme: theme,
+        ),
+        _timeCell(
+          title: row.formattedIqamahTime ?? '------',
+          subtitle: null,
+          theme: theme,
+        ),
       ],
     );
   }
 
-  DataCell _timeCell(
-    ({String title, String? subtitle}) info,
-    FThemeData theme,
-  ) {
+  DataCell _timeCell({
+    required String title,
+    required String? subtitle,
+    required FThemeData theme,
+  }) {
     return DataCell(
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
         spacing: 2,
         children: [
           Text(
-            info.title,
+            title,
             style: theme.typography.base.copyWith(
               fontWeight: FontWeight.w600,
               color: theme.colors.primary,
             ),
           ),
-          if (info.subtitle != null)
+          if (subtitle != null)
             Text(
-              info.subtitle!,
+              subtitle,
               style: theme.typography.xs.copyWith(
                 color: theme.colors.mutedForeground,
               ),

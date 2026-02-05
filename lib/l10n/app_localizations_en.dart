@@ -751,7 +751,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get footnote => 'Footnote';
 
   @override
-  String get logPrayerStatus => 'Log Prayer Status';
+  String get logPrayerStatus => 'Prayer Status';
 
   @override
   String get nowActive => 'Now Active';

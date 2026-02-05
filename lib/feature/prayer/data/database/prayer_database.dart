@@ -122,15 +122,35 @@ class PrayerDatabase {
   }
 
   /// Inserts or updates a prayer completion.
+  ///
+  /// If a completion for the same prayer on the same date already exists,
+  /// it will be updated. Otherwise, a new completion will be inserted.
   Future<void> insertOrUpdateCompletion(PrayerCompletion completion) async {
-    if (completion.id == null) {
+    // First, check if a completion already exists for this prayer+date
+    final existingId = await _findExistingCompletionId(
+      completion.prayer,
+      completion.completionTime,
+    );
+
+    if (existingId != null) {
+      // Update existing completion with the same ID
+      await _box.put(existingId, completion.copyWith(id: existingId));
+    } else if (completion.id != null) {
+      // Update by explicit ID
+      await _box.put(completion.id!, completion);
+    } else {
       // Add new completion (Hivez will auto-assign an ID)
       final id = await _box.add(completion);
       await _box.put(id, completion.copyWith(id: id));
-    } else {
-      // Update existing completion
-      await _box.put(completion.id!, completion);
     }
+  }
+
+  /// Finds an existing completion ID for a prayer on a specific date.
+  Future<int?> _findExistingCompletionId(Prayer prayer, DateTime date) async {
+    return _box.firstKeyWhere(
+      (_, value) =>
+          value.prayer == prayer && value.completionTime.isSameDate(date),
+    );
   }
 
   /// Returns whether a prayer completion exists.
