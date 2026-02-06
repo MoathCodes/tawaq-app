@@ -23,15 +23,38 @@ class PrayerHeroHeader extends ConsumerWidget {
 
   static const _kBorderRadius = BorderRadius.all(Radius.circular(16));
 
-  static Color _getPrayerColor(Prayer prayer) {
+  /// Returns a gradient color pair for each prayer.
+  /// The first color is the primary (lighter), the second is the accent (darker).
+  static (Color, Color) _getPrayerGradient(Prayer prayer) {
     return switch (prayer) {
-      Prayer.fajr => Colors.blueGrey.shade400,
-      Prayer.sunrise => Colors.orange.shade400,
-      Prayer.dhuhr => Colors.lightBlue.shade400,
-      Prayer.asr => Colors.amber.shade600,
-      Prayer.maghrib => Colors.deepOrange.shade400,
-      Prayer.isha => Colors.indigo.shade400,
-      _ => Colors.teal.shade400,
+      Prayer.fajr => (
+        const Color(0xFF5C6BC0), // Indigo/blue twilight
+        const Color(0xFF303F9F), // Darker indigo
+      ),
+      Prayer.sunrise => (
+        const Color(0xFFFF8A65), // Soft orange
+        const Color(0xFFE64A19), // Deep orange
+      ),
+      Prayer.dhuhr => (
+        const Color(0xFF4FC3F7), // Light sky blue
+        const Color(0xFF0288D1), // Deep blue
+      ),
+      Prayer.asr => (
+        const Color(0xFFFFB74D), // Warm amber
+        const Color(0xFFF57C00), // Deep amber
+      ),
+      Prayer.maghrib => (
+        const Color(0xFFFF7043), // Sunset orange
+        const Color(0xFFD84315), // Deep burnt orange
+      ),
+      Prayer.isha => (
+        const Color(0xFF7986CB), // Soft indigo
+        const Color(0xFF3949AB), // Deep indigo
+      ),
+      _ => (
+        const Color(0xFF4DB6AC), // Teal
+        const Color(0xFF00897B), // Deep teal
+      ),
     };
   }
 
@@ -68,19 +91,20 @@ class _HeroContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hijriDate = ref.watch(hijriClockProvider);
 
-    final prayerColor = PrayerHeroHeader._getPrayerColor(data.prayer);
-    final primary = theme.colors.primary;
+    final (gradientStart, gradientEnd) = PrayerHeroHeader._getPrayerGradient(
+      data.prayer,
+    );
+
+    // Flip gradient direction based on text direction (RTL vs LTR)
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return Container(
       height: 260.h,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            primary,
-            Color.lerp(primary, prayerColor, 0.4) ?? primary,
-          ],
+          begin: isRtl ? Alignment.topLeft : Alignment.topRight,
+          end: isRtl ? Alignment.bottomRight : Alignment.bottomLeft,
+          colors: [gradientStart, gradientEnd],
         ),
         borderRadius: PrayerHeroHeader._kBorderRadius,
       ),
@@ -88,14 +112,15 @@ class _HeroContent extends ConsumerWidget {
         children: [
           // Watermark Icon
           Positioned(
-            right: -20,
+            right: isRtl ? null : -20,
+            left: isRtl ? -20 : null,
             bottom: -40,
             child: Transform.rotate(
-              angle: -0.2,
+              angle: isRtl ? 0.2 : -0.2,
               child: Icon(
                 data.prayer.icon,
                 size: 200.sp,
-                color: theme.colors.foreground.withValues(alpha: 0.1),
+                color: Colors.white.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -117,7 +142,7 @@ class _HeroContent extends ConsumerWidget {
                 Text(
                   data.prayer.getLocaleName(context.l10n),
                   style: TextStyle(
-                    color: theme.colors.foreground,
+                    color: Colors.white,
                     fontSize: 36.sp,
                     fontWeight: FontWeight.bold,
                   ),
@@ -126,7 +151,7 @@ class _HeroContent extends ConsumerWidget {
                 Text(
                   '${context.l10n.nextPrayer}: ${data.time}',
                   style: TextStyle(
-                    color: theme.colors.foreground.withValues(alpha: 0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 18.sp,
                   ),
                 ),
@@ -136,7 +161,9 @@ class _HeroContent extends ConsumerWidget {
                   children: [
                     _TimeSquare(
                       time: data.adhanTime,
-                      label: context.l10n.adhan,
+                      label: data.prayer.isObligatory
+                          ? context.l10n.adhan
+                          : null,
                     ),
                     if (data.showIqamah) ...[
                       const SizedBox(width: AppSpacing.lg),
@@ -183,7 +210,7 @@ class _HijriDatePill extends StatelessWidget {
         children: [
           Icon(
             FIcons.calendar,
-            color: theme.colors.foreground.withValues(alpha: 0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             size: 14.sp,
           ),
           const SizedBox(width: AppSpacing.xs),
@@ -191,14 +218,14 @@ class _HijriDatePill extends StatelessWidget {
             AsyncData<String>(:final value) => Text(
               value,
               style: TextStyle(
-                color: theme.colors.foreground.withValues(alpha: 0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 12.sp,
               ),
             ),
             _ => Text(
               '...',
               style: TextStyle(
-                color: theme.colors.foreground.withValues(alpha: 0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 12.sp,
               ),
             ),
@@ -213,7 +240,7 @@ class _TimeSquare extends StatelessWidget {
   const _TimeSquare({required this.time, required this.label});
 
   final String time;
-  final String label;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -233,19 +260,20 @@ class _TimeSquare extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            label.toUpperCase(),
-            style: context.theme.typography.xs.copyWith(
-              color: theme.colors.foreground.withValues(alpha: 0.7),
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1,
+          if (label != null)
+            Text(
+              label!.toUpperCase(),
+              style: context.theme.typography.xs.copyWith(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 1,
+              ),
             ),
-          ),
           const SizedBox(height: 6),
           Text(
             time,
             style: TextStyle(
-              color: theme.colors.foreground,
+              color: Colors.white,
               fontSize: 24.sp,
               fontWeight: FontWeight.w600,
               fontFeatures: const [FontFeature.tabularFigures()],
@@ -362,7 +390,7 @@ class _StatusSelectorButton extends ConsumerWidget {
                           Text(
                             context.l10n.logPrayerStatus,
                             style: TextStyle(
-                              color: theme.colors.foreground,
+                              color: Colors.white,
                               fontWeight: FontWeight.w600,
                               fontSize: 14.sp,
                             ),

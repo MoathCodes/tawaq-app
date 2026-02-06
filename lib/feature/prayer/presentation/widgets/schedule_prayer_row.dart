@@ -293,13 +293,15 @@ class _StatusBadge extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: status.getBadgeColor().withValues(alpha: 0.2),
+        color: status
+            .getBadgeColor(isDark: context.theme.isDark)
+            .withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         status.getLocaleName(context.l10n),
         style: TextStyle(
-          color: status.getBadgeColor(),
+          color: status.getBadgeColor(isDark: context.theme.isDark),
           fontSize: 10.sp,
           fontWeight: FontWeight.w600,
         ),
@@ -392,10 +394,14 @@ class _StatusButton extends StatelessWidget {
             vertical: AppSpacing.sm,
           ),
           decoration: BoxDecoration(
-            color: isSelected ? status.getBadgeColor() : colors.background,
+            color: isSelected
+                ? status.getBadgeColor(isDark: context.theme.isDark)
+                : colors.background,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isSelected ? status.getBadgeColor() : colors.border,
+              color: isSelected
+                  ? status.getBadgeColor(isDark: context.theme.isDark)
+                  : colors.border,
             ),
           ),
           child: Row(

@@ -12,7 +12,6 @@ import 'package:hasanat/core/widgets/f_skeletonizer.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
-import 'package:hasanat/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hasanat/theme/theme.dart';
@@ -95,8 +94,6 @@ class _DailyAchievementCard extends StatelessWidget {
     final theme = FTheme.of(context);
     final counts = data.todayStatusCounts;
 
-    final score = _weightedScore(counts);
-
     return StaticCard(
       padding: const EdgeInsets.all(AppSpacing.lg),
       backgroundColor: theme.colors.secondary.withValues(alpha: 0.7),
@@ -110,27 +107,20 @@ class _DailyAchievementCard extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'إنجاز اليوم',
-                    style: theme.typography.lg.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Icon(
-                    FIcons.chartSpline,
-                    size: 18.sp,
-                    color: theme.colors.mutedForeground,
-                  ),
-                ],
+              Text(
+                context.l10n.todayAchievement,
+                style: theme.typography.lg.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              Center(
-                child: _Gauge(
-                  progress: score,
-                  size: gaugeSize,
+              RepaintBoundary(
+                child: Center(
+                  child: _Gauge(
+                    progress: data.todayPerformanceScore,
+                    statusCounts: counts,
+                    size: gaugeSize,
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -141,29 +131,51 @@ class _DailyAchievementCard extends StatelessWidget {
       ),
     );
   }
-
-  double _weightedScore(Map<CompletionStatus, int> counts) {
-    final jamaah = counts[CompletionStatus.jamaah] ?? 0;
-    final onTime = counts[CompletionStatus.onTime] ?? 0;
-    final late = counts[CompletionStatus.late] ?? 0;
-    const expected = PrayerAnalyticsCalculator.prayersPerDay;
-    if (expected == 0) return 0;
-
-    final totalScore = (jamaah * 1.0) + (onTime * 0.85) + (late * 0.5);
-    return (totalScore / expected).clamp(0.0, 1.0);
-  }
 }
 
 class _Gauge extends StatelessWidget {
-  const _Gauge({required this.progress, required this.size});
+  const _Gauge({
+    required this.progress,
+    required this.statusCounts,
+    required this.size,
+  });
 
   final double progress;
+  final Map<CompletionStatus, int> statusCounts;
   final double size;
+
+  /// Determines the dominant status and returns its color for the percentage text.
+  Color _getPerformanceColor(bool isDark) {
+    final jamaah = statusCounts[CompletionStatus.jamaah] ?? 0;
+    final onTime = statusCounts[CompletionStatus.onTime] ?? 0;
+    final late = statusCounts[CompletionStatus.late] ?? 0;
+    final missed = statusCounts[CompletionStatus.missed] ?? 0;
+    final total = jamaah + onTime + late + missed;
+
+    if (total == 0) {
+      return CompletionStatus.onTime.getBadgeColor(isDark: isDark);
+    }
+
+    // Calculate a weighted score: jamaah=4, onTime=3, late=1, missed=0
+    final score = (jamaah * 4 + onTime * 3 + late * 1) / (total * 4);
+
+    // Return color based on performance tier
+    if (score >= 0.75) {
+      return CompletionStatus.jamaah.getBadgeColor(isDark: isDark);
+    } else if (score >= 0.5) {
+      return CompletionStatus.onTime.getBadgeColor(isDark: isDark);
+    } else if (score >= 0.25) {
+      return CompletionStatus.late.getBadgeColor(isDark: isDark);
+    } else {
+      return CompletionStatus.missed.getBadgeColor(isDark: isDark);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     final percent = (progress * 100).round();
+    final performanceColor = _getPerformanceColor(theme.isDark);
 
     return SizedBox(
       width: size,
@@ -175,6 +187,8 @@ class _Gauge extends StatelessWidget {
             size: Size(size, size * 0.65),
             painter: _GaugePainter(
               progress: progress,
+              statusCounts: statusCounts,
+              isDark: theme.isDark,
               trackColor: theme.colors.secondaryForeground.withValues(
                 alpha: 0.12,
               ),
@@ -189,11 +203,12 @@ class _Gauge extends StatelessWidget {
                   style: theme.typography.xl.copyWith(
                     fontWeight: FontWeight.w800,
                     fontSize: 32.sp,
+                    color: performanceColor,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  'مؤشر الأداء',
+                  context.l10n.performanceIndicator,
                   style: theme.typography.sm.copyWith(
                     color: theme.colors.mutedForeground,
                   ),
@@ -208,97 +223,157 @@ class _Gauge extends StatelessWidget {
 }
 
 class _GaugePainter extends CustomPainter {
-  _GaugePainter({required this.progress, required this.trackColor});
+  _GaugePainter({
+    required this.progress,
+    required this.statusCounts,
+    required this.trackColor,
+    required this.isDark,
+  });
 
   final double progress;
+  final Map<CompletionStatus, int> statusCounts;
   final Color trackColor;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (size.width <= 0 || size.height <= 0) return;
-    if (!progress.isFinite) return;
+    if (size.width <= 0 || size.height <= 0 || !progress.isFinite) return;
 
-    final safeProgress = progress.clamp(0.0, 1.0);
     final center = Offset(size.width / 2, size.height);
     final radius = size.width / 2.2;
-    const startAngle = math.pi;
-    const sweepAngle = math.pi;
-    const strokeWidth = 16.0;
 
     if (radius <= 0) return;
 
-    final trackPaint = Paint()
-      ..color = trackColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    const startAngle = math.pi;
+    const totalSweep = math.pi;
+    const strokeWidth = 16.0;
 
     final rect = Rect.fromCircle(center: center, radius: radius);
-    canvas.drawArc(rect, startAngle, sweepAngle, false, trackPaint);
 
-    if (safeProgress <= 0) return;
-
-    final gradient = SweepGradient(
-      startAngle: startAngle,
-      endAngle: startAngle + sweepAngle * safeProgress,
-      colors: const [
-        Color(0xFF60A5FA),
-        Color(0xFF22D3EE),
-        Color(0xFF34D399),
-      ],
+    // Draw background track
+    canvas.drawArc(
+      rect,
+      startAngle,
+      totalSweep,
+      false,
+      Paint()
+        ..color = trackColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round,
     );
 
-    final progressPaint = Paint()
-      ..shader = gradient.createShader(rect)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+    // Get counts for each status
+    final jamaah = statusCounts[CompletionStatus.jamaah] ?? 0;
+    final onTime = statusCounts[CompletionStatus.onTime] ?? 0;
+    final late = statusCounts[CompletionStatus.late] ?? 0;
+    final missed = statusCounts[CompletionStatus.missed] ?? 0;
+    final total = jamaah + onTime + late + missed;
 
-    final progressSweep = sweepAngle * safeProgress;
-    if (progressSweep > 0) {
-      canvas.drawArc(rect, startAngle, progressSweep, false, progressPaint);
+    if (total == 0) return;
+
+    // Calculate proportional angles for each status
+    // Order: jamaah (best) -> onTime -> late -> missed (worst)
+    final segments = <(double, Color)>[
+      (jamaah / total, CompletionStatus.jamaah.getBadgeColor(isDark: isDark)),
+      (onTime / total, CompletionStatus.onTime.getBadgeColor(isDark: isDark)),
+      (late / total, CompletionStatus.late.getBadgeColor(isDark: isDark)),
+      (missed / total, CompletionStatus.missed.getBadgeColor(isDark: isDark)),
+    ];
+
+    // Draw each segment
+    var currentAngle = startAngle;
+    for (final (proportion, color) in segments) {
+      if (proportion <= 0) continue;
+
+      final sweepAngle = totalSweep * proportion;
+
+      canvas.drawArc(
+        rect,
+        currentAngle,
+        sweepAngle,
+        false,
+        Paint()
+          ..color = color
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.butt,
+      );
+
+      currentAngle += sweepAngle;
+    }
+
+    // Draw rounded caps at start and end
+    if (total > 0) {
+      // Start cap (first non-zero segment)
+      final firstSegment = segments.firstWhere((s) => s.$1 > 0);
+      final startCapOffset = Offset(
+        center.dx + radius * math.cos(startAngle),
+        center.dy + radius * math.sin(startAngle),
+      );
+      canvas.drawCircle(
+        startCapOffset,
+        strokeWidth / 2,
+        Paint()..color = firstSegment.$2,
+      );
+
+      // End cap (last non-zero segment)
+      final lastSegment = segments.lastWhere((s) => s.$1 > 0);
+      final endCapOffset = Offset(
+        center.dx + radius * math.cos(startAngle + totalSweep),
+        center.dy + radius * math.sin(startAngle + totalSweep),
+      );
+      canvas.drawCircle(
+        endCapOffset,
+        strokeWidth / 2,
+        Paint()..color = lastSegment.$2,
+      );
     }
   }
 
   @override
   bool shouldRepaint(covariant _GaugePainter oldDelegate) {
     return oldDelegate.progress != progress ||
-        oldDelegate.trackColor != trackColor;
+        oldDelegate.trackColor != trackColor ||
+        oldDelegate.statusCounts != statusCounts;
   }
 }
 
 class _DailyStatsRow extends StatelessWidget {
   const _DailyStatsRow({required this.counts});
 
+  static const List<CompletionStatus> _statuses = [
+    CompletionStatus.missed,
+    CompletionStatus.late,
+    CompletionStatus.onTime,
+    CompletionStatus.jamaah,
+  ];
+
   final Map<CompletionStatus, int> counts;
 
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    const statuses = [
-      CompletionStatus.missed,
-      CompletionStatus.late,
-      CompletionStatus.onTime,
-      CompletionStatus.jamaah,
-    ];
+    final isDark = theme.isDark;
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       decoration: BoxDecoration(
         color: theme.colors.background.withValues(alpha: 0.2),
-        borderRadius: context.theme.radii.lg,
+        borderRadius: theme.radii.lg,
       ),
       child: IntrinsicHeight(
         child: Row(
           children: [
-            for (var i = 0; i < statuses.length; i++) ...[
+            for (var i = 0; i < _statuses.length; i++) ...[
               Expanded(
                 child: _StatColumn(
-                  value: counts[statuses[i]] ?? 0,
-                  label: statuses[i].getLocaleName(context.l10n),
-                  color: statuses[i].getBadgeColor(isDark: true),
+                  value: counts[_statuses[i]] ?? 0,
+                  label: _statuses[i].getLocaleName(context.l10n),
+                  color: _statuses[i].getBadgeColor(isDark: isDark),
                 ),
               ),
-              if (i != statuses.length - 1) _VerticalDivider(),
+              if (i != _statuses.length - 1) const _VerticalDivider(),
             ],
           ],
         ),
@@ -343,13 +418,14 @@ class _StatColumn extends StatelessWidget {
 }
 
 class _VerticalDivider extends StatelessWidget {
+  const _VerticalDivider();
+
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
     return Container(
       width: 1,
       height: 32,
-      color: theme.colors.border.withValues(alpha: 0.2),
+      color: FTheme.of(context).colors.border.withValues(alpha: 0.2),
     );
   }
 }
@@ -377,7 +453,7 @@ class _TrendAnalysisCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'التحليل البياني',
+            context.l10n.graphicalAnalysis,
             style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -425,7 +501,7 @@ class _TrendChart extends StatelessWidget {
         height: 180,
         child: Center(
           child: Text(
-            'لا توجد بيانات',
+            context.l10n.noDataAvailable,
             style: theme.typography.sm.copyWith(
               color: theme.colors.mutedForeground,
             ),
@@ -434,7 +510,7 @@ class _TrendChart extends StatelessWidget {
       );
     }
 
-    final groups = _buildGroups(buckets);
+    final groups = _buildGroups(buckets, context.theme.isDark);
     final maxTotal = groups
         .map((g) => g.barRods.first.toY)
         .fold<double>(1, math.max);
@@ -481,7 +557,7 @@ class _TrendChart extends StatelessWidget {
                       ),
                       children: [
                         TextSpan(
-                          text: 'الإجمالي: $total\n',
+                          text: '${context.l10n.total}: $total\n',
                           style: theme.typography.xs.copyWith(
                             color: theme.colors.mutedForeground,
                             fontWeight: FontWeight.w600,
@@ -491,7 +567,7 @@ class _TrendChart extends StatelessWidget {
                           text: '● ${context.l10n.jamaah}: $jamaah\n',
                           style: theme.typography.xs.copyWith(
                             color: CompletionStatus.jamaah.getBadgeColor(
-                              isDark: true,
+                              isDark: context.theme.isDark,
                             ),
                           ),
                         ),
@@ -499,7 +575,7 @@ class _TrendChart extends StatelessWidget {
                           text: '● ${context.l10n.onTime}: $onTime\n',
                           style: theme.typography.xs.copyWith(
                             color: CompletionStatus.onTime.getBadgeColor(
-                              isDark: true,
+                              isDark: context.theme.isDark,
                             ),
                           ),
                         ),
@@ -507,7 +583,7 @@ class _TrendChart extends StatelessWidget {
                           text: '● ${context.l10n.late}: $late\n',
                           style: theme.typography.xs.copyWith(
                             color: CompletionStatus.late.getBadgeColor(
-                              isDark: true,
+                              isDark: context.theme.isDark,
                             ),
                           ),
                         ),
@@ -515,7 +591,7 @@ class _TrendChart extends StatelessWidget {
                           text: '● ${context.l10n.missed}: $missed',
                           style: theme.typography.xs.copyWith(
                             color: CompletionStatus.missed.getBadgeColor(
-                              isDark: true,
+                              isDark: context.theme.isDark,
                             ),
                           ),
                         ),
@@ -553,20 +629,21 @@ class _TrendChart extends StatelessWidget {
 
   List<BarChartGroupData> _buildGroups(
     List<PrayerTrendBucket> buckets,
+    bool isDark,
   ) {
-    final jamaahColor = CompletionStatus.jamaah.getBadgeColor(isDark: true);
-    final onTimeColor = CompletionStatus.onTime.getBadgeColor(isDark: true);
-    final lateColor = CompletionStatus.late.getBadgeColor(isDark: true);
-    final missedColor = CompletionStatus.missed.getBadgeColor(isDark: true);
+    // Cache colors once
+    final jamaahColor = CompletionStatus.jamaah.getBadgeColor(isDark: isDark);
+    final onTimeColor = CompletionStatus.onTime.getBadgeColor(isDark: isDark);
+    final lateColor = CompletionStatus.late.getBadgeColor(isDark: isDark);
+    final missedColor = CompletionStatus.missed.getBadgeColor(isDark: isDark);
+    final borderRadius = BorderRadius.circular(6);
 
-    return buckets.asMap().entries.map((entry) {
-      final index = entry.key;
-      final counts = entry.value.statusCounts;
+    return List.generate(buckets.length, (index) {
+      final counts = buckets[index].statusCounts;
       final jamaah = (counts[CompletionStatus.jamaah] ?? 0).toDouble();
       final onTime = (counts[CompletionStatus.onTime] ?? 0).toDouble();
       final late = (counts[CompletionStatus.late] ?? 0).toDouble();
       final missed = (counts[CompletionStatus.missed] ?? 0).toDouble();
-
       final total = jamaah + onTime + late + missed;
 
       return BarChartGroupData(
@@ -575,7 +652,7 @@ class _TrendChart extends StatelessWidget {
           BarChartRodData(
             toY: total,
             width: 14,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: borderRadius,
             rodStackItems: [
               BarChartRodStackItem(0, jamaah, jamaahColor),
               BarChartRodStackItem(jamaah, jamaah + onTime, onTimeColor),
@@ -593,7 +670,7 @@ class _TrendChart extends StatelessWidget {
           ),
         ],
       );
-    }).toList();
+    });
   }
 }
 
@@ -646,22 +723,26 @@ class _BottomTitle extends StatelessWidget {
 class _LegendRow extends StatelessWidget {
   const _LegendRow();
 
+  static const List<CompletionStatus> _statuses = [
+    CompletionStatus.jamaah,
+    CompletionStatus.onTime,
+    CompletionStatus.late,
+    CompletionStatus.missed,
+  ];
+
   @override
   Widget build(BuildContext context) {
-    const statuses = [
-      CompletionStatus.jamaah,
-      CompletionStatus.onTime,
-      CompletionStatus.late,
-      CompletionStatus.missed,
-    ];
+    final isDark = context.theme.isDark;
+    final l10n = context.l10n;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        for (var i = 0; i < statuses.length; i++) ...[
+        for (var i = 0; i < _statuses.length; i++) ...[
           if (i != 0) const SizedBox(width: AppSpacing.md),
           _LegendItem(
-            label: statuses[i].getLocaleName(context.l10n),
-            color: statuses[i].getBadgeColor(isDark: true),
+            label: _statuses[i].getLocaleName(l10n),
+            color: _statuses[i].getBadgeColor(isDark: isDark),
           ),
         ],
       ],

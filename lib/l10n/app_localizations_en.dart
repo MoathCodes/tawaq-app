@@ -764,4 +764,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sunnahTimes => 'Sunnah Times';
+
+  @override
+  String get todayAchievement => 'Today\'s Achievement';
+
+  @override
+  String get performanceIndicator => 'Performance Indicator';
+
+  @override
+  String get graphicalAnalysis => 'Graphical Analysis';
+
+  @override
+  String get noDataAvailable => 'No data available';
+
+  @override
+  String get total => 'Total';
 }

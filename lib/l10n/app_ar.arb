@@ -1,6 +1,7 @@
 {
   "@@locale": "ar",
   "about": "عن التطبيق",
+  "addReflection": "أضف تأملاً...",
   "adhan": "الأذان",
   "adhanAdjustments": "تعديلات الأذان (بالدقائق)",
   "adhanHoursAgo": "{hours, plural, =0 {الآن} =1 {قبل ساعة} =2 {قبل ساعتين} few {قبل {hours} ساعات} many {قبل {hours} ساعة} other {قبل {hours} ساعة}}",
@@ -45,6 +46,7 @@
   "autoLocationDisabled": "اضغط لتفعيل الموقع التلقائي",
   "autoLocationEnabled": "يتم تحديث الموقع تلقائيًا",
   "autoSelectOrMap": "تحديد تلقائي او بالخريطة",
+  "ayahLabel": "الآية",
   "back": "رجوع",
   "basicParametersTitle": "إعدادات أساسية",
   "bestStreak": "أفضل إنجاز",
@@ -67,6 +69,7 @@
   "customParametersTitle": "إعدادات مخصصة",
   "daily": "يومي",
   "dark": "داكن",
+  "defaultSurahName": "الفاتحة",
   "detectTimezone": "اكتشاف المنطقة الزمنية",
   "detectTimezoneNotImplemented": "اكتشاف المنطقة الزمنية غير متاح هنا.",
   "deviceLocationNotImplemented": "استخدام موقع الجهاز غير متاح هنا.",
@@ -78,6 +81,9 @@
   "editsSavedTitle": "تم حفظ التعديلات",
   "egyptian": "الهيئة العامة المصرية للمساحة",
   "english": "الإنجيليزية",
+  "englishLanguage": "الإنجليزية",
+  "errorLoadingTafsir": "خطأ في تحميل التفسير",
+  "errorLoadingTranslation": "خطأ في تحميل الترجمة",
   "errorNotFoundPage": "لم نستطع الوصول لهذه الصفحة الرجاء التأكد من الرابط ثم إعادة المحاولة.",
   "@errorNotFoundPage": {},
   "errorOccurredWhile": "حدث خطأ أثناء {whileError}",
@@ -92,9 +98,31 @@
   "errorUpdatingLocationTitle": "حدث خطأ أثناء تحديث الموقع",
   "fajr": "الفجر",
   "fajrAngleLabel": "زاوية الفجر (°)",
+  "footnote": "الحاشية",
   "gettingLocation": "الحصول على الموقع",
+  "graphicalAnalysis": "التحليل البياني",
   "green": "أخضر",
   "hadith": "الحديث",
+  "hadithAlternativeAuthentic": "روايات صحيحة بديلة",
+  "hadithFoundations": "الأصول",
+  "hadithGradeExplanation": "شرح الحكم",
+  "hadithLoadSharh": "تحميل الشرح",
+  "hadithLoadSharhFailed": "فشل تحميل الشرح: {error}",
+  "@hadithLoadSharhFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hadithMuhaddith": "المحدث",
+  "hadithNarrator": "الراوي",
+  "hadithRelatedLinks": "روابط ذات صلة",
+  "hadithRetry": "إعادة المحاولة",
+  "hadithSharh": "الشرح",
+  "hadithSimilar": "أحاديث مشابهة",
+  "hadithSource": "المصدر",
+  "hadithTakhrij": "التخريج",
   "highLatitudeRule_middleOfTheNight": "منتصف الليل",
   "highLatitudeRule_seventhOfTheNight": "سبع الليل",
   "highLatitudeRule_twilightAngle": "زاوية الشفق",
@@ -123,17 +151,28 @@
   "jamaah": "جماعة",
   "jamaahRate": "الصلاة جماعة",
   "jumuah": "الجمعة",
+  "juzLabel": "الجزء {number}",
+  "@juzLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "karachi": "جامعة العلوم الإسلامية، كراتشي",
   "kuwait": "الكويت",
+  "languageLabel": "اللغة",
   "lastThirdOfTheNight": "الثلث الأخير من الليل",
   "late": "متأخر",
   "lateRate": "الصلاة متأخرًا",
   "latitude": "خط العرض",
   "light": "فاتح",
+  "loading": "جاري التحميل...",
   "loadingLocationSettings": "جاري تحميل إعدادات الموقع",
   "locationSectionSubtitle": "حدد موقعك الجغرافي والمنطقة الزمنية لأوقات صلاة دقيقة.",
   "locationSectionTitle": "الموقع",
   "lockToPreventEdits": "اقفل لمنع التعديل",
+  "logPrayerStatus": "تسجيل حالة الصلاة",
   "longitude": "خط الطول",
   "madhab_hanafi": "حنفي",
   "madhab_shafi": "شافعي",
@@ -153,8 +192,13 @@
   "neutral": "محايد",
   "next": "التالي",
   "nextPrayer": "الصلاة القادمة",
+  "noDataAvailable": "لا توجد بيانات",
   "noResults": "لا يوجد نتائج.",
+  "noResultsFound": "لا توجد نتائج",
   "northAmerica": "أمريكا الشمالية (ISNA)",
+  "noTafsirAvailable": "لا يوجد تفسير متاح لهذه الآية",
+  "noTranslationAvailable": "لا توجد ترجمة متاحة لهذه الآية",
+  "nowActive": "نشط الآن",
   "onTime": "في وقتها",
   "onTimePrayersLast30Days": "الصلاة المنتظمة (ﻷخر 30 يوم)",
   "onTimePrayersLast365Days": "الصلاة المنتظمة (ﻷخر 365 يوم)",
@@ -164,10 +208,30 @@
   "optionalHint": "اختياري",
   "orange": "برتقالي",
   "other": "أخرى",
+  "pageJuzInfo": "صفحة {page} • الجزء {juz}",
+  "@pageJuzInfo": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "juz": {
+        "type": "int"
+      }
+    }
+  },
+  "pageLabel": "صفحة {page}",
+  "@pageLabel": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
   "pageNotFound": "الصفحة غير موجودة",
   "pageNotFoundDescription": "هذه الصفحة غير موجودة. يرجى العودة إلى الصفحة الرئيسية.",
   "parametersSavedDescription": "تم حفظ إعداداتك المخصصة بنجاح.",
   "parametersSavedTitle": "تم حفظ الإعدادات",
+  "performanceIndicator": "مؤشر الأداء",
   "placeholdersHint": "يمكن ضبط المذهب والخيارات الأخرى لاحقًا. هذه المدخلات مؤقتة.",
   "playerAnalytics": "تحليل الصلاة",
   "pleaseSelectMethod": "يرجى اختيار طريقة الحساب.",
@@ -183,15 +247,20 @@
   "quran": "القرآن الكريم",
   "@quran": {},
   "red": "أحمر",
+  "reflectionPlaceholder": "اكتب أفكارك حول هذه الآية...",
   "remembrance": "الأذكار",
   "resetCompleteDescription": "تمت إعادة الإعدادات إلى القيم الافتراضية.",
   "resetCompleteTitle": "تمت إعادة الضبط",
   "resetToDefaults": "إعادة الضبط للوضع الافتراضي",
   "rose": "وردي",
   "save": "حفظ",
+  "saveNote": "حفظ الملاحظة",
   "saveParameters": "حفظ الإعدادات",
   "searchForMore": "ابحث للمزيد من الخيارات",
   "searchPlaceLabel": "البحث عن موقع",
+  "searchQuran": "ابحث في القرآن...",
+  "selectAyahToSeeContent": "اختر آية لعرض المحتوى.",
+  "selectPrayerToLog": "اختر صلاة لتسجيل الحالة",
   "settings": "الإعدادات",
   "setupPrayerSettingsSubtitle": "سنرشدك عبر خطوات سريعة. يمكنك تغيير هذه لاحقًا من الإعدادات.",
   "setupPrayerSettingsTitle": "لنقم بإعداد إعدادات الصلاة.",
@@ -200,6 +269,7 @@
   "singapore": "سنغافورة",
   "skip": "تخطي",
   "slate": "رمادي",
+  "sourceLabel": "المصدر:",
   "status": "الحالة",
   "stone": "حجر",
   "streakInDays": "{streak, plural, =0 {0} =1 {يوم واحد} =2 {يومان} few {{streak} أيام} many {{streak} يومًا} other {{streak} يومًا}}",
@@ -210,14 +280,42 @@
       }
     }
   },
+  "studyMode": "وضع الدراسة",
+  "sunnahTimes": "أوقات السنن",
   "sunrise": "الشروق",
+  "surahAyahInfo": "{surahName} • الآية {ayahNumber}",
+  "@surahAyahInfo": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      },
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "surahNameDefault": "سورة {number}",
+  "@surahNameDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "tafsir": "التفسير",
+  "tafsirAlMuyassar": "التفسير الميسر",
   "tehran": "طهران",
   "timeFormat": "تنسيق الوقت",
   "timeSectionSubtitle": "إعداد طريقة الحساب وتنسيق الوقت والإقامة.",
   "timeSectionTitle": "مواقيت الصلاة",
   "timezone": "المنطقة الزمنية",
   "tipHoldCtrlToRotate": "تلميح: اضغط على Ctrl واسحب لتدوير وإمالة الخريطة.",
+  "todayAchievement": "إنجاز اليوم",
+  "todaysSchedule": "جدول اليوم",
   "toggleArabic": "حول اللغة",
+  "total": "الإجمالي",
+  "translation": "الترجمة",
+  "tryDifferentSearchTerm": "جرب مصطلح بحث مختلف",
   "turkiye": "تركيا (ديانت)",
   "ummAlQura": "جامعة أم القرى",
   "unlockToEditCoordinates": "افتح القفل لتعديل الإحداثيات",
@@ -236,101 +334,5 @@
   "wizardStep_welcome": "مرحبًا",
   "yearly": "سنوي",
   "yellow": "أصفر",
-  "zinc": "زنك",
-
-  "hadithLoadSharhFailed": "فشل تحميل الشرح: {error}",
-  "@hadithLoadSharhFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "hadithNarrator": "الراوي",
-  "hadithGradeExplanation": "شرح الحكم",
-  "hadithTakhrij": "التخريج",
-  "hadithSource": "المصدر",
-  "hadithMuhaddith": "المحدث",
-  "hadithSharh": "الشرح",
-  "hadithRetry": "إعادة المحاولة",
-  "hadithLoadSharh": "تحميل الشرح",
-  "hadithRelatedLinks": "روابط ذات صلة",
-  "hadithSimilar": "أحاديث مشابهة",
-  "hadithAlternativeAuthentic": "روايات صحيحة بديلة",
-  "hadithFoundations": "الأصول",
-
-  "studyMode": "وضع الدراسة",
-  "defaultSurahName": "الفاتحة",
-  "ayahLabel": "الآية",
-  "tafsir": "التفسير",
-  "translation": "الترجمة",
-  "loading": "جاري التحميل...",
-  "selectAyahToSeeContent": "اختر آية لعرض المحتوى.",
-  "errorLoadingTafsir": "خطأ في تحميل التفسير",
-  "noTafsirAvailable": "لا يوجد تفسير متاح لهذه الآية",
-  "errorLoadingTranslation": "خطأ في تحميل الترجمة",
-  "noTranslationAvailable": "لا توجد ترجمة متاحة لهذه الآية",
-  "sourceLabel": "المصدر:",
-  "tafsirAlMuyassar": "التفسير الميسر",
-  "languageLabel": "اللغة",
-  "englishLanguage": "الإنجليزية",
-  "addReflection": "أضف تأملاً...",
-  "reflectionPlaceholder": "اكتب أفكارك حول هذه الآية...",
-  "saveNote": "حفظ الملاحظة",
-
-  "juzLabel": "الجزء {number}",
-  "@juzLabel": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "searchQuran": "ابحث في القرآن...",
-  "noResultsFound": "لا توجد نتائج",
-  "tryDifferentSearchTerm": "جرب مصطلح بحث مختلف",
-  "pageLabel": "صفحة {page}",
-  "@pageLabel": {
-    "placeholders": {
-      "page": {
-        "type": "int"
-      }
-    }
-  },
-  "surahAyahInfo": "{surahName} • الآية {ayahNumber}",
-  "@surahAyahInfo": {
-    "placeholders": {
-      "surahName": {
-        "type": "String"
-      },
-      "ayahNumber": {
-        "type": "int"
-      }
-    }
-  },
-  "pageJuzInfo": "صفحة {page} • الجزء {juz}",
-  "@pageJuzInfo": {
-    "placeholders": {
-      "page": {
-        "type": "int"
-      },
-      "juz": {
-        "type": "int"
-      }
-    }
-  },
-  "surahNameDefault": "سورة {number}",
-  "@surahNameDefault": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "footnote": "الحاشية",
-  "logPrayerStatus": "تسجيل حالة الصلاة",
-  "nowActive": "نشط الآن",
-  "todaysSchedule": "جدول اليوم",
-  "selectPrayerToLog": "اختر صلاة لتسجيل الحالة",
-  "sunnahTimes": "أوقات السنن"
+  "zinc": "زنك"
 }

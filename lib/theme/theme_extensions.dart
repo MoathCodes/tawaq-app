@@ -15,4 +15,7 @@ extension AppTokensExtension on FThemeData {
 
   /// Access the [AppDurations] theme extension.
   AppDurations get durations => extension<AppDurations>();
+
+  /// checks if the current theme is dark mode.
+  bool get isDark => colors.brightness == .dark;
 }

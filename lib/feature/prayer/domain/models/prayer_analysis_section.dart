@@ -22,6 +22,7 @@ class PrayerAnalysisSectionData {
   const PrayerAnalysisSectionData({
     required this.period,
     required this.todayStatusCounts,
+    required this.todayPerformanceScore,
     required this.trendBuckets,
   });
 
@@ -29,12 +30,17 @@ class PrayerAnalysisSectionData {
     return PrayerAnalysisSectionData(
       period: period,
       todayStatusCounts: _emptyCounts(),
+      todayPerformanceScore: 0,
       trendBuckets: const [],
     );
   }
 
   final PrayerAnalyticsPeriod period;
   final Map<CompletionStatus, int> todayStatusCounts;
+
+  /// Performance score from 0.0 to 1.0 based on weighted prayer completions.
+  /// Jamaah = 1.0, OnTime = 0.85, Late = 0.5, Missed = 0.
+  final double todayPerformanceScore;
   final List<PrayerTrendBucket> trendBuckets;
 
   static Map<CompletionStatus, int> _emptyCounts() {

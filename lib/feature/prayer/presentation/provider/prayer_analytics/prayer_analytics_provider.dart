@@ -172,6 +172,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
           completionsAsync.value ??
           await service.getPrayerCompletionForDate(now);
       final todayCounts = _countStatuses(todayCompletions);
+      final performanceScore = _calculatePerformanceScore(todayCounts);
 
       final buckets = period == PrayerAnalyticsPeriod.daily
           ? _buildDailyPrayerBuckets(todayCompletions, todayStart, todayEnd)
@@ -186,6 +187,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       return PrayerAnalysisSectionData(
         period: period,
         todayStatusCounts: todayCounts,
+        todayPerformanceScore: performanceScore,
         trendBuckets: buckets,
       );
     } catch (e, stackTrace) {
@@ -206,6 +208,19 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       counts[completion.status] = (counts[completion.status] ?? 0) + 1;
     }
     return counts;
+  }
+
+  /// Calculates a weighted performance score from 0.0 to 1.0.
+  /// Jamaah = 1.0, OnTime = 0.85, Late = 0.5, Missed = 0.
+  double _calculatePerformanceScore(Map<CompletionStatus, int> counts) {
+    final jamaah = counts[CompletionStatus.jamaah] ?? 0;
+    final onTime = counts[CompletionStatus.onTime] ?? 0;
+    final late = counts[CompletionStatus.late] ?? 0;
+    const expected = PrayerAnalyticsCalculator.prayersPerDay;
+    if (expected == 0) return 0;
+
+    final totalScore = (jamaah * 1.0) + (onTime * 0.85) + (late * 0.5);
+    return (totalScore / expected).clamp(0.0, 1.0);
   }
 
   DateTime _rangeStart(PrayerAnalyticsPeriod period, DateTime todayStart) {

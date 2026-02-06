@@ -1471,6 +1471,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sunnah Times'**
   String get sunnahTimes;
+
+  /// No description provided for @todayAchievement.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Achievement'**
+  String get todayAchievement;
+
+  /// No description provided for @performanceIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance Indicator'**
+  String get performanceIndicator;
+
+  /// No description provided for @graphicalAnalysis.
+  ///
+  /// In en, this message translates to:
+  /// **'Graphical Analysis'**
+  String get graphicalAnalysis;
+
+  /// No description provided for @noDataAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No data available'**
+  String get noDataAvailable;
+
+  /// No description provided for @total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get total;
 }
 
 class _AppLocalizationsDelegate

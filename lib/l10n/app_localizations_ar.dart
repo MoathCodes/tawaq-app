@@ -794,4 +794,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sunnahTimes => 'أوقات السنن';
+
+  @override
+  String get todayAchievement => 'إنجاز اليوم';
+
+  @override
+  String get performanceIndicator => 'مؤشر الأداء';
+
+  @override
+  String get graphicalAnalysis => 'التحليل البياني';
+
+  @override
+  String get noDataAvailable => 'لا توجد بيانات';
+
+  @override
+  String get total => 'الإجمالي';
 }

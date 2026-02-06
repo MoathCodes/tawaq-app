@@ -333,5 +333,10 @@
   "nowActive": "Now Active",
   "todaysSchedule": "Today's Schedule",
   "selectPrayerToLog": "Select a prayer to log status",
-  "sunnahTimes": "Sunnah Times"
+  "sunnahTimes": "Sunnah Times",
+  "todayAchievement": "Today's Achievement",
+  "performanceIndicator": "Performance Indicator",
+  "graphicalAnalysis": "Graphical Analysis",
+  "noDataAvailable": "No data available",
+  "total": "Total"
 }
