@@ -58,7 +58,6 @@ dependencies:
   logger: ^2.6.2
   mushaf_reader:
     path: packages/mushaf_reader
-  prf: ^2.4.5
   riverpod_annotation: ^4.0.0
   skeletonizer: ^2.1.0+1
   sqlite3: ^2.9.4

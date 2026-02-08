@@ -1,4 +1,3 @@
-import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hasanat/core/utils/date_extensions.dart';
 import 'package:hasanat/core/utils/prayer_extensions.dart';
@@ -9,110 +8,10 @@ import 'package:hasanat/feature/prayer/domain/services/prayer_analytics_calculat
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/feature/settings/service/settings_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_analytics_provider.g.dart';
-
-/// Notifier for prayer analytics.
-@riverpod
-class PrayerAnalyticsNotifier extends _$PrayerAnalyticsNotifier {
-  @override
-  FutureOr<PrayerAnalytics> build() async {
-    const period = PrayerAnalyticsPeriod.weekly;
-    try {
-      return await _computeAnalytics(period);
-    } catch (e, stackTrace) {
-      ref
-          .read(loggerProvider)
-          .e(
-            '[PrayerAnalyticsNotifier] Error computing analytics',
-            error: e,
-            stackTrace: stackTrace,
-          );
-      rethrow;
-    }
-  }
-
-  /// Changes the analytics period and recomputes the analytics.
-  Future<void> changePeriod(PrayerAnalyticsPeriod period) async {
-    state = const AsyncValue.loading();
-    try {
-      final analytics = await _computeAnalytics(period);
-      state = AsyncValue.data(analytics);
-    } catch (e, stackTrace) {
-      ref
-          .read(loggerProvider)
-          .e(
-            '[PrayerAnalyticsNotifier] Error while changing period',
-            error: e,
-            stackTrace: stackTrace,
-          );
-      state = AsyncValue.error(e, stackTrace);
-    }
-  }
-
-  Future<PrayerAnalytics> _computeAnalytics(
-    PrayerAnalyticsPeriod period,
-  ) async {
-    if (!ref.mounted) {
-      return PrayerAnalytics.empty().copyWith(period: period);
-    }
-    final log = ref.read(loggerProvider);
-    try {
-      final service = ref.read(prayerServiceProvider);
-      final settings = ref.read(prayerSettingsProvider);
-      final settingsService = ref.read(settingsServiceProvider);
-
-      // Fetch data
-      final location = settings.when(
-        data: (data) => data.location,
-        loading: () => local,
-        error: (error, stackTrace) => local,
-      );
-
-      final streaks = await service.computeStreaks(location);
-      final countsMap = await service.countAllStatusesOnPeriod(period);
-      final firstRecordedDate = await settingsService
-          .getFirstPrayerRecordedDate();
-
-      // Calculate expected prayers using calculator
-      final expectedPrayers =
-          PrayerAnalyticsCalculator.calculateExpectedPrayers(
-            period: period,
-            firstRecordedDate: firstRecordedDate,
-            now: DateTime.now(),
-          );
-
-      // Use calculator to build analytics
-      return PrayerAnalyticsCalculator.calculateAnalytics(
-        period: period,
-        statusCounts: countsMap,
-        expectedPrayers: expectedPrayers,
-        currentStreak: streaks.current,
-        bestStreak: streaks.best,
-      );
-    } catch (e, stackTrace) {
-      log.e(
-        '[PrayerAnalyticsNotifier] Error computing analytics',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      // Return zeroed analytics in case of error so UI still renders.
-      return PrayerAnalytics(
-        period: period,
-        completionPercentage: 0,
-        jamaahPercentage: 0,
-        onTimePercentage: 0,
-        latePercentage: 0,
-        missedPercentage: 0,
-        currentStreak: 0,
-        bestStreak: 0,
-      );
-    }
-  }
-}
 
 /// Notifier for the analysis section view data.
 @riverpod
@@ -174,15 +73,16 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       final todayCounts = _countStatuses(todayCompletions);
       final performanceScore = _calculatePerformanceScore(todayCounts);
 
-      final buckets = period == PrayerAnalyticsPeriod.daily
-          ? _buildDailyPrayerBuckets(todayCompletions, todayStart, todayEnd)
-          : await _buildTrendBuckets(
-              period: period,
-              service: service,
-              location: location,
-              rangeStart: _rangeStart(period, todayStart),
-              rangeEnd: todayEnd,
-            );
+      final buckets =
+          //  period == PrayerAnalyticsPeriod.daily
+          //     ? _buildDailyPrayerBuckets(todayCompletions, todayStart, todayEnd)
+          await _buildTrendBuckets(
+            period: period,
+            service: service,
+            location: location,
+            rangeStart: _rangeStart(period, todayStart),
+            rangeEnd: todayEnd,
+          );
 
       return PrayerAnalysisSectionData(
         period: period,
@@ -225,7 +125,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
 
   DateTime _rangeStart(PrayerAnalyticsPeriod period, DateTime todayStart) {
     return switch (period) {
-      PrayerAnalyticsPeriod.daily => todayStart,
+      // PrayerAnalyticsPeriod.daily => todayStart,
       PrayerAnalyticsPeriod.weekly => todayStart.subtract(
         const Duration(days: 6),
       ),
@@ -274,43 +174,43 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     return buckets;
   }
 
-  List<PrayerTrendBucket> _buildDailyPrayerBuckets(
-    List<PrayerCompletion> completions,
-    DateTime dayStart,
-    DateTime dayEnd,
-  ) {
-    const prayers = [
-      Prayer.fajr,
-      Prayer.dhuhr,
-      Prayer.asr,
-      Prayer.maghrib,
-      Prayer.isha,
-    ];
+  // List<PrayerTrendBucket> _buildDailyPrayerBuckets(
+  //   List<PrayerCompletion> completions,
+  //   DateTime dayStart,
+  //   DateTime dayEnd,
+  // ) {
+  //   const prayers = [
+  //     Prayer.fajr,
+  //     Prayer.dhuhr,
+  //     Prayer.asr,
+  //     Prayer.maghrib,
+  //     Prayer.isha,
+  //   ];
 
-    return prayers.map((prayer) {
-      final counts = _emptyCounts();
-      final completion = completions.firstWhere(
-        (c) => c.prayer == prayer,
-        orElse: () => PrayerCompletion(
-          id: null,
-          prayer: prayer,
-          completionTime: dayStart,
-          status: CompletionStatus.none,
-        ),
-      );
+  //   return prayers.map((prayer) {
+  //     final counts = _emptyCounts();
+  //     final completion = completions.firstWhere(
+  //       (c) => c.prayer == prayer,
+  //       orElse: () => PrayerCompletion(
+  //         id: null,
+  //         prayer: prayer,
+  //         completionTime: dayStart,
+  //         status: CompletionStatus.none,
+  //       ),
+  //     );
 
-      if (completion.status != CompletionStatus.none) {
-        counts[completion.status] = 1;
-      }
+  //     if (completion.status != CompletionStatus.none) {
+  //       counts[completion.status] = 1;
+  //     }
 
-      return PrayerTrendBucket(
-        start: dayStart,
-        end: dayEnd,
-        statusCounts: counts,
-        prayer: prayer,
-      );
-    }).toList();
-  }
+  //     return PrayerTrendBucket(
+  //       start: dayStart,
+  //       end: dayEnd,
+  //       statusCounts: counts,
+  //       prayer: prayer,
+  //     );
+  //   }).toList();
+  // }
 
   List<PrayerTrendBucket> _initializeBuckets(
     PrayerAnalyticsPeriod period,
@@ -321,14 +221,14 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     final emptyCounts = _emptyCounts();
 
     switch (period) {
-      case PrayerAnalyticsPeriod.daily:
-        buckets.add(
-          PrayerTrendBucket(
-            start: rangeStart,
-            end: rangeEnd,
-            statusCounts: emptyCounts,
-          ),
-        );
+      // case PrayerAnalyticsPeriod.daily:
+      //   buckets.add(
+      //     PrayerTrendBucket(
+      //       start: rangeStart,
+      //       end: rangeEnd,
+      //       statusCounts: emptyCounts,
+      //     ),
+      //   );
       case PrayerAnalyticsPeriod.weekly:
         for (var i = 0; i < 7; i++) {
           final dayStart = rangeStart.add(Duration(days: i));

@@ -7,7 +7,7 @@ part 'quran_notes.g.dart';
 
 /// Provides a [QuranNotes] data source for storing ayah notes.
 @riverpod
-QuranNotes quranNotes(Ref ref) {
+QuranNotes quranNotesSource(Ref ref) {
   final box = Box<int, String>('quran_notes');
   final log = ref.read(loggerProvider);
   ref.onDispose(() async {

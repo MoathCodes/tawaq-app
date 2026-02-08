@@ -9,7 +9,8 @@ part 'hijri_provider.g.dart';
 /// A provider that emits a formatted Hijri date string every second.
 @riverpod
 Stream<String> hijriClock(Ref ref) async* {
-  final locale = ref.watch(localeProvider).value;
+  final langCode = ref.watch(localeProvider);
+  final locale = Locale(langCode);
   yield _formatHijri(locale);
   yield* Stream.periodic(
     const Duration(seconds: 1),

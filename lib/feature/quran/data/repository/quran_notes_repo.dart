@@ -8,7 +8,7 @@ part 'quran_notes_repo.g.dart';
 /// Provides a [QuranNotesRepo] instance for managing Quran notes.
 @riverpod
 QuranNotesRepo quranNotesRepo(Ref ref) {
-  final notes = ref.read(quranNotesProvider);
+  final notes = ref.read(quranNotesSourceProvider);
   final log = ref.read(loggerProvider);
   return QuranNotesRepo(notes, log);
 }

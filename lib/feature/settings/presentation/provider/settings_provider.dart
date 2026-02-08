@@ -11,10 +11,13 @@ import 'package:hasanat/feature/quran/domain/models/quran_layouts.dart';
 import 'package:hasanat/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hasanat/feature/settings/data/models/state_settings.dart';
+import 'package:hasanat/feature/settings/data/models/theme_prefs.dart';
+import 'package:hasanat/feature/settings/data/repository/settings_storage.dart';
 import 'package:hasanat/feature/settings/service/location_service.dart';
-import 'package:hasanat/feature/settings/service/settings_service.dart';
 import 'package:hasanat/theme/theme_model.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:riverpod_annotation/experimental/json_persist.dart';
+import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:timezone/timezone.dart';
 
@@ -24,56 +27,75 @@ const String _localeLogPrefix = '[LocaleNotifier]';
 const String _prayerLogPrefix = '[PrayerSettingsNotifier]';
 const String _themeLogPrefix = '[ThemeNotifier]';
 
+// ---------------------------------------------------------------------------
+// Locale
+// ---------------------------------------------------------------------------
+
 /// Notifier for the application locale.
+///
+/// Persisted as a plain language-code string via [persist].
 @riverpod
+@JsonPersist()
 class LocaleNotifier extends _$LocaleNotifier {
   @override
-  FutureOr<Locale> build() {
-    final log = ref.read(loggerProvider)..i('$_localeLogPrefix Building...');
-    final locale = ref.read(settingsServiceProvider).getLocale();
-    log.i('$_localeLogPrefix Loaded: $locale');
-    return locale;
+  String build() {
+    ref.read(loggerProvider).i('$_localeLogPrefix Building...');
+    persist(
+      ref.read(settingsStorageProvider),
+      options: const StorageOptions(
+        cacheTime: StorageCacheTime.unsafe_forever,
+      ),
+    );
+    return 'en';
   }
 
+  @override
+  String get key => 'locale';
+
   /// Returns true if the current locale is Arabic.
-  bool isArabic() => state.value?.languageCode == 'ar';
+  bool isArabic() => state == 'ar';
 
   /// Sets the application locale.
   void setLocale(Locale newLocale) {
-    if (newLocale == state.value || state.value == null) return;
+    if (newLocale.languageCode == state) return;
     ref.read(loggerProvider).i('$_localeLogPrefix Setting to: $newLocale');
-    ref.read(settingsServiceProvider).setLocale(newLocale);
-    state = AsyncData(newLocale);
+    state = newLocale.languageCode;
   }
 
   /// Toggles the application locale between English and Arabic.
   void toggleLocale() {
-    if (state.value == null) return;
     setLocale(
-      state.value!.languageCode == 'ar'
-          ? const Locale('en')
-          : const Locale('ar'),
+      state == 'ar' ? const Locale('en') : const Locale('ar'),
     );
   }
 }
 
+// ---------------------------------------------------------------------------
+// Prayer Settings
+// ---------------------------------------------------------------------------
+
 /// Notifier for prayer settings.
+///
+/// Persisted as JSON via [JsonPersist] + Hivez-backed [SettingsStorage].
 @riverpod
+@JsonPersist()
 class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   @override
-  FutureOr<PrayerSettings> build() {
+  Future<PrayerSettings> build() async {
     ref.read(loggerProvider).i('$_prayerLogPrefix Building...');
-    return ref.read(settingsServiceProvider).getPrayerSettings();
+    await persist(
+      ref.read(settingsStorageProvider),
+      options: const StorageOptions(
+        cacheTime: StorageCacheTime.unsafe_forever,
+      ),
+    ).future;
+    return state.value ?? PrayerSettings.defaultSettings();
   }
-
-  void _persist(PrayerSettings settings) =>
-      ref.read(settingsServiceProvider).setPrayerSettings(settings);
 
   void _update(PrayerSettings Function(PrayerSettings) fn, String field) {
     if (state.value == null) return;
     final newSettings = fn(state.value!);
     if (state.value == newSettings) return;
-    _persist(newSettings);
     state = AsyncData(newSettings);
     ref.read(loggerProvider).i('$_prayerLogPrefix $field updated');
   }
@@ -105,7 +127,6 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   /// Sets the complete prayer settings object.
   void setPrayerSettings(PrayerSettings s) {
     if (state.value == null || state.value == s) return;
-    _persist(s);
     state = AsyncData(s);
     ref.read(loggerProvider).i('$_prayerLogPrefix Settings updated');
   }
@@ -115,26 +136,20 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     FutureOr<PrayerSettings> Function(PrayerSettings) cb, {
     FutureOr<PrayerSettings> Function(Object, StackTrace)? onError,
   }) {
-    final previous = state.value;
-    return super
-        .update(
-          cb,
-          onError: (err, st) {
-            ref
-                .read(loggerProvider)
-                .e(
-                  '$_prayerLogPrefix Update error',
-                  error: err,
-                  stackTrace: st,
-                );
-            if (onError != null) return onError(err, st);
-            throw Exception(err);
-          },
-        )
-        .then((v) {
-          if (previous != v) _persist(v);
-          return v;
-        });
+    return super.update(
+      cb,
+      onError: (err, st) {
+        ref
+            .read(loggerProvider)
+            .e(
+              '$_prayerLogPrefix Update error',
+              error: err,
+              stackTrace: st,
+            );
+        if (onError != null) return onError(err, st);
+        throw Exception(err);
+      },
+    );
   }
 
   /// Updates location-related data in prayer settings.
@@ -159,7 +174,6 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
       location: loc ?? s.location,
     );
     if (s == newSettings) return;
-    await ref.read(settingsServiceProvider).setPrayerSettings(newSettings);
     state = AsyncData(newSettings);
   }
 
@@ -190,44 +204,40 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Theme
+// ---------------------------------------------------------------------------
+
 /// Notifier for theme settings.
+///
+/// Persists [ThemePrefs] (palette + mode) via [JsonPersist].
 @riverpod
+@JsonPersist()
 class ThemeNotifier extends _$ThemeNotifier {
   @override
-  FutureOr<ThemeSettings> build() async {
+  Future<ThemePrefs> build() async {
     ref.read(loggerProvider).i('$_themeLogPrefix Building...');
-    final svc = ref.watch(settingsServiceProvider);
-    final palette = await svc.getAppPalette();
-    final mode = await svc.getThemeMode();
-    return ThemeSettings(
-      appPalette: palette,
-      themeMode: mode,
-      colorScheme: resolveColorScheme(palette, mode),
-    );
+    await persist(
+      ref.read(settingsStorageProvider),
+      options: const StorageOptions(
+        cacheTime: StorageCacheTime.unsafe_forever,
+      ),
+    ).future;
+    return state.value ?? ThemePrefs.defaults();
   }
 
   /// Sets the application palette.
   void setPalette(AppPalette p) {
-    if (p == state.value?.appPalette || state.value == null) return;
-    ref.read(settingsServiceProvider).setAppPalette(p);
-    state = AsyncData(
-      state.value!.copyWith(
-        appPalette: p,
-        colorScheme: resolveColorScheme(p, state.value!.themeMode),
-      ),
-    );
+    final prefs = state.value;
+    if (prefs == null || p == prefs.appPalette) return;
+    state = AsyncData(prefs.copyWith(appPalette: p));
   }
 
   /// Sets the theme mode.
   void setThemeMode(ThemeMode m) {
-    if (m == state.value?.themeMode || state.value == null) return;
-    ref.read(settingsServiceProvider).setThemeMode(m);
-    state = AsyncData(
-      state.value!.copyWith(
-        themeMode: m,
-        colorScheme: resolveColorScheme(state.value!.appPalette, m),
-      ),
-    );
+    final prefs = state.value;
+    if (prefs == null || m == prefs.themeMode) return;
+    state = AsyncData(prefs.copyWith(themeMode: m));
   }
 
   /// Toggles the theme mode between light and dark.
@@ -236,12 +246,26 @@ class ThemeNotifier extends _$ThemeNotifier {
   );
 }
 
+// ---------------------------------------------------------------------------
+// State Settings
+// ---------------------------------------------------------------------------
+
 /// Notifier for application state settings.
+///
+/// Persisted via [JsonPersist]. Contains sidebar/quran/analytics state.
 @riverpod
+@JsonPersist()
 class StateSettingsNotifier extends _$StateSettingsNotifier {
   @override
-  Future<StateSettings> build() =>
-      ref.read(settingsServiceProvider).getAppStateSettings();
+  Future<StateSettings> build() async {
+    await persist(
+      ref.read(settingsStorageProvider),
+      options: const StorageOptions(
+        cacheTime: StorageCacheTime.unsafe_forever,
+      ),
+    ).future;
+    return state.value ?? StateSettings.initial();
+  }
 
   Future<void> _update(
     StateSettings Function(StateSettings) fn,
@@ -251,7 +275,6 @@ class StateSettingsNotifier extends _$StateSettingsNotifier {
       if (!state.hasValue) return;
       final newState = fn(state.value!);
       state = AsyncData(newState);
-      await ref.read(settingsServiceProvider).setAppStateSettings(newState);
       ref.read(loggerProvider).i('[StateSettingsNotifier] $field updated');
     });
   }
@@ -304,4 +327,59 @@ class StateSettingsNotifier extends _$StateSettingsNotifier {
         (s) => s.copyWith(translationEnabled: enabled),
         'Translation enabled',
       );
+}
+
+// ---------------------------------------------------------------------------
+// First Prayer Recorded Date
+// ---------------------------------------------------------------------------
+
+/// Persisted date of the first prayer ever recorded.
+///
+/// Stored as an ISO 8601 string. This replaces the old Prf-based setting and
+/// is used by prayer analytics / completion providers.
+@riverpod
+@JsonPersist()
+class FirstPrayerRecordedDate extends _$FirstPrayerRecordedDate {
+  @override
+  String? build() {
+    persist(
+      ref.read(settingsStorageProvider),
+      options: const StorageOptions(
+        cacheTime: StorageCacheTime.unsafe_forever,
+      ),
+    );
+    return null;
+  }
+
+  @override
+  String get key => 'first_prayer_recorded_date';
+
+  /// Sets the date only if not already set.
+  void setIfNull(DateTime date) {
+    if (state != null) return;
+    state = date.toIso8601String();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Derived Providers
+// ---------------------------------------------------------------------------
+
+/// The full [ThemeSettings] derived from the persisted [ThemePrefs].
+@riverpod
+ThemeSettings themeSettingsFromPrefs(Ref ref) {
+  final prefs = ref.watch(themeProvider).value ?? ThemePrefs.defaults();
+  return ThemeSettings(
+    appPalette: prefs.appPalette,
+    themeMode: prefs.themeMode,
+    colorScheme: resolveColorScheme(prefs.appPalette, prefs.themeMode),
+  );
+}
+
+/// The parsed [DateTime] from the persisted first-prayer-recorded date string.
+@riverpod
+DateTime? firstPrayerRecordedDateTime(Ref ref) {
+  final raw = ref.watch(firstPrayerRecordedDateProvider);
+  if (raw == null || raw.isEmpty) return null;
+  return DateTime.tryParse(raw);
 }

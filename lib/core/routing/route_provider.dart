@@ -30,7 +30,7 @@ GoRouter appRouter(Ref ref) {
     ...ref.read(mainRoutesProvider(null)),
     ...ref.read(secondaryRoutesProvider(null)),
   ];
-  final themeData = ref.read(themeProvider).value ?? defaultTheme;
+  final themeData = ref.read(themeSettingsFromPrefsProvider);
   final log = ref.read(loggerProvider);
   final appRouter = GoRouter(
     routes: _generateRoutes(routes, themeData, log),
@@ -68,18 +68,18 @@ List<AppRoute> mainRoutes(Ref ref, AppLocalizations? localization) {
       icon: FIcons.book,
       child: const QuranScreen(),
     ),
-    AppRoute(
-      path: '/muslim_fortress',
-      label: _labelLocalization(localization?.muslimFortress, 'الحصن'),
-      icon: FIcons.building,
-      child: const QuranScreen(),
-    ),
-    AppRoute(
-      path: '/thkr',
-      label: _labelLocalization(localization?.remembrance, 'الأذكار'),
-      icon: FIcons.bell,
-      child: const QuranScreen(),
-    ),
+    // AppRoute(
+    //   path: '/muslim_fortress',
+    //   label: _labelLocalization(localization?.muslimFortress, 'الحصن'),
+    //   icon: FIcons.building,
+    //   child: const QuranScreen(),
+    // ),
+    // AppRoute(
+    //   path: '/thkr',
+    //   label: _labelLocalization(localization?.remembrance, 'الأذكار'),
+    //   icon: FIcons.bell,
+    //   child: const QuranScreen(),
+    // ),
     AppRoute(
       path: '/hadith',
       label: _labelLocalization(localization?.hadith, 'الحديث'),

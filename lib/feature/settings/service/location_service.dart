@@ -1,5 +1,4 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:free_map/free_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:hasanat/core/logging/logger_provider.dart';
@@ -15,9 +14,7 @@ part 'location_service.g.dart';
 @riverpod
 LocationService locationService(Ref ref) {
   final log = ref.read(loggerProvider);
-  final lang = ref.watch(
-    localeProvider.select((value) => value.value?.languageCode),
-  );
+  final lang = ref.watch(localeProvider);
   final service = FmService()
     ..setData(userAgent: 'Tawaq/1.0 (contact: moathaltamimidev@gmail.com)');
   return LocationService(log, service, lang);
