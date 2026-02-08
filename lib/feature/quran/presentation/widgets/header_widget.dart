@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:hasanat/core/locale/locale_extension.dart';
 import 'package:hasanat/feature/quran/domain/models/font_sizes.dart';
 import 'package:hasanat/feature/quran/domain/models/quran_layouts.dart';
 import 'package:hasanat/feature/quran/presentation/widgets/ayah_search_selector.dart';
@@ -20,14 +21,12 @@ class QuranHeaderWidget extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final layout = ref.watch(
+    final state = ref.watch(
       stateSettingsProvider.select(
-        (v) => v.value?.quranState.layout ?? QuranReadingLayout.studyMode,
-      ),
-    );
-    final fontSize = ref.watch(
-      stateSettingsProvider.select(
-        (v) => v.value?.quranState.fontSize ?? FontSizes.medium,
+        (v) => (
+          layout: v.value?.quranState.layout ?? QuranReadingLayout.studyMode,
+          fontSize: v.value?.quranState.fontSize ?? FontSizes.medium,
+        ),
       ),
     );
 
@@ -40,10 +39,10 @@ class QuranHeaderWidget extends HookConsumerWidget {
         children: [
           // View mode tabs
           SizedBox(
-            width: 140,
+            width: 280,
             child: FTabs(
               control: FTabControl.lifted(
-                index: layout.index,
+                index: state.layout.index,
                 onChange: (v) => ref
                     .read(stateSettingsProvider.notifier)
                     .setLastLayout(QuranReadingLayout.values[v]),
@@ -55,7 +54,14 @@ class QuranHeaderWidget extends HookConsumerWidget {
               children: [
                 for (final mode in QuranReadingLayout.values)
                   FTabEntry(
-                    label: Icon(mode.icon, size: 14),
+                    label: Row(
+                      mainAxisAlignment: .center,
+                      spacing: 4,
+                      children: [
+                        Icon(mode.icon),
+                        Text(mode.getLocaleName(context.l10n)),
+                      ],
+                    ),
                     child: const SizedBox.shrink(),
                   ),
               ],
@@ -83,8 +89,8 @@ class QuranHeaderWidget extends HookConsumerWidget {
             width: 140,
             child: FTabs(
               control: FTabControl.lifted(
-                index: fontSize.index,
-                onChange: (int v) => ref
+                index: state.fontSize.index,
+                onChange: (v) => ref
                     .read(stateSettingsProvider.notifier)
                     .setFontSize(FontSizes.values[v]),
               ),

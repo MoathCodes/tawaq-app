@@ -181,6 +181,8 @@
   "prepareForPrayer": "Prepare yourself for the prayer.",
   "qatar": "Qatar",
   "quran": "Holy Quran",
+  "quranLayoutDoublePage": "Double Page",
+  "quranLayoutStudyMode": "Study Mode",
   "red": "Red",
   "remembrance": "Remembrance",
   "resetCompleteDescription": "Parameters have been reset to default values.",

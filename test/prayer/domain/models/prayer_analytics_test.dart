@@ -4,9 +4,9 @@ import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
 void main() {
   group('PrayerAnalyticsPeriod', () {
     group('duration', () {
-      test('daily returns 1 day', () {
-        expect(PrayerAnalyticsPeriod.daily.duration, const Duration(days: 1));
-      });
+      // test('daily returns 1 day', () {
+      //   expect(PrayerAnalyticsPeriod.daily.duration, const Duration(days: 1));
+      // });
 
       test('weekly returns 7 days', () {
         expect(PrayerAnalyticsPeriod.weekly.duration, const Duration(days: 7));
@@ -36,7 +36,7 @@ void main() {
         expect(
           PrayerAnalyticsPeriod.values,
           containsAll([
-            PrayerAnalyticsPeriod.daily,
+            // PrayerAnalyticsPeriod.daily,
             PrayerAnalyticsPeriod.weekly,
             PrayerAnalyticsPeriod.monthly,
             PrayerAnalyticsPeriod.yearly,
@@ -87,14 +87,14 @@ void main() {
     });
 
     group('copyWith', () {
-      test('updates period while preserving other fields', () {
-        final original = PrayerAnalytics.empty();
+      // test('updates period while preserving other fields', () {
+      //   final original = PrayerAnalytics.empty();
 
-        final updated = original.copyWith(period: PrayerAnalyticsPeriod.daily);
+      //   final updated = original.copyWith(period: PrayerAnalyticsPeriod.daily);
 
-        expect(updated.period, PrayerAnalyticsPeriod.daily);
-        expect(updated.completionPercentage, original.completionPercentage);
-      });
+      //   expect(updated.period, PrayerAnalyticsPeriod.daily);
+      //   expect(updated.completionPercentage, original.completionPercentage);
+      // });
 
       test('updates streaks', () {
         final original = PrayerAnalytics.empty();

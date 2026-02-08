@@ -1,63 +1,88 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forui/forui.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 
 void main() {
   group('CompletionStatus', () {
     group('getBadgeColor', () {
-      test('returns teal for jamaah (light mode)', () {
-        final color = CompletionStatus.jamaah.getBadgeColor();
+      late FColors lightColors;
+      late FColors darkColors;
 
-        expect(color, const Color(0xFF14B8A6));
+      setUp(() {
+        lightColors = FThemes.zinc.light.colors;
+        darkColors = FThemes.zinc.dark.colors;
       });
 
-      test('returns dark teal for jamaah (dark mode)', () {
-        final color = CompletionStatus.jamaah.getBadgeColor(isDark: true);
-
-        expect(color, const Color(0xFF0F766E));
+      test('jamaah returns primary color', () {
+        expect(
+          CompletionStatus.jamaah.getBadgeColor(lightColors),
+          lightColors.primary,
+        );
+        expect(
+          CompletionStatus.jamaah.getBadgeColor(darkColors),
+          darkColors.primary,
+        );
       });
 
-      test('returns blue for onTime (light mode)', () {
-        final color = CompletionStatus.onTime.getBadgeColor();
+      test(
+        'onTime returns blended color between primary and mutedForeground',
+        () {
+          final color = CompletionStatus.onTime.getBadgeColor(lightColors);
 
-        expect(color, const Color(0xFF60A5FA));
+          expect(color, isNot(equals(lightColors.primary)));
+          expect(color, isNot(equals(lightColors.mutedForeground)));
+          expect(color, isNot(equals(Colors.transparent)));
+          expect(
+            color,
+            Color.lerp(lightColors.primary, lightColors.mutedForeground, 0.35),
+          );
+        },
+      );
+
+      test('late returns further blended color toward mutedForeground', () {
+        final color = CompletionStatus.late.getBadgeColor(lightColors);
+
+        expect(color, isNot(equals(lightColors.primary)));
+        expect(
+          color,
+          Color.lerp(lightColors.primary, lightColors.mutedForeground, 0.65),
+        );
       });
 
-      test('returns dark blue for onTime (dark mode)', () {
-        final color = CompletionStatus.onTime.getBadgeColor(isDark: true);
+      test('missed returns mostly mutedForeground blend', () {
+        final color = CompletionStatus.missed.getBadgeColor(lightColors);
 
-        expect(color, const Color(0xFF1E40AF));
+        expect(color, isNot(equals(lightColors.primary)));
+        expect(
+          color,
+          Color.lerp(lightColors.primary, lightColors.mutedForeground, 0.85),
+        );
       });
 
-      test('returns amber for late (light mode)', () {
-        final color = CompletionStatus.late.getBadgeColor();
+      test('colors form a gradient hierarchy from primary to muted', () {
+        final jamaah = CompletionStatus.jamaah.getBadgeColor(lightColors);
+        final onTime = CompletionStatus.onTime.getBadgeColor(lightColors);
+        final late = CompletionStatus.late.getBadgeColor(lightColors);
+        final missed = CompletionStatus.missed.getBadgeColor(lightColors);
 
-        expect(color, const Color(0xFFF59E0B));
-      });
-
-      test('returns dark amber for late (dark mode)', () {
-        final color = CompletionStatus.late.getBadgeColor(isDark: true);
-
-        expect(color, const Color(0xFF92400E));
-      });
-
-      test('returns rose for missed (light mode)', () {
-        final color = CompletionStatus.missed.getBadgeColor();
-
-        expect(color, const Color(0xFFFB7185));
-      });
-
-      test('returns dark rose for missed (dark mode)', () {
-        final color = CompletionStatus.missed.getBadgeColor(isDark: true);
-
-        expect(color, const Color(0xFF9F1239));
+        // All should be distinct
+        expect({jamaah, onTime, late, missed}.length, 4);
       });
 
       test('returns transparent for none', () {
-        final color = CompletionStatus.none.getBadgeColor();
+        final color = CompletionStatus.none.getBadgeColor(lightColors);
 
         expect(color, Colors.transparent);
+      });
+
+      test('adapts to dark theme colors', () {
+        final lightJamaah = CompletionStatus.jamaah.getBadgeColor(lightColors);
+        final darkJamaah = CompletionStatus.jamaah.getBadgeColor(darkColors);
+
+        // Different themes produce different colors
+        expect(lightJamaah, isNot(equals(darkJamaah)));
       });
     });
 

@@ -15,6 +15,7 @@ import 'package:hasanat/gen/fonts.gen.dart';
 import 'package:hasanat/hive/hive_registrar.g.dart';
 import 'package:hasanat/l10n/app_localizations.dart';
 import 'package:hasanat/theme/theme.dart';
+import 'package:hasanat/theme/theme_model.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -63,8 +64,15 @@ class TawaqApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appRouter = ref.watch(appRouterProvider);
-    final locale = ref.watch(localeProvider);
-    final appTheme = ref.watch(themeProvider);
+    final langCode = ref.watch(localeProvider);
+    final themePrefs = ref.watch(themeProvider);
+    final locale = Locale(langCode);
+    final resolvedTheme = themePrefs.value != null
+        ? resolveColorScheme(
+            themePrefs.value!.appPalette,
+            themePrefs.value!.themeMode,
+          )
+        : FThemes.zinc.light;
 
     return ScreenUtilPlusInit(
       designSize: _designSize,
@@ -76,8 +84,8 @@ class TawaqApp extends ConsumerWidget {
           ScreenUtilPlus().screenHeight >= _designSize.height,
       builder: (_, _) => MaterialApp.router(
         debugShowCheckedModeBanner: false,
-        themeMode: appTheme.value?.themeMode,
-        locale: locale.value,
+        themeMode: themePrefs.value?.themeMode,
+        locale: locale,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: appRouter,
         onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? '',
@@ -90,8 +98,8 @@ class TawaqApp extends ConsumerWidget {
         ],
         builder: (_, child) => FTheme(
           data: _buildTheme(
-            appTheme.value?.colorScheme ?? FThemes.zinc.light,
-            isArabic: locale.value?.languageCode == 'ar',
+            resolvedTheme,
+            isArabic: locale.languageCode == 'ar',
           ),
           child: child!,
         ),

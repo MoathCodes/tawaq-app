@@ -463,6 +463,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quran => 'Holy Quran';
 
   @override
+  String get quranLayoutDoublePage => 'Double Page';
+
+  @override
+  String get quranLayoutStudyMode => 'Study Mode';
+
+  @override
   String get red => 'Red';
 
   @override

@@ -54,7 +54,7 @@ abstract class PrayerAnalytics with _$PrayerAnalytics {
 /// The period of the prayer analytics.
 enum PrayerAnalyticsPeriod {
   /// The analytics for a single day.
-  daily,
+  // daily,
 
   /// The analytics for the last 7 days.
   weekly,
@@ -69,7 +69,7 @@ enum PrayerAnalyticsPeriod {
   /// The duration of the period.
   Duration get duration {
     return switch (this) {
-      .daily => const Duration(days: 1),
+      // .daily => const Duration(days: 1),
       .weekly => const Duration(days: 7),
       .monthly => const Duration(days: 30),
       .yearly => const Duration(days: 365),
@@ -79,7 +79,7 @@ enum PrayerAnalyticsPeriod {
   /// Returns the localized name of the period.
   String getLocaleName(AppLocalizations l10n) {
     return switch (this) {
-      .daily => l10n.daily,
+      // .daily => l10n.daily,
       .weekly => l10n.weekly,
       .monthly => l10n.monthly,
       .yearly => l10n.yearly,

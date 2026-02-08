@@ -246,6 +246,8 @@
   "qatar": "قطر",
   "quran": "القرآن الكريم",
   "@quran": {},
+  "quranLayoutDoublePage": "صفحتان",
+  "quranLayoutStudyMode": "وضع الدراسة",
   "red": "أحمر",
   "reflectionPlaceholder": "اكتب أفكارك حول هذه الآية...",
   "remembrance": "الأذكار",

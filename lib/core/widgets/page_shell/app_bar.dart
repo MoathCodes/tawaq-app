@@ -17,7 +17,7 @@ class ShellAppBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appSettings = ref.watch(localeProvider);
+    final langCode = ref.watch(localeProvider);
     final locationName = ref.watch(
       prayerSettingsProvider.select((value) => value.value?.locationName),
     );
@@ -25,7 +25,7 @@ class ShellAppBar extends ConsumerWidget {
 
     // final colors = FTheme.of(context).colors;
 
-    final isArabic = appSettings.value?.languageCode == 'ar';
+    final isArabic = langCode == 'ar';
 
     final hijriDate = ref.watch(hijriClockProvider);
 

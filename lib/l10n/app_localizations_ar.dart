@@ -484,6 +484,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quran => 'القرآن الكريم';
 
   @override
+  String get quranLayoutDoublePage => 'صفحتان';
+
+  @override
+  String get quranLayoutStudyMode => 'وضع الدراسة';
+
+  @override
   String get red => 'أحمر';
 
   @override

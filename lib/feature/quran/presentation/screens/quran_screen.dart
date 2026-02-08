@@ -101,13 +101,13 @@ class _MainContentWidget extends ConsumerWidget {
     );
 
     final child = switch (viewMode) {
-      QuranReadingLayout.singlePage => layouts.SinglePageLayout(
-        controller: controller,
-        buildStyle: _buildStyle,
-        theme: theme,
-        onPageChanged: savePageInfo,
-        onAyahTapped: onAyahTapped,
-      ),
+      // QuranReadingLayout.singlePage => layouts.SinglePageLayout(
+      //   controller: controller,
+      //   buildStyle: _buildStyle,
+      //   theme: theme,
+      //   onPageChanged: savePageInfo,
+      //   onAyahTapped: onAyahTapped,
+      // ),
       QuranReadingLayout.doublePage => layouts.DoublePageLayout(
         controller: controller,
         buildStyle: _buildStyle,

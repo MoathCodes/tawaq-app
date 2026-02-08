@@ -902,6 +902,18 @@ abstract class AppLocalizations {
   /// **'Holy Quran'**
   String get quran;
 
+  /// No description provided for @quranLayoutDoublePage.
+  ///
+  /// In en, this message translates to:
+  /// **'Double Page'**
+  String get quranLayoutDoublePage;
+
+  /// No description provided for @quranLayoutStudyMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Mode'**
+  String get quranLayoutStudyMode;
+
   /// No description provided for @red.
   ///
   /// In en, this message translates to:

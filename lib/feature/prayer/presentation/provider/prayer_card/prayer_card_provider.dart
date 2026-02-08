@@ -41,7 +41,7 @@ class PrayerCard extends _$PrayerCard {
     }
 
     final formatter = ref.watch(timeFormatterProvider);
-    final isArabic = ref.read(localeProvider.notifier).isArabic();
+    final isArabic = ref.read(localeProvider) == 'ar';
 
     while (true) {
       try {

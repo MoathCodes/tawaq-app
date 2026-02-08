@@ -12,12 +12,10 @@ part 'date_formatter.g.dart';
 /// in the correct format.
 @riverpod
 DateFormat timeFormatter(Ref ref) {
-  final locale = ref.watch(localeProvider);
+  final langCode = ref.watch(localeProvider);
   final is24Hours = ref.watch(
     prayerSettingsProvider.select((s) => s.value?.is24Hours),
   );
 
-  return is24Hours ?? false
-      ? DateFormat.Hm(locale.value?.languageCode)
-      : DateFormat.jm(locale.value?.languageCode);
+  return is24Hours ?? false ? DateFormat.Hm(langCode) : DateFormat.jm(langCode);
 }

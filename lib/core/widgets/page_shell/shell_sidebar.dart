@@ -29,7 +29,7 @@ class ShellSidebar extends HookConsumerWidget {
     final secondaryRoutes = ref.read(secondaryRoutesProvider(context.l10n));
     final theme = FTheme.of(context);
     final router = GoRouter.of(context);
-    final isRtl = ref.watch(localeProvider).value?.languageCode == 'ar';
+    final isRtl = ref.watch(localeProvider) == 'ar';
     final duration = context.theme.durations.fast;
     final textDir = isRtl ? TextDirection.rtl : TextDirection.ltr;
     final isTablet =
@@ -63,9 +63,9 @@ class ShellSidebar extends HookConsumerWidget {
       return null;
     }, [isTablet]);
 
-    final itemStyle = useMemoized(
+    final FSidebarItemStyle Function(FSidebarItemStyle) itemStyle = useMemoized(
       () =>
-          (FSidebarItemStyle s) => s.copyWith(
+          (s) => s.copyWith(
             backgroundColor: FWidgetStateMap({
               WidgetState.disabled: Colors.transparent,
               WidgetState.selected | WidgetState.hovered | WidgetState.pressed:

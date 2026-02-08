@@ -2,9 +2,8 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hasanat/core/utils/date_extensions.dart';
 import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
-import 'package:hasanat/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:hasanat/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:hasanat/feature/settings/service/settings_service.dart';
+import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'prayer_completion_provider.g.dart';
@@ -17,7 +16,6 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
   Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
     if (!ref.mounted) return;
     final service = ref.read(prayerServiceProvider);
-    final settingsService = ref.read(settingsServiceProvider);
 
     // --- Optimistic UI Update ---
     // Update the state immediately so the UI reflects the change instantly
@@ -45,9 +43,9 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
 
     // --- Persist to Database ---
     // Set the first prayer recorded date if not already set
-    await settingsService.setFirstPrayerRecordedDateIfNull(
-      completion.completionTime,
-    );
+    ref
+        .read(firstPrayerRecordedDateProvider.notifier)
+        .setIfNull(completion.completionTime);
 
     await service.addOrUpdateCompletion(completion);
     if (!ref.mounted) return;
@@ -59,7 +57,6 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
     if (!ref.mounted) return;
 
     state = AsyncData(completions);
-    ref.invalidate(prayerAnalyticsProvider);
   }
 
   @override
