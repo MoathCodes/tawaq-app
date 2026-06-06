@@ -1,46 +1,239 @@
 // The GoRouter setup reads BuildContext for localization and error widgets.
 // ignore_for_file: avoid_build_context_in_providers
-// import 'dart:ui';
-// raghad is so wow
 
+import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/logging/logger_provider.dart';
-import 'package:hasanat/core/routing/route.dart';
-import 'package:hasanat/core/widgets/not_found_screen.dart';
-import 'package:hasanat/core/widgets/page_shell/page_shell.dart';
-import 'package:hasanat/feature/prayer/presentation/screens/prayer_screen.dart';
-import 'package:hasanat/feature/quran/presentation/screens/quran_screen.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/feature/settings/presentation/screens/settings_screen.dart';
-import 'package:hasanat/feature/settings/presentation/screens/start_wizard.dart';
-import 'package:hasanat/l10n/app_localizations.dart';
-import 'package:hasanat/theme/theme_model.dart';
-import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/not_found_screen.dart';
+import 'package:tawaq/core/widgets/page_shell/page_shell.dart';
+import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
+import 'package:tawaq/feature/prayer/presentation/screens/prayer_screen.dart';
+import 'package:tawaq/feature/quran/presentation/screens/quran_screen.dart';
+import 'package:tawaq/feature/settings/presentation/screens/settings_screen.dart';
+import 'package:tawaq/feature/settings/presentation/screens/start_wizard.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 
 part 'route_provider.g.dart';
+
+/// Route for the startup wizard screen.
+@TypedGoRoute<WizardRoute>(path: '/wizard')
+@immutable
+class WizardRoute extends GoRouteData with $WizardRoute {
+  /// Creates the wizard route.
+  const WizardRoute();
+
+  @override
+  /// Builds the startup wizard screen.
+  Widget build(BuildContext context, GoRouterState state) {
+    return const StartedScreen();
+  }
+}
+
+/// Shell route that hosts the app's primary navigation destinations.
+@TypedShellRoute<AppShellRoute>(
+  routes: [
+    TypedGoRoute<PrayerRoute>(path: '/prayer'),
+    TypedGoRoute<QuranRoute>(path: '/quran'),
+    TypedGoRoute<HadithRoute>(path: '/hadith'),
+    TypedGoRoute<MuslimFortressRoute>(path: '/muslim_fortress'),
+    TypedGoRoute<SettingsRoute>(path: '/settings'),
+    TypedGoRoute<AboutRoute>(path: '/about'),
+  ],
+)
+class AppShellRoute extends ShellRouteData {
+  /// Creates the application shell route.
+  const AppShellRoute();
+
+  @override
+  /// Builds the shell around the nested navigator.
+  Widget builder(BuildContext context, GoRouterState state, Widget navigator) {
+    return PageShell(child: navigator);
+  }
+}
+
+/// Shared route base for app navigation metadata and page transitions.
+abstract class AppNavigationRoute extends GoRouteData {
+  /// Creates a navigation route with optional nested sub-routes.
+  const AppNavigationRoute({this.subRoutes = const []});
+
+  /// Nested routes that are considered part of this navigation branch.
+  final List<AppNavigationRoute> subRoutes;
+
+  /// The icon shown in navigation chrome for this route.
+  IconData get icon;
+
+  /// Returns the localized label for this route.
+  String localizedLabel(AppLocalizations? localization);
+
+  /// The current route location.
+  String get path => location;
+
+  /// Whether this destination can be activated from shell navigation.
+  ///
+  /// When false, shell chrome shows the route but disables its control.
+  bool get navigationEnabled => true;
+
+  /// Whether this route (or one of its nested sub-routes) matches [location].
+  bool containsLocation(String? location) {
+    if (location == null) return false;
+    if (path == location) return true;
+    return subRoutes.any((route) => route.containsLocation(location));
+  }
+
+  @override
+  Page<void> buildPage(BuildContext context, GoRouterState state) {
+    return _buildDesktopTransitionPage(
+      state.pageKey,
+      build(context, state),
+      barrierColor: FTheme.of(context).colors.background,
+    );
+  }
+}
+
+/// Route for the prayer screen.
+@immutable
+class PrayerRoute extends AppNavigationRoute with $PrayerRoute {
+  /// Creates the prayer route.
+  const PrayerRoute();
+
+  @override
+  /// The prayer route icon.
+  IconData get icon => FLucideIcons.clock;
+
+  @override
+  /// Returns the localized prayer label.
+  String localizedLabel(AppLocalizations? localization) =>
+      _labelLocalization(localization?.prayerTimes, 'مواقيت الصلاة');
+
+  @override
+  /// Builds the prayer screen.
+  Widget build(BuildContext context, GoRouterState state) {
+    return const PrayerScreen();
+  }
+}
+
+/// Route for the Quran screen.
+@immutable
+class QuranRoute extends AppNavigationRoute with $QuranRoute {
+  /// Creates the Quran route.
+  const QuranRoute();
+
+  @override
+  /// The Quran route icon.
+  IconData get icon => FLucideIcons.book;
+
+  @override
+  /// Returns the localized Quran label.
+  String localizedLabel(AppLocalizations? localization) =>
+      _labelLocalization(localization?.quran, 'القرآن');
+
+  @override
+  /// Builds the Quran screen.
+  Widget build(BuildContext context, GoRouterState state) {
+    return const QuranScreen();
+  }
+}
+
+/// Route for the hadith screen.
+@immutable
+class HadithRoute extends AppNavigationRoute with $HadithRoute {
+  /// Creates the hadith route.
+  const HadithRoute({this.$extra});
+
+  /// Extra hadiths used when the route is opened in specific-list mode.
+  final List<DetailedHadith>? $extra;
+
+  @override
+  /// The hadith route icon.
+  IconData get icon => FLucideIcons.mic;
+
+  @override
+  /// Returns the localized hadith label.
+  String localizedLabel(AppLocalizations? localization) =>
+      _labelLocalization(localization?.hadith, 'الأحاديث');
+
+  @override
+  /// Builds the hadith page.
+  Widget build(BuildContext context, GoRouterState state) {
+    return HadithPage(
+      initialHadiths: $extra ?? const <DetailedHadith>[],
+    );
+  }
+}
+
+/// Route for the Muslim Fortress screen.
+@immutable
+class MuslimFortressRoute extends AppNavigationRoute with $MuslimFortressRoute {
+  /// Creates the Muslim Fortress route.
+  const MuslimFortressRoute();
+
+  @override
+  IconData get icon => FLucideIcons.shield;
+
+  @override
+  String localizedLabel(AppLocalizations? localization) =>
+      _labelLocalization(localization?.muslimFortress, 'حصن المسلم');
+
+  @override
+  Widget build(BuildContext context, GoRouterState state) {
+    return const MuslimFortressScreen();
+  }
+}
+
+/// Route for the settings screen.
+@immutable
+class SettingsRoute extends AppNavigationRoute with $SettingsRoute {
+  /// Creates the settings route.
+  const SettingsRoute();
+
+  @override
+  /// The settings route icon.
+  IconData get icon => FLucideIcons.settings;
+
+  @override
+  /// Returns the localized settings label.
+  String localizedLabel(AppLocalizations? localization) =>
+      _labelLocalization(localization?.settings, 'الإعدادات');
+
+  @override
+  /// Builds the settings screen.
+  Widget build(BuildContext context, GoRouterState state) {
+    return const SettingsScreen();
+  }
+}
+
+/// Route for the about screen.
+@immutable
+class AboutRoute extends AppNavigationRoute with $AboutRoute {
+  /// Creates the about route.
+  const AboutRoute();
+
+  @override
+  /// The about route icon.
+  IconData get icon => FLucideIcons.info;
+
+  @override
+  /// Returns the localized about label.
+  String localizedLabel(AppLocalizations? localization) =>
+      _labelLocalization(localization?.about, 'عن التطبيق');
+
+  @override
+  /// Builds the about screen.
+  Widget build(BuildContext context, GoRouterState state) {
+    return const QuranScreen();
+  }
+}
 
 /// Configures the root [GoRouter] used by the application shell.
 @riverpod
 GoRouter appRouter(Ref ref) {
-  final routes = [
-    ...ref.read(mainRoutesProvider(null)),
-    ...ref.read(secondaryRoutesProvider(null)),
-  ];
-  final themeData = ref.read(themeSettingsFromPrefsProvider);
-  final log = ref.read(loggerProvider);
   final appRouter = GoRouter(
-    routes: _generateRoutes(routes, themeData, log),
-    initialLocation: routes.first.path,
-    // initialLocation: '/settings',
-    // errorPageBuilder: (context, state) =>
-    //     _buildErrorPage(context, state, themeData),
-    // errorBuilder: (context, state) => NotFoundPage(
-    //   errorMsg: state.error?.message ?? context.l10n.errorNotFoundPage,
-    // ),
+    routes: $appRoutes,
+    initialLocation: const PrayerRoute().location,
     errorPageBuilder: (context, state) => NoTransitionPage(
       key: state.pageKey,
       child: NotFoundScreen(
@@ -54,98 +247,36 @@ GoRouter appRouter(Ref ref) {
 
 /// Returns the main navigation destinations shown in the primary shell.
 @riverpod
-List<AppRoute> mainRoutes(Ref ref, AppLocalizations? localization) {
-  return [
-    AppRoute(
-      path: '/prayer',
-      label: _labelLocalization(localization?.prayerTimes, 'مواقيت الصلاة'),
-      icon: FIcons.clock,
-      child: const PrayerScreen(),
-    ),
-    AppRoute(
-      path: '/quran',
-      label: _labelLocalization(localization?.quran, 'القرآن'),
-      icon: FIcons.book,
-      child: const QuranScreen(),
-    ),
-    // AppRoute(
-    //   path: '/muslim_fortress',
-    //   label: _labelLocalization(localization?.muslimFortress, 'الحصن'),
-    //   icon: FIcons.building,
-    //   child: const QuranScreen(),
-    // ),
-    // AppRoute(
-    //   path: '/thkr',
-    //   label: _labelLocalization(localization?.remembrance, 'الأذكار'),
-    //   icon: FIcons.bell,
-    //   child: const QuranScreen(),
-    // ),
-    AppRoute(
-      path: '/hadith',
-      label: _labelLocalization(localization?.hadith, 'الحديث'),
-      icon: FIcons.mic,
-      child: const QuranScreen(),
-    ),
+List<AppNavigationRoute> mainRoutes(Ref ref) {
+  return const [
+    PrayerRoute(),
+    QuranRoute(),
+    HadithRoute(),
+    MuslimFortressRoute(),
   ];
 }
 
 /// Returns secondary destinations rendered in the application shell.
 @riverpod
-List<AppRoute> secondaryRoutes(Ref ref, AppLocalizations? localization) {
-  return [
-    AppRoute(
-      path: '/settings',
-      label: _labelLocalization(localization?.settings, 'الإعدادات'),
-      icon: FIcons.settings,
-      child: const SettingsScreen(),
-    ),
-    AppRoute(
-      path: '/about',
-      label: _labelLocalization(localization?.about, 'عن التطبيق'),
-      icon: FIcons.info,
-      child: const QuranScreen(),
-    ),
+List<AppNavigationRoute> secondaryRoutes(Ref ref) {
+  return const [
+    SettingsRoute(),
+    AboutRoute(),
   ];
 }
 
-/// Builds a GoRoute for a given AppRoute
-GoRoute _buildGoRoute(AppRoute route, ThemeSettings themeData) => GoRoute(
-  path: route.path,
-  name: route.label,
-  // pageBuilder: (context, state) => _buildCustomTransitionPage(
-  //   state.pageKey,
-  //   route.child,
-  //   themeData,
-  // ),
-  // pageBuilder: (context, state) => MaterialPage(
-  //   key: state.pageKey,
-  //   child: route.child,
-  // ),
-  // builder: (context, state) => route.child,
-  pageBuilder: (context, state) {
-    final theme = FTheme.of(context);
-    // Use theme-aware surface color for a tasteful fade backdrop
-    final overlay = theme.colors.background;
-    return _desktopTransitionPage(
-      state.pageKey,
-      route.child,
-      barrierColor: overlay,
-    );
-  },
-);
-
 /// A desktop-style transition that fades in the content with a subtle slide
 /// and scale effect.
-CustomTransitionPage<T> _desktopTransitionPage<T>(
+CustomTransitionPage<void> _buildDesktopTransitionPage(
   LocalKey key,
   Widget child, {
   required Color barrierColor,
 }) {
-  return CustomTransitionPage<T>(
+  return CustomTransitionPage<void>(
     key: key,
     child: child,
-    barrierColor: barrierColor, // theme-aware
-    opaque: false, // allow the barrier to show
+    barrierColor: barrierColor,
+    opaque: false,
     transitionDuration: const Duration(milliseconds: 400),
     reverseTransitionDuration: const Duration(milliseconds: 280),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -160,9 +291,8 @@ CustomTransitionPage<T> _desktopTransitionPage<T>(
         reverseCurve: Curves.easeIn,
       );
 
-      // Subtle depth and slide for desktop feel
       final slide = Tween<Offset>(
-        begin: const Offset(0, 0.02), // ~2% height
+        begin: const Offset(0, 0.02),
         end: Offset.zero,
       ).animate(motion);
       final scale = Tween<double>(begin: 0.985, end: 1).animate(motion);
@@ -180,28 +310,6 @@ CustomTransitionPage<T> _desktopTransitionPage<T>(
     },
   );
 }
-
-/// Generates the routes for the app.
-List<RouteBase> _generateRoutes(
-  List<AppRoute> routes,
-  ThemeSettings themeData,
-  Logger log,
-) => [
-  // GoRoute(
-  //   path: '/test',
-  //   builder: (context, state) => const TawaqApp(),
-  // ),
-  GoRoute(
-    path: '/wizard',
-    builder: (context, state) => const StartedScreen(),
-  ),
-  ShellRoute(
-    routes: [
-      ...routes.map((route) => _buildGoRoute(route, themeData)),
-    ],
-    builder: (context, state, child) => PageShell(child: child),
-  ),
-];
 
 /// Returns the localized label if available,
 ///  otherwise returns the initial label.

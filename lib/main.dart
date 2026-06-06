@@ -1,42 +1,44 @@
 /// The entry point of the application.
 library;
 
-import 'dart:io';
-
+import 'package:dorar_hadith_flutter/dorar_hadith_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/routing/route_provider.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/gen/fonts.gen.dart';
-import 'package:hasanat/hive/hive_registrar.g.dart';
-import 'package:hasanat/l10n/app_localizations.dart';
-import 'package:hasanat/theme/theme.dart';
-import 'package:hasanat/theme/theme_model.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/routing/route_provider.dart';
+import 'package:tawaq/core/utils/platform.dart';
+import 'package:tawaq/feature/settings/data/models/theme_prefs.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/hive/hive_registrar.g.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:window_manager/window_manager.dart';
 
-/// Whether running on desktop platform.
-bool get _isDesktop =>
-    !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+bool get _isTouchThemePlatform =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.fuchsia);
 
 /// The entry point of the application.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Future.wait([
+    DorarHadithFlutter.ensureInitialized(),
     MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq'),
     Hive.initFlutter(),
   ]);
   Hive.registerAdapters();
   tz.initializeTimeZones();
 
-  if (_isDesktop) await _initDesktopWindow();
+  if (isDesktopPlatform) await _initDesktopWindow();
 
   runApp(const ProviderScope(child: TawaqApp()));
 }
@@ -67,13 +69,15 @@ class TawaqApp extends ConsumerWidget {
     final langCode = ref.watch(localeProvider);
     final themePrefs = ref.watch(themeProvider);
     final locale = Locale(langCode);
-    final resolvedTheme = themePrefs.value != null
-        ? resolveColorScheme(
-            themePrefs.value!.appPalette,
-            themePrefs.value!.themeMode,
-          )
-        : FThemes.zinc.light;
-
+    final useTouchTheme = _isTouchThemePlatform;
+    final prefs = themePrefs.value ?? ThemePrefs.defaults();
+    final appTheme = buildAppTheme(
+      palette: prefs.appPalette,
+      themeMode: prefs.themeMode,
+      touch: useTouchTheme,
+      textScale: prefs.appTextScale.scalar,
+      isArabic: locale.languageCode == 'ar',
+    );
     return ScreenUtilPlusInit(
       designSize: _designSize,
       minTextAdapt: true,
@@ -85,6 +89,7 @@ class TawaqApp extends ConsumerWidget {
       builder: (_, _) => MaterialApp.router(
         debugShowCheckedModeBanner: false,
         themeMode: themePrefs.value?.themeMode,
+        theme: appTheme.toApproximateMaterialTheme(),
         locale: locale,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: appRouter,
@@ -97,31 +102,10 @@ class TawaqApp extends ConsumerWidget {
           GlobalCupertinoLocalizations.delegate,
         ],
         builder: (_, child) => FTheme(
-          data: _buildTheme(
-            resolvedTheme,
-            isArabic: locale.languageCode == 'ar',
-          ),
+          data: appTheme,
           child: child!,
         ),
       ),
-    );
-  }
-
-  FThemeData _buildTheme(FThemeData base, {required bool isArabic}) {
-    const extensions = <ThemeExtension<dynamic>>[
-      AppRadii.standard(),
-      AppDurations.standard(),
-    ];
-
-    if (!isArabic) return base.copyWith(extensions: extensions);
-
-    return FThemeData(
-      colors: base.colors,
-      typography: FTypography.inherit(
-        colors: base.colors,
-        defaultFontFamily: FontFamily.iBMPlexSansArabic,
-      ),
-      extensions: extensions,
     );
   }
 }
