@@ -1,173 +1,77 @@
-// Need to catch all errors to ensure stream continues.
-// ignore_for_file: avoid_catches_without_on_clauses
-
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/core/logging/logger_provider.dart';
-import 'package:hasanat/core/utils/date_formatter.dart';
-import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_card_decision.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_card_model.dart';
-import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart'
-    show PrayerService, computePrayerCardDecision, prayerServiceProvider;
-import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:intl/intl.dart';
-import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:timezone/timezone.dart';
+import 'package:tawaq/core/utils/date_formatter.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_card_model.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/use_cases/compute_prayer_card_decision.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 part 'prayer_card_provider.g.dart';
 
-const String _prayerCardLogPrefix = '[PrayerCard]';
+final PrayerCardInfo _emptyPrayerCard = PrayerCardInfo.empty();
 
-/// Notifier for the prayer card information.
+/// Hero prayer card derived from the shared [prayerDayProvider] clock.
 @riverpod
-class PrayerCard extends _$PrayerCard {
-  _PrayerCache? _cache;
-  PrayerSettings? _cachedSettings;
+PrayerCardInfo prayerCard(Ref ref) {
+  final day = ref.watch(prayerDayProvider).value;
+  if (day == null) return _emptyPrayerCard;
 
-  @override
-  Stream<PrayerCardInfo> build() async* {
-    if (!ref.mounted) return;
-    final log = ref.watch(loggerProvider);
-    final service = ref.watch(prayerServiceProvider);
+  final settings = ref.watch(prayerSettingsProvider).value;
+  if (settings == null) return _emptyPrayerCard;
 
-    final settingsState = ref.watch(prayerSettingsProvider);
-    final settings = settingsState.value;
+  final formatter = ref.watch(timeFormatterProvider);
+  final isArabic = ref.watch(localeProvider) == 'ar';
 
-    if (settings == null) {
-      log.d('$_prayerCardLogPrefix Settings unavailable – empty stream');
-      yield PrayerCardInfo.empty();
-    }
-
-    final formatter = ref.watch(timeFormatterProvider);
-    final isArabic = ref.read(localeProvider) == 'ar';
-
-    while (true) {
-      try {
-        final now = DateTime.now().toLocation(settings!.location);
-
-        _ensureCache(settings, now, service, log);
-
-        if (_cache == null) {
-          // Shouldn\'t normally happen, but be defensive.
-          yield PrayerCardInfo.empty();
-        }
-
-        final decision = computePrayerCardDecision(
-          currentTime: now,
-          location: settings.location,
-          todaysPrayerTimes: _cache!.todaysTimes,
-          yesterdaysPrayerTimes: _cache!.yesterdaysTimes,
-          todaysSunnahTimes: _cache!.todaysSunnah,
-          yesterdaysSunnahTimes: _cache!.yesterdaysSunnah,
-        );
-
-        yield _generateCard(
-          decision,
-          settings.location,
-          now,
-          isArabic,
-          formatter,
-          settings,
-        );
-      } catch (e, stackTrace) {
-        log.e(
-          '$_prayerCardLogPrefix Error producing prayer card',
-          error: e,
-          stackTrace: stackTrace,
-        );
-        yield PrayerCardInfo.empty();
-      } finally {
-        await Future<void>.delayed(const Duration(seconds: 1));
-      }
-    }
-  }
-
-  void _ensureCache(
-    PrayerSettings settings,
-    DateTime now,
-    PrayerService service,
-    Logger log,
-  ) {
-    final todayAnchor = DateTime(now.year, now.month, now.day);
-
-    final needsRefresh =
-        _cache == null ||
-        _cachedSettings != settings ||
-        _cache!.anchorDate != todayAnchor;
-
-    if (!needsRefresh) return;
-
-    log.d('$_prayerCardLogPrefix Building prayer cache …');
-
-    final todaysTimes = service.getTodaysPrayerTimes(
-      now,
-      roundToMinutes: false,
+  try {
+    return _buildPrayerCard(
+      day: day,
+      iqamahSettings: settings.iqamahSettings,
+      formatter: formatter,
+      useHinduArabicNumerals: isArabic,
     );
-    final yesterdaysTimes = service.getTodaysPrayerTimes(
-      now.subtract(const Duration(days: 1)),
-      roundToMinutes: false,
-    );
-
-    _cache = _PrayerCache(
-      anchorDate: todayAnchor,
-      todaysTimes: todaysTimes,
-      yesterdaysTimes: yesterdaysTimes,
-      todaysSunnah: service.getSunnahTime(todaysTimes),
-      yesterdaysSunnah: service.getSunnahTime(yesterdaysTimes),
-    );
-
-    _cachedSettings = settings;
-  }
-
-  PrayerCardInfo _generateCard(
-    PrayerCardDecision decision,
-    Location location,
-    DateTime currentTime,
-    bool useHinduArabicNumerals,
-    DateFormat formatter,
-    PrayerSettings activeSettingsForIqamah,
-  ) {
-    final time = decision.isCountdown
-        ? decision.referenceTime
-              .difference(currentTime)
-              .toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)
-        : '+${currentTime.difference(decision.referenceTime).toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)}';
-
-    final iqamahMinutes =
-        activeSettingsForIqamah.iqamahSettings[decision.prayer] ?? 0;
-
-    final cardInfo = PrayerCardInfo(
-      canSetStatus: currentTime.isAfter(decision.referenceTime),
-      showIqamah: iqamahMinutes > 0,
-      time: time,
-      prayer: decision.prayer,
-      adhanTime: formatter.format(decision.referenceTime),
-      iqamahTime: formatter.format(
-        decision.referenceTime.add(Duration(minutes: iqamahMinutes)),
-      ),
-    );
-    return cardInfo;
+  } catch (_) {
+    return _emptyPrayerCard;
   }
 }
 
-// Lightweight container for today/yesterday prayer & sunnah times.
-class _PrayerCache {
-  const _PrayerCache({
-    required this.anchorDate,
-    required this.todaysTimes,
-    required this.yesterdaysTimes,
-    required this.todaysSunnah,
-    required this.yesterdaysSunnah,
-  });
+PrayerCardInfo _buildPrayerCard({
+  required PrayerDaySnapshot day,
+  required Map<Prayer, int> iqamahSettings,
+  required DateFormat formatter,
+  required bool useHinduArabicNumerals,
+}) {
+  final decision = computePrayerCardDecision(
+    currentTime: day.now,
+    location: day.location,
+    todaysPrayerTimes: day.today,
+    yesterdaysPrayerTimes: day.yesterday,
+    todaysSunnahTimes: day.todaySunnah,
+    yesterdaysSunnahTimes: day.yesterdaySunnah,
+  );
 
-  /// Midnight of the day the cache was built (in the active location).
-  final DateTime anchorDate;
+  final iqamahMinutes = iqamahSettings[decision.prayer] ?? 0;
+  final adhanTime = formatter.format(decision.referenceTime);
+  final iqamahTime = formatter.format(
+    decision.referenceTime.add(Duration(minutes: iqamahMinutes)),
+  );
 
-  final PrayerTimes todaysTimes;
+  final time = decision.isCountdown
+      ? decision.referenceTime
+            .difference(day.now)
+            .toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)
+      : '+${day.now.difference(decision.referenceTime).toHHMMSS(
+          useHinduArabicNumerals: useHinduArabicNumerals,
+        )}';
 
-  final PrayerTimes yesterdaysTimes;
-  final SunnahTimes todaysSunnah;
-  final SunnahTimes yesterdaysSunnah;
+  return PrayerCardInfo(
+    time: time,
+    prayer: decision.prayer,
+    adhanTime: adhanTime,
+    iqamahTime: iqamahTime,
+    canSetStatus: decision.referenceTime.isBefore(day.now),
+    showIqamah: iqamahMinutes > 0,
+  );
 }

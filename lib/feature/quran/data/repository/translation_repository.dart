@@ -1,7 +1,7 @@
-import 'package:hasanat/core/database/asset_database_service.dart';
-import 'package:hasanat/feature/quran/data/sources/translation_data_source.dart';
-import 'package:hasanat/feature/quran/domain/models/translation.dart';
-import 'package:hasanat/feature/quran/domain/models/translation_source.dart';
+import 'package:tawaq/core/database/asset_database_service.dart';
+import 'package:tawaq/feature/quran/data/models/translation.dart';
+import 'package:tawaq/feature/quran/data/sources/translation_data_source.dart';
+import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 
 /// Repository for accessing Quran translations.
 ///

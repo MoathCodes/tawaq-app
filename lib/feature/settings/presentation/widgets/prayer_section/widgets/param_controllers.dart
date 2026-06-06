@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:forui_hooks/forui_hooks.dart';
+import 'package:tawaq/feature/settings/domain/use_cases/calculation_method_form.dart';
 
 /// Default calculation method used for fallback values.
-const OtherCalculationMethod paramDefaults = CalculationMethod.other;
+const OtherCalculationMethod paramDefaults = calculationMethodDefaults;
 
 /// Creates a memoized [TextEditingController] that auto-disposes.
 TextEditingController useAutoDisposingController(String initialText) {
@@ -53,69 +54,61 @@ class ParamControllers {
 
   /// Syncs all controllers from a [CalculationMethod].
   void syncFrom(CalculationMethod? p) {
-    fajrAngle.text = (p?.fajrAngle ?? paramDefaults.fajrAngle).toString();
-    ishaAngle.text = (p?.ishaAngle ?? paramDefaults.ishaAngle).toString();
-    ishaInterval.text = p?.ishaInterval?.toString() ?? '';
-    maghribAngle.text = p?.maghribAngle?.toString() ?? '';
-    madhab.value = p?.madhab ?? paramDefaults.madhab;
-    highLatRule.value = p?.highLatitudeRule ?? paramDefaults.highLatitudeRule;
+    final values = calculationMethodFieldValues(p);
+    fajrAngle.text = values.fajrAngle.toString();
+    ishaAngle.text = values.ishaAngle.toString();
+    ishaInterval.text = values.ishaInterval?.toString() ?? '';
+    maghribAngle.text = values.maghribAngle?.toString() ?? '';
+    madhab.value = values.madhab;
+    highLatRule.value = values.highLatitudeRule;
     for (final prayer in Prayer.values) {
-      adjustments[prayer]?.text = (p?.adjustments[prayer] ?? 0).toString();
+      adjustments[prayer]?.text = (values.adjustments[prayer] ?? 0).toString();
     }
   }
 
   /// Builds a new [CalculationMethod] from current controller values.
   CalculationMethod toMethod(CalculationMethod? base) {
-    final newAdjustments = <Prayer, int>{
-      for (final e in adjustments.entries) e.key: ?int.tryParse(e.value.text),
-    };
-
-    final newMethod = base?.copyWith(
-      fajrAngle: double.tryParse(fajrAngle.text),
-      ishaAngle: double.tryParse(ishaAngle.text),
-      ishaInterval: int.tryParse(ishaInterval.text),
-      maghribAngle: double.tryParse(maghribAngle.text),
-      madhab: madhab.value,
-      highLatitudeRule: highLatRule.value,
-      adjustments: newAdjustments.isEmpty ? null : newAdjustments,
+    return buildCalculationMethod(
+      base: base,
+      values: CalculationMethodFieldValues(
+        fajrAngle: double.tryParse(fajrAngle.text),
+        ishaAngle: double.tryParse(ishaAngle.text),
+        ishaInterval: int.tryParse(ishaInterval.text),
+        maghribAngle: double.tryParse(maghribAngle.text),
+        madhab: madhab.value ?? paramDefaults.madhab,
+        highLatitudeRule: highLatRule.value ?? paramDefaults.highLatitudeRule,
+        adjustments: {
+          for (final entry in adjustments.entries)
+            entry.key: int.tryParse(entry.value.text),
+        },
+      ),
     );
-
-    if (newMethod?.props.toString() == base?.props.toString()) {
-      return base ?? const UmmAlQura();
-    }
-    return newMethod ?? const UmmAlQura();
   }
 }
 
 /// Hook that creates all [ParamControllers] with proper initialization.
 ParamControllers useParamControllers(CalculationMethod? initial) {
-  final p = initial;
+  final values = calculationMethodFieldValues(initial);
 
-  final fajrAngle = useAutoDisposingController(
-    (p?.fajrAngle ?? paramDefaults.fajrAngle).toString(),
-  );
-  final ishaAngle = useAutoDisposingController(
-    (p?.ishaAngle ?? paramDefaults.ishaAngle).toString(),
-  );
+  final fajrAngle = useAutoDisposingController(values.fajrAngle.toString());
+  final ishaAngle = useAutoDisposingController(values.ishaAngle.toString());
   final ishaInterval = useAutoDisposingController(
-    p?.ishaInterval?.toString() ?? '',
+    values.ishaInterval?.toString() ?? '',
   );
   final maghribAngle = useAutoDisposingController(
-    p?.maghribAngle?.toString() ?? '',
+    values.maghribAngle?.toString() ?? '',
   );
 
-  final madhab = useFSelectController<Madhab>(
-    value: p?.madhab ?? paramDefaults.madhab,
-  );
+  final madhab = useFSelectController<Madhab>(value: values.madhab);
   final highLatRule = useFSelectController<HighLatitudeRule>(
-    value: p?.highLatitudeRule ?? paramDefaults.highLatitudeRule,
+    value: values.highLatitudeRule,
   );
 
   final adjustments = useMemoized(
     () => {
       for (final prayer in Prayer.values)
         prayer: TextEditingController(
-          text: (p?.adjustments[prayer] ?? 0).toString(),
+          text: (values.adjustments[prayer] ?? 0).toString(),
         ),
     },
     const [],

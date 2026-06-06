@@ -1,9 +1,9 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/core/logging/logger_provider.dart';
-import 'package:hasanat/feature/prayer/data/database/prayer_database.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_repo.g.dart';
@@ -28,9 +28,12 @@ class PrayerRepo {
   final Logger log;
 
   /// Adds or updates a prayer completion.
-  Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
+  Future<void> addOrUpdateCompletion(
+    PrayerCompletion completion,
+    Location location,
+  ) async {
     try {
-      await prayerDatabase.insertOrUpdateCompletion(completion);
+      await prayerDatabase.insertOrUpdateCompletion(completion, location);
     } catch (e, stackTrace) {
       log.e(
         'Error adding/updating completion',
@@ -79,9 +82,12 @@ class PrayerRepo {
     return prayerDatabase.getFullyCompletedDays(loc);
   }
 
-  /// Watches for changes to the prayer completions on a specific date.
-  Future<List<PrayerCompletion>> getPrayerCompletionForDate(DateTime date) {
-    return prayerDatabase.getCompletionsForDate(date);
+  /// Returns prayer completions recorded on [date].
+  Future<List<PrayerCompletion>> getPrayerCompletionForDate(
+    DateTime date,
+    Location location,
+  ) {
+    return prayerDatabase.getCompletionsForDate(date, location);
   }
 
   /// Returns all prayer completions between [from] and [to] (inclusive).

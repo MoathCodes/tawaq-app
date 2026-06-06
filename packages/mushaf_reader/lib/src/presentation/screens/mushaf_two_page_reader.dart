@@ -3,6 +3,7 @@ import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_page_info.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_style.dart';
 import 'package:mushaf_reader/src/logic/mushaf_reader_controller.dart';
+import 'package:mushaf_reader/src/presentation/mushaf_loading.dart';
 import 'package:mushaf_reader/src/presentation/screens/mushaf_page.dart';
 
 /// A widget for displaying a complete Mushaf reader with 2 pages side-by-side.
@@ -93,8 +94,7 @@ class _MushafTwoPageReaderState extends State<MushafTwoPageReader> {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return widget.loadingWidget ??
-          const Center(child: CircularProgressIndicator());
+      return widget.loadingWidget ?? MushafLoading.none;
     }
 
     return Directionality(
@@ -117,6 +117,7 @@ class _MushafTwoPageReaderState extends State<MushafTwoPageReader> {
               // Right Page (Odd in RTL, Left in LTR)
               Expanded(
                 child: MushafPage(
+                  key: ValueKey(firstPage),
                   page: firstPage,
                   controller: _controller,
                   style: widget.style,
@@ -136,6 +137,7 @@ class _MushafTwoPageReaderState extends State<MushafTwoPageReader> {
               Expanded(
                 child: secondPage <= 604
                     ? MushafPage(
+                        key: ValueKey(secondPage),
                         page: secondPage,
                         controller: _controller,
                         style: widget.style,

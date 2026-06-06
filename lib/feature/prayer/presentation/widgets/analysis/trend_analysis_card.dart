@@ -3,13 +3,13 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/widgets/custom_cards.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_analysis_section.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
-import 'package:hasanat/theme/theme.dart';
 import 'package:intl/intl.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Card showing prayer trend analysis with a stacked bar chart.
 class TrendAnalysisCard extends StatelessWidget {
@@ -34,16 +34,25 @@ class TrendAnalysisCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     final colors = theme.colors;
+    final l10n = context.l10n;
 
-    return StaticCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      backgroundColor: theme.colors.secondary.withValues(alpha: 0.7),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: theme.colors.border,
+        ),
+        borderRadius: theme.radii.lg,
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            context.l10n.graphicalAnalysis,
-            style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
+          Semantics(
+            header: true,
+            child: Text(
+              l10n.graphicalAnalysis,
+              style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           FTabs(
@@ -52,15 +61,21 @@ class TrendAnalysisCard extends StatelessWidget {
               onChange: (index) =>
                   onPeriodChanged(PrayerAnalyticsPeriod.values[index]),
             ),
-            style: (style) => style.copyWith(
-              decoration: style.decoration.copyWith(color: colors.barrier),
-              unselectedLabelTextStyle: style.unselectedLabelTextStyle.copyWith(
-                color: colors.secondaryForeground.withAlpha(150),
-              ),
+            style: .delta(
+              decoration: .boxDelta(color: colors.barrier),
+              labelTextStyle: .delta([
+                .exact(
+                  {.desktop},
+                  .delta(
+                    color: colors.secondaryForeground.withAlpha(150),
+                  ),
+                ),
+              ]),
             ),
+
             children: PrayerAnalyticsPeriod.values.map((period) {
               return FTabEntry(
-                label: Text(period.getLocaleName(context.l10n)),
+                label: Text(period.getLocaleName(l10n)),
                 child: _TrendChart(
                   data: data,
                   period: period,
@@ -83,6 +98,7 @@ class _TrendChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
     final buckets = data.trendBuckets;
 
     if (buckets.isEmpty) {
@@ -90,7 +106,7 @@ class _TrendChart extends StatelessWidget {
         height: 180,
         child: Center(
           child: Text(
-            context.l10n.noDataAvailable,
+            l10n.noDataAvailable,
             style: theme.typography.sm.copyWith(
               color: theme.colors.mutedForeground,
             ),
@@ -106,9 +122,10 @@ class _TrendChart extends StatelessWidget {
 
     return Column(
       children: [
-        SizedBox(
-          height: 180,
-          child: BarChart(
+        ExcludeSemantics(
+          child: SizedBox(
+            height: 180,
+            child: BarChart(
             BarChartData(
               maxY: maxTotal + 1,
               gridData: const FlGridData(show: false),
@@ -133,7 +150,7 @@ class _TrendChart extends StatelessWidget {
                     final total = jamaah + onTime + late + missed;
 
                     final title = DateFormat.MMMd(
-                      context.l10n.localeName,
+                      l10n.localeName,
                     ).format(bucket.start);
 
                     return BarTooltipItem(
@@ -144,14 +161,14 @@ class _TrendChart extends StatelessWidget {
                       ),
                       children: [
                         TextSpan(
-                          text: '${context.l10n.total}: $total\n',
+                          text: '${l10n.total}: $total\n',
                           style: theme.typography.xs.copyWith(
                             color: theme.colors.mutedForeground,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         TextSpan(
-                          text: '\u25cf ${context.l10n.jamaah}: $jamaah\n',
+                          text: '\u25cf ${l10n.jamaah}: $jamaah\n',
                           style: theme.typography.xs.copyWith(
                             color: CompletionStatus.jamaah.getBadgeColor(
                               theme.colors,
@@ -159,7 +176,7 @@ class _TrendChart extends StatelessWidget {
                           ),
                         ),
                         TextSpan(
-                          text: '\u25cf ${context.l10n.onTime}: $onTime\n',
+                          text: '\u25cf ${l10n.onTime}: $onTime\n',
                           style: theme.typography.xs.copyWith(
                             color: CompletionStatus.onTime.getBadgeColor(
                               theme.colors,
@@ -167,7 +184,7 @@ class _TrendChart extends StatelessWidget {
                           ),
                         ),
                         TextSpan(
-                          text: '\u25cf ${context.l10n.late}: $late\n',
+                          text: '\u25cf ${l10n.late}: $late\n',
                           style: theme.typography.xs.copyWith(
                             color: CompletionStatus.late.getBadgeColor(
                               theme.colors,
@@ -175,7 +192,7 @@ class _TrendChart extends StatelessWidget {
                           ),
                         ),
                         TextSpan(
-                          text: '\u25cf ${context.l10n.missed}: $missed',
+                          text: '\u25cf ${l10n.missed}: $missed',
                           style: theme.typography.xs.copyWith(
                             color: CompletionStatus.missed.getBadgeColor(
                               theme.colors,
@@ -206,6 +223,7 @@ class _TrendChart extends StatelessWidget {
               ),
               barGroups: groups,
             ),
+          ),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -306,12 +324,14 @@ class _BottomTitle extends StatelessWidget {
       PrayerAnalyticsPeriod.weekly => DateFormat.E(locale).format(bucket.start),
     };
 
+    final theme = FTheme.of(context);
+
     return SideTitleWidget(
       meta: meta,
       child: Text(
         label,
-        style: FTheme.of(context).typography.xs.copyWith(
-          color: FTheme.of(context).colors.mutedForeground,
+        style: theme.typography.xs.copyWith(
+          color: theme.colors.mutedForeground,
         ),
       ),
     );
@@ -357,24 +377,28 @@ class _LegendItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    return Row(
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(3),
+    return MergeSemantics(
+      child: Row(
+        children: [
+          ExcludeSemantics(
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
           ),
-        ),
-        const SizedBox(width: AppSpacing.xs),
-        Text(
-          label,
-          style: theme.typography.xs.copyWith(
-            color: theme.colors.mutedForeground,
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            label,
+            style: theme.typography.xs.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

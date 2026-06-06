@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
 import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
+import 'package:mushaf_reader/src/presentation/mushaf_loading.dart';
 
 /// A widget that displays a single Ayah (verse) with the correct QCF4 font.
 ///
@@ -92,7 +93,7 @@ class AyahWidget extends StatefulWidget {
 
   /// Widget to display while loading the Ayah data.
   ///
-  /// Defaults to a centered [CircularProgressIndicator].
+  /// Defaults to [MushafLoading.none].
   final Widget? loadingWidget;
 
   /// Widget to display if an error occurs.
@@ -138,8 +139,9 @@ class AyahWidget extends StatefulWidget {
 
   /// Creates an AyahWidget that fetches by Surah and Ayah number.
   ///
-  /// Use this when you know the Surah number (1-114) and the verse
-  /// number within that Surah.
+  /// Use when you know the Surah number (1-114) and the verse number within
+  /// that Surah. Prefer [AyahWidget.fromId] when you already have the global
+  /// ayah id (1-6236) to skip surah-to-id resolution.
   ///
   /// ## Example
   ///
@@ -178,8 +180,7 @@ class _AyahWidgetState extends State<AyahWidget> {
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return widget.loadingWidget ??
-              const Center(child: CircularProgressIndicator());
+          return widget.loadingWidget ?? MushafLoading.none;
         }
         if (snapshot.hasError || !snapshot.hasData) {
           return widget.errorWidget ??

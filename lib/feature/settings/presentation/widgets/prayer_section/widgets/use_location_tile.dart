@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/widgets/location_helpers.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_helpers.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 
 /// Toggle tile for enabling/disabling automatic location detection.
 class UseLocationTile extends ConsumerWidget {
@@ -33,26 +35,35 @@ class UseLocationTile extends ConsumerWidget {
     final autoLocation = ref.watch(
       prayerSettingsProvider.select((v) => v.value?.autoLocation ?? false),
     );
+    final prayerSettingsReady = ref.watch(
+      prayerSettingsProvider.select((v) => v.hasValue),
+    );
     final colors = FTheme.of(context).colors;
+    final l10n = context.l10n;
 
-    return FTile(
-      prefix: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: colors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+    return NonSelectable(
+      child: FTile(
+      prefix: SettingsSemantics.decorative(
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: colors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(FLucideIcons.locate, color: colors.primary),
         ),
-        child: Icon(FIcons.locate, color: colors.primary),
       ),
-      title: Text(context.l10n.useMyLocation),
+      title: Text(l10n.useMyLocation),
       subtitle: Text(
         autoLocation
-            ? context.l10n.autoLocationEnabled
-            : context.l10n.autoLocationDisabled,
+            ? l10n.autoLocationEnabled
+            : l10n.autoLocationDisabled,
       ),
       suffix: FSwitch(
+        enabled: prayerSettingsReady,
         value: autoLocation,
         onChange: (v) => _onToggle(context, ref, v),
+      ),
       ),
     );
   }

@@ -1,7 +1,7 @@
-import 'package:hasanat/core/logging/logger_provider.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
 
 part 'quran_notes.g.dart';
 

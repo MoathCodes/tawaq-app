@@ -1,6 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hasanat/feature/prayer/domain/use_cases/compute_prayer_card_decision.dart';
+import 'package:tawaq/feature/prayer/domain/use_cases/compute_prayer_card_decision.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 

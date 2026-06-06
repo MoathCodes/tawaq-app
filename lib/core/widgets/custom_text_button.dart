@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:hasanat/core/hooks/hooks.dart';
-import 'package:hasanat/core/widgets/mouse_click.dart';
+import 'package:tawaq/core/hooks/hooks.dart';
+import 'package:tawaq/core/widgets/mouse_click.dart';
 
 /// A text button that displays a hover effect when the mouse is over it.
 class CustomTextButton extends HookWidget {

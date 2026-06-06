@@ -14,14 +14,53 @@ import 'package:flutter/widgets.dart';
 class $AssetsDatabaseGen {
   const $AssetsDatabaseGen();
 
+  /// File path: assets/database/quran_bn.db
+  String get quranBn => 'assets/database/quran_bn.db';
+
+  /// File path: assets/database/quran_es.db
+  String get quranEs => 'assets/database/quran_es.db';
+
+  /// File path: assets/database/quran_fr.db
+  String get quranFr => 'assets/database/quran_fr.db';
+
+  /// File path: assets/database/quran_id.db
+  String get quranId => 'assets/database/quran_id.db';
+
+  /// File path: assets/database/quran_ru.db
+  String get quranRu => 'assets/database/quran_ru.db';
+
+  /// File path: assets/database/quran_sv.db
+  String get quranSv => 'assets/database/quran_sv.db';
+
+  /// File path: assets/database/quran_tr.db
+  String get quranTr => 'assets/database/quran_tr.db';
+
+  /// File path: assets/database/quran_ur.db
+  String get quranUr => 'assets/database/quran_ur.db';
+
+  /// File path: assets/database/quran_zh.db
+  String get quranZh => 'assets/database/quran_zh.db';
+
   /// File path: assets/database/saheeh_international.db
   String get saheehInternational => 'assets/database/saheeh_international.db';
 
-  /// File path: assets/database/tafseer_mouaser.db
-  String get tafseerMouaser => 'assets/database/tafseer_mouaser.db';
+  /// Directory path: assets/database/tafseer_ar
+  $AssetsDatabaseTafseerArGen get tafseerAr =>
+      const $AssetsDatabaseTafseerArGen();
 
   /// List of all assets
-  List<String> get values => [saheehInternational, tafseerMouaser];
+  List<String> get values => [
+    quranBn,
+    quranEs,
+    quranFr,
+    quranId,
+    quranRu,
+    quranSv,
+    quranTr,
+    quranUr,
+    quranZh,
+    saheehInternational,
+  ];
 }
 
 class $AssetsImagesGen {
@@ -69,6 +108,25 @@ class $AssetsImagesGen {
     midnight,
     sunrise,
   ];
+}
+
+class $AssetsDatabaseTafseerArGen {
+  const $AssetsDatabaseTafseerArGen();
+
+  /// File path: assets/database/tafseer_ar/Quraan_AS.db
+  String get quraanAS => 'assets/database/tafseer_ar/Quraan_AS.db';
+
+  /// File path: assets/database/tafseer_ar/Quraan_Ba.db
+  String get quraanBa => 'assets/database/tafseer_ar/Quraan_Ba.db';
+
+  /// File path: assets/database/tafseer_ar/Quraan_IK.db
+  String get quraanIK => 'assets/database/tafseer_ar/Quraan_IK.db';
+
+  /// File path: assets/database/tafseer_ar/tafseer_mouaser.db
+  String get tafseerMouaser => 'assets/database/tafseer_ar/tafseer_mouaser.db';
+
+  /// List of all assets
+  List<String> get values => [quraanAS, quraanBa, quraanIK, tafseerMouaser];
 }
 
 class Assets {

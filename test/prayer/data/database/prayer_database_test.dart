@@ -1,9 +1,9 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hasanat/feature/prayer/data/database/prayer_database.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/hive/hive_registrar.g.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
+import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 
@@ -44,7 +44,7 @@ void main() {
           status: CompletionStatus.jamaah,
         );
 
-        await db.insertOrUpdateCompletion(completion);
+        await db.insertOrUpdateCompletion(completion, location);
 
         final all = await db.getAllCompletions();
         expect(all, hasLength(1));
@@ -63,6 +63,7 @@ void main() {
             completionTime: date,
             status: CompletionStatus.onTime,
           ),
+          location,
         );
 
         // Update to jamaah
@@ -73,6 +74,7 @@ void main() {
             completionTime: date,
             status: CompletionStatus.jamaah,
           ),
+          location,
         );
 
         final all = await db.getAllCompletions();
@@ -91,6 +93,7 @@ void main() {
               completionTime: date,
               status: CompletionStatus.onTime,
             ),
+            location,
           );
         }
 
@@ -106,6 +109,7 @@ void main() {
             completionTime: DateTime(2024, 5, 15),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -114,6 +118,7 @@ void main() {
             completionTime: DateTime(2024, 5, 16),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
 
         final all = await db.getAllCompletions();
@@ -130,6 +135,7 @@ void main() {
             completionTime: DateTime(2024, 5, 15, 5),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -138,6 +144,7 @@ void main() {
             completionTime: DateTime(2024, 5, 15, 12, 30),
             status: CompletionStatus.jamaah,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -146,12 +153,40 @@ void main() {
             completionTime: DateTime(2024, 5, 16, 5),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
 
-        final result = await db.getCompletionsForDate(DateTime(2024, 5, 15));
+        final result = await db.getCompletionsForDate(
+          DateTime(2024, 5, 15),
+          location,
+        );
 
         expect(result, hasLength(2));
         expect(result.every((c) => c.completionTime.day == 15), isTrue);
+      });
+
+      test('matches prayer-location calendar day across device timezones', () async {
+        final mecca = getLocation('Asia/Riyadh');
+        final nyc = getLocation('America/New_York');
+        // 22:00 in New York on June 4 is 05:00 on June 5 in Mecca.
+        final deviceStoredTime = TZDateTime(nyc, 2024, 6, 4, 22);
+
+        await db.insertOrUpdateCompletion(
+          PrayerCompletion(
+            id: null,
+            prayer: Prayer.fajr,
+            completionTime: deviceStoredTime,
+            status: CompletionStatus.onTime,
+          ),
+          mecca,
+        );
+
+        final result = await db.getCompletionsForDate(
+          DateTime(2024, 6, 5),
+          mecca,
+        );
+
+        expect(result, hasLength(1));
       });
 
       test('returns empty list when no completions for date', () async {
@@ -162,9 +197,13 @@ void main() {
             completionTime: DateTime(2024, 5, 15),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
 
-        final result = await db.getCompletionsForDate(DateTime(2024, 5, 20));
+        final result = await db.getCompletionsForDate(
+          DateTime(2024, 5, 20),
+          location,
+        );
 
         expect(result, isEmpty);
       });
@@ -179,6 +218,7 @@ void main() {
             completionTime: DateTime(2024, 5, 10),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -187,6 +227,7 @@ void main() {
             completionTime: DateTime(2024, 5, 15),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -195,6 +236,7 @@ void main() {
             completionTime: DateTime(2024, 5, 20),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -203,6 +245,7 @@ void main() {
             completionTime: DateTime(2024, 5, 25),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
 
         final result = await db.getCompletionsBetween(
@@ -225,6 +268,7 @@ void main() {
             completionTime: baseDate,
             status: CompletionStatus.jamaah,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -233,6 +277,7 @@ void main() {
             completionTime: baseDate,
             status: CompletionStatus.jamaah,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -241,6 +286,7 @@ void main() {
             completionTime: baseDate,
             status: CompletionStatus.onTime,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -249,6 +295,7 @@ void main() {
             completionTime: baseDate,
             status: CompletionStatus.late,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -257,6 +304,7 @@ void main() {
             completionTime: baseDate,
             status: CompletionStatus.missed,
           ),
+          location,
         );
 
         final result = await db.countAllPrayerStatusOnDate(
@@ -305,7 +353,8 @@ void main() {
               completionTime: date,
               status: statuses[i],
             ),
-          );
+          location,
+        );
         }
       }
 
@@ -350,6 +399,7 @@ void main() {
             completionTime: date,
             status: CompletionStatus.onTime,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -358,6 +408,7 @@ void main() {
             completionTime: date,
             status: CompletionStatus.onTime,
           ),
+          location,
         );
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
@@ -366,6 +417,7 @@ void main() {
             completionTime: date,
             status: CompletionStatus.onTime,
           ),
+          location,
         );
 
         final result = await db.getFullyCompletedDays(location);
@@ -420,6 +472,7 @@ void main() {
             completionTime: DateTime(2024, 5, 15),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
 
         final all = await db.getAllCompletions();
@@ -441,6 +494,7 @@ void main() {
             completionTime: DateTime(2024, 5, 15),
             status: CompletionStatus.onTime,
           ),
+          location,
         );
 
         final all = await db.getAllCompletions();

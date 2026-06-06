@@ -1,0 +1,37 @@
+import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+
+/// Builds the themed [MushafStyle] used by the Quran reader layouts.
+MushafStyle buildQuranMushafStyle(
+  FThemeData theme, [
+  QuranTextScale textScale = QuranTextScale.medium,
+]) =>
+    MushafStyle(
+      scale: MushafScale(readingBoost: textScale.boost),
+      ayahStyleModifier: (s) => s.copyWith(color: theme.colors.foreground),
+      juzStyleModifier: (s) => s.copyWith(color: theme.colors.mutedForeground),
+      pageNumberStyleModifier: (s) =>
+          s.copyWith(color: theme.colors.mutedForeground),
+      surahNameStyleModifier: (s) =>
+          s.copyWith(color: theme.colors.mutedForeground),
+      basmalahStyleModifier: (s) => s.copyWith(color: theme.colors.foreground),
+      activeAyahStyleModifier: (s) => s.copyWith(
+        backgroundColor: theme.colors.primary,
+        color: theme.colors.primaryForeground,
+      ),
+      headerSurahNameStyleModifier: (s) =>
+          s.copyWith(color: theme.colors.mutedForeground),
+    );
+
+/// Builds a compact [MushafStyle] for embedded mushaf blocks (e.g. fortress).
+MushafStyle buildAccentMushafStyle(
+  Color accentColor, [
+  QuranTextScale textScale = QuranTextScale.medium,
+]) =>
+    MushafStyle(
+      scale: MushafScale(readingBoost: textScale.boost),
+      ayahStyleModifier: (s) => s.copyWith(color: accentColor),
+      basmalahStyleModifier: (s) => s.copyWith(color: accentColor),
+    );

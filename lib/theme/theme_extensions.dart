@@ -1,6 +1,6 @@
 import 'package:forui/forui.dart';
-import 'package:hasanat/theme/durations.dart';
-import 'package:hasanat/theme/radii.dart';
+import 'package:tawaq/theme/durations.dart';
+import 'package:tawaq/theme/radii.dart';
 
 /// Convenience extension on [FThemeData] for accessing app design tokens.
 ///

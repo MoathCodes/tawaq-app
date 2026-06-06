@@ -1,19 +1,26 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/theme/theme.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/theme/theme.dart';
 
-/// Search-based calculation method selector.
+/// Builds a search [FSelect] for [CalculationMethod] tied to prayer settings.
+///
+/// Persists the chosen method through [prayerSettingsProvider].
 Widget buildCalculationMethodSelector(
   BuildContext context,
   WidgetRef ref,
-  CalculationMethod methodValue,
-) {
-  return FSelect<CalculationMethod>.searchBuilder(
+  CalculationMethod methodValue, {
+  bool enabled = true,
+}) {
+  final l10n = context.l10n;
+  return NonSelectable(
+    child: FSelect<CalculationMethod>.searchBuilder(
+    enabled: enabled,
     control: .lifted(
       value: methodValue,
       onChange: (value) async {
@@ -26,14 +33,14 @@ Widget buildCalculationMethodSelector(
         }
       },
     ),
-    label: Text(context.l10n.calculationMethod),
-    format: (method) => method.getLocaleName(context.l10n),
+    label: Text(l10n.calculationMethod),
+    format: (method) => method.getLocaleName(l10n),
     filter: (query) async {
       return query.isEmpty
           ? CalculationMethod.values
           : CalculationMethod.values.where(
               (method) => method
-                  .getLocaleName(context.l10n)
+                  .getLocaleName(l10n)
                   .toLowerCase()
                   .contains(query.toLowerCase()),
             );
@@ -41,7 +48,7 @@ Widget buildCalculationMethodSelector(
     contentBuilder: (_, _, data) => data
         .map(
           (method) => FSelectItem(
-            title: Text(method.getLocaleName(context.l10n)),
+            title: Text(method.getLocaleName(l10n)),
             value: method,
           ),
         )
@@ -52,11 +59,12 @@ Widget buildCalculationMethodSelector(
         mainAxisAlignment: MainAxisAlignment.center,
         spacing: 8,
         children: [
-          const Icon(FIcons.searchX),
-          Text(context.l10n.noResults),
+          const Icon(FLucideIcons.searchX),
+          Text(l10n.noResults),
         ],
       ),
     ),
     contentLoadingBuilder: (_, _) => const FCircularProgress(),
+    ),
   );
 }

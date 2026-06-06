@@ -144,6 +144,11 @@ abstract class IQuranRepository {
   /// - Juz number
   Future<QuranPage> getPage(int page);
 
+  /// Returns a fully built page from the in-memory LRU cache, if present.
+  ///
+  /// Does not load from storage. Call [ensureReady] first.
+  QuranPage? peekCachedPage(int page);
+
   // ============================================================
   // Sync methods for cached data access
   // ============================================================

@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/widgets/page_shell/app_bar.dart';
-import 'package:hasanat/core/widgets/page_shell/shell_navigation_bar.dart';
-import 'package:hasanat/core/widgets/page_shell/shell_sidebar.dart';
-import 'package:hasanat/core/widgets/window_controls.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/core/widgets/page_shell/app_bar.dart';
+import 'package:tawaq/core/widgets/page_shell/shell_navigation_bar.dart';
+import 'package:tawaq/core/widgets/page_shell/shell_shortcut_scope.dart';
+import 'package:tawaq/core/widgets/page_shell/shell_sidebar.dart';
+import 'package:tawaq/core/widgets/window_controls.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// The main shell of the application.
@@ -29,32 +31,49 @@ class PageShell extends ConsumerWidget {
     return Column(
       crossAxisAlignment: .stretch,
       children: [
-        GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onPanStart: (_) {
-            unawaited(windowManager.startDragging());
-          },
+        NonSelectable(
           child: ColoredBox(
             color: context.theme.colors.background,
-            child: const Padding(
-              padding: .all(6),
+            child: Padding(
+              padding: const .all(6),
               child: SizedBox(
                 height: 28,
-                child: Row(children: [WindowControls()]),
+                child: Row(
+                  children: [
+                    const WindowControls(),
+                    Expanded(
+                      child: ExcludeSemantics(
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onPanStart: (_) {
+                            unawaited(windowManager.startDragging());
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
         Expanded(
           child: FScaffold(
-            header: const ShellAppBar(),
+            header: const NonSelectable(child: ShellAppBar()),
             sidebar: ResponsiveQuery.of(context).isAtLeast(.sm)
-                ? const ShellSidebar()
+                ? const NonSelectable(child: ShellSidebar())
                 : null,
-            footer: isMobile ? const ShellBottomNavigationBar() : null,
-            // RepaintBoundary prevents child from rebuilding when sidebar changes
+            footer: isMobile
+                ? const NonSelectable(child: ShellBottomNavigationBar())
+                : null,
+            // RepaintBoundary prevents child from rebuilding
+            // when sidebar changes
             child: RepaintBoundary(
-              child: FToaster(child: child),
+              child: FToaster(
+                child: ShellShortcutScope(
+                  child: child,
+                ),
+              ),
             ),
           ),
         ),

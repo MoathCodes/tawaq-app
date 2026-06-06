@@ -3,13 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:free_map/free_map.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/utils/location_extensions.dart';
-import 'package:hasanat/feature/settings/presentation/provider/location_provider.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/widgets/location_helpers.dart';
-import 'package:hasanat/theme/theme.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/location_extensions.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/settings/presentation/provider/location_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_display.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_helpers.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
+import 'package:tawaq/theme/theme.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 /// Responsive row containing city search and timezone selector.
@@ -29,16 +32,18 @@ class LocationControlsRow extends ConsumerWidget {
           TimezoneSelect(enabled: enabled),
         ];
 
-        return constraints.maxWidth > 500
-            ? Row(
-                spacing: 12,
-                children: children.map((c) => Expanded(child: c)).toList(),
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: 12,
-                children: children,
-              );
+        return NonSelectable(
+          child: constraints.maxWidth > 500
+              ? Row(
+                  spacing: 12,
+                  children: children.map((c) => Expanded(child: c)).toList(),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 12,
+                  children: children,
+                ),
+        );
       },
     );
   }
@@ -57,6 +62,8 @@ class CitySearchSelect extends ConsumerWidget {
     final locationName = ref.watch(
       prayerSettingsProvider.select((v) => v.value?.locationName),
     );
+    final l10n = context.l10n;
+    final secondaryForeground = context.theme.colors.secondaryForeground;
 
     return FSelect<FmData>.searchBuilder(
       enabled: enabled,
@@ -74,15 +81,17 @@ class CitySearchSelect extends ConsumerWidget {
           }
         },
       ),
-      label: Text(context.l10n.searchPlaceLabel),
-      hint: locationName ?? context.l10n.searchForMore,
+      label: Text(l10n.searchPlaceLabel),
+      hint: locationName == null
+          ? l10n.searchForMore
+          : resolveLocationDisplayName(l10n, locationName),
       format: (s) => s.name,
       filter: (query) => ref.read(searchPlacesProvider(query).future),
       prefixBuilder: (_, _, _) => Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
         child: Icon(
-          FIcons.search,
-          color: context.theme.colors.secondaryForeground,
+          FLucideIcons.search,
+          color: secondaryForeground,
         ),
       ),
       contentBuilder: (_, _, data) => [
@@ -125,6 +134,8 @@ class TimezoneSelect extends ConsumerWidget {
     final location = ref.watch(
       prayerSettingsProvider.select((v) => v.value?.location),
     );
+    final l10n = context.l10n;
+    final colors = context.theme.colors;
 
     return FSelect<tz.Location>.searchBuilder(
       enabled: enabled,
@@ -134,16 +145,16 @@ class TimezoneSelect extends ConsumerWidget {
           if (v != null) unawaited(_setTimezone(context, ref, v));
         },
       ),
-      label: Text(context.l10n.timezone),
+      label: Text(l10n.timezone),
       format: (loc) => loc.name,
       searchFieldProperties: FSelectSearchFieldProperties(
-        hint: context.l10n.searchForMore,
+        hint: l10n.searchForMore,
       ),
       prefixBuilder: (_, _, _) => Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
         child: Icon(
-          FIcons.clock,
-          color: context.theme.colors.secondaryForeground,
+          FLucideIcons.clock,
+          color: colors.secondaryForeground,
         ),
       ),
       filter: (query) async {
@@ -165,13 +176,19 @@ class TimezoneSelect extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         spacing: 4,
         children: [
-          Icon(FIcons.chevronDown, color: context.theme.colors.primary),
+          Icon(FLucideIcons.chevronDown, color: colors.primary),
           FTooltip(
-            tipBuilder: (_, _) => Text(context.l10n.useSystemTimezone),
-            child: FButton.icon(
-              style: FButtonStyle.ghost(),
-              onPress: () => unawaited(_setTimezone(context, ref)),
-              child: const Icon(FIcons.locate),
+            tipBuilder: (_, _) => Text(l10n.useSystemTimezone),
+            child: SettingsSemantics.iconAction(
+              label: SettingsSemantics.useSystemTimezoneAction(l10n),
+              enabled: enabled,
+              child: FButton.icon(
+                variant: .ghost,
+                onPress: enabled
+                    ? () => unawaited(_setTimezone(context, ref))
+                    : null,
+                child: const Icon(FLucideIcons.locate),
+              ),
             ),
           ),
         ],

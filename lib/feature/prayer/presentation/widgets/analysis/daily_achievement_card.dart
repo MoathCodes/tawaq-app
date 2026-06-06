@@ -1,16 +1,19 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/widgets/custom_cards.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_analysis_section.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/scaled_screen_util.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
+import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Card showing today's prayer achievement gauge and stats breakdown.
-class DailyAchievementCard extends StatelessWidget {
+class DailyAchievementCard extends ConsumerWidget {
   /// Creates a [DailyAchievementCard].
   const DailyAchievementCard({required this.data, super.key});
 
@@ -18,13 +21,20 @@ class DailyAchievementCard extends StatelessWidget {
   final PrayerAnalysisSectionData data;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appScale = ref.watch(appTextScaleFactorProvider);
     final theme = FTheme.of(context);
     final counts = data.todayStatusCounts;
 
-    return StaticCard(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      backgroundColor: theme.colors.secondary.withValues(alpha: 0.7),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: theme.colors.border,
+        ),
+        borderRadius: theme.radii.lg,
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      // backgroundColor: theme.colors.secondary.withValues(alpha: 0.7),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final maxWidth = constraints.maxWidth.isFinite
@@ -35,10 +45,13 @@ class DailyAchievementCard extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                context.l10n.todayAchievement,
-                style: theme.typography.lg.copyWith(
-                  fontWeight: FontWeight.w700,
+              Semantics(
+                header: true,
+                child: Text(
+                  context.l10n.todayAchievement,
+                  style: theme.typography.lg.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -48,6 +61,7 @@ class DailyAchievementCard extends StatelessWidget {
                     progress: data.todayPerformanceScore,
                     statusCounts: counts,
                     size: gaugeSize,
+                    appScale: appScale,
                   ),
                 ),
               ),
@@ -66,11 +80,13 @@ class _Gauge extends StatelessWidget {
     required this.progress,
     required this.statusCounts,
     required this.size,
+    required this.appScale,
   });
 
   final double progress;
   final Map<CompletionStatus, int> statusCounts;
   final double size;
+  final double appScale;
 
   /// Determines the dominant status and returns its color for the percentage
   /// text.
@@ -106,46 +122,56 @@ class _Gauge extends StatelessWidget {
     final percent = (progress * 100).round();
     final performanceColor = _getPerformanceColor(theme.colors);
 
-    return SizedBox(
-      width: size,
-      height: size * 0.65,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CustomPaint(
-            size: Size(size, size * 0.65),
-            painter: _GaugePainter(
-              progress: progress,
-              statusCounts: statusCounts,
-              colors: theme.colors,
-              trackColor: theme.colors.secondaryForeground.withValues(
-                alpha: 0.12,
+    return Semantics(
+      label: PrayerSemantics.todayPerformance(
+        l10n: context.l10n,
+        percent: percent,
+      ),
+      readOnly: true,
+      excludeSemantics: true,
+      child: SizedBox(
+        width: size,
+        height: size * 0.65,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            ExcludeSemantics(
+              child: CustomPaint(
+                size: Size(size, size * 0.65),
+                painter: _GaugePainter(
+                  progress: progress,
+                  statusCounts: statusCounts,
+                  colors: theme.colors,
+                  trackColor: theme.colors.secondaryForeground.withValues(
+                    alpha: 0.12,
+                  ),
+                ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: 0,
-            child: Column(
-              children: [
-                Text(
-                  '$percent%',
-                  style: theme.typography.xl.copyWith(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 32.sp,
-                    color: performanceColor,
+            Positioned(
+              bottom: 0,
+              child: Column(
+                children: [
+                  Text(
+                    '$percent%',
+                    style: theme.typography.xl.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: scaledSp(32, appScale),
+                      color: performanceColor,
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  context.l10n.performanceIndicator,
-                  style: theme.typography.sm.copyWith(
-                    color: theme.colors.mutedForeground,
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    context.l10n.performanceIndicator,
+                    style: theme.typography.sm.copyWith(
+                      color: theme.colors.mutedForeground,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -326,23 +352,28 @@ class _StatColumn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    return Column(
-      children: [
-        Text(
-          value.toString(),
-          style: theme.typography.lg.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
+    return Semantics(
+      label: PrayerSemantics.statCell(value: value, statusLabel: label),
+      readOnly: true,
+      excludeSemantics: true,
+      child: Column(
+        children: [
+          Text(
+            value.toString(),
+            style: theme.typography.lg.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          label,
-          style: theme.typography.xs.copyWith(
-            color: theme.colors.mutedForeground,
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            label,
+            style: theme.typography.xs.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

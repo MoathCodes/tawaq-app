@@ -2,7 +2,8 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 
 void main() {
   group('CompletionStatus', () {
@@ -11,8 +12,8 @@ void main() {
       late FColors darkColors;
 
       setUp(() {
-        lightColors = FThemes.zinc.light.colors;
-        darkColors = FThemes.zinc.dark.colors;
+        lightColors = FThemes.zinc.light.desktop.colors;
+        darkColors = FThemes.zinc.dark.desktop.colors;
       });
 
       test('jamaah returns primary color', () {

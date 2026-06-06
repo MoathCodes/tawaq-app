@@ -1,8 +1,5 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hasanat/l10n/app_localizations.dart';
 
 part 'prayer_completion.freezed.dart';
 part 'prayer_completion.g.dart';
@@ -22,45 +19,7 @@ enum CompletionStatus {
   missed,
 
   /// The prayer has not been performed yet.
-  none
-  ;
-
-  /// Returns the color of the badge for this status.
-  ///
-  /// Uses a monochromatic gradient derived from the theme's [FColors],
-  /// fading from [FColors.primary] toward [FColors.mutedForeground].
-  /// This creates a clean hierarchy that adapts to any theme palette.
-  Color getBadgeColor(FColors colors) {
-    return switch (this) {
-      .jamaah => colors.primary,
-      .onTime => Color.lerp(colors.primary, colors.mutedForeground, 0.35)!,
-      .late => Color.lerp(colors.primary, colors.mutedForeground, 0.65)!,
-      .missed => Color.lerp(colors.primary, colors.mutedForeground, 0.85)!,
-      .none => Colors.transparent,
-    };
-  }
-
-  /// Returns the icon for this status.
-  IconData? getIcon() {
-    return switch (this) {
-      .jamaah => FIcons.users,
-      .onTime => FIcons.checkCheck,
-      .late => FIcons.clock,
-      .missed => FIcons.circleX,
-      .none => null,
-    };
-  }
-
-  /// Returns the localized name of this status.
-  String getLocaleName(AppLocalizations locale) {
-    return switch (this) {
-      .jamaah => locale.jamaah,
-      .onTime => locale.onTime,
-      .late => locale.late,
-      .missed => locale.missed,
-      .none => '',
-    };
-  }
+  none;
 }
 
 /// A prayer completion.

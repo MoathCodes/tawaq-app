@@ -52,6 +52,9 @@ class HiveBoxManager {
   Box<PageLayouts>? _pageLayoutsBox;
   Box<String>? _metadataBox;
 
+  /// Layout rows grouped by page number (built once at init).
+  final Map<int, List<PageLayouts>> _layoutsByPage = {};
+
   /// Factory constructor that returns the singleton instance.
   factory HiveBoxManager() {
     _refCount++;
@@ -111,18 +114,13 @@ class HiveBoxManager {
   }
 
   /// Gets all PageLayouts for a specific page number.
+  ///
+  /// Uses an in-memory index built at [init] — O(1) per page instead of
+  /// scanning every key in the layouts box.
   List<PageLayouts> getLayoutsForPage(int page) {
     _ensureInitialized();
-    final prefix = '${page}_';
-    final layouts = <PageLayouts>[];
-    for (final key in _pageLayoutsBox!.keys) {
-      if (key.toString().startsWith(prefix)) {
-        final layout = _pageLayoutsBox!.get(key);
-        if (layout != null) {
-          layouts.add(layout);
-        }
-      }
-    }
+    final layouts = _layoutsByPage[page];
+    if (layouts == null || layouts.isEmpty) return const [];
     return layouts;
   }
 
@@ -164,7 +162,18 @@ class HiveBoxManager {
     _pageLayoutsBox = await Hive.openBox<PageLayouts>('pagelayouts');
     _metadataBox = await Hive.openBox<String>('metadata');
 
+    _buildLayoutsByPageIndex();
+
     _initialized = true;
+  }
+
+  void _buildLayoutsByPageIndex() {
+    _layoutsByPage.clear();
+    for (final key in _pageLayoutsBox!.keys) {
+      final layout = _pageLayoutsBox!.get(key);
+      if (layout == null) continue;
+      (_layoutsByPage[layout.page] ??= []).add(layout);
+    }
   }
 
   /// Internal method to close and reset.
@@ -180,6 +189,7 @@ class HiveBoxManager {
     _juzsBox = null;
     _pageLayoutsBox = null;
     _metadataBox = null;
+    _layoutsByPage.clear();
 
     _initialized = false;
     _instance = null;

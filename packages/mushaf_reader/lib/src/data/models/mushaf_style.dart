@@ -64,6 +64,14 @@ typedef StyleModifier = TextStyle Function(TextStyle defaultStyle);
 ///   maxScale: 1.5,  // Don't go larger than 150%
 /// )
 /// ```
+///
+/// ## Reading boost
+///
+/// Apply a comfort multiplier after the page fits the viewport:
+///
+/// ```dart
+/// MushafScale(readingBoost: 1.08)
+/// ```
 class MushafScale {
   /// Fixed scale factor. If provided, auto-scaling is disabled.
   final double? factor;
@@ -86,6 +94,18 @@ class MushafScale {
   /// Reference width for scale calculations. Defaults to 500.
   final double referenceWidth;
 
+  /// User reading comfort multiplier applied after width/height fit.
+  ///
+  /// Defaults to `1.0`. Typical range: `0.9` (compact) to `1.12` (extra large).
+  /// Ignored when [ayahFontSize] is set (fixed-size mode).
+  final double readingBoost;
+
+  /// Minimum allowed [readingBoost]. Defaults to `0.85`.
+  final double minReadingBoost;
+
+  /// Maximum allowed [readingBoost]. Defaults to `1.15`.
+  final double maxReadingBoost;
+
   const MushafScale({
     this.factor,
     this.ayahFontSize,
@@ -94,6 +114,9 @@ class MushafScale {
     this.minScale = 0.5,
     this.maxScale = 2.0,
     this.referenceWidth = 500.0,
+    this.readingBoost = 1,
+    this.minReadingBoost = 0.85,
+    this.maxReadingBoost = 1.15,
   });
 
   /// Gets the effective Ayah font size for a given scale.

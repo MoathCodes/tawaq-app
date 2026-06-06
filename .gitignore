@@ -12,6 +12,7 @@
 .svn/
 migrate_working_dir/
 .jj/
+docs/
 # ---------------------------------------------------------------------------
 # IDEs
 # ---------------------------------------------------------------------------
@@ -74,4 +75,7 @@ build/
 
 # FVM Version Cache
 .fvm/
+
+# Local Dart/Cursor skills install cache (cloned registries)
+.dart_skills/
 

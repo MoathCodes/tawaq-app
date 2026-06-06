@@ -1,21 +1,28 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/core/utils/date_extensions.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
-import 'package:hasanat/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 part 'prayer_completion_provider.g.dart';
 
-/// Notifier for prayer completion records.
+/// Async notifier for completion records on the active calendar day.
+///
+/// Watches [prayerCalendarDayKeyProvider] so the list refreshes at midnight
+/// without restarting the app.
 @riverpod
 class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
   /// Adds or updates a prayer completion.
-  /// This method provides an **optimistic update** to the UI for instant feedback.
+  /// This method provides an **optimistic update**
+  ///  to the UI for instant feedback.
   Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
     if (!ref.mounted) return;
     final service = ref.read(prayerServiceProvider);
+    final location =
+        ref.read(prayerSettingsProvider).value?.location ??
+        PrayerSettings.defaultSettings().location;
 
     // --- Optimistic UI Update ---
     // Update the state immediately so the UI reflects the change instantly
@@ -23,7 +30,10 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
     final existingIndex = currentCompletions.indexWhere(
       (c) =>
           c.prayer == completion.prayer &&
-          c.completionTime.isSameDate(completion.completionTime),
+          c.completionTime.isSameCalendarDay(
+            completion.completionTime,
+            location,
+          ),
     );
 
     final List<PrayerCompletion> updatedCompletions;
@@ -62,7 +72,17 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
   @override
   Future<List<PrayerCompletion>> build() {
     // Watch the completions for the current date
-    final currentTime = ref.watch(currentLocationTimeProvider);
+    final dayKey = ref.watch(prayerCalendarDayKeyProvider);
+    final currentTime = dayKey == 0
+        ? ref.read(currentLocationTimeProvider).calendarDayIn(
+            ref.read(prayerSettingsProvider).value?.location ??
+                PrayerSettings.defaultSettings().location,
+          )
+        : DateTime(
+            dayKey ~/ 10000,
+            (dayKey % 10000) ~/ 100,
+            dayKey % 100,
+          );
     final completions = ref
         .read(prayerServiceProvider)
         .getPrayerCompletionForDate(currentTime);
@@ -79,9 +99,12 @@ class PrayerCompletionNotifier extends _$PrayerCompletionNotifier {
   ) async {
     if (!prayer.isObligatory) return null;
     final List<PrayerCompletion> completions;
+    final location =
+        ref.read(prayerSettingsProvider).value?.location ??
+        PrayerSettings.defaultSettings().location;
     if (state.value != null &&
         state.value!.isNotEmpty &&
-        state.value!.first.completionTime.isSameDate(date)) {
+        state.value!.first.completionTime.isSameCalendarDay(date, location)) {
       completions = state.value!;
     } else {
       completions = await ref

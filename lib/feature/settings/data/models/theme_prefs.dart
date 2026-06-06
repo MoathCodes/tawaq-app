@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart' show FThemeData;
 import 'package:forui/theme.dart' show FThemeData;
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hasanat/theme/theme_model.dart';
+import 'package:tawaq/feature/settings/data/models/app_text_scale.dart';
+import 'package:tawaq/theme/theme_model.dart';
 
 part 'theme_prefs.freezed.dart';
 part 'theme_prefs.g.dart';
@@ -20,6 +21,9 @@ abstract class ThemePrefs with _$ThemePrefs {
 
     /// The selected theme brightness mode.
     required ThemeMode themeMode,
+
+    /// App-wide UI text scale (Forui typography + scaled ScreenUtil).
+    @Default(AppTextScale.normal) AppTextScale appTextScale,
   }) = _ThemePrefs;
 
   /// Creates a [ThemePrefs] instance from a JSON map.
@@ -28,5 +32,8 @@ abstract class ThemePrefs with _$ThemePrefs {
 
   /// Default theme preferences.
   factory ThemePrefs.defaults() =>
-      const ThemePrefs(appPalette: AppPalette.zinc, themeMode: ThemeMode.light);
+      const ThemePrefs(
+        appPalette: AppPalette.manuscript,
+        themeMode: ThemeMode.light,
+      );
 }

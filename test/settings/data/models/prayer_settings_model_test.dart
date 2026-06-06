@@ -1,6 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:tawaq/feature/settings/data/location_constants.dart';
+import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 
@@ -16,7 +17,7 @@ void main() {
         expect(settings.is24Hours, isFalse);
         expect(settings.coordinates.latitude, 0);
         expect(settings.coordinates.longitude, 0);
-        expect(settings.locationName, 'Default Location');
+        expect(settings.locationName, LocationConstants.defaultLocationName);
         expect(settings.autoLocation, isFalse);
       });
 

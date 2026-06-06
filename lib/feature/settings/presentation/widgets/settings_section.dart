@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// A section widget for displaying a specific setting.
 class SettingsSection extends StatelessWidget {
@@ -38,29 +39,37 @@ class SettingsSection extends StatelessWidget {
     final theme = FTheme.of(context);
     return FCard(
       image: leading,
-      style: (p0) => p0.copyWith(
-        decoration: p0.decoration.copyWith(
+      style: .delta(
+        decoration: .boxDelta(
           color: Colors.transparent,
-          border: Border.all(color: Colors.transparent),
+          border: .all(color: Colors.transparent),
         ),
-        contentStyle: (p0) => p0.copyWith(padding: EdgeInsets.zero),
+        // contentStyle: .delta(
+        //   padding: .value(EdgeInsets.zero),
+        // ),
       ),
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: theme.typography.base.copyWith(
-              fontWeight: FontWeight.w600,
+          SettingsSemantics.sectionHeader(
+            label: title,
+            child: Text(
+              title,
+              style: theme.typography.md.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           ?suffix,
         ],
       ),
-      subtitle: Text(
-        subtitle,
-        style: theme.typography.sm.copyWith(
-          color: theme.colors.mutedForeground,
+      subtitle: Semantics(
+        label: subtitle,
+        child: Text(
+          subtitle,
+          style: theme.typography.sm.copyWith(
+            color: theme.colors.mutedForeground,
+          ),
         ),
       ),
       child: Column(

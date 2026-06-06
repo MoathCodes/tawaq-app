@@ -1,9 +1,18 @@
-import 'package:hasanat/core/logging/logger_provider.dart';
-import 'package:hasanat/feature/quran/data/services/quran_notes_service.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/feature/quran/data/repository/quran_notes_repo.dart';
+import 'package:tawaq/feature/quran/domain/services/quran_notes_service.dart';
 
 part 'quran_notes_provider.g.dart';
+
+/// Provides a [QuranNotesService] instance for managing Quran notes.
+@riverpod
+QuranNotesService quranNotesService(Ref ref) {
+  final repo = ref.read(quranNotesRepoProvider);
+  final log = ref.read(loggerProvider);
+  return QuranNotesService(repo, log);
+}
 
 /// Provider for managing Quran notes for a specific ayah.
 ///

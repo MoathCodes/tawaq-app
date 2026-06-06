@@ -190,9 +190,22 @@ Disable auto-scaling with a fixed multiplier:
 MushafScale(factor: 1.2)  // Always 20% larger than default
 ```
 
+#### Reading comfort boost
+
+After the page fits the viewport, apply a user preference multiplier:
+
+```dart
+MushafScale(
+  readingBoost: 1.08, // ~8% larger when the page has room
+)
+```
+
+Font sizes stay on real `TextStyle.fontSize` values (snapped to device pixels)
+for crisp QCF rendering. Dense pages automatically shrink to avoid overflow.
+
 #### Fixed Font Sizes
 
-For precise control, specify exact font sizes:
+For precise control, specify exact font sizes (disables auto-fit boost):
 
 ```dart
 MushafScale(
@@ -201,6 +214,9 @@ MushafScale(
   pageNumberFontSize: 16,  // Page numbers
 )
 ```
+
+When using modifiers, `fontSize` in `ayahStyleModifier` is treated as a
+**maximum** cap, not a fixed override.
 
 ### Custom Styling
 

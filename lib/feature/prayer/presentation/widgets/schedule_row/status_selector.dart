@@ -1,14 +1,18 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/widgets/mouse_click.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/scaled_screen_util.dart';
+import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Expandable status selector showing all completion status options.
-class StatusSelector extends StatelessWidget {
+class StatusSelector extends ConsumerWidget {
   /// Creates a [StatusSelector].
   const StatusSelector({
     required this.prayer,
@@ -35,20 +39,24 @@ class StatusSelector extends StatelessWidget {
   final void Function(CompletionStatus status) onStatusSelected;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
+    final l10n = context.l10n;
 
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            context.l10n.logPrayerStatus.toUpperCase(),
-            style: theme.typography.xs.copyWith(
-              color: theme.colors.mutedForeground,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
+          Semantics(
+            header: true,
+            child: Text(
+              l10n.logPrayerStatus.toUpperCase(),
+              style: theme.typography.xs.copyWith(
+                color: theme.colors.mutedForeground,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -74,7 +82,7 @@ class StatusSelector extends StatelessWidget {
 }
 
 /// A single status option button inside the [StatusSelector].
-class StatusButton extends StatelessWidget {
+class StatusButton extends ConsumerWidget {
   /// Creates a [StatusButton].
   const StatusButton({
     required this.status,
@@ -97,48 +105,61 @@ class StatusButton extends StatelessWidget {
   final bool enable;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appScale = ref.watch(appTextScaleFactorProvider);
     final theme = FTheme.of(context);
     final colors = theme.colors;
 
-    return MouseClick(
-      disabled: !enable,
-      onClick: onPressed,
-      child: Opacity(
-        opacity: enable ? 1.0 : 0.5,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? status.getBadgeColor(colors)
-                : colors.background,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isSelected ? status.getBadgeColor(colors) : colors.border,
+    return Semantics(
+      button: true,
+      enabled: enable,
+      selected: isSelected,
+      label: PrayerSemantics.statusOption(
+        l10n: context.l10n,
+        status: status,
+        enabled: enable,
+      ),
+      excludeSemantics: true,
+      child: MouseClick(
+        disabled: !enable,
+        onClick: enable ? onPressed : null,
+        child: Opacity(
+          opacity: enable ? 1.0 : 0.5,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                status.getIcon(),
-                color: isSelected ? colors.background : colors.foreground,
-                size: 16.sp,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? status.getBadgeColor(colors)
+                  : colors.background,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color:
+                    isSelected ? status.getBadgeColor(colors) : colors.border,
               ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                status.getLocaleName(context.l10n),
-                style: TextStyle(
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  status.getIcon(),
                   color: isSelected ? colors.background : colors.foreground,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w500,
+                  size: scaledSp(16, appScale),
                 ),
-              ),
-            ],
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  status.getLocaleName(context.l10n),
+                  style: TextStyle(
+                    color: isSelected ? colors.background : colors.foreground,
+                    fontSize: scaledSp(12, appScale),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

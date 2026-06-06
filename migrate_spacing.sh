@@ -5,7 +5,7 @@
 set -e
 
 LIB_DIR="lib"
-IMPORT_LINE="import 'package:hasanat/theme/theme.dart';"
+IMPORT_LINE="import 'package:tawaq/theme/theme.dart';"
 
 # Files to skip (already migrated or special)
 SKIP_FILES=(
@@ -29,7 +29,7 @@ should_skip() {
 
 add_import_if_needed() {
   local file="$1"
-  if ! grep -q "package:hasanat/theme/theme.dart" "$file"; then
+  if ! grep -q "package:tawaq/theme/theme.dart" "$file"; then
     # Find the last import line and add after it
     if grep -q "^import " "$file"; then
       # Add import after the last existing import

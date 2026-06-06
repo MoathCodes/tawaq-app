@@ -9,7 +9,7 @@
     "placeholders": {
       "hours": {
         "type": "int"
-      }
+    }
     }
   },
   "adhanHoursLeft": "{hours, plural, =0 {الآن} =1 {متبقي ساعة} =2 {متبقي ساعتين} few {متبقي {hours} ساعات} many {متبقي {hours} ساعة} other {متبقي {hours} ساعة}}",
@@ -39,18 +39,31 @@
   "advancedSettingsTitle": "إعدادات متقدمة",
   "appearance": "المظهر",
   "appearanceSubtitle": "تخصيص سمة التطبيق وألوانه.",
-  "appName": "حسانات",
+  "appName": "توّاق",
   "@appName": {},
   "arabic": "العربية",
   "asr": "العصر",
-  "autoLocationDisabled": "اضغط لتفعيل الموقع التلقائي",
-  "autoLocationEnabled": "يتم تحديث الموقع تلقائيًا",
-  "autoSelectOrMap": "تحديد تلقائي او بالخريطة",
+  "autoLocationDisabled": "انقر لتفعيل الموقع التلقائي",
+  "autoLocationEnabled": "يُحدَّث الموقع تلقائيًا",
+  "autoLocationMapOverlay": "يُحدَّث الموقع تلقائيًا. أوقف المفتاح أعلاه لاختيار موقع على الخريطة.",
+  "autoSelectOrMap": "تحديد تلقائي أو بالخريطة",
   "ayahLabel": "الآية",
+  "ayahBookmark": "إشارة مرجعية",
+  "ayahCopied": "تم نسخ {reference}",
+  "@ayahCopied": {
+    "placeholders": {
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "ayahCopy": "نسخ",
+  "ayahShare": "مشاركة",
   "back": "رجوع",
   "basicParametersTitle": "إعدادات أساسية",
   "bestStreak": "أفضل إنجاز",
   "blue": "أزرق",
+  "bookmarks": "المحفوظات",
   "calculationMethod": "طريقة الحساب",
   "cancel": "إلغاء",
   "changingTimezone": "تغيير المنطقة الزمنية",
@@ -59,8 +72,41 @@
   "collapse": "طي",
   "colorTheme": "نمط الألوان",
   "colorThemeSubtitle": "تغيير نمط الألوان في التطبيق.",
+  "typographySectionTitle": "النص والتحجيم",
+  "typographySectionSubtitle": "اضبط حجم نص الواجهة وحجم قراءة القرآن بشكل منفصل.",
+  "appTextSize": "حجم نص التطبيق",
+  "appTextSizeCompact": "مضغوط",
+  "appTextSizeNormal": "افتراضي",
+  "appTextSizeLarge": "كبير",
+  "appTextSizeExtraLarge": "كبير جداً",
+  "quranTextSize": "حجم نص القرآن",
+  "quranTextSizeSmall": "صغير",
+  "quranTextSizeMedium": "متوسط",
+  "quranTextSizeLarge": "كبير",
+  "quranTextSizeExtraLarge": "كبير جداً",
+  "quranTextSizeShortExtraLarge": "أكبر",
+  "appTextSizeShortExtraLarge": "أكبر",
+  "quranTextSizePreviewLabel": "معاينة",
+  "quranTextSizeIndependentNote": "حجم قراءة القرآن مستقل عن تحجيم التطبيق والنظام.",
+  "quranTextSizePreview": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+  "quranAyahSearchPreviewTruncated": "{preview}...",
+  "@quranAyahSearchPreviewTruncated": {
+    "placeholders": {
+      "preview": {
+        "type": "String"
+      }
+    }
+  },
+  "quranTranslationQuoted": "\"{translation}\"",
+  "@quranTranslationQuoted": {
+    "placeholders": {
+      "translation": {
+        "type": "String"
+      }
+    }
+  },
   "completed": "مكتملة •",
-  "completionStatus": "حالة الاكتمال",
+  "completionStatus": "حالة الإكمال",
   "coordinates": "الإحداثيات الجغرافية",
   "currentPrayer": "الصلاة الحالية",
   "currentStreak": "الإنجاز الحالي",
@@ -69,22 +115,25 @@
   "customParametersTitle": "إعدادات مخصصة",
   "daily": "يومي",
   "dark": "داكن",
+  "decimalPlaceholder": "٠٫٠",
+  "defaultLocation": "الموقع الافتراضي",
   "defaultSurahName": "الفاتحة",
   "detectTimezone": "اكتشاف المنطقة الزمنية",
   "detectTimezoneNotImplemented": "اكتشاف المنطقة الزمنية غير متاح هنا.",
   "deviceLocationNotImplemented": "استخدام موقع الجهاز غير متاح هنا.",
   "dhuhr": "الظهر",
   "done": "تم",
-  "dragTheMapTip": "اسحب الخريطة لتحديد موقع الدبوس",
+  "dragTheMapTip": "اسحب الخريطة لتحديد مؤشر الموقع",
   "dubai": "دبي",
-  "editsSavedDescription": "تم حفظ تغييراتك بنجاح.",
-  "editsSavedTitle": "تم حفظ التعديلات",
+  "editsSavedDescription": "حُفظت تغييراتك بنجاح.",
+  "editsSavedTitle": "حُفظت التعديلات",
   "egyptian": "الهيئة العامة المصرية للمساحة",
   "english": "الإنجيليزية",
   "englishLanguage": "الإنجليزية",
-  "errorLoadingTafsir": "خطأ في تحميل التفسير",
-  "errorLoadingTranslation": "خطأ في تحميل الترجمة",
-  "errorNotFoundPage": "لم نستطع الوصول لهذه الصفحة الرجاء التأكد من الرابط ثم إعادة المحاولة.",
+  "errorLoadingTafsir": "تعذّر تحميل التفسير",
+  "tafsirTextMayBeIncomplete": "قد يكون هذا التفسير مقطوعًا في النص المصدر.",
+  "errorLoadingTranslation": "تعذّر تحميل الترجمة",
+  "errorNotFoundPage": "لم نتمكن من الوصول إلى هذه الصفحة. تحقق من الرابط ثم أعد المحاولة.",
   "@errorNotFoundPage": {},
   "errorOccurredWhile": "حدث خطأ أثناء {whileError}",
   "@errorOccurredWhile": {
@@ -94,20 +143,30 @@
       }
     }
   },
-  "errorUpdatingLocationDescription": "تم تحديث الإحداثيات بنجاح، ولكن لم نتمكن من جلب اسم موقعك. لن يؤثر ذلك على عمل التطبيق.",
+  "errorUpdatingLocationDescription": "حُدثت الإحداثيات بنجاح، ولكن لم نتمكن من جلب اسم موقعك. لن يؤثر ذلك على عمل التطبيق.",
   "errorUpdatingLocationTitle": "حدث خطأ أثناء تحديث الموقع",
   "fajr": "الفجر",
   "fajrAngleLabel": "زاوية الفجر (°)",
   "footnote": "الحاشية",
   "gettingLocation": "الحصول على الموقع",
-  "graphicalAnalysis": "التحليل البياني",
+  "goToPrayerPage": "انتقل إلى صفحة الصلاة",
+  "graphicalAnalysis": "الرسوم البيانية",
   "green": "أخضر",
-  "hadith": "الحديث",
+  "hadith": "الأحاديث",
+  "hadithActiveFilters": "مرشّحات البحث النشطة",
+  "hadithAlternateHadithSahih": "حديث صحيح بديل",
   "hadithAlternativeAuthentic": "روايات صحيحة بديلة",
+  "hadithBooks": "الكتب",
+  "hadithClearAllFilters": "مسح جميع المرشّحات",
+  "hadithClearAllRecents": "مسح الكل",
+  "hadithDegrees": "الدرجات",
+  "hadithDetailsTab": "التفاصيل",
+  "hadithFilterTab": "التصفية",
   "hadithFoundations": "الأصول",
   "hadithGradeExplanation": "شرح الحكم",
+  "hadithLoadMore": "تحميل المزيد",
   "hadithLoadSharh": "تحميل الشرح",
-  "hadithLoadSharhFailed": "فشل تحميل الشرح: {error}",
+  "hadithLoadSharhFailed": "تعذّر تحميل الشرح: {error}",
   "@hadithLoadSharhFailed": {
     "placeholders": {
       "error": {
@@ -117,25 +176,105 @@
   },
   "hadithMuhaddith": "المحدث",
   "hadithNarrator": "الراوي",
+  "hadithNarrators": "الرواة",
+  "hadithNoDetailedData": "لا توجد بيانات تفصيلية لهذا الحديث",
+  "hadithNoDetailsSelected": "اختر حديثًا من النتائج لعرض التفاصيل",
+  "hadithBackToSearch": "العودة للبحث",
+  "hadithNoBookmarks": "لا توجد أحاديث محفوظة",
+  "hadithNoMatchingResults": "لا توجد نتائج مطابقة",
+  "hadithNoRecentSearches": "لا توجد عمليات بحث حديثة",
+  "hadithOpenFilters": "التصفية",
+  "hadithRecentSearches": "عمليات البحث الأخيرة",
   "hadithRelatedLinks": "روابط ذات صلة",
+  "hadithResetFilters": "إعادة ضبط الفلاتر",
+  "hadithResultsCount": "{count, plural, =0 {لا نتائج} =1 {نتيجة واحدة} =2 {نتيجتان} few {{count} نتائج} many {{count} نتيجة} other {{count} نتائج}}",
+  "@hadithResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "hadithRetry": "إعادة المحاولة",
+  "hadithScholars": "المحدث",
+  "hadithScope": "نطاق البحث",
+  "hadithSearchHint": "ابحث في الحديث...",
+  "hadithSearchMethod": "طريقة البحث",
+  "hadithSearchMethodAllWords": "جميع الكلمات",
+  "hadithSearchMethodAnyWord": "أي كلمة",
+  "hadithSearchMethodExactMatch": "بحث مطابق",
+  "hadithSearchZoneAll": "جميع الأحاديث",
+  "hadithSearchZoneMarfoo": "الأحاديث المرفوعة",
+  "hadithSearchZoneQudsi": "الأحاديث القدسية",
+  "hadithSearchZoneSahabaAthar": "آثار الصحابة",
+  "hadithSearchZoneSharh": "شروح الأحاديث",
+  "hadithDegreeAll": "جميع الدرجات",
+  "hadithDegreeAuthenticHadith": "أحاديث حكم المحدثون عليها بالصحة، ونحو ذلك",
+  "hadithDegreeAuthenticChain": "أحاديث حكم المحدثون على أسانيدها بالصحة، ونحو ذلك",
+  "hadithDegreeWeakHadith": "أحاديث حكم المحدثون عليها بالضعف، ونحو ذلك",
+  "hadithDegreeWeakChain": "أحاديث حكم المحدثون على أسانيدها بالضعف، ونحو ذلك",
+  "hadithFieldLabel": "{label}:",
+  "@hadithFieldLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "hadithSourceCitation": "{book} ({reference})",
+  "@hadithSourceCitation": {
+    "placeholders": {
+      "book": {
+        "type": "String"
+      },
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
   "hadithSharh": "الشرح",
   "hadithSimilar": "أحاديث مشابهة",
+  "hadithSimilarHadith": "أحاديث مشابهة",
   "hadithSource": "المصدر",
+  "hadithSpecialist": "متخصص",
+  "hadithSpecialistHint": "البحث ضمن المصادر المحكّمة من المتخصصين",
+  "hadithStartSearchPrompt": "ابدأ البحث لعرض النتائج",
   "hadithTakhrij": "التخريج",
+  "hadithTypeToSearch": "اكتب للبحث...",
+  "hadithUsulHadith": "أصول الحديث",
   "highLatitudeRule_middleOfTheNight": "منتصف الليل",
   "highLatitudeRule_seventhOfTheNight": "سبع الليل",
   "highLatitudeRule_twilightAngle": "زاوية الشفق",
   "highLatitudeRuleLabel": "قاعدة خطوط العرض العالية",
+  "integerPlaceholder": "٠",
   "invalidCoordinatesDescription": "يرجى إدخال قيم صحيحة لخط العرض وخط الطول.",
   "invalidCoordinatesTitle": "إحداثيات غير صالحة",
   "invalidParametersDescription": "يرجى التحقق من القيم المدخلة.",
   "invalidParametersTitle": "إعدادات غير صالحة",
+  "invalidParametersWithError": "{message} {error}",
+  "@invalidParametersWithError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "iqamah": "الإقامة",
   "iqamahAdjustment": "ضبط الإقامة",
   "iqamahAfterAdhan": "الإقامة (دقائق بعد الأذان)",
-  "iqamahSavedDescription": "تم حفظ تعديلات الإقامة بنجاح.",
-  "iqamahSavedTitle": "تم حفظ إعدادات الإقامة",
+  "iqamahSavedDescription": "حُفظت تعديلات الإقامة بنجاح.",
+  "iqamahSavedForPrayer": "حُفظ ضبط الإقامة لصلاة {prayer}.",
+  "@iqamahSavedForPrayer": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "iqamahSavedTitle": "حُفظت إعدادات الإقامة",
   "iqamahSubtitleMessage": "{iqamahMins, plural, =0 {الآن} =1 {+ دقيقة} =2 {+ دقيقتين} few {+{iqamahMins} دقائق} many {+{iqamahMins} دقيقة} other {+{iqamahMins} دقيقة}}",
   "@iqamahSubtitleMessage": {
     "placeholders": {
@@ -149,7 +288,7 @@
   "ishaIntervalLabel": "فاصل العشاء (دقيقة)",
   "islamicTheme": "المخطوطة",
   "jamaah": "جماعة",
-  "jamaahRate": "الصلاة جماعة",
+  "jamaahRate": "نسبة الجماعة",
   "jumuah": "الجمعة",
   "juzLabel": "الجزء {number}",
   "@juzLabel": {
@@ -164,13 +303,27 @@
   "languageLabel": "اللغة",
   "lastThirdOfTheNight": "الثلث الأخير من الليل",
   "late": "متأخر",
-  "lateRate": "الصلاة متأخرًا",
+  "lateRate": "نسبة التأخير",
   "latitude": "خط العرض",
   "light": "فاتح",
-  "loading": "جاري التحميل...",
-  "loadingLocationSettings": "جاري تحميل إعدادات الموقع",
+  "loading": "جارٍ التحميل...",
+  "loadingAnalytics": "جارٍ تحميل التحليلات",
+  "loadingLocationSettings": "جارٍ تحميل إعدادات الموقع",
+  "loadingSchedule": "جارٍ تحميل الجدول",
   "locationSectionSubtitle": "حدد موقعك الجغرافي والمنطقة الزمنية لأوقات صلاة دقيقة.",
+  "locationCoordinatesLookupFailed": "تعذّر تحديد المنطقة الزمنية من الإحداثيات.",
+  "locationNoPlaceFound": "لم يُعثر على مكان عند {coordinates}.",
+  "@locationNoPlaceFound": {
+    "placeholders": {
+      "coordinates": {
+        "type": "String"
+      }
+    }
+  },
+  "locationPermissionDenied": "تم رفض إذن الموقع.",
+  "locationPermissionDeniedForever": "إذن الموقع مرفوض بشكل دائم. فعّله من إعدادات النظام.",
   "locationSectionTitle": "الموقع",
+  "locationServicesDisabled": "خدمات الموقع معطّلة.",
   "lockToPreventEdits": "اقفل لمنع التعديل",
   "logPrayerStatus": "تسجيل حالة الصلاة",
   "longitude": "خط الطول",
@@ -182,29 +335,93 @@
   "midnight": "منتصف الليل",
   "minute": "دقيقة",
   "missed": "فائتة",
-  "missedRate": "الصلاة الفائتة",
+  "missedRate": "نسبة الفوائت",
   "monthly": "شهري",
   "moonsightingCommittee": "لجنة رؤية الهلال",
   "morocco": "المغرب",
   "muslimFortress": "حصن المسلم",
   "@muslimFortress": {},
+  "fortressCompleted": "انتهى",
+  "fortressRemainingCount": "{count, plural, =0 {لا يتبقى شيء} =1 {متبقي: 1} =2 {متبقيان: 2} few {متبقي: {count}} many {متبقي: {count}} other {متبقي: {count}}}",
+  "@fortressRemainingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressSharh": "الشرح",
+  "fortressVirtue": "الفضل",
+  "fortressBenefit": "الفائدة",
+  "fortressRelatedHadith": "حديث مرتبط",
+  "fortressSourceReference": "المصدر",
+  "fortressWeakHadithWarning": "تنبيه: هذا الذكر ضعيف أو موضوع",
+  "fortressFakeHadithGuide": "دليل الأحاديث الضعيفة والموضوعة",
+  "fortressFakeHadithIntro": "قائمة مرجعية من تطبيق حصن المسلم للأحاديث التي يُحذّر منها العلماء.",
+  "fortressBrowseWeakHadith": "الأحاديث الضعيفة والموضوعة",
+  "fortressSearchHint": "ابحث في الأذكار والأبواب...",
+  "fortressSearchTitles": "الأبواب",
+  "fortressSearchContents": "الأذكار",
+  "fortressNoSearchResults": "لم يُعثر على نتائج",
+  "fortressFilterAuthenticity": "تصفية حسب الحكم",
+  "fortressShowDetails": "عرض التفاصيل",
+  "fortressShowSharh": "عرض الشرح",
+  "fortressShowSource": "عرض المصدر",
+  "fortressHideDetails": "إخفاء التفاصيل",
+  "fortressLoadError": "تعذّر تحميل الأذكار",
+  "fortressRetry": "إعادة المحاولة",
+  "fortressAllChapters": "كل الأذكار",
+  "fortressFavorites": "المفضلة",
+  "fortressEmptyFavoritesTitle": "لا توجد أقسام مفضلة بعد",
+  "fortressEmptySearchTitle": "لا توجد نتائج للبحث",
+  "fortressEmptyFavoritesHint": "اضغط على أيقونة الإشارة المرجعية بجانب أي قسم لإضافته هنا",
+  "fortressEmptySearchHint": "جرّب كلمات بحث مختلفة",
+  "fortressSupplicationCount": "{count, plural, =0 {لا أذكار} =1 {ذكر واحد} =2 {ذكران} few {{count} أذكار} many {{count} ذكراً} other {{count} ذكر}}",
+  "@fortressSupplicationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressSupplicationsInSection": "{count, plural, =0 {لا أذكار في هذا القسم} =1 {ذكر واحد في هذا القسم} =2 {ذكران في هذا القسم} few {{count} أذكار في هذا القسم} many {{count} ذكراً في هذا القسم} other {{count} ذكر في هذا القسم}}",
+  "@fortressSupplicationsInSection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressStartReading": "بدء القراءة",
+  "fortressNoAdhkarInChapter": "لا توجد أذكار في هذا الباب",
+  "fortressFinish": "إنهاء",
+  "fortressReadingHint": "انقر على الذكر للعد · اسحب أفقياً للتنقل · مسافة للعد",
+  "fortressPrevious": "السابق",
+  "fortressWelcomeTitle": "اختر باباً وابدأ الذكر",
+  "fortressWelcomeSubtitle": "تصفّح الأبواب من القائمة، أو ابدأ من التوصيات حسب وقتك أو المفضلة.",
+  "fortressRecommendedNow": "موصى به الآن",
+  "fortressNoRecommendations": "لا توجد توصيات متاحة حالياً",
+  "fortressNoFavoriteChapters": "لا توجد أبواب مفضلة بعد — أضف إشارة مرجعية من القائمة الجانبية",
+  "fortressReadShort": "قراءة قصيرة",
+  "fortressReadMedium": "قراءة متوسط",
+  "fortressReadLong": "قراءة مطولة",
   "muslimWorldLeague": "رابطة العالم الإسلامي",
   "neutral": "محايد",
   "next": "التالي",
   "nextPrayer": "الصلاة القادمة",
   "noDataAvailable": "لا توجد بيانات",
-  "noResults": "لا يوجد نتائج.",
+  "noResults": "لا توجد نتائج.",
   "noResultsFound": "لا توجد نتائج",
   "northAmerica": "أمريكا الشمالية (ISNA)",
   "noTafsirAvailable": "لا يوجد تفسير متاح لهذه الآية",
   "noTranslationAvailable": "لا توجد ترجمة متاحة لهذه الآية",
   "nowActive": "نشط الآن",
   "onTime": "في وقتها",
-  "onTimePrayersLast30Days": "الصلاة المنتظمة (ﻷخر 30 يوم)",
-  "onTimePrayersLast365Days": "الصلاة المنتظمة (ﻷخر 365 يوم)",
-  "onTimePrayersLast7Days": "الصلاة المنتظمة (ﻷخر 7 أيام)",
+  "onTimePrayersLast30Days": "الصلاة المنتظمة (لآخر 30 يومًا)",
+  "onTimePrayersLast365Days": "الصلاة المنتظمة (لآخر 365 يومًا)",
+  "onTimePrayersLast7Days": "الصلاة المنتظمة (لآخر 7 أيام)",
   "onTimePrayersToday": "الصلاة المنتظمة (اليوم)",
-  "onTimeRate": "الصلاة في وقتها",
+  "onTimeRate": "نسبة الانتظام",
   "optionalHint": "اختياري",
   "orange": "برتقالي",
   "other": "أخرى",
@@ -229,19 +446,19 @@
   },
   "pageNotFound": "الصفحة غير موجودة",
   "pageNotFoundDescription": "هذه الصفحة غير موجودة. يرجى العودة إلى الصفحة الرئيسية.",
-  "parametersSavedDescription": "تم حفظ إعداداتك المخصصة بنجاح.",
-  "parametersSavedTitle": "تم حفظ الإعدادات",
+  "parametersSavedDescription": "حُفظت إعداداتك المخصصة بنجاح.",
+  "parametersSavedTitle": "حُفظت الإعدادات",
   "performanceIndicator": "مؤشر الأداء",
   "placeholdersHint": "يمكن ضبط المذهب والخيارات الأخرى لاحقًا. هذه المدخلات مؤقتة.",
-  "playerAnalytics": "تحليل الصلاة",
+  "playerAnalytics": "إحصاءات الصلاة",
   "pleaseSelectMethod": "يرجى اختيار طريقة الحساب.",
   "prayer": "الصلاة",
-  "prayerSettingsSubtitle": "الإعدادات الخاصة بالصلاة ومواقيتها وتعقبها.",
-  "prayerSettingsTitle": "اعدادات الصلاة",
+  "prayerSettingsSubtitle": "إعدادات الصلاة ومواقيتها ومتابعتها.",
+  "prayerSettingsTitle": "إعدادات الصلاة",
   "prayerTimeAdjustmentsTitle": "تعديلات مواقيت الصلاة (بالدقائق)",
   "prayerTimes": "مواقيت الصلاة",
-  "prayerTrackerSubtitle": "تتبع صلواتك وكن منتظمًا، انقر على صلاة لتحديدها كمكتملة.",
-  "prayerTrackerTitle": "متعقب الصلاة",
+  "prayerTrackerSubtitle": "تتبع صلواتك وحافظ على انتظامك، انقر على صلاة لتسجيلها كمكتملة.",
+  "prayerTrackerTitle": "متابعة الصلاة",
   "prepareForPrayer": "تجهز للصلاة.",
   "qatar": "قطر",
   "quran": "القرآن الكريم",
@@ -251,8 +468,8 @@
   "red": "أحمر",
   "reflectionPlaceholder": "اكتب أفكارك حول هذه الآية...",
   "remembrance": "الأذكار",
-  "resetCompleteDescription": "تمت إعادة الإعدادات إلى القيم الافتراضية.",
-  "resetCompleteTitle": "تمت إعادة الضبط",
+  "resetCompleteDescription": "أُعيدت الإعدادات إلى القيم الافتراضية.",
+  "resetCompleteTitle": "أُعيد ضبط الإعدادات",
   "resetToDefaults": "إعادة الضبط للوضع الافتراضي",
   "rose": "وردي",
   "save": "حفظ",
@@ -263,13 +480,106 @@
   "searchQuran": "ابحث في القرآن...",
   "selectAyahToSeeContent": "اختر آية لعرض المحتوى.",
   "selectPrayerToLog": "اختر صلاة لتسجيل الحالة",
+  "selectVerseToAddReflection": "يرجى اختيار آية لإضافة تأمل",
   "settings": "الإعدادات",
   "setupPrayerSettingsSubtitle": "سنرشدك عبر خطوات سريعة. يمكنك تغيير هذه لاحقًا من الإعدادات.",
-  "setupPrayerSettingsTitle": "لنقم بإعداد إعدادات الصلاة.",
+  "setupPrayerSettingsTitle": "لنضبط إعدادات الصلاة",
   "setupPreferences": "لنقم بضبط تفضيلاتك.",
   "signedExampleHint": "20 أو -10",
   "singapore": "سنغافورة",
   "skip": "تخطي",
+  "shareAppName": "اسم التطبيق",
+  "shareBasmalah": "البسملة",
+  "shareByApp": "بواسطة\n{appName}",
+  "@shareByApp": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "shareClipboardInstallHint": "ثبّت wl-clipboard (Wayland) أو xclip (X11) لنسخ الصور",
+  "shareCopyImage": "نسخ الصورة",
+  "shareCouldNotCreateImage": "تعذر إنشاء الصورة",
+  "shareExportFailed": "فشل التصدير: {error}",
+  "@shareExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shareFailedToLoadPage": "فشل تحميل الصفحة: {error}",
+  "@shareFailedToLoadPage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shareImageCopied": "تم نسخ الصورة إلى الحافظة",
+  "shareImageCopyFailed": "تعذر نسخ الصورة: {error}",
+  "@shareImageCopyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shareImageSaved": "تم الحفظ في {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shareIncludeInImage": "تضمين في الصورة",
+  "sharePreview": "معاينة",
+  "shareRangeDescription": "{startReference} – {endReference} ({verseCount})",
+  "@shareRangeDescription": {
+    "placeholders": {
+      "startReference": {
+        "type": "String"
+      },
+      "endReference": {
+        "type": "String"
+      },
+      "verseCount": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRangeSingleDescription": "{reference} ({verseCount})",
+  "@shareRangeSingleDescription": {
+    "placeholders": {
+      "reference": {
+        "type": "String"
+      },
+      "verseCount": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRangeOnPage": "النطاق في الصفحة {page}",
+  "@shareRangeOnPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "shareSaveImage": "حفظ الصورة",
+  "shareSurahHeader": "رأس السورة",
+  "shareVerseCount": "{count, plural, =1{آية واحدة} =2{آيتان} few{{count} آيات} many{{count} آية} other{{count} آية}}",
+  "@shareVerseCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareVerses": "مشاركة الآيات",
   "slate": "رمادي",
   "sourceLabel": "المصدر:",
   "status": "الحالة",
@@ -311,10 +621,9 @@
   "timeSectionSubtitle": "إعداد طريقة الحساب وتنسيق الوقت والإقامة.",
   "timeSectionTitle": "مواقيت الصلاة",
   "timezone": "المنطقة الزمنية",
-  "tipHoldCtrlToRotate": "تلميح: اضغط على Ctrl واسحب لتدوير وإمالة الخريطة.",
   "todayAchievement": "إنجاز اليوم",
   "todaysSchedule": "جدول اليوم",
-  "toggleArabic": "حول اللغة",
+  "toggleArabic": "بدّل اللغة",
   "total": "الإجمالي",
   "translation": "الترجمة",
   "tryDifferentSearchTerm": "جرب مصطلح بحث مختلف",
@@ -324,6 +633,8 @@
   "use24HourFormat": "استخدام نظام 24 ساعة",
   "useDeviceLocation": "استخدام موقع الجهاز",
   "useMyLocation": "استخدم موقعي الحالي",
+  "unavailableShort": "—",
+  "unknownLocation": "موقع غير معروف",
   "useSystemTimezone": "استخدام المنطقة الزمنية للنظام",
   "violet": "بنفسجي",
   "weekly": "أسبوعي",
@@ -336,5 +647,72 @@
   "wizardStep_welcome": "مرحبًا",
   "yearly": "سنوي",
   "yellow": "أصفر",
-  "zinc": "زنك"
+  "zinc": "الخارصين",
+  "a11ySwitchToLightTheme": "التبديل إلى الوضع الفاتح",
+  "a11ySwitchToDarkTheme": "التبديل إلى الوضع الداكن",
+  "a11yNavigationUnavailable": "غير متاح",
+  "a11yExpandSidebar": "توسيع الشريط الجانبي",
+  "a11yWindowMinimize": "تصغير النافذة",
+  "a11yWindowMaximize": "تكبير النافذة",
+  "a11yWindowRestore": "استعادة النافذة",
+  "a11yWindowClose": "إغلاق النافذة",
+  "a11yOpenSetupWizard": "فتح معالج الإعداد",
+  "a11ySettingsDecreaseIqamah": "تقليل دقائق إقامة {prayer}",
+  "@a11ySettingsDecreaseIqamah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "a11ySettingsIncreaseIqamah": "زيادة دقائق إقامة {prayer}",
+  "@a11ySettingsIncreaseIqamah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "a11ySettingsResetIqamah": "إعادة إقامة {prayer} إلى الافتراضي",
+  "@a11ySettingsResetIqamah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "a11yNotificationsOn": "الإشعارات مفعّلة",
+  "a11yNotificationsOff": "الإشعارات معطّلة",
+  "keyboardShortcutsTabTitle": "الإختصارات",
+  "keyboardShortcutsSectionTitle": "اختصارات لوحة المفاتيح",
+  "keyboardShortcutsSectionSubtitle": "قائمة مرجعية للاختصارات المتاحة على سطح المكتب. تعمل الاختصارات في كل الشاشات بما فيها هذه. لا يمكن تخصيصها.",
+  "keyboardShortcutsCategorySubtitle": "متاحة عند استخدام التطبيق على سطح المكتب.",
+  "shortcutCategoryGlobal": "عام",
+  "shortcutCategoryQuran": "القرآن",
+  "shortcutCategoryFortress": "حصن المسلم",
+  "shortcutToggleThemeLabel": "تبديل المظهر",
+  "shortcutToggleThemeDescription": "التبديل بين الوضع الفاتح والداكن.",
+  "shortcutToggleLocaleLabel": "تبديل اللغة",
+  "shortcutToggleLocaleDescription": "التبديل بين الإنجليزية والعربية.",
+  "shortcutOpenSettingsLabel": "فتح الإعدادات",
+  "shortcutOpenSettingsDescription": "الانتقال إلى شاشة الإعدادات.",
+  "shortcutFocusSearchLabel": "التركيز على البحث",
+  "shortcutFocusSearchDescription": "فتح أو التركيز على حقل البحث في القرآن والحديث وحصن المسلم.",
+  "shortcutFocusSearchUnavailable": "البحث غير متاح في هذه الشاشة.",
+  "shortcutQuranPageNextLabel": "الصفحة التالية",
+  "shortcutQuranPageNextDescription": "الانتقال إلى صفحة المصحف التالية (اتجاه القراءة).",
+  "shortcutQuranPagePrevLabel": "الصفحة السابقة",
+  "shortcutQuranPagePrevDescription": "العودة إلى صفحة المصحف السابقة.",
+  "shortcutQuranPageNextSpaceLabel": "الصفحة التالية (مسافة)",
+  "shortcutQuranPageNextSpaceDescription": "الانتقال إلى صفحة المصحف التالية.",
+  "shortcutQuranAyahNextLabel": "الآية التالية",
+  "shortcutQuranAyahNextDescription": "اختيار الآية التالية في وضع الدراسة.",
+  "shortcutQuranAyahPrevLabel": "الآية السابقة",
+  "shortcutQuranAyahPrevDescription": "اختيار الآية السابقة في وضع الدراسة.",
+  "shortcutFortressCountLabel": "عدّ الذكر",
+  "shortcutFortressCountDescription": "تقليل عداد التكرار أثناء القراءة المركّزة.",
+  "shortcutFortressThikrNextLabel": "الذكر التالي",
+  "shortcutFortressThikrNextDescription": "الانتقال إلى الذكر التالي أثناء القراءة المركّزة.",
+  "shortcutFortressThikrPrevLabel": "الذكر السابق",
+  "shortcutFortressThikrPrevDescription": "العودة إلى الذكر السابق أثناء القراءة المركّزة."
 }

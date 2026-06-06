@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hasanat/core/utils/date_extensions.dart';
+import 'package:tawaq/core/utils/date_extensions.dart';
 
 void main() {
   group('DateExtensions', () {

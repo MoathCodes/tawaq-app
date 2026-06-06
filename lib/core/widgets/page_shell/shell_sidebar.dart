@@ -5,16 +5,21 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/routing/route.dart';
-import 'package:hasanat/core/routing/route_provider.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/gen/fonts.gen.dart';
-import 'package:hasanat/theme/spacing.dart';
-import 'package:hasanat/theme/theme_extensions.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/locale/locale_provider.dart';
+import 'package:tawaq/core/routing/route_provider.dart';
+import 'package:tawaq/core/utils/scaled_screen_util.dart';
+import 'package:tawaq/core/widgets/merged_action_semantics.dart';
+import 'package:tawaq/core/widgets/page_shell/shell_providers.dart';
+import 'package:tawaq/core/widgets/shell_a11y.dart';
+import 'package:tawaq/feature/settings/presentation/provider/ui_state_settings_providers.dart';
+import 'package:tawaq/gen/fonts.gen.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/theme/spacing.dart';
+import 'package:tawaq/theme/theme_extensions.dart';
 
-const _kCollapsed = 100.0;
+const _kCollapsed = 105.0;
 const _kExpanded = 250.0;
 const _kSlideOffset = Offset(-0.2, 0);
 
@@ -25,21 +30,17 @@ class ShellSidebar extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mainRoutes = ref.read(mainRoutesProvider(context.l10n));
-    final secondaryRoutes = ref.read(secondaryRoutesProvider(context.l10n));
+    final mainRoutes = ref.watch(mainRoutesProvider);
+    final secondaryRoutes = ref.watch(secondaryRoutesProvider);
     final theme = FTheme.of(context);
     final router = GoRouter.of(context);
     final isRtl = ref.watch(localeProvider) == 'ar';
     final duration = context.theme.durations.fast;
     final textDir = isRtl ? TextDirection.rtl : TextDirection.ltr;
+    final appScale = ref.watch(shellAppTextScaleFactorProvider);
     final isTablet =
         MediaQuery.sizeOf(context).width <= Breakpoints.bootstrap.lg;
-    // Use .select() to only rebuild when sidebarCollapsed changes
-    final isCollapsed = ref.watch(
-      stateSettingsProvider.select(
-        (v) => v.value?.sidebarCollapsed ?? isTablet,
-      ),
-    );
+    final isCollapsed = ref.watch(shellSidebarCollapsedProvider(isTablet));
 
     useListenable(router.routeInformationProvider);
 
@@ -53,26 +54,28 @@ class ShellSidebar extends HookConsumerWidget {
       return null;
     }, [isCollapsed]);
     useEffect(() {
-      if (isTablet) {
-        unawaited(
+      if (isTablet && context.mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
           ref
-              .read(stateSettingsProvider.notifier)
-              .setSidebarCollapsed(collapsed: true),
-        );
+              .read(sidebarSettingsProvider.notifier)
+              .setCollapsed(collapsed: true);
+        });
       }
       return null;
     }, [isTablet]);
 
-    final FSidebarItemStyle Function(FSidebarItemStyle) itemStyle = useMemoized(
-      () =>
-          (s) => s.copyWith(
-            backgroundColor: FWidgetStateMap({
-              WidgetState.disabled: Colors.transparent,
-              WidgetState.selected | WidgetState.hovered | WidgetState.pressed:
-                  theme.colors.hover(theme.colors.secondary),
-              WidgetState.any: Colors.transparent,
-            }),
-          ),
+    final itemStyle = useMemoized(
+      () => FSidebarItemStyleDelta.delta(
+        backgroundColor: FVariants(
+          Colors.transparent,
+          variants: {
+            [.selected, .hovered, .pressed]: theme.colors.hover(
+              theme.colors.secondary,
+            ),
+            [.disabled]: Colors.transparent,
+          },
+        ),
+      ),
       [theme],
     );
 
@@ -85,8 +88,8 @@ class ShellSidebar extends HookConsumerWidget {
 
     void toggle() => WidgetsBinding.instance.addPostFrameCallback(
       (_) async => ref
-          .read(stateSettingsProvider.notifier)
-          .setSidebarCollapsed(collapsed: !isCollapsed),
+          .read(sidebarSettingsProvider.notifier)
+          .setCollapsed(collapsed: !isCollapsed),
     );
 
     return AnimatedBuilder(
@@ -98,10 +101,12 @@ class ShellSidebar extends HookConsumerWidget {
             _kCollapsed + (animation.value * (_kExpanded - _kCollapsed));
 
         return FSidebar(
-          style: (s) => s.copyWith(
-            headerPadding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 8,
+          style: FSidebarStyleDelta.delta(
+            headerPadding: const .value(
+              EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 8,
+              ),
             ),
             constraints: BoxConstraints.tightFor(width: width),
           ),
@@ -109,13 +114,15 @@ class ShellSidebar extends HookConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               FLabel(
-                axis: Axis.vertical,
+                layout: .vertical,
                 child: Text(
                   'توّاق',
                   style: TextStyle(
                     fontFamily: FontFamily.iBMPlexSansArabic,
                     fontWeight: FontWeight.bold,
-                    fontSize: 24.sp + (animation.value * 12.sp),
+                    fontSize:
+                        scaledSp(24, appScale) +
+                        (animation.value * scaledSp(12, appScale)),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -128,42 +135,29 @@ class ShellSidebar extends HookConsumerWidget {
             child: AnimatedSwitcher(
               duration: duration,
               transitionBuilder: slideTransition,
-              child: Row(
-                key: ValueKey(isExpanded),
-                children: [
-                  Expanded(
-                    child: isExpanded
-                        ? FButton(
-                            style: (s) => s.copyWith(
-                              iconContentStyle: theme
-                                  .buttonStyles
-                                  .outline
-                                  .iconContentStyle
-                                  .call,
-                              decoration: theme.buttonStyles.outline.decoration,
-                              contentStyle: theme
-                                  .buttonStyles
-                                  .outline
-                                  .contentStyle
-                                  .copyWith(
-                                    padding: const EdgeInsets.all(
-                                      AppSpacing.sm,
-                                    ),
-                                  )
-                                  .call,
-                            ),
-                            onPress: toggle,
-                            prefix: const Icon(FIcons.panelRightOpen),
-                            child: Text(context.l10n.collapse, overflow: .clip),
-                          )
-                        : FButton.icon(
-                            style: FButtonStyle.outline(),
-                            onPress: toggle,
-                            child: const Icon(FIcons.panelRightOpen),
+              child: isExpanded
+                  ? FButton(
+                      key: ValueKey(isExpanded),
+                      variant: .outline,
+                      style: const .delta(
+                        contentStyle: .delta(
+                          padding: .value(
+                            EdgeInsets.all(AppSpacing.sm),
                           ),
-                  ),
-                ],
-              ),
+                        ),
+                      ),
+                      onPress: toggle,
+                      prefix: const Icon(FLucideIcons.panelRightOpen),
+                      child: Text(context.l10n.collapse, overflow: .clip),
+                    )
+                  : MergedActionSemantics(
+                      key: ValueKey(isExpanded),
+                      label: ShellA11y.expandSidebarLabel(context.l10n),
+                      child: FButton.icon(
+                        onPress: toggle,
+                        child: const Icon(FLucideIcons.panelRightOpen),
+                      ),
+                    ),
             ),
           ),
           children: [
@@ -175,11 +169,9 @@ class ShellSidebar extends HookConsumerWidget {
                 routes: routes,
                 groupKey: key,
                 duration: duration,
-                isExpanded: isExpanded,
                 currentPath: currentPath,
                 slideTransition: slideTransition,
                 itemStyle: itemStyle,
-                onNavigate: context.go,
               ),
           ],
         );
@@ -188,28 +180,30 @@ class ShellSidebar extends HookConsumerWidget {
   }
 }
 
-class _RouteGroup extends StatelessWidget {
+class _RouteGroup extends ConsumerWidget {
   const _RouteGroup({
     required this.routes,
     required this.groupKey,
-    required this.isExpanded,
     required this.currentPath,
     required this.duration,
     required this.slideTransition,
     required this.itemStyle,
-    required this.onNavigate,
   });
-  final List<AppRoute> routes;
+  final List<AppNavigationRoute> routes;
   final String groupKey;
-  final bool isExpanded;
   final String? currentPath;
   final Duration duration;
   final Widget Function(Widget, Animation<double>) slideTransition;
-  final FSidebarItemStyle Function(FSidebarItemStyle) itemStyle;
-  final void Function(String) onNavigate;
+  final FSidebarItemStyleDelta itemStyle;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final isTablet =
+        MediaQuery.sizeOf(context).width <= Breakpoints.bootstrap.lg;
+    final isCollapsed = ref.watch(shellSidebarCollapsedProvider(isTablet));
+    final isExpanded = !isCollapsed;
+
     return AnimatedSwitcher(
       duration: duration,
       transitionBuilder: slideTransition,
@@ -218,24 +212,96 @@ class _RouteGroup extends StatelessWidget {
         children: [
           for (final r in routes)
             isExpanded
-                ? FSidebarItem(
-                    key: ValueKey(r.path),
-                    style: itemStyle,
-                    onPress: () => onNavigate(r.path),
-                    icon: Icon(r.icon),
-                    selected: currentPath == r.path,
-                    label: Text(r.label),
+                ? _expandedSidebarItem(
+                    context: context,
+                    route: r,
+                    currentPath: currentPath,
+                    itemStyle: itemStyle,
+                    l10n: l10n,
                   )
-                : FButton.icon(
-                    key: ValueKey(r.path),
-                    onPress: () => onNavigate(r.path),
-                    style: currentPath == r.path
-                        ? FButtonStyle.secondary()
-                        : FButtonStyle.ghost(),
-                    child: Center(child: Icon(r.icon)),
+                : _collapsedSidebarItem(
+                    context: context,
+                    route: r,
+                    currentPath: currentPath,
+                    l10n: l10n,
                   ),
         ],
       ),
     );
   }
+}
+
+Widget _expandedSidebarItem({
+  required BuildContext context,
+  required AppNavigationRoute route,
+  required String? currentPath,
+  required FSidebarItemStyleDelta itemStyle,
+  required AppLocalizations l10n,
+}) {
+  final selected = route.containsLocation(currentPath);
+  final enabled = route.navigationEnabled;
+  final item = FSidebarItem(
+    key: ValueKey(route.path),
+    style: itemStyle,
+    onPress: enabled ? () => route.go(context) : null,
+    icon: Icon(route.icon),
+    selected: selected,
+    label: Text(route.localizedLabel(l10n)),
+    children: [
+      if (route.subRoutes.isNotEmpty)
+        ...route.subRoutes.map(
+          (sub) {
+            final subEnabled = sub.navigationEnabled;
+            final subSelected = sub.containsLocation(currentPath);
+            final subItem = FSidebarItem(
+              key: ValueKey(sub.path),
+              style: itemStyle,
+              onPress: subEnabled ? () => sub.go(context) : null,
+              icon: Icon(sub.icon),
+              selected: subSelected,
+              label: Text(sub.localizedLabel(l10n)),
+            );
+            if (subEnabled) {
+              return subItem;
+            }
+            return Semantics(
+              hint: ShellA11y.navDisabledHint(l10n),
+              enabled: false,
+              child: subItem,
+            );
+          },
+        ),
+    ],
+  );
+  if (enabled) {
+    return item;
+  }
+  return Semantics(
+    hint: ShellA11y.navDisabledHint(l10n),
+    enabled: false,
+    child: item,
+  );
+}
+
+Widget _collapsedSidebarItem({
+  required BuildContext context,
+  required AppNavigationRoute route,
+  required String? currentPath,
+  required AppLocalizations l10n,
+}) {
+  final selected = route.containsLocation(currentPath);
+  final enabled = route.navigationEnabled;
+  return MergedActionSemantics(
+    key: ValueKey(route.path),
+    label: ShellA11y.navItemLabel(route.localizedLabel(l10n)),
+    hint: enabled ? null : ShellA11y.navDisabledHint(l10n),
+    selected: selected,
+    enabled: enabled,
+    child: FButton.icon(
+      onPress: enabled ? () => route.go(context) : null,
+      selected: selected,
+      variant: selected ? .secondary : .ghost,
+      child: Center(child: Icon(route.icon)),
+    ),
+  );
 }

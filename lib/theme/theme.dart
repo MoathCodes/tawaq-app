@@ -2,11 +2,11 @@
 ///
 /// Import this single file to access all theme tokens and extensions:
 /// ```dart
-/// import 'package:hasanat/theme/theme.dart';
+/// import 'package:tawaq/theme/theme.dart';
 /// ```
 library;
 
-export 'button_style.dart';
+export 'button_styles.dart';
 export 'durations.dart';
 export 'radii.dart';
 export 'select_style.dart';

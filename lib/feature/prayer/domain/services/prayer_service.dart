@@ -1,36 +1,14 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/core/logging/logger_provider.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/data/repository/prayer_repo.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
-import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hijri_date/hijri.dart';
 import 'package:logger/logger.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/timezone.dart';
 
 export '../use_cases/compute_prayer_card_decision.dart'
     show computePrayerCardDecision;
-
-part 'prayer_service.g.dart';
-
-/// Provider for the [PrayerService].
-@riverpod
-PrayerService prayerService(Ref ref) {
-  final repo = ref.watch(prayerRepoProvider);
-  final log = ref.read(loggerProvider);
-  final settings = ref.watch(prayerSettingsProvider);
-
-  return settings.when(
-    data: (d) => PrayerService(repo, d, log),
-    loading: () => PrayerService(repo, PrayerSettings.defaultSettings(), log),
-    error: (e, st) {
-      log.e('Error loading settings', error: e, stackTrace: st);
-      return PrayerService(repo, PrayerSettings.defaultSettings(), log);
-    },
-  );
-}
 
 /// Service class for prayer-related operations.
 class PrayerService {
@@ -40,11 +18,11 @@ class PrayerService {
   final PrayerSettings _settings;
   final Logger _log;
 
-  TZDateTime _now() => TZDateTime.from(DateTime.now(), _settings.location);
+  TZDateTime _now() => TZDateTime.now(_settings.location);
 
   /// Adds or updates a prayer completion record.
   Future<void> addOrUpdateCompletion(PrayerCompletion c) =>
-      _repo.addOrUpdateCompletion(c);
+      _repo.addOrUpdateCompletion(c, _settings.location);
 
   /// Computes the current and best streaks of fully completed prayer days.
   Future<({int current, int best})> computeStreaks(Location loc) async {
@@ -129,7 +107,9 @@ class PrayerService {
   /// Returns the Sunnah times for the given prayer times.
   SunnahTimes getSunnahTime(PrayerTimes t) => _repo.getSunnahTime(t);
 
-  /// Returns the prayer times for today (or a specific date).
+  /// Returns prayer times for [date] or today using saved settings.
+  ///
+  /// During Ramadan with [UmmAlQura], Isha is extended by 30 minutes.
   PrayerTimes getTodaysPrayerTimes(
     DateTime? date, {
     bool roundToMinutes = true,
@@ -140,7 +120,9 @@ class PrayerService {
       _settings.method,
       roundToMinutes: roundToMinutes,
     );
-    if (HijriDate.now().hMonth == 9 && _settings.method is UmmAlQura) {
+    final anchor = date ?? _now();
+    if (HijriDate.fromDate(anchor).hMonth == 9 &&
+        _settings.method is UmmAlQura) {
       _log.d('Adjusting Isha for Ramadan');
       times = times.copyWith(isha: times.isha.add(const Duration(minutes: 30)));
     }
@@ -153,7 +135,7 @@ class PrayerService {
 
   /// Returns the prayer completion records for a specific date.
   Future<List<PrayerCompletion>> getPrayerCompletionForDate([DateTime? date]) =>
-      _repo.getPrayerCompletionForDate(date ?? _now());
+      _repo.getPrayerCompletionForDate(date ?? _now(), _settings.location);
 
   /// Returns prayer completion records between [from] and [to] (inclusive).
   Future<List<PrayerCompletion>> getCompletionsBetween(

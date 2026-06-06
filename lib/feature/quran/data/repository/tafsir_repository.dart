@@ -1,7 +1,7 @@
-import 'package:hasanat/core/database/asset_database_service.dart';
-import 'package:hasanat/feature/quran/data/sources/tafsir_data_source.dart';
-import 'package:hasanat/feature/quran/domain/models/tafsir.dart';
-import 'package:hasanat/feature/quran/domain/models/tafsir_source.dart';
+import 'package:tawaq/core/database/asset_database_service.dart';
+import 'package:tawaq/feature/quran/data/models/tafsir.dart';
+import 'package:tawaq/feature/quran/data/sources/tafsir_data_source.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 
 /// Repository for accessing Quran tafsir (commentary).
 ///
@@ -34,7 +34,7 @@ class TafsirRepository {
 
     // Open the database and create data source
     final database = await _dbService.openDatabase(source.databasePath);
-    final dataSource = SqliteTafsirDataSource(database);
+    final dataSource = createTafsirDataSource(database, source);
     _dataSources[source] = dataSource;
 
     return dataSource;

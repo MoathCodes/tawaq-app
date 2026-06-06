@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hasanat/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 
 part 'prayer_analytics.freezed.dart';
 

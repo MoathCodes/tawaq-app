@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:mushaf_reader/src/data/models/ayah_fragment.dart';
@@ -82,6 +83,12 @@ class PageAyahWidget extends StatefulWidget {
   /// The currently selected Ayah ID, or `null` if none is selected.
   final int? selectedAyahId;
 
+  /// Whether to strip newline characters from each ayah fragment.
+  ///
+  /// Used for compact single-verse layouts (e.g. share images). Page layout
+  /// should keep the default `false` to preserve mushaf line breaks.
+  final bool removeNewLines;
+
   /// Creates a PageAyahWidget.
   const PageAyahWidget({
     super.key,
@@ -93,6 +100,7 @@ class PageAyahWidget extends StatefulWidget {
     required this.onAyahSelection,
     this.onAyahLongPress,
     this.selectedAyahId,
+    this.removeNewLines = false,
   });
 
   @override
@@ -124,6 +132,12 @@ class _PageAyahWidgetState extends State<PageAyahWidget> {
   /// The active style used to build [_cachedSpans].
   TextStyle? _cachedActiveStyle;
 
+  /// The ayah fragments used to build [_cachedSpans].
+  List<AyahFragment>? _cachedAyahs;
+
+  /// Whether newlines were stripped when building [_cachedSpans].
+  bool? _cachedRemoveNewLines;
+
   @override
   Widget build(BuildContext context) {
     // Check if we need to rebuild spans
@@ -131,7 +145,10 @@ class _PageAyahWidgetState extends State<PageAyahWidget> {
         _cachedFullText != widget.fullText ||
         _cachedSelectedAyah != widget.selectedAyahId ||
         _cachedStyle != widget.style ||
-        _cachedActiveStyle != widget.activeStyle) {
+        _cachedActiveStyle != widget.activeStyle ||
+        _cachedRemoveNewLines != widget.removeNewLines ||
+        !listEquals(_cachedAyahs, widget.ayahs)) {
+      _cachedAyahs = widget.ayahs;
       _buildSpans();
     }
 
@@ -169,6 +186,9 @@ class _PageAyahWidgetState extends State<PageAyahWidget> {
 
     for (final frag in widget.ayahs) {
       final textSlice = widget.fullText.substring(frag.start, frag.end);
+      final text = widget.removeNewLines
+          ? textSlice.replaceAll('\n', '')
+          : textSlice;
 
       GestureRecognizer? recognizer;
 
@@ -214,7 +234,7 @@ class _PageAyahWidgetState extends State<PageAyahWidget> {
 
       spans.add(
         TextSpan(
-          text: textSlice,
+          text: text,
           style: widget.selectedAyahId == frag.ayahId
               ? widget.activeStyle ?? widget.style
               : widget.style,
@@ -228,5 +248,6 @@ class _PageAyahWidgetState extends State<PageAyahWidget> {
     _cachedSelectedAyah = widget.selectedAyahId;
     _cachedStyle = widget.style;
     _cachedActiveStyle = widget.activeStyle;
+    _cachedRemoveNewLines = widget.removeNewLines;
   }
 }

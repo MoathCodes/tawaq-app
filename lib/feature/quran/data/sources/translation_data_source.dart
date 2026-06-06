@@ -1,5 +1,5 @@
-import 'package:hasanat/feature/quran/domain/models/translation.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:tawaq/feature/quran/data/models/translation.dart';
 
 /// Abstract interface for translation data sources.
 abstract class ITranslationDataSource {

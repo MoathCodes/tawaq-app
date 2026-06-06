@@ -1,6 +1,7 @@
 {
   "@@locale": "en",
   "about": "About",
+  "addReflection": "Add a reflection...",
   "adhan": "Adhan",
   "adhanAdjustments": "Adhan adjustments (minutes)",
   "adhanHoursAgo": "{hours} hours ago",
@@ -42,14 +43,30 @@
   "advancedSettingsTitle": "Advanced Settings",
   "appearance": "Appearance",
   "appearanceSubtitle": "Customize the app's theme and colors.",
-  "appName": "Hasanat",
+  "appName": "Tawaq",
   "arabic": "Arabic",
   "asr": "Asr",
+  "autoLocationDisabled": "Tap to enable automatic location",
+  "autoLocationEnabled": "Location updates automatically",
+  "autoLocationMapOverlay": "Location is updated automatically. Turn off the switch above to pick a location on the map.",
   "autoSelectOrMap": "Auto Select or Map",
+  "ayahLabel": "Ayah",
+  "ayahBookmark": "Bookmark",
+  "ayahCopied": "Copied {reference}",
+  "@ayahCopied": {
+    "placeholders": {
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "ayahCopy": "Copy",
+  "ayahShare": "Share",
   "back": "Back",
   "basicParametersTitle": "Basic Parameters",
   "bestStreak": "Best Streak",
   "blue": "Blue",
+  "bookmarks": "bookmarks",
   "calculationMethod": "Calculation Method",
   "cancel": "Cancel",
   "changingTimezone": "Changing Timezone",
@@ -58,6 +75,39 @@
   "collapse": "Collapse",
   "colorTheme": "Color Theme",
   "colorThemeSubtitle": "Change the apps color themes.",
+  "typographySectionTitle": "Text & scaling",
+  "typographySectionSubtitle": "Adjust UI text size and Quran reading size separately.",
+  "appTextSize": "App text size",
+  "appTextSizeCompact": "Compact",
+  "appTextSizeNormal": "Default",
+  "appTextSizeLarge": "Large",
+  "appTextSizeExtraLarge": "Extra large",
+  "quranTextSize": "Quran text size",
+  "quranTextSizeSmall": "Small",
+  "quranTextSizeMedium": "Medium",
+  "quranTextSizeLarge": "Large",
+  "quranTextSizeExtraLarge": "Extra large",
+  "quranTextSizeShortExtraLarge": "XL",
+  "appTextSizeShortExtraLarge": "XL",
+  "quranTextSizePreviewLabel": "Preview",
+  "quranTextSizeIndependentNote": "Quran reading size is independent of app and system text scaling.",
+  "quranTextSizePreview": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+  "quranAyahSearchPreviewTruncated": "{preview}...",
+  "@quranAyahSearchPreviewTruncated": {
+    "placeholders": {
+      "preview": {
+        "type": "String"
+      }
+    }
+  },
+  "quranTranslationQuoted": "\"{translation}\"",
+  "@quranTranslationQuoted": {
+    "placeholders": {
+      "translation": {
+        "type": "String"
+      }
+    }
+  },
   "completed": "Completed •",
   "completionStatus": "Completion Status",
   "coordinates": "Coordinates",
@@ -68,6 +118,8 @@
   "customParametersTitle": "Custom Parameters",
   "daily": "Daily",
   "dark": "Dark",
+  "defaultLocation": "Default location",
+  "defaultSurahName": "Al-Fatihah",
   "detectTimezone": "Detect timezone",
   "detectTimezoneNotImplemented": "Timezone detection is not implemented here.",
   "deviceLocationNotImplemented": "Using device location is not implemented here.",
@@ -79,6 +131,10 @@
   "editsSavedTitle": "Edits were saved",
   "egyptian": "Egyptian General Authority of Survey",
   "english": "English",
+  "englishLanguage": "English",
+  "errorLoadingTafsir": "Error loading tafsir",
+  "tafsirTextMayBeIncomplete": "This commentary may be cut off in the source text.",
+  "errorLoadingTranslation": "Error loading translation",
   "errorNotFoundPage": "we couldn't find this page please make sure you entered the correct url.",
   "errorOccurredWhile": "Error Occurred While {whileError}",
   "@errorOccurredWhile": {
@@ -92,9 +148,100 @@
   "errorUpdatingLocationTitle": "Error occurred while updating location",
   "fajr": "Fajir",
   "fajrAngleLabel": "Fajr Angle (°)",
+  "footnote": "Footnote",
   "gettingLocation": "Getting Location",
+  "graphicalAnalysis": "Graphical Analysis",
   "green": "Green",
   "hadith": "Hadith",
+  "hadithActiveFilters": "Active Filters",
+  "hadithAlternativeAuthentic": "Alternative Authentic Narrations",
+  "hadithBooks": "Books",
+  "hadithClearAllFilters": "Clear all filters",
+  "hadithClearAllRecents": "Clear all",
+  "hadithDegrees": "Degrees",
+  "hadithDetailsTab": "Details",
+  "hadithFilterTab": "Filters",
+  "hadithFoundations": "Foundations",
+  "hadithGradeExplanation": "Grade Explanation",
+  "hadithLoadMore": "Load more",
+  "hadithLoadSharh": "Load Explanation",
+  "hadithLoadSharhFailed": "Failed to load sharh: {error}",
+  "@hadithLoadSharhFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "hadithMuhaddith": "Muhaddith",
+  "hadithNarrator": "Narrator",
+  "hadithNarrators": "Narrators",
+  "hadithNoDetailedData": "No detailed data found for this hadith",
+  "hadithNoDetailsSelected": "Select a hadith from results to view details",
+  "hadithBackToSearch": "Back to search",
+  "hadithNoBookmarks": "No saved hadiths yet",
+  "hadithNoMatchingResults": "No matching results found",
+  "hadithNoRecentSearches": "No recent searches yet",
+  "hadithOpenFilters": "Filters",
+  "hadithRecentSearches": "Recent Searches",
+  "hadithRelatedLinks": "Related Links",
+  "hadithSimilarHadith": "Similar Hadith",
+  "hadithAlternateHadithSahih": "Alternate Authentic Hadith",
+  "hadithResetFilters": "Reset filters",
+  "hadithResultsCount": "{count, plural, =0 {No results} =1 {1 result} other {{count} results}}",
+  "@hadithResultsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hadithRetry": "Retry",
+  "hadithScholars": "Scholars",
+  "hadithScope": "Scope",
+  "hadithSearchHint": "Search hadith...",
+  "hadithSearchMethod": "Search method",
+  "hadithSearchMethodAllWords": "All words",
+  "hadithSearchMethodAnyWord": "Any word",
+  "hadithSearchMethodExactMatch": "Exact match",
+  "hadithSearchZoneAll": "All hadiths",
+  "hadithSearchZoneMarfoo": "Marfoo hadiths",
+  "hadithSearchZoneQudsi": "Qudsi hadiths",
+  "hadithSearchZoneSahabaAthar": "Companion narrations",
+  "hadithSearchZoneSharh": "Hadith commentaries",
+  "hadithDegreeAll": "All degrees",
+  "hadithDegreeAuthenticHadith": "Hadiths scholars ruled authentic",
+  "hadithDegreeAuthenticChain": "Chains scholars ruled authentic",
+  "hadithDegreeWeakHadith": "Hadiths scholars ruled weak",
+  "hadithDegreeWeakChain": "Chains scholars ruled weak",
+  "hadithFieldLabel": "{label}:",
+  "@hadithFieldLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "hadithSourceCitation": "{book} ({reference})",
+  "@hadithSourceCitation": {
+    "placeholders": {
+      "book": {
+        "type": "String"
+      },
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "hadithSharh": "Explanation",
+  "hadithSimilar": "Similar Hadiths",
+  "hadithSource": "Source",
+  "hadithSpecialist": "Specialist",
+  "hadithSpecialistHint": "Search within specialist-reviewed sources",
+  "hadithStartSearchPrompt": "Start searching to see results",
+  "hadithTakhrij": "Takhrij",
+  "hadithUsulHadith": "Usul al-Hadith",
+  "hadithTypeToSearch": "Type to search...",
   "highLatitudeRule_middleOfTheNight": "Middle of the Night",
   "highLatitudeRule_seventhOfTheNight": "Seventh of the Night",
   "highLatitudeRule_twilightAngle": "Twilight Angle",
@@ -103,10 +250,29 @@
   "invalidCoordinatesTitle": "Invalid Coordinates",
   "invalidParametersDescription": "Please check your input values.",
   "invalidParametersTitle": "Invalid Parameters",
+  "invalidParametersWithError": "{message} {error}",
+  "@invalidParametersWithError": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "iqamah": "Iqamah",
   "iqamahAdjustment": "Iqamah Adjustment",
   "iqamahAfterAdhan": "Iqamah (minutes after adhan)",
   "iqamahSavedDescription": "Your iqamah adjustments have been saved successfully.",
+  "iqamahSavedForPrayer": "Saved iqamah adjustment for {prayer}.",
+  "@iqamahSavedForPrayer": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
   "iqamahSavedTitle": "Iqamah adjustments saved",
   "iqamahSubtitleMessage": "+{iqamahMins} minutes",
   "@iqamahSubtitleMessage": {
@@ -124,17 +290,42 @@
   "jamaah": "Jamaah",
   "jamaahRate": "Jamaah Rate",
   "jumuah": "Jumuah",
+  "juzLabel": "Juz {number}",
+  "@juzLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "karachi": "University of Islamic Sciences, Karachi",
   "kuwait": "Kuwait",
+  "languageLabel": "Language",
   "lastThirdOfTheNight": "Last Third Of The Night",
   "late": "Late",
   "lateRate": "Late Rate",
   "latitude": "Latitude",
   "light": "Light",
+  "loading": "Loading...",
+  "loadingAnalytics": "Loading Analytics",
+  "loadingSchedule": "Loading schedule",
   "loadingLocationSettings": "Loading Location Settings",
+  "locationCoordinatesLookupFailed": "Could not determine timezone from coordinates.",
+  "locationNoPlaceFound": "No place found at {coordinates}.",
+  "@locationNoPlaceFound": {
+    "placeholders": {
+      "coordinates": {
+        "type": "String"
+      }
+    }
+  },
+  "locationPermissionDenied": "Location permission was denied.",
+  "locationPermissionDeniedForever": "Location permission is permanently denied. Enable it in system settings.",
   "locationSectionSubtitle": "Set your geographical location and timezone for accurate prayer times.",
   "locationSectionTitle": "Location",
+  "locationServicesDisabled": "Location services are disabled.",
   "lockToPreventEdits": "Lock to prevent edits",
+  "logPrayerStatus": "Prayer Status",
   "longitude": "Longitude",
   "madhab_hanafi": "Hanafi",
   "madhab_shafi": "Shafi",
@@ -149,12 +340,81 @@
   "moonsightingCommittee": "Moonsighting Committee",
   "morocco": "Morocco",
   "muslimFortress": "Muslim Fortress",
+  "fortressCompleted": "Completed",
+  "fortressRemainingCount": "{count, plural, =0 {None remaining} =1 {1 remaining} other {{count} remaining}}",
+  "@fortressRemainingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressSharh": "Explanation",
+  "fortressVirtue": "Virtue",
+  "fortressBenefit": "Benefit",
+  "fortressRelatedHadith": "Related hadith",
+  "fortressSourceReference": "Source",
+  "fortressWeakHadithWarning": "Warning: this dhikr is weak or fabricated",
+  "fortressFakeHadithGuide": "Weak & fabricated hadith guide",
+  "fortressFakeHadithIntro": "Reference list from Hisn al-Muslim of hadiths scholars warn against.",
+  "fortressBrowseWeakHadith": "Weak & fabricated hadiths",
+  "fortressSearchHint": "Search chapters and adhkar...",
+  "fortressSearchTitles": "Chapters",
+  "fortressSearchContents": "Adhkar",
+  "fortressNoSearchResults": "No results found",
+  "fortressFilterAuthenticity": "Filter by grading",
+  "fortressShowDetails": "Show details",
+  "fortressShowSharh": "Show explanation",
+  "fortressShowSource": "Show source",
+  "fortressHideDetails": "Hide details",
+  "fortressLoadError": "Failed to load adhkar",
+  "fortressRetry": "Retry",
+  "fortressAllChapters": "All adhkar",
+  "fortressFavorites": "Favorites",
+  "fortressEmptyFavoritesTitle": "No favorite sections yet",
+  "fortressEmptySearchTitle": "No search results",
+  "fortressEmptyFavoritesHint": "Tap the bookmark icon next to any section to add it here",
+  "fortressEmptySearchHint": "Try different search terms",
+  "fortressSupplicationCount": "{count, plural, =1 {1 dhikr} other {{count} adhkar}}",
+  "@fortressSupplicationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressSupplicationsInSection": "{count, plural, =1 {1 dhikr in this section} other {{count} adhkar in this section}}",
+  "@fortressSupplicationsInSection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressStartReading": "Start reading",
+  "fortressNoAdhkarInChapter": "No adhkar in this chapter",
+  "fortressFinish": "Finish",
+  "fortressReadingHint": "Tap the dhikr to count · Swipe horizontally to navigate · Space to count",
+  "fortressPrevious": "Previous",
+  "fortressWelcomeTitle": "Choose a chapter and begin dhikr",
+  "fortressWelcomeSubtitle": "Browse chapters from the list, or start from recommendations for your time or favorites.",
+  "fortressRecommendedNow": "Recommended now",
+  "fortressNoRecommendations": "No recommendations available right now",
+  "fortressNoFavoriteChapters": "No favorite chapters yet — bookmark one from the sidebar",
+  "fortressReadShort": "Short reading",
+  "fortressReadMedium": "Medium reading",
+  "fortressReadLong": "Long reading",
   "muslimWorldLeague": "Muslim World League",
   "neutral": "Neutral",
   "next": "Next",
   "nextPrayer": "Next Prayer",
+  "noDataAvailable": "No data available",
   "noResults": "No results found.",
+  "noResultsFound": "No results found",
   "northAmerica": "North America (ISNA)",
+  "noTafsirAvailable": "No tafsir available for this ayah",
+  "noTranslationAvailable": "No translation available for this ayah",
+  "nowActive": "Now Active",
   "onTime": "On Time",
   "onTimePrayersLast30Days": "On time prayers (last 30 days)",
   "onTimePrayersLast365Days": "On time prayers (last 365 days)",
@@ -164,10 +424,31 @@
   "optionalHint": "Optional",
   "orange": "Orange",
   "other": "Other",
+  "pageJuzInfo": "Page {page} • Juz {juz}",
+  "@pageJuzInfo": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "juz": {
+        "type": "int"
+      }
+    }
+  },
+  "pageLabel": "Page {page}",
+  "@pageLabel": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
   "pageNotFound": "Page Not Found",
   "pageNotFoundDescription": "This page doesn't exist. Please go back to the home page.",
+  "selectVerseToAddReflection": "Please select a verse to add a reflection",
   "parametersSavedDescription": "Your custom parameters have been saved successfully.",
   "parametersSavedTitle": "Parameters Saved",
+  "performanceIndicator": "Performance Indicator",
   "placeholdersHint": "Madhab and other options can be configured later. These inputs are placeholders.",
   "playerAnalytics": "Player Analytics",
   "pleaseSelectMethod": "Please select a calculation method.",
@@ -184,23 +465,124 @@
   "quranLayoutDoublePage": "Double Page",
   "quranLayoutStudyMode": "Study Mode",
   "red": "Red",
+  "reflectionPlaceholder": "Write your thoughts about this verse...",
   "remembrance": "Remembrance",
   "resetCompleteDescription": "Parameters have been reset to default values.",
   "resetCompleteTitle": "Reset Complete",
   "resetToDefaults": "Reset to Defaults",
   "rose": "Rose",
   "save": "Save",
+  "saveNote": "Save Note",
   "saveParameters": "Save Parameters",
   "searchForMore": "Search for more options",
   "searchPlaceLabel": "Search for a place",
+  "searchQuran": "Search Quran...",
+  "selectAyahToSeeContent": "Select an ayah to see the content.",
+  "selectPrayerToLog": "Select a prayer to log status",
   "settings": "Settings",
   "setupPrayerSettingsSubtitle": "We'll guide you through a few quick steps. You can change these later in Settings.",
   "setupPrayerSettingsTitle": "Let's set up your prayer settings.",
   "setupPreferences": "Let's set up your preferences.",
+  "goToPrayerPage": "Go to Prayer Page",
+  "decimalPlaceholder": "0.0",
+  "integerPlaceholder": "0",
   "signedExampleHint": "20 or -10",
   "singapore": "Singapore",
   "skip": "Skip",
+  "shareAppName": "App name",
+  "shareBasmalah": "Basmalah",
+  "shareByApp": "By\n{appName}",
+  "@shareByApp": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "shareClipboardInstallHint": "Install wl-clipboard (Wayland) or xclip (X11) to copy images",
+  "shareCopyImage": "Copy image",
+  "shareCouldNotCreateImage": "Could not create image",
+  "shareExportFailed": "Export failed: {error}",
+  "@shareExportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shareFailedToLoadPage": "Failed to load page: {error}",
+  "@shareFailedToLoadPage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shareImageCopied": "Image copied to clipboard",
+  "shareImageCopyFailed": "Could not copy image: {error}",
+  "@shareImageCopyFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "shareImageSaved": "Saved to {path}",
+  "@shareImageSaved": {
+    "placeholders": {
+      "path": {
+        "type": "String"
+      }
+    }
+  },
+  "shareIncludeInImage": "Include in image",
+  "sharePreview": "Preview",
+  "shareRangeDescription": "{startReference} – {endReference} ({verseCount})",
+  "@shareRangeDescription": {
+    "placeholders": {
+      "startReference": {
+        "type": "String"
+      },
+      "endReference": {
+        "type": "String"
+      },
+      "verseCount": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRangeSingleDescription": "{reference} ({verseCount})",
+  "@shareRangeSingleDescription": {
+    "placeholders": {
+      "reference": {
+        "type": "String"
+      },
+      "verseCount": {
+        "type": "String"
+      }
+    }
+  },
+  "shareRangeOnPage": "Range on page {page}",
+  "@shareRangeOnPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
+  "shareSaveImage": "Save image",
+  "shareSurahHeader": "Surah header",
+  "shareVerseCount": "{count, plural, =1{1 verse} other{{count} verses}}",
+  "@shareVerseCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "shareVerses": "Share verses",
   "slate": "Slate",
+  "sourceLabel": "Source:",
   "status": "Status",
   "stone": "Stone",
   "streakInDays": "{streak} days",
@@ -211,22 +593,49 @@
       }
     }
   },
+  "studyMode": "Study Mode",
+  "sunnahTimes": "Sunnah Times",
   "sunrise": "Sunrise",
+  "surahAyahInfo": "{surahName} • Ayah {ayahNumber}",
+  "@surahAyahInfo": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      },
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "surahNameDefault": "Surah {number}",
+  "@surahNameDefault": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "tafsir": "Tafsir",
+  "tafsirAlMuyassar": "Tafsir Al-Muyassar",
   "tehran": "Tehran",
   "timeFormat": "Time Format",
   "timeSectionSubtitle": "Configure calculation method, time format, and Iqamah settings.",
   "timeSectionTitle": "Prayer Times",
   "timezone": "Timezone",
-  "tipHoldCtrlToRotate": "Tip: Hold Ctrl and drag to rotate and tilt the map.",
+  "todayAchievement": "Today's Achievement",
+  "todaysSchedule": "Today's Schedule",
   "toggleArabic": "Toggle Arabic",
+  "total": "Total",
+  "translation": "Translation",
+  "tryDifferentSearchTerm": "Try a different search term",
   "turkiye": "Turkey (Diyanet)",
   "ummAlQura": "Umm Al-Qura University",
   "unlockToEditCoordinates": "Unlock to edit coordinates",
   "use24HourFormat": "Use 24-hour format",
   "useDeviceLocation": "Use device location",
   "useMyLocation": "Use My Location",
-  "autoLocationEnabled": "Location updates automatically",
-  "autoLocationDisabled": "Tap to enable automatic location",
+  "unavailableShort": "—",
+  "unknownLocation": "Unknown location",
   "useSystemTimezone": "Use System Timezone",
   "violet": "Violet",
   "weekly": "Weekly",
@@ -240,105 +649,71 @@
   "yearly": "Yearly",
   "yellow": "Yellow",
   "zinc": "Zinc",
-
-  "hadithLoadSharhFailed": "Failed to load sharh: {error}",
-  "@hadithLoadSharhFailed": {
+  "a11ySwitchToLightTheme": "Switch to light theme",
+  "a11ySwitchToDarkTheme": "Switch to dark theme",
+  "a11yNavigationUnavailable": "Unavailable",
+  "a11yExpandSidebar": "Expand sidebar",
+  "a11yWindowMinimize": "Minimize window",
+  "a11yWindowMaximize": "Maximize window",
+  "a11yWindowRestore": "Restore window",
+  "a11yWindowClose": "Close window",
+  "a11yOpenSetupWizard": "Open setup wizard",
+  "a11ySettingsDecreaseIqamah": "Decrease {prayer} iqamah minutes",
+  "@a11ySettingsDecreaseIqamah": {
     "placeholders": {
-      "error": {
+      "prayer": {
         "type": "String"
       }
     }
   },
-  "hadithNarrator": "Narrator",
-  "hadithGradeExplanation": "Grade Explanation",
-  "hadithTakhrij": "Takhrij",
-  "hadithSource": "Source",
-  "hadithMuhaddith": "Muhaddith",
-  "hadithSharh": "Explanation",
-  "hadithRetry": "Retry",
-  "hadithLoadSharh": "Load Explanation",
-  "hadithRelatedLinks": "Related Links",
-  "hadithSimilar": "Similar Hadiths",
-  "hadithAlternativeAuthentic": "Alternative Authentic Narrations",
-  "hadithFoundations": "Foundations",
-
-  "studyMode": "Study Mode",
-  "defaultSurahName": "Al-Fatihah",
-  "ayahLabel": "Ayah",
-  "tafsir": "Tafsir",
-  "translation": "Translation",
-  "loading": "Loading...",
-  "selectAyahToSeeContent": "Select an ayah to see the content.",
-  "errorLoadingTafsir": "Error loading tafsir",
-  "noTafsirAvailable": "No tafsir available for this ayah",
-  "errorLoadingTranslation": "Error loading translation",
-  "noTranslationAvailable": "No translation available for this ayah",
-  "sourceLabel": "Source:",
-  "tafsirAlMuyassar": "Tafsir Al-Muyassar",
-  "languageLabel": "Language",
-  "englishLanguage": "English",
-  "addReflection": "Add a reflection...",
-  "reflectionPlaceholder": "Write your thoughts about this verse...",
-  "saveNote": "Save Note",
-
-  "juzLabel": "Juz {number}",
-  "@juzLabel": {
+  "a11ySettingsIncreaseIqamah": "Increase {prayer} iqamah minutes",
+  "@a11ySettingsIncreaseIqamah": {
     "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "searchQuran": "Search Quran...",
-  "noResultsFound": "No results found",
-  "tryDifferentSearchTerm": "Try a different search term",
-  "pageLabel": "Page {page}",
-  "@pageLabel": {
-    "placeholders": {
-      "page": {
-        "type": "int"
-      }
-    }
-  },
-  "surahAyahInfo": "{surahName} • Ayah {ayahNumber}",
-  "@surahAyahInfo": {
-    "placeholders": {
-      "surahName": {
+      "prayer": {
         "type": "String"
-      },
-      "ayahNumber": {
-        "type": "int"
       }
     }
   },
-  "pageJuzInfo": "Page {page} • Juz {juz}",
-  "@pageJuzInfo": {
+  "a11ySettingsResetIqamah": "Reset {prayer} iqamah to default",
+  "@a11ySettingsResetIqamah": {
     "placeholders": {
-      "page": {
-        "type": "int"
-      },
-      "juz": {
-        "type": "int"
+      "prayer": {
+        "type": "String"
       }
     }
   },
-  "surahNameDefault": "Surah {number}",
-  "@surahNameDefault": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "footnote": "Footnote",
-  "logPrayerStatus": "Prayer Status",
-  "nowActive": "Now Active",
-  "todaysSchedule": "Today's Schedule",
-  "selectPrayerToLog": "Select a prayer to log status",
-  "sunnahTimes": "Sunnah Times",
-  "todayAchievement": "Today's Achievement",
-  "performanceIndicator": "Performance Indicator",
-  "graphicalAnalysis": "Graphical Analysis",
-  "noDataAvailable": "No data available",
-  "total": "Total"
+  "a11yNotificationsOn": "Notifications on",
+  "a11yNotificationsOff": "Notifications off",
+  "keyboardShortcutsTabTitle": "Keyboard shortcuts",
+  "keyboardShortcutsSectionTitle": "Keyboard shortcuts",
+  "keyboardShortcutsSectionSubtitle": "Reference list of keyboard shortcuts available on desktop. Shortcuts work app-wide from any screen, including this one. They cannot be customized.",
+  "keyboardShortcutsCategorySubtitle": "Available when using the app on desktop.",
+  "shortcutCategoryGlobal": "Global",
+  "shortcutCategoryQuran": "Quran",
+  "shortcutCategoryFortress": "Muslim Fortress",
+  "shortcutToggleThemeLabel": "Toggle theme",
+  "shortcutToggleThemeDescription": "Switch between light and dark mode.",
+  "shortcutToggleLocaleLabel": "Toggle language",
+  "shortcutToggleLocaleDescription": "Switch between English and Arabic.",
+  "shortcutOpenSettingsLabel": "Open settings",
+  "shortcutOpenSettingsDescription": "Go to the settings screen.",
+  "shortcutFocusSearchLabel": "Focus search",
+  "shortcutFocusSearchDescription": "Open or focus the search field on Quran, Hadith, and Muslim Fortress.",
+  "shortcutFocusSearchUnavailable": "Search is not available on this screen.",
+  "shortcutQuranPageNextLabel": "Next page",
+  "shortcutQuranPageNextDescription": "Go to the next mushaf page (RTL reading direction).",
+  "shortcutQuranPagePrevLabel": "Previous page",
+  "shortcutQuranPagePrevDescription": "Go to the previous mushaf page.",
+  "shortcutQuranPageNextSpaceLabel": "Next page (Space)",
+  "shortcutQuranPageNextSpaceDescription": "Advance to the next mushaf page.",
+  "shortcutQuranAyahNextLabel": "Next ayah",
+  "shortcutQuranAyahNextDescription": "Select the next ayah in study mode.",
+  "shortcutQuranAyahPrevLabel": "Previous ayah",
+  "shortcutQuranAyahPrevDescription": "Select the previous ayah in study mode.",
+  "shortcutFortressCountLabel": "Count thikr",
+  "shortcutFortressCountDescription": "Decrement the repeat counter during focus reading.",
+  "shortcutFortressThikrNextLabel": "Next thikr",
+  "shortcutFortressThikrNextDescription": "Go to the next thikr during focus reading.",
+  "shortcutFortressThikrPrevLabel": "Previous thikr",
+  "shortcutFortressThikrPrevDescription": "Go to the previous thikr during focus reading."
 }

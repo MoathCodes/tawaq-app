@@ -79,12 +79,15 @@ import 'package:mushaf_reader/src/data/hive/hive_box_manager.dart';
 // Core utilities
 export 'src/core/fonts.dart'
     show MushafFonts, MushafBaseFontSizes, MushafTextStyleMerger;
+export 'src/core/mushaf_layout.dart' show mushafReferencePageHeight;
+export 'src/presentation/widgets/page_ayah_widget.dart';
 // Core models
 export 'src/data/models/ayah.dart';
 export 'src/data/models/juz.dart';
 export 'src/data/models/mushaf_page_info.dart';
 export 'src/data/models/mushaf_style.dart';
 export 'src/data/models/quran_page.dart';
+export 'src/data/models/surah_block.dart';
 export 'src/data/models/revelation_type.dart';
 export 'src/data/models/surah.dart';
 // Controller
@@ -94,6 +97,7 @@ export 'src/presentation/screens/mushaf_page.dart';
 export 'src/presentation/screens/mushaf_reader.dart';
 export 'src/presentation/screens/mushaf_two_page_reader.dart';
 // Widgets
+export 'src/presentation/mushaf_loading.dart' show MushafLoading;
 export 'src/presentation/widgets/ayah_widget.dart';
 export 'src/presentation/widgets/basmalah_widget.dart';
 export 'src/presentation/widgets/juz_widget.dart';

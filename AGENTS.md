@@ -150,8 +150,8 @@ This adapts automatically to every theme palette. **Never hardcode status/accent
 - `PageShell` / `ShellSidebar` / `ShellAppBar` — app shell layout widgets
 
 ### Barrel exports
-- `import 'package:hasanat/theme/theme.dart'` → all theme tokens (`AppSpacing`, `AppRadii`, `AppDurations`, extensions, button/select styles)
-- `import 'package:hasanat/core/hooks/hooks.dart'` → all custom hooks
+- `import 'package:tawaq/theme/theme.dart'` → all theme tokens (`AppSpacing`, `AppRadii`, `AppDurations`, extensions, button/select styles)
+- `import 'package:tawaq/core/hooks/hooks.dart'` → all custom hooks
 
 ## Localization
 

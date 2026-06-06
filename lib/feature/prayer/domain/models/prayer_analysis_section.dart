@@ -1,9 +1,10 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 
 /// Trend bucket containing aggregated prayer status counts.
 class PrayerTrendBucket {
+  /// Creates a trend bucket that covers a single time range.
   const PrayerTrendBucket({
     required this.start,
     required this.end,
@@ -11,14 +12,22 @@ class PrayerTrendBucket {
     this.prayer,
   });
 
+  /// Start time of the bucket.
   final DateTime start;
+
+  /// End time of the bucket.
   final DateTime end;
+
+  /// Aggregated prayer completion counts for the bucket.
   final Map<CompletionStatus, int> statusCounts;
+
+  /// The prayer associated with the bucket, when it represents one prayer.
   final Prayer? prayer;
 }
 
 /// View data for the analysis section.
 class PrayerAnalysisSectionData {
+  /// Creates a prayer analysis snapshot for the selected period.
   const PrayerAnalysisSectionData({
     required this.period,
     required this.todayStatusCounts,
@@ -26,6 +35,7 @@ class PrayerAnalysisSectionData {
     required this.trendBuckets,
   });
 
+  /// Creates an empty analysis snapshot for the given period.
   factory PrayerAnalysisSectionData.empty(PrayerAnalyticsPeriod period) {
     return PrayerAnalysisSectionData(
       period: period,
@@ -35,12 +45,17 @@ class PrayerAnalysisSectionData {
     );
   }
 
+  /// The analytics period used to build this section.
   final PrayerAnalyticsPeriod period;
+
+  /// Completion counts for the current day.
   final Map<CompletionStatus, int> todayStatusCounts;
 
   /// Performance score from 0.0 to 1.0 based on weighted prayer completions.
   /// Jamaah = 1.0, OnTime = 0.85, Late = 0.5, Missed = 0.
   final double todayPerformanceScore;
+
+  /// Historical trend buckets for the selected analytics period.
   final List<PrayerTrendBucket> trendBuckets;
 
   static Map<CompletionStatus, int> _emptyCounts() {

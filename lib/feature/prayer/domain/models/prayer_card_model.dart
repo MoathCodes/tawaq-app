@@ -8,11 +8,17 @@ part 'prayer_card_model.freezed.dart';
 abstract class PrayerCardInfo with _$PrayerCardInfo {
   /// Creates a [PrayerCardInfo] instance.
   const factory PrayerCardInfo({
+    /// Countdown until the next anchor, or elapsed time since the current one
+    /// (prefixed with `+`), formatted as `HH:MM:SS`.
     required String time,
     required Prayer prayer,
     required String adhanTime,
     required String iqamahTime,
+
+    /// Whether the anchor time has passed and the user may log a status.
     required bool canSetStatus,
+
+    /// Whether an iqamah offset is configured for [prayer].
     required bool showIqamah,
   }) = _PrayerCardInfo;
 

@@ -3,6 +3,7 @@
 
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:tawaq/feature/settings/data/location_constants.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/timezone.dart';
 
@@ -50,43 +51,61 @@ Map<String, dynamic>? methodToJson(CalculationMethod method) {
   return method.toJson();
 }
 
-/// Model representing prayer settings.
+/// Persisted prayer-time configuration (method, location, iqamah, format).
+///
+/// Serialized to Hive via the prayer settings notifier and used by adhan
+/// calculations across the prayer feature.
 @freezed
 abstract class PrayerSettings with _$PrayerSettings {
   /// Creates a [PrayerSettings] instance.
   const factory PrayerSettings({
+    /// Calculation method (angles, madhab, high-latitude rules, adjustments).
     @JsonKey(
       name: 'calculation_method',
       fromJson: CalculationMethod.fromJson,
       toJson: methodToJson,
     )
     required CalculationMethod method,
+
+    /// Human-readable label for the selected place (city or address).
     required String locationName,
+
+    /// Latitude and longitude used for prayer-time math.
     @JsonKey(
       name: 'coordinates',
       fromJson: Coordinates.fromJson,
       toJson: Coordinates.toJson,
     )
     required Coordinates coordinates,
+
+    /// When true, prayer times are shown in 24-hour format.
     required bool is24Hours,
+
+    /// Minutes after adhan until iqamah, keyed by [Prayer].
     @JsonKey(
       name: 'iqamah_settings',
       fromJson: iqamahSettingsFromJson,
       toJson: iqamahSettingsToJson,
     )
     required Map<Prayer, int> iqamahSettings,
+
+    /// Per-prayer adhan time adjustments in minutes (can be negative).
     @JsonKey(
       name: 'adhan_adjustments',
       fromJson: adhanAdjustmentsFromJson,
       toJson: adhanAdjustmentsToJson,
     )
     required Map<Prayer, int> adhanAdjustments,
+
+    /// IANA timezone used with [coordinates] for local prayer times.
     @JsonKey(
       name: 'location',
       fromJson: locationFromJson,
       toJson: locationToJson,
     )
     required Location location,
+
+    /// When true, GPS auto-updates coordinates and related fields.
     @JsonKey(name: 'auto_location') @Default(false) bool autoLocation,
   }) = _PrayerSettings;
 
@@ -98,7 +117,7 @@ abstract class PrayerSettings with _$PrayerSettings {
       iqamahSettings: {Prayer.dhuhr: 20},
       adhanAdjustments: {},
       coordinates: const Coordinates(0, 0),
-      locationName: 'Default Location',
+      locationName: LocationConstants.defaultLocationName,
       location: tz.getLocation('Asia/Riyadh'),
     );
   }

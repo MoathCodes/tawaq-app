@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/routing/route_provider.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/routing/route_provider.dart';
 
 /// The bottom navigation bar for the main shell.
 class ShellBottomNavigationBar extends ConsumerWidget {
@@ -12,22 +12,33 @@ class ShellBottomNavigationBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final routes = ref.watch(mainRoutesProvider(context.l10n));
+    final routes = ref.watch(mainRoutesProvider);
+    final currentLocation = GoRouter.of(context).state.fullPath;
+    final selectedIndex = routes.indexWhere(
+      (route) => route.containsLocation(currentLocation),
+    );
 
-    return FBottomNavigationBar(
-      index: routes.indexWhere(
-        (value) => GoRouter.of(context).state.fullPath == value.path,
-      ),
-      onChange: (value) => context.go(routes[value].path),
-      children: [
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      child: FBottomNavigationBar(
+        index: selectedIndex < 0 ? 0 : selectedIndex,
+        onChange: (value) {
+          final route = routes[value];
+          if (route.navigationEnabled) {
+            route.go(context);
+          }
+        },
+        children: [
         ...routes.map(
           (route) => _buildButton(
-            route.label,
+            route.localizedLabel(context.l10n),
             route.icon,
             route.path,
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 

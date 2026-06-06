@@ -1,11 +1,14 @@
+import 'dart:async';
+
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 /// Row of latitude / longitude input fields.
 class CoordinatesRow extends ConsumerWidget {
@@ -27,7 +30,9 @@ class CoordinatesRow extends ConsumerWidget {
     final newCoords = isLat
         ? Coordinates(parsed, coords.longitude)
         : Coordinates(coords.latitude, parsed);
-    ref.read(prayerSettingsProvider.notifier).setCoordinates(newCoords);
+    final notifier = ref.read(prayerSettingsProvider.notifier)
+      ..setCoordinates(newCoords);
+    unawaited(notifier.updateLocationData(coordinates: newCoords));
   }
 
   @override
@@ -37,13 +42,15 @@ class CoordinatesRow extends ConsumerWidget {
     );
     if (coordinates == null) return const SizedBox.shrink();
 
-    return Row(
+    final l10n = context.l10n;
+    return NonSelectable(
+      child: Row(
       spacing: 12,
       children: [
         Expanded(
           child: CoordinateField(
             enabled: enabled,
-            label: context.l10n.latitude,
+            label: l10n.latitude,
             value: coordinates.latitude.toStringAsFixed(7),
             min: -90,
             max: 90,
@@ -53,7 +60,7 @@ class CoordinatesRow extends ConsumerWidget {
         Expanded(
           child: CoordinateField(
             enabled: enabled,
-            label: context.l10n.longitude,
+            label: l10n.longitude,
             value: coordinates.longitude.toStringAsFixed(7),
             min: -180,
             max: 180,
@@ -61,6 +68,7 @@ class CoordinatesRow extends ConsumerWidget {
           ),
         ),
       ],
+      ),
     );
   }
 }
@@ -102,7 +110,7 @@ class CoordinateField extends HookWidget {
     final focusNode = useFocusNode();
 
     // Sync external value only when not focused.
-    useValueChanged<String, void>(value, (_, __) {
+    useValueChanged<String, void>(value, (_, _) {
       if (!focusNode.hasFocus) controller.text = value;
       return;
     });

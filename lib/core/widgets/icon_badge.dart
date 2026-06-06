@@ -22,18 +22,20 @@ class IconBadge extends StatelessWidget {
   final double spacing;
 
   /// The style of the badge.
-  final FBaseBadgeStyle Function(FBadgeStyle)? style;
+  final FBadgeStyleDelta? style;
 
   @override
   Widget build(BuildContext context) {
-    return FBadge(
-      style: style ?? FBadgeStyle.primary(),
-      child: Row(
-        spacing: spacing,
-        children: [
-          icon,
-          label,
-        ],
+    return MergeSemantics(
+      child: FBadge(
+        style: style ?? const .context(),
+        child: Row(
+          spacing: spacing,
+          children: [
+            icon,
+            label,
+          ],
+        ),
       ),
     );
   }

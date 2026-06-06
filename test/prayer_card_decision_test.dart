@@ -1,12 +1,12 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hasanat/feature/prayer/data/database/prayer_database.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/data/repository/prayer_repo.dart';
-import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
-import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:logger/logger.dart';
+import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_service.dart';
+import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 

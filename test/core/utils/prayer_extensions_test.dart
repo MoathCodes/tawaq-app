@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hasanat/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 
@@ -67,6 +67,28 @@ void main() {
         final localTime = utcTime.toLocation(location);
 
         expect(localTime.hour, 12);
+      });
+    });
+
+    group('isSameCalendarDay', () {
+      test('treats NYC evening as next day in Mecca', () {
+        final mecca = getLocation('Asia/Riyadh');
+        final nyc = getLocation('America/New_York');
+        final nycEvening = TZDateTime(nyc, 2024, 6, 4, 22);
+        final meccaDay = DateTime(2024, 6, 5);
+
+        expect(nycEvening.isSameCalendarDay(meccaDay, mecca), isTrue);
+        expect(
+          nycEvening.isSameCalendarDay(DateTime(2024, 6, 4), mecca),
+          isFalse,
+        );
+      });
+
+      test('calendarDayIn uses prayer location midnight', () {
+        final mecca = getLocation('Asia/Riyadh');
+        final instant = DateTime.utc(2024, 6, 4, 21); // 00:00 June 5 in Mecca
+
+        expect(instant.calendarDayIn(mecca), DateTime(2024, 6, 5));
       });
     });
   });

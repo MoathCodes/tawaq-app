@@ -216,5 +216,36 @@ void main() {
 
       expect(find.byType(RichText), findsOneWidget);
     });
+
+    testWidgets('should strip newlines when removeNewLines is true', (
+      tester,
+    ) async {
+      const testText = 'line1\nline2';
+      final fragments = [
+        AyahFragment(ayahId: 1, start: 0, end: testText.length),
+      ];
+
+      const style = TextStyle(fontSize: 16);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PageAyahWidget(
+              fullText: testText,
+              ayahs: fragments,
+              style: style,
+              activeStyle: style,
+              removeNewLines: true,
+              onAyahSelection: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      final richText = tester.widget<RichText>(find.byType(RichText));
+      final textSpan = richText.text as TextSpan;
+      expect(textSpan.children?.single, isA<TextSpan>());
+      expect((textSpan.children!.single as TextSpan).text, 'line1line2');
+    });
   });
 }

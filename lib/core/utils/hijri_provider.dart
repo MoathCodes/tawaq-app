@@ -1,8 +1,8 @@
 import 'dart:ui';
 
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hijri_date/hijri.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/locale/locale_provider.dart';
 
 part 'hijri_provider.g.dart';
 

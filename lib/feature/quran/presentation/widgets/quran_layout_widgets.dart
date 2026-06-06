@@ -1,22 +1,29 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/widgets/custom_cards.dart';
-import 'package:hasanat/feature/quran/domain/models/font_sizes.dart';
-import 'package:hasanat/feature/quran/presentation/widgets/study_panel.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/custom_cards.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/mushaf_page_shortcut_scope.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/share/quran_selected_ayah_actions.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
-/// Single page layout for the Quran reader.
-class SinglePageLayout extends ConsumerWidget {
-  /// Creates a [SinglePageLayout] instance.
-  const SinglePageLayout({
+/// Stable mushaf subtree shared across reading layouts.
+///
+/// Assign a stable [key] so Flutter reparents this widget when layout chrome
+/// changes instead of tearing down shortcuts, semantics, and ayah actions.
+class QuranMushafPane extends HookConsumerWidget {
+  /// Creates a [QuranMushafPane] instance.
+  const QuranMushafPane({
     required this.controller,
+    required this.layout,
     required this.buildStyle,
-    required this.theme,
     required this.onPageChanged,
     required this.onAyahTapped,
     super.key,
@@ -25,11 +32,11 @@ class SinglePageLayout extends ConsumerWidget {
   /// The mushaf reader controller.
   final MushafReaderController controller;
 
-  /// Function to build the mushaf style.
-  final MushafStyle Function(FThemeData, [FontSizes]) buildStyle;
+  /// Active reading layout (single-page vs two-page reader).
+  final QuranReadingLayout layout;
 
-  /// The theme data.
-  final FThemeData theme;
+  /// Function to build the mushaf style.
+  final MushafStyle Function(FThemeData, [QuranTextScale]) buildStyle;
 
   /// Callback when page changes.
   final void Function(MushafPageInfo) onPageChanged;
@@ -39,191 +46,159 @@ class SinglePageLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fontSize = ref.watch(
-      stateSettingsProvider.select(
-        (v) => v.value?.quranState.fontSize ?? FontSizes.medium,
+    final targetViewport = layout == QuranReadingLayout.doublePage ? 2 : 1;
+    useEffect(() {
+      if (controller.pagesPerViewport != targetViewport) {
+        controller.pagesPerViewport = targetViewport;
+      }
+      return null;
+    }, [targetViewport]);
+
+    final theme = context.theme;
+    final textScale = ref.watch(
+      quranScreenSettingsProvider.select(
+        (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
       ),
     );
-    return CallbackShortcuts(
-      bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.arrowLeft): () => unawaited(
-          controller.animateToPage(controller.currentPage + 1),
-        ),
-        const SingleActivator(LogicalKeyboardKey.arrowRight): () => unawaited(
-          controller.animateToPage(controller.currentPage - 1),
-        ),
-        const SingleActivator(LogicalKeyboardKey.space): () => unawaited(
-          controller.animateToPage(controller.currentPage + 1),
-        ),
-      },
-      child: Focus(
-        autofocus: true,
-        child: StaticCard(
-          child: MushafReader(
+    final style = buildStyle(theme, textScale);
+
+    final reader = layout == QuranReadingLayout.doublePage
+        ? MushafTwoPageReader(
             controller: controller,
+            loadingWidget: const FCircularProgress.loader(),
+            pageLoadingWidget: const FCircularProgress.loader(),
+            style: style,
             onAyahTap: onAyahTapped,
-            style: buildStyle(theme, fontSize),
+            onPageChanged: (info) => onPageChanged(info.$1),
+          )
+        : MushafReader(
+            controller: controller,
+            loadingWidget: const FCircularProgress.loader(),
+            pageLoadingWidget: const FCircularProgress.loader(),
+            style: style,
             onPageChanged: onPageChanged,
-          ),
+            onAyahTap: onAyahTapped,
+          );
+
+    return MushafPageShortcutScope(
+      controller: controller,
+      child: _MushafReadingSemantics(
+        child: QuranReaderWithAyahActions(
+          controller: controller,
+          layout: layout,
+          reader: NonSelectable(child: reader),
         ),
       ),
     );
+  }
+}
+
+/// Single page layout for the Quran reader.
+class SinglePageLayout extends StatelessWidget {
+  /// Creates a [SinglePageLayout] instance.
+  const SinglePageLayout({required this.mushaf, super.key});
+
+  /// The shared mushaf reading pane.
+  final Widget mushaf;
+
+  @override
+  Widget build(BuildContext context) {
+    return StaticCard(child: mushaf);
   }
 }
 
 /// Double page layout for the Quran reader.
-class DoublePageLayout extends ConsumerWidget {
+class DoublePageLayout extends StatelessWidget {
   /// Creates a [DoublePageLayout] instance.
-  const DoublePageLayout({
-    required this.controller,
-    required this.buildStyle,
-    required this.theme,
-    required this.onPageChanged,
-    required this.onAyahTapped,
-    super.key,
-  });
+  const DoublePageLayout({required this.mushaf, super.key});
 
-  /// The mushaf reader controller.
-  final MushafReaderController controller;
-
-  /// Function to build the mushaf style.
-  final MushafStyle Function(FThemeData, [FontSizes]) buildStyle;
-
-  /// The theme data.
-  final FThemeData theme;
-
-  /// Callback when page changes.
-  final void Function(MushafPageInfo) onPageChanged;
-
-  /// Callback when an ayah is tapped.
-  final void Function(Ayah) onAyahTapped;
+  /// The shared mushaf reading pane.
+  final Widget mushaf;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final fontSize = ref.watch(
-      stateSettingsProvider.select(
-        (v) => v.value?.quranState.fontSize ?? FontSizes.medium,
-      ),
-    );
-    return CallbackShortcuts(
-      bindings: <ShortcutActivator, VoidCallback>{
-        const SingleActivator(LogicalKeyboardKey.arrowLeft): () => unawaited(
-          controller.animateToPage(controller.currentPage + 1),
-        ),
-        const SingleActivator(LogicalKeyboardKey.arrowRight): () => unawaited(
-          controller.animateToPage(controller.currentPage - 1),
-        ),
-        const SingleActivator(LogicalKeyboardKey.space): () => unawaited(
-          controller.animateToPage(controller.currentPage + 1),
-        ),
-      },
-      child: Focus(
-        autofocus: true,
-        child: StaticCard(
-          child: MushafTwoPageReader(
-            key: ValueKey(
-              'two-page-${theme.colors.secondaryForeground.hashCode}',
-            ),
-            controller: controller,
-            style: buildStyle(theme, fontSize),
-            onAyahTap: onAyahTapped,
-            onPageChanged: (info) => onPageChanged(info.$1),
-          ),
-        ),
-      ),
-    );
+  Widget build(BuildContext context) {
+    return StaticCard(child: mushaf);
   }
 }
 
 /// Study mode layout for the Quran reader with a side panel.
-class StudyModeLayout extends StatelessWidget {
+class StudyModeLayout extends ConsumerWidget {
   /// Creates a [StudyModeLayout] instance.
   const StudyModeLayout({
-    required this.buildStyle,
-    required this.theme,
     required this.controller,
-    required this.onPageChanged,
-    required this.onAyahTapped,
+    required this.mushaf,
     super.key,
   });
 
-  /// Function to build the mushaf style.
-  final MushafStyle Function(FThemeData, [FontSizes]) buildStyle;
-
-  /// The theme data.
-  final FThemeData theme;
-
-  /// The mushaf reader controller.
+  /// The mushaf reader controller (for the study side panel).
   final MushafReaderController controller;
 
-  /// Callback when page changes.
-  final void Function(MushafPageInfo) onPageChanged;
-
-  /// Callback when an ayah is tapped.
-  final void Function(Ayah) onAyahTapped;
+  /// The shared mushaf reading pane.
+  final Widget mushaf;
 
   @override
-  Widget build(BuildContext context) {
-    const panelWidth = 350.0;
+  Widget build(BuildContext context, WidgetRef ref) {
     const spacer = 20.0;
+    final textDirection = Directionality.of(context);
+    final isArabic = textDirection == TextDirection.rtl;
 
-    // Study panel with navigation logic built-in
     final panel = RepaintBoundary(
       child: Directionality(
-        textDirection: Directionality.of(context),
+        textDirection: textDirection,
         child: StudyPanel(controller: controller),
       ),
     );
-    final isArabic = Directionality.of(context) == TextDirection.rtl;
+
+    final content = StaticCard(
+      child: Center(child: mushaf),
+    );
 
     return LayoutBuilder(
-      builder: (_, constraints) {
-        final quranWidth = constraints.maxWidth - panelWidth - spacer;
-
-        // Mushaf reader content with isolated font size rebuild
-        final content = StaticCard(
-          child: Center(
-            child: Consumer(
-              builder: (context, ref, child) {
-                final fontSize = ref.watch(
-                  stateSettingsProvider.select(
-                    (v) => v.value?.quranState.fontSize ?? FontSizes.medium,
-                  ),
-                );
-                return MushafReader(
-                  controller: controller,
-                  style: buildStyle(theme, fontSize),
-                  onPageChanged: onPageChanged,
-                  onAyahTap: onAyahTapped,
-                );
-              },
-            ),
-          ),
-        );
+      builder: (context, constraints) {
+        final quranWidth =
+            constraints.maxWidth -
+            (ref.read(quranScreenSettingsProvider).value?.sidePanelWidth ??
+                350) -
+            spacer;
 
         return Directionality(
           textDirection: TextDirection.ltr,
           child: FResizable(
             axis: Axis.horizontal,
+            control: .managed(
+              onResizeEnd: (value) => ref
+                  .read(quranScreenSettingsProvider.notifier)
+                  .setSidePanelWidth(
+                    value[isArabic ? 1 : 0].extent.current,
+                  ),
+            ),
             children: [
               FResizableRegion.region(
-                initialExtent: isArabic ? quranWidth : panelWidth,
+                initialExtent: isArabic
+                    ? quranWidth
+                    : ref
+                              .read(quranScreenSettingsProvider)
+                              .value
+                              ?.sidePanelWidth ??
+                          350,
                 minExtent: isArabic ? null : 250,
-                builder: (_, _, _) => Align(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: isArabic ? content : panel,
-                  ),
+                builder: (_, _, _) => Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: isArabic ? content : panel,
                 ),
               ),
               FResizableRegion.region(
-                initialExtent: isArabic ? panelWidth : quranWidth,
+                initialExtent: isArabic
+                    ? ref
+                              .read(quranScreenSettingsProvider)
+                              .value
+                              ?.sidePanelWidth ??
+                          350
+                    : quranWidth,
                 minExtent: isArabic ? 250 : null,
-                builder: (_, _, _) => Align(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 8),
-                    child: isArabic ? panel : content,
-                  ),
+                builder: (_, _, _) => Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: isArabic ? panel : content,
                 ),
               ),
             ],
@@ -231,5 +206,31 @@ class StudyModeLayout extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+/// Announces the mushaf page region without per-ayah semantics.
+class _MushafReadingSemantics extends ConsumerWidget {
+  const _MushafReadingSemantics({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final pageNumber = ref.watch(
+      quranScreenSettingsProvider.select(
+        (v) => v.value?.pageInfo.pageNumber ?? 1,
+      ),
+    );
+    final juzNumber = ref.watch(
+      quranScreenSettingsProvider.select(
+        (v) => v.value?.pageInfo.juzNumber ?? 1,
+      ),
+    );
+    final label =
+        '${l10n.quran}, ${l10n.pageJuzInfo(pageNumber, juzNumber)}';
+
+    return QuranSemantics.mushafReadingRegion(label: label, child: child);
   }
 }

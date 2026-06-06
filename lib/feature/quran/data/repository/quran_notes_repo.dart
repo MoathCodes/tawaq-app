@@ -1,7 +1,7 @@
-import 'package:hasanat/core/logging/logger_provider.dart';
-import 'package:hasanat/feature/quran/data/sources/quran_notes.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/feature/quran/data/sources/quran_notes.dart';
 
 part 'quran_notes_repo.g.dart';
 

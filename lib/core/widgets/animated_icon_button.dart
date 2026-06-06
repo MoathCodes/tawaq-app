@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 
 /// An icon button that animates between a primary and a secondary icon.
 ///
@@ -17,7 +18,7 @@ class AnimatedIconButton extends HookWidget {
     required this.isSecondaryActive,
     super.key,
     this.onPressed,
-    this.buttonStyle,
+    this.variant,
     this.iconSize = 20,
     this.animationDuration = const Duration(milliseconds: 500),
     this.opacityDuration = const Duration(milliseconds: 300),
@@ -44,8 +45,8 @@ class AnimatedIconButton extends HookWidget {
   /// The duration of the opacity animation.
   final Duration opacityDuration;
 
-  /// The style of the button.
-  final FBaseButtonStyle Function(FButtonStyle)? buttonStyle;
+  /// The variant of the button.
+  final FButtonVariant? variant;
 
   @override
   Widget build(BuildContext context) {
@@ -67,8 +68,9 @@ class AnimatedIconButton extends HookWidget {
       [isSecondaryActive],
     );
 
-    return FButton(
-      style: buttonStyle?.call ?? FButtonStyle.ghost(),
+    return NonSelectable(
+      child: FButton(
+      variant: variant ?? .ghost,
       onPress: onPressed,
       child: AnimatedBuilder(
         animation: animationController,
@@ -104,6 +106,7 @@ class AnimatedIconButton extends HookWidget {
             ),
           );
         },
+      ),
       ),
     );
   }

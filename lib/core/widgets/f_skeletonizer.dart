@@ -3,7 +3,16 @@ import 'package:forui/forui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 /// Skeleton effect type for [FSkeletonizer].
-enum SkeletonEffectType { shimmer, pulse, fade }
+enum SkeletonEffectType {
+  /// Shimmering highlight effect.
+  shimmer,
+
+  /// Pulsing opacity effect.
+  pulse,
+
+  /// Subtle fading highlight effect.
+  fade,
+}
 
 /// A Forui-themed wrapper around the Skeletonizer widget.
 ///

@@ -15,7 +15,7 @@ part 'settings_storage.g.dart';
 /// ```
 /// This enables full `deleteOutOfDate` support and `destroyKey` migration.
 final class SettingsStorage extends Storage<String, String> {
-  /// Creates a [SettingsStorage] backed by the given [box].
+  /// Creates a [SettingsStorage] backed by the given [_box].
   SettingsStorage(this._box);
 
   /// Opens the underlying Hivez box and returns a ready storage instance.
@@ -24,6 +24,7 @@ final class SettingsStorage extends Storage<String, String> {
 
   final Box<String, String> _box;
 
+  /// Reads a persisted envelope for [key], or null if missing or corrupt.
   @override
   FutureOr<PersistedData<String>?> read(String key) async {
     final raw = await _box.get(key);
@@ -45,6 +46,7 @@ final class SettingsStorage extends Storage<String, String> {
     }
   }
 
+  /// Writes [value] under [key] with optional [StorageOptions] metadata.
   @override
   FutureOr<void> write(
     String key,
@@ -64,11 +66,13 @@ final class SettingsStorage extends Storage<String, String> {
     await _box.put(key, envelope);
   }
 
+  /// Removes the entry for [key].
   @override
   FutureOr<void> delete(String key) async {
     await _box.delete(key);
   }
 
+  /// Deletes entries whose expiration timestamp is in the past (best-effort).
   @override
   void deleteOutOfDate() {
     // Settings use unsafe_forever, so expiration is not expected.

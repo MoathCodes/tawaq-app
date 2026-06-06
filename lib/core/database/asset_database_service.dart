@@ -33,7 +33,9 @@ class AssetDatabaseService {
   ///
   /// Example:
   /// ```dart
-  /// final db = await service.openDatabase('assets/database/tafsir.db');
+  /// final db = await service.openDatabase(
+  ///   Assets.database.tafseerAr.tafseerMouaser,
+  /// );
   /// final result = db.select('SELECT * FROM tafseer WHERE sura_no = ?', [1]);
   /// ```
   Future<Database> openDatabase(String assetPath) async {
@@ -74,7 +76,7 @@ class AssetDatabaseService {
   /// Closes all open databases and releases resources.
   void dispose() {
     for (final db in _openDatabases.values) {
-      db.dispose();
+      db.close();
     }
     _openDatabases.clear();
   }

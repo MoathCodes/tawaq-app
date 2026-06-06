@@ -2,13 +2,18 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:go_router/go_router.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/utils/hijri_provider.dart';
-import 'package:hasanat/core/widgets/custom_cards.dart';
-import 'package:hasanat/core/widgets/theme_mode_button.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/locale/locale_provider.dart';
+import 'package:tawaq/core/routing/route_provider.dart';
+import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
+import 'package:tawaq/core/widgets/merged_action_semantics.dart';
+import 'package:tawaq/core/widgets/page_shell/hijri_date_chip.dart';
+import 'package:tawaq/core/widgets/shell_a11y.dart';
+import 'package:tawaq/core/widgets/shortcuts/shortcut_hint.dart';
+import 'package:tawaq/core/widgets/theme_mode_button.dart';
+import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_display.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// The app bar for the main shell.
 class ShellAppBar extends ConsumerWidget {
@@ -17,87 +22,85 @@ class ShellAppBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final langCode = ref.watch(localeProvider);
-    final locationName = ref.watch(
-      prayerSettingsProvider.select((value) => value.value?.locationName),
-    );
-    // final formatter = DateFormat.E(appSettings.value);
+    final locationName = ref.watch(prayerLocationNameProvider);
 
-    // final colors = FTheme.of(context).colors;
-
-    final isArabic = langCode == 'ar';
-
-    final hijriDate = ref.watch(hijriClockProvider);
+    final isArabic = context.l10n.localeName == 'ar';
 
     final Widget? locationChip =
         (locationName != null && locationName.isNotEmpty)
-        ? Row(
-            children: [
-              Icon(
-                FIcons.mapPin,
-                size: 16,
-                color: context.theme.colors.secondaryForeground,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(locationName, overflow: TextOverflow.ellipsis),
-            ],
+        ? Container(
+            padding: context.theme.buttonStyles.outline.sm.contentStyle.padding,
+            decoration: context.theme.buttonStyles.outline.sm.decoration.base,
+            child: Row(
+              spacing: AppSpacing.xs,
+              children: [
+                Icon(
+                  FLucideIcons.mapPin,
+                  size: 16,
+                  color: context.theme.colors.secondaryForeground,
+                ),
+                Text(
+                  resolveLocationDisplayName(context.l10n, locationName),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
           )
         : null;
-
-    // Widget displayed next to the Sidebar.
-    final nearWidgets = [
-      ?locationChip,
-      const Spacer(),
-      switch (hijriDate) {
-        AsyncData<String>() => Text(hijriDate.value),
-        _ => const SizedBox.shrink(),
-      },
-    ];
 
     final Widget? debugButton = kDebugMode
-        ? FButton(
-            style: FButtonStyle.primary(),
-            child: const Icon(FIcons.bug),
-            onPress: () {
-              context.go('/wizard');
-            },
+        ? MergedActionSemantics(
+            label: ShellA11y.openSetupWizard(context.l10n),
+            child: FButton(
+              child: const Icon(FLucideIcons.bug),
+              onPress: () {
+                const WizardRoute().go(context);
+              },
+            ),
           )
         : null;
-
-    // Widgets displayed at the end from of the Sidebar
-    final farWidgets = [
-      ?debugButton,
-      FButton(
-        style: FButtonStyle.ghost(),
-        onPress: () {
-          ref.read(localeProvider.notifier).toggleLocale();
-        },
-        prefix: const Icon(FIcons.languages),
-        child: Text(isArabic ? context.l10n.arabic : context.l10n.english),
-      ),
-      const ThemeModeButton(),
-    ];
 
     return FHeader.nested(
       // prefixes: isArabic ? suffixes : prefixes,
+      // suffixes: [
+      //   Expanded(
+      //     flex: 2,
+      //     child: StaticCard(
+      //       padding: const .all(AppSpacing.sm),
+      //       child: Row(children: nearWidgets),
+      //     ),
+      //   ),
+      //   Expanded(
+      //     child: Row(
+      //       spacing: 4,
+      //       mainAxisAlignment: .end,
+      //       children: farWidgets,
+      //     ),
+      //   ),
+      // ],
       suffixes: [
-        Expanded(
-          flex: 2,
-          child: StaticCard(
-            padding: const .all(AppSpacing.sm),
-            child: Row(children: nearWidgets),
+        ?debugButton,
+        const SizedBox(width: AppSpacing.sm),
+        ShortcutTooltip(
+          id: AppShortcutId.toggleLocale,
+          child: FButton(
+            variant: .ghost,
+            onPress: () {
+              ref.read(localeProvider.notifier).toggleLocale();
+            },
+            prefix: const Icon(FLucideIcons.languages),
+            child: Text(isArabic ? context.l10n.arabic : context.l10n.english),
           ),
         ),
-        Expanded(
-          child: Row(
-            spacing: 4,
-            mainAxisAlignment: .end,
-            children: farWidgets,
-          ),
-        ),
+        const SizedBox(width: AppSpacing.sm),
+
+        const ThemeModeButton(),
       ],
-      // prefixes: farWidgets,
-      // suffixes: isArabic ? nearWidgets : farWidgets,
+      prefixes: [
+        ?locationChip,
+        const SizedBox(width: AppSpacing.sm),
+        const HijriDateChip(),
+      ],
     );
   }
 }

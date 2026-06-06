@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 
 /// A utility class containing pure functions for calculating prayer analytics.
 ///

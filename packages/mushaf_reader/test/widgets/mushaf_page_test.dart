@@ -21,14 +21,7 @@ void main() {
       ),
     );
 
-    // Initially loading
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-
-    // Wait for async load
     await tester.pumpAndSettle();
-
-    // Should show content
-    expect(find.byType(CircularProgressIndicator), findsNothing);
 
     expect(find.byType(PageAyahWidget), findsOneWidget);
     expect(find.byType(PageNumberWidget), findsOneWidget);

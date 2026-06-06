@@ -1,45 +1,213 @@
+import 'dart:async';
+
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
-import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_service.dart';
+import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:timezone/timezone.dart';
 
 part 'prayer_data_providers.g.dart';
 
-/// Provides the current time in the user's selected location.
-/// This will automatically update dependents when the settings change.
+/// Provider for the [PrayerService].
 @riverpod
-DateTime currentLocationTime(Ref ref) {
-  final location = ref.watch(
-    prayerSettingsProvider.select((settings) => settings.value?.location),
-  );
+PrayerService prayerService(Ref ref) {
+  final repo = ref.watch(prayerRepoProvider);
+  final log = ref.read(loggerProvider);
+  final settings = ref.watch(prayerSettingsProvider);
 
-  // Use default location if settings are not loaded yet.
-  return DateTime.now().toLocation(
-    location ?? PrayerSettings.defaultSettings().location,
+  return settings.when(
+    data: (d) => PrayerService(repo, d, log),
+    loading: () => PrayerService(repo, PrayerSettings.defaultSettings(), log),
+    error: (e, st) {
+      log.e('Error loading settings', error: e, stackTrace: st);
+      return PrayerService(repo, PrayerSettings.defaultSettings(), log);
+    },
   );
 }
 
-/// Watches the prayer completions for a specific date from the database.
-/// Using a `.family` allows us to fetch data for any given date.
-// @riverpod
-// Stream<List<PrayerCompletion>> prayerCompletionsForDate(
-//   Ref ref,
-//   DateTime date,
-// ) {
-//   final service = ref.watch(prayerServiceProvider);
-//   // Normalize the date to avoid issues with time components.
-//   final dateKey = DateTime(date.year, date.month, date.day);
-//   return service.watchPrayerCompletionByDate(dateKey);
-// }
+const _tickInterval = Duration(seconds: 1);
 
-/// Provides the prayer times for the current day.
-/// It automatically recalculates if the date changes or settings are updated.
+class _PrayerDayCache {
+  _PrayerDayCache({
+    required this.anchorDate,
+    required this.today,
+    required this.yesterday,
+    required this.todaySunnah,
+    required this.yesterdaySunnah,
+    required this.timeline,
+  });
+
+  final TZDateTime anchorDate;
+  final PrayerTimes today;
+  final PrayerTimes yesterday;
+  final SunnahTimes todaySunnah;
+  final SunnahTimes yesterdaySunnah;
+  final PrayerDayTimeline timeline;
+}
+
+/// Single live source for “now”, timezone, and today/yesterday prayer times.
+///
+/// Ticks once per second app-wide. Features that need live updates (hero card,
+/// schedule, fortress recommendations) should watch this instead of running
+/// their own timers.
+@Riverpod(keepAlive: true)
+class PrayerDay extends _$PrayerDay {
+  _PrayerDayCache? _cache;
+  PrayerSettings? _cachedSettings;
+
+  @override
+  Stream<PrayerDaySnapshot> build() async* {
+    ref.watch(prayerSettingsProvider);
+    final service = ref.watch(prayerServiceProvider);
+
+    PrayerDaySnapshot snapshot() {
+      final settings =
+          ref.read(prayerSettingsProvider).value ??
+          PrayerSettings.defaultSettings();
+      final now = TZDateTime.now(settings.location);
+      _ensureCache(settings, now, service);
+      final cache = _cache!;
+
+      return PrayerDaySnapshot(
+        now: now,
+        location: settings.location,
+        today: cache.today,
+        yesterday: cache.yesterday,
+        todaySunnah: cache.todaySunnah,
+        yesterdaySunnah: cache.yesterdaySunnah,
+        timeline: cache.timeline,
+      );
+    }
+
+    yield snapshot();
+    yield* Stream.periodic(_tickInterval, (_) => snapshot());
+  }
+
+  void _ensureCache(
+    PrayerSettings settings,
+    TZDateTime now,
+    PrayerService service,
+  ) {
+    final anchorDate = TZDateTime(
+      settings.location,
+      now.year,
+      now.month,
+      now.day,
+    );
+
+    final needsRefresh =
+        _cache == null ||
+        _cachedSettings != settings ||
+        _cache!.anchorDate != anchorDate;
+
+    if (!needsRefresh) return;
+
+    final localNow = TZDateTime.from(now, settings.location);
+    final today = service.getTodaysPrayerTimes(
+      localNow,
+      roundToMinutes: false,
+    );
+    final yesterday = service.getTodaysPrayerTimes(
+      localNow.subtract(const Duration(days: 1)),
+      roundToMinutes: false,
+    );
+    final todaySunnah = service.getSunnahTime(today);
+    final yesterdaySunnah = service.getSunnahTime(yesterday);
+
+    final timeline = PrayerDayTimeline(
+      fajrToday: TZDateTime.from(today.fajr, settings.location),
+      sunriseToday: TZDateTime.from(today.sunrise, settings.location),
+      dhuhrToday: TZDateTime.from(today.dhuhr, settings.location),
+      asrToday: TZDateTime.from(today.asr, settings.location),
+      maghribToday: TZDateTime.from(today.maghrib, settings.location),
+      ishaToday: TZDateTime.from(today.isha, settings.location),
+      ishaYesterday: TZDateTime.from(yesterday.isha, settings.location),
+      middleOfNightToday: TZDateTime.from(
+        todaySunnah.middleOfTheNight,
+        settings.location,
+      ),
+      middleOfNightYesterday: TZDateTime.from(
+        yesterdaySunnah.middleOfTheNight,
+        settings.location,
+      ),
+      lastThirdToday: TZDateTime.from(
+        todaySunnah.lastThirdOfTheNight,
+        settings.location,
+      ),
+      lastThirdYesterday: TZDateTime.from(
+        yesterdaySunnah.lastThirdOfTheNight,
+        settings.location,
+      ),
+    );
+
+    _cache = _PrayerDayCache(
+      anchorDate: anchorDate,
+      today: today,
+      yesterday: yesterday,
+      todaySunnah: todaySunnah,
+      yesterdaySunnah: yesterdaySunnah,
+      timeline: timeline,
+    );
+    _cachedSettings = settings;
+  }
+}
+
+/// Prayer times for a specific calendar date (no live tick).
+@riverpod
+PrayerTimes prayerTimesForDate(Ref ref, DateTime date) {
+  final service = ref.watch(prayerServiceProvider);
+  final settings =
+      ref.read(prayerSettingsProvider).value ??
+      PrayerSettings.defaultSettings();
+  final anchor = TZDateTime(
+    settings.location,
+    date.year,
+    date.month,
+    date.day,
+  );
+  return service.getTodaysPrayerTimes(anchor);
+}
+
+/// Calendar day key from [prayerDayProvider]; stable within a day so dependents
+/// are not notified on every clock tick.
+@riverpod
+int prayerCalendarDayKey(Ref ref) {
+  return ref.watch(prayerDayProvider).value?.calendarDayKey ?? 0;
+}
+
+/// Today's prayer times derived from [prayerDayProvider].
+///
+/// Pass [forDate] to resolve times for another calendar day without the live
+/// tick stream.
 @riverpod
 PrayerTimes currentPrayerTimes(Ref ref, {DateTime? forDate}) {
-  // Depend on the service to get the prayer times.
+  if (forDate != null) {
+    return ref.watch(
+      prayerTimesForDateProvider(
+        DateTime(forDate.year, forDate.month, forDate.day),
+      ),
+    );
+  }
+
+  final snapshot = ref.watch(prayerDayProvider).value;
+  if (snapshot != null) return snapshot.today;
+
   final service = ref.watch(prayerServiceProvider);
-  return service.getTodaysPrayerTimes(forDate);
+  return service.getTodaysPrayerTimes(null);
+}
+
+/// Current instant in the user's prayer timezone from [prayerDayProvider].
+@riverpod
+TZDateTime currentLocationTime(Ref ref) {
+  final snapshot = ref.watch(prayerDayProvider).value;
+  if (snapshot != null) return snapshot.now;
+
+  final settings = ref.read(prayerSettingsProvider).value;
+  return TZDateTime.now(
+    settings?.location ?? PrayerSettings.defaultSettings().location,
+  );
 }

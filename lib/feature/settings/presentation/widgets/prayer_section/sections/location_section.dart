@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/widgets/coordinates_row.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/widgets/location_controls_row.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/widgets/location_map_section.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/widgets/use_location_tile.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/coordinates_row.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_controls_row.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_map_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/use_location_tile.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 
 /// Widget for the prayer location settings section with inline map.
 class PrayerSettingsLocationSection extends ConsumerWidget {
@@ -22,12 +22,16 @@ class PrayerSettingsLocationSection extends ConsumerWidget {
     final autoLocation = ref.watch(
       prayerSettingsProvider.select((v) => v.value?.autoLocation ?? false),
     );
-    final enabled = !autoLocation;
+    final prayerSettingsReady = ref.watch(
+      prayerSettingsProvider.select((v) => v.hasValue),
+    );
+    final enabled = prayerSettingsReady && !autoLocation;
+    final l10n = context.l10n;
 
     return SettingsSection(
       crossAxisAlignment: .center,
-      title: context.l10n.locationSectionTitle,
-      subtitle: context.l10n.locationSectionSubtitle,
+      title: l10n.locationSectionTitle,
+      subtitle: l10n.locationSectionSubtitle,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: FCard(

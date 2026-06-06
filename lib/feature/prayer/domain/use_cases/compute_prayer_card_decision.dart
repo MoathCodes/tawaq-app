@@ -1,10 +1,12 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_card_decision.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_card_decision.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:timezone/timezone.dart';
 
-/// Computes which prayer card to display based on
-///  the current time and prayer times.
+/// Picks the hero card prayer and whether to count down or up.
+///
+/// Switches to the next prayer in the cycle when less than half of the current
+/// slot remains ([PrayerCardDecision.isCountdown] becomes `true`).
 PrayerCardDecision computePrayerCardDecision({
   required DateTime currentTime,
   required Location location,
@@ -85,7 +87,8 @@ PrayerCardDecision computePrayerCardDecision({
         );
 }
 
-/// Returns the current prayer based on the current time and prayer times.
+/// Returns the active prayer slot for [currentTime], including night windows
+/// ([Prayer.fajrAfter], [Prayer.ishaBefore]) between Isha and Fajr.
 Prayer getCurrentPrayer({
   required DateTime currentTime,
   required Location location,

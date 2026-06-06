@@ -81,6 +81,9 @@ class MockQuranRepository implements IQuranRepository {
   Juz? getJuzSync(int number) => Juz(number: number, glyph: 'Juz $number');
 
   @override
+  QuranPage? peekCachedPage(int page) => null;
+
+  @override
   Future<QuranPage> getPage(int page) async {
     // Generate dummy page content
     // Page 1: Surah 1, Ayahs 1-7

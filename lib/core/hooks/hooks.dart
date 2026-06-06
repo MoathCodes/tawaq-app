@@ -1,4 +1,4 @@
-/// Custom hooks for the Hasanat app.
+/// Custom hooks for the Tawaq app.
 ///
 /// This library provides reusable hooks for common patterns in the app,
 library;

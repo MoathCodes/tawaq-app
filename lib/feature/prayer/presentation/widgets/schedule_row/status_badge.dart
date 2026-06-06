@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/scaled_screen_util.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Small badge showing the completion status of a prayer.
-class StatusBadge extends StatelessWidget {
+class StatusBadge extends ConsumerWidget {
   /// Creates a [StatusBadge].
   const StatusBadge({required this.status, super.key});
 
@@ -14,25 +17,28 @@ class StatusBadge extends StatelessWidget {
   final CompletionStatus status;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appScale = ref.watch(appTextScaleFactorProvider);
+    final colors = context.theme.colors;
+    final badgeColor = status.getBadgeColor(colors);
+    return ExcludeSemantics(
+      child: Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: status
-            .getBadgeColor(context.theme.colors)
-            .withValues(alpha: 0.2),
+        color: badgeColor.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         status.getLocaleName(context.l10n),
         style: TextStyle(
-          color: status.getBadgeColor(context.theme.colors),
-          fontSize: 10.sp,
+          color: badgeColor,
+          fontSize: scaledSp(10, appScale),
           fontWeight: FontWeight.w600,
         ),
+      ),
       ),
     );
   }

@@ -1,9 +1,9 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/core/utils/date_extensions.dart';
-import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/utils/date_extensions.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_database.g.dart';
@@ -83,11 +83,13 @@ class PrayerDatabase {
     return _box.get(id);
   }
 
-  /// Returns all prayer completions for a specific date.
-  Future<List<PrayerCompletion>> getCompletionsForDate(DateTime date) async {
+  /// Returns all prayer completions for a specific calendar day in [location].
+  Future<List<PrayerCompletion>> getCompletionsForDate(
+    DateTime date,
+    Location location,
+  ) async {
     final completions = await _box.getValuesWhere((value) {
-      final ct = value.completionTime;
-      return ct.isSameDate(date);
+      return value.completionTime.isSameCalendarDay(date, location);
     });
 
     return completions.toList();
@@ -137,11 +139,15 @@ class PrayerDatabase {
   ///
   /// If a completion for the same prayer on the same date already exists,
   /// it will be updated. Otherwise, a new completion will be inserted.
-  Future<void> insertOrUpdateCompletion(PrayerCompletion completion) async {
+  Future<void> insertOrUpdateCompletion(
+    PrayerCompletion completion,
+    Location location,
+  ) async {
     // First, check if a completion already exists for this prayer+date
     final existingId = await _findExistingCompletionId(
       completion.prayer,
       completion.completionTime,
+      location,
     );
 
     if (existingId != null) {
@@ -158,10 +164,15 @@ class PrayerDatabase {
   }
 
   /// Finds an existing completion ID for a prayer on a specific date.
-  Future<int?> _findExistingCompletionId(Prayer prayer, DateTime date) async {
+  Future<int?> _findExistingCompletionId(
+    Prayer prayer,
+    DateTime date,
+    Location location,
+  ) async {
     return _box.firstKeyWhere(
       (_, value) =>
-          value.prayer == prayer && value.completionTime.isSameDate(date),
+          value.prayer == prayer &&
+          value.completionTime.isSameCalendarDay(date, location),
     );
   }
 

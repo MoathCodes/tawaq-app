@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:mushaf_reader/src/data/models/surah.dart';
 
 part 'ayah.freezed.dart';
 
@@ -122,7 +123,28 @@ abstract class Ayah with _$Ayah {
   /// with font rendering code.
   String get codeV4 => text;
 
-  /// Returns a formatted reference string like "2:255" (Al-Baqarah, Ayat
-  /// Al-Kursi).
+  /// Returns a compact numeric reference string like "2:255".
+  ///
+  /// Prefer [referenceWithSurahName] for user-facing labels.
   String get reference => '$surahNumber:$numberInSurah';
+
+  /// Returns a human-readable reference with the surah name and ayah number.
+  ///
+  /// Example (English): "Al-Baqara 255"
+  /// Example (Arabic): "سُورَةُ ٱلْبَقَرَةِ 255"
+  String referenceWithSurahName(Surah surah, {bool preferArabic = true}) {
+    final name = preferArabic
+        ? (surah.nameArabic ?? surah.nameEnglish ?? 'Surah ${surah.number}')
+        : (surah.nameEnglish ?? surah.nameArabic ?? 'Surah ${surah.number}');
+    return '$name $numberInSurah';
+  }
+
+  /// Sanitizes a reference string for safe use in filenames.
+  static String sanitizeReferenceForFilename(String reference) {
+    return reference
+        .replaceAll(RegExp(r'[<>:"/\\|?*•]'), '-')
+        .replaceAll(RegExp(r'\s+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+  }
 }

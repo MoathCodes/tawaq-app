@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
-import 'package:hasanat/feature/prayer/domain/services/prayer_analytics_calculator.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 
 void main() {
   group('PrayerAnalyticsCalculator', () {

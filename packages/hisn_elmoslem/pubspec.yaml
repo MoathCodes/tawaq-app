@@ -1,0 +1,39 @@
+name: hisn_elmoslem
+description: >-
+  Pure Dart library for Hisn al-Muslim (Fortress of the Muslim) content:
+  dhikr, explanations, takhreej, Quranic passages, and search.
+version: 0.1.0
+repository: https://github.com/MoathCodes/tawaq
+issue_tracker: https://github.com/MoathCodes/tawaq/issues
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  windows:
+  web:
+
+topics:
+  - islamic
+  - azkar
+  - dhikr
+  - arabic
+  - religion
+
+environment:
+  sdk: ^3.10.0
+
+dependencies:
+  meta: ^1.16.0
+  path: ^1.9.1
+  sqlite3: ^3.2.0
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.26.3
+
+flutter:
+  assets:
+    - assets/database/
+    - assets/upstream.lock.json

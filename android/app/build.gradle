@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.hasanat"
+    namespace = "me.moathdev.tawaq"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

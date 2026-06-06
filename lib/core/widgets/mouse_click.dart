@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 
 /// A widget that detects mouse clicks and hover events.
 class MouseClick extends StatelessWidget {
@@ -12,6 +13,8 @@ class MouseClick extends StatelessWidget {
     this.onExit,
     this.cursor = SystemMouseCursors.click,
     this.disabled,
+    this.semanticsLabel,
+    this.semanticsHint,
   });
 
   /// The widget below this widget in the tree.
@@ -32,18 +35,44 @@ class MouseClick extends StatelessWidget {
   /// Whether the widget is disabled.
   final bool? disabled;
 
+  /// Merged accessibility label when this control should be announced.
+  final String? semanticsLabel;
+
+  /// Optional hint merged with [semanticsLabel] for assistive technologies.
+  final String? semanticsHint;
+
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: onClick == null || (disabled ?? false)
-          ? MouseCursor.defer
-          : cursor,
+    final isDisabled = disabled ?? false;
+    final interactive = onClick != null && !isDisabled;
+    final hasSemantics = semanticsLabel != null || semanticsHint != null;
+
+    final content = interactive ? NonSelectable(child: child) : child;
+
+    final pointer = MouseRegion(
+      cursor: onClick == null || isDisabled ? MouseCursor.defer : cursor,
       onHover: onHover,
       onExit: onExit,
       child: GestureDetector(
-        onTap: disabled ?? false ? null : onClick,
-        child: child,
+        onTap: isDisabled ? null : onClick,
+        child: content,
       ),
+    );
+
+    if (!hasSemantics && interactive) {
+      return pointer;
+    }
+    if (!hasSemantics && !interactive) {
+      return pointer;
+    }
+
+    return Semantics(
+      label: semanticsLabel,
+      hint: semanticsHint,
+      button: interactive,
+      enabled: interactive,
+      excludeSemantics: hasSemantics,
+      child: pointer,
     );
   }
 }

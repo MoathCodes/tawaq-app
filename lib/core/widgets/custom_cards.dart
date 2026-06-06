@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/hooks/hooks.dart';
-import 'package:hasanat/core/widgets/mouse_click.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:tawaq/core/hooks/hooks.dart';
+import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/theme/theme.dart';
 
 const _kBorderRadius = 15.0;
 const _kBorderOpacity = 100;
@@ -21,15 +21,36 @@ class HoverCard extends HookWidget {
     this.borderColor,
     this.activeBorderColor,
     this.backgroundColor,
+    this.semanticsLabel,
+    this.semanticsHint,
   });
 
+  /// The card content.
   final Widget child;
+
+  /// Whether the hover transition should be enabled.
   final bool enableHoverEffect;
+
+  /// Optional inner padding.
   final EdgeInsets? padding;
+
+  /// Optional border radius override.
   final double? borderRadius;
+
+  /// Border color used when the card is not hovered.
   final Color? borderColor;
+
+  /// Border color used when the card is hovered.
   final Color? activeBorderColor;
+
+  /// Optional background color override.
   final Color? backgroundColor;
+
+  /// Merged accessibility label when the card is interactive.
+  final String? semanticsLabel;
+
+  /// Optional accessibility hint merged with [semanticsLabel].
+  final String? semanticsHint;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +60,8 @@ class HoverCard extends HookWidget {
 
     return MouseClick(
       disabled: !enableHoverEffect,
+      semanticsLabel: semanticsLabel,
+      semanticsHint: semanticsHint,
       onExit: (_) => setHovered(value: false),
       onHover: (_) => setHovered(value: true),
       child: AnimatedContainer(
@@ -94,10 +117,19 @@ class StaticCard extends StatelessWidget {
     this.backgroundColor,
   });
 
+  /// The card content.
   final Widget child;
+
+  /// Optional inner padding.
   final EdgeInsets? padding;
+
+  /// Optional border radius override.
   final BorderRadiusGeometry? borderRadius;
+
+  /// Optional border color override.
   final Color? borderColor;
+
+  /// Optional background color override.
   final Color? backgroundColor;
 
   @override

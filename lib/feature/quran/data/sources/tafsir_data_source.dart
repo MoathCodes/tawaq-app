@@ -1,5 +1,6 @@
-import 'package:hasanat/feature/quran/domain/models/tafsir.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:tawaq/feature/quran/data/models/tafsir.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 
 /// Abstract interface for tafsir data sources.
 abstract class ITafsirDataSource {
@@ -54,4 +55,64 @@ class SqliteTafsirDataSource implements ITafsirDataSource {
       'aya_tafseer': row['aya_tafseer'],
     };
   }
+}
+
+/// SQLite implementation for compact tafsir databases.
+///
+/// Reads tafsir data from tables such as `AS`, `Ba`, or `IK` with columns:
+/// `SURA_num`, `AYA_num`, `Tafsir`.
+class SqliteCompactTafsirDataSource implements ITafsirDataSource {
+  /// Creates a compact-schema data source.
+  SqliteCompactTafsirDataSource(this._database, this._tableName);
+
+  final Database _database;
+  final String _tableName;
+
+  @override
+  Tafsir? getTafsir(int suraNo, int ayaNo) {
+    final result = _database.select(
+      'SELECT * FROM "$_tableName" WHERE SURA_num = ? AND AYA_num = ?',
+      [suraNo, ayaNo],
+    );
+
+    if (result.isEmpty) return null;
+
+    final row = result.first;
+    return Tafsir(
+      id: 0,
+      suraNo: row['SURA_num'] as int,
+      ayaNo: row['AYA_num'] as int,
+      ayaTafseer: row['Tafsir'] as String,
+    );
+  }
+
+  @override
+  List<Tafsir> getTafsirForSura(int suraNo) {
+    final result = _database.select(
+      'SELECT * FROM "$_tableName" WHERE SURA_num = ? ORDER BY AYA_num',
+      [suraNo],
+    );
+
+    return result
+        .map(
+          (row) => Tafsir(
+            id: 0,
+            suraNo: row['SURA_num'] as int,
+            ayaNo: row['AYA_num'] as int,
+            ayaTafseer: row['Tafsir'] as String,
+          ),
+        )
+        .toList();
+  }
+}
+
+/// Creates the appropriate data source for [source].
+ITafsirDataSource createTafsirDataSource(Database database, TafsirId source) {
+  return switch (source.schema) {
+    TafsirSchema.mouaser => SqliteTafsirDataSource(database),
+    TafsirSchema.compact => SqliteCompactTafsirDataSource(
+      database,
+      source.tableName!,
+    ),
+  };
 }

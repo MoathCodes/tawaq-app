@@ -8,13 +8,13 @@ import 'package:forui/theme.dart';
 /// `Text` widget while preserving any explicitly provided properties.
 extension FTextSizing on Text {
   /// Applies the base (default) typographic style from the current theme.
-  Widget get base => _withStyle((ctx) => FTheme.of(ctx).typography.base);
+  Widget get base => _withStyle((ctx) => FTheme.of(ctx).typography.md);
 
   // /// Applies a bold font weight to the text.
   // Widget get bold => _withStyle(
   //   (ctx) =>
   //       style?.copyWith(fontWeight: FontWeight.bold) ??
-  //       FTheme.of(ctx).typography.base.copyWith(fontWeight: FontWeight.bold),
+  //       FTheme.of(ctx).typography.md.copyWith(fontWeight: FontWeight.bold),
   // );
 
   /// Applies the large text style from the current theme.
@@ -26,7 +26,7 @@ extension FTextSizing on Text {
         style?.copyWith(color: FTheme.of(ctx).colors.muted) ??
         FTheme.of(
           ctx,
-        ).typography.base.copyWith(color: FTheme.of(ctx).colors.muted),
+        ).typography.md.copyWith(color: FTheme.of(ctx).colors.muted),
   );
 
   /// Applies the small text style from the current theme.

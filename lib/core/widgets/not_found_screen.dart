@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:go_router/go_router.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/routing/route_provider.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// A screen that is displayed when a route is not found.
 class NotFoundScreen extends StatelessWidget {
@@ -22,30 +22,33 @@ class NotFoundScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: .center,
             children: [
-              // Error icon
-              Container(
-                padding: const .all(AppSpacing.xl),
-                decoration: BoxDecoration(
-                  color: theme.colors.destructive.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  FIcons.bug,
-                  size: 64,
-                  color: theme.colors.destructive,
+              ExcludeSemantics(
+                child: Container(
+                  padding: const .all(AppSpacing.xl),
+                  decoration: BoxDecoration(
+                    color: theme.colors.destructive.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    FLucideIcons.bug,
+                    size: 64,
+                    color: theme.colors.destructive,
+                  ),
                 ),
               ),
 
               const SizedBox(height: AppSpacing.xxl),
 
-              // Main title
-              Text(
-                context.l10n.pageNotFound,
+              Semantics(
+                header: true,
+                child: Text(
+                  context.l10n.pageNotFound,
                 style: theme.typography.xl2.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colors.foreground,
                 ),
-                textAlign: TextAlign.center,
+                  textAlign: TextAlign.center,
+                ),
               ),
 
               const SizedBox(height: AppSpacing.lg),
@@ -83,22 +86,10 @@ class NotFoundScreen extends StatelessWidget {
               const SizedBox(height: AppSpacing.xxl),
 
               // Action button
-              Row(
-                mainAxisAlignment: .center,
-                children: [
-                  FButton(
-                    style: FButtonStyle.primary(),
-                    onPress: () => context.go('/prayer'),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(FIcons.clock, size: 18),
-                        SizedBox(width: AppSpacing.sm),
-                        Text('Go to Prayer Page'),
-                      ],
-                    ),
-                  ),
-                ],
+              FButton(
+                onPress: () => const PrayerRoute().go(context),
+                prefix: const Icon(FLucideIcons.clock, size: 18),
+                child: Text(context.l10n.goToPrayerPage),
               ),
             ],
           ),

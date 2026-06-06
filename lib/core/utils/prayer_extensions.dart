@@ -1,5 +1,5 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:hasanat/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:timezone/timezone.dart';
 
 /// Formatting helpers for computing human-readable time differences.
@@ -17,40 +17,89 @@ extension DateTimeDifference on DateTime {
   DateTime toLocation(Location location) {
     return TZDateTime.from(this, location);
   }
+
+  /// Whether this instant falls on the same calendar day as [other]
+  /// in [location].
+  bool isSameCalendarDay(DateTime other, Location location) {
+    final local = toLocation(location);
+    final otherLocal = other.toLocation(location);
+    return local.year == otherLocal.year &&
+        local.month == otherLocal.month &&
+        local.day == otherLocal.day;
+  }
+
+  /// Midnight on this instant's calendar day in [location] (naive [DateTime]).
+  DateTime calendarDayIn(Location location) {
+    final local = toLocation(location);
+    return DateTime(local.year, local.month, local.day);
+  }
 }
 
 /// Convenience formatter for [Duration] instances.
 extension DurationFormatting on Duration {
   /// Returns the duration formatted as `HH:mm:ss`.
   String toHHMMSS({required bool useHinduArabicNumerals}) {
-    final hours = inHours;
-    final minutes = inMinutes.remainder(60);
-    final seconds = inSeconds.remainder(60);
-    final time =
-        '${hours.toString().padLeft(2, '0')}:'
-        '${(minutes % 60).toString().padLeft(2, '0')}:'
-        '${(seconds % 60).toString().padLeft(2, '0')}';
+    final totalSeconds = inSeconds;
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds ~/ 60) % 60;
+    final seconds = totalSeconds % 60;
 
-    // Map Western digits to Arabic-Indic (Hindu-Arabic) numerals.
-    const arabicIndicDigits = [
-      '٠',
-      '١',
-      '٢',
-      '٣',
-      '٤',
-      '٥',
-      '٦',
-      '٧',
-      '٨',
-      '٩',
-    ];
-    if (!useHinduArabicNumerals) return time;
-    return time.replaceAllMapped(RegExp(r'\d'), (m) {
-      final idx = int.parse(m[0]!);
-      return arabicIndicDigits[idx];
-    });
+    final buffer = StringBuffer()
+      ..write(
+        _formatNumber(
+          hours,
+          minDigits: 2,
+          useHinduArabicNumerals: useHinduArabicNumerals,
+        ),
+      )
+      ..write(':')
+      ..write(
+        _formatNumber(
+          minutes,
+          minDigits: 2,
+          useHinduArabicNumerals: useHinduArabicNumerals,
+        ),
+      )
+      ..write(':')
+      ..write(
+        _formatNumber(
+          seconds,
+          minDigits: 2,
+          useHinduArabicNumerals: useHinduArabicNumerals,
+        ),
+      );
+
+    return buffer.toString();
   }
 }
+
+String _formatNumber(
+  int value, {
+  required int minDigits,
+  required bool useHinduArabicNumerals,
+}) {
+  final westernDigits = value.toString().padLeft(minDigits, '0');
+  if (!useHinduArabicNumerals) return westernDigits;
+
+  final buffer = StringBuffer();
+  for (final codeUnit in westernDigits.codeUnits) {
+    buffer.write(_arabicIndicDigits[codeUnit - 48]);
+  }
+  return buffer.toString();
+}
+
+const List<String> _arabicIndicDigits = [
+  '٠',
+  '١',
+  '٢',
+  '٣',
+  '٤',
+  '٥',
+  '٦',
+  '٧',
+  '٨',
+  '٩',
+];
 
 /// Localized labels for [CalculationMethod] values.
 extension MethodLocaleExtension on CalculationMethod {

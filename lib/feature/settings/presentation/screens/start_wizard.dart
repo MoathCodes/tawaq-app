@@ -2,9 +2,9 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/wizard_steps.dart';
-import 'package:hasanat/l10n/app_localizations.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/wizard/wizard_steps.dart';
 
 /// Screen for the initial setup wizard.
 class StartedScreen extends StatelessWidget {
@@ -13,6 +13,7 @@ class StartedScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await showFDialog<void>(
         context: context,
@@ -22,8 +23,8 @@ class StartedScreen extends StatelessWidget {
     return FScaffold(
       child: Column(
         children: [
-          Text(context.l10n.welcomeToApp),
-          Text(context.l10n.setupPreferences),
+          Text(l10n.welcomeToApp),
+          Text(l10n.setupPreferences),
         ],
       ),
     );
@@ -100,12 +101,14 @@ class _StartWizardDialog extends HookWidget {
 
     return FDialog(
       direction: Axis.horizontal,
-      title: Text(titles[step.value]),
+      title: SettingsSemantics.sectionHeader(
+        label: titles[step.value],
+        child: Text(titles[step.value]),
+      ),
       body: Padding(
         padding: const EdgeInsets.only(top: 4),
         child: _buildStep(
           step: step.value,
-          l10n: l10n,
           method: method,
           fajrAngle: fajrAngle,
           ishaAngle: ishaAngle,
@@ -137,7 +140,6 @@ class _StartWizardDialog extends HookWidget {
 
   Widget _buildStep({
     required int step,
-    required AppLocalizations l10n,
     required ValueNotifier<CalculationMethod?> method,
     required TextEditingController fajrAngle,
     required TextEditingController ishaAngle,
@@ -151,19 +153,17 @@ class _StartWizardDialog extends HookWidget {
     required Map<Prayer, TextEditingController> adjust,
   }) {
     return switch (step) {
-      0 => WelcomeStep(l10n: l10n),
+      0 => const WelcomeStep(),
       1 => MethodStep(
-        l10n: l10n,
         method: method,
         fajr: fajrAngle,
         isha: ishaAngle,
         ishaInt: ishaInterval,
         maghrib: maghribAngle,
       ),
-      2 => TimeFormatStep(l10n: l10n, is24Hours: is24Hours),
-      3 => LocationStep(l10n: l10n, name: locName, lat: lat, lng: lng),
+      2 => TimeFormatStep(is24Hours: is24Hours),
+      3 => LocationStep(name: locName, lat: lat, lng: lng),
       4 => IqamahStep(
-        l10n: l10n,
         iqamah: iqamah,
         adjust: adjust,
         iqamahPrayers: _iqamahPrayers,

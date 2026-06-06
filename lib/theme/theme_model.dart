@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hasanat/l10n/app_localizations.dart';
-import 'package:hasanat/theme/custom_themes.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/theme/custom_themes.dart';
 
 part 'theme_model.freezed.dart';
 
 /// Fallback theme settings used when persisted preferences are unavailable.
 final defaultTheme = ThemeSettings(
-  appPalette: AppPalette.zinc,
-  colorScheme: FThemes.zinc.light,
+  appPalette: AppPalette.manuscript,
+  colorScheme: ManuscriptTheme.lightManuscript.desktop,
   themeMode: ThemeMode.light,
 );
 
-final Map<String, List<FThemeData>> _palettesData = {
+final Map<String, List<FPlatformThemeData>> _palettesData = {
   'Manuscript': [
     ManuscriptTheme.darkManuscript,
     ManuscriptTheme.lightManuscript,
@@ -31,11 +31,14 @@ final Map<String, List<FThemeData>> _palettesData = {
   'Zinc': [FThemes.zinc.dark, FThemes.zinc.light],
 };
 
-/// Returns the [FThemeData] matching the selected [palette] and [themeMode].
+/// Returns the [FPlatformThemeData] matching [palette] and [themeMode].
 ///
 /// Falls back to the zinc palette when the mapping is missing or malformed,
 /// logging a warning for easier troubleshooting.
-FThemeData resolveColorScheme(AppPalette palette, ThemeMode themeMode) {
+FPlatformThemeData resolvePlatformColorScheme(
+  AppPalette palette,
+  ThemeMode themeMode,
+) {
   final paletteKey = palette.key;
   final schemesList = _palettesData[paletteKey];
 
@@ -48,6 +51,16 @@ FThemeData resolveColorScheme(AppPalette palette, ThemeMode themeMode) {
     return themeMode == ThemeMode.dark ? defaultSchemes[0] : defaultSchemes[1];
   }
   return themeMode == ThemeMode.dark ? schemesList[0] : schemesList[1];
+}
+
+/// Returns the resolved [FThemeData] variant for the selected platform density.
+FThemeData resolveColorScheme(
+  AppPalette palette,
+  ThemeMode themeMode, {
+  bool touch = false,
+}) {
+  final scheme = resolvePlatformColorScheme(palette, themeMode);
+  return touch ? scheme.touch : scheme.desktop;
 }
 
 /// Available color palettes exposed to the settings UI.

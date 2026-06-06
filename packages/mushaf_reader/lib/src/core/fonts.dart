@@ -215,11 +215,17 @@ class MushafTextStyleMerger {
       );
     }
 
-    // Apply modifier if provided, then re-enforce font settings
+    // Apply modifier; optional fontSize acts as a maximum cap on fitted size.
     if (modifier != null) {
-      result = modifier(
-        result,
-      ).copyWith(fontFamily: fontFamily, package: packageName);
+      final modified = modifier(result);
+      final maxFontSize = modified.fontSize;
+      result = modified.copyWith(
+        fontFamily: fontFamily,
+        package: packageName,
+        fontSize: maxFontSize != null
+            ? (maxFontSize < fontSize ? maxFontSize : fontSize)
+            : fontSize,
+      );
     }
 
     return result;

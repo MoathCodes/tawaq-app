@@ -1,6 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 
 part 'prayer_schedule_row.freezed.dart';
 

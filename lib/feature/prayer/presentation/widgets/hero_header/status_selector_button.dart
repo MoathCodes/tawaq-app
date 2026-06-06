@@ -1,13 +1,17 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/widgets/mouse_click.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/presentation/provider/prayer_completion_provider.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/scaled_screen_util.dart';
+import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Button that lets the user log a prayer's completion status via a popover.
 class StatusSelectorButton extends ConsumerWidget {
@@ -26,6 +30,11 @@ class StatusSelectorButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final appScale = ref.watch(appTextScaleFactorProvider);
+    final theme = FTheme.of(context);
+    final l10n = context.l10n;
+    final now = ref.watch(currentLocationTimeProvider);
+    final completionDay = DateTime(now.year, now.month, now.day);
     final status = ref.watch(
       prayerCompletionProvider.select(
         (value) => value.value
@@ -34,12 +43,17 @@ class StatusSelectorButton extends ConsumerWidget {
               orElse: () => PrayerCompletion(
                 prayer: prayer,
                 status: CompletionStatus.none,
-                completionTime: DateTime.now(),
+                completionTime: completionDay,
                 id: null,
               ),
             )
             .status,
       ),
+    );
+
+    final menuTriggerLabel = PrayerSemantics.statusMenuTrigger(
+      l10n: l10n,
+      status: status,
     );
 
     return canSetStatus
@@ -50,10 +64,10 @@ class StatusSelectorButton extends ConsumerWidget {
                     .where((v) => v != CompletionStatus.none)
                     .map(
                       (e) => FItem(
-                        title: Text(e.getLocaleName(context.l10n)),
+                        title: Text(e.getLocaleName(l10n)),
                         prefix: Icon(
                           e.getIcon(),
-                          color: e.getBadgeColor(FTheme.of(context).colors),
+                          color: e.getBadgeColor(theme.colors),
                         ),
                         onPress: () async {
                           await ref
@@ -63,7 +77,7 @@ class StatusSelectorButton extends ConsumerWidget {
                                   id: null,
                                   status: e,
                                   prayer: prayer,
-                                  completionTime: DateTime.now(),
+                                  completionTime: completionDay,
                                 ),
                               );
                         },
@@ -74,8 +88,8 @@ class StatusSelectorButton extends ConsumerWidget {
             ],
             builder: (context, controller, _) {
               final isSet = status != CompletionStatus.none && status != null;
-              final theme = FTheme.of(context);
               return MouseClick(
+                semanticsLabel: menuTriggerLabel,
                 onClick: controller.toggle,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
@@ -94,43 +108,41 @@ class StatusSelectorButton extends ConsumerWidget {
                           : theme.colors.border.withValues(alpha: 0.1),
                     ),
                   ),
-                  child: IntrinsicHeight(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isSet) ...[
-                          Icon(
-                            status.getIcon(),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isSet) ...[
+                        Icon(
+                          status.getIcon(),
+                          color: theme.colors.secondaryForeground,
+                          size: scaledSp(16, appScale),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Text(
+                          status.getLocaleName(l10n),
+                          style: TextStyle(
                             color: theme.colors.secondaryForeground,
-                            size: 16.sp,
+                            fontWeight: FontWeight.w700,
+                            fontSize: scaledSp(14, appScale),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Text(
-                            status.getLocaleName(context.l10n),
-                            style: TextStyle(
-                              color: theme.colors.secondaryForeground,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 14.sp,
-                            ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Icon(
+                          FLucideIcons.chevronDown,
+                          color: theme.colors.secondaryForeground,
+                          size: scaledSp(14, appScale),
+                        ),
+                      ] else ...[
+                        Text(
+                          l10n.logPrayerStatus,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: scaledSp(14, appScale),
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Icon(
-                            FIcons.chevronDown,
-                            color: theme.colors.secondaryForeground,
-                            size: 14.sp,
-                          ),
-                        ] else ...[
-                          Text(
-                            context.l10n.logPrayerStatus,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14.sp,
-                            ),
-                          ),
-                        ],
+                        ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
               );

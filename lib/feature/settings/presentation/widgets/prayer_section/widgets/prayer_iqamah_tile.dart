@@ -2,10 +2,12 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_images.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// A tile for adjusting the iqamah time of a single prayer.
 class PrayerIqamahTile extends StatelessWidget implements FTileMixin {
@@ -18,6 +20,7 @@ class PrayerIqamahTile extends StatelessWidget implements FTileMixin {
     required this.onDelta,
     required this.onSave,
     required this.onReset,
+    this.enabled = true,
     super.key,
   });
 
@@ -42,36 +45,49 @@ class PrayerIqamahTile extends StatelessWidget implements FTileMixin {
   /// Called when the user resets this prayer's value.
   final VoidCallback onReset;
 
+  /// Whether adjustment controls are interactive.
+  final bool enabled;
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final colors = theme.colors;
+    final l10n = context.l10n;
     final textStyle = theme.typography.sm.copyWith(
       color: colors.foreground,
       fontFeatures: const [FontFeature.tabularFigures()],
     );
+    final prayerName = prayer.getLocaleName(l10n);
 
     return FTile(
-      prefix: Icon(prayer.icon, size: 32),
+      prefix: SettingsSemantics.decorative(
+        Icon(prayer.icon, size: 32),
+      ),
       title: Text(
-        prayer.getLocaleName(context.l10n),
+        prayerName,
         style: theme.typography.xl.copyWith(
           fontWeight: FontWeight.w600,
-          color: theme.colors.foreground,
+          color: colors.foreground,
         ),
       ),
-      details: Row(
+      details: NonSelectable(
+        child: Row(
         mainAxisSize: MainAxisSize.min,
+        spacing: AppSpacing.xs,
         children: [
-          FButton.icon(
-            style: FButtonStyle.ghost(),
-            onPress: () => onDelta(-1),
-            child: const Icon(FIcons.minus),
+          SettingsSemantics.iconAction(
+            label: SettingsSemantics.decreaseIqamahAction(l10n, prayerName),
+            enabled: enabled,
+            child: FButton.icon(
+              variant: .ghost,
+              onPress: enabled ? () => onDelta(-1) : null,
+              child: const Icon(FLucideIcons.minus),
+            ),
           ),
-          const SizedBox(width: AppSpacing.xs),
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 64, maxWidth: 120),
             child: FTextField(
+              enabled: enabled,
               control: .managed(controller: controller),
               focusNode: focusNode,
               textAlign: TextAlign.center,
@@ -86,27 +102,34 @@ class PrayerIqamahTile extends StatelessWidget implements FTileMixin {
               onSubmit: (_) => onSave(),
               suffixBuilder: (context, value, child) => Padding(
                 padding: const EdgeInsetsDirectional.symmetric(horizontal: 4),
-                child: Text(context.l10n.minute, style: textStyle),
+                child: Text(l10n.minute, style: textStyle),
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.xs),
-          FButton.icon(
-            style: FButtonStyle.ghost(),
-            onPress: () => onDelta(1),
-            child: const Icon(FIcons.plus),
+          SettingsSemantics.iconAction(
+            label: SettingsSemantics.increaseIqamahAction(l10n, prayerName),
+            enabled: enabled,
+            child: FButton.icon(
+              variant: .ghost,
+              onPress: enabled ? () => onDelta(1) : null,
+              child: const Icon(FLucideIcons.plus),
+            ),
           ),
-          const SizedBox(width: AppSpacing.xs),
           FTooltip(
             tipBuilder: (context, controller) =>
-                Text(context.l10n.resetToDefaults),
-            child: FButton.icon(
-              style: FButtonStyle.ghost(),
-              onPress: onReset,
-              child: const Icon(FIcons.rotateCcw),
+                Text(l10n.resetToDefaults),
+            child: SettingsSemantics.iconAction(
+              label: SettingsSemantics.resetIqamahAction(l10n, prayerName),
+              enabled: enabled,
+              child: FButton.icon(
+                variant: .ghost,
+                onPress: enabled ? onReset : null,
+                child: const Icon(FLucideIcons.rotateCcw),
+              ),
             ),
           ),
         ],
+        ),
       ),
     );
   }

@@ -2,15 +2,16 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/sections/custom_parameters_section.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/widgets/calculation_method_selector.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/widgets/iqamah_helpers.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/prayer_section/widgets/prayer_iqamah_tile.dart';
-import 'package:hasanat/feature/settings/presentation/widgets/settings_section.dart';
-import 'package:hasanat/theme/theme.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/custom_parameters_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/calculation_method_selector.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/iqamah_helpers.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/prayer_iqamah_tile.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Widget for the prayer time settings section.
 class PrayerSettingsTimeSection extends HookConsumerWidget {
@@ -31,8 +32,11 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final prayerSettings = ref.watch(prayerSettingsProvider).value;
-    final values = prayerSettings?.iqamahSettings;
+    final values = ref.watch(
+      prayerSettingsProvider.select(
+        (value) => value.value?.iqamahSettings,
+      ),
+    );
 
     // Controllers and focus nodes keyed by prayer
     final controllers = useMemoized(
@@ -43,7 +47,11 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
     );
 
     // Method controller
-    final method = prayerSettings?.method ?? CalculationMethod.ummAlQura;
+    final method = ref.watch(
+      prayerSettingsProvider.select(
+        (value) => value.value?.method ?? CalculationMethod.ummAlQura,
+      ),
+    );
 
     // Track initial values and unsaved state
     final initialIqamahValues = useMemoized(() => <Prayer, String>{});
@@ -159,71 +167,91 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
         (value) => value.value?.is24Hours,
       ),
     );
+    final prayerSettingsReady = ref.watch(
+      prayerSettingsProvider.select((value) => value.hasValue),
+    );
+    final l10n = context.l10n;
+    final theme = context.theme;
+    final mutedForeground = theme.colors.mutedForeground;
     return SettingsSection(
       crossAxisAlignment: CrossAxisAlignment.center,
-      title: context.l10n.timeSectionTitle,
-      subtitle: context.l10n.timeSectionSubtitle,
+      title: l10n.timeSectionTitle,
+      subtitle: l10n.timeSectionSubtitle,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxWidth: maxWidth),
         child: Column(
           spacing: AppSpacing.xl,
           children: [
             FCard(
-              title: Text(context.l10n.calculationMethod),
+              title: Text(l10n.calculationMethod),
               child: Column(
                 children: [
                   buildCalculationMethodSelector(
                     context,
                     ref,
                     method,
+                    enabled: prayerSettingsReady,
                   ),
-                  PrayerSettingsCustomParametersCard(maxWidth: maxWidth),
+                  PrayerSettingsCustomParametersCard(
+                    maxWidth: maxWidth,
+                    enabled: prayerSettingsReady,
+                  ),
                 ],
               ),
             ),
             FCard(
-              title: Text(context.l10n.timeFormat),
-              child: FSwitch(
-                value: is24Hours ?? false,
-                onChange: (value) {
-                  ref
-                      .read(prayerSettingsProvider.notifier)
-                      .set24HourFormat(value: value);
-                },
-                label: Text(context.l10n.use24HourFormat),
+              title: Text(l10n.timeFormat),
+              child: NonSelectable(
+                child: FSwitch(
+                  enabled: prayerSettingsReady,
+                  value: is24Hours ?? false,
+                  onChange: (value) {
+                    ref
+                        .read(prayerSettingsProvider.notifier)
+                        .set24HourFormat(value: value);
+                  },
+                  label: Text(l10n.use24HourFormat),
+                ),
               ),
             ),
             FCard(
               title: Row(
                 mainAxisAlignment: .spaceBetween,
                 children: [
-                  Text(context.l10n.iqamahAdjustment),
-                  FTooltip(
-                    tipBuilder: (ctx, ctrl) => Text(context.l10n.save),
-                    child: FButton(
-                      prefix: const Icon(FIcons.save),
-                      onPress: unsavedPrayers.value.isEmpty
-                          ? null
-                          : saveUnsavedPrayers,
-                      child: Text(context.l10n.save),
+                  Text(l10n.iqamahAdjustment),
+                  NonSelectable(
+                    child: FTooltip(
+                      tipBuilder: (ctx, ctrl) => Text(l10n.save),
+                      child: FButton(
+                        prefix: const Icon(FLucideIcons.save),
+                        onPress: unsavedPrayers.value.isEmpty
+                            ? null
+                            : saveUnsavedPrayers,
+                        child: Text(l10n.save),
+                      ),
                     ),
                   ),
                 ],
               ),
               child: FTileGroup(
+                style: .delta(
+                  decoration: .boxDelta(
+                    border: .all(color: Colors.transparent),
+                  ),
+                ),
                 label: Row(
+                  spacing: AppSpacing.xs,
                   children: [
                     Icon(
-                      FIcons.info,
+                      FLucideIcons.info,
                       size: 14,
-                      color: context.theme.colors.mutedForeground,
+                      color: mutedForeground,
                     ),
-                    const SizedBox(width: AppSpacing.xs),
                     Flexible(
                       child: Text(
-                        context.l10n.iqamahAfterAdhan,
-                        style: context.theme.typography.sm.copyWith(
-                          color: context.theme.colors.mutedForeground,
+                        l10n.iqamahAfterAdhan,
+                        style: theme.typography.sm.copyWith(
+                          color: mutedForeground,
                         ),
                       ),
                     ),
@@ -234,6 +262,7 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
                       (p) => PrayerIqamahTile(
                         key: ValueKey(p),
                         prayer: p,
+                        enabled: prayerSettingsReady,
                         controller: controllers[p]!,
                         focusNode: focusNodes[p]!,
                         allowSigned: false,

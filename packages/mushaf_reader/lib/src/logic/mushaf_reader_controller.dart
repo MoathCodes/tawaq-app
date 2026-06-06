@@ -579,6 +579,15 @@ class MushafReaderController extends ChangeNotifier {
 
     final normalizedPage =
         ((page - 1) ~/ pagesPerViewport) * pagesPerViewport + 1;
+
+    final pagesToWarm = <int>[normalizedPage];
+    if (pagesPerViewport == 2 && normalizedPage + 1 <= 604) {
+      pagesToWarm.add(normalizedPage + 1);
+    }
+    for (final p in pagesToWarm) {
+      _repo.getPage(p);
+    }
+
     _setCurrentPage(normalizedPage);
 
     final viewportIndex = (normalizedPage - 1) ~/ pagesPerViewport;

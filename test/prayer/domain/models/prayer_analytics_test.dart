@@ -1,11 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hasanat/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 
 void main() {
   group('PrayerAnalyticsPeriod', () {
     group('duration', () {
       // test('daily returns 1 day', () {
-      //   expect(PrayerAnalyticsPeriod.daily.duration, const Duration(days: 1));
+      //   expect(PrayerAnalyticsPeriod.daily.duration, 
+      //const Duration(days: 1));
       // });
 
       test('weekly returns 7 days', () {
@@ -90,7 +91,8 @@ void main() {
       // test('updates period while preserving other fields', () {
       //   final original = PrayerAnalytics.empty();
 
-      //   final updated = original.copyWith(period: PrayerAnalyticsPeriod.daily);
+      //   final updated = original.copyWith(period: 
+      // PrayerAnalyticsPeriod.daily);
 
       //   expect(updated.period, PrayerAnalyticsPeriod.daily);
       //   expect(updated.completionPercentage, original.completionPercentage);

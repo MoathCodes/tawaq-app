@@ -1,13 +1,13 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hasanat/feature/prayer/data/database/prayer_database.dart';
-import 'package:hasanat/feature/prayer/data/models/prayer_completion.dart';
-import 'package:hasanat/feature/prayer/data/repository/prayer_repo.dart';
-import 'package:hasanat/feature/prayer/domain/services/prayer_service.dart';
-import 'package:hasanat/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:hasanat/hive/hive_registrar.g.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:logger/logger.dart';
+import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_service.dart';
+import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart';
 
@@ -79,7 +79,7 @@ void main() {
             prayer: prayer,
             status: CompletionStatus.jamaah,
           );
-          await db.insertOrUpdateCompletion(completion);
+          await db.insertOrUpdateCompletion(completion, loc);
         }
       }
     }
@@ -211,6 +211,7 @@ void main() {
             prayer: prayer,
             status: CompletionStatus.jamaah,
           ),
+          loc,
         );
       }
 
@@ -232,7 +233,8 @@ void main() {
           prayer: Prayer.fajr,
           status: CompletionStatus.jamaah,
         ),
-      );
+          loc,
+        );
       await db.insertOrUpdateCompletion(
         PrayerCompletion(
           id: null,
@@ -240,7 +242,8 @@ void main() {
           prayer: Prayer.dhuhr,
           status: CompletionStatus.missed, // Missed!
         ),
-      );
+          loc,
+        );
       await db.insertOrUpdateCompletion(
         PrayerCompletion(
           id: null,
@@ -248,7 +251,8 @@ void main() {
           prayer: Prayer.asr,
           status: CompletionStatus.jamaah,
         ),
-      );
+          loc,
+        );
       await db.insertOrUpdateCompletion(
         PrayerCompletion(
           id: null,
@@ -256,7 +260,8 @@ void main() {
           prayer: Prayer.maghrib,
           status: CompletionStatus.jamaah,
         ),
-      );
+          loc,
+        );
       await db.insertOrUpdateCompletion(
         PrayerCompletion(
           id: null,
@@ -264,7 +269,8 @@ void main() {
           prayer: Prayer.isha,
           status: CompletionStatus.none, // None!
         ),
-      );
+          loc,
+        );
 
       final streaks = await service.computeStreaks(loc);
 
@@ -311,6 +317,7 @@ void main() {
               prayer: prayer,
               status: CompletionStatus.onTime,
             ),
+            loc,
           );
         }
       }

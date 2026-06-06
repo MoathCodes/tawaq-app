@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Displays a time column with label (e.g., "ADHAN" / "IQAMAH") and time value.
 class TimeColumn extends StatelessWidget {

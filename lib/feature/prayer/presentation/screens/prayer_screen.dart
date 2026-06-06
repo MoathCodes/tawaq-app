@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hasanat/core/widgets/animation_entry.dart';
-import 'package:hasanat/feature/prayer/presentation/widgets/prayer_hero_header.dart';
-import 'package:hasanat/feature/prayer/presentation/widgets/prayer_schedule_list.dart';
-import 'package:hasanat/feature/prayer/presentation/widgets/prayer_stats_sidebar.dart';
-import 'package:hasanat/theme/theme.dart';
+import 'package:tawaq/core/widgets/animation_entry.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/hero_header/prayer_hero_header.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_schedule_list.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/sidebar/prayer_stats_sidebar.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Screen that displays prayer times with hero header, schedule, and stats.
 class PrayerScreen extends ConsumerWidget {

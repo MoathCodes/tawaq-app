@@ -1,10 +1,10 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:hasanat/core/locale/locale_extension.dart';
-import 'package:hasanat/core/utils/prayer_extensions.dart';
-import 'package:hasanat/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 /// Increments or decrements an iqamah controller value.
 void changeIqamah(TextEditingController controller, int delta) {
@@ -50,28 +50,29 @@ void saveIqamahField(
   if (text.isEmpty) return;
 
   final value = int.tryParse(text);
-  if (value != null) {
-    ref
-        .read(prayerSettingsProvider.notifier)
-        .updatePrayerIqamahTime(prayer, value);
+  if (value == null) return;
 
-    final normalized = value.toString();
-    if (controller.text != normalized) {
-      controller.text = normalized;
-    }
+  ref
+      .read(prayerSettingsProvider.notifier)
+      .updatePrayerIqamahTime(prayer, value);
 
-    if (initialIqamahValues[prayer] != normalized ||
-        unsavedPrayers.value.contains(prayer)) {
-      initialIqamahValues[prayer] = normalized;
-      unsavedPrayers.value = {...unsavedPrayers.value}..remove(prayer);
-    }
+  final normalized = value.toString();
+  if (controller.text != normalized) {
+    controller.text = normalized;
   }
+
+  if (initialIqamahValues[prayer] != normalized ||
+      unsavedPrayers.value.contains(prayer)) {
+    initialIqamahValues[prayer] = normalized;
+    unsavedPrayers.value = {...unsavedPrayers.value}..remove(prayer);
+  }
+
+  final l10n = context.l10n;
   showFToast(
     context: context,
-    title: Text(context.l10n.iqamahSavedTitle),
+    title: Text(l10n.iqamahSavedTitle),
     description: Text(
-      '${context.l10n.iqamahSavedDescription} '
-      "'${prayer.getLocaleName(context.l10n)}'",
+      l10n.iqamahSavedForPrayer(prayer.getLocaleName(l10n)),
     ),
   );
 }

@@ -3,6 +3,7 @@ import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_page_info.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_style.dart';
 import 'package:mushaf_reader/src/logic/mushaf_reader_controller.dart';
+import 'package:mushaf_reader/src/presentation/mushaf_loading.dart';
 import 'package:mushaf_reader/src/presentation/screens/mushaf_page.dart';
 
 /// A convenient widget for displaying a complete Mushaf reader with navigation.
@@ -176,8 +177,7 @@ class _MushafReaderState extends State<MushafReader> {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return widget.loadingWidget ??
-          const Center(child: CircularProgressIndicator());
+      return widget.loadingWidget ?? MushafLoading.none;
     }
 
     return Directionality(
@@ -192,6 +192,7 @@ class _MushafReaderState extends State<MushafReader> {
         itemBuilder: (context, index) {
           final page = index + 1;
           return MushafPage(
+            key: ValueKey(page),
             page: page,
             controller: _controller,
             style: widget.style,
