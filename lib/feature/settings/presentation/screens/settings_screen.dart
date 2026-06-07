@@ -52,34 +52,31 @@ class SettingsScreen extends HookWidget {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 800),
-        child: Column(
+        child: FTabs(
+          expands: true,
+          control: .lifted(
+            index: index.value,
+            onChange: (i) => index.value = i,
+          ),
           children: [
-            FTabs(
-              control: .lifted(
-                index: index.value,
-                onChange: (i) => index.value = i,
-              ),
-              children: [
-                for (final entry in entries)
-                  .entry(label: entry.label, child: const SizedBox.shrink()),
-              ],
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                child: KeyedSubtree(
-                  key: ValueKey(index.value),
-                  child: entries[index.value].child
-                      .animate()
-                      .fadeIn(duration: 200.ms, curve: Curves.easeOut)
-                      .moveY(
-                        begin: 12,
-                        end: 0,
-                        duration: 280.ms,
-                        curve: Curves.easeOutCubic,
-                      ),
+            for (final (i, entry) in entries.indexed)
+              .entry(
+                label: entry.label,
+                child: SingleChildScrollView(
+                  child: KeyedSubtree(
+                    key: ValueKey('settings-tab-${entry.label.label}-$i'),
+                    child: entry.child
+                        .animate()
+                        .fadeIn(duration: 200.ms, curve: Curves.easeOut)
+                        .moveY(
+                          begin: 12,
+                          end: 0,
+                          duration: 280.ms,
+                          curve: Curves.easeOutCubic,
+                        ),
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
