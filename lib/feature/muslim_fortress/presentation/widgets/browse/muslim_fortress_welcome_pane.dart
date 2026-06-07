@@ -15,6 +15,7 @@ class MuslimFortressWelcomePane extends StatelessWidget {
     required this.recommendedCategories,
     required this.bookmarkCategories,
     required this.onSelectCategory,
+    required this.onViewAll,
     super.key,
   });
 
@@ -27,12 +28,16 @@ class MuslimFortressWelcomePane extends StatelessWidget {
   /// Opens the selected chapter in the main pane.
   final ValueChanged<FortressCategory> onSelectCategory;
 
+  ///
+  final VoidCallback onViewAll;
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
-
+    final categories = bookmarkCategories.take(4).toList();
+    final numLeft = bookmarkCategories.length - 4;
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: AppSpacing.xl),
       child: Column(
@@ -79,13 +84,27 @@ class MuslimFortressWelcomePane extends StatelessWidget {
             style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: AppSpacing.md),
-          if (bookmarkCategories.isEmpty)
+          if (categories.isEmpty)
             _SectionEmptyHint(message: l10n.fortressNoFavoriteChapters)
-          else
+          else ...[
             _CategoryCardGrid(
-              categories: bookmarkCategories,
+              categories: categories,
               onSelectCategory: onSelectCategory,
             ),
+            const SizedBox(
+              height: AppSpacing.md,
+            ),
+            FButton(
+              variant: .ghost,
+              onPress: onViewAll,
+              child: Text(
+                "إضافةً إلى ${numLeft} أبواب أخرى...",
+                style: theme.typography.sm.copyWith(
+                  color: colors.mutedForeground,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

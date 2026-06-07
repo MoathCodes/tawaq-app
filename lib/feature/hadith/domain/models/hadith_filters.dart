@@ -23,6 +23,9 @@ abstract class HadithFilters with _$HadithFilters {
   const factory HadithFilters({
     @Default(SearchMethod.anyWord) SearchMethod searchMethod,
     @Default(SearchZone.all) SearchZone zone,
+    /// When true, limit results to hadiths that include takhrij in their
+    /// metadata (Dorar.net `#specialist` tab / `&all` URL flag; site UI
+    /// label: "متخصص").
     @Default(false) bool specialist,
     @Default(<HadithDegree>[]) List<HadithDegree> degrees,
     @Default(<HadithLookupRef>[]) List<HadithLookupRef> scholars,

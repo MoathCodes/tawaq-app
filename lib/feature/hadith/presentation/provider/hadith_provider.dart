@@ -161,6 +161,13 @@ class HadithScreenController extends _$HadithScreenController {
         .clearRecentSearches();
   }
 
+  /// Removes one query from the persisted recent-search history.
+  Future<void> removeRecentSearch(String query) {
+    return ref
+        .read(hadithSearchControllerProvider.notifier)
+        .removeRecentSearch(query);
+  }
+
   /// Persists the active hadith panel tab.
   void setActiveTab(HadithPanelTab tab) {
     return ref.read(hadithScreenSettingsProvider.notifier).setActiveTab(tab);
@@ -362,6 +369,12 @@ class HadithSearchController extends _$HadithSearchController {
   /// Clears the saved recent-search history.
   Future<void> clearRecentSearches() async {
     await ref.read(hadithServiceProvider).clearRecentSearches();
+    ref.invalidate(hadithRecentSearchesProvider);
+  }
+
+  /// Removes one query from the saved recent-search history.
+  Future<void> removeRecentSearch(String query) async {
+    await ref.read(hadithServiceProvider).removeRecentSearch(query);
     ref.invalidate(hadithRecentSearchesProvider);
   }
 

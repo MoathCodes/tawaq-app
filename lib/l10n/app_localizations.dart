@@ -968,16 +968,16 @@ abstract class AppLocalizations {
   /// **'Source'**
   String get hadithSource;
 
-  /// No description provided for @hadithSpecialist.
+  /// Filter toggle for Dorar's specialist tab: limits results to hadiths that include takhrij in their metadata (Dorar UI label: متخصص).
   ///
   /// In en, this message translates to:
-  /// **'Specialist'**
+  /// **'Takhrij'**
   String get hadithSpecialist;
 
-  /// No description provided for @hadithSpecialistHint.
+  /// Explains that enabling this filter limits results to hadiths with takhrij populated in result metadata.
   ///
   /// In en, this message translates to:
-  /// **'Search within specialist-reviewed sources'**
+  /// **'Only return hadiths that include takhrij in their metadata'**
   String get hadithSpecialistHint;
 
   /// No description provided for @hadithStartSearchPrompt.

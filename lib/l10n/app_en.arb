@@ -236,8 +236,14 @@
   "hadithSharh": "Explanation",
   "hadithSimilar": "Similar Hadiths",
   "hadithSource": "Source",
-  "hadithSpecialist": "Specialist",
-  "hadithSpecialistHint": "Search within specialist-reviewed sources",
+  "hadithSpecialist": "Takhrij",
+  "@hadithSpecialist": {
+    "description": "Filter toggle for Dorar's specialist tab: limits results to hadiths that include takhrij in their metadata (Dorar UI label: متخصص)."
+  },
+  "hadithSpecialistHint": "Only return hadiths that include takhrij in their metadata",
+  "@hadithSpecialistHint": {
+    "description": "Explains that enabling this filter limits results to hadiths with takhrij populated in result metadata."
+  },
   "hadithStartSearchPrompt": "Start searching to see results",
   "hadithTakhrij": "Takhrij",
   "hadithUsulHadith": "Usul al-Hadith",

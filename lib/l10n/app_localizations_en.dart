@@ -507,11 +507,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithSource => 'Source';
 
   @override
-  String get hadithSpecialist => 'Specialist';
+  String get hadithSpecialist => 'Takhrij';
 
   @override
   String get hadithSpecialistHint =>
-      'Search within specialist-reviewed sources';
+      'Only return hadiths that include takhrij in their metadata';
 
   @override
   String get hadithStartSearchPrompt => 'Start searching to see results';

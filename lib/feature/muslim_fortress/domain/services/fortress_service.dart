@@ -3,7 +3,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/hisn_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_fake_hadith.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_featured_dua.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 
@@ -59,10 +58,6 @@ class FortressService {
     return _repository.search(trimmed, limit: limit);
   }
 
-  /// Known weak/fabricated hadith warnings.
-  List<FortressFakeHadith> loadFakeHadithWarnings() =>
-      _repository.loadFakeHadithWarnings();
-
   /// Featured cards for the welcome layout.
   List<FortressFeaturedDua> loadFeaturedDuas() =>
       _repository.loadFeaturedDuas();
@@ -70,6 +65,10 @@ class FortressService {
   /// Full commentary for a content id (load on demand for study sheets).
   HisnCommentary? loadCommentaryForContent(int contentId) =>
       _repository.loadCommentaryForContent(contentId);
+
+  /// Default bookmark chapter ids for first-run seeding.
+  List<int> defaultBookmarkChapterIds() =>
+      _repository.defaultBookmarkChapterIds();
 
   String _resolveCategoryTitle(
     List<FortressCategory> chapters,

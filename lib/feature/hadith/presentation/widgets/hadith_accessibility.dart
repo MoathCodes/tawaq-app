@@ -55,6 +55,14 @@ String hadithRecentSearchChipSemanticsLabel(
   return '${l10n.hadithRecentSearches}: $query';
 }
 
+/// Label for removing one recent-search entry.
+String hadithRemoveRecentSearchSemanticsLabel(
+  String query,
+  AppLocalizations l10n,
+) {
+  return '${l10n.hadithRecentSearches}: $query. ${l10n.hadithClearAllRecents}';
+}
+
 /// Semantic label for the bookmark toggle on a result row.
 String hadithFavoriteToggleSemanticsLabel({
   required bool isFavorite,

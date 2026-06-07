@@ -82,6 +82,20 @@ class HadithLocalDatabase {
     await _recentsBox.clear();
   }
 
+  /// Removes one recent-search query from history.
+  Future<void> removeRecentSearch(String query) async {
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) return;
+
+    final matches = await _recentsBox.getValuesWhere(
+      (entry) => entry.query == trimmed,
+    );
+
+    for (final entry in matches) {
+      await _recentsBox.delete(entry.id);
+    }
+  }
+
   /// Returns every stored favorite hadith.
   Future<List<DetailedHadith>> getAllFavorites() async {
     final values = await _favoritesBox.getAllValues();

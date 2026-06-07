@@ -5,6 +5,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_screen_state.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
@@ -184,4 +185,57 @@ class HadithScreenSettingsNotifier extends _$HadithScreenSettingsNotifier {
   /// Sets the hadith side panel width.
   void setSidePanelWidth(double width) =>
       _update((s) => s.copyWith(sidePanelWidth: width), 'Hadith side panel width');
+}
+
+/// Persisted Muslim Fortress screen UI state.
+@riverpod
+@JsonPersist()
+class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier {
+  @override
+  Future<FortressScreenState> build() async {
+    await ref.watch(stateSettingsLegacyMigrationProvider.future);
+    await persist(
+      ref.read(settingsStorageProvider),
+      options: const StorageOptions(
+        cacheTime: StorageCacheTime.unsafe_forever,
+      ),
+    ).future;
+    return state.value ?? FortressScreenState.initial();
+  }
+
+  void _update(
+    FortressScreenState Function(FortressScreenState) fn,
+    String field,
+  ) {
+    if (!state.hasValue) return;
+    final current = state.value!;
+    final next = fn(current);
+    if (current == next) return;
+    state = AsyncData(next);
+    _logUiStateUpdate(ref, 'FortressScreenSettingsNotifier', field);
+  }
+
+  /// Sets the fortress sidebar tab.
+  void setSidebarTab(FortressSidebarTab tab) =>
+      _update((s) => s.copyWith(sidebarTab: tab), 'Fortress sidebar tab');
+
+  /// Toggles a chapter in the favorites list (most recent first).
+  void toggleFavorite(int chapterId) => _update((s) {
+    final ids = List<int>.from(s.favoriteChapterIds);
+    if (ids.contains(chapterId)) {
+      ids.remove(chapterId);
+    } else {
+      ids.insert(0, chapterId);
+    }
+    return s.copyWith(favoriteChapterIds: ids);
+  }, 'Fortress favorite chapter');
+
+  /// Seeds default bookmarks once for new users.
+  void ensureDefaultBookmarks(List<int> defaultIds) => _update((s) {
+    if (s.defaultBookmarksSeeded) return s;
+    return s.copyWith(
+      favoriteChapterIds: defaultIds,
+      defaultBookmarksSeeded: true,
+    );
+  }, 'Fortress default bookmarks');
 }

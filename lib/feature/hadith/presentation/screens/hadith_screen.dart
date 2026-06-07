@@ -7,6 +7,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/use_register_app_search_focus.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
@@ -23,6 +24,7 @@ import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart'
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_detail_pane.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 part 'hadith_screen_filters.dart';

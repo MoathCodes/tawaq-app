@@ -11,16 +11,18 @@ import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_service.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_browse_sidebar.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/muslim_fortress_welcome_pane.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_fake_hadith_dialog.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/search/fortress_search_results.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Muslim Fortress screen — sidebar browse, welcome home, and focus reading.
@@ -37,10 +39,14 @@ class MuslimFortressScreen extends HookConsumerWidget {
     final l10n = context.l10n;
     final chaptersAsync = ref.watch(muslimFortressChaptersProvider);
     final day = ref.watch(prayerDayProvider).value;
+    final screenSettings = ref.watch(fortressScreenSettingsProvider);
+    final screenState =
+        screenSettings.asData?.value ?? FortressScreenState.initial();
+    final favoriteChapterIds = screenState.favoriteChapterIds;
+    final isFavoritesTab =
+        screenState.sidebarTab == FortressSidebarTab.favorites;
 
     final selectedCategory = useState<FortressCategory?>(null);
-    final sidePanelTabIndex = useState(0);
-    final favoriteTitles = useState(<String>[]);
     final animatedSidebarChapterIds = useRef(<int>{});
     final isFocusMode = useState(false);
     final focusStartIndex = useState(0);
@@ -70,34 +76,44 @@ class MuslimFortressScreen extends HookConsumerWidget {
       return timer.cancel;
     }, [searchController.text]);
 
+    useEffect(() {
+      if (!chaptersAsync.hasValue) return null;
+
+      unawaited(() async {
+        final service = await ref.read(fortressServiceProvider.future);
+        ref
+            .read(fortressScreenSettingsProvider.notifier)
+            .ensureDefaultBookmarks(service.defaultBookmarkChapterIds());
+      }());
+
+      return null;
+    }, [chaptersAsync.hasValue]);
+
     final allCategories = chaptersAsync.when(
       data: (value) => value,
       loading: () => fortressCategoryPlaceholders(l10n: l10n),
       error: (_, _) => const <FortressCategory>[],
     );
 
-    final sourceCategories = sidePanelTabIndex.value == 0
+    final sourceCategories = isFavoritesTab
         ? allCategories
-        : allCategories
-              .where((c) => favoriteTitles.value.contains(c.title))
-              .toList();
+              .where((c) => favoriteChapterIds.contains(c.chapterId))
+              .toList()
+        : allCategories;
 
     final filteredCategories = sourceCategories.where((category) {
       if (sidebarQuery.isEmpty) return true;
       return category.title.toLowerCase().contains(sidebarQuery) ||
-          fortressRecurrenceLabel(category.recurrence, l10n)
-              .toLowerCase()
-              .contains(sidebarQuery);
+          fortressRecurrenceLabel(
+            category.recurrence,
+            l10n,
+          ).toLowerCase().contains(sidebarQuery);
     }).toList();
 
-    void toggleFavorite(String title) {
-      final next = List<String>.from(favoriteTitles.value);
-      if (next.contains(title)) {
-        next.remove(title);
-      } else {
-        next.insert(0, title);
-      }
-      favoriteTitles.value = next;
+    void toggleFavorite(int chapterId) {
+      ref
+          .read(fortressScreenSettingsProvider.notifier)
+          .toggleFavorite(chapterId);
     }
 
     void selectCategory(FortressCategory category) {
@@ -153,13 +169,14 @@ class MuslimFortressScreen extends HookConsumerWidget {
             location: day.location,
           );
 
-    final categoriesByTitle = {
-      for (final category in allCategories) category.title: category,
+    final categoriesByChapterId = {
+      for (final category in allCategories) category.chapterId: category,
     };
     final bookmarkCategories = [
-      for (final title in favoriteTitles.value)
-        if (categoriesByTitle[title] != null) categoriesByTitle[title]!,
-    ].take(4).toList();
+      for (final chapterId in favoriteChapterIds)
+        if (categoriesByChapterId[chapterId] != null)
+          categoriesByChapterId[chapterId]!,
+    ].toList();
 
     if (chaptersAsync.hasError) {
       return Directionality(
@@ -240,13 +257,22 @@ class MuslimFortressScreen extends HookConsumerWidget {
                               const SizedBox(height: AppSpacing.lg),
                               NonSelectable(
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
                                   children: [
                                     FTabs(
                                       control: .lifted(
-                                        index: sidePanelTabIndex.value,
-                                        onChange: (index) =>
-                                            sidePanelTabIndex.value = index,
+                                        index: isFavoritesTab ? 1 : 0,
+                                        onChange: (index) => ref
+                                            .read(
+                                              fortressScreenSettingsProvider
+                                                  .notifier,
+                                            )
+                                            .setSidebarTab(
+                                              index == 1
+                                                  ? .favorites
+                                                  : .allChapters,
+                                            ),
                                       ),
                                       children: [
                                         FTabEntry(
@@ -270,29 +296,6 @@ class MuslimFortressScreen extends HookConsumerWidget {
                                           (context, style, variants) =>
                                               const Icon(FLucideIcons.search),
                                     ),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    FButton(
-                                      variant: .ghost,
-                                      onPress: () async {
-                                        final entries = await ref.read(
-                                          muslimFortressFakeHadithWarningsProvider
-                                              .future,
-                                        );
-                                        if (!context.mounted) return;
-                                        await showFortressFakeHadithDialog(
-                                          context,
-                                          entries: entries,
-                                        );
-                                      },
-                                      prefix: const Icon(
-                                        FLucideIcons.triangleAlert,
-                                        size: 16,
-                                      ),
-                                      child: Text(
-                                        l10n.fortressBrowseWeakHadith,
-                                        style: theme.typography.xs,
-                                      ),
-                                    ),
                                   ],
                                 ),
                               ),
@@ -300,8 +303,7 @@ class MuslimFortressScreen extends HookConsumerWidget {
                               Expanded(
                                 child: filteredCategories.isEmpty
                                     ? FortressEmptySidePanelState(
-                                        isFavoritesTab:
-                                            sidePanelTabIndex.value == 1,
+                                        isFavoritesTab: isFavoritesTab,
                                       )
                                     : ListView.separated(
                                         itemCount: filteredCategories.length,
@@ -317,9 +319,8 @@ class MuslimFortressScreen extends HookConsumerWidget {
                                                   .value
                                                   ?.chapterId ==
                                               category.chapterId;
-                                          final isFavorite = favoriteTitles
-                                              .value
-                                              .contains(category.title);
+                                          final isFavorite = favoriteChapterIds
+                                              .contains(category.chapterId);
 
                                           final tile = FortressCategoryListTile(
                                             category: category,
@@ -328,7 +329,9 @@ class MuslimFortressScreen extends HookConsumerWidget {
                                             onTap: () =>
                                                 selectCategory(category),
                                             onToggleFavorite: () =>
-                                                toggleFavorite(category.title),
+                                                toggleFavorite(
+                                                  category.chapterId,
+                                                ),
                                           );
 
                                           if (animatedSidebarChapterIds.value
@@ -430,6 +433,12 @@ class MuslimFortressScreen extends HookConsumerWidget {
                                         recommendedCategories,
                                     bookmarkCategories: bookmarkCategories,
                                     onSelectCategory: selectCategory,
+                                    onViewAll: () => ref
+                                        .read(
+                                          fortressScreenSettingsProvider
+                                              .notifier,
+                                        )
+                                        .setSidebarTab(.favorites),
                                   )
                                 : selectedDuasAsync == null
                                 ? const SizedBox.shrink()
@@ -440,11 +449,11 @@ class MuslimFortressScreen extends HookConsumerWidget {
                                       ),
                                       category: selectedCategory.value!,
                                       duas: duas,
-                                      isFavorite: favoriteTitles.value.contains(
-                                        selectedCategory.value!.title,
+                                      isFavorite: favoriteChapterIds.contains(
+                                        selectedCategory.value!.chapterId,
                                       ),
                                       onToggleFavorite: () => toggleFavorite(
-                                        selectedCategory.value!.title,
+                                        selectedCategory.value!.chapterId,
                                       ),
                                       onStartReading: startFocusReading,
                                     ),
@@ -454,11 +463,11 @@ class MuslimFortressScreen extends HookConsumerWidget {
                                       ),
                                       category: selectedCategory.value!,
                                       duas: const [],
-                                      isFavorite: favoriteTitles.value.contains(
-                                        selectedCategory.value!.title,
+                                      isFavorite: favoriteChapterIds.contains(
+                                        selectedCategory.value!.chapterId,
                                       ),
                                       onToggleFavorite: () => toggleFavorite(
-                                        selectedCategory.value!.title,
+                                        selectedCategory.value!.chapterId,
                                       ),
                                       onStartReading: startFocusReading,
                                       isLoading: true,
@@ -480,4 +489,3 @@ class MuslimFortressScreen extends HookConsumerWidget {
     );
   }
 }
-

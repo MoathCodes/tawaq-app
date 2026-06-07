@@ -33,6 +33,11 @@ class HadithService {
     return _repository.clearRecentSearches();
   }
 
+  /// Removes one query from the recent-search history.
+  Future<void> removeRecentSearch(String query) {
+    return _repository.removeRecentSearch(query);
+  }
+
   /// Returns the bookmarked hadiths.
   Future<List<DetailedHadith>> getFavorites() {
     return _repository.getFavorites();

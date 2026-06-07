@@ -8,6 +8,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -31,6 +32,10 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
     final l10n = context.l10n;
     final expandedSections = useState<Set<int>>({});
     final hadithId = hadith.hadithId;
+    const sharhSectionIndex = 0;
+    final isSharhExpanded =
+        hadith.hasSharhMetadata &&
+        expandedSections.value.contains(sharhSectionIndex);
 
     final accordionItems = <FAccordionItem>[
       if (hadith.hasSharhMetadata)
@@ -40,13 +45,20 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
             FLucideIcons.bookOpenText,
             l10n.hadithSharh,
           ),
-          child: HadithAsyncDetailsSection<Sharh>(
-            value: ref.watch(hadithSharhProvider(hadith.sharhMetadata!.id)),
-            dataBuilder: (sharh) => HadithMetaItem(
-              title: l10n.hadithSharh,
-              value: sharh.sharhText ?? l10n.noDataAvailable,
-            ),
-          ),
+          child: isSharhExpanded
+              ? HadithAsyncDetailsSection<Sharh>(
+                  value: ref.watch(
+                    hadithSharhProvider(hadith.sharhMetadata!.id),
+                  ),
+                  dataBuilder: (sharh) {
+                    final text = sharh.sharhText;
+                    if (text == null || text.trim().isEmpty) {
+                      return const HadithSectionPlaceholder();
+                    }
+                    return HadithSharhText(text: text);
+                  },
+                )
+              : const SizedBox.shrink(),
         ),
       if (hadith.hasUsulHadith && hadithId != null)
         FAccordionItem(
@@ -197,12 +209,19 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
       ],
     ];
 
-    return ListView(children: children);
+    return ListView(
+      padding: const .all(AppSpacing.sm),
+      children: children,
+    );
   }
 }
 
 class HadithAsyncDetailsSection<T> extends StatelessWidget {
-  const HadithAsyncDetailsSection({required this.value, required this.dataBuilder, super.key});
+  const HadithAsyncDetailsSection({
+    required this.value,
+    required this.dataBuilder,
+    super.key,
+  });
 
   final AsyncValue<T> value;
   final Widget Function(T value) dataBuilder;

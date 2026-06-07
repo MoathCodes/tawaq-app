@@ -2,7 +2,6 @@ import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_fake_hadith.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_service.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_featured_dua_ui.dart';
@@ -45,15 +44,6 @@ Future<FortressSearchResults> muslimFortressSearchResults(Ref ref) async {
   final query = ref.watch(muslimFortressSearchQueryProvider);
   final service = await ref.watch(fortressServiceProvider.future);
   return service.search(query);
-}
-
-/// Known weak/fabricated hadith warnings.
-@riverpod
-Future<List<FortressFakeHadith>> muslimFortressFakeHadithWarnings(
-  Ref ref,
-) async {
-  final service = await ref.watch(fortressServiceProvider.future);
-  return service.loadFakeHadithWarnings();
 }
 
 /// Featured dua cards for the v2 welcome screen.

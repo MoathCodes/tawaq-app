@@ -236,8 +236,14 @@
   "hadithSimilar": "أحاديث مشابهة",
   "hadithSimilarHadith": "أحاديث مشابهة",
   "hadithSource": "المصدر",
-  "hadithSpecialist": "متخصص",
-  "hadithSpecialistHint": "البحث ضمن المصادر المحكّمة من المتخصصين",
+  "hadithSpecialist": "تخريج",
+  "@hadithSpecialist": {
+    "description": "Filter toggle for Dorar's specialist tab: limits results to hadiths that include takhrij in their metadata (Dorar UI label: متخصص)."
+  },
+  "hadithSpecialistHint": "إرجاع الأحاديث التي تتضمّن التخريج في بياناتها فقط",
+  "@hadithSpecialistHint": {
+    "description": "Explains that enabling this filter limits results to hadiths with takhrij populated in result metadata."
+  },
   "hadithStartSearchPrompt": "ابدأ البحث لعرض النتائج",
   "hadithTakhrij": "التخريج",
   "hadithTypeToSearch": "اكتب للبحث...",

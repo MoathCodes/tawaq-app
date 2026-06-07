@@ -8,7 +8,13 @@ import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y
 import 'package:tawaq/theme/theme.dart';
 
 class FortressCategoryListTile extends StatelessWidget {
-  const FortressCategoryListTile({required this.category, required this.isSelected, required this.isFavorite, required this.onTap, required this.onToggleFavorite, super.key,
+  const FortressCategoryListTile({
+    required this.category,
+    required this.isSelected,
+    required this.isFavorite,
+    required this.onTap,
+    required this.onToggleFavorite,
+    super.key,
   });
 
   final FortressCategory category;
@@ -30,27 +36,27 @@ class FortressCategoryListTile extends StatelessWidget {
 
     final l10n = context.l10n;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.md,
-      ),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: theme.radii.md,
-        border: Border.all(color: borderColor),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Semantics(
-              button: true,
-              selected: isSelected,
-              label: category.title,
-              child: ExcludeSemantics(
-                child: MouseClick(
-                  onClick: onTap,
+    return MouseClick(
+      onClick: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: theme.radii.md,
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                button: true,
+                selected: isSelected,
+                label: category.title,
+                child: ExcludeSemantics(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -88,29 +94,29 @@ class FortressCategoryListTile extends StatelessWidget {
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Semantics(
-            button: true,
-            label: l10n.fortressFavorites,
-            child: ExcludeSemantics(
-              child: MouseClick(
-                onClick: onToggleFavorite,
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xs),
-                  child: Icon(
-                    FLucideIcons.bookmark,
-                    size: 18,
-                    color: isFavorite
-                        ? theme.colors.primary
-                        : theme.colors.mutedForeground,
-                    fill: isFavorite ? 1.0 : 0.0,
+            const SizedBox(width: AppSpacing.sm),
+            Semantics(
+              button: true,
+              label: l10n.fortressFavorites,
+              child: ExcludeSemantics(
+                child: MouseClick(
+                  onClick: onToggleFavorite,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    child: Icon(
+                      FLucideIcons.bookmark,
+                      size: 18,
+                      color: isFavorite
+                          ? theme.colors.primary
+                          : theme.colors.mutedForeground,
+                      fill: isFavorite ? 1.0 : 0.0,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -139,35 +145,34 @@ class FortressEmptySidePanelState extends StatelessWidget {
             children: [
               Icon(
                 isFavoritesTab ? FLucideIcons.bookmark : FLucideIcons.searchX,
-              size: 40,
-              color: theme.colors.mutedForeground.withAlpha(120),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              isFavoritesTab
-                  ? l10n.fortressEmptyFavoritesTitle
-                  : l10n.fortressEmptySearchTitle,
-              style: theme.typography.md.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colors.foreground,
+                size: 40,
+                color: theme.colors.mutedForeground.withAlpha(120),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              isFavoritesTab
-                  ? l10n.fortressEmptyFavoritesHint
-                  : l10n.fortressEmptySearchHint,
-              style: theme.typography.sm.copyWith(
-                color: theme.colors.mutedForeground,
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                isFavoritesTab
+                    ? l10n.fortressEmptyFavoritesTitle
+                    : l10n.fortressEmptySearchTitle,
+                style: theme.typography.md.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colors.foreground,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                isFavoritesTab
+                    ? l10n.fortressEmptyFavoritesHint
+                    : l10n.fortressEmptySearchHint,
+                style: theme.typography.sm.copyWith(
+                  color: theme.colors.mutedForeground,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
 }
-

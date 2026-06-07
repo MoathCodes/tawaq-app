@@ -12,6 +12,7 @@ import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
+import 'package:tawaq/core/widgets/tawaq_scroll_behavior.dart';
 import 'package:tawaq/feature/settings/data/models/theme_prefs.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
@@ -88,8 +89,14 @@ class TawaqApp extends ConsumerWidget {
           ScreenUtilPlus().screenHeight >= _designSize.height,
       builder: (_, _) => MaterialApp.router(
         debugShowCheckedModeBanner: false,
+        scrollBehavior: const TawaqAppScrollBehavior(),
         themeMode: themePrefs.value?.themeMode,
-        theme: appTheme.toApproximateMaterialTheme(),
+        theme: appTheme.toApproximateMaterialTheme().copyWith(
+          scrollbarTheme: const ScrollbarThemeData(
+            thumbVisibility: WidgetStatePropertyAll(false),
+            trackVisibility: WidgetStatePropertyAll(false),
+          ),
+        ),
         locale: locale,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: appRouter,

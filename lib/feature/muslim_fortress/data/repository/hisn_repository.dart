@@ -8,8 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/muslim_fortress/data/sources/hisn_data_source.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_default_bookmarks.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_fake_hadith.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_featured_dua.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 
@@ -219,19 +219,6 @@ class HisnRepository {
     );
   }
 
-  /// Known weak/fabricated hadith warnings bundled with Hisn.
-  List<FortressFakeHadith> loadFakeHadithWarnings() {
-    return [
-      for (final entry in _client.fakeHadith.all())
-        FortressFakeHadith(
-          id: entry.id,
-          text: entry.text,
-          darga: entry.darga,
-          source: entry.source,
-        ),
-    ];
-  }
-
   /// Featured cards for the welcome layout.
   List<FortressFeaturedDua> loadFeaturedDuas() {
     final featuredTitles = _featuredTitleCategories();
@@ -257,6 +244,27 @@ class HisnRepository {
   /// Full commentary for a content id (load on demand for study sheets).
   HisnCommentary? loadCommentaryForContent(int contentId) {
     return _client.commentary.byContentId(contentId);
+  }
+
+  /// Resolves default bookmark chapter ids from [fortressDefaultBookmarkFragments].
+  ///
+  /// Each fragment maps to the first matching title; duplicate ids are skipped
+  /// while preserving fragment order.
+  List<int> defaultBookmarkChapterIds() {
+    final seen = <int>{};
+    final ids = <int>[];
+
+    for (final fragment in fortressDefaultBookmarkFragments) {
+      final matches = _client.titles.byNameFragments([fragment]);
+      if (matches.isEmpty) continue;
+
+      final id = matches.first.id;
+      if (seen.add(id)) {
+        ids.add(id);
+      }
+    }
+
+    return ids;
   }
 
   FortressDuaItem _mapContent(

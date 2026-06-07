@@ -64,6 +64,11 @@ class HadithRepository {
     await _local.clearRecentSearches();
   }
 
+  /// Removes one stored recent-search query.
+  Future<void> removeRecentSearch(String query) async {
+    await _local.removeRecentSearch(query);
+  }
+
   /// Returns the stable bookmark key for a hadith.
   String favoriteKeyFromHadith(HadithBase hadith) {
     return hadithStableKey(hadith);

@@ -531,10 +531,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithSource => 'المصدر';
 
   @override
-  String get hadithSpecialist => 'متخصص';
+  String get hadithSpecialist => 'تخريج';
 
   @override
-  String get hadithSpecialistHint => 'البحث ضمن المصادر المحكّمة من المتخصصين';
+  String get hadithSpecialistHint =>
+      'إرجاع الأحاديث التي تتضمّن التخريج في بياناتها فقط';
 
   @override
   String get hadithStartSearchPrompt => 'ابدأ البحث لعرض النتائج';

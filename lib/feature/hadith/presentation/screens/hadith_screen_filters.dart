@@ -57,40 +57,41 @@ class _SearchHeader extends HookConsumerWidget {
 
     return NonSelectable(
       child: Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (isBookmarksMode)
-            Row(
-              spacing: AppSpacing.sm,
-              children: [
-                FButton.icon(
-                  variant: FButtonVariant.ghost,
-                  onPress: () => unawaited(screenController.exitSpecificMode()),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: AppSpacing.xs,
-                    children: [
-                      const Icon(FLucideIcons.chevronLeft, size: 16),
-                      Text(l10n.hadithBackToSearch),
-                    ],
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isBookmarksMode)
+              Row(
+                spacing: AppSpacing.sm,
+                children: [
+                  FButton.icon(
+                    variant: FButtonVariant.ghost,
+                    onPress: () =>
+                        unawaited(screenController.exitSpecificMode()),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      spacing: AppSpacing.xs,
+                      children: [
+                        const Icon(FLucideIcons.chevronLeft, size: 16),
+                        Text(l10n.hadithBackToSearch),
+                      ],
+                    ),
                   ),
-                ),
-                Text(
-                  l10n.bookmarks,
-                  style: theme.typography.lg.copyWith(
-                    fontWeight: FontWeight.w600,
+                  Text(
+                    l10n.bookmarks,
+                    style: theme.typography.lg.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
-            )
-          else
-            Row(
-              spacing: AppSpacing.sm,
-              children: [
-                Expanded(
-                  child: FTextField(
+                ],
+              )
+            else
+              Row(
+                spacing: AppSpacing.sm,
+                children: [
+                  Expanded(
+                    child: FTextField(
                       focusNode: searchFocusNode,
                       enabled: !searchBusy,
                       control: .managed(
@@ -113,119 +114,124 @@ class _SearchHeader extends HookConsumerWidget {
                         ),
                       ),
                     ),
-                ),
-                if (isSearchMode)
-                  FButton.icon(
-                    onPress: () => unawaited(screenController.openBookmarks()),
-                    semanticsLabel: desktop ? null : l10n.bookmarks,
-                    child: desktop
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            spacing: AppSpacing.xs,
-                            children: [
-                              const Icon(FLucideIcons.bookmark, size: 16),
-                              Text(l10n.bookmarks),
-                            ],
-                          )
-                        : const HadithDecorExcludeSemantics(
-                            child: Icon(FLucideIcons.bookmark, size: 18),
-                          ),
                   ),
-                if (desktop && isSearchMode)
-                  FButton.icon(
-                    onPress: searchBusy
-                        ? null
-                        : () {
-                            screenController.setActiveTab(
-                              HadithPanelTab.filters,
-                            );
-                          },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      spacing: AppSpacing.xs,
-                      children: [
-                        const Icon(FLucideIcons.slidersHorizontal, size: 16),
-                        Text(l10n.hadithOpenFilters),
-                        if (activeFilterCount > 0) ...[
-                          _CountDot(count: activeFilterCount),
-                        ],
-                      ],
+                  if (isSearchMode)
+                    FButton.icon(
+                      onPress: () =>
+                          unawaited(screenController.openBookmarks()),
+                      semanticsLabel: desktop ? null : l10n.bookmarks,
+                      child: desktop
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              spacing: AppSpacing.xs,
+                              children: [
+                                const Icon(FLucideIcons.bookmark, size: 16),
+                                Text(l10n.bookmarks),
+                              ],
+                            )
+                          : const HadithDecorExcludeSemantics(
+                              child: Icon(FLucideIcons.bookmark, size: 18),
+                            ),
                     ),
-                  )
-                else if (isSearchMode)
-                  FPopover(
-                    groupId: groupId,
-                    popoverAnchor: Alignment.topRight,
-                    childAnchor: Alignment.bottomRight,
+                  if (desktop && isSearchMode)
+                    FButton.icon(
+                      onPress: searchBusy
+                          ? null
+                          : () {
+                              screenController.setActiveTab(
+                                HadithPanelTab.filters,
+                              );
+                            },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        spacing: AppSpacing.xs,
+                        children: [
+                          const Icon(FLucideIcons.slidersHorizontal, size: 16),
+                          Text(l10n.hadithOpenFilters),
+                          if (activeFilterCount > 0) ...[
+                            _CountDot(count: activeFilterCount),
+                          ],
+                        ],
+                      ),
+                    )
+                  else if (isSearchMode)
+                    FPopover(
+                      groupId: groupId,
+                      popoverAnchor: Alignment.topRight,
+                      childAnchor: Alignment.bottomRight,
 
-                    popoverBuilder: (_, controller) => ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        minWidth: 360,
-                        maxWidth: 420,
-                        maxHeight: 620,
+                      popoverBuilder: (_, controller) => ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          minWidth: 360,
+                          maxWidth: 420,
+                          maxHeight: 620,
+                        ),
+                        child: _FilterPanel(
+                          showHeader: true,
+                          onClose: () => unawaited(controller.hide()),
+                        ),
                       ),
-                      child: _FilterPanel(
-                        showHeader: true,
-                        onClose: () => unawaited(controller.hide()),
+                      builder: (_, controller, child) => FButton.icon(
+                        onPress: searchBusy ? null : controller.toggle,
+                        child: child,
                       ),
-                    ),
-                    builder: (_, controller, child) => FButton.icon(
-                      onPress: searchBusy ? null : controller.toggle,
-                      child: child,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      spacing: AppSpacing.xs,
-                      children: [
-                        const Icon(FLucideIcons.slidersHorizontal, size: 16),
-                        Text(l10n.hadithOpenFilters),
-                        if (activeFilterCount > 0) ...[
-                          _CountDot(count: activeFilterCount),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        spacing: AppSpacing.xs,
+                        children: [
+                          const Icon(FLucideIcons.slidersHorizontal, size: 16),
+                          Text(l10n.hadithOpenFilters),
+                          if (activeFilterCount > 0) ...[
+                            _CountDot(count: activeFilterCount),
+                          ],
                         ],
-                      ],
+                      ),
+                    ),
+                ],
+              ),
+            if (isSearchMode) ...[
+              const SizedBox(height: AppSpacing.xs),
+              if (fieldQuery.trim().isNotEmpty || activeFilterCount > 0)
+                Semantics(
+                  label: l10n.hadithResultsCount(resultsCount),
+                  child: HadithDecorExcludeSemantics(
+                    child: FBadge(
+                      variant: resultsCount > 0 ? .secondary : .outline,
+                      child: Text(l10n.hadithResultsCount(resultsCount)),
                     ),
                   ),
-              ],
-            ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            spacing: AppSpacing.sm,
-            children: [
-              Semantics(
-                label: l10n.hadithResultsCount(resultsCount),
-                child: HadithDecorExcludeSemantics(
-                  child: FBadge(
-                    variant: .secondary,
-                    child: Text(l10n.hadithResultsCount(resultsCount)),
-                  ),
                 ),
+              _ActiveFiltersSection(
+                desktop: desktop,
+                interactionsEnabled: filterActionsEnabled,
               ),
-              if (isSearchMode)
-                Expanded(
-                  child: _ActiveFiltersRow(
-                    interactionsEnabled: filterActionsEnabled,
-                  ),
+              if (fieldQuery.trim().isEmpty) ...[
+                if (activeFilterCount > 0)
+                  const SizedBox(height: AppSpacing.xs),
+                _RecentSearches(
+                  recentSearches: recentSearches,
+                  interactionsEnabled: !searchBusy,
+                  onQuerySelected: (query) {
+                    queryController.text = query;
+                    onQuerySubmitted(query);
+                  },
+                  onRemove: (query) {
+                    unawaited(
+                      ref
+                          .read(hadithScreenControllerProvider.notifier)
+                          .removeRecentSearch(query),
+                    );
+                  },
+                  onClearAll: () {
+                    return ref
+                        .read(hadithScreenControllerProvider.notifier)
+                        .clearRecentSearches();
+                  },
                 ),
+              ],
             ],
-          ),
-          if (isSearchMode && fieldQuery.trim().isEmpty) ...[
-            const SizedBox(height: AppSpacing.sm),
-            _RecentSearches(
-              recentSearches: recentSearches,
-              interactionsEnabled: !searchBusy,
-              onQuerySelected: (query) {
-                queryController.text = query;
-                onQuerySubmitted(query);
-              },
-              onClearAll: () {
-                return ref
-                    .read(hadithScreenControllerProvider.notifier)
-                    .clearRecentSearches();
-              },
-            ),
           ],
-        ],
-      ),
+        ),
       ),
     );
   }
@@ -261,16 +267,131 @@ class _CountDot extends StatelessWidget {
   }
 }
 
+class _SearchMetaSectionHeader extends StatelessWidget {
+  const _SearchMetaSectionHeader({
+    required this.icon,
+    required this.title,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String title;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+
+    return Row(
+      children: [
+        Icon(icon, size: 12, color: theme.colors.mutedForeground),
+        const SizedBox(width: AppSpacing.xs),
+        Text(
+          title,
+          style: theme.typography.xs.copyWith(
+            color: theme.colors.mutedForeground,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (trailing != null) ...[
+          const Spacer(),
+          trailing!,
+        ],
+      ],
+    );
+  }
+}
+
+class _RecentSearchChip extends HookWidget {
+  const _RecentSearchChip({
+    required this.query,
+    required this.interactionsEnabled,
+    required this.onSelect,
+    required this.onRemove,
+  });
+
+  final String query;
+  final bool interactionsEnabled;
+  final VoidCallback onSelect;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = context.l10n;
+    final (:isHovered, :setHovered) = useHoverState();
+    final showRemove = isHovered || !context.breakpoint.isAtLeast(.lg);
+
+    return MouseRegion(
+      onEnter: (_) => setHovered(value: true),
+      onExit: (_) => setHovered(value: false),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FButton(
+            variant: FButtonVariant.ghost,
+            size: FButtonSizeVariant.sm,
+            mainAxisSize: MainAxisSize.min,
+            semanticsLabel: hadithRecentSearchChipSemanticsLabel(query, l10n),
+            onPress: interactionsEnabled ? onSelect : null,
+            child: HadithDecorExcludeSemantics(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                spacing: AppSpacing.xs,
+                children: [
+                  Icon(
+                    FLucideIcons.search,
+                    size: 11,
+                    color: theme.colors.mutedForeground,
+                  ),
+                  Text(query, softWrap: false),
+                ],
+              ),
+            ),
+          ),
+          ClipRect(
+            child: AnimatedSize(
+              duration: theme.durations.fast,
+              curve: Curves.easeOut,
+              alignment: AlignmentDirectional.centerStart,
+              child: showRemove && interactionsEnabled
+                  ? AnimatedOpacity(
+                      duration: theme.durations.fast,
+                      opacity: showRemove ? 1 : 0,
+                      child: FButton.icon(
+                        variant: FButtonVariant.ghost,
+                        size: FButtonSizeVariant.sm,
+                        semanticsLabel: hadithRemoveRecentSearchSemanticsLabel(
+                          query,
+                          l10n,
+                        ),
+                        onPress: onRemove,
+                        child: const HadithDecorExcludeSemantics(
+                          child: Icon(FLucideIcons.x, size: 12),
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _RecentSearches extends StatelessWidget {
   const _RecentSearches({
     required this.recentSearches,
     required this.onQuerySelected,
+    required this.onRemove,
     required this.onClearAll,
     required this.interactionsEnabled,
   });
 
   final AsyncValue<List<String>> recentSearches;
   final ValueChanged<String> onQuerySelected;
+  final ValueChanged<String> onRemove;
   final Future<void> Function() onClearAll;
   final bool interactionsEnabled;
 
@@ -284,52 +405,42 @@ class _RecentSearches extends StatelessWidget {
         if (items.isEmpty) {
           return Text(
             l10n.hadithNoRecentSearches,
-            style: theme.typography.sm.copyWith(
+            style: theme.typography.xs.copyWith(
               color: theme.colors.mutedForeground,
             ),
           );
         }
 
-        return Row(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: AppSpacing.xs,
           children: [
-            Text(
-              l10n.hadithRecentSearches,
-              style: theme.typography.sm.copyWith(
-                color: theme.colors.mutedForeground,
+            _SearchMetaSectionHeader(
+              icon: FLucideIcons.history,
+              title: l10n.hadithRecentSearches,
+              trailing: FButton(
+                variant: FButtonVariant.ghost,
+                size: FButtonSizeVariant.sm,
+                mainAxisSize: MainAxisSize.min,
+                onPress: interactionsEnabled
+                    ? () => unawaited(onClearAll())
+                    : null,
+                child: Text(l10n.hadithClearAllRecents),
               ),
             ),
-            const SizedBox(width: AppSpacing.sm),
-            FButton(
-              variant: FButtonVariant.ghost,
-              onPress: interactionsEnabled
-                  ? () => unawaited(onClearAll())
-                  : null,
-              child: Text(l10n.hadithClearAllRecents),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: SizedBox(
-                height: 40,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(width: AppSpacing.sm),
-                  itemBuilder: (context, index) {
-                    final query = items[index];
-                    return FButton(
-                      variant: FButtonVariant.secondary,
-                      semanticsLabel: hadithRecentSearchChipSemanticsLabel(
-                        query,
-                        l10n,
-                      ),
-                      onPress: interactionsEnabled
-                          ? () => onQuerySelected(query)
-                          : null,
-                      child: HadithDecorExcludeSemantics(child: Text(query)),
-                    );
-                  },
-                ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                spacing: AppSpacing.xs,
+                children: [
+                  for (final query in items)
+                    _RecentSearchChip(
+                      query: query,
+                      interactionsEnabled: interactionsEnabled,
+                      onSelect: () => onQuerySelected(query),
+                      onRemove: () => onRemove(query),
+                    ),
+                ],
               ),
             ),
           ],
@@ -551,45 +662,45 @@ class _FilterPanel extends ConsumerWidget {
 
     final panel = NonSelectable(
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (showHeader) _FilterHeader(theme: theme, onClose: onClose),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsetsDirectional.only(
-              start: AppSpacing.sm,
-              end: AppSpacing.sm,
-              bottom: AppSpacing.md,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (showHeader) _FilterHeader(theme: theme, onClose: onClose),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsetsDirectional.only(
+                start: AppSpacing.sm,
+                end: AppSpacing.sm,
+                bottom: AppSpacing.md,
+              ),
+              children: scrollableFields,
             ),
-            children: scrollableFields,
           ),
-        ),
-        const Padding(
-          padding: EdgeInsetsDirectional.symmetric(horizontal: AppSpacing.sm),
-          child: FDivider(),
-        ),
-        Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(
-            AppSpacing.sm,
-            AppSpacing.sm,
-            AppSpacing.sm,
-            AppSpacing.md,
+          const Padding(
+            padding: EdgeInsetsDirectional.symmetric(horizontal: AppSpacing.sm),
+            child: FDivider(),
           ),
-          child: FButton(
-            variant: FButtonVariant.outline,
-            onPress: panelEnabled
-                ? () {
-                    unawaited(
-                      ref
-                          .read(hadithScreenControllerProvider.notifier)
-                          .clearFilters(),
-                    );
-                  }
-                : null,
-            child: Text(l10n.hadithResetFilters),
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(
+              AppSpacing.sm,
+              AppSpacing.sm,
+              AppSpacing.sm,
+              AppSpacing.md,
+            ),
+            child: FButton(
+              variant: FButtonVariant.outline,
+              onPress: panelEnabled
+                  ? () {
+                      unawaited(
+                        ref
+                            .read(hadithScreenControllerProvider.notifier)
+                            .clearFilters(),
+                      );
+                    }
+                  : null,
+              child: Text(l10n.hadithResetFilters),
+            ),
           ),
-        ),
-      ],
+        ],
       ),
     );
 
@@ -721,9 +832,13 @@ class _LookupSection<T> extends StatelessWidget {
   }
 }
 
-class _ActiveFiltersRow extends ConsumerWidget {
-  const _ActiveFiltersRow({required this.interactionsEnabled});
+class _ActiveFiltersSection extends ConsumerWidget {
+  const _ActiveFiltersSection({
+    required this.desktop,
+    required this.interactionsEnabled,
+  });
 
+  final bool desktop;
   final bool interactionsEnabled;
 
   @override
@@ -731,160 +846,199 @@ class _ActiveFiltersRow extends ConsumerWidget {
     final filters = ref.watch(hadithFiltersProvider);
     final theme = context.theme;
     final l10n = context.l10n;
-    final chips = <_FilterActionChip>[];
-
-    if (filters.searchMethod != SearchMethod.anyWord) {
-      chips.add(
-        _FilterActionChip(
-          label: filters.searchMethod.getLocaleName(l10n),
-          nextFilters: filters.copyWith(searchMethod: SearchMethod.anyWord),
-        ),
-      );
-    }
-
-    if (filters.zone != SearchZone.all) {
-      chips.add(
-        _FilterActionChip(
-          label: filters.zone.getLocaleName(l10n),
-          nextFilters: filters.copyWith(zone: SearchZone.all),
-        ),
-      );
-    }
-
-    if (filters.specialist) {
-      chips.add(
-        _FilterActionChip(
-          label: l10n.hadithSpecialist,
-          nextFilters: filters.copyWith(specialist: false),
-        ),
-      );
-    }
-
-    for (final degree in filters.degrees) {
-      chips.add(
-        _FilterActionChip(
-          label: degree.getLocaleName(l10n),
-          nextFilters: filters.copyWith(
-            degrees: filters.degrees
-                .where((entry) => entry != degree)
-                .toList(growable: false),
-          ),
-        ),
-      );
-    }
-
-    for (final scholar in filters.scholars) {
-      chips.add(
-        _FilterActionChip(
-          label: scholar.name,
-          nextFilters: filters.copyWith(
-            scholars: filters.scholars
-                .where((entry) => entry.id != scholar.id)
-                .toList(growable: false),
-          ),
-        ),
-      );
-    }
-
-    for (final book in filters.books) {
-      chips.add(
-        _FilterActionChip(
-          label: book.name,
-          nextFilters: filters.copyWith(
-            books: filters.books
-                .where((entry) => entry.id != book.id)
-                .toList(growable: false),
-          ),
-        ),
-      );
-    }
-
-    for (final rawi in filters.rawi) {
-      chips.add(
-        _FilterActionChip(
-          label: rawi.name,
-          nextFilters: filters.copyWith(
-            rawi: filters.rawi
-                .where((entry) => entry.id != rawi.id)
-                .toList(growable: false),
-          ),
-        ),
-      );
-    }
+    final chips = _buildActiveFilterChips(filters, l10n);
 
     if (chips.isEmpty) return const SizedBox.shrink();
 
-    return Row(
-      spacing: AppSpacing.sm,
-      children: [
-        Text(
-          l10n.hadithActiveFilters,
-          style: theme.typography.sm.copyWith(
-            color: theme.colors.mutedForeground,
-          ),
-        ),
-        FButton.icon(
-          semanticsLabel: l10n.hadithClearAllFilters,
-          onPress: interactionsEnabled
-              ? () {
-                  unawaited(
-                    ref
-                        .read(hadithScreenControllerProvider.notifier)
-                        .clearFilters(),
-                  );
-                }
-              : null,
-          child: const HadithDecorExcludeSemantics(
-            child: Icon(FLucideIcons.delete),
-          ),
-        ),
-        Expanded(
-          child: SizedBox(
-            height: 42,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: chips.length,
-              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
-              itemBuilder: (context, index) {
-                final chip = chips[index];
-                return FButton(
-                  variant: FButtonVariant.secondary,
-                  semanticsLabel: hadithFilterChipSemanticsLabel(
-                    chip.label,
-                    l10n,
-                  ),
-                  onPress: interactionsEnabled
-                      ? () {
-                          unawaited(
-                            ref
-                                .read(
-                                  hadithScreenControllerProvider.notifier,
-                                )
-                                .setFilters(
-                                  chip.nextFilters,
-                                  debounced: false,
-                                ),
-                          );
-                        }
-                      : null,
-                  child: HadithDecorExcludeSemantics(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      spacing: AppSpacing.xs,
-                      children: [
-                        Text(chip.label, style: theme.typography.sm),
-                        const Icon(FLucideIcons.x, size: 14),
-                      ],
-                    ),
-                  ),
-                );
-              },
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        spacing: AppSpacing.sm,
+        children: [
+          Semantics(
+            label: desktop ? null : l10n.hadithActiveFilters,
+            child: Icon(
+              FLucideIcons.slidersHorizontal,
+              size: 12,
+              color: theme.colors.mutedForeground,
             ),
           ),
-        ),
-      ],
+          if (desktop)
+            Text(
+              l10n.hadithActiveFilters,
+              style: theme.typography.xs.copyWith(
+                color: theme.colors.mutedForeground,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                spacing: AppSpacing.xs,
+                children: [
+                  for (final chip in chips)
+                    FButton(
+                      variant: FButtonVariant.outline,
+                      size: FButtonSizeVariant.sm,
+                      mainAxisSize: MainAxisSize.min,
+                      semanticsLabel: hadithFilterChipSemanticsLabel(
+                        chip.label,
+                        l10n,
+                      ),
+                      onPress: interactionsEnabled
+                          ? () {
+                              unawaited(
+                                ref
+                                    .read(
+                                      hadithScreenControllerProvider.notifier,
+                                    )
+                                    .setFilters(
+                                      chip.nextFilters,
+                                      debounced: false,
+                                    ),
+                              );
+                            }
+                          : null,
+                      suffix: const HadithDecorExcludeSemantics(
+                        child: Icon(FLucideIcons.x, size: 11),
+                      ),
+                      child: HadithDecorExcludeSemantics(
+                        child: Text(chip.label, softWrap: false),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          if (desktop)
+            FButton(
+              variant: FButtonVariant.ghost,
+              size: FButtonSizeVariant.sm,
+              mainAxisSize: MainAxisSize.min,
+              semanticsLabel: l10n.hadithClearAllFilters,
+              onPress: interactionsEnabled
+                  ? () {
+                      unawaited(
+                        ref
+                            .read(hadithScreenControllerProvider.notifier)
+                            .clearFilters(),
+                      );
+                    }
+                  : null,
+              child: Text(l10n.hadithClearAllFilters),
+            )
+          else
+            FButton.icon(
+              variant: FButtonVariant.ghost,
+              size: FButtonSizeVariant.sm,
+              semanticsLabel: l10n.hadithClearAllFilters,
+              onPress: interactionsEnabled
+                  ? () {
+                      unawaited(
+                        ref
+                            .read(hadithScreenControllerProvider.notifier)
+                            .clearFilters(),
+                      );
+                    }
+                  : null,
+              child: const HadithDecorExcludeSemantics(
+                child: Icon(FLucideIcons.rotateCcw, size: 12),
+              ),
+            ),
+        ],
+      ),
     );
   }
+}
+
+List<_FilterActionChip> _buildActiveFilterChips(
+  HadithFilters filters,
+  AppLocalizations l10n,
+) {
+  final chips = <_FilterActionChip>[];
+
+  if (filters.searchMethod != SearchMethod.anyWord) {
+    chips.add(
+      _FilterActionChip(
+        label: filters.searchMethod.getLocaleName(l10n),
+        nextFilters: filters.copyWith(searchMethod: SearchMethod.anyWord),
+      ),
+    );
+  }
+
+  if (filters.zone != SearchZone.all) {
+    chips.add(
+      _FilterActionChip(
+        label: filters.zone.getLocaleName(l10n),
+        nextFilters: filters.copyWith(zone: SearchZone.all),
+      ),
+    );
+  }
+
+  if (filters.specialist) {
+    chips.add(
+      _FilterActionChip(
+        label: l10n.hadithSpecialist,
+        nextFilters: filters.copyWith(specialist: false),
+      ),
+    );
+  }
+
+  for (final degree in filters.degrees) {
+    chips.add(
+      _FilterActionChip(
+        label: degree.getLocaleName(l10n),
+        nextFilters: filters.copyWith(
+          degrees: filters.degrees
+              .where((entry) => entry != degree)
+              .toList(growable: false),
+        ),
+      ),
+    );
+  }
+
+  for (final scholar in filters.scholars) {
+    chips.add(
+      _FilterActionChip(
+        label: scholar.name,
+        nextFilters: filters.copyWith(
+          scholars: filters.scholars
+              .where((entry) => entry.id != scholar.id)
+              .toList(growable: false),
+        ),
+      ),
+    );
+  }
+
+  for (final book in filters.books) {
+    chips.add(
+      _FilterActionChip(
+        label: book.name,
+        nextFilters: filters.copyWith(
+          books: filters.books
+              .where((entry) => entry.id != book.id)
+              .toList(growable: false),
+        ),
+      ),
+    );
+  }
+
+  for (final rawi in filters.rawi) {
+    chips.add(
+      _FilterActionChip(
+        label: rawi.name,
+        nextFilters: filters.copyWith(
+          rawi: filters.rawi
+              .where((entry) => entry.id != rawi.id)
+              .toList(growable: false),
+        ),
+      ),
+    );
+  }
+
+  return chips;
 }
 
 class _FilterActionChip {
