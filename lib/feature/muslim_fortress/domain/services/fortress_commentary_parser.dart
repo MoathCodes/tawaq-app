@@ -1,3 +1,5 @@
+import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
+import 'package:tawaq/core/text/arabic_text_normalizer.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_commentary_block.dart';
 
 /// Splits raw Hisn sharh into readable blocks.
@@ -5,6 +7,10 @@ abstract final class FortressCommentaryParser {
   static final _listItemHeaderPattern = RegExp(r'^(\d+)\s*[-–—]\s*');
   static final _listItemSplitPattern = RegExp(r'\n(?=\d+\s*[-–—]\s*)');
   static final _citationPattern = RegExp(r'/55\s*(.+?)\s*/55', dotAll: true);
+  static final _collapseWhitespacePattern = RegExp(r'\s+');
+  static final _trailingCommaPattern = RegExp(r'\s*،\s*$');
+  static final _spaceTabPattern = RegExp(r'[ \t]+');
+  static final _newlinePattern = RegExp(r'\n+');
 
   /// Parses [text] into intro and numbered blocks.
   static List<FortressCommentaryBlock> parse(String text) {
@@ -60,24 +66,28 @@ abstract final class FortressCommentaryParser {
     });
 
     return (
-      body: _normalizeWhitespace(body),
+      body: _normalizeBody(body),
       citations: citations,
     );
   }
 
   static String _normalizeCitation(String raw) {
-    return _normalizeWhitespace(
-      raw.replaceAll(RegExp(r'\s+'), ' '),
-    ).replaceAll(RegExp(r'\s*،\s*$'), '');
+    final normalized = _collapseHisnWhitespace(
+      raw.replaceAll(_collapseWhitespacePattern, ' '),
+    ).replaceAll(_trailingCommaPattern, '');
+    return isolateLtrNumerals(normalized);
   }
 
-  static String _normalizeWhitespace(String input) {
+  /// Collapses Hisn DB line breaks before shared Arabic typography fixes.
+  static String _collapseHisnWhitespace(String input) {
     return input
-        .replaceAll(RegExp(r'[ \t]+'), ' ')
-        .replaceAll(RegExp(r'\n+'), ' ')
-        .replaceAllMapped(RegExp(r'\s*([،.؛:!?])\s*'), (match) => '${match[1]} ')
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .replaceAllMapped(RegExp(r'\s*([،.؛])\s*$'), (match) => match[1]!)
+        .replaceAll(_spaceTabPattern, ' ')
+        .replaceAll(_newlinePattern, ' ')
+        .replaceAll(_collapseWhitespacePattern, ' ')
         .trim();
+  }
+
+  static String _normalizeBody(String input) {
+    return ArabicTextNormalizer.normalize(_collapseHisnWhitespace(input));
   }
 }

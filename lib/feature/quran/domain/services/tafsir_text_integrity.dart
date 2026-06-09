@@ -1,35 +1,7 @@
 /// Heuristics for detecting truncated or incomplete tafsir rows in bundled DBs.
 library;
 
-/// Why raw tafsir text is considered likely truncated.
-enum TafsirTruncationReason {
-  /// More `</div>` closers than `<div>` openers in the raw markup.
-  orphanClosingDiv,
-
-  /// Unbalanced `(`, `)`, `[`, `]`, `«`, `»`, or `"` after HTML is stripped.
-  unbalancedDelimiters,
-
-  /// Commentary ends on a short Arabic fragment without closing punctuation.
-  midWordEnding,
-
-  /// Long entry ends with a very short tail that does not close a sentence.
-  abruptTail,
-}
-
-/// Result of [TafsirTextIntegrity.analyze].
-class TafsirTruncationReport {
-  /// Creates a truncation report.
-  const TafsirTruncationReport({
-    required this.isLikelyTruncated,
-    required this.reasons,
-  });
-
-  /// Whether any heuristic flagged the text.
-  final bool isLikelyTruncated;
-
-  /// All reasons that fired (may be empty).
-  final List<TafsirTruncationReason> reasons;
-}
+import 'package:tawaq/feature/quran/domain/models/tafsir_truncation_report.dart';
 
 /// Detects likely database truncation in raw tafsir markup.
 abstract final class TafsirTextIntegrity {
@@ -59,7 +31,13 @@ abstract final class TafsirTextIntegrity {
   static const int midWordMaxLastTokenLength = 2;
 
   /// Analyzes [rawText] from the database before parser repair/normalization.
-  static TafsirTruncationReport analyze(String rawText) {
+  ///
+  /// When [strippedHtml] is supplied, HTML tag removal is skipped to avoid a
+  /// second full-text strip pass.
+  static TafsirTruncationReport analyze(
+    String rawText, {
+    String? strippedHtml,
+  }) {
     if (rawText.trim().isEmpty) {
       return const TafsirTruncationReport(
         isLikelyTruncated: false,
@@ -73,7 +51,7 @@ abstract final class TafsirTextIntegrity {
       reasons.add(TafsirTruncationReason.orphanClosingDiv);
     }
 
-    final stripped = _stripHtml(rawText).trimRight();
+    final stripped = (strippedHtml ?? _stripHtml(rawText)).trimRight();
     if (stripped.isEmpty) {
       return TafsirTruncationReport(
         isLikelyTruncated: reasons.isNotEmpty,

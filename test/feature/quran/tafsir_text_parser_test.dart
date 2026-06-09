@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_truncation_report.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
 
 void main() {
@@ -10,7 +11,7 @@ void main() {
           '<span class="aya">﴿بِسْمِ اللَّهِ﴾</span> '
           'commentary after';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(segments, hasLength(3));
       expect(segments[0].kind, TafsirSegmentKind.commentary);
@@ -27,7 +28,7 @@ void main() {
           'تفسير '
           '<span class="t1">" ما لم يعلم "</span>';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(segments, hasLength(3));
       expect(segments[0].kind, TafsirSegmentKind.ayah);
@@ -43,7 +44,7 @@ void main() {
           '<span class="t3">( 1 - العلق )</span> '
           'باقي';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(segments[1].kind, TafsirSegmentKind.crossReference);
       expect(segments[1].text, '(1 - العلق)');
@@ -54,7 +55,7 @@ void main() {
           'قوله: <span class="t4">{الحمد لله}</span> '
           'و<span class="t2">[11 - الإسراء]</span>';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(segments, hasLength(4));
       expect(segments[0].kind, TafsirSegmentKind.commentary);
@@ -68,7 +69,7 @@ void main() {
     test('converts br tags to line breaks in commentary', () {
       const raw = 'سطر أول<br>سطر ثان';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(segments.single.kind, TafsirSegmentKind.commentary);
       expect(segments.single.text, 'سطر أول\nسطر ثان');
@@ -79,7 +80,7 @@ void main() {
           'نص</div> '
           '<span class="t2">[ الحديث ]</span>';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(segments[0].text, 'نص');
       expect(segments[1].kind, TafsirSegmentKind.reference);
@@ -88,7 +89,7 @@ void main() {
     test('returns commentary-only segment when no spans exist', () {
       const raw = 'Plain tafsir text';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(segments, hasLength(1));
       expect(segments.single.kind, TafsirSegmentKind.commentary);
@@ -99,7 +100,7 @@ void main() {
       const raw =
           '<span class="t3">( بسم الله )</span><br>يقال لها';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(segments, hasLength(2));
       expect(segments[1].text, '\nيقال لها');
@@ -109,7 +110,7 @@ void main() {
       const raw =
           '<span class="t3">( verse )</span> يقال';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(segments[1].text, 'يقال');
     });
@@ -123,7 +124,7 @@ void main() {
             ' ، قال الله … ( مالك يوم الدين )'
             '</span>';
 
-        final segments = TafsirTextParser.parse(raw);
+        final segments = TafsirTextParser.parse(raw).segments;
 
         expect(segments, hasLength(3));
         expect(segments[0].kind, TafsirSegmentKind.commentary);
@@ -142,7 +143,7 @@ void main() {
             ' … ]'
             '</span>';
 
-        final segments = TafsirTextParser.parse(raw);
+        final segments = TafsirTextParser.parse(raw).segments;
 
         expect(segments, hasLength(3));
         expect(segments[0].kind, TafsirSegmentKind.reference);
@@ -161,7 +162,7 @@ void main() {
             ' … ]'
             '</span>';
 
-        final segments = TafsirTextParser.parse(raw);
+        final segments = TafsirTextParser.parse(raw).segments;
 
         expect(segments, hasLength(3));
         expect(segments[0].kind, TafsirSegmentKind.reference);
@@ -178,7 +179,7 @@ void main() {
             ' ]'
             '</span>';
 
-        final segments = TafsirTextParser.parse(raw);
+        final segments = TafsirTextParser.parse(raw).segments;
 
         expect(segments, hasLength(3));
         expect(segments[0].kind, TafsirSegmentKind.reference);
@@ -196,7 +197,7 @@ void main() {
             '"'
             '</span>';
 
-        final segments = TafsirTextParser.parse(raw);
+        final segments = TafsirTextParser.parse(raw).segments;
 
         expect(segments, hasLength(3));
         expect(segments[0].kind, TafsirSegmentKind.qiraatQuote);
@@ -214,7 +215,7 @@ void main() {
             '<span class="t2">[ref]</span> '
             'after';
 
-        final segments = TafsirTextParser.parse(raw);
+        final segments = TafsirTextParser.parse(raw).segments;
 
         expect(segments, hasLength(4));
         expect(segments[0].kind, TafsirSegmentKind.commentary);
@@ -222,6 +223,22 @@ void main() {
         expect(segments[2].kind, TafsirSegmentKind.reference);
         expect(segments[3].kind, TafsirSegmentKind.commentary);
       });
+    });
+
+    test('returns truncation report alongside segments', () {
+      const raw = '…بسم ا</div>';
+
+      final result = TafsirTextParser.parse(raw);
+
+      expect(result.segments, isNotEmpty);
+      expect(result.truncationReport.isLikelyTruncated, isTrue);
+      expect(
+        result.truncationReport.reasons,
+        containsAll([
+          TafsirTruncationReason.orphanClosingDiv,
+          TafsirTruncationReason.midWordEnding,
+        ]),
+      );
     });
   });
 }

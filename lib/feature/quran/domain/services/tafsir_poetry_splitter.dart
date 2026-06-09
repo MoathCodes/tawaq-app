@@ -4,6 +4,20 @@ import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
 abstract final class TafsirPoetrySplitter {
   static final _poetryGap = RegExp(r'\s{4,}');
 
+  static final _htmlTagPattern = RegExp('<[^>]+>');
+
+  static final _proseLeadPattern = RegExp(
+    r'^(?:وقال|قال|روى|حدث|ذكر|وفي|وقد|وهذا|أما[\s:،]|ثم|لما|فإ|فقد|وكذلك|حدثنا|أخبرنا)',
+  );
+
+  static final _arabicLetterPattern = RegExp(r'[\u0621-\u064A]');
+
+  static final _parallelHemistichLead = RegExp('^و(?:لا|إذا|ما|من)');
+
+  static final _prosePrefixMarker = RegExp(
+    r'(?:[.:،؟!]|قال\s|وقال\s|يعني\s|روي\s)',
+  );
+
   static final _poetryIntroMarker = RegExp(
     '(?:'
     r'قال\s+(?:ال)?شاعر'
@@ -34,6 +48,7 @@ abstract final class TafsirPoetrySplitter {
     final result = <TafsirTextSegment>[];
     final proseBuffer = StringBuffer();
     var pendingAfterMarker = false;
+    var proseEndsWithNewline = false;
 
     void flushProse() {
       final prose = proseBuffer.toString().trimRight();
@@ -46,21 +61,37 @@ abstract final class TafsirPoetrySplitter {
         );
       }
       proseBuffer.clear();
+      proseEndsWithNewline = false;
+    }
+
+    void appendProseLine(String line) {
+      if (proseBuffer.isNotEmpty && !proseEndsWithNewline) {
+        proseBuffer.write('\n');
+        proseEndsWithNewline = true;
+      }
+      proseBuffer.write(line);
+      proseEndsWithNewline = false;
+    }
+
+    void appendProseNewline() {
+      proseBuffer.write('\n');
+      proseEndsWithNewline = true;
     }
 
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i];
       if (line.isEmpty) {
-        proseBuffer.write('\n');
+        appendProseNewline();
         pendingAfterMarker = false;
         continue;
       }
 
       if (_lineEndsWithPoetryMarker(line)) {
-        if (proseBuffer.isNotEmpty && !proseBuffer.toString().endsWith('\n')) {
-          proseBuffer.write('\n');
+        if (proseBuffer.isNotEmpty && !proseEndsWithNewline) {
+          appendProseNewline();
         }
         proseBuffer.write(line);
+        proseEndsWithNewline = false;
         pendingAfterMarker = true;
         continue;
       }
@@ -98,10 +129,7 @@ abstract final class TafsirPoetrySplitter {
         flushProse();
         result.addAll(lineSegments);
       } else {
-        if (proseBuffer.isNotEmpty && !proseBuffer.toString().endsWith('\n')) {
-          proseBuffer.write('\n');
-        }
-        proseBuffer.write(line);
+        appendProseLine(line);
       }
     }
 
@@ -128,15 +156,13 @@ abstract final class TafsirPoetrySplitter {
     if (trimmed.length < 10 || trimmed.length > 220) {
       return false;
     }
-    if (RegExp('<[^>]+>').hasMatch(trimmed)) {
+    if (_htmlTagPattern.hasMatch(trimmed)) {
       return false;
     }
-    if (RegExp(
-      r'^(?:وقال|قال|روى|حدث|ذكر|وفي|وقد|وهذا|أما[\s:،]|ثم|لما|فإ|فقد|وكذلك|حدثنا|أخبرنا)',
-    ).hasMatch(trimmed)) {
+    if (_proseLeadPattern.hasMatch(trimmed)) {
       return false;
     }
-    return RegExp(r'[\u0621-\u064A]').hasMatch(trimmed);
+    return _arabicLetterPattern.hasMatch(trimmed);
   }
 
   static bool _isContinuationHemistich(String line) {
@@ -158,7 +184,7 @@ abstract final class TafsirPoetrySplitter {
     if (!_looksLikePoetryLine(line)) {
       return false;
     }
-    return RegExp('^و(?:لا|إذا|ما|من)').hasMatch(trimmed);
+    return _parallelHemistichLead.hasMatch(trimmed);
   }
 
   static TafsirTextSegment _poetrySegment(String first, String second) {
@@ -182,8 +208,7 @@ abstract final class TafsirPoetrySplitter {
 
     return TafsirTextSegment(
       text: trimmed,
-      kind: TafsirSegmentKind.poetry,
-      poetryHemistichs: [trimmed, ''],
+      kind: TafsirSegmentKind.commentary,
     );
   }
 
@@ -303,8 +328,7 @@ abstract final class TafsirPoetrySplitter {
 
   /// Returns prose before an embedded poetry hemistich, when present.
   static String? _prosePrefixBeforePoetry(String leftPart) {
-    final markerPattern = RegExp(r'(?:[.:،؟!]|قال\s|وقال\s|يعني\s|روي\s)');
-    final marker = markerPattern.allMatches(leftPart).lastOrNull;
+    final marker = _prosePrefixMarker.allMatches(leftPart).lastOrNull;
     if (marker == null) return null;
 
     final prefix = leftPart.substring(0, marker.end);

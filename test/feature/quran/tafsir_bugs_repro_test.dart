@@ -31,7 +31,7 @@ void main() {
         'والله أعلم.';
 
     test('parses qawl, ayah, reference, and commentary segments', () {
-      final segments = TafsirTextParser.parse(raw, tafsirId: TafsirId.ibnKathir);
+      final segments = TafsirTextParser.parse(raw, tafsirId: TafsirId.ibnKathir).segments;
 
       expect(segments, hasLength(4));
       expect(segments[0].kind, TafsirSegmentKind.commentary);
@@ -159,7 +159,7 @@ void main() {
         'قال: بلى.';
 
     test('keeps hadith dialogue in commentary and promotes only the ayah', () {
-      final segments = TafsirTextParser.parse(raw, tafsirId: TafsirId.ibnKathir);
+      final segments = TafsirTextParser.parse(raw, tafsirId: TafsirId.ibnKathir).segments;
 
       final ayah = segments.firstWhere((s) => s.kind == TafsirSegmentKind.ayah);
       expect(

@@ -1,8 +1,11 @@
+import 'package:tawaq/core/text/arabic_text_normalizer.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_parse_result.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_poetry_splitter.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_segment_repair.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_span_classifier.dart';
+import 'package:tawaq/feature/quran/domain/services/tafsir_text_integrity.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_normalizer.dart';
 
 /// Parses raw tafsir HTML-like markup into styled segments.
@@ -15,10 +18,28 @@ abstract final class TafsirTextParser {
   static final _spanCloseToken = RegExp('</span>', caseSensitive: false);
 
   static final _brPattern = RegExp(r'<br\s*/?>', caseSensitive: false);
+  static final _divClosePattern = RegExp('</div>', caseSensitive: false);
+  static final _divOpenPattern = RegExp('<div[^>]*>', caseSensitive: false);
   static final _htmlTagPattern = RegExp('<[^>]+>');
 
-  /// Parses [rawText] into commentary, ayah, quote, and reference segments.
-  static List<TafsirTextSegment> parse(
+  /// Parses [rawText] into segments and a truncation report in one pass.
+  static TafsirParseResult parse(
+    String rawText, {
+    TafsirId? tafsirId,
+  }) {
+    final strippedHtml = rawText.replaceAll(_htmlTagPattern, '');
+    final truncationReport = TafsirTextIntegrity.analyze(
+      rawText,
+      strippedHtml: strippedHtml,
+    );
+
+    return TafsirParseResult(
+      segments: _parseSegments(rawText, tafsirId: tafsirId),
+      truncationReport: truncationReport,
+    );
+  }
+
+  static List<TafsirTextSegment> _parseSegments(
     String rawText, {
     TafsirId? tafsirId,
   }) {
@@ -46,7 +67,7 @@ abstract final class TafsirTextParser {
   }
 
   static String _normalizeSegmentText(TafsirTextSegment segment) {
-    final normalized = TafsirTextNormalizer.normalize(segment.text);
+    final normalized = ArabicTextNormalizer.normalize(segment.text);
     if (segment.kind == TafsirSegmentKind.ayah) {
       return TafsirTextNormalizer.formatAyahDisplay(normalized);
     }
@@ -152,7 +173,7 @@ abstract final class TafsirTextParser {
       return;
     }
 
-    final text = _cleanSpanContent(raw);
+    final text = _stripResidualTags(raw);
     if (text.isEmpty) return;
 
     segments.addAll(
@@ -167,8 +188,8 @@ abstract final class TafsirTextParser {
   static String _normalize(String raw) {
     return raw
         .replaceAll(_brPattern, '\n')
-        .replaceAll(RegExp('</div>', caseSensitive: false), '')
-        .replaceAll(RegExp('<div[^>]*>', caseSensitive: false), '');
+        .replaceAll(_divClosePattern, '')
+        .replaceAll(_divOpenPattern, '');
   }
 
   static void _addCommentary(List<TafsirTextSegment> segments, String raw) {
@@ -193,9 +214,4 @@ abstract final class TafsirTextParser {
   static String _stripResidualTags(String input) {
     return input.replaceAll(_htmlTagPattern, '');
   }
-
-  static String _cleanSpanContent(String input) {
-    return _stripResidualTags(input);
-  }
-
 }

@@ -23,7 +23,7 @@ void main() {
           'وأيديكم الآية '
           '<span class="t2">[ المائدة : 6 ]</span>';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(
         segments.map((s) => s.kind).toList(),
@@ -45,7 +45,7 @@ void main() {
           'قل هو الرحمن آمنا به وعليه توكلنا ) '
           '<span class="t2">[ الملك : 29 ]</span>';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
       final ayahBeforeRef = _ayahBeforeReference(segments, '[الملك: 29]');
 
       expect(ayahBeforeRef, isNotNull);
@@ -58,7 +58,7 @@ void main() {
           'خير عند ربك ثوابا وخير أملا '
           '<span class="t2">[ الكهف : 46 ]</span>';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
       final ayahBeforeRef = _ayahBeforeReference(segments, '[الكهف: 46]');
 
       expect(ayahBeforeRef, isNotNull);
@@ -70,7 +70,7 @@ void main() {
           'وقال : ( ويوم يقول كن فيكون ، '
           '<span class="t2">[ الأنعام : 73 ]</span>';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
       final ayahBeforeRef = _ayahBeforeReference(segments, '[الأنعام: 73]');
 
       expect(ayahBeforeRef, isNotNull);
@@ -87,7 +87,7 @@ void main() {
           '$prefix$longHadith$ayahTail'
           '<span class="t2">[ النساء : 136 ]</span>';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
       final ayahBeforeRef = _ayahBeforeReference(segments, '[النساء: 136]');
 
       expect(ayahBeforeRef, isNotNull);
@@ -102,7 +102,7 @@ void main() {
           'اليهود ، ولا الضالين ) '
           '<span class="t2">[ الفاتحة : 7 ]</span>';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
       final ayahBeforeRef = _ayahBeforeReference(segments, '[الفاتحة: 7]');
 
       expect(ayahBeforeRef, isNotNull);
@@ -118,7 +118,7 @@ void main() {
           '(قوله الحق وله الملك وحكي عن أبي حنيفة … غريب جدا ]'
           '</span>';
 
-      final segments = TafsirTextParser.parse(raw, tafsirId: TafsirId.ibnKathir);
+      final segments = TafsirTextParser.parse(raw, tafsirId: TafsirId.ibnKathir).segments;
       final ayahs = segments
           .where((s) => s.kind == TafsirSegmentKind.ayah)
           .map((s) => s.text)
@@ -136,7 +136,7 @@ void main() {
           'قال: أولست تجد فيما أوحى الله إلي استجيبوا لله وللرسول إذا دعاكم لما يحييكم ) '
           '<span class="t2">[ الأنفال : 24 ]</span>';
 
-      final segments = TafsirTextParser.parse(raw, tafsirId: TafsirId.ibnKathir);
+      final segments = TafsirTextParser.parse(raw, tafsirId: TafsirId.ibnKathir).segments;
       final ayahBeforeRef = _ayahBeforeReference(segments, '[الأنفال: 24]');
 
       expect(ayahBeforeRef, isNotNull);
@@ -149,7 +149,7 @@ void main() {
     test('classifies ( سورة النحل ، 98 ) as cross-reference', () {
       const raw = '<span class="t3">( سورة النحل ، 98 )</span>';
 
-      final segments = TafsirTextParser.parse(raw);
+      final segments = TafsirTextParser.parse(raw).segments;
 
       expect(segments.single.kind, TafsirSegmentKind.crossReference);
     });

@@ -1,13 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tawaq/core/text/arabic_text_normalizer.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_poetry_splitter.dart';
-import 'package:tawaq/feature/quran/domain/services/tafsir_text_normalizer.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
 
 void main() {
   group('TafsirPoetrySplitter', () {
     List<TafsirTextSegment> expandFromRaw(String raw) {
-      final text = TafsirTextNormalizer.normalize(raw.replaceAll('<br>', '\n'));
+      final text = ArabicTextNormalizer.normalize(raw.replaceAll('<br>', '\n'));
       return TafsirPoetrySplitter.expand([
         TafsirTextSegment(text: text, kind: TafsirSegmentKind.commentary),
       ]);
@@ -27,9 +27,15 @@ void main() {
 
     test('splits IK 1:2 br-separated poetry after qala al-shaair', () {
       const raw = 'يكون بالجنان واللسان والأركان ، كما قال الشاعر :<br>أفادتكم النعماء مني ثلاثة يدي ولساني والضمير المحجبا<br>';
-      final poetry = expandFromRaw(raw).where((s) => s.kind == TafsirSegmentKind.poetry);
-      expect(poetry, hasLength(1));
-      expect(poetry.first.text, contains('أفادتكم النع'));
+      final segments = expandFromRaw(raw);
+      expect(
+        segments.any(
+          (s) =>
+              s.kind == TafsirSegmentKind.commentary &&
+              s.text.contains('أفادتكم النع'),
+        ),
+        isTrue,
+      );
     });
 
     test('merges cross-line second hemistich for ibn al-Mutazz bayt', () {
@@ -40,11 +46,20 @@ void main() {
       expect(poetry.first.poetryHemistichs?.last, contains('تدل على أنه واحد'));
     });
 
-    test('keeps parallel Mutanabbi hemistich on next line as separate poetry', () {
+    test('keeps parallel Mutanabbi hemistich on next line as separate commentary', () {
       const raw = 'كما قال المتنبي :<br>يا من ألوذ به فيما أؤمله ومن أعوذ به ممن أحاذره     لا يجبر الناس عظما أنت كاسره<br>ولا يهيضون عظما أنت جابره<br><br>fasl';
-      final poetry = expandFromRaw(raw).where((s) => s.kind == TafsirSegmentKind.poetry).toList();
-      expect(poetry, hasLength(2));
+      final segments = expandFromRaw(raw);
+      final poetry = segments.where((s) => s.kind == TafsirSegmentKind.poetry);
+      expect(poetry, hasLength(1));
       expect(poetry.first.text, contains('ه فيما أؤمله'));
+      expect(
+        segments.any(
+          (s) =>
+              s.kind == TafsirSegmentKind.commentary &&
+              s.text.contains('ولا يهيضون'),
+        ),
+        isTrue,
+      );
     });
 
     test('splits Baghawi br-separated hemistichs after qala al-shaair', () {
@@ -56,16 +71,28 @@ void main() {
 
     test('detects single-line bayt after dhi al-Rumma attribution', () {
       const raw = 'استشهد بقول ذي الرمة :<br>على رأسه أم لنا نقتدي بها جماع أمور ليس نعصي لها أمرا<br>';
-      final poetry = expandFromRaw(raw).where((s) => s.kind == TafsirSegmentKind.poetry);
-      expect(poetry, hasLength(1));
-      expect(poetry.first.text, contains('على رأسه أم '));
+      final segments = expandFromRaw(raw);
+      expect(
+        segments.any(
+          (s) =>
+              s.kind == TafsirSegmentKind.commentary &&
+              s.text.contains('على رأسه أم '),
+        ),
+        isTrue,
+      );
     });
 
     test('detects single-line bayt after umayya attribution', () {
       const raw = 'قال أمية بن أبي الصلت في ذكر ما أوتي سليمان ، عليه السلام :<br>أيما شاطن عصاه عكاه ثم يلقى في السجن والأغلال<br>';
-      final poetry = expandFromRaw(raw).where((s) => s.kind == TafsirSegmentKind.poetry);
-      expect(poetry, hasLength(1));
-      expect(poetry.first.text, contains('أيما شاطن عص'));
+      final segments = expandFromRaw(raw);
+      expect(
+        segments.any(
+          (s) =>
+              s.kind == TafsirSegmentKind.commentary &&
+              s.text.contains('أيما شاطن عص'),
+        ),
+        isTrue,
+      );
     });
 
     test('splits jarir br-separated hemistichs', () {
@@ -77,7 +104,7 @@ void main() {
 
     test('end-to-end parser keeps poetry for wide-gap fixtures', () {
       const raw = 'كما قال المتنبي :<br>يا من ألوذ به فيما أؤمله ومن أعوذ به ممن أحاذره     لا يجبر الناس عظما أنت كاسره<br>ولا يهيضون عظما أنت جابره<br>';
-      final poetry = TafsirTextParser.parse(raw).where((s) => s.kind == TafsirSegmentKind.poetry);
+      final poetry = TafsirTextParser.parse(raw).segments.where((s) => s.kind == TafsirSegmentKind.poetry);
       expect(poetry, isNotEmpty);
     });
   });

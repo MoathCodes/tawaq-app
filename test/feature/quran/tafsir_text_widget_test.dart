@@ -110,7 +110,7 @@ void main() {
       expect(
         hasStyledLeaf(
           root,
-          (style) => style?.color == const Color(0xFF15803D),
+          (style) => style?.fontWeight == FontWeight.w500,
         ),
         isTrue,
         reason: 'ayah span',

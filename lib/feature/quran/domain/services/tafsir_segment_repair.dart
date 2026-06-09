@@ -1,8 +1,18 @@
+import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
 
 /// Repairs common markup gaps in parsed tafsir segments before normalization.
 abstract final class TafsirSegmentRepair {
   static const _maxAyahQuoteLength = 200;
+
+  /// Lone Arabic prefix particles merged into the following qawl-lead segment.
+  static const arabicPrefixParticles = 'لوبفك';
+
+  static final _surahAyahCrossRef = RegExp(r'^\(\s*\d+\s*-\s*.+\s*\)$');
+
+  static final _arabicLetterPattern = RegExp(r'[\u0621-\u064A]');
+
+  static final _ayahSuffixPattern = RegExp(r'الآية\s*$');
 
   static final _surahNameCrossRef = RegExp(
     r'^\(\s*سورة\s+.+\s*[،,]\s*\d+\s*\)$',
@@ -59,13 +69,57 @@ abstract final class TafsirSegmentRepair {
 
   /// Applies segment-level repairs to [segments].
   static List<TafsirTextSegment> repair(List<TafsirTextSegment> segments) {
-    return _splitChainedBareAyahQuotes(_repairAyahBoundaries(segments));
+    return mergeAttachedPrefixParticles(
+      _splitChainedBareAyahQuotes(_repairAyahBoundaries(segments)),
+    );
+  }
+
+  /// Merges a lone Arabic prefix particle into the following qawl-lead segment.
+  static List<TafsirTextSegment> mergeAttachedPrefixParticles(
+    List<TafsirTextSegment> segments,
+  ) {
+    if (segments.length < 2) return segments;
+
+    final merged = <TafsirTextSegment>[];
+    for (var i = 0; i < segments.length; i++) {
+      final current = segments[i];
+      final next = i + 1 < segments.length ? segments[i + 1] : null;
+
+      if (next != null &&
+          current.kind == TafsirSegmentKind.commentary &&
+          isArabicPrefixParticle(current.text) &&
+          startsWithQawlLead(next.text)) {
+        merged.add(
+          TafsirTextSegment(
+            text: current.text + next.text,
+            kind: TafsirSegmentKind.commentary,
+          ),
+        );
+        i++;
+        continue;
+      }
+
+      merged.add(current);
+    }
+
+    return merged;
+  }
+
+  /// Whether [text] is a single attached Arabic prefix particle.
+  static bool isArabicPrefixParticle(String text) {
+    if (text.length != 1) return false;
+    return arabicPrefixParticles.contains(text);
+  }
+
+  /// Whether [text] begins with a qawl-lead phrase.
+  static bool startsWithQawlLead(String text) {
+    return CommentaryInlineSpans.qawlLeadPrefix.hasMatch(text);
   }
 
   /// Whether [content] is a surah/ayah cross-reference rather than ayah text.
   static bool isSurahCrossReference(String content) {
     final trimmed = content.trim();
-    if (RegExp(r'^\(\s*\d+\s*-\s*.+\s*\)$').hasMatch(trimmed)) {
+    if (_surahAyahCrossRef.hasMatch(trimmed)) {
       return true;
     }
     return _surahNameCrossRef.hasMatch(trimmed);
@@ -295,7 +349,7 @@ abstract final class TafsirSegmentRepair {
     final quote = match.group(2)?.trim();
     if (quote == null || quote.isEmpty) return null;
     if (quote.length < 15 || quote.length > _maxAyahQuoteLength) return null;
-    if (!RegExp(r'[\u0621-\u064A]').hasMatch(quote)) return null;
+    if (!_arabicLetterPattern.hasMatch(quote)) return null;
 
     return (prefix: match.group(1) ?? '', quote: quote);
   }
@@ -323,7 +377,7 @@ abstract final class TafsirSegmentRepair {
   static ({String prefix, String quote})? _splitUnclosedAyahQuoteAnchored(
     String text,
   ) {
-    final ayahSuffix = RegExp(r'الآية\s*$');
+    final ayahSuffix = _ayahSuffixPattern;
     if (!ayahSuffix.hasMatch(text.trimRight())) {
       return null;
     }

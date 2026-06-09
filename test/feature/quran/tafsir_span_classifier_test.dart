@@ -20,7 +20,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         '<span class="t3">( قلt )</span>',
         tafsirId: TafsirId.ibnKathir,
-      );
+      ).segments;
 
       expect(segments, hasLength(1));
       expect(segments.single.kind, TafsirSegmentKind.commentary);
@@ -31,7 +31,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         'نص <span class="t3">( مسألة )</span> باقي',
         tafsirId: TafsirId.ibnKathir,
-      );
+      ).segments;
 
       expect(segments[1].kind, TafsirSegmentKind.commentary);
       expect(segments[1].text, '(مسألة)');
@@ -41,7 +41,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         '<span class="t3">( قال )</span>',
         tafsirId: TafsirId.baghawi,
-      );
+      ).segments;
 
       expect(segments.single.kind, TafsirSegmentKind.commentary);
     });
@@ -50,7 +50,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         '<span class="t3">( الرحمن الرحيم )</span>',
         tafsirId: TafsirId.ibnKathir,
-      );
+      ).segments;
 
       expect(segments.single.kind, TafsirSegmentKind.commentary);
     });
@@ -59,7 +59,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         '<span class="t3">( 1 - العلق )</span>',
         tafsirId: TafsirId.ibnKathir,
-      );
+      ).segments;
 
       expect(segments.single.kind, TafsirSegmentKind.crossReference);
     });
@@ -71,7 +71,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         raw,
         tafsirId: TafsirId.ibnKathir,
-      );
+      ).segments;
 
       expect(segments, hasLength(2));
       expect(segments[0].kind, TafsirSegmentKind.ayah);
@@ -84,7 +84,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         '<span class="t3">( نص ) كما في حديث النبي</span>',
         tafsirId: TafsirId.ibnKathir,
-      );
+      ).segments;
 
       expect(segments, hasLength(2));
       expect(segments[0].kind, TafsirSegmentKind.ayah);
@@ -97,7 +97,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         'نص <span class="t2">[الحسنى]</span> باقي',
         tafsirId: TafsirId.asSadi,
-      );
+      ).segments;
 
       expect(segments[1].kind, TafsirSegmentKind.gloss);
       expect(segments[1].text, '[الحسنى]');
@@ -107,7 +107,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         '<span class="t2">[قال]</span>',
         tafsirId: TafsirId.ibnKathir,
-      );
+      ).segments;
 
       expect(segments.single.kind, TafsirSegmentKind.commentary);
     });
@@ -116,7 +116,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         '<span class="t2">[ فقال ]</span>',
         tafsirId: TafsirId.ibnKathir,
-      );
+      ).segments;
 
       expect(segments.single.kind, TafsirSegmentKind.commentary);
     });
@@ -125,7 +125,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         '<span class="t2">[الفاتحة: 5]</span>',
         tafsirId: TafsirId.asSadi,
-      );
+      ).segments;
 
       expect(segments.single.kind, TafsirSegmentKind.reference);
     });
@@ -134,7 +134,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         '<span class="t2">[11 - الإسراء]</span>',
         tafsirId: TafsirId.ibnKathir,
-      );
+      ).segments;
 
       expect(segments.single.kind, TafsirSegmentKind.reference);
     });
@@ -155,7 +155,7 @@ void main() {
       final segments = TafsirTextParser.parse(
         '<span class="t2">[ الله ]</span>',
         tafsirId: TafsirId.ibnKathir,
-      );
+      ).segments;
 
       expect(segments.single.kind, TafsirSegmentKind.gloss);
     });
