@@ -22,7 +22,6 @@ class HoverCard extends HookWidget {
     this.activeBorderColor,
     this.backgroundColor,
     this.semanticsLabel,
-    this.semanticsHint,
   });
 
   /// The card content.
@@ -49,9 +48,6 @@ class HoverCard extends HookWidget {
   /// Merged accessibility label when the card is interactive.
   final String? semanticsLabel;
 
-  /// Optional accessibility hint merged with [semanticsLabel].
-  final String? semanticsHint;
-
   @override
   Widget build(BuildContext context) {
     final (:isHovered, :setHovered) = useHoverState();
@@ -61,9 +57,7 @@ class HoverCard extends HookWidget {
     return MouseClick(
       disabled: !enableHoverEffect,
       semanticsLabel: semanticsLabel,
-      semanticsHint: semanticsHint,
-      onExit: (_) => setHovered(value: false),
-      onHover: (_) => setHovered(value: true),
+      onHoverChange: (hovering) => setHovered(value: hovering),
       child: AnimatedContainer(
         duration: _kAnimDuration,
         curve: Curves.easeOutCubic,

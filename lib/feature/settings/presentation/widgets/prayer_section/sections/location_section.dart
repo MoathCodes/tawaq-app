@@ -8,14 +8,12 @@ import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widge
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_map_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/use_location_tile.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Widget for the prayer location settings section with inline map.
 class PrayerSettingsLocationSection extends ConsumerWidget {
   /// Creates a new [PrayerSettingsLocationSection] instance.
-  const PrayerSettingsLocationSection({required this.maxWidth, super.key});
-
-  /// The maximum width of the section.
-  final double maxWidth;
+  const PrayerSettingsLocationSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,22 +30,19 @@ class PrayerSettingsLocationSection extends ConsumerWidget {
       crossAxisAlignment: .center,
       title: l10n.locationSectionTitle,
       subtitle: l10n.locationSectionSubtitle,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: FCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 16,
-            children: [
-              const UseLocationTile(),
-              const FDivider(),
-              LocationMapSection(enabled: enabled),
-              const FDivider(),
-              CoordinatesRow(enabled: enabled),
-              const FDivider(),
-              LocationControlsRow(enabled: enabled),
-            ],
-          ),
+      child: FCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: AppSpacing.lg,
+          children: [
+            const UseLocationTile(),
+            const FDivider(),
+            LocationMapSection(enabled: enabled),
+            const FDivider(),
+            CoordinatesRow(enabled: enabled),
+            const FDivider(),
+            LocationControlsRow(enabled: enabled),
+          ],
         ),
       ),
     );

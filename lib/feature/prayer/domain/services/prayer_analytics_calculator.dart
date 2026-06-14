@@ -14,6 +14,47 @@ class PrayerAnalyticsCalculator {
   /// Number of obligatory prayers per day.
   static const int prayersPerDay = 5;
 
+  /// Inclusive calendar-day bounds for a period (matches trend chart buckets).
+  static ({DateTime start, DateTime end}) periodCalendarRange(
+    PrayerAnalyticsPeriod period,
+    DateTime anchor,
+  ) {
+    final todayStart = DateTime(anchor.year, anchor.month, anchor.day);
+    final todayEnd = todayStart
+        .add(const Duration(days: 1))
+        .subtract(const Duration(milliseconds: 1));
+
+    final start = switch (period) {
+      PrayerAnalyticsPeriod.weekly => todayStart.subtract(
+        const Duration(days: 6),
+      ),
+      PrayerAnalyticsPeriod.monthly => todayStart.subtract(
+        const Duration(days: 29),
+      ),
+      PrayerAnalyticsPeriod.yearly => DateTime(
+        todayStart.year,
+        todayStart.month - 11,
+      ),
+    };
+
+    return (start: start, end: todayEnd);
+  }
+
+  /// Number of inclusive calendar days in [periodCalendarRange].
+  static int calendarDaysInPeriod(
+    PrayerAnalyticsPeriod period,
+    DateTime anchor,
+  ) {
+    final range = periodCalendarRange(period, anchor);
+    final startDay = DateTime(
+      range.start.year,
+      range.start.month,
+      range.start.day,
+    );
+    final endDay = DateTime(range.end.year, range.end.month, range.end.day);
+    return endDay.difference(startDay).inDays + 1;
+  }
+
   /// Calculates the completion percentage for a period.
   ///
   /// Only counts [CompletionStatus.jamaah] and [CompletionStatus.onTime]
@@ -58,8 +99,14 @@ class PrayerAnalyticsCalculator {
   }) {
     if (firstRecordedDate == null) return 0;
 
-    final daysSinceFirst = now.difference(firstRecordedDate).inDays + 1;
-    final periodDays = period.duration.inDays;
+    final firstDay = DateTime(
+      firstRecordedDate.year,
+      firstRecordedDate.month,
+      firstRecordedDate.day,
+    );
+    final today = DateTime(now.year, now.month, now.day);
+    final daysSinceFirst = today.difference(firstDay).inDays + 1;
+    final periodDays = calendarDaysInPeriod(period, now);
 
     // Clamp to the minimum of period days or days since first recorded
     final effectiveDays = math.min(periodDays, daysSinceFirst);
@@ -123,7 +170,7 @@ class PrayerAnalyticsCalculator {
       final daysDiff = todayNormalized.difference(lastDayNormalized).inDays;
 
       // Streak is active if last completed day was today or yesterday
-      if (daysDiff <= 1) {
+      if (daysDiff >= 0 && daysDiff <= 1) {
         activeStreak = currentStreak;
       }
     }

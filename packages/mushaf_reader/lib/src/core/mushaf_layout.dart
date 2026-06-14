@@ -3,7 +3,9 @@ import 'package:mushaf_reader/src/core/fonts.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_style.dart';
 import 'package:mushaf_reader/src/data/models/quran_page.dart';
 
-/// Reference page height used for auto-fit calculations.
+/// Logical pixel height of a Mushaf page at the reference layout (width 500).
+///
+/// Used by [MushafScale] auto-fit to clamp vertical scaling in [MushafPage].
 const double mushafReferencePageHeight = 850;
 
 /// Snaps [logicalSize] to the nearest physical pixel for crisp QCF rendering.
@@ -226,6 +228,91 @@ double resolvePageScale({
   );
 
   return baseFit * (userBoost < maxBoost ? userBoost : maxBoost);
+}
+
+/// Memoizes [resolvePageScale] for repeated builds with the same inputs.
+final class PageScaleCache {
+  int? _pageNumber;
+  double? _availableWidth;
+  double? _availableHeight;
+  bool? _hideHeader;
+  int? _scaleConfigHash;
+  int? _styleHash;
+  double? _cachedScale;
+
+  /// Returns a cached scale when inputs match the previous call.
+  double resolve({
+    required BuildContext context,
+    required MushafScale scaleConfig,
+    required QuranPage page,
+    required double availableWidth,
+    required double availableHeight,
+    required bool hideHeader,
+    required int pageNumber,
+    MushafStyle? style,
+  }) {
+    final scaleConfigHash = Object.hash(
+      scaleConfig.factor,
+      scaleConfig.ayahFontSize,
+      scaleConfig.basmalahFontSize,
+      scaleConfig.pageNumberFontSize,
+      scaleConfig.minScale,
+      scaleConfig.maxScale,
+      scaleConfig.referenceWidth,
+      scaleConfig.readingBoost,
+      scaleConfig.minReadingBoost,
+      scaleConfig.maxReadingBoost,
+    );
+    final styleHash = style == null
+        ? 0
+        : Object.hash(
+            style.ayahStyle,
+            style.ayahStyleModifier,
+            style.highlightColor,
+            style.backgroundColor,
+          );
+
+    if (_cachedScale != null &&
+        _pageNumber == pageNumber &&
+        _availableWidth == availableWidth &&
+        _availableHeight == availableHeight &&
+        _hideHeader == hideHeader &&
+        _scaleConfigHash == scaleConfigHash &&
+        _styleHash == styleHash) {
+      return _cachedScale!;
+    }
+
+    final scale = resolvePageScale(
+      context: context,
+      scaleConfig: scaleConfig,
+      page: page,
+      availableWidth: availableWidth,
+      availableHeight: availableHeight,
+      hideHeader: hideHeader,
+      pageNumber: pageNumber,
+      style: style,
+    );
+
+    _pageNumber = pageNumber;
+    _availableWidth = availableWidth;
+    _availableHeight = availableHeight;
+    _hideHeader = hideHeader;
+    _scaleConfigHash = scaleConfigHash;
+    _styleHash = styleHash;
+    _cachedScale = scale;
+    return scale;
+  }
+
+  /// Clears the cached scale (e.g. when the page or style changes).
+  void clear() {
+    _pageNumber = null;
+    _availableWidth = null;
+    _availableHeight = null;
+    _hideHeader = null;
+    _scaleConfigHash = null;
+    _styleHash = null;
+    _cachedScale = null;
+  }
 }
 
 /// Estimates vertical space reserved for headers, banners, and page number.

@@ -1,0 +1,47 @@
+# Tawaq icon generator configuration.
+# Edit this file, then run: ./generate.sh [--install]
+
+fonts_dir: ../../assets/fonts/IBM_Plex_Sans_Arabic
+
+# Full app icon (rounded cream tile).
+# Colors align with ManuscriptTheme light tokens for readable gold-on-parchment.
+app:
+  text: "تَوَّاق"
+  canvas_size: 1024
+  background: "#E8E3D7"
+  foreground: "#9A6B1F"
+  border: "#C9BAA5"
+  font_file: IBMPlexSansArabic-SemiBold.ttf
+  # Use font_size_px OR font_size_ratio (fraction of canvas height).
+  font_size_px: null
+  font_size_ratio: 0.36
+  padding_ratio: 0.14
+  letter_spacing: "0"
+  font_weight: 600
+  line_height: 1.1
+  # ~22.5% mimics common dock / launcher squircle rounding.
+  corner_radius_ratio: 0.225
+  # Subtle shadow so rounded edges stay visible on light launcher backgrounds.
+  shadow: true
+  # Warm edge + glyph depth for legibility at small launcher sizes.
+  text_depth: true
+
+# System tray icon (transparent background, simplified label).
+tray:
+  text: "تواق"
+  # Render large, trim, pad, then downscale for crisp small sizes.
+  canvas_size: 256
+  background: transparent
+  foreground: "#FFFFFF"
+  font_file: IBMPlexSansArabic-Bold.ttf
+  font_size_px: null
+  font_size_ratio: 0.5
+  padding_ratio: 0.2
+  letter_spacing: "0"
+  font_weight: 700
+  line_height: 1.25
+  # Margin re-added after auto-trim so glyphs are not clipped in the panel.
+  trim_margin_ratio: 0.16
+  # Optional CSS text-shadow for legibility on mixed backgrounds.
+  text_shadow: "0 0 1px rgba(0,0,0,0.45)"
+  sizes: [16, 24, 32]

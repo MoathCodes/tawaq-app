@@ -16,10 +16,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Widget for the prayer time settings section.
 class PrayerSettingsTimeSection extends HookConsumerWidget {
   /// Creates a new [PrayerSettingsTimeSection] instance.
-  const PrayerSettingsTimeSection({required this.maxWidth, super.key});
-
-  /// The maximum width of the section.
-  final double maxWidth;
+  const PrayerSettingsTimeSection({super.key});
 
   // Prayers that support Iqamah adjustment
   static const List<Prayer> _kIqamahPrayers = <Prayer>[
@@ -171,20 +168,19 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
       prayerSettingsProvider.select((value) => value.hasValue),
     );
     final l10n = context.l10n;
-    final theme = context.theme;
-    final mutedForeground = theme.colors.mutedForeground;
     return SettingsSection(
       crossAxisAlignment: CrossAxisAlignment.center,
       title: l10n.timeSectionTitle,
       subtitle: l10n.timeSectionSubtitle,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
+      child: FCard(
         child: Column(
-          spacing: AppSpacing.xl,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: AppSpacing.lg,
           children: [
-            FCard(
-              title: Text(l10n.calculationMethod),
+            SettingsGroup(
+              title: l10n.calculationMethod,
               child: Column(
+                spacing: AppSpacing.md,
                 children: [
                   buildCalculationMethodSelector(
                     context,
@@ -193,104 +189,91 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
                     enabled: prayerSettingsReady,
                   ),
                   PrayerSettingsCustomParametersCard(
-                    maxWidth: maxWidth,
                     enabled: prayerSettingsReady,
                   ),
                 ],
               ),
             ),
-            FCard(
-              title: Text(l10n.timeFormat),
-              child: NonSelectable(
-                child: FSwitch(
-                  enabled: prayerSettingsReady,
-                  value: is24Hours ?? false,
-                  onChange: (value) {
-                    ref
-                        .read(prayerSettingsProvider.notifier)
-                        .set24HourFormat(value: value);
-                  },
-                  label: Text(l10n.use24HourFormat),
-                ),
-              ),
-            ),
-            FCard(
-              title: Row(
-                mainAxisAlignment: .spaceBetween,
-                children: [
-                  Text(l10n.iqamahAdjustment),
-                  NonSelectable(
-                    child: FTooltip(
-                      tipBuilder: (ctx, ctrl) => Text(l10n.save),
-                      child: FButton(
-                        prefix: const Icon(FLucideIcons.save),
-                        onPress: unsavedPrayers.value.isEmpty
-                            ? null
-                            : saveUnsavedPrayers,
-                        child: Text(l10n.save),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              child: FTileGroup(
-                style: .delta(
-                  decoration: .boxDelta(
-                    border: .all(color: Colors.transparent),
+              const FDivider(),
+              SettingsGroup(
+                title: l10n.timeFormat,
+                child: NonSelectable(
+                  child: FSwitch(
+                    enabled: prayerSettingsReady,
+                    value: is24Hours ?? false,
+                    onChange: (value) {
+                      ref
+                          .read(prayerSettingsProvider.notifier)
+                          .set24HourFormat(value: value);
+                    },
+                    label: Text(l10n.use24HourFormat),
                   ),
                 ),
-                label: Row(
-                  spacing: AppSpacing.xs,
-                  children: [
-                    Icon(
-                      FLucideIcons.info,
-                      size: 14,
-                      color: mutedForeground,
-                    ),
-                    Flexible(
-                      child: Text(
-                        l10n.iqamahAfterAdhan,
-                        style: theme.typography.sm.copyWith(
-                          color: mutedForeground,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                children: _kIqamahPrayers
-                    .map(
-                      (p) => PrayerIqamahTile(
-                        key: ValueKey(p),
-                        prayer: p,
-                        enabled: prayerSettingsReady,
-                        controller: controllers[p]!,
-                        focusNode: focusNodes[p]!,
-                        allowSigned: false,
-                        onDelta: (delta) =>
-                            changeIqamah(controllers[p]!, delta),
-                        onSave: () => saveIqamahField(
-                          context,
-                          ref,
-                          p,
-                          controllers,
-                          initialIqamahValues,
-                          unsavedPrayers,
-                        ),
-                        onReset: () => resetIqamah(
-                          context,
-                          ref,
-                          p,
-                          controllers[p]!,
-                          controllers,
-                          initialIqamahValues,
-                          unsavedPrayers,
-                        ),
-                      ),
-                    )
-                    .toList()
-                    .cast<FTileMixin>(),
               ),
-            ),
+              const FDivider(),
+              SettingsGroup(
+                title: l10n.iqamahAdjustment,
+                subtitle: l10n.iqamahAfterAdhan,
+                trailing: NonSelectable(
+                  child: FTooltip(
+                    tipBuilder: (ctx, ctrl) => Text(l10n.save),
+                    child: FButton(
+                      variant: unsavedPrayers.value.isEmpty
+                          ? .outline
+                          : .primary,
+                      prefix: const Icon(FLucideIcons.save, size: 16),
+                      style: const FButtonStyleDelta.delta(
+                        contentStyle: FButtonContentStyleDelta.delta(
+                          padding: EdgeInsetsGeometryDelta.value(
+                            EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                          ),
+                        ),
+                      ),
+                      onPress: unsavedPrayers.value.isEmpty
+                          ? null
+                          : saveUnsavedPrayers,
+                      child: Text(l10n.save),
+                    ),
+                  ),
+                ),
+                child: IqamahPrayerList(
+                  children: _kIqamahPrayers
+                      .map(
+                        (p) => PrayerIqamahTile(
+                          key: ValueKey(p),
+                          prayer: p,
+                          enabled: prayerSettingsReady,
+                          isUnsaved: unsavedPrayers.value.contains(p),
+                          controller: controllers[p]!,
+                          focusNode: focusNodes[p]!,
+                          allowSigned: false,
+                          onDelta: (delta) =>
+                              changeIqamah(controllers[p]!, delta),
+                          onSave: () => saveIqamahField(
+                            context,
+                            ref,
+                            p,
+                            controllers,
+                            initialIqamahValues,
+                            unsavedPrayers,
+                          ),
+                          onReset: () => resetIqamah(
+                            context,
+                            ref,
+                            p,
+                            controllers[p]!,
+                            controllers,
+                            initialIqamahValues,
+                            unsavedPrayers,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
           ],
         ),
       ),

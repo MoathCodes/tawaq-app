@@ -1598,6 +1598,12 @@ abstract class AppLocalizations {
   /// **'No favorite chapters yet — bookmark one from the sidebar'**
   String get fortressNoFavoriteChapters;
 
+  /// No description provided for @fortressMoreFavoriteChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {Plus 1 more chapter…} other {Plus {count} more chapters…}}'**
+  String fortressMoreFavoriteChapters(int count);
+
   /// No description provided for @fortressReadShort.
   ///
   /// In en, this message translates to:
@@ -1958,12 +1964,6 @@ abstract class AppLocalizations {
   /// **'Select an ayah to see the content.'**
   String get selectAyahToSeeContent;
 
-  /// No description provided for @selectPrayerToLog.
-  ///
-  /// In en, this message translates to:
-  /// **'Select a prayer to log status'**
-  String get selectPrayerToLog;
-
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:
@@ -2036,10 +2036,16 @@ abstract class AppLocalizations {
   /// **'Basmalah'**
   String get shareBasmalah;
 
+  /// No description provided for @shareAttributionPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Using'**
+  String get shareAttributionPrefix;
+
   /// No description provided for @shareByApp.
   ///
   /// In en, this message translates to:
-  /// **'By\n{appName}'**
+  /// **'Using {appName}'**
   String shareByApp(String appName);
 
   /// No description provided for @shareClipboardInstallHint.
@@ -2129,6 +2135,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save image'**
   String get shareSaveImage;
+
+  /// No description provided for @sharePreserveLineBreaks.
+  ///
+  /// In en, this message translates to:
+  /// **'Mushaf line breaks'**
+  String get sharePreserveLineBreaks;
 
   /// No description provided for @shareSurahHeader.
   ///
@@ -2484,17 +2496,77 @@ abstract class AppLocalizations {
   /// **'Reset {prayer} iqamah to default'**
   String a11ySettingsResetIqamah(String prayer);
 
-  /// No description provided for @a11yNotificationsOn.
+  /// No description provided for @scheduleAlertOff.
   ///
   /// In en, this message translates to:
-  /// **'Notifications on'**
-  String get a11yNotificationsOn;
+  /// **'Silent'**
+  String get scheduleAlertOff;
 
-  /// No description provided for @a11yNotificationsOff.
+  /// No description provided for @scheduleAlertSound.
   ///
   /// In en, this message translates to:
-  /// **'Notifications off'**
-  String get a11yNotificationsOff;
+  /// **'Adhan'**
+  String get scheduleAlertSound;
+
+  /// No description provided for @scheduleAlertIqamahSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get scheduleAlertIqamahSound;
+
+  /// No description provided for @scheduleAlertNotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify'**
+  String get scheduleAlertNotify;
+
+  /// No description provided for @scheduleAlertOffHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No alert for this time'**
+  String get scheduleAlertOffHint;
+
+  /// No description provided for @scheduleAlertSoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play adhan when the time arrives'**
+  String get scheduleAlertSoundHint;
+
+  /// No description provided for @scheduleAlertIqamahSoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play alert when the time arrives'**
+  String get scheduleAlertIqamahSoundHint;
+
+  /// No description provided for @scheduleAlertNotifyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a notification without sound'**
+  String get scheduleAlertNotifyHint;
+
+  /// No description provided for @scheduleAlertPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert for {event}'**
+  String scheduleAlertPickerTitle(String event);
+
+  /// No description provided for @scheduleAlertEventAdhan.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer} adhan'**
+  String scheduleAlertEventAdhan(String prayer);
+
+  /// No description provided for @scheduleAlertEventIqamah.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer} iqamah'**
+  String scheduleAlertEventIqamah(String prayer);
+
+  /// No description provided for @scheduleAlertEventSunnah.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer}'**
+  String scheduleAlertEventSunnah(String prayer);
 
   /// No description provided for @keyboardShortcutsTabTitle.
   ///
@@ -2687,6 +2759,306 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Go to the previous thikr during focus reading.'**
   String get shortcutFortressThikrPrevDescription;
+
+  /// No description provided for @adhanSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan'**
+  String get adhanSectionTitle;
+
+  /// No description provided for @adhanSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.'**
+  String get adhanSectionSubtitle;
+
+  /// No description provided for @adhanSoundLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan sound'**
+  String get adhanSoundLabel;
+
+  /// No description provided for @adhanMuezzinMisharyAlafasi.
+  ///
+  /// In en, this message translates to:
+  /// **'Mishary Alafasi'**
+  String get adhanMuezzinMisharyAlafasi;
+
+  /// No description provided for @adhanMuezzinMakkah.
+  ///
+  /// In en, this message translates to:
+  /// **'Makkah'**
+  String get adhanMuezzinMakkah;
+
+  /// No description provided for @adhanMuezzinAbedAlbasaei.
+  ///
+  /// In en, this message translates to:
+  /// **'Abed Al-Basaei'**
+  String get adhanMuezzinAbedAlbasaei;
+
+  /// No description provided for @adhanMuezzinAhmadNufais.
+  ///
+  /// In en, this message translates to:
+  /// **'Ahmad Nufais'**
+  String get adhanMuezzinAhmadNufais;
+
+  /// No description provided for @adhanMuezzinGhaziAlSaadoni.
+  ///
+  /// In en, this message translates to:
+  /// **'Ghazi Al-Saadoni'**
+  String get adhanMuezzinGhaziAlSaadoni;
+
+  /// No description provided for @adhanMuezzinHamadDeghreri.
+  ///
+  /// In en, this message translates to:
+  /// **'Hamad Deghreri'**
+  String get adhanMuezzinHamadDeghreri;
+
+  /// No description provided for @adhanMuezzinHamdanAlMalki.
+  ///
+  /// In en, this message translates to:
+  /// **'Hamdan Al-Malki'**
+  String get adhanMuezzinHamdanAlMalki;
+
+  /// No description provided for @adhanMuezzinIbrahimAlArkani.
+  ///
+  /// In en, this message translates to:
+  /// **'Ibrahim Al-Arkani'**
+  String get adhanMuezzinIbrahimAlArkani;
+
+  /// No description provided for @adhanMuezzinMajedAlHamathani.
+  ///
+  /// In en, this message translates to:
+  /// **'Majed Al-Hamathani'**
+  String get adhanMuezzinMajedAlHamathani;
+
+  /// No description provided for @adhanMuezzinMansoorAlZahrani.
+  ///
+  /// In en, this message translates to:
+  /// **'Mansoor Az-Zahrani'**
+  String get adhanMuezzinMansoorAlZahrani;
+
+  /// No description provided for @adhanMuezzinMohammadAlMenshawy.
+  ///
+  /// In en, this message translates to:
+  /// **'Mohammad Al-Menshawy'**
+  String get adhanMuezzinMohammadAlMenshawy;
+
+  /// No description provided for @adhanMuezzinMohammadRefat.
+  ///
+  /// In en, this message translates to:
+  /// **'Mohammad Refat'**
+  String get adhanMuezzinMohammadRefat;
+
+  /// No description provided for @adhanMuezzinNasserAlQatami.
+  ///
+  /// In en, this message translates to:
+  /// **'Nasser Al-Qatami'**
+  String get adhanMuezzinNasserAlQatami;
+
+  /// No description provided for @adhanMuezzinSuhaibKhatba.
+  ///
+  /// In en, this message translates to:
+  /// **'Suhaib Khatba'**
+  String get adhanMuezzinSuhaibKhatba;
+
+  /// No description provided for @adhanVolumeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan volume'**
+  String get adhanVolumeLabel;
+
+  /// No description provided for @adhanShowAlertLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Show adhan alert'**
+  String get adhanShowAlertLabel;
+
+  /// No description provided for @adhanShowOsNotificationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'OS notification when hidden in tray'**
+  String get adhanShowOsNotificationLabel;
+
+  /// No description provided for @adhanAlertPositionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert position'**
+  String get adhanAlertPositionLabel;
+
+  /// No description provided for @adhanAlertPositionTopEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Top right'**
+  String get adhanAlertPositionTopEnd;
+
+  /// No description provided for @adhanAlertPositionTopStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Top left'**
+  String get adhanAlertPositionTopStart;
+
+  /// No description provided for @adhanAlertPositionCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center'**
+  String get adhanAlertPositionCenter;
+
+  /// No description provided for @adhanStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop adhan'**
+  String get adhanStop;
+
+  /// No description provided for @adhanAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan — {prayer}'**
+  String adhanAlertTitle(String prayer);
+
+  /// No description provided for @adhanPlayingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan — {prayer}'**
+  String adhanPlayingTitle(String prayer);
+
+  /// No description provided for @adhanOsNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan is playing — tap to focus'**
+  String get adhanOsNotificationBody;
+
+  /// No description provided for @iqamahAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah — {prayer}'**
+  String iqamahAlertTitle(String prayer);
+
+  /// No description provided for @iqamahPlayingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah — {prayer}'**
+  String iqamahPlayingTitle(String prayer);
+
+  /// No description provided for @iqamahOsNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah time — tap to focus'**
+  String get iqamahOsNotificationBody;
+
+  /// No description provided for @sunnahAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer}'**
+  String sunnahAlertTitle(String prayer);
+
+  /// No description provided for @sunnahOsNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunnah time — tap to focus'**
+  String get sunnahOsNotificationBody;
+
+  /// No description provided for @prayerAlertDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get prayerAlertDismiss;
+
+  /// No description provided for @iqamahSoundLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah call'**
+  String get iqamahSoundLabel;
+
+  /// No description provided for @iqamahMuezzinYasserAlDossari.
+  ///
+  /// In en, this message translates to:
+  /// **'Yasser Al-Dossari'**
+  String get iqamahMuezzinYasserAlDossari;
+
+  /// No description provided for @iqamahMuezzinMadinah.
+  ///
+  /// In en, this message translates to:
+  /// **'Madinah'**
+  String get iqamahMuezzinMadinah;
+
+  /// No description provided for @desktopSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop'**
+  String get desktopSectionTitle;
+
+  /// No description provided for @desktopSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System tray, window behaviour, and startup on desktop.'**
+  String get desktopSectionSubtitle;
+
+  /// No description provided for @desktopLaunchAtLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Start at login'**
+  String get desktopLaunchAtLogin;
+
+  /// No description provided for @desktopLaunchAtLoginHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start hidden in tray was also enabled so adhan alerts work after login.'**
+  String get desktopLaunchAtLoginHint;
+
+  /// No description provided for @desktopMinimizeToTrayOnClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide to tray when closing the window'**
+  String get desktopMinimizeToTrayOnClose;
+
+  /// No description provided for @desktopMinimizeToTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide to tray when minimizing'**
+  String get desktopMinimizeToTray;
+
+  /// No description provided for @desktopLaunchToTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Start hidden in tray'**
+  String get desktopLaunchToTray;
+
+  /// No description provided for @trayShowApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Tawaq'**
+  String get trayShowApp;
+
+  /// No description provided for @trayMuteAdhan.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute adhan'**
+  String get trayMuteAdhan;
+
+  /// No description provided for @trayQuit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit'**
+  String get trayQuit;
+
+  /// No description provided for @trayNextPrayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {prayer}'**
+  String trayNextPrayer(String prayer);
+
+  /// No description provided for @quranRecitationComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Recitation playback coming soon'**
+  String get quranRecitationComingSoon;
+
+  /// No description provided for @quranPlayAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'Play ayah'**
+  String get quranPlayAyah;
 }
 
 class _AppLocalizationsDelegate

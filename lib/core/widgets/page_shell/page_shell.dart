@@ -2,14 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/page_shell/app_bar.dart';
 import 'package:tawaq/core/widgets/page_shell/shell_navigation_bar.dart';
 import 'package:tawaq/core/widgets/page_shell/shell_shortcut_scope.dart';
 import 'package:tawaq/core/widgets/page_shell/shell_sidebar.dart';
 import 'package:tawaq/core/widgets/window_controls.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/adhan/adhan_alert_toast_listener.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// The main shell of the application.
@@ -26,41 +27,37 @@ class PageShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMobile = ResponsiveQuery.of(context).isLessThan(.sm);
+    final isMobile = isLessThan(context, FBreakpoint.sm);
 
     return Column(
       crossAxisAlignment: .stretch,
       children: [
         NonSelectable(
-          child: ColoredBox(
+          child: Container(
             color: context.theme.colors.background,
-            child: Padding(
-              padding: const .all(6),
-              child: SizedBox(
-                height: 28,
-                child: Row(
-                  children: [
-                    const WindowControls(),
-                    Expanded(
-                      child: ExcludeSemantics(
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onPanStart: (_) {
-                            unawaited(windowManager.startDragging());
-                          },
-                        ),
-                      ),
+            padding: const .all(6),
+            height: 40,
+            child: Row(
+              children: [
+                const WindowControls(),
+                Expanded(
+                  child: ExcludeSemantics(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.translucent,
+                      onPanStart: (_) {
+                        unawaited(windowManager.startDragging());
+                      },
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
         Expanded(
           child: FScaffold(
             header: const NonSelectable(child: ShellAppBar()),
-            sidebar: ResponsiveQuery.of(context).isAtLeast(.sm)
+            sidebar: isAtLeast(context, FBreakpoint.sm)
                 ? const NonSelectable(child: ShellSidebar())
                 : null,
             footer: isMobile
@@ -69,7 +66,7 @@ class PageShell extends ConsumerWidget {
             // RepaintBoundary prevents child from rebuilding
             // when sidebar changes
             child: RepaintBoundary(
-              child: FToaster(
+              child: AdhanAlertToastListener(
                 child: ShellShortcutScope(
                   child: child,
                 ),

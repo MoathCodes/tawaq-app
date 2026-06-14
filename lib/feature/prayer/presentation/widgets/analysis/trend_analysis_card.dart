@@ -2,55 +2,56 @@ import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:intl/intl.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/analysis/analysis_widgets.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Card showing prayer trend analysis with a stacked bar chart.
-class TrendAnalysisCard extends StatelessWidget {
+/// Card showing period trends, rates, and a stacked activity chart.
+class TrendAnalysisCard extends ConsumerWidget {
   /// Creates a [TrendAnalysisCard].
   const TrendAnalysisCard({
     required this.data,
-    required this.onPeriodChanged,
-    required this.selectedPeriod,
+    this.enabled = true,
     super.key,
   });
 
   /// The analysis data to display.
   final PrayerAnalysisSectionData data;
 
-  /// Callback when the selected period tab changes.
-  final void Function(PrayerAnalyticsPeriod) onPeriodChanged;
-
-  /// The currently selected analytics period.
-  final PrayerAnalyticsPeriod selectedPeriod;
+  /// When false, period tabs are not interactive (e.g. skeleton state).
+  final bool enabled;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
-    final colors = theme.colors;
     final l10n = context.l10n;
-
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: theme.colors.border,
-        ),
-        borderRadius: theme.radii.lg,
+    final selectedPeriod = ref.watch(
+      prayerAnalyticsSettingsProvider.select(
+        (value) => value.value?.period ?? PrayerAnalyticsPeriod.weekly,
       ),
-      padding: const EdgeInsets.all(AppSpacing.md),
+    );
+
+    return StaticCard(
+      backgroundColor: Colors.transparent,
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Semantics(
             header: true,
             child: Text(
-              l10n.graphicalAnalysis,
+              l10n.playerAnalytics,
               style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
@@ -58,33 +59,68 @@ class TrendAnalysisCard extends StatelessWidget {
           FTabs(
             control: FTabControl.lifted(
               index: selectedPeriod.index,
-              onChange: (index) =>
-                  onPeriodChanged(PrayerAnalyticsPeriod.values[index]),
+              onChange: enabled
+                  ? (index) => ref
+                        .read(prayerAnalyticsSettingsProvider.notifier)
+                        .setPeriod(PrayerAnalyticsPeriod.values[index])
+                  : (_) {},
             ),
-            style: .delta(
-              decoration: .boxDelta(color: colors.barrier),
-              labelTextStyle: .delta([
-                .exact(
-                  {.desktop},
-                  .delta(
-                    color: colors.secondaryForeground.withAlpha(150),
-                  ),
+            children: [
+              for (final period in PrayerAnalyticsPeriod.values)
+                FTabEntry(
+                  label: Text(period.getLocaleName(l10n)),
+                  child: data.period == period
+                      ? _PeriodTrendBody(data: data, period: period)
+                      : const SizedBox.shrink(),
                 ),
-              ]),
-            ),
-
-            children: PrayerAnalyticsPeriod.values.map((period) {
-              return FTabEntry(
-                label: Text(period.getLocaleName(l10n)),
-                child: _TrendChart(
-                  data: data,
-                  period: period,
-                ),
-              );
-            }).toList(),
+            ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PeriodTrendBody extends StatelessWidget {
+  const _PeriodTrendBody({
+    required this.data,
+    required this.period,
+  });
+
+  final PrayerAnalysisSectionData data;
+  final PrayerAnalyticsPeriod period;
+
+  String _periodSubtitle(AppLocalizations l10n) {
+    return switch (period) {
+      PrayerAnalyticsPeriod.weekly => l10n.onTimePrayersLast7Days,
+      PrayerAnalyticsPeriod.monthly => l10n.onTimePrayersLast30Days,
+      PrayerAnalyticsPeriod.yearly => l10n.onTimePrayersLast365Days,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final analytics = data.periodAnalytics;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: AppSpacing.md),
+        PeriodCompletionSummary(
+          completionPercentage: analytics.completionPercentage,
+          subtitle: _periodSubtitle(l10n),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        PeriodRateBars(
+          jamaahRate: analytics.jamaahPercentage,
+          onTimeRate: analytics.onTimePercentage,
+          lateRate: analytics.latePercentage,
+          missedRate: analytics.missedPercentage,
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        _TrendChart(data: data, period: period),
+      ],
     );
   }
 }
@@ -103,7 +139,7 @@ class _TrendChart extends StatelessWidget {
 
     if (buckets.isEmpty) {
       return SizedBox(
-        height: 180,
+        height: 200,
         child: Center(
           child: Text(
             l10n.noDataAvailable,
@@ -115,133 +151,183 @@ class _TrendChart extends StatelessWidget {
       );
     }
 
-    final groups = _buildGroups(buckets, theme.colors);
-    final maxTotal = groups
-        .map((g) => g.barRods.first.toY)
-        .fold<double>(1, math.max);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final chartHeight = constraints.maxWidth < theme.breakpoints.sm
+            ? 180.0
+            : constraints.maxWidth < theme.breakpoints.md
+            ? 200.0
+            : 220.0;
+        final barWidth = constraints.maxWidth < theme.breakpoints.sm
+            ? 18.0
+            : constraints.maxWidth < theme.breakpoints.md
+            ? 22.0
+            : 26.0;
+        final groupsSpace = constraints.maxWidth < theme.breakpoints.sm
+            ? 10.0
+            : 14.0;
 
-    return Column(
-      children: [
-        ExcludeSemantics(
-          child: SizedBox(
-            height: 180,
-            child: BarChart(
-            BarChartData(
-              maxY: maxTotal + 1,
-              gridData: const FlGridData(show: false),
-              borderData: FlBorderData(show: false),
-              barTouchData: BarTouchData(
-                enabled: true,
-                touchTooltipData: BarTouchTooltipData(
-                  tooltipPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.sm,
-                  ),
-                  tooltipMargin: 12,
-                  getTooltipColor: (_) =>
-                      theme.colors.background.withValues(alpha: 0.96),
-                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    final bucket = buckets[group.x];
-                    final counts = bucket.statusCounts;
-                    final jamaah = counts[CompletionStatus.jamaah] ?? 0;
-                    final onTime = counts[CompletionStatus.onTime] ?? 0;
-                    final late = counts[CompletionStatus.late] ?? 0;
-                    final missed = counts[CompletionStatus.missed] ?? 0;
-                    final total = jamaah + onTime + late + missed;
+        final groups = _buildGroups(
+          buckets,
+          theme.colors,
+          barWidth: barWidth,
+        );
+        final maxY = _resolveMaxY(period, groups);
 
-                    final title = DateFormat.MMMd(
-                      l10n.localeName,
-                    ).format(bucket.start);
-
-                    return BarTooltipItem(
-                      '$title\n',
-                      theme.typography.sm.copyWith(
-                        color: theme.colors.foreground,
-                        fontWeight: FontWeight.w700,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ExcludeSemantics(
+              child: SizedBox(
+                height: chartHeight,
+                child: BarChart(
+                  BarChartData(
+                    maxY: maxY,
+                    minY: 0,
+                    groupsSpace: groupsSpace,
+                    gridData: FlGridData(
+                      drawVerticalLine: false,
+                      horizontalInterval: maxY / 4,
+                      getDrawingHorizontalLine: (value) => FlLine(
+                        color: theme.colors.border.withValues(alpha: 0.25),
+                        strokeWidth: 1,
                       ),
-                      children: [
-                        TextSpan(
-                          text: '${l10n.total}: $total\n',
-                          style: theme.typography.xs.copyWith(
-                            color: theme.colors.mutedForeground,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '\u25cf ${l10n.jamaah}: $jamaah\n',
-                          style: theme.typography.xs.copyWith(
-                            color: CompletionStatus.jamaah.getBadgeColor(
-                              theme.colors,
-                            ),
-                          ),
-                        ),
-                        TextSpan(
-                          text: '\u25cf ${l10n.onTime}: $onTime\n',
-                          style: theme.typography.xs.copyWith(
-                            color: CompletionStatus.onTime.getBadgeColor(
-                              theme.colors,
-                            ),
-                          ),
-                        ),
-                        TextSpan(
-                          text: '\u25cf ${l10n.late}: $late\n',
-                          style: theme.typography.xs.copyWith(
-                            color: CompletionStatus.late.getBadgeColor(
-                              theme.colors,
-                            ),
-                          ),
-                        ),
-                        TextSpan(
-                          text: '\u25cf ${l10n.missed}: $missed',
-                          style: theme.typography.xs.copyWith(
-                            color: CompletionStatus.missed.getBadgeColor(
-                              theme.colors,
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              titlesData: FlTitlesData(
-                leftTitles: const AxisTitles(),
-                rightTitles: const AxisTitles(),
-                topTitles: const AxisTitles(),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 1,
-                    getTitlesWidget: (value, meta) => _BottomTitle(
-                      index: value.toInt(),
-                      buckets: buckets,
-                      period: period,
-                      meta: meta,
                     ),
+                    borderData: FlBorderData(show: false),
+                    barTouchData: BarTouchData(
+                      enabled: true,
+                      touchTooltipData: BarTouchTooltipData(
+                        tooltipPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        tooltipMargin: 12,
+                        getTooltipColor: (_) =>
+                            theme.colors.background.withValues(alpha: 0.96),
+                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                          final bucket = buckets[group.x];
+                          final counts = bucket.statusCounts;
+                          final jamaah = counts[CompletionStatus.jamaah] ?? 0;
+                          final onTime = counts[CompletionStatus.onTime] ?? 0;
+                          final late = counts[CompletionStatus.late] ?? 0;
+                          final missed = counts[CompletionStatus.missed] ?? 0;
+                          final total = jamaah + onTime + late + missed;
+
+                          final title = DateFormat.MMMd(
+                            l10n.localeName,
+                          ).format(bucket.start);
+
+                          return BarTooltipItem(
+                            '$title\n',
+                            theme.typography.sm.copyWith(
+                              color: theme.colors.foreground,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: '${l10n.total}: $total\n',
+                                style: theme.typography.xs.copyWith(
+                                  color: theme.colors.mutedForeground,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '\u25cf ${l10n.jamaah}: $jamaah\n',
+                                style: theme.typography.xs.copyWith(
+                                  color: CompletionStatus.jamaah.getBadgeColor(
+                                    theme.colors,
+                                  ),
+                                ),
+                              ),
+                              TextSpan(
+                                text: '\u25cf ${l10n.onTime}: $onTime\n',
+                                style: theme.typography.xs.copyWith(
+                                  color: CompletionStatus.onTime.getBadgeColor(
+                                    theme.colors,
+                                  ),
+                                ),
+                              ),
+                              TextSpan(
+                                text: '\u25cf ${l10n.late}: $late\n',
+                                style: theme.typography.xs.copyWith(
+                                  color: CompletionStatus.late.getBadgeColor(
+                                    theme.colors,
+                                  ),
+                                ),
+                              ),
+                              TextSpan(
+                                text: '\u25cf ${l10n.missed}: $missed',
+                                style: theme.typography.xs.copyWith(
+                                  color: CompletionStatus.missed.getBadgeColor(
+                                    theme.colors,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    titlesData: FlTitlesData(
+                      leftTitles: const AxisTitles(),
+                      rightTitles: const AxisTitles(),
+                      topTitles: const AxisTitles(),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: period == PrayerAnalyticsPeriod.weekly
+                              ? 42
+                              : 28,
+                          interval: 1,
+                          getTitlesWidget: (value, meta) => _BottomTitle(
+                            index: value.toInt(),
+                            buckets: buckets,
+                            period: period,
+                            meta: meta,
+                          ),
+                        ),
+                      ),
+                    ),
+                    barGroups: groups,
                   ),
                 ),
               ),
-              barGroups: groups,
             ),
-          ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        const _LegendRow(),
-      ],
+            const SizedBox(height: AppSpacing.sm),
+            const _LegendRow(),
+          ],
+        );
+      },
     );
+  }
+
+  double _resolveMaxY(
+    PrayerAnalyticsPeriod period,
+    List<BarChartGroupData> groups,
+  ) {
+    final observedMax = groups
+        .map((g) => g.barRods.first.toY)
+        .fold<double>(0, math.max);
+
+    return switch (period) {
+      PrayerAnalyticsPeriod.weekly => math.max(
+        PrayerAnalyticsCalculator.prayersPerDay.toDouble(),
+        observedMax,
+      ),
+      _ => math.max(observedMax, 1),
+    };
   }
 
   List<BarChartGroupData> _buildGroups(
     List<PrayerTrendBucket> buckets,
-    FColors colors,
-  ) {
-    // Cache colors once
+    FColors colors, {
+    required double barWidth,
+  }) {
     final jamaahColor = CompletionStatus.jamaah.getBadgeColor(colors);
     final onTimeColor = CompletionStatus.onTime.getBadgeColor(colors);
     final lateColor = CompletionStatus.late.getBadgeColor(colors);
     final missedColor = CompletionStatus.missed.getBadgeColor(colors);
-    final borderRadius = BorderRadius.circular(6);
+    const borderRadius = BorderRadius.vertical(top: Radius.circular(8));
 
     return List.generate(buckets.length, (index) {
       final counts = buckets[index].statusCounts;
@@ -256,16 +342,11 @@ class _TrendChart extends StatelessWidget {
         barRods: [
           BarChartRodData(
             toY: total,
-            width: 14,
+            width: barWidth,
             borderRadius: borderRadius,
             borderSide: .none,
             rodStackItems: [
-              BarChartRodStackItem(
-                0,
-                jamaah,
-                jamaahColor,
-                borderSide: .none,
-              ),
+              BarChartRodStackItem(0, jamaah, jamaahColor, borderSide: .none),
               BarChartRodStackItem(
                 jamaah,
                 jamaah + onTime,
@@ -313,6 +394,8 @@ class _BottomTitle extends StatelessWidget {
 
     final bucket = buckets[index];
     final locale = context.l10n.localeName;
+    final theme = FTheme.of(context);
+    final colors = theme.colors;
 
     final label = switch (period) {
       PrayerAnalyticsPeriod.yearly => DateFormat.MMM(
@@ -324,15 +407,32 @@ class _BottomTitle extends StatelessWidget {
       PrayerAnalyticsPeriod.weekly => DateFormat.E(locale).format(bucket.start),
     };
 
-    final theme = FTheme.of(context);
+    final showStreakMarker =
+        period == PrayerAnalyticsPeriod.weekly &&
+        isFullyCompletedBucket(bucket);
 
     return SideTitleWidget(
       meta: meta,
-      child: Text(
-        label,
-        style: theme.typography.xs.copyWith(
-          color: theme.colors.mutedForeground,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showStreakMarker)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+              child: Icon(
+                FLucideIcons.flame,
+                size: 12,
+                color: colors.primary,
+              ),
+            ),
+          Text(
+            label,
+            style: theme.typography.xs.copyWith(
+              color: theme.colors.mutedForeground,
+              fontWeight: showStreakMarker ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -353,16 +453,16 @@ class _LegendRow extends StatelessWidget {
     final colors = context.theme.colors;
     final l10n = context.l10n;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.sm,
       children: [
-        for (var i = 0; i < _statuses.length; i++) ...[
-          if (i != 0) const SizedBox(width: AppSpacing.md),
+        for (final status in _statuses)
           _LegendItem(
-            label: _statuses[i].getLocaleName(l10n),
-            color: _statuses[i].getBadgeColor(colors),
+            label: status.getLocaleName(l10n),
+            color: status.getBadgeColor(colors),
           ),
-        ],
       ],
     );
   }
@@ -379,6 +479,7 @@ class _LegendItem extends StatelessWidget {
     final theme = FTheme.of(context);
     return MergeSemantics(
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           ExcludeSemantics(
             child: Container(

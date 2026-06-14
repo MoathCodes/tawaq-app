@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
@@ -71,6 +72,7 @@ class AyahSearchSelector extends ConsumerWidget {
           ),
         ),
       suffixBuilder: null,
+      contentConstraints: selectPopoverPortalConstraints(context),
       style: selectStyle(
         colors: colors,
         style: theme.style,
@@ -122,13 +124,7 @@ class AyahSearchSelector extends ConsumerWidget {
       ),
       contentLoadingBuilder: (context, style) => const Padding(
         padding: EdgeInsets.all(24),
-        child: Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: FCircularProgress.loader(),
-          ),
-        ),
+        child: FCircularProgress.loader(),
       ),
       // Lifted control syncs with selectedAyah from unified state
       control: FSelectControl.lifted(
@@ -157,24 +153,28 @@ class AyahSearchSelector extends ConsumerWidget {
           value: ayah,
           title: Row(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: .1),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  l10n.surahAyahInfo(surahName, ayah.numberInSurah),
-                  style: typography.xs.copyWith(
-                    color: colors.primary,
-                    fontWeight: FontWeight.w600,
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: colors.primary.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    l10n.surahAyahInfo(surahName, ayah.numberInSurah),
+                    style: typography.xs.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 l10n.pageJuzInfo(ayah.page, ayah.juz),
                 style: typography.xs.copyWith(

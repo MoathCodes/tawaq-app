@@ -2,9 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/desktop/desktop_window_controller.dart';
 import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/merged_action_semantics.dart';
 import 'package:tawaq/core/widgets/shell_a11y.dart';
 import 'package:tawaq/theme/button_styles.dart';
@@ -72,7 +75,7 @@ class MacOSWindowControls extends StatelessWidget {
 }
 
 /// Window controls that adapt to the current platform.
-class WindowControls extends StatelessWidget {
+class WindowControls extends ConsumerWidget {
   /// Creates a new instance of [WindowControls].
   const WindowControls({super.key, this.forceMacStyle});
 
@@ -80,7 +83,7 @@ class WindowControls extends StatelessWidget {
   final bool? forceMacStyle;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isMaximized = windowManager.isMaximized().asStream();
     final theme = FTheme.of(context);
     final l10n = context.l10n;
@@ -88,8 +91,8 @@ class WindowControls extends StatelessWidget {
 
     if (isMacStyle) {
       return MacOSWindowControls(
-        onClose: _closeWindow,
-        onMinimize: _minimizeWindow,
+        onClose: () => _closeWindow(ref),
+        onMinimize: () => _minimizeWindow(ref),
         isMaximized: isMaximized,
         onFullscreen: _maximizeWindow,
       );
@@ -106,7 +109,7 @@ class WindowControls extends StatelessWidget {
               typography: theme.typography,
               style: theme.style,
             ),
-            onPress: _closeWindow,
+            onPress: () => _closeWindow(ref),
             child: const Icon(FLucideIcons.x, size: 14),
           ),
         ),
@@ -141,7 +144,7 @@ class WindowControls extends StatelessWidget {
               typography: theme.typography,
               style: theme.style,
             ),
-            onPress: _minimizeWindow,
+            onPress: () => _minimizeWindow(ref),
             child: const Icon(FLucideIcons.minus, size: 14),
           ),
         ),
@@ -149,7 +152,11 @@ class WindowControls extends StatelessWidget {
     );
   }
 
-  Future<void> _closeWindow() async {
+  Future<void> _closeWindow(WidgetRef ref) async {
+    if (isDesktopPlatform) {
+      await ref.read(desktopWindowControllerProvider).requestClose();
+      return;
+    }
     await windowManager.close();
   }
 
@@ -161,7 +168,11 @@ class WindowControls extends StatelessWidget {
     }
   }
 
-  Future<void> _minimizeWindow() async {
+  Future<void> _minimizeWindow(WidgetRef ref) async {
+    if (isDesktopPlatform) {
+      await ref.read(desktopWindowControllerProvider).requestMinimize();
+      return;
+    }
     await windowManager.minimize();
   }
 }

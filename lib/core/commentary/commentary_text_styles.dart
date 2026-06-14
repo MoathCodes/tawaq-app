@@ -84,13 +84,11 @@ class CommentaryTextStyles {
         fontSize: fontSize * 0.88,
         color: colors.mutedForeground,
         height: 1.55,
-        fontFamily: FontFamily.iBMPlexSansArabic,
       ),
       verseRef: baseStyle.copyWith(
         fontSize: fontSize * 0.78,
         color: colors.mutedForeground,
         height: 1.6,
-        fontFamily: FontFamily.iBMPlexSansArabic,
       ),
       listMarker: baseStyle.copyWith(
         fontWeight: FontWeight.w700,

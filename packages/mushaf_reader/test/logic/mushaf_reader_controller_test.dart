@@ -3,6 +3,8 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import '../test_utils.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('MushafReaderController Tests', () {
     late MushafReaderController controller;
     late MockQuranRepository mockRepo;
@@ -17,11 +19,11 @@ void main() {
 
     test('Initial state is correct', () async {
       expect(controller.currentPage, 1);
-      expect(controller.isInitialized, true);
+      expect(controller.isInitialized, false);
       expect(controller.selectedAyahId, null);
 
-      // Wait for async init to complete (microtask)
-      await Future.microtask(() {});
+      await controller.ensureReady();
+      expect(controller.isInitialized, true);
       expect(controller.currentPageInfo, isNotNull);
       expect(controller.currentPageInfo?.pageNumber, 1);
     });
@@ -71,6 +73,16 @@ void main() {
       await controller.jumpToJuz(2);
       // Mock repo: (2-1)*20 + 2 = 22
       expect(controller.currentPage, 22);
+    });
+
+    test('getSurahSync returns null when surah is missing', () async {
+      await controller.ensureReady();
+      expect(controller.getSurahSync(999), isNull);
+    });
+
+    test('getJuzSync returns null when juz is missing', () async {
+      await controller.ensureReady();
+      expect(controller.getJuzSync(999), isNull);
     });
   });
 }

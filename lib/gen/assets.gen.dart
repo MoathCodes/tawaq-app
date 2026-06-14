@@ -11,6 +11,16 @@
 
 import 'package:flutter/widgets.dart';
 
+class $AssetsAudioGen {
+  const $AssetsAudioGen();
+
+  /// Directory path: assets/audio/adhan
+  $AssetsAudioAdhanGen get adhan => const $AssetsAudioAdhanGen();
+
+  /// Directory path: assets/audio/iqamah
+  $AssetsAudioIqamahGen get iqamah => const $AssetsAudioIqamahGen();
+}
+
 class $AssetsDatabaseGen {
   const $AssetsDatabaseGen();
 
@@ -69,6 +79,10 @@ class $AssetsImagesGen {
   /// File path: assets/images/888-02.png
   AssetGenImage get a88802 => const AssetGenImage('assets/images/888-02.png');
 
+  /// File path: assets/images/app_icon.png
+  AssetGenImage get appIcon =>
+      const AssetGenImage('assets/images/app_icon.png');
+
   /// File path: assets/images/asr.webp
   AssetGenImage get asr => const AssetGenImage('assets/images/asr.webp');
 
@@ -96,9 +110,14 @@ class $AssetsImagesGen {
   AssetGenImage get sunrise =>
       const AssetGenImage('assets/images/sunrise.webp');
 
+  /// File path: assets/images/tray_icon.png
+  AssetGenImage get trayIcon =>
+      const AssetGenImage('assets/images/tray_icon.png');
+
   /// List of all assets
   List<AssetGenImage> get values => [
     a88802,
+    appIcon,
     asr,
     duhr,
     fajr,
@@ -107,7 +126,96 @@ class $AssetsImagesGen {
     magrib,
     midnight,
     sunrise,
+    trayIcon,
   ];
+}
+
+class $AssetsAudioAdhanGen {
+  const $AssetsAudioAdhanGen();
+
+  /// File path: assets/audio/adhan/abed_albasaei.mp3
+  String get abedAlbasaei => 'assets/audio/adhan/abed_albasaei.mp3';
+
+  /// File path: assets/audio/adhan/ahmad_nufais.mp3
+  String get ahmadNufais => 'assets/audio/adhan/ahmad_nufais.mp3';
+
+  /// File path: assets/audio/adhan/fajr.mp3
+  String get fajr => 'assets/audio/adhan/fajr.mp3';
+
+  /// File path: assets/audio/adhan/ghazi_al_saadoni.mp3
+  String get ghaziAlSaadoni => 'assets/audio/adhan/ghazi_al_saadoni.mp3';
+
+  /// File path: assets/audio/adhan/hamad_deghreri.mp3
+  String get hamadDeghreri => 'assets/audio/adhan/hamad_deghreri.mp3';
+
+  /// File path: assets/audio/adhan/hamdan_al_malki.mp3
+  String get hamdanAlMalki => 'assets/audio/adhan/hamdan_al_malki.mp3';
+
+  /// File path: assets/audio/adhan/ibrahim_al_arkani.mp3
+  String get ibrahimAlArkani => 'assets/audio/adhan/ibrahim_al_arkani.mp3';
+
+  /// File path: assets/audio/adhan/majed_al_hamathani.mp3
+  String get majedAlHamathani => 'assets/audio/adhan/majed_al_hamathani.mp3';
+
+  /// File path: assets/audio/adhan/makkah.mp3
+  String get makkah => 'assets/audio/adhan/makkah.mp3';
+
+  /// File path: assets/audio/adhan/mansoor_al_zahrani.mp3
+  String get mansoorAlZahrani => 'assets/audio/adhan/mansoor_al_zahrani.mp3';
+
+  /// File path: assets/audio/adhan/mishary_alafasi.mp3
+  String get misharyAlafasi => 'assets/audio/adhan/mishary_alafasi.mp3';
+
+  /// File path: assets/audio/adhan/mohammad_al_menshawy.mp3
+  String get mohammadAlMenshawy =>
+      'assets/audio/adhan/mohammad_al_menshawy.mp3';
+
+  /// File path: assets/audio/adhan/mohammad_refat.mp3
+  String get mohammadRefat => 'assets/audio/adhan/mohammad_refat.mp3';
+
+  /// File path: assets/audio/adhan/nasser_al_qatami.mp3
+  String get nasserAlQatami => 'assets/audio/adhan/nasser_al_qatami.mp3';
+
+  /// File path: assets/audio/adhan/suhaib_khatba.mp3
+  String get suhaibKhatba => 'assets/audio/adhan/suhaib_khatba.mp3';
+
+  /// List of all assets
+  List<String> get values => [
+    abedAlbasaei,
+    ahmadNufais,
+    fajr,
+    ghaziAlSaadoni,
+    hamadDeghreri,
+    hamdanAlMalki,
+    ibrahimAlArkani,
+    majedAlHamathani,
+    makkah,
+    mansoorAlZahrani,
+    misharyAlafasi,
+    mohammadAlMenshawy,
+    mohammadRefat,
+    nasserAlQatami,
+    suhaibKhatba,
+  ];
+}
+
+class $AssetsAudioIqamahGen {
+  const $AssetsAudioIqamahGen();
+
+  /// File path: assets/audio/iqamah/madinah.mp3
+  String get madinah => 'assets/audio/iqamah/madinah.mp3';
+
+  /// File path: assets/audio/iqamah/makkah.mp3
+  String get makkah => 'assets/audio/iqamah/makkah.mp3';
+
+  /// File path: assets/audio/iqamah/mishary_alafasi.mp3
+  String get misharyAlafasi => 'assets/audio/iqamah/mishary_alafasi.mp3';
+
+  /// File path: assets/audio/iqamah/yasser_al_dossari.mp3
+  String get yasserAlDossari => 'assets/audio/iqamah/yasser_al_dossari.mp3';
+
+  /// List of all assets
+  List<String> get values => [madinah, makkah, misharyAlafasi, yasserAlDossari];
 }
 
 class $AssetsDatabaseTafseerArGen {
@@ -132,6 +240,7 @@ class $AssetsDatabaseTafseerArGen {
 class Assets {
   const Assets._();
 
+  static const $AssetsAudioGen audio = $AssetsAudioGen();
   static const $AssetsDatabaseGen database = $AssetsDatabaseGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
 }

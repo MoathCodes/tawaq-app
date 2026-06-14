@@ -8,6 +8,7 @@
 /// - `surahs.hive` - All 114 surahs keyed by surah number
 /// - `juzs.hive` - All 30 juzs keyed by juz number
 /// - `pageLayouts.hive` - Page layouts keyed by page number (1-604)
+/// - `search_index.hive` - Pre-normalized plain text for ayah search
 /// - `metadata.hive` - Key-value metadata (e.g., basmalah glyph)
 /// - `manifest.json` - MD5 hashes for versioning
 library;
@@ -17,13 +18,15 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:mushaf_reader/src/core/arabic_search_normalize.dart';
+import 'package:mushaf_reader/src/core/search_index_entry.dart';
 import 'package:mushaf_reader/src/data/hive/hive_adapters.dart';
 import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:mushaf_reader/src/data/models/juz.dart';
 import 'package:mushaf_reader/src/data/models/page_layouts.dart';
 import 'package:mushaf_reader/src/data/models/revelation_type.dart';
 import 'package:mushaf_reader/src/data/models/surah.dart';
-import 'package:mushaf_reader/src/data/surah_metadata.dart';
+import 'data/surah_metadata.dart';
 import 'package:path/path.dart' as p;
 
 Future<void> main() async {
@@ -87,6 +90,10 @@ Future<void> main() async {
   // Generate Ayahs box using quran_full.json for word-level glyph construction
   print('Generating ayahs.hive...');
   await _generateAyahsBox(surahsData, pagesData);
+
+  // Generate compact search index (normalized plain text only)
+  print('Generating search_index.hive...');
+  await _generateSearchIndexBox(surahsData);
 
   // Generate Juzs box (needs surahsData to calculate start page/ayah)
   print('Generating juzs.hive...');
@@ -249,6 +256,37 @@ Future<void> _generateAyahsBox(
 
   await box.close();
   print('  - $count ayahs written');
+}
+
+Future<void> _generateSearchIndexBox(List<dynamic> surahsData) async {
+  final box = await Hive.openBox<String>('search_index');
+
+  var count = 0;
+  for (final s in surahsData) {
+    final surahNumber = s['number'] as int;
+    final ayahs = s['ayahs'] as List<dynamic>;
+
+    for (final a in ayahs) {
+      final ayahId = a['number'] as int;
+      final textPlain = a['aya_text_emlaey'] as String?;
+      if (textPlain == null || textPlain.isEmpty) continue;
+
+      final normalizedText = normalizeArabicForSearch(textPlain);
+      if (normalizedText.isEmpty) continue;
+
+      await box.put(
+        ayahId,
+        encodeSearchIndexEntry(
+          surahNumber: surahNumber,
+          normalizedText: normalizedText,
+        ),
+      );
+      count++;
+    }
+  }
+
+  await box.close();
+  print('  - $count search entries written');
 }
 
 Future<void> _generateJuzsBox(

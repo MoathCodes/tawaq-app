@@ -25,6 +25,20 @@ class HadithResultCard extends StatelessWidget {
   final bool showFavoriteAction;
   final int hadithMaxLines;
 
+  int _effectiveHadithMaxLines(double maxWidth, FBreakpoints breakpoints) {
+    if (maxWidth < breakpoints.sm) {
+      return hadithMaxLines.clamp(2, 3);
+    }
+    if (maxWidth < breakpoints.md) {
+      return hadithMaxLines.clamp(3, 4);
+    }
+    return hadithMaxLines;
+  }
+
+  TextAlign _hadithTextAlign(double maxWidth, FBreakpoints breakpoints) {
+    return maxWidth < breakpoints.sm ? TextAlign.start : TextAlign.justify;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -48,105 +62,120 @@ class HadithResultCard extends StatelessWidget {
           )
         : null;
 
-    final card = HoverCard(
-      enableHoverEffect: onSelect != null,
-      backgroundColor: colors.background,
-      borderColor: isSelected
-          ? colors.primary
-          : colors.border.withValues(alpha: 0.6),
-      activeBorderColor: colors.primary,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: AppSpacing.sm,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: colors.secondary.withValues(alpha: 0.6),
-              borderRadius: theme.radii.md,
-              border: Border.all(
-                color: colors.border.withValues(alpha: 0.5),
+    Widget buildCard(double maxWidth) {
+      final breakpoints = context.theme.breakpoints;
+      final effectiveMaxLines = _effectiveHadithMaxLines(maxWidth, breakpoints);
+      final textAlign = _hadithTextAlign(maxWidth, breakpoints);
+
+      return HoverCard(
+        enableHoverEffect: onSelect != null,
+        backgroundColor: colors.background,
+        borderColor: isSelected
+            ? colors.primary
+            : colors.border.withValues(alpha: 0.6),
+        activeBorderColor: colors.primary,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.sm,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: colors.secondary.withValues(alpha: 0.6),
+                borderRadius: theme.radii.md,
+                border: Border.all(
+                  color: colors.border.withValues(alpha: 0.5),
+                ),
+              ),
+              child: ExcludeSemantics(
+                child: Text(
+                  hadith.hadith,
+                  maxLines: effectiveMaxLines,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: textAlign,
+                  style: theme.typography.lg.copyWith(height: 1.9),
+                ),
               ),
             ),
-            child: ExcludeSemantics(
-              child: Text(
-                hadith.hadith,
-                maxLines: hadithMaxLines,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.justify,
-                style: theme.typography.lg.copyWith(height: 1.9),
-              ),
-            ),
-          ),
-          ExcludeSemantics(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: 4,
-              children: [
-                HadithMetaLine(
-                  label: l10n.hadithNarrator,
-                  value: hadith.rawi,
-                ),
-                HadithMetaLine(
-                  label: l10n.hadithMuhaddith,
-                  value: hadith.mohdith,
-                ),
-                HadithMetaLine(
-                  label: l10n.hadithSource,
-                  value: l10n.hadithSourceCitation(
-                    hadith.book,
-                    hadith.numberOrPage,
+            ExcludeSemantics(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 4,
+                children: [
+                  HadithMetaLine(
+                    label: l10n.hadithNarrator,
+                    value: hadith.rawi,
                   ),
-                ),
-              ],
+                  HadithMetaLine(
+                    label: l10n.hadithMuhaddith,
+                    value: hadith.mohdith,
+                  ),
+                  HadithMetaLine(
+                    label: l10n.hadithSource,
+                    value: l10n.hadithSourceCitation(
+                      hadith.book,
+                      hadith.numberOrPage,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Row(
-            children: [
-              HadithDecorExcludeSemantics(child: HadithHukmBadge(hukm: hadith.hukm)),
-              if (showMetadataAvailability) ...[
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: HadithDecorExcludeSemantics(
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                HadithDecorExcludeSemantics(
+                  child: HadithHukmBadge(hukm: hadith.hukm),
+                ),
+                if (showMetadataAvailability)
+                  HadithDecorExcludeSemantics(
                     child: HadithDetailsAvailabilityRow(hadith: hadith),
                   ),
-                ),
-              ] else if (favoriteButton != null)
-                const Spacer(),
-            ],
-          ),
-        ],
-      ),
-    );
-
-    final onCardSelect = onSelect;
-    final rowBody = onCardSelect == null
-        ? card
-        : MouseClick(onClick: onCardSelect, child: card);
-
-    final row = HadithResultRowSemantics(
-      label: hadithResultRowSemanticsLabel(
-        hadith,
-        l10n,
-        isFavorite: isFavorite,
-        isSelected: isSelected,
-      ),
-      button: onCardSelect != null,
-      child: rowBody,
-    );
-
-    if (favoriteButton == null) {
-      return row;
+              ],
+            ),
+          ],
+        ),
+      );
     }
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: row),
-        favoriteButton,
-      ],
+    final rowLabel = hadithResultRowSemanticsLabel(
+      hadith,
+      l10n,
+      isFavorite: isFavorite,
+      isSelected: isSelected,
+    );
+
+    Widget buildRow(Widget card) {
+      final onCardSelect = onSelect;
+      return onCardSelect == null
+          ? HadithResultRowSemantics(
+              label: rowLabel,
+              child: card,
+            )
+          : MouseClick(
+              onClick: onCardSelect,
+              semanticsLabel: rowLabel,
+              child: card,
+            );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final card = buildRow(buildCard(constraints.maxWidth));
+        final favorite = favoriteButton;
+        if (favorite == null) return card;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: card),
+            favorite,
+          ],
+        );
+      },
     );
   }
 }
@@ -177,8 +206,6 @@ class HadithMetaLine extends StatelessWidget {
           TextSpan(text: value),
         ],
       ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
     );
   }
 }
@@ -223,12 +250,10 @@ class HadithDetailsAvailabilityRow extends StatelessWidget {
 
     if (chips.isEmpty) return const SizedBox.shrink();
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        spacing: AppSpacing.xs,
-        children: chips,
-      ),
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
+      children: chips,
     );
   }
 }
@@ -247,6 +272,7 @@ class HadithInfoMiniChip extends StatelessWidget {
       child: FBadge(
       variant: .secondary,
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         spacing: AppSpacing.xs,
         children: [
           Icon(icon, size: 12, color: theme.colors.mutedForeground),
@@ -287,24 +313,22 @@ class HadithHukmBadge extends StatelessWidget {
       _ => Color.lerp(colors.primary, colors.mutedForeground, 0.75)!,
     };
 
-    return ConstrainedBox(
+    return Container(
       constraints: const BoxConstraints(maxWidth: 500),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: 6,
-        ),
-        decoration: BoxDecoration(
-          color: color.withAlpha(28),
-          borderRadius: theme.radii.md,
-          border: Border.all(color: color.withAlpha(80)),
-        ),
-        child: Text(
-          hukm,
-          style: theme.typography.sm.copyWith(color: color),
-          overflow: TextOverflow.ellipsis,
-          maxLines: 1,
-        ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: color.withAlpha(28),
+        borderRadius: theme.radii.md,
+        border: Border.all(color: color.withAlpha(80)),
+      ),
+      child: Text(
+        hukm,
+        style: theme.typography.sm.copyWith(color: color),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 2,
       ),
     );
   }

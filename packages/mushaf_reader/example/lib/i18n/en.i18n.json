@@ -1,0 +1,79 @@
+{
+  "appTitle": "mushaf_reader demos",
+  "gettingStarted": "Call MushafReaderLibrary.ensureInitialized(subDirectory: 'my_app') in main() so hive data is isolated per app.",
+  "catalogSections": {
+    "readers": "Readers",
+    "pages": "Pages & excerpts",
+    "buildingBlocks": "Building blocks"
+  },
+  "demos": {
+    "mushafReader": {
+      "title": "MushafReader",
+      "subtitle": "Full swipeable reader (single page per viewport)"
+    },
+    "twoPageSpread": {
+      "title": "Two-page spread",
+      "subtitle": "MushafReader with pagesPerViewport: 2"
+    },
+    "mushafPage": {
+      "title": "MushafPage",
+      "subtitle": "Single page with ayah tap handling"
+    },
+    "shareCard": {
+      "title": "MushafPageRange share card",
+      "subtitle": "Ayah range inside a mock share card"
+    },
+    "crossPageRange": {
+      "title": "Cross-page range",
+      "subtitle": "MushafPageRange.contiguous across pages"
+    },
+    "standaloneWidgets": {
+      "title": "Standalone widgets",
+      "subtitle": "AyahWidget, headers, basmalah, juz, page number"
+    }
+  },
+  "common": {
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "pageLabel": "Page $page",
+    "pagesSpread": "Pages $left – $right",
+    "jumpToPage": "Go to page",
+    "invalidPage": "Enter a page between 1 and 604",
+    "loadingPage": "Loading page…",
+    "retry": "Retry",
+    "loadFailed": "Could not load page",
+    "localeToggle": "Switch language",
+    "themeToggle": "Toggle theme",
+    "tappedAyah": "Tapped: $reference",
+    "ayahId": "Ayah id: $id",
+    "footer": "mushaf_reader example"
+  },
+  "shareCard": {
+    "title": "MushafPageRange mock share card",
+    "showSurahHeader": "Show surah header",
+    "showBasmalah": "Show basmalah",
+    "basmalahUnavailable": "Not available for this range",
+    "rangeEnd": "Range end: $reference"
+  },
+  "crossPage": {
+    "title": "Cross-page MushafPageRange",
+    "presetLabel": "Preset range",
+    "presetPages1to2": "Ayahs 1–8 (pages 1–2)",
+    "sliceSummary": "Page $page: $count ayah(s)"
+  },
+  "standalone": {
+    "title": "Standalone widgets",
+    "ayahFromId": "AyahWidget.fromId",
+    "ayahFromIdHint": "Loads a single ayah by global id from the repository.",
+    "ayahFromSurahAyah": "AyahWidget.fromSurahAyah",
+    "ayahFromSurahAyahHint": "Loads an ayah by surah and verse number.",
+    "basmalah": "BasmalahWidget",
+    "basmalahHint": "Loads the QCF4 basmalah glyph from the repository.",
+    "surahHeader": "SurahHeaderWidget",
+    "surahHeaderHint": "Use fromSurahNumber() — never pass fake Surah.glyph strings.",
+    "surahNameJuz": "SurahNameWidget + JuzWidget",
+    "surahNameJuzHint": "Header row pattern used by MushafPage.",
+    "pageNumber": "PageNumberWidget",
+    "pageNumberHint": "Renders the mushaf page numeral for a given page."
+  }
+}

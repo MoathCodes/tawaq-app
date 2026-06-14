@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
@@ -28,11 +30,6 @@ import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 ///     super.initState();
 ///     _controller = MushafReaderController();
 ///     _initReader();
-///   }
-///
-///   Future<void> _initReader() async {
-///     await _controller.init();
-///     setState(() {});
 ///   }
 ///
 ///   @override
@@ -80,6 +77,10 @@ import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 ///
 /// ## Data Access
 ///
+/// Async data methods delegate to [repository] and add controller-level caches
+/// for surahs/juzs. For navigation-free lookups, [repository] is equivalent.
+/// Prefer the controller when you already hold one for a reader widget.
+///
 /// ```dart
 /// // Get all surahs (cached after first call)
 /// final surahs = await controller.getAllSurahs();
@@ -89,6 +90,9 @@ import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 ///
 /// // Get ayah by reference
 /// final ayah = await controller.getAyahBySurah(2, 255);
+///
+/// // Or use the repository directly
+/// final sameAyah = await controller.repository.getAyahBySurah(2, 255);
 /// ```
 ///
 /// See also:
@@ -108,6 +112,9 @@ class MushafReaderController extends ChangeNotifier {
   /// Whether this controller owns the PageController.
   final bool _ownsPageController;
 
+  /// Whether to require [MushafReaderLibrary.ensureInitialized] before init.
+  final bool _checkLibraryInit;
+
   /// The initial page to display (1-604).
   final int initialPage;
 
@@ -122,8 +129,11 @@ class MushafReaderController extends ChangeNotifier {
   /// The currently selected Ayah ID, or null if none selected.
   int? _selectedAyahId;
 
-  /// Whether the controller is initialized.
+  /// Whether the controller is initialized and [ensureReady] has completed.
   bool _isInitialized = false;
+
+  /// Completes when [_doInit] finishes successfully.
+  Future<void>? _initFuture;
 
   /// Cached Basmalah glyph.
   String? _cachedBasmalah;
@@ -132,7 +142,7 @@ class MushafReaderController extends ChangeNotifier {
   Map<int, Juz>? _juzCache;
 
   /// Cached Surah data (populated during init).
-  List<Surah>? _surahCache;
+  Map<int, Surah>? _surahCache;
 
   /// Cached page info for the current page.
   MushafPageInfo? _currentPageInfo;
@@ -151,17 +161,21 @@ class MushafReaderController extends ChangeNotifier {
   /// [initialPage] - The page to start on (1-604). Defaults to 1.
   ///
   /// [pagesPerViewport] - How many pages to show at once. Defaults to 1.
+  ///
+  /// [repository] - Optional custom data source. Defaults to [HiveQuranRepository].
   MushafReaderController({
     PageController? pageController,
     this.initialPage = 1,
     int pagesPerViewport = 1,
+    IQuranRepository? repository,
   }) : _pageController = pageController,
        _ownsPageController = pageController == null,
-       _repo = HiveQuranRepository(),
+       _repo = repository ?? HiveQuranRepository(),
+       _checkLibraryInit = repository == null,
        _pagesPerViewport = pagesPerViewport,
        _currentPage =
            ((initialPage - 1) ~/ pagesPerViewport) * pagesPerViewport + 1 {
-    _init(checkInit: true);
+    _init(checkInit: _checkLibraryInit);
   }
 
   /// Creates a MushafReaderController with a custom repository.
@@ -176,6 +190,7 @@ class MushafReaderController extends ChangeNotifier {
   }) : _pageController = pageController,
        _ownsPageController = pageController == null,
        _repo = repository,
+       _checkLibraryInit = false,
        _pagesPerViewport = pagesPerViewport,
        _currentPage =
            ((initialPage - 1) ~/ pagesPerViewport) * pagesPerViewport + 1 {
@@ -183,9 +198,22 @@ class MushafReaderController extends ChangeNotifier {
   }
 
   void _init({required bool checkInit}) {
+    unawaited(ensureReady(checkInit: checkInit));
+  }
+
+  /// Waits until the repository is ready and reference data is cached.
+  ///
+  /// [MushafReaderController] starts initialization in its constructor; call
+  /// this (or await it) before relying on [isInitialized], [getSurahSync], or
+  /// [currentPageInfo].
+  Future<void> ensureReady({bool? checkInit}) {
+    if (_isInitialized) return Future.value();
+    return _initFuture ??= _doInit(checkInit: checkInit ?? _checkLibraryInit);
+  }
+
+  Future<void> _doInit({required bool checkInit}) async {
     if (_isInitialized) return;
 
-    // Ensure the library was initialized (only if using default repo)
     if (checkInit && !MushafReaderLibrary.isInitialized) {
       throw StateError(
         'MushafReaderLibrary.ensureInitialized() must be called before using '
@@ -197,21 +225,18 @@ class MushafReaderController extends ChangeNotifier {
         '}',
       );
     }
-    // Pre-cache basmalah
-    _repo.getBasmalah().then((value) => _cachedBasmalah = value);
 
-    // Pre-cache all juzs
-    _repo.getJuzs().then(
-      (value) => _juzCache = {for (var j in value) j.number: j},
-    );
+    await _repo.ensureReady();
 
-    // Pre-cache all surahs
-    _repo.getAllSurahs().then((value) => _surahCache = value);
+    _cachedBasmalah = await _repo.getBasmalah();
 
-    // Load initial page info
-    getPageInfo(_currentPage).then((value) {
-      _currentPageInfo = value;
-    });
+    final juzs = await _repo.getJuzs();
+    _juzCache = {for (final j in juzs) j.number: j};
+
+    final surahs = await _repo.getAllSurahs();
+    _surahCache = {for (final s in surahs) s.number: s};
+
+    _currentPageInfo = await getPageInfo(_currentPage);
 
     _isInitialized = true;
     _safeNotifyListeners();
@@ -222,7 +247,7 @@ class MushafReaderController extends ChangeNotifier {
   /// This prevents "setState during build" errors by checking if
   /// the scheduler is currently building and deferring notification.
   void _safeNotifyListeners() {
-    final phase = SchedulerBinding.instance.schedulerPhase;
+    final SchedulerPhase? phase = _schedulerPhaseOrNull;
     final isBuildPhase =
         phase == SchedulerPhase.persistentCallbacks ||
         phase == SchedulerPhase.midFrameMicrotasks;
@@ -238,6 +263,14 @@ class MushafReaderController extends ChangeNotifier {
       }
     } else {
       notifyListeners();
+    }
+  }
+
+  SchedulerPhase? get _schedulerPhaseOrNull {
+    try {
+      return SchedulerBinding.instance.schedulerPhase;
+    } on Object {
+      return null;
     }
   }
 
@@ -272,7 +305,7 @@ class MushafReaderController extends ChangeNotifier {
   (MushafPageInfo?, MushafPageInfo?) get currentPagesInfo =>
       (_currentPageInfo, _nextPageInfo);
 
-  /// Whether the controller is initialized and ready for use.
+  /// Whether [ensureReady] has completed and cached data is available.
   bool get isInitialized => _isInitialized;
 
   /// The PageController for binding to a PageView.
@@ -327,7 +360,7 @@ class MushafReaderController extends ChangeNotifier {
     Duration duration = const Duration(milliseconds: 300),
     Curve curve = Curves.easeInOut,
   }) async {
-    if (page < 1 || page > 604) return;
+    if (page < 1 || page > MushafConstants.pageCount) return;
 
     final normalizedPage =
         ((page - 1) ~/ pagesPerViewport) * pagesPerViewport + 1;
@@ -369,9 +402,13 @@ class MushafReaderController extends ChangeNotifier {
   /// Returns cached surahs if available, otherwise fetches from repo
   /// and caches the result.
   Future<List<Surah>> getAllSurahs() async {
-    if (_surahCache != null) return _surahCache!;
-    _surahCache = await _repo.getAllSurahs();
-    return _surahCache!;
+    if (_surahCache != null) {
+      return _surahCache!.values.toList()
+        ..sort((a, b) => a.number.compareTo(b.number));
+    }
+    final surahs = await _repo.getAllSurahs();
+    _surahCache = {for (final s in surahs) s.number: s};
+    return surahs;
   }
 
   /// Gets an Ayah by its global ID.
@@ -426,6 +463,12 @@ class MushafReaderController extends ChangeNotifier {
   /// Gets a complete page model.
   Future<QuranPage> getPage(int page) => _repo.getPage(page);
 
+  /// Ayah ids on [page] in mushaf reading order.
+  Future<List<int>> orderedAyahIdsOnPage(int page) async {
+    final pageModel = await getPage(page);
+    return MushafPageRangeLayout.orderedAyahIdsOnPage(pageModel);
+  }
+
   /// Gets the page number for a specific Ayah.
   Future<int> getPageForAyah(int ayahId) => _repo.getPageForAyah(ayahId);
 
@@ -441,7 +484,7 @@ class MushafReaderController extends ChangeNotifier {
   Future<(MushafPageInfo, MushafPageInfo?)> getTwoPagesInfo(int page) async {
     final first = await getPageInfo(page);
     MushafPageInfo? second;
-    if (page + 1 <= 604) {
+    if (page + 1 <= MushafConstants.pageCount) {
       second = await getPageInfo(page + 1);
     }
     return (first, second);
@@ -465,13 +508,10 @@ class MushafReaderController extends ChangeNotifier {
   Future<Surah?> getSurah(int surahNumber) => _repo.getSurah(surahNumber);
 
   /// Gets a Surah by number (sync, requires init).
-  Surah? getSurahSync(int surahNumber) {
-    if (_surahCache == null) return null;
-    return _surahCache!.firstWhere(
-      (s) => s.number == surahNumber,
-      orElse: () => throw ArgumentError('Surah $surahNumber not found'),
-    );
-  }
+  ///
+  /// Returns `null` when the cache is not ready or the surah is missing —
+  /// same semantics as [getJuzSync].
+  Surah? getSurahSync(int surahNumber) => _surahCache?[surahNumber];
 
   /// Searches for Ayahs containing the given query text.
   ///
@@ -509,50 +549,11 @@ class MushafReaderController extends ChangeNotifier {
     );
   }
 
-  /// Initializes the controller.
+  /// Opens the ayah search box so the first [searchAyahs] call skips open latency.
   ///
-  /// This must be called before using most methods. It:
-  /// - Pre-caches essential data (surahs, juzs, basmalah)
-  /// - Loads the initial page info
-  ///
-  /// **Important**: You must call `MushafReaderLibrary.ensureInitialized()` in your
-  /// `main()` function before using this controller.
-  ///
-  /// This method is idempotent - subsequent calls return immediately.
-  ///
-  /// Throws [StateError] if `MushafReaderLibrary.ensureInitialized()` was not called.
-  // Future<void> init() async {
-  //   if (_isInitialized) return;
-
-  //   // Ensure the library was initialized
-  //   if (!MushafReaderLibrary.isInitialized) {
-  //     throw StateError(
-  //       'MushafReaderLibrary.ensureInitialized() must be called before using '
-  //       'MushafReaderController. Add it to your main() function:\n\n'
-  //       'void main() async {\n'
-  //       '  WidgetsFlutterBinding.ensureInitialized();\n'
-  //       '  await MushafReaderLibrary.ensureInitialized();\n'
-  //       '  runApp(MyApp());\n'
-  //       '}',
-  //     );
-  //   }
-
-  //   // Pre-cache basmalah
-  //   _cachedBasmalah = await _repo.getBasmalah();
-
-  //   // Pre-cache all juzs
-  //   final juzs = await _repo.getJuzs();
-  //   _juzCache = {for (var j in juzs) j.number: j};
-
-  //   // Pre-cache all surahs
-  //   _surahCache = await _repo.getAllSurahs();
-
-  //   // Load initial page info
-  //   _currentPageInfo = await getPageInfo(_currentPage);
-
-  //   _isInitialized = true;
-  //   notifyListeners();
-  // }
+  /// Optional — call when opening search UI. If omitted, the box opens on the
+  /// first search. Zero extra RAM until this runs or search is used.
+  Future<void> warmUpSearchIndex() => _repo.warmUpSearchIndex();
 
   /// Jumps to the page containing a specific Ayah.
   ///
@@ -575,13 +576,13 @@ class MushafReaderController extends ChangeNotifier {
   ///
   /// Updates the current page and navigates the PageView.
   void jumpToPage(int page) {
-    if (page < 1 || page > 604) return;
+    if (page < 1 || page > MushafConstants.pageCount) return;
 
     final normalizedPage =
         ((page - 1) ~/ pagesPerViewport) * pagesPerViewport + 1;
 
     final pagesToWarm = <int>[normalizedPage];
-    if (pagesPerViewport == 2 && normalizedPage + 1 <= 604) {
+    if (pagesPerViewport == 2 && normalizedPage + 1 <= MushafConstants.pageCount) {
       pagesToWarm.add(normalizedPage + 1);
     }
     for (final p in pagesToWarm) {
@@ -607,7 +608,7 @@ class MushafReaderController extends ChangeNotifier {
   /// Call this after navigation to update [currentPageInfo].
   Future<MushafPageInfo> loadCurrentPageInfo() async {
     _currentPageInfo = await getPageInfo(_currentPage);
-    if (pagesPerViewport == 2 && _currentPage + 1 <= 604) {
+    if (pagesPerViewport == 2 && _currentPage + 1 <= MushafConstants.pageCount) {
       _nextPageInfo = await getPageInfo(_currentPage + 1);
     }
     return _currentPageInfo!;
@@ -616,7 +617,7 @@ class MushafReaderController extends ChangeNotifier {
   /// Navigates to the next page.
   void nextPage() {
     final next = _currentPage + pagesPerViewport;
-    if (next <= 604) {
+    if (next <= MushafConstants.pageCount) {
       jumpToPage(next);
     }
   }
@@ -645,7 +646,9 @@ class MushafReaderController extends ChangeNotifier {
     final pages = <int>[];
     for (int i = 1; i <= count; i++) {
       if (_currentPage - i >= 1) pages.add(_currentPage - i);
-      if (_currentPage + i <= 604) pages.add(_currentPage + i);
+      if (_currentPage + i <= MushafConstants.pageCount) {
+        pages.add(_currentPage + i);
+      }
     }
     await preloadPages(pages);
   }
@@ -717,7 +720,7 @@ class MushafReaderController extends ChangeNotifier {
     final page = _currentPage;
     final info = await getPageInfo(page);
     MushafPageInfo? nextInfo;
-    if (pagesPerViewport == 2 && page + 1 <= 604) {
+    if (pagesPerViewport == 2 && page + 1 <= MushafConstants.pageCount) {
       nextInfo = await getPageInfo(page + 1);
     }
 

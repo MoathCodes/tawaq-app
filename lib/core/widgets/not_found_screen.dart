@@ -20,7 +20,6 @@ class NotFoundScreen extends StatelessWidget {
         child: Padding(
           padding: const .all(AppSpacing.xl),
           child: Column(
-            mainAxisAlignment: .center,
             children: [
               ExcludeSemantics(
                 child: Container(

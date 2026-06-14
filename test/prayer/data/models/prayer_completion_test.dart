@@ -137,6 +137,22 @@ void main() {
         );
       });
     });
+
+    group('trackerCycleNext', () {
+      test('cycles through logged statuses then clears', () {
+        expect(CompletionStatus.none.trackerCycleNext, CompletionStatus.jamaah);
+        expect(
+          CompletionStatus.jamaah.trackerCycleNext,
+          CompletionStatus.onTime,
+        );
+        expect(
+          CompletionStatus.onTime.trackerCycleNext,
+          CompletionStatus.late,
+        );
+        expect(CompletionStatus.late.trackerCycleNext, CompletionStatus.missed);
+        expect(CompletionStatus.missed.trackerCycleNext, isNull);
+      });
+    });
   });
 
   group('PrayerCompletion', () {

@@ -6,7 +6,6 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_parser.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_commentary_body.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_metadata_card.dart';
-import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Renders Dorar hadith sharh with zone-aware metadata and segment styling.
@@ -31,15 +30,13 @@ class HadithSharhText extends HookWidget {
     final theme = context.theme;
     final colors = theme.colors;
     final isDark = theme.isDark;
-    final baseStyle = theme.typography.sm.copyWith(
-      fontFamily: FontFamily.iBMPlexSansArabic,
-      height: 1.8,
-    );
+    final baseStyle = theme.typography.sm.copyWith(height: 1.8);
     final styles = useMemoized(
       () => CommentaryTextStyles.from(
         baseStyle: baseStyle,
         colors: colors,
         isDark: isDark,
+        includeSelectionStrut: true,
       ),
       [
         baseStyle,
@@ -69,10 +66,16 @@ class HadithSharhText extends HookWidget {
             baseStyle: baseStyle,
           ),
         if (zones.commentary.isNotEmpty)
-          HadithSharhCommentaryBody(
-            segments: parsed.segments,
-            styles: styles,
-            textAlign: textAlign,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final narrow =
+                  constraints.maxWidth < context.theme.breakpoints.sm;
+              return HadithSharhCommentaryBody(
+                segments: parsed.segments,
+                styles: styles,
+                textAlign: narrow ? TextAlign.start : textAlign,
+              );
+            },
           ),
       ],
     );

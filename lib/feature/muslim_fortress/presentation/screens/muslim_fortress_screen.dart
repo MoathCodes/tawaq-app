@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/persisted_horizontal_split_pane.dart';
+import 'package:tawaq/core/layout/responsive.dart';
+import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/use_register_app_search_focus.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
@@ -30,8 +33,9 @@ class MuslimFortressScreen extends HookConsumerWidget {
   /// Creates a Muslim Fortress screen.
   const MuslimFortressScreen({super.key});
 
-  static const _maxContentWidth = 1100.0;
-  static const _sidebarWidth = 300.0;
+  static const _sidebarMinExtent = 280.0;
+  static const _mainPaneMinExtent = 480.0;
+  static const _stackedSidebarMaxHeight = 360.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -183,12 +187,11 @@ class MuslimFortressScreen extends HookConsumerWidget {
         textDirection: TextDirection.rtl,
         child: Scaffold(
           backgroundColor: theme.colors.background,
-          body: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+          body: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
                   Icon(
                     FLucideIcons.circleAlert,
                     size: 48,
@@ -215,11 +218,191 @@ class MuslimFortressScreen extends HookConsumerWidget {
                         ref.invalidate(muslimFortressChaptersProvider),
                     child: Text(l10n.fortressRetry),
                   ),
-                ],
-              ),
+              ],
             ),
           ),
         ),
+      );
+    }
+
+    Widget buildSidebar() {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.muslimFortress,
+            style: theme.typography.xl2.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          NonSelectable(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                FTabs(
+                  control: .lifted(
+                    index: isFavoritesTab ? 1 : 0,
+                    onChange: (index) => ref
+                        .read(fortressScreenSettingsProvider.notifier)
+                        .setSidebarTab(
+                          index == 1 ? .favorites : .allChapters,
+                        ),
+                  ),
+                  children: [
+                    FTabEntry(
+                      label: Text(l10n.fortressAllChapters),
+                      child: const SizedBox.shrink(),
+                    ),
+                    FTabEntry(
+                      label: Text(l10n.fortressFavorites),
+                      child: const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                FTextField(
+                  focusNode: searchFocusNode,
+                  hint: l10n.fortressSearchHint,
+                  control: FTextFieldControl.managed(
+                    controller: searchController,
+                  ),
+                  prefixBuilder: (context, style, variants) =>
+                      const Icon(FLucideIcons.search),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Expanded(
+            child: filteredCategories.isEmpty
+                ? FortressEmptySidePanelState(isFavoritesTab: isFavoritesTab)
+                : ListView.separated(
+                    itemCount: filteredCategories.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (context, index) {
+                      final category = filteredCategories[index];
+                      final isSelected =
+                          selectedCategory.value?.chapterId ==
+                          category.chapterId;
+                      final isFavorite = favoriteChapterIds.contains(
+                        category.chapterId,
+                      );
+
+                      final tile = FortressCategoryListTile(
+                        category: category,
+                        isSelected: isSelected,
+                        isFavorite: isFavorite,
+                        onTap: () => selectCategory(category),
+                        onToggleFavorite: () =>
+                            toggleFavorite(category.chapterId),
+                      );
+
+                      if (animatedSidebarChapterIds.value.contains(
+                        category.chapterId,
+                      )) {
+                        return tile;
+                      }
+
+                      return AnimationEntry(
+                        key: ValueKey(category.chapterId),
+                        animateOnce: true,
+                        delay: Duration(milliseconds: 100 + (index * 20)),
+                        onEntranceComplete: () {
+                          animatedSidebarChapterIds.value = {
+                            ...animatedSidebarChapterIds.value,
+                            category.chapterId,
+                          };
+                        },
+                        child: tile,
+                      );
+                    },
+                  ),
+          ),
+        ],
+      );
+    }
+
+    Widget buildMainPane() {
+      return AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: isGlobalSearch
+            ? searchResultsAsync!.when(
+                data: (results) => FortressSearchResultsPane(
+                  key: ValueKey(globalSearchQuery),
+                  results: results,
+                  query: globalSearchQuery,
+                  onSelectTitle: (category) {
+                    searchController.clear();
+                    ref
+                        .read(muslimFortressSearchQueryProvider.notifier)
+                        .setQuery('');
+                    selectCategory(category);
+                  },
+                  onSelectContent: (hit) async {
+                    searchController.clear();
+                    ref
+                        .read(muslimFortressSearchQueryProvider.notifier)
+                        .setQuery('');
+                    final category = allCategories
+                        .where((c) => c.chapterId == hit.chapterId)
+                        .firstOrNull;
+                    if (category == null) return;
+                    selectCategory(category);
+                    final duas = await ref.read(
+                      muslimFortressDuasProvider(hit.chapterId).future,
+                    );
+                    final index = duas.indexWhere(
+                      (d) => d.contentId == hit.item.contentId,
+                    );
+                    startFocusReading(initialIndex: index >= 0 ? index : 0);
+                  },
+                ),
+                loading: () =>
+                    const Center(child: FCircularProgress.loader()),
+                error: (e, _) => Center(child: Text(e.toString())),
+              )
+            : selectedCategory.value == null
+            ? MuslimFortressWelcomePane(
+                key: const ValueKey('welcome'),
+                recommendedCategories: recommendedCategories,
+                bookmarkCategories: bookmarkCategories,
+                onSelectCategory: selectCategory,
+                onViewAll: () => ref
+                    .read(fortressScreenSettingsProvider.notifier)
+                    .setSidebarTab(.favorites),
+              )
+            : selectedDuasAsync == null
+            ? const SizedBox.shrink()
+            : selectedDuasAsync.when(
+                data: (duas) => FortressCategoryDetailView(
+                  key: ValueKey(selectedCategory.value!.chapterId),
+                  category: selectedCategory.value!,
+                  duas: duas,
+                  isFavorite: favoriteChapterIds.contains(
+                    selectedCategory.value!.chapterId,
+                  ),
+                  onToggleFavorite: () => toggleFavorite(
+                    selectedCategory.value!.chapterId,
+                  ),
+                  onStartReading: startFocusReading,
+                ),
+                loading: () => FortressCategoryDetailView(
+                  key: ValueKey(selectedCategory.value!.chapterId),
+                  category: selectedCategory.value!,
+                  duas: const [],
+                  isFavorite: favoriteChapterIds.contains(
+                    selectedCategory.value!.chapterId,
+                  ),
+                  onToggleFavorite: () => toggleFavorite(
+                    selectedCategory.value!.chapterId,
+                  ),
+                  onStartReading: startFocusReading,
+                  isLoading: true,
+                ),
+                error: (e, _) => Center(child: Text(e.toString())),
+              ),
       );
     }
 
@@ -228,6 +411,7 @@ class MuslimFortressScreen extends HookConsumerWidget {
         final contentHeight = viewport.maxHeight.isFinite
             ? viewport.maxHeight - AppSpacing.md * 2
             : MediaQuery.sizeOf(context).height - AppSpacing.md * 2;
+        final isNarrow = isLessThan(context, FBreakpoint.md);
 
         return FSkeletonizer(
           enabled: chaptersAsync.isLoading,
@@ -235,257 +419,139 @@ class MuslimFortressScreen extends HookConsumerWidget {
             textDirection: TextDirection.rtl,
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: _maxContentWidth),
-                  child: SizedBox(
-                    height: contentHeight,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        SizedBox(
-                          width: _sidebarWidth,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                l10n.muslimFortress,
-                                style: theme.typography.xl2.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.lg),
-                              NonSelectable(
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    FTabs(
-                                      control: .lifted(
-                                        index: isFavoritesTab ? 1 : 0,
-                                        onChange: (index) => ref
-                                            .read(
-                                              fortressScreenSettingsProvider
-                                                  .notifier,
-                                            )
-                                            .setSidebarTab(
-                                              index == 1
-                                                  ? .favorites
-                                                  : .allChapters,
-                                            ),
-                                      ),
-                                      children: [
-                                        FTabEntry(
-                                          label: Text(l10n.fortressAllChapters),
-                                          child: const SizedBox.shrink(),
-                                        ),
-                                        FTabEntry(
-                                          label: Text(l10n.fortressFavorites),
-                                          child: const SizedBox.shrink(),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: AppSpacing.lg),
-                                    FTextField(
-                                      focusNode: searchFocusNode,
-                                      hint: l10n.fortressSearchHint,
-                                      control: FTextFieldControl.managed(
-                                        controller: searchController,
-                                      ),
-                                      prefixBuilder:
-                                          (context, style, variants) =>
-                                              const Icon(FLucideIcons.search),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.lg),
-                              Expanded(
-                                child: filteredCategories.isEmpty
-                                    ? FortressEmptySidePanelState(
-                                        isFavoritesTab: isFavoritesTab,
-                                      )
-                                    : ListView.separated(
-                                        itemCount: filteredCategories.length,
-                                        separatorBuilder: (context, index) =>
-                                            const SizedBox(
-                                              height: AppSpacing.sm,
-                                            ),
-                                        itemBuilder: (context, index) {
-                                          final category =
-                                              filteredCategories[index];
-                                          final isSelected =
-                                              selectedCategory
-                                                  .value
-                                                  ?.chapterId ==
-                                              category.chapterId;
-                                          final isFavorite = favoriteChapterIds
-                                              .contains(category.chapterId);
-
-                                          final tile = FortressCategoryListTile(
-                                            category: category,
-                                            isSelected: isSelected,
-                                            isFavorite: isFavorite,
-                                            onTap: () =>
-                                                selectCategory(category),
-                                            onToggleFavorite: () =>
-                                                toggleFavorite(
-                                                  category.chapterId,
-                                                ),
-                                          );
-
-                                          if (animatedSidebarChapterIds.value
-                                              .contains(category.chapterId)) {
-                                            return tile;
-                                          }
-
-                                          return AnimationEntry(
-                                            key: ValueKey(category.chapterId),
-                                            animateOnce: true,
-                                            delay: Duration(
-                                              milliseconds: 100 + (index * 20),
-                                            ),
-                                            onEntranceComplete: () {
-                                              animatedSidebarChapterIds.value =
-                                                  {
-                                                    ...animatedSidebarChapterIds
-                                                        .value,
-                                                    category.chapterId,
-                                                  };
-                                            },
-                                            child: tile,
-                                          );
-                                        },
-                                      ),
-                              ),
-                            ],
+              child: SizedBox(
+                height: contentHeight,
+                child: isNarrow
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(child: buildMainPane()),
+                          const SizedBox(height: AppSpacing.md),
+                          SizedBox(
+                            height: _stackedSidebarMaxHeight.clamp(
+                              0,
+                              contentHeight * 0.45,
+                            ),
+                            child: buildSidebar(),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg,
-                          ),
-                          child: VerticalDivider(
-                            color: theme.colors.border,
-                            width: 1,
-                            thickness: 1,
-                          ),
-                        ),
-                        Expanded(
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            child: isGlobalSearch
-                                ? searchResultsAsync!.when(
-                                    data: (results) => FortressSearchResultsPane(
-                                      key: ValueKey(globalSearchQuery),
-                                      results: results,
-                                      query: globalSearchQuery,
-                                      onSelectTitle: (category) {
-                                        searchController.clear();
-                                        ref
-                                            .read(
-                                              muslimFortressSearchQueryProvider
-                                                  .notifier,
-                                            )
-                                            .setQuery('');
-                                        selectCategory(category);
-                                      },
-                                      onSelectContent: (hit) async {
-                                        searchController.clear();
-                                        ref
-                                            .read(
-                                              muslimFortressSearchQueryProvider
-                                                  .notifier,
-                                            )
-                                            .setQuery('');
-                                        final category = allCategories
-                                            .where(
-                                              (c) =>
-                                                  c.chapterId == hit.chapterId,
-                                            )
-                                            .firstOrNull;
-                                        if (category == null) return;
-                                        selectCategory(category);
-                                        final duas = await ref.read(
-                                          muslimFortressDuasProvider(
-                                            hit.chapterId,
-                                          ).future,
-                                        );
-                                        final index = duas.indexWhere(
-                                          (d) =>
-                                              d.contentId == hit.item.contentId,
-                                        );
-                                        startFocusReading(
-                                          initialIndex: index >= 0 ? index : 0,
-                                        );
-                                      },
-                                    ),
-                                    loading: () => const Center(
-                                      child: FCircularProgress.loader(),
-                                    ),
-                                    error: (e, _) =>
-                                        Center(child: Text(e.toString())),
-                                  )
-                                : selectedCategory.value == null
-                                ? MuslimFortressWelcomePane(
-                                    key: const ValueKey('welcome'),
-                                    recommendedCategories:
-                                        recommendedCategories,
-                                    bookmarkCategories: bookmarkCategories,
-                                    onSelectCategory: selectCategory,
-                                    onViewAll: () => ref
-                                        .read(
-                                          fortressScreenSettingsProvider
-                                              .notifier,
-                                        )
-                                        .setSidebarTab(.favorites),
-                                  )
-                                : selectedDuasAsync == null
-                                ? const SizedBox.shrink()
-                                : selectedDuasAsync.when(
-                                    data: (duas) => FortressCategoryDetailView(
-                                      key: ValueKey(
-                                        selectedCategory.value!.chapterId,
-                                      ),
-                                      category: selectedCategory.value!,
-                                      duas: duas,
-                                      isFavorite: favoriteChapterIds.contains(
-                                        selectedCategory.value!.chapterId,
-                                      ),
-                                      onToggleFavorite: () => toggleFavorite(
-                                        selectedCategory.value!.chapterId,
-                                      ),
-                                      onStartReading: startFocusReading,
-                                    ),
-                                    loading: () => FortressCategoryDetailView(
-                                      key: ValueKey(
-                                        selectedCategory.value!.chapterId,
-                                      ),
-                                      category: selectedCategory.value!,
-                                      duas: const [],
-                                      isFavorite: favoriteChapterIds.contains(
-                                        selectedCategory.value!.chapterId,
-                                      ),
-                                      onToggleFavorite: () => toggleFavorite(
-                                        selectedCategory.value!.chapterId,
-                                      ),
-                                      onStartReading: startFocusReading,
-                                      isLoading: true,
-                                    ),
-                                    error: (e, _) =>
-                                        Center(child: Text(e.toString())),
-                                  ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                        ],
+                      )
+                    : _FortressDesktopSplitLayout(
+                        mainPane: buildMainPane(),
+                        sidebar: buildSidebar(),
+                      ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+/// Resolved side/main pane widths for the fortress split layout.
+({
+  double sideExtent,
+  double mainExtent,
+  double sideMin,
+  double mainMin,
+  double sideMax,
+}) _resolveFortressSplitExtents({
+  required double totalWidth,
+  required double sideWidth,
+}) {
+  const sideMinTarget = MuslimFortressScreen._sidebarMinExtent;
+  const mainMinTarget = MuslimFortressScreen._mainPaneMinExtent;
+
+  if (totalWidth <= 0) {
+    return (
+      sideExtent: 0,
+      mainExtent: 0,
+      sideMin: 0,
+      mainMin: 0,
+      sideMax: 0,
+    );
+  }
+
+  final sideMin = sideMinTarget.clamp(0.0, totalWidth);
+  final mainMin = mainMinTarget.clamp(0.0, totalWidth - sideMin);
+  final sideMax = (totalWidth * 0.45).clamp(sideMin, totalWidth - mainMin);
+
+  final extents = resolveSplitExtents(
+    totalWidth: totalWidth,
+    sideWidth: sideWidth,
+    sideMin: sideMin,
+    mainMin: mainMin,
+    sideMax: sideMax,
+  );
+
+  return (
+    sideExtent: extents.sideExtent,
+    mainExtent: extents.mainExtent,
+    sideMin: sideMin,
+    mainMin: mainMin,
+    sideMax: sideMax,
+  );
+}
+
+class _FortressDesktopSplitLayout extends ConsumerWidget {
+  const _FortressDesktopSplitLayout({
+    required this.mainPane,
+    required this.sidebar,
+  });
+
+  final Widget mainPane;
+  final Widget sidebar;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final sidePanelWidth = ref.watch(
+      fortressScreenSettingsProvider.select(
+        (v) => v.asData?.value.sidePanelWidth ?? 300,
+      ),
+    );
+
+    return PersistedHorizontalSplitPane(
+      sidePanelWidth: sidePanelWidth,
+      sideRegionIndex: 1,
+      resolve: ({required totalWidth, required sideWidth}) {
+        final resolved = _resolveFortressSplitExtents(
+          totalWidth: totalWidth,
+          sideWidth: sideWidth,
+        );
+        return (
+          sideExtent: resolved.sideExtent,
+          mainExtent: resolved.mainExtent,
+          sideMin: resolved.sideMin,
+          mainMin: resolved.mainMin,
+        );
+      },
+      onSidePanelWidthChanged: (width) => ref
+          .read(fortressScreenSettingsProvider.notifier)
+          .setSidePanelWidth(width),
+      style: const .delta(
+        thumbStyle: .delta(
+          decoration: .boxDelta(
+            border: .fromBorderSide(
+              .new(color: Colors.transparent),
+            ),
+          ),
+        ),
+      ),
+      mainPane: Padding(
+        padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: mainPane,
+        ),
+      ),
+      sidePane: Padding(
+        padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: sidebar,
+        ),
+      ),
     );
   }
 }

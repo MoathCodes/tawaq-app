@@ -34,3 +34,11 @@ cursor_find_logic_for_quranic_font_chan.md
 
 # FVM Version Cache
 .fvm/
+
+# IDE / tooling
+.gemini/
+devtools_options.yaml
+
+# Hive lock files (runtime artifacts, not source data)
+assets/hive/*.lock
+example/assets/hive/*.lock

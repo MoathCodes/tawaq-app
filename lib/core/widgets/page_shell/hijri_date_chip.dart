@@ -5,7 +5,7 @@ import 'package:tawaq/core/utils/hijri_provider.dart';
 
 /// Isolated Hijri date display for the shell app bar.
 ///
-/// Only this subtree rebuilds on the 1 Hz [hijriClockProvider] tick.
+/// Isolated Hijri date chip; rebuilds on day or locale change only.
 class HijriDateChip extends ConsumerWidget {
   /// Creates a [HijriDateChip].
   const HijriDateChip({super.key});
@@ -14,13 +14,10 @@ class HijriDateChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final hijriDate = ref.watch(hijriClockProvider);
 
-    return switch (hijriDate) {
-      AsyncData<String>(:final value) => Container(
-        padding: context.theme.buttonStyles.outline.sm.contentStyle.padding,
-        decoration: context.theme.buttonStyles.outline.sm.decoration.base,
-        child: Text(value),
-      ),
-      _ => const SizedBox.shrink(),
-    };
+    return Container(
+      padding: context.theme.buttonStyles.outline.sm.contentStyle.padding,
+      decoration: context.theme.buttonStyles.outline.sm.decoration.base,
+      child: Text(hijriDate),
+    );
   }
 }

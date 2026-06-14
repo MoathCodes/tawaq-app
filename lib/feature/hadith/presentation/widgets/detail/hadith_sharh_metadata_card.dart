@@ -49,35 +49,33 @@ class HadithSharhMetadataCard extends StatelessWidget {
     );
 
     return StaticCard(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: AppSpacing.md,
-          children: [
-            if (prefix case final matn? when matn.isNotEmpty)
-              _MatnPrefixQuote(
-                text: matn,
-                colors: colors,
-                style: baseStyle.copyWith(
-                  color: colors.mutedForeground,
-                  height: 1.7,
-                ),
-                radii: theme.radii.sm,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.md,
+        children: [
+          if (prefix case final matn? when matn.isNotEmpty)
+            _MatnPrefixQuote(
+              text: matn,
+              colors: colors,
+              style: baseStyle.copyWith(
+                color: colors.mutedForeground,
+                height: 1.7,
               ),
-            for (final entry in fields.populatedEntries)
-              _MetadataRow(
-                label: entry.label.arabicLabel,
-                value: entry.value,
-                labelStyle: labelStyle,
-                valueStyle: entry.label == HadithSharhMetadataLabel.takhrij
-                    ? citationStyle
-                    : valueStyle,
-                isolateNumerals:
-                    entry.label == HadithSharhMetadataLabel.takhrij,
-              ),
-          ],
-        ),
+              radii: theme.radii.sm,
+            ),
+          for (final entry in fields.populatedEntries)
+            _MetadataRow(
+              label: entry.label.arabicLabel,
+              value: entry.value,
+              labelStyle: labelStyle,
+              valueStyle: entry.label == HadithSharhMetadataLabel.takhrij
+                  ? citationStyle
+                  : valueStyle,
+              isolateNumerals:
+                  entry.label == HadithSharhMetadataLabel.takhrij,
+            ),
+        ],
       ),
     );
   }

@@ -4,10 +4,12 @@ import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/hooks/hooks.dart';
+import 'package:tawaq/core/layout/persisted_horizontal_split_pane.dart';
+import 'package:tawaq/core/layout/responsive.dart';
+import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/use_register_app_search_focus.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
@@ -55,7 +57,7 @@ class HadithPage extends HookConsumerWidget {
       return null;
     }, [initialHadiths]);
 
-    final desktop = context.breakpoint.isAtLeast(.lg);
+    final desktop = isAtLeast(context, FBreakpoint.lg);
 
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),

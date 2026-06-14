@@ -1,5 +1,4 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:tawaq/gen/assets.gen.dart';
 
 /// Database layout used by a bundled tafsir SQLite file.
 enum TafsirSchema {
@@ -74,16 +73,6 @@ enum TafsirId {
 
   /// Table name for [TafsirSchema.compact] databases.
   final String? tableName;
-
-  /// Asset path to the SQLite database file.
-  String get databasePath {
-    return switch (this) {
-      TafsirId.tafseerMouaser => Assets.database.tafseerAr.tafseerMouaser,
-      TafsirId.baghawi => Assets.database.tafseerAr.quraanBa,
-      TafsirId.ibnKathir => Assets.database.tafseerAr.quraanIK,
-      TafsirId.asSadi => Assets.database.tafseerAr.quraanAS,
-    };
-  }
 
   /// Localized label for UI display.
   String displayLabel({required bool isArabic}) =>

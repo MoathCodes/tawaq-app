@@ -20,6 +20,7 @@ abstract class FortressScreenState with _$FortressScreenState {
     @Default(FortressSidebarTab.allChapters) FortressSidebarTab sidebarTab,
     @Default([]) List<int> favoriteChapterIds,
     @Default(false) bool defaultBookmarksSeeded,
+    @Default(300) double sidePanelWidth,
   }) = _FortressScreenState;
 
   /// Deserializes the fortress screen state from JSON.

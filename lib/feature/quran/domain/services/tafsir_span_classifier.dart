@@ -109,16 +109,6 @@ abstract final class TafsirSpanClassifier {
     final isComposite =
         _t3CompositeMarker.hasMatch(trimmed) ||
         _hasNestedParenthetical(trimmed);
-    if (isComposite) {
-      final split = _splitMegaT3Span(content);
-      if (split != null) {
-        return [
-          _segment(split.ayahPart, TafsirSegmentKind.ayah),
-          _segment(split.commentaryPart, TafsirSegmentKind.commentary),
-        ];
-      }
-      return [_segment(content, TafsirSegmentKind.commentary)];
-    }
 
     final split = _splitMegaT3Span(content);
     if (split != null) {
@@ -126,6 +116,10 @@ abstract final class TafsirSpanClassifier {
         _segment(split.ayahPart, TafsirSegmentKind.ayah),
         _segment(split.commentaryPart, TafsirSegmentKind.commentary),
       ];
+    }
+
+    if (isComposite) {
+      return [_segment(content, TafsirSegmentKind.commentary)];
     }
 
     return [_segment(content, TafsirSegmentKind.ayah)];

@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
@@ -55,11 +56,18 @@ Future<void> showFortressStudySheet(
   final l10n = context.l10n;
   return showFDialog<void>(
     context: context,
-    builder: (context, style, animation) => FDialog(
+    builder: (dialogContext, style, animation) {
+      final constraints = dialogConstraints(
+        dialogContext,
+        preferredWidth: 640,
+        preferredHeight: 520,
+        minWidth: 280,
+      );
+
+      return FDialog(
       title: Text(_fortressStudyDialogTitle(dua, l10n)),
-      body: SizedBox(
-        width: 640,
-        height: 520,
+      body: ConstrainedBox(
+        constraints: constraints,
         child: DesktopSelectionArea(
           child: SingleChildScrollView(
             child: FortressDuaStudyContent(dua: dua),
@@ -68,11 +76,12 @@ Future<void> showFortressStudySheet(
       ),
       actions: [
         FButton(
-          onPress: () => Navigator.of(context).pop(),
+          onPress: () => Navigator.of(dialogContext).pop(),
           child: Text(l10n.cancel),
         ),
       ],
-    ),
+    );
+    },
   );
 }
 
@@ -107,39 +116,63 @@ class FortressDuaStudyNavAction extends StatelessWidget {
               horizontal: AppSpacing.sm,
               vertical: AppSpacing.xs,
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      FLucideIcons.bookOpenText,
-                      size: 16,
-                      color: theme.colors.foreground,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      label,
-                      style: theme.typography.sm.copyWith(
-                        fontWeight: FontWeight.w600,
+            child: showIncludes
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            FLucideIcons.bookOpenText,
+                            size: 16,
+                            color: theme.colors.foreground,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Flexible(
+                            child: Text(
+                              label,
+                              style: theme.typography.sm.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-                if (showIncludes) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    sections.join(' · '),
-                    style: theme.typography.xs.copyWith(
-                      color: theme.colors.mutedForeground,
-                      height: 1.3,
-                    ),
-                    textAlign: TextAlign.center,
+                      const SizedBox(height: 2),
+                      Text(
+                        sections.join(' · '),
+                        style: theme.typography.xs.copyWith(
+                          color: theme.colors.mutedForeground,
+                          height: 1.3,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  )
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        FLucideIcons.bookOpenText,
+                        size: 16,
+                        color: theme.colors.foreground,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Flexible(
+                        child: Text(
+                          label,
+                          style: theme.typography.sm.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ],
-            ),
           ),
         ),
       ),
@@ -193,7 +226,6 @@ class FortressDuaVirtueLine extends StatelessWidget {
     final proseStyle = theme.typography.sm.copyWith(
       color: theme.colors.mutedForeground,
       height: 1.75,
-      fontFamily: 'IBMPlexSansArabic',
     );
 
     return FortressCommentaryText(
@@ -320,7 +352,6 @@ class FortressDuaStudyContent extends HookConsumerWidget {
     return scale.copyWith(
       color: colors.foreground,
       height: 1.75,
-      fontFamily: 'IBMPlexSansArabic',
     );
   }
 
@@ -446,14 +477,7 @@ class FortressDuaInsights extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        FortressDuaStudyAccess(dua: dua),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => FortressDuaStudyAccess(dua: dua);
 }
 
 /// Hadith and benefit supplements — tabbed only when both are present.

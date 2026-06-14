@@ -22,7 +22,7 @@ abstract class ThemePrefs with _$ThemePrefs {
     /// The selected theme brightness mode.
     required ThemeMode themeMode,
 
-    /// App-wide UI text scale (Forui typography + scaled ScreenUtil).
+    /// App-wide UI text scale (Forui typography via [buildAppTheme]).
     @Default(AppTextScale.normal) AppTextScale appTextScale,
   }) = _ThemePrefs;
 

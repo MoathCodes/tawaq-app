@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
@@ -44,11 +45,10 @@ class CoordinatesRow extends ConsumerWidget {
 
     final l10n = context.l10n;
     return NonSelectable(
-      child: Row(
-      spacing: 12,
-      children: [
-        Expanded(
-          child: CoordinateField(
+      child: ResponsiveFieldRow(
+        maxColumns: 2,
+        children: [
+          CoordinateField(
             enabled: enabled,
             label: l10n.latitude,
             value: coordinates.latitude.toStringAsFixed(7),
@@ -56,9 +56,7 @@ class CoordinatesRow extends ConsumerWidget {
             max: 90,
             onChanged: (v) => _updateCoordinate(ref, coordinates, v, true),
           ),
-        ),
-        Expanded(
-          child: CoordinateField(
+          CoordinateField(
             enabled: enabled,
             label: l10n.longitude,
             value: coordinates.longitude.toStringAsFixed(7),
@@ -66,8 +64,7 @@ class CoordinatesRow extends ConsumerWidget {
             max: 180,
             onChanged: (v) => _updateCoordinate(ref, coordinates, v, false),
           ),
-        ),
-      ],
+        ],
       ),
     );
   }

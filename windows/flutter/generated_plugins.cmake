@@ -3,8 +3,11 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  desktop_tray
   flutter_timezone
   geolocator_windows
+  local_notifier
+  mpv_audio_kit
   pasteboard
   screen_retriever_windows
   window_manager

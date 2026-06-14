@@ -8,6 +8,9 @@ enum AyahShareInclude {
 
   /// App name footer.
   appName,
+
+  /// Keep mushaf line breaks when sharing a partial page range.
+  preserveLineBreaks,
 }
 
 /// Default include options for a share image.

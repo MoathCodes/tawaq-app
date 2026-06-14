@@ -49,14 +49,15 @@ class SettingsSection extends StatelessWidget {
         // ),
       ),
       title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          SettingsSemantics.sectionHeader(
-            label: title,
-            child: Text(
-              title,
-              style: theme.typography.md.copyWith(
-                fontWeight: FontWeight.w600,
+          Expanded(
+            child: SettingsSemantics.sectionHeader(
+              label: title,
+              child: Text(
+                title,
+                style: theme.typography.md.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -72,13 +73,76 @@ class SettingsSection extends StatelessWidget {
           ),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: crossAxisAlignment,
-        children: [
-          const SizedBox(height: AppSpacing.md),
-          child,
-        ],
+      child: Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.md),
+        child: crossAxisAlignment == CrossAxisAlignment.center
+            ? Center(child: child)
+            : child,
       ),
+    );
+  }
+}
+
+/// A labeled block inside a settings section — no card chrome.
+class SettingsGroup extends StatelessWidget {
+  /// Creates a [SettingsGroup].
+  const SettingsGroup({
+    required this.child,
+    this.title,
+    this.subtitle,
+    this.trailing,
+    super.key,
+  });
+
+  /// Optional group heading.
+  final String? title;
+
+  /// Optional helper text below the heading.
+  final String? subtitle;
+
+  /// Optional widget aligned with the heading (e.g. save action).
+  final Widget? trailing;
+
+  /// Group content.
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    final colors = theme.colors;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.sm,
+      children: [
+        if (title != null)
+          Row(
+            spacing: AppSpacing.sm,
+            children: [
+              Expanded(
+                child: SettingsSemantics.sectionHeader(
+                  label: title!,
+                  child: Text(
+                    title!,
+                    style: theme.typography.md.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: colors.mutedForeground,
+                    ),
+                  ),
+                ),
+              ),
+              ?trailing,
+            ],
+          ),
+        if (subtitle != null)
+          Text(
+            subtitle!,
+            style: theme.typography.sm.copyWith(
+              color: colors.mutedForeground,
+            ),
+          ),
+        child,
+      ],
     );
   }
 }

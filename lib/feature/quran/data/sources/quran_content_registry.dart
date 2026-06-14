@@ -8,7 +8,8 @@ import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 /// 2. Run `dart run build_runner build` to regenerate `assets.gen.dart`
 /// 3. Add a new enum value to [TranslationId] or [TafsirId]
 /// 4. Add a switch arm in [TranslationId.databasePath] or
-///    [TafsirId.databasePath] referencing the new `Assets.database.*` getter
+///    [TafsirDatabasePaths.databasePath] referencing the new `Assets.database.*`
+///    getter
 /// 5. Set [TranslationId.fontFamily] for the new source (or `null` for theme default)
 class QuranContentRegistry {
   QuranContentRegistry._();

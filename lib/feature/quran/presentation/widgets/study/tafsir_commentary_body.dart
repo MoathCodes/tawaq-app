@@ -235,40 +235,54 @@ class _TafsirPoetryRow extends StatelessWidget {
     final theme = context.theme;
     final colors = theme.colors;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.secondary.withAlpha(theme.isDark ? 40 : 55),
-        borderRadius: theme.radii.sm,
-        border: Border.all(color: colors.border.withAlpha(90)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: ScopedSelectableText(
-                hemistichs[0],
-                style: style.copyWith(fontStyle: FontStyle.italic),
-                textAlign: TextAlign.start,
-                textDirection: TextDirection.rtl,
-              ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackVertically = constraints.maxWidth < theme.breakpoints.sm;
+
+        Widget buildHemistich(String text, TextAlign align) {
+          return ScopedSelectableText(
+            text,
+            style: style.copyWith(fontStyle: FontStyle.italic),
+            textAlign: align,
+            textDirection: TextDirection.rtl,
+          );
+        }
+
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: colors.secondary.withAlpha(theme.isDark ? 40 : 55),
+            borderRadius: theme.radii.sm,
+            border: Border.all(color: colors.border.withAlpha(90)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: ScopedSelectableText(
-                hemistichs[1],
-                style: style.copyWith(fontStyle: FontStyle.italic),
-                textAlign: TextAlign.end,
-                textDirection: TextDirection.rtl,
-              ),
-            ),
-          ],
-        ),
-      ),
+            child: stackVertically
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      buildHemistich(hemistichs[0], TextAlign.start),
+                      const SizedBox(height: AppSpacing.sm),
+                      buildHemistich(hemistichs[1], TextAlign.end),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: buildHemistich(hemistichs[0], TextAlign.start),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: buildHemistich(hemistichs[1], TextAlign.end),
+                      ),
+                    ],
+                  ),
+          ),
+        );
+      },
     );
   }
 }

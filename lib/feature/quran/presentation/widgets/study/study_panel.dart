@@ -77,23 +77,19 @@ class StudyPanel extends HookConsumerWidget {
       [ayaId],
     );
 
-    final studyContent = Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ContentAccordion(
-            sura: sura,
-            aya: aya,
-            hasSelectedAyah: selectedAyah != null,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          NotesSection(
-            ayahId: ayaId,
-          ),
-          const SizedBox(height: AppSpacing.xl),
-        ],
-      ),
+    final studyContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ContentAccordion(
+          sura: sura,
+          aya: aya,
+          hasSelectedAyah: selectedAyah != null,
+        ),
+        const SizedBox(height: AppSpacing.xl),
+        NotesSection(
+          ayahId: ayaId,
+        ),
+      ],
     );
 
     final canGoNext = ayaId == null || ayaId < kMaxQuranAyahId;
@@ -119,9 +115,9 @@ class StudyPanel extends HookConsumerWidget {
                 builder: (context, constraints) {
                   return ReadingSwipeViewport(
                     viewportMinHeight: constraints.maxHeight,
-                    horizontalPadding: 0,
-                    topPadding: 0,
-                    bottomPadding: 0,
+                    horizontalPadding: AppSpacing.lg,
+                    topPadding: AppSpacing.lg,
+                    bottomPadding: AppSpacing.lg + AppSpacing.xl,
                     textDirection: kReadingPageTurnDirection,
                     canGoNext: canGoNext,
                     canGoPrevious: canGoPrevious,

@@ -28,14 +28,19 @@ class FortressMushafPages extends ConsumerWidget {
   /// Shown while a page loads.
   final Widget loadingWidget;
 
+  static const _maxViewportHeightFraction = 0.55;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final primaryColor = context.theme.colors.primary;
+    final theme = context.theme;
     final quranTextScale = ref.watch(
       quranScreenSettingsProvider.select(
         (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
       ),
     );
+    final maxPageHeight =
+        MediaQuery.sizeOf(context).height * _maxViewportHeightFraction;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -44,14 +49,17 @@ class FortressMushafPages extends ConsumerWidget {
           if (i > 0) const SizedBox(height: AppSpacing.lg),
           QuranSemantics.mushafReadingRegion(
             label: context.l10n.pageLabel(pages[i]),
-            child: AspectRatio(
-              aspectRatio: _referenceWidth / _referenceHeight,
-              child: MushafPage(
-                page: pages[i],
-                hideHeader: true,
-                enableAyahHighlight: false,
-                loadingWidget: loadingWidget,
-                style: buildAccentMushafStyle(primaryColor, quranTextScale),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxPageHeight),
+              child: AspectRatio(
+                aspectRatio: _referenceWidth / _referenceHeight,
+                child: MushafPage(
+                  page: pages[i],
+                  hideHeader: true,
+                  enableAyahHighlight: false,
+                  loadingWidget: loadingWidget,
+                  style: buildQuranMushafStyle(theme, quranTextScale),
+                ),
               ),
             ),
           ),

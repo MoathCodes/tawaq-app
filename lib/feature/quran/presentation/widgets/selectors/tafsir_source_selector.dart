@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/data/sources/quran_content_registry.dart';
@@ -45,6 +46,7 @@ class TafsirSourceSelector extends ConsumerWidget {
         excludeChild: true,
         child: FSelect<TafsirId>.searchBuilder(
           enabled: enabled,
+          contentConstraints: selectPopoverPortalConstraints(context),
           style: selectStyle(
             colors: colors,
             style: theme.style,

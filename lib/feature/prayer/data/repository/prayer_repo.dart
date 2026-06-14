@@ -11,6 +11,7 @@ part 'prayer_repo.g.dart';
 /// Provides a singleton instance of the [PrayerRepo].
 @riverpod
 PrayerRepo prayerRepo(Ref ref) {
+  ref.watch(prayerCompletionsRepairProvider);
   final database = ref.read(prayerDatabaseProvider);
   final log = ref.read(loggerProvider);
   return PrayerRepo(prayerDatabase: database, log: log);
@@ -44,27 +45,41 @@ class PrayerRepo {
     }
   }
 
-  /// Counts the number of prayers for each completion status on a given date.
+  /// Counts deduped completion statuses between [from] and [to].
   Future<Map<CompletionStatus, int>> countAllStatusesOnDate(
     DateTime from,
     DateTime to,
+    Location location,
   ) {
-    return prayerDatabase.countAllPrayerStatusOnDate(from, to);
+    return prayerDatabase.countAllPrayerStatusOnDate(from, to, location);
   }
 
-  /// Counts the number of prayers with a specific
-  ///  completion status on a given date.
+  /// Counts deduped prayers with [status] between [from] and [to].
   Future<int> countPrayerStatusOnDate(
     CompletionStatus status,
     DateTime from,
     DateTime to,
+    Location location,
   ) {
-    return prayerDatabase.countPrayerStatusOnDate(status, from, to);
+    return prayerDatabase.countPrayerStatusOnDate(status, from, to, location);
   }
 
   /// Deletes a prayer completion.
   Future<void> deleteCompletion(int id) {
     return prayerDatabase.deleteCompletion(id);
+  }
+
+  /// Deletes all completions for [prayer] on [date]'s calendar day.
+  Future<void> deleteCompletionForPrayerOnDate(
+    Prayer prayer,
+    DateTime date,
+    Location location,
+  ) {
+    return prayerDatabase.deleteCompletionForPrayerOnDate(
+      prayer,
+      date,
+      location,
+    );
   }
 
   /// Returns whether a prayer completion exists.
@@ -75,6 +90,11 @@ class PrayerRepo {
   /// Returns all prayer completions.
   Future<List<PrayerCompletion>> getAllCompletions() {
     return prayerDatabase.getAllCompletions();
+  }
+
+  /// Returns the earliest logged completion time, if any.
+  Future<DateTime?> getEarliestCompletionTime() {
+    return prayerDatabase.getEarliestCompletionTime();
   }
 
   /// Returns a list of dates on which all prayers were completed.

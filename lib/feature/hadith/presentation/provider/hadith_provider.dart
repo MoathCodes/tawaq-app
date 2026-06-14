@@ -175,9 +175,11 @@ class HadithScreenController extends _$HadithScreenController {
 
   /// Persists the hadith side-panel width.
   void setSidePanelWidth(double width) {
+    const sideMin = 320.0;
+    const sideMax = 1200.0;
     return ref
         .read(hadithScreenSettingsProvider.notifier)
-        .setSidePanelWidth(width);
+        .setSidePanelWidth(width.clamp(sideMin, sideMax));
   }
 
   /// Updates the session search query and optionally debounces a refresh.

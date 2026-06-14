@@ -4,7 +4,6 @@ import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.da
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_service.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/fortress_featured_dua_ui.dart';
 
 part 'muslim_fortress_provider.g.dart';
 
@@ -44,15 +43,6 @@ Future<FortressSearchResults> muslimFortressSearchResults(Ref ref) async {
   final query = ref.watch(muslimFortressSearchQueryProvider);
   final service = await ref.watch(fortressServiceProvider.future);
   return service.search(query);
-}
-
-/// Featured dua cards for the v2 welcome screen.
-@riverpod
-Future<List<FortressFeaturedDuaCard>> muslimFortressFeaturedDuas(
-  Ref ref,
-) async {
-  final service = await ref.watch(fortressServiceProvider.future);
-  return withAccentShifts(service.loadFeaturedDuas());
 }
 
 /// On-demand sharh commentary for a Hisn content id.

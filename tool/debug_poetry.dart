@@ -28,7 +28,8 @@ void main() {
       print('${s.kind.name}: ${s.text}');
       print('  hemis: ${s.poetryHemistichs}');
     }
-    final parsed = TafsirTextParser.parse(text.replaceAll('\n', '<br>'));
+    final parsed =
+        TafsirTextParser.parse(text.replaceAll('\n', '<br>')).segments;
     print('--- parser ---');
     for (final s in parsed) {
       if (s.kind == TafsirSegmentKind.poetry) {

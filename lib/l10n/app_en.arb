@@ -407,6 +407,14 @@
   "fortressRecommendedNow": "Recommended now",
   "fortressNoRecommendations": "No recommendations available right now",
   "fortressNoFavoriteChapters": "No favorite chapters yet — bookmark one from the sidebar",
+  "fortressMoreFavoriteChapters": "{count, plural, =1 {Plus 1 more chapter…} other {Plus {count} more chapters…}}",
+  "@fortressMoreFavoriteChapters": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fortressReadShort": "Short reading",
   "fortressReadMedium": "Medium reading",
   "fortressReadLong": "Long reading",
@@ -484,7 +492,6 @@
   "searchPlaceLabel": "Search for a place",
   "searchQuran": "Search Quran...",
   "selectAyahToSeeContent": "Select an ayah to see the content.",
-  "selectPrayerToLog": "Select a prayer to log status",
   "settings": "Settings",
   "setupPrayerSettingsSubtitle": "We'll guide you through a few quick steps. You can change these later in Settings.",
   "setupPrayerSettingsTitle": "Let's set up your prayer settings.",
@@ -497,7 +504,8 @@
   "skip": "Skip",
   "shareAppName": "App name",
   "shareBasmalah": "Basmalah",
-  "shareByApp": "By\n{appName}",
+  "shareAttributionPrefix": "Using",
+  "shareByApp": "Using {appName}",
   "@shareByApp": {
     "placeholders": {
       "appName": {
@@ -577,6 +585,7 @@
     }
   },
   "shareSaveImage": "Save image",
+  "sharePreserveLineBreaks": "Mushaf line breaks",
   "shareSurahHeader": "Surah header",
   "shareVerseCount": "{count, plural, =1{1 verse} other{{count} verses}}",
   "@shareVerseCount": {
@@ -688,8 +697,46 @@
       }
     }
   },
-  "a11yNotificationsOn": "Notifications on",
-  "a11yNotificationsOff": "Notifications off",
+  "scheduleAlertOff": "Silent",
+  "scheduleAlertSound": "Adhan",
+  "scheduleAlertIqamahSound": "Sound",
+  "scheduleAlertNotify": "Notify",
+  "scheduleAlertOffHint": "No alert for this time",
+  "scheduleAlertSoundHint": "Play adhan when the time arrives",
+  "scheduleAlertIqamahSoundHint": "Play alert when the time arrives",
+  "scheduleAlertNotifyHint": "Show a notification without sound",
+  "scheduleAlertPickerTitle": "Alert for {event}",
+  "@scheduleAlertPickerTitle": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAlertEventAdhan": "{prayer} adhan",
+  "@scheduleAlertEventAdhan": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAlertEventIqamah": "{prayer} iqamah",
+  "@scheduleAlertEventIqamah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAlertEventSunnah": "{prayer}",
+  "@scheduleAlertEventSunnah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
   "keyboardShortcutsTabTitle": "Keyboard shortcuts",
   "keyboardShortcutsSectionTitle": "Keyboard shortcuts",
   "keyboardShortcutsSectionSubtitle": "Reference list of keyboard shortcuts available on desktop. Shortcuts work app-wide from any screen, including this one. They cannot be customized.",
@@ -721,5 +768,97 @@
   "shortcutFortressThikrNextLabel": "Next thikr",
   "shortcutFortressThikrNextDescription": "Go to the next thikr during focus reading.",
   "shortcutFortressThikrPrevLabel": "Previous thikr",
-  "shortcutFortressThikrPrevDescription": "Go to the previous thikr during focus reading."
+  "shortcutFortressThikrPrevDescription": "Go to the previous thikr during focus reading.",
+  "adhanSectionTitle": "Adhan",
+  "adhanSectionSubtitle": "Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.",
+  "adhanSoundLabel": "Adhan sound",
+  "adhanMuezzinMisharyAlafasi": "Mishary Alafasi",
+  "adhanMuezzinMakkah": "Makkah",
+  "adhanMuezzinAbedAlbasaei": "Abed Al-Basaei",
+  "adhanMuezzinAhmadNufais": "Ahmad Nufais",
+  "adhanMuezzinGhaziAlSaadoni": "Ghazi Al-Saadoni",
+  "adhanMuezzinHamadDeghreri": "Hamad Deghreri",
+  "adhanMuezzinHamdanAlMalki": "Hamdan Al-Malki",
+  "adhanMuezzinIbrahimAlArkani": "Ibrahim Al-Arkani",
+  "adhanMuezzinMajedAlHamathani": "Majed Al-Hamathani",
+  "adhanMuezzinMansoorAlZahrani": "Mansoor Az-Zahrani",
+  "adhanMuezzinMohammadAlMenshawy": "Mohammad Al-Menshawy",
+  "adhanMuezzinMohammadRefat": "Mohammad Refat",
+  "adhanMuezzinNasserAlQatami": "Nasser Al-Qatami",
+  "adhanMuezzinSuhaibKhatba": "Suhaib Khatba",
+  "adhanVolumeLabel": "Adhan volume",
+  "adhanShowAlertLabel": "Show adhan alert",
+  "adhanShowOsNotificationLabel": "OS notification when hidden in tray",
+  "adhanAlertPositionLabel": "Alert position",
+  "adhanAlertPositionTopEnd": "Top right",
+  "adhanAlertPositionTopStart": "Top left",
+  "adhanAlertPositionCenter": "Center",
+  "adhanStop": "Stop adhan",
+  "adhanAlertTitle": "Adhan — {prayer}",
+  "@adhanAlertTitle": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "adhanPlayingTitle": "Adhan — {prayer}",
+  "@adhanPlayingTitle": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "adhanOsNotificationBody": "Adhan is playing — tap to focus",
+  "iqamahAlertTitle": "Iqamah — {prayer}",
+  "@iqamahAlertTitle": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "iqamahPlayingTitle": "Iqamah — {prayer}",
+  "@iqamahPlayingTitle": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "iqamahOsNotificationBody": "Iqamah time — tap to focus",
+  "sunnahAlertTitle": "{prayer}",
+  "@sunnahAlertTitle": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "sunnahOsNotificationBody": "Sunnah time — tap to focus",
+  "prayerAlertDismiss": "Dismiss",
+  "iqamahSoundLabel": "Iqamah call",
+  "iqamahMuezzinYasserAlDossari": "Yasser Al-Dossari",
+  "iqamahMuezzinMadinah": "Madinah",
+  "desktopSectionTitle": "Desktop",
+  "desktopSectionSubtitle": "System tray, window behaviour, and startup on desktop.",
+  "desktopLaunchAtLogin": "Start at login",
+  "desktopLaunchAtLoginHint": "Start hidden in tray was also enabled so adhan alerts work after login.",
+  "desktopMinimizeToTrayOnClose": "Hide to tray when closing the window",
+  "desktopMinimizeToTray": "Hide to tray when minimizing",
+  "desktopLaunchToTray": "Start hidden in tray",
+  "trayShowApp": "Show Tawaq",
+  "trayMuteAdhan": "Mute adhan",
+  "trayQuit": "Quit",
+  "trayNextPrayer": "Next: {prayer}",
+  "@trayNextPrayer": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "quranRecitationComingSoon": "Recitation playback coming soon",
+  "quranPlayAyah": "Play ayah"
 }

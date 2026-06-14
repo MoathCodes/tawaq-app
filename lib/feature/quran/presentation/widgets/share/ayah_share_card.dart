@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/feature/quran/domain/services/ayah_share_logic.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/presentation/models/ayah_share_ui.dart';
+import 'package:tawaq/gen/assets.gen.dart';
 import 'package:tawaq/theme/theme.dart';
+
+const _kShareAttributionIconSize = 32.0;
+const _kShareAttributionFade = 0.7;
 
 /// Card rendered with mushaf typography for sharing as an image.
 class AyahShareCard extends StatelessWidget {
@@ -16,7 +20,7 @@ class AyahShareCard extends StatelessWidget {
     required this.showSurahHeader,
     required this.showBasmalah,
     required this.showAppName,
-    required this.appName,
+    required this.preserveMushafLineBreaks,
     required this.isDark,
     super.key,
   });
@@ -42,8 +46,8 @@ class AyahShareCard extends StatelessWidget {
   /// Whether to show the app name below the verses.
   final bool showAppName;
 
-  /// Localized app name shown in the footer.
-  final String appName;
+  /// Whether to keep mushaf line breaks for partial-page selections.
+  final bool preserveMushafLineBreaks;
 
   /// Whether to use the dark surah banner variant.
   final bool isDark;
@@ -52,111 +56,75 @@ class AyahShareCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final typography = context.theme.typography;
-    final scale = style.scale;
-    final ayahFontSize = scale.getAyahFontSize(1);
-    final basmalahFontSize = scale.getBasmalahFontSize(1);
-    final ayahStyle = MushafTextStyleMerger.mergeAyahStyle(
-      userStyle: style.ayahStyle,
-      modifier: style.ayahStyleModifier,
-      pageNumber: page.pageNumber,
-      baseSize: ayahFontSize,
-    );
-    const horizontalPadding = AppSpacing.xl;
-    const contentWidth = kAyahShareCardWidth - (horizontalPadding * 2);
-    final selectedIds = ayahIds.toSet();
-
-    final card = Container(
-      width: kAyahShareCardWidth,
-      padding: const EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: AppSpacing.xl,
-      ),
-      decoration: BoxDecoration(
-        color: style.backgroundColor ?? colors.background,
-        borderRadius: context.theme.radii.lg,
-        border: Border.all(color: colors.border, width: 1.5),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final block in page.surahs) ...[
-            if (showSurahHeader &&
-                AyahShareLogic.shouldShowShareSurahHeader(block, selectedIds))
-              ...[
-              SurahHeaderWidget(
-                surahData: Surah(
-                  number: block.surahNumber,
-                  glyph: block.glyph,
-                  hasBasmalah: block.hasBasmalah,
-                ),
-                width: contentWidth,
-                fontSize: basmalahFontSize,
-                textStyle: style.headerSurahNameStyle ?? style.surahNameStyle,
-                styleModifier: style.headerSurahNameStyleModifier ??
-                    style.surahNameStyleModifier,
-                customHeaderImage: style.surahHeaderImage,
-                isDark: isDark,
-              ),
-              SizedBox(height: 12 * scale.readingBoost.clamp(0.85, 1.15)),
-            ],
-            if (showBasmalah &&
-                AyahShareLogic.shouldShowShareBasmalah(block, selectedIds)) ...[
-              BasmalahWidget(
-                fontSize: basmalahFontSize,
-                textStyle: style.basmalahStyle,
-                styleModifier: style.basmalahStyleModifier,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-            ..._buildBlockAyahs(
-              block: block,
-              selectedIds: selectedIds,
-              ayahStyle: ayahStyle,
-            ),
-          ],
-          if (showAppName) ...[
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              appName,
-              textAlign: TextAlign.center,
-              style: typography.sm.copyWith(
-                color: colors.mutedForeground,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ],
-      ),
+    final l10n = context.l10n;
+    final radii = context.theme.radii;
+    final attributionStyle = typography.xs.copyWith(
+      color: colors.mutedForeground.withValues(alpha: _kShareAttributionFade),
+      fontWeight: FontWeight.w500,
     );
 
-    return RepaintBoundary(key: boundaryKey, child: card);
-  }
-
-  List<Widget> _buildBlockAyahs({
-    required SurahBlock block,
-    required Set<int> selectedIds,
-    required TextStyle ayahStyle,
-  }) {
-    final fragments = block.ayahs
-        .where((fragment) => selectedIds.contains(fragment.ayahId))
-        .toList();
-    if (fragments.isEmpty) return const [];
-
-    return [
-      PageAyahWidget(
-        fullText: page.glyphText,
-        ayahs: fragments,
-        style: ayahStyle,
-        enableHighlight: false,
-        activeStyle: ayahStyle,
-        removeNewLines: AyahShareLogic.shouldRemoveNewLinesForBlock(
-          page,
-          block,
-          selectedIds,
+    return RepaintBoundary(
+      key: boundaryKey,
+      child: Container(
+        width: kAyahShareCardWidth,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xl,
+          vertical: AppSpacing.xl,
         ),
-        onAyahSelection: (_) {},
+        decoration: BoxDecoration(
+          color: style.backgroundColor ?? colors.background,
+          borderRadius: context.theme.radii.lg,
+          border: Border.all(color: colors.border, width: 1.5),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            MushafPageRange.onPage(
+              page: page.pageNumber,
+              startAyahId: ayahIds.first,
+              endAyahId: ayahIds.last,
+              pageData: page,
+              style: style,
+              showSurahHeader: showSurahHeader,
+              showBasmalah: showBasmalah,
+              preserveMushafLineBreaks: preserveMushafLineBreaks,
+              isDark: isDark,
+            ),
+            if (showAppName) ...[
+              const SizedBox(height: AppSpacing.md),
+              Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: AppSpacing.xs,
+                  children: [
+                    Opacity(
+                      opacity: _kShareAttributionFade,
+                      child: ClipRRect(
+                        borderRadius: radii.xs,
+                        child: Assets.images.appIcon.image(
+                          width: _kShareAttributionIconSize,
+                          height: _kShareAttributionIconSize,
+                          fit: BoxFit.cover,
+                          cacheWidth:
+                              (_kShareAttributionIconSize *
+                                      MediaQuery.devicePixelRatioOf(context))
+                                  .round(),
+                          cacheHeight:
+                              (_kShareAttributionIconSize *
+                                      MediaQuery.devicePixelRatioOf(context))
+                                  .round(),
+                        ),
+                      ),
+                    ),
+                    Text(l10n.shareAttributionPrefix, style: attributionStyle),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
-    ];
+    );
   }
 }

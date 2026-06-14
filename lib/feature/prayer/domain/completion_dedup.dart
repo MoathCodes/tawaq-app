@@ -1,0 +1,114 @@
+import 'package:adhan_dart/adhan_dart.dart';
+import 'package:tawaq/core/utils/date_extensions.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:timezone/timezone.dart';
+
+/// Midnight on [time]'s calendar day in [location] (naive [DateTime]).
+DateTime completionCalendarDay(DateTime time, Location location) {
+  return time.calendarDayIn(location);
+}
+
+/// Stable grouping key `yyyyMMdd` in [location].
+int completionDayKey(DateTime time, Location location) {
+  final day = completionCalendarDay(time, location);
+  return day.year * 10000 + day.month * 100 + day.day;
+}
+
+String _groupKey(PrayerCompletion completion, Location location) {
+  return '${completionDayKey(completion.completionTime, location)}_'
+      '${completion.prayer.name}';
+}
+
+/// Picks the canonical row for [prayer] on [day] from [rows].
+///
+/// Highest [PrayerCompletion.id] wins; tie-break by latest [completionTime].
+PrayerCompletion? pickCanonical(
+  List<PrayerCompletion> rows, {
+  required Prayer prayer,
+  required Location location,
+  required DateTime day,
+}) {
+  final matches = rows.where(
+    (c) =>
+        c.prayer == prayer &&
+        c.completionTime.isSameCalendarDay(day, location),
+  );
+  if (matches.isEmpty) return null;
+  return matches.reduce(_preferCanonical);
+}
+
+/// Returns one canonical row per `(calendar_day, prayer)` in [location].
+List<PrayerCompletion> dedupeCompletions(
+  List<PrayerCompletion> rows,
+  Location location,
+) {
+  final groups = <String, List<PrayerCompletion>>{};
+  for (final row in rows) {
+    groups.putIfAbsent(_groupKey(row, location), () => []).add(row);
+  }
+  return [
+    for (final group in groups.values) group.reduce(_preferCanonical),
+  ];
+}
+
+/// Maps obligatory prayers to their canonical status on [day].
+Map<Prayer, CompletionStatus> mapPrayerStatuses(
+  List<PrayerCompletion> rows,
+  Location location,
+  DateTime day,
+) {
+  final statuses = {
+    for (final prayer in kObligatoryPrayers) prayer: CompletionStatus.none,
+  };
+  for (final prayer in kObligatoryPrayers) {
+    final canonical = pickCanonical(
+      rows,
+      prayer: prayer,
+      location: location,
+      day: day,
+    );
+    if (canonical != null) {
+      statuses[prayer] = canonical.status;
+    }
+  }
+  return statuses;
+}
+
+/// Counts completion statuses after deduping per `(calendar_day, prayer)`.
+Map<CompletionStatus, int> countDedupedStatuses(
+  List<PrayerCompletion> rows,
+  Location location,
+) {
+  final counts = {
+    for (final status in CompletionStatus.values) status: 0,
+  };
+  for (final completion in dedupeCompletions(rows, location)) {
+    counts[completion.status] = (counts[completion.status] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/// Counts deduped statuses for rows whose calendar day falls in [from, to].
+Map<CompletionStatus, int> countDedupedStatusesInRange(
+  List<PrayerCompletion> rows,
+  Location location,
+  DateTime from,
+  DateTime to,
+) {
+  final filtered = rows.where((c) {
+    final day = completionCalendarDay(c.completionTime, location);
+    return day.isBetween(from, to);
+  });
+  return countDedupedStatuses(filtered.toList(), location);
+}
+
+PrayerCompletion _preferCanonical(PrayerCompletion a, PrayerCompletion b) {
+  final aId = a.id ?? -1;
+  final bId = b.id ?? -1;
+  if (aId != bId) {
+    return aId > bId ? a : b;
+  }
+  return a.completionTime.isAfter(b.completionTime) ? a : b;
+}

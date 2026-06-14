@@ -1,96 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:mushaf_reader/src/data/models/ayah.dart';
-import 'package:mushaf_reader/src/data/models/mushaf_page_info.dart';
-import 'package:mushaf_reader/src/data/models/mushaf_style.dart';
-import 'package:mushaf_reader/src/logic/mushaf_reader_controller.dart';
-import 'package:mushaf_reader/src/presentation/mushaf_loading.dart';
-import 'package:mushaf_reader/src/presentation/screens/mushaf_page.dart';
+import 'package:mushaf_reader/mushaf_reader.dart'
+    show
+        AyahTapCallback,
+        AyahLongPressCallback,
+        MushafConstants,
+        MushafPageChangedCallback,
+        MushafLoading,
+        MushafPage,
+        MushafReaderController,
+        MushafStyle,
+        MushafTwoPageChangedCallback;
 
 /// A convenient widget for displaying a complete Mushaf reader with navigation.
 ///
-/// This widget provides a ready-to-use Quran reader experience with:
-/// - Page-by-page navigation via horizontal swiping
-/// - Ayah tap and long-press handling with rich info
-/// - Automatic controller management (or bring your own)
-/// - Preloading of adjacent pages for smooth scrolling
+/// Supports single-page (`pagesPerViewport: 1`, default) or two-page spread
+/// (`pagesPerViewport: 2`) layouts.
 ///
 /// ## Quick Start
 ///
 /// ```dart
-/// // Minimal setup - just add to your widget tree
 /// MushafReader(
 ///   onAyahTap: (ayah) => print('Tapped ${ayah.reference}'),
 /// )
 /// ```
 ///
-/// ## With Controller
-///
-/// For programmatic navigation and state access:
+/// ## Two-page spread
 ///
 /// ```dart
-/// class _MyReaderState extends State<MyReader> {
-///   late final MushafReaderController _controller;
-///
-///   @override
-///   void initState() {
-///     super.initState();
-///     _controller = MushafReaderController(initialPage: 1);
-///   }
-///
-///   @override
-///   void dispose() {
-///     _controller.dispose();
-///     super.dispose();
-///   }
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return Column(
-///       children: [
-///         // Navigation header
-///         Row(
-///           children: [
-///             IconButton(
-///               icon: Icon(Icons.arrow_back),
-///               onPressed: () => _controller.previousPage(),
-///             ),
-///             Text('Page ${_controller.currentPage}'),
-///             IconButton(
-///               icon: Icon(Icons.arrow_forward),
-///               onPressed: () => _controller.nextPage(),
-///             ),
-///           ],
-///         ),
-///         // Reader
-///         Expanded(
-///           child: MushafReader(
-///             controller: _controller,
-///             onAyahTap: (ayah) => _showAyahDetails(ayah),
-///             onAyahLongPress: (ayah) => _showContextMenu(ayah),
-///           ),
-///         ),
-///       ],
-///     );
-///   }
-/// }
+/// MushafReader(
+///   pagesPerViewport: 2,
+///   onAyahTap: (ayah) => print(ayah.reference),
+///   onSpreadChanged: (info) => print(info.$1.pageNumber),
+/// )
 /// ```
-///
-/// ## RTL Support
-///
-/// The Mushaf is read right-to-left. By default, [textDirection] is set to
-/// [TextDirection.rtl], providing an authentic reading experience where
-/// swiping right goes to the next page.
 ///
 /// See also:
 /// - [MushafReaderController], for programmatic control
 /// - [MushafPage], for single-page display
-/// - [Ayah], for tap callback info
-/// - [MushafPageInfo], for current page info
 class MushafReader extends StatefulWidget {
   /// The controller for managing navigation and state.
   ///
   /// If not provided, an internal controller is created and managed.
   final MushafReaderController? controller;
+
+  /// Mushaf pages shown per viewport: `1` (default) or `2`.
+  final int pagesPerViewport;
 
   /// The initial page to display (1-604).
   ///
@@ -98,35 +52,30 @@ class MushafReader extends StatefulWidget {
   final int initialPage;
 
   /// Whether to reverse page order within the [textDirection].
-  ///
-  /// Defaults to `false`.
   final bool reverse;
 
   /// The reading direction for the Mushaf.
   ///
-  /// Defaults to [TextDirection.rtl], which matches the natural reading
-  /// direction of Arabic text (swiping right goes to the next page).
+  /// Defaults to [TextDirection.rtl].
   final TextDirection textDirection;
 
   /// Callback invoked when an Ayah is tapped.
-  ///
-  /// Provides the full [Ayah] with surah, verse, page, juz, and text content.
-  final void Function(Ayah ayah)? onAyahTap;
+  final AyahTapCallback? onAyahTap;
 
   /// Callback invoked when an Ayah is long-pressed.
-  ///
-  /// Provides the full [Ayah] for context menus, sharing, etc.
-  final void Function(Ayah ayah)? onAyahLongPress;
+  final AyahLongPressCallback? onAyahLongPress;
 
-  /// Callback invoked when the page changes.
-  ///
-  /// Provides the new [MushafPageInfo] with page metadata.
-  final void Function(MushafPageInfo info)? onPageChanged;
+  /// Invoked when the visible page changes (single-page mode only).
+  final MushafPageChangedCallback? onPageChanged;
 
-  /// Callback invoked with just the page number on page change.
-  ///
-  /// Use this for simple page tracking without loading full info.
+  /// Invoked with the page number on change (single-page mode only).
   final void Function(int page)? onPageNumberChanged;
+
+  /// Invoked when the visible spread changes (two-page mode only).
+  final MushafTwoPageChangedCallback? onSpreadChanged;
+
+  /// Invoked with spread page numbers on change (two-page mode only).
+  final void Function((int, int) pages)? onSpreadPageNumbersChanged;
 
   /// Styling options for the pages.
   final MushafStyle? style;
@@ -150,6 +99,7 @@ class MushafReader extends StatefulWidget {
   const MushafReader({
     super.key,
     this.controller,
+    this.pagesPerViewport = 1,
     this.initialPage = 1,
     this.reverse = false,
     this.textDirection = TextDirection.rtl,
@@ -157,13 +107,18 @@ class MushafReader extends StatefulWidget {
     this.onAyahLongPress,
     this.onPageChanged,
     this.onPageNumberChanged,
+    this.onSpreadChanged,
+    this.onSpreadPageNumbersChanged,
     this.style,
     this.loadingWidget,
     this.pageLoadingWidget,
     this.hideHeader = false,
     this.clipBehavior = Clip.hardEdge,
     this.physics,
-  });
+  }) : assert(
+         pagesPerViewport == 1 || pagesPerViewport == 2,
+         'pagesPerViewport must be 1 or 2',
+       );
 
   @override
   State<MushafReader> createState() => _MushafReaderState();
@@ -173,6 +128,8 @@ class _MushafReaderState extends State<MushafReader> {
   late MushafReaderController _controller;
   bool _ownsController = false;
   bool _isInitialized = false;
+
+  bool get _isTwoPage => widget.pagesPerViewport == 2;
 
   @override
   Widget build(BuildContext context) {
@@ -187,24 +144,15 @@ class _MushafReaderState extends State<MushafReader> {
         reverse: widget.reverse,
         clipBehavior: widget.clipBehavior,
         physics: widget.physics,
-        itemCount: 604,
+        itemCount: _isTwoPage
+            ? MushafConstants.twoPageSpreadCount
+            : MushafConstants.pageCount,
         onPageChanged: _onPageChanged,
         itemBuilder: (context, index) {
-          final page = index + 1;
-          return MushafPage(
-            key: ValueKey(page),
-            page: page,
-            controller: _controller,
-            style: widget.style,
-            loadingWidget: widget.pageLoadingWidget,
-            hideHeader: widget.hideHeader,
-            onTapAyah: widget.onAyahTap != null
-                ? (ayahId) => _handleAyahTap(ayahId)
-                : null,
-            onLongPressAyah: widget.onAyahLongPress != null
-                ? (ayahId) => _handleAyahLongPress(ayahId)
-                : null,
-          );
+          if (_isTwoPage) {
+            return _buildSpread(index);
+          }
+          return _buildSinglePage(index + 1);
         },
       ),
     );
@@ -224,15 +172,50 @@ class _MushafReaderState extends State<MushafReader> {
     super.initState();
     if (widget.controller != null) {
       _controller = widget.controller!;
-      // Ensure controller is configured for single-page mode
-      _controller.pagesPerViewport = 1;
+      _controller.pagesPerViewport = widget.pagesPerViewport;
       _isInitialized = _controller.isInitialized;
     } else {
-      _controller = MushafReaderController(initialPage: widget.initialPage);
+      _controller = MushafReaderController(
+        initialPage: widget.initialPage,
+        pagesPerViewport: widget.pagesPerViewport,
+      );
       _ownsController = true;
     }
     _controller.addListener(_onControllerChanged);
     _initController();
+  }
+
+  Widget _buildSinglePage(int page) {
+    return MushafPage(
+      key: ValueKey(page),
+      page: page,
+      controller: _controller,
+      style: widget.style,
+      loadingWidget: widget.pageLoadingWidget,
+      hideHeader: widget.hideHeader,
+      onAyahIdTap: widget.onAyahTap != null
+          ? (ayahId) => _handleAyahTap(ayahId)
+          : null,
+      onAyahIdLongPress: widget.onAyahLongPress != null
+          ? (ayahId) => _handleAyahLongPress(ayahId)
+          : null,
+    );
+  }
+
+  Widget _buildSpread(int index) {
+    final firstPage = index * 2 + 1;
+    final secondPage = firstPage + 1;
+
+    return Row(
+      children: [
+        Expanded(child: _buildSinglePage(firstPage)),
+        Expanded(
+          child: secondPage <= MushafConstants.pageCount
+              ? _buildSinglePage(secondPage)
+              : const SizedBox.shrink(),
+        ),
+      ],
+    );
   }
 
   Future<void> _handleAyahLongPress(int ayahId) async {
@@ -248,11 +231,11 @@ class _MushafReaderState extends State<MushafReader> {
   }
 
   Future<void> _initController() async {
+    await _controller.ensureReady();
     if (mounted) {
       setState(() {
         _isInitialized = true;
       });
-      // Load initial page info
       await _controller.loadCurrentPageInfo();
     }
   }
@@ -264,20 +247,28 @@ class _MushafReaderState extends State<MushafReader> {
   }
 
   void _onPageChanged(int index) {
-    final page = index + 1;
     _controller.onPageChanged(index);
 
-    // Simple page number callback
-    widget.onPageNumberChanged?.call(page);
+    if (_isTwoPage) {
+      final pages = _controller.currentPages;
+      widget.onSpreadPageNumbersChanged?.call(pages);
 
-    // Rich page info callback (async)
-    if (widget.onPageChanged != null) {
-      _controller.getPageInfo(page).then((info) {
-        widget.onPageChanged?.call(info);
-      });
+      if (widget.onSpreadChanged != null) {
+        _controller.getTwoPagesInfo(pages.$1).then((info) {
+          widget.onSpreadChanged?.call(info);
+        });
+      }
+    } else {
+      final page = index + 1;
+      widget.onPageNumberChanged?.call(page);
+
+      if (widget.onPageChanged != null) {
+        _controller.getPageInfo(page).then((info) {
+          widget.onPageChanged?.call(info);
+        });
+      }
     }
 
-    // Preload adjacent pages
     _controller.preloadAdjacentPages(count: 2);
   }
 }

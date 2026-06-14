@@ -54,40 +54,38 @@ class FortressCategoryDetailView extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          category.title,
-                          style: theme.typography.xl2.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          fortressRecurrenceLabel(category.recurrence, l10n),
-                          style: theme.typography.md.copyWith(
-                            color: theme.colors.mutedForeground,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      category.title,
+                      style: theme.typography.xl2.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   MouseClick(
                     onClick: onToggleFavorite,
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xs),
-                      child: Icon(
-                        FLucideIcons.bookmark,
-                        size: 22,
-                        color: isFavorite
-                            ? theme.colors.primary
-                            : theme.colors.mutedForeground,
-                        fill: isFavorite ? 1.0 : 0.0,
+                    semanticsLabel: l10n.fortressFavorites,
+                    child: FortressExcludeDecorative(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.xs),
+                        child: Icon(
+                          FLucideIcons.bookmark,
+                          size: 22,
+                          color: isFavorite
+                              ? theme.colors.primary
+                              : theme.colors.mutedForeground,
+                          fill: isFavorite ? 1.0 : 0.0,
+                        ),
                       ),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                fortressRecurrenceLabel(category.recurrence, l10n),
+                style: theme.typography.md.copyWith(
+                  color: theme.colors.mutedForeground,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
               FBadge(

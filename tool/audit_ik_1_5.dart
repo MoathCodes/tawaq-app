@@ -2,6 +2,8 @@
 
 import 'dart:io';
 
+import 'package:tawaq/core/text/arabic_text_normalizer.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_poetry_splitter.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_segment_repair.dart';
@@ -140,7 +142,10 @@ void main() {
   print('after_poetry: ${finalSegments.length} segments');
   _printKindCounts('final', finalSegments);
 
-  final parsed = TafsirTextParser.parse(raw);
+  final parsed = TafsirTextParser.parse(
+    raw,
+    tafsirId: TafsirId.ibnKathir,
+  ).segments;
   print('\n=== FULL PARSER OUTPUT (${parsed.length} segments) ===');
   for (var i = 0; i < parsed.length; i++) {
     final s = parsed[i];
@@ -308,7 +313,7 @@ TafsirSegmentKind _classify(String cssClass, String content) {
 }
 
 String _normText(TafsirTextSegment s) {
-  final normalized = TafsirTextNormalizer.normalize(s.text);
+  final normalized = ArabicTextNormalizer.normalize(s.text);
   if (s.kind == TafsirSegmentKind.ayah) {
     return TafsirTextNormalizer.formatAyahDisplay(normalized);
   }

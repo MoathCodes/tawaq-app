@@ -189,6 +189,7 @@ class ContentAccordion extends ConsumerWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(minHeight: 120),
                     child: _buildTafsirContent(
+                      context,
                       l10n,
                       colors,
                       typography,
@@ -240,6 +241,7 @@ class ContentAccordion extends ConsumerWidget {
   }
 
   Widget _buildTafsirContent(
+    BuildContext context,
     AppLocalizations l10n,
     FColors colors,
     FTypography typography,
@@ -295,15 +297,26 @@ class ContentAccordion extends ConsumerWidget {
                     children: [
                       const TafsirSourceSelector(),
                       const SizedBox(height: AppSpacing.lg),
-                      TafsirText(
-                        text: tafsirText,
-                        tafsirId: source,
-                        baseStyle: typography.sm.copyWith(
-                          color: colors.foreground,
-                          fontFamily: 'UthmanTN',
-                          height: 1.8,
-                          fontSize: 20,
-                        ),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final breakpoints = context.theme.breakpoints;
+                          final fontSize = constraints.maxWidth < breakpoints.sm
+                              ? 16.0
+                              : constraints.maxWidth < breakpoints.md
+                              ? 18.0
+                              : 20.0;
+
+                          return TafsirText(
+                            text: tafsirText,
+                            tafsirId: source,
+                            baseStyle: typography.sm.copyWith(
+                              color: colors.foreground,
+                              fontFamily: 'UthmanTN',
+                              height: 1.8,
+                              fontSize: fontSize,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

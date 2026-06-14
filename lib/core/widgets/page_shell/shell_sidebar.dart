@@ -2,19 +2,17 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/routing/route_provider.dart';
-import 'package:tawaq/core/utils/scaled_screen_util.dart';
 import 'package:tawaq/core/widgets/merged_action_semantics.dart';
 import 'package:tawaq/core/widgets/page_shell/shell_providers.dart';
 import 'package:tawaq/core/widgets/shell_a11y.dart';
 import 'package:tawaq/feature/settings/presentation/provider/ui_state_settings_providers.dart';
-import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/spacing.dart';
 import 'package:tawaq/theme/theme_extensions.dart';
@@ -37,9 +35,7 @@ class ShellSidebar extends HookConsumerWidget {
     final isRtl = ref.watch(localeProvider) == 'ar';
     final duration = context.theme.durations.fast;
     final textDir = isRtl ? TextDirection.rtl : TextDirection.ltr;
-    final appScale = ref.watch(shellAppTextScaleFactorProvider);
-    final isTablet =
-        MediaQuery.sizeOf(context).width <= Breakpoints.bootstrap.lg;
+    final isTablet = isLessThan(context, FBreakpoint.lg);
     final isCollapsed = ref.watch(shellSidebarCollapsedProvider(isTablet));
 
     useListenable(router.routeInformationProvider);
@@ -117,12 +113,13 @@ class ShellSidebar extends HookConsumerWidget {
                 layout: .vertical,
                 child: Text(
                   'توّاق',
-                  style: TextStyle(
-                    fontFamily: FontFamily.iBMPlexSansArabic,
+                  style: theme.typography.lg.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize:
-                        scaledSp(24, appScale) +
-                        (animation.value * scaledSp(12, appScale)),
+                        theme.typography.lg.fontSize! +
+                        (animation.value *
+                            (theme.typography.xl2.fontSize! -
+                                theme.typography.lg.fontSize!)),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -199,8 +196,7 @@ class _RouteGroup extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final isTablet =
-        MediaQuery.sizeOf(context).width <= Breakpoints.bootstrap.lg;
+    final isTablet = isLessThan(context, FBreakpoint.lg);
     final isCollapsed = ref.watch(shellSidebarCollapsedProvider(isTablet));
     final isExpanded = !isCollapsed;
 
@@ -301,7 +297,7 @@ Widget _collapsedSidebarItem({
       onPress: enabled ? () => route.go(context) : null,
       selected: selected,
       variant: selected ? .secondary : .ghost,
-      child: Center(child: Icon(route.icon)),
+      child: Icon(route.icon),
     ),
   );
 }

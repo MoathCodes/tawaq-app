@@ -5,7 +5,7 @@ import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
 import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 import 'package:mushaf_reader/src/presentation/mushaf_loading.dart';
 import 'package:mushaf_reader/src/core/mushaf_layout.dart';
-import 'package:mushaf_reader/src/presentation/widgets/page_ayah_widget.dart';
+import 'package:mushaf_reader/src/presentation/widgets/mushaf_page_surah_blocks.dart';
 
 /// A widget that displays a single page of the Mushaf (Quran).
 ///
@@ -18,19 +18,15 @@ import 'package:mushaf_reader/src/presentation/widgets/page_ayah_widget.dart';
 ///
 /// ## Prerequisites
 ///
-/// Before using this widget, ensure the repository is initialized.
-/// If using [MushafReaderController], call:
-///
-/// ```dart
-/// await controller.ensureReady();
-/// ```
+/// Call [MushafReaderLibrary.ensureInitialized] once before building this
+/// widget (typically in `main()`).
 ///
 /// ## Basic Usage
 ///
 /// ```dart
 /// MushafPage(
 ///   page: 1,
-///   onTapAyah: (ayahId) {
+///   onAyahIdTap: (ayahId) {
 ///     print('Tapped ayah: $ayahId');
 ///   },
 /// )
@@ -52,14 +48,13 @@ import 'package:mushaf_reader/src/presentation/widgets/page_ayah_widget.dart';
 ///
 /// ```dart
 /// final controller = MushafReaderController();
-/// await controller.ensureReady();
 ///
 /// MushafPage(
 ///   page: 1,
 ///   controller: controller,
 /// )
 ///
-/// // Later, highlight an ayah programmatically
+/// // Highlight an ayah programmatically
 /// controller.selectAyah(7);
 /// ```
 ///
@@ -68,7 +63,7 @@ import 'package:mushaf_reader/src/presentation/widgets/page_ayah_widget.dart';
 /// ```dart
 /// MushafReader(
 ///   controller: controller,
-///   onTapAyah: (Ayah) => print('Tapped: ${Ayah.reference}'),
+///   onAyahTap: (ayah) => print('Tapped: ${ayah.reference}'),
 /// )
 /// ```
 ///
@@ -102,15 +97,12 @@ class MushafPage extends StatefulWidget {
 
   /// Callback invoked when an Ayah is tapped.
   ///
-  /// The callback receives the global Ayah ID (1-6236).
-  /// Use this to show Ayah details, play audio, etc.
-  final Function(int ayahId)? onTapAyah;
+  /// Receives the global ayah id (1–6236). For a full [Ayah] model, use
+  /// [MushafReader.onAyahTap] or fetch via [MushafReaderController.getAyah].
+  final AyahIdTapCallback? onAyahIdTap;
 
   /// Callback invoked when an Ayah is long-pressed.
-  ///
-  /// The callback receives the global Ayah ID (1-6236).
-  /// Use this to show context menus, share options, etc.
-  final Function(int ayahId)? onLongPressAyah;
+  final AyahIdLongPressCallback? onAyahIdLongPress;
 
   /// Styling options for the page.
   ///
@@ -121,32 +113,22 @@ class MushafPage extends StatefulWidget {
   /// Callback invoked when a Surah header banner is tapped.
   ///
   /// Receives the Surah number (1-114).
-  final void Function(int surahNumber)? onTapSurahHeader;
+  final SurahTapCallback? onTapSurahHeader;
 
   /// Callback invoked when a Surah header banner is long-pressed.
-  ///
-  /// Receives the Surah number (1-114).
-  final void Function(int surahNumber)? onLongPressSurahHeader;
+  final SurahTapCallback? onLongPressSurahHeader;
 
   /// Callback invoked when a Surah name (in page header) is tapped.
-  ///
-  /// Receives the Surah number (1-114).
-  final void Function(int surahNumber)? onTapSurahName;
+  final SurahTapCallback? onTapSurahName;
 
   /// Callback invoked when a Surah name (in page header) is long-pressed.
-  ///
-  /// Receives the Surah number (1-114).
-  final void Function(int surahNumber)? onLongPressSurahName;
+  final SurahTapCallback? onLongPressSurahName;
 
   /// Callback invoked when the Juz indicator is tapped.
-  ///
-  /// Receives the Juz number (1-30).
-  final void Function(int juzNumber)? onTapJuz;
+  final JuzTapCallback? onTapJuz;
 
   /// Callback invoked when the Juz indicator is long-pressed.
-  ///
-  /// Receives the Juz number (1-30).
-  final void Function(int juzNumber)? onLongPressJuz;
+  final JuzTapCallback? onLongPressJuz;
 
   /// Whether to hide the page header (surah name, page number, juz indicator).
   final bool? hideHeader;
@@ -165,7 +147,8 @@ class MushafPage extends StatefulWidget {
     required this.page,
     this.controller,
     this.loadingWidget,
-    this.onTapAyah,
+    this.onAyahIdTap,
+    this.onAyahIdLongPress,
     this.style,
     this.onTapSurahHeader,
     this.onLongPressSurahHeader,
@@ -173,7 +156,6 @@ class MushafPage extends StatefulWidget {
     this.onLongPressSurahName,
     this.onTapJuz,
     this.onLongPressJuz,
-    this.onLongPressAyah,
     this.hideHeader,
     this.enableAyahHighlight = true,
   });
@@ -191,6 +173,8 @@ class _MushafPageState extends State<MushafPage>
   int? _selectedAyahId;
 
   QuranPage? _pageData;
+
+  final PageScaleCache _pageScaleCache = PageScaleCache();
 
   @override
   bool get wantKeepAlive => true; // Keep page alive in PageView
@@ -224,6 +208,10 @@ class _MushafPageState extends State<MushafPage>
       if (_controller != null) {
         _repository = _controller!.repository;
       }
+    }
+
+    if (widget.page != oldWidget.page || widget.style != oldWidget.style) {
+      _pageScaleCache.clear();
     }
 
     if (widget.page != oldWidget.page) {
@@ -298,7 +286,7 @@ class _MushafPageState extends State<MushafPage>
             ? constraints.maxHeight
             : double.infinity;
 
-        final scale = resolvePageScale(
+        final scale = _pageScaleCache.resolve(
           context: context,
           scaleConfig: scaleConfig,
           page: data,
@@ -310,7 +298,6 @@ class _MushafPageState extends State<MushafPage>
         );
 
         final contentWidth = scaleConfig.referenceWidth * scale;
-        final fontFamily = MushafFonts.forPage(widget.page);
 
         final ayahFontSize = snapToDevicePixel(
           context,
@@ -345,7 +332,7 @@ class _MushafPageState extends State<MushafPage>
               )
             : defaultAyahStyle.copyWith(backgroundColor: style.highlightColor);
 
-        return Center(
+        final pageContent = Center(
           child: SizedBox(
             width: contentWidth,
             height: availableHeight.isFinite ? availableHeight : null,
@@ -358,7 +345,6 @@ class _MushafPageState extends State<MushafPage>
                   data,
                   contentWidth,
                   scale,
-                  fontFamily,
                   defaultAyahStyle,
                   activeStyle,
                   style,
@@ -374,6 +360,15 @@ class _MushafPageState extends State<MushafPage>
             ),
           ),
         );
+
+        if (style.backgroundColor == null) {
+          return pageContent;
+        }
+
+        return ColoredBox(
+          color: style.backgroundColor!,
+          child: pageContent,
+        );
       },
     );
   }
@@ -383,71 +378,47 @@ class _MushafPageState extends State<MushafPage>
     QuranPage data,
     double width,
     double scale,
-    String fontFamily,
     TextStyle defaultAyahStyle,
     TextStyle activeStyle,
     MushafStyle mushafStyle,
     double basmalahFontSize,
   ) {
-    return data.surahs.expand(
-      (block) => [
-        // Show header when this block starts a new surah (first ayah is verse 1)
-        if (block.hasBasmalah) ...[
-          SurahHeaderWidget(
-            surahData: block.toSurah(),
-            width: width,
-            fontSize: basmalahFontSize,
-            textStyle:
-                mushafStyle.headerSurahNameStyle ?? mushafStyle.surahNameStyle,
-            styleModifier:
-                mushafStyle.headerSurahNameStyleModifier ??
-                mushafStyle.surahNameStyleModifier,
-            customHeaderImage: mushafStyle.surahHeaderImage,
-            onTap: widget.onTapSurahHeader,
-            onLongPress: widget.onLongPressSurahHeader,
-          ),
-          SizedBox(height: 12 * scale),
-          // Show basmalah for all surahs except Al-Fatiha (1) and At-Tawbah (9)
-          if (block.surahNumber != 9 && block.surahNumber != 1)
-            BasmalahWidget(
-              fontSize: basmalahFontSize,
-              textStyle: mushafStyle.basmalahStyle,
-              styleModifier: mushafStyle.basmalahStyleModifier,
-            ),
-        ],
-        PageAyahWidget(
-          fullText: data.glyphText,
-          enableHighlight: widget.enableAyahHighlight,
-          activeStyle: activeStyle,
-          selectedAyahId: widget.enableAyahHighlight
-              ? (_controller?.selectedAyahId ?? _selectedAyahId)
-              : null,
-          ayahs: block.ayahs,
-          style: defaultAyahStyle,
-          onAyahSelection: (ayahId) {
-            if (!widget.enableAyahHighlight) return;
-            final currentSelection =
-                _controller?.selectedAyahId ?? _selectedAyahId;
-            if (currentSelection == ayahId) {
-              if (_controller != null) {
-                _controller!.clearSelection();
-              } else {
-                setState(() => _selectedAyahId = null);
-              }
-            } else {
-              if (_controller != null) {
-                _controller!.selectAyah(ayahId);
-              } else {
-                setState(() => _selectedAyahId = ayahId);
-              }
-            }
-            widget.onTapAyah?.call(ayahId);
-          },
-          onAyahLongPress:
-              widget.enableAyahHighlight ? widget.onLongPressAyah : null,
-        ),
-        if (data.surahs.last == block) const Spacer(),
-      ],
+    return MushafPageSurahBlocks.build(
+      data: data,
+      pageNumber: widget.page,
+      width: width,
+      scale: scale,
+      defaultAyahStyle: defaultAyahStyle,
+      activeStyle: activeStyle,
+      mushafStyle: mushafStyle,
+      basmalahFontSize: basmalahFontSize,
+      enableAyahHighlight: widget.enableAyahHighlight,
+      selectedAyahId: widget.enableAyahHighlight
+          ? (_controller?.selectedAyahId ?? _selectedAyahId)
+          : null,
+      onAyahSelection: (ayahId) {
+        if (!widget.enableAyahHighlight) return;
+        final currentSelection = _controller?.selectedAyahId ?? _selectedAyahId;
+        if (currentSelection == ayahId) {
+          if (_controller != null) {
+            _controller!.clearSelection();
+          } else {
+            setState(() => _selectedAyahId = null);
+          }
+        } else {
+          if (_controller != null) {
+            _controller!.selectAyah(ayahId);
+          } else {
+            setState(() => _selectedAyahId = ayahId);
+          }
+        }
+        widget.onAyahIdTap?.call(ayahId);
+      },
+      onAyahLongPress: widget.enableAyahHighlight
+          ? widget.onAyahIdLongPress
+          : null,
+      onTapSurahHeader: widget.onTapSurahHeader,
+      onLongPressSurahHeader: widget.onLongPressSurahHeader,
     );
   }
 

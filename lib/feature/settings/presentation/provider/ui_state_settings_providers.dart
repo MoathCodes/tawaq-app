@@ -238,4 +238,8 @@ class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier {
       defaultBookmarksSeeded: true,
     );
   }, 'Fortress default bookmarks');
+
+  /// Sets the fortress browse sidebar width.
+  void setSidePanelWidth(double width) =>
+      _update((s) => s.copyWith(sidePanelWidth: width), 'Fortress side panel width');
 }

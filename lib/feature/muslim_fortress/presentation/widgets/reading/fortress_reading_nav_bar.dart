@@ -45,41 +45,86 @@ class FortressReadingNavBar extends StatelessWidget {
     final showStudy =
         studyDua != null && studyDua!.hasFocusStudyAction;
 
-    return NonSelectable(
-      child: Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        FortressLabeledNavButton(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact =
+            constraints.maxWidth < context.theme.breakpoints.sm;
+
+        final previous = FortressLabeledNavButton(
           label: FortressA11y.navActionLabel(l10n, isPrevious: true),
           enabled: canGoPrevious,
           onPress: onPrevious,
+          iconOnly: compact,
           prefix: const Icon(FLucideIcons.chevronLeft, size: 18),
           child: Text(l10n.fortressPrevious),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Flexible(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showStudy) FortressDuaStudyNavAction(dua: studyDua!),
-              if (showStudy) const SizedBox(height: AppSpacing.sm),
-              Semantics(
-                liveRegion: true,
-                child: center,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        FortressLabeledNavButton(
+        );
+        final next = FortressLabeledNavButton(
           label: FortressA11y.navActionLabel(l10n, isPrevious: false),
           enabled: canGoNext,
           onPress: onNext,
+          iconOnly: compact,
           prefix: const Icon(FLucideIcons.chevronRight, size: 18),
           child: Text(l10n.next),
-        ),
-      ],
-      ),
+        );
+
+        final navRow = Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            previous,
+            const SizedBox(width: AppSpacing.md),
+            Flexible(
+              child: Semantics(
+                liveRegion: true,
+                child: center,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            next,
+          ],
+        );
+
+        if (!showStudy) {
+          return NonSelectable(child: navRow);
+        }
+
+        if (compact) {
+          return NonSelectable(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FortressDuaStudyNavAction(dua: studyDua!),
+                const SizedBox(height: AppSpacing.sm),
+                navRow,
+              ],
+            ),
+          );
+        }
+
+        return NonSelectable(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              previous,
+              const SizedBox(width: AppSpacing.md),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FortressDuaStudyNavAction(dua: studyDua!),
+                    const SizedBox(height: AppSpacing.sm),
+                    Semantics(
+                      liveRegion: true,
+                      child: center,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              next,
+            ],
+          ),
+        );
+      },
     );
   }
 }

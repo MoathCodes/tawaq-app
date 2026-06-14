@@ -15,13 +15,9 @@ import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widge
 class PrayerSettingsCustomParametersCard extends HookConsumerWidget {
   /// Creates a new [PrayerSettingsCustomParametersCard] instance.
   const PrayerSettingsCustomParametersCard({
-    required this.maxWidth,
     this.enabled = true,
     super.key,
   });
-
-  /// The maximum width of the section.
-  final double maxWidth;
 
   /// Whether custom parameter controls are interactive.
   final bool enabled;
@@ -94,25 +90,25 @@ class PrayerSettingsCustomParametersCard extends HookConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: FAccordion(
-        control: .managed(controller: useFAccordionController()),
-        style: const .delta(
-          dividerStyle: .delta(
-            color: Colors.transparent,
-            padding: .value(EdgeInsets.zero),
-          ),
-        ),
-        children: [
-          FAccordionItem(
-            title: Text(l10n.customParametersTitle),
-            child: CustomParametersContent(
-              controllers: controllers,
-              enabled: enabled,
-              onSave: save,
-              onReset: reset,
+          control: .managed(controller: useFAccordionController()),
+          style: const .delta(
+            dividerStyle: .delta(
+              color: Colors.transparent,
+              padding: .value(EdgeInsets.zero),
             ),
           ),
-        ],
-      ),
+          children: [
+            FAccordionItem(
+              title: Text(l10n.customParametersTitle),
+              child: CustomParametersContent(
+                controllers: controllers,
+                enabled: enabled,
+                onSave: save,
+                onReset: reset,
+              ),
+            ),
+          ],
+        ),
     );
   }
 }

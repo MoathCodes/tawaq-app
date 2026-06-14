@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/layout/centered_viewport_shell.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 import 'package:tawaq/core/widgets/icon_label.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/desktop_settings_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/keyboard_shortcuts/keyboard_shortcuts_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/adhan_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/time_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
@@ -18,9 +21,10 @@ class SettingsScreen extends HookWidget {
   /// Creates a new [SettingsScreen] instance.
   const SettingsScreen({super.key});
 
+  static const _maxContentWidth = 800.0;
+
   @override
   Widget build(BuildContext context) {
-    final index = useState(0);
     final l10n = context.l10n;
 
     final showKeyboardShortcuts = supportsKeyboardShortcuts;
@@ -47,9 +51,7 @@ class SettingsScreen extends HookWidget {
                 subtitle: l10n.typographySectionSubtitle,
                 child: const TypographySettingsSection(),
               ),
-              const SizedBox(
-                height: AppSpacing.lg,
-              ),
+              const DesktopSettingsSection(),
             ],
           ),
         ),
@@ -59,7 +61,14 @@ class SettingsScreen extends HookWidget {
             icon: FLucideIcons.clock,
             excludeIconSemantics: true,
           ),
-          child: const PrayerSettingsTimeSection(maxWidth: 800),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpacing.lg,
+            children: [
+              PrayerSettingsTimeSection(),
+              PrayerAdhanSettingsSection(),
+            ],
+          ),
         ),
         (
           label: IconLabel(
@@ -67,7 +76,7 @@ class SettingsScreen extends HookWidget {
             icon: FLucideIcons.mapPin,
             excludeIconSemantics: true,
           ),
-          child: const PrayerSettingsLocationSection(maxWidth: 800),
+          child: const PrayerSettingsLocationSection(),
         ),
         if (showKeyboardShortcuts)
           (
@@ -86,36 +95,66 @@ class SettingsScreen extends HookWidget {
       [l10n, showKeyboardShortcuts],
     );
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 800),
-        child: FTabs(
-          expands: true,
-          control: .lifted(
-            index: index.value,
-            onChange: (i) => index.value = i,
+    final tabController = useTabController(initialLength: entries.length);
+    final tabsStyle = context.theme.tabsStyle;
+
+    return CenteredViewportShell(
+      maxContentWidth: _maxContentWidth,
+      header: Material(
+        color: Colors.transparent,
+        child: DecoratedBox(
+          decoration: tabsStyle.decoration,
+          child: TabBar(
+            controller: tabController,
+            tabs: [
+              for (final entry in entries)
+                Tab(height: tabsStyle.height, child: entry.label),
+            ],
+            padding: tabsStyle.padding,
+            indicator: tabsStyle.indicatorDecoration,
+            indicatorSize: TabBarIndicatorSize.tab,
+            dividerColor: Colors.transparent,
+            labelStyle: tabsStyle.labelTextStyle.resolve({
+              context.platformVariant,
+              FTabVariant.selected,
+            }),
+            unselectedLabelStyle: tabsStyle.labelTextStyle.resolve({
+              context.platformVariant,
+            }),
+            overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+            splashFactory: NoSplash.splashFactory,
           ),
-          children: [
-            for (final (i, entry) in entries.indexed)
-              .entry(
-                label: entry.label,
-                child: SingleChildScrollView(
-                  child: KeyedSubtree(
-                    key: ValueKey('settings-tab-${entry.label.label}-$i'),
-                    child: entry.child
-                        .animate()
-                        .fadeIn(duration: 200.ms, curve: Curves.easeOut)
-                        .moveY(
-                          begin: 12,
-                          end: 0,
-                          duration: 280.ms,
-                          curve: Curves.easeOutCubic,
-                        ),
-                  ),
-                ),
-              ),
-          ],
         ),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: tabsStyle.spacing),
+          Expanded(
+            child: TabBarView(
+              controller: tabController,
+              physics: const BouncingScrollPhysics(),
+              children: [
+                for (final (i, entry) in entries.indexed)
+                  centeredViewportScrollTab(
+                    maxContentWidth: _maxContentWidth,
+                    child: KeyedSubtree(
+                      key: ValueKey('settings-tab-${entry.label.label}-$i'),
+                      child: entry.child
+                          .animate()
+                          .fadeIn(duration: 200.ms, curve: Curves.easeOut)
+                          .moveY(
+                            begin: 12,
+                            end: 0,
+                            duration: 280.ms,
+                            curve: Curves.easeOutCubic,
+                          ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

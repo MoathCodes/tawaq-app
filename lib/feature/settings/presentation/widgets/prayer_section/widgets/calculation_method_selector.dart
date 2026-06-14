@@ -20,51 +20,50 @@ Widget buildCalculationMethodSelector(
   final l10n = context.l10n;
   return NonSelectable(
     child: FSelect<CalculationMethod>.searchBuilder(
-    enabled: enabled,
-    control: .lifted(
-      value: methodValue,
-      onChange: (value) async {
-        if (value != null) {
-          await ref
-              .read(prayerSettingsProvider.notifier)
-              .update(
-                (settings) => settings.copyWith(method: value),
-              );
-        }
-      },
-    ),
-    label: Text(l10n.calculationMethod),
-    format: (method) => method.getLocaleName(l10n),
-    filter: (query) async {
-      return query.isEmpty
-          ? CalculationMethod.values
-          : CalculationMethod.values.where(
-              (method) => method
-                  .getLocaleName(l10n)
-                  .toLowerCase()
-                  .contains(query.toLowerCase()),
-            );
-    },
-    contentBuilder: (_, _, data) => data
-        .map(
-          (method) => FSelectItem(
-            title: Text(method.getLocaleName(l10n)),
-            value: method,
-          ),
-        )
-        .toList(),
-    contentEmptyBuilder: (_, _) => Padding(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        spacing: 8,
-        children: [
-          const Icon(FLucideIcons.searchX),
-          Text(l10n.noResults),
-        ],
+      enabled: enabled,
+      control: .lifted(
+        value: methodValue,
+        onChange: (value) async {
+          if (value != null) {
+            await ref
+                .read(prayerSettingsProvider.notifier)
+                .update(
+                  (settings) => settings.copyWith(method: value),
+                );
+          }
+        },
       ),
-    ),
-    contentLoadingBuilder: (_, _) => const FCircularProgress(),
+      format: (method) => method.getLocaleName(l10n),
+      filter: (query) async {
+        return query.isEmpty
+            ? CalculationMethod.values
+            : CalculationMethod.values.where(
+                (method) => method
+                    .getLocaleName(l10n)
+                    .toLowerCase()
+                    .contains(query.toLowerCase()),
+              );
+      },
+      contentBuilder: (_, _, data) => data
+          .map(
+            (method) => FSelectItem(
+              title: Text(method.getLocaleName(l10n)),
+              value: method,
+            ),
+          )
+          .toList(),
+      contentEmptyBuilder: (_, _) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 8,
+          children: [
+            const Icon(FLucideIcons.searchX),
+            Text(l10n.noResults),
+          ],
+        ),
+      ),
+      contentLoadingBuilder: (_, _) => const FCircularProgress(),
     ),
   );
 }

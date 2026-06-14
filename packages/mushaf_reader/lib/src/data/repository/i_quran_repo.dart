@@ -37,7 +37,7 @@ import 'package:mushaf_reader/src/data/models/surah.dart';
 ///
 /// See also:
 /// - [HiveQuranRepository], the Hive-based implementation
-/// - [MushafController], which uses this interface
+/// - [MushafReaderController], which uses this interface
 abstract class IQuranRepository {
   /// Releases resources held by the repository.
   ///
@@ -179,6 +179,11 @@ abstract class IQuranRepository {
   /// Returns empty list if not cached. Call [ensureReady] first.
   List<Surah> getSurahsSync();
 
+  /// Gets a Surah synchronously from cache.
+  ///
+  /// Returns null if not cached or not found. Call [ensureReady] first.
+  Surah? getSurahSync(int number);
+
   /// Searches for Ayahs containing the given query text.
   ///
   /// The search uses the [Ayah.textPlain] property which contains
@@ -204,4 +209,11 @@ abstract class IQuranRepository {
     int? surahNumber,
     int maxResults = 100,
   });
+
+  /// Opens the pre-normalized ayah search box (~842 KB into RAM once opened).
+  ///
+  /// Optional — call when opening search UI so the first [searchAyahs] query
+  /// skips box open latency. If omitted, the box opens lazily on first search.
+  /// No-op after the box is open; safe to call multiple times.
+  Future<void> warmUpSearchIndex();
 }

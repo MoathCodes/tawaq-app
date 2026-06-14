@@ -3,10 +3,12 @@ import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/utils/date_formatter.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
 import 'package:tawaq/feature/prayer/domain/use_cases/compute_prayer_card_decision.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
@@ -55,9 +57,23 @@ List<PrayerScheduleRow> prayerSchedule(
   if (settings == null) return [];
 
   final formatter = ref.watch(timeFormatterProvider);
-  final completions = ref.watch(prayerCompletionProvider).value ?? [];
+  final DateTime completionDay;
+  if (forDate != null) {
+    completionDay = normalizeCompletionDay(forDate);
+  } else {
+    ref.watch(prayerCalendarDayKeyProvider);
+    completionDay = normalizeCompletionDay(
+      ref.read(currentLocationTimeProvider),
+    );
+  }
+  final completions =
+      ref.watch(prayerCompletionsForDateProvider(completionDay)).value ?? [];
+  final completionStatuses = mapPrayerStatuses(
+    completions,
+    settings.location,
+    completionDay,
+  );
 
-  final completionMap = {for (final c in completions) c.prayer: c};
   final targetDate = forDate != null
       ? DateTime(forDate.year, forDate.month, forDate.day)
       : null;
@@ -74,12 +90,12 @@ List<PrayerScheduleRow> prayerSchedule(
         times: times,
         targetDate: targetDate,
         settings: settings,
-        completions: completionMap,
+        completionStatuses: completionStatuses,
       );
     }
   }
 
-  // Stable deps only — no [prayerDayProvider] tick (live labels are in widgets).
+  // Stable deps only — live relative labels are in row widgets.
   ref.watch(prayerCalendarDayKeyProvider);
   final times = ref.watch(currentPrayerTimesProvider());
   final anchor = DateTime(times.fajr.year, times.fajr.month, times.fajr.day);
@@ -89,7 +105,7 @@ List<PrayerScheduleRow> prayerSchedule(
     times: times,
     targetDate: anchor,
     settings: settings,
-    completions: completionMap,
+    completionStatuses: completionStatuses,
   );
 }
 
@@ -98,7 +114,7 @@ List<PrayerScheduleRow> _buildRows({
   required PrayerTimes times,
   required DateTime targetDate,
   required PrayerSettings settings,
-  required Map<Prayer, PrayerCompletion> completions,
+  required Map<Prayer, CompletionStatus> completionStatuses,
 }) {
   final location = settings.location;
   final completionDate = DateTime(
@@ -109,7 +125,11 @@ List<PrayerScheduleRow> _buildRows({
 
   final rows = <PrayerScheduleRow>[];
   for (final prayer in _obligatoryPrayers) {
-    final prayerTime = times.getTimesForPrayer(prayer, location);
+    final prayerTime = applyAdhanAdjustment(
+      prayerTime: times.getTimesForPrayer(prayer, location),
+      prayer: prayer,
+      adjustments: settings.adhanAdjustments,
+    );
     rows.add(
       PrayerScheduleRow(
         prayer: prayer,
@@ -121,7 +141,7 @@ List<PrayerScheduleRow> _buildRows({
           iqamahMinutes: settings.iqamahSettings[prayer] ?? 0,
         ),
         completionStatus:
-            completions[prayer]?.status ?? CompletionStatus.none,
+            completionStatuses[prayer] ?? CompletionStatus.none,
         completionDate: completionDate,
       ),
     );

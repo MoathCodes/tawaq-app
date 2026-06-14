@@ -1,4 +1,4 @@
-import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
+import 'package:tawaq/core/text/qawl_patterns.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
 
 /// Repairs common markup gaps in parsed tafsir segments before normalization.
@@ -113,7 +113,7 @@ abstract final class TafsirSegmentRepair {
 
   /// Whether [text] begins with a qawl-lead phrase.
   static bool startsWithQawlLead(String text) {
-    return CommentaryInlineSpans.qawlLeadPrefix.hasMatch(text);
+    return QawlPatterns.qawlLeadPrefix.hasMatch(text);
   }
 
   /// Whether [content] is a surah/ayah cross-reference rather than ayah text.

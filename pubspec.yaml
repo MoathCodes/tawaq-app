@@ -45,7 +45,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^3.0.3
-  flutter_screenutil_plus: ^1.4.0
   flutter_staggered_grid_view: ^0.7.0
   flutter_timezone: ^5.0.0
   forui: ^0.22.3
@@ -69,6 +68,12 @@ dependencies:
   path_provider: ^2.1.5
   timezone: ^0.11.0
   window_manager: ^0.5.1
+  screen_retriever: ^0.2.1
+  desktop_tray: ^2026.4.19
+  mpv_audio_kit: ^0.3.4
+  local_notifier: ^0.1.6
+  launch_at_startup: ^0.5.1
+  package_info_plus: ^8.3.1
   fl_chart: ^1.1.1
   path: ^1.9.1
   pasteboard: ^0.5.0
@@ -91,6 +96,7 @@ dev_dependencies:
   riverpod_generator: ^4.0.0+1
   riverpod_lint: ^3.0.3
   very_good_analysis: ^10.0.0
+  vector_graphics_compiler: ^1.2.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -161,6 +167,8 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/audio/adhan/
+    - assets/audio/iqamah/
     - assets/database/
     - assets/database/tafseer_ar/
 

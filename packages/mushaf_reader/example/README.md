@@ -1,24 +1,42 @@
 # Mushaf Reader Example
 
-This is a complete example of a Quran application built using the `mushaf_reader` package.
+Runnable showcase for `mushaf_reader` widgets with English and Arabic UI (via [slang](https://pub.dev/packages/slang)).
 
-## Features Demonstrated
+## Demos
 
-- **Mushaf Page Rendering**: Uses `MushafPage` to render Quran pages with correct fonts and layout.
-- **Navigation**: `PageView` for smooth page turning.
-- **State Management**: Uses `MushafController` for initialization and data fetching.
-- **Performance**: Demonstrates `preloadPages` for smooth scrolling.
-- **Interactivity**: Tap on Ayahs to see details (Surah, Ayah number, text).
-- **Immersive Mode**: Tap the page to toggle UI controls.
-- **Surah Index**: A bottom sheet to jump to specific Surahs.
-- **RTL Support**: Correctly configured `Directionality` for Arabic text.
+| Section | Screen | What it shows |
+| ------- | ------ | ------------- |
+| **Readers** | MushafReader | Full swipeable reader with ayah tap snackbars |
+| | Two-page spread | `MushafReader(pagesPerViewport: 2)` |
+| **Pages & excerpts** | MushafPage | Single page with page navigation and ayah taps |
+| | MushafPageRange share card | Ayah range in a mock share card (page picker, header/basmalah toggles) |
+| | Cross-page range | `MushafPageRange.contiguous` spanning multiple pages |
+| **Building blocks** | Standalone widgets | `AyahWidget`, `BasmalahWidget`, `SurahHeaderWidget.fromSurahNumber`, etc. |
 
-## Getting Started
+## Run
 
-1.  Ensure you have Flutter installed.
-2.  Run `flutter pub get` in this directory.
-3.  Run `flutter run`.
+From this directory:
 
-## Code Structure
+```bash
+flutter pub get
+dart run slang   # after editing lib/i18n/*.i18n.json
+flutter run
+```
 
-- `main.dart`: Contains the entire example application, including the `MushafExampleApp` widget, `QuranReaderScreen`, and helper widgets like `SurahIndexSheet`.
+## Localization
+
+- Strings live in `lib/i18n/en.i18n.json` and `lib/i18n/ar.i18n.json`.
+- Regenerate Dart bindings: `dart run slang`
+- Use the language icon in any screen app bar to switch between English and Arabic.
+
+## Project layout
+
+```
+lib/
+  main.dart              # App entry + grouped catalog
+  demo_catalog.dart      # Demo metadata
+  demo_scaffold.dart     # Shared app bar + locale toggle
+  demo_widgets.dart      # Page navigator, share card, loading helpers
+  demos/                 # Individual demo screens
+  i18n/                  # slang JSON + generated strings.g.dart
+```

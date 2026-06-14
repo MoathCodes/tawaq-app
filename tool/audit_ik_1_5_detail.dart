@@ -2,11 +2,15 @@
 
 import 'dart:io';
 
+import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
 
 void main() {
   final raw = File('/tmp/ik_1_5_raw.html').readAsStringSync().trim();
-  final parsed = TafsirTextParser.parse(raw);
+  final parsed = TafsirTextParser.parse(
+    raw,
+    tafsirId: TafsirId.ibnKathir,
+  ).segments;
 
   // True nested spans (open before close of prior)
   final trueNested = RegExp('<span[^>]*>(?:(?!</span>).)*<span', dotAll: true);

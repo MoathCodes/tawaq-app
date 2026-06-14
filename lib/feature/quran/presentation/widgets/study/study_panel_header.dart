@@ -72,7 +72,7 @@ class StudyPanelHeader extends ConsumerWidget {
         ? '${l10n.studyMode}, $contextLabel'
         : l10n.studyMode;
 
-    return Container(
+    return Padding(
       padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

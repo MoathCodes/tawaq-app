@@ -875,6 +875,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'No favorite chapters yet — bookmark one from the sidebar';
 
   @override
+  String fortressMoreFavoriteChapters(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Plus $count more chapters…',
+      one: 'Plus 1 more chapter…',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get fortressReadShort => 'Short reading';
 
   @override
@@ -1066,9 +1077,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectAyahToSeeContent => 'Select an ayah to see the content.';
 
   @override
-  String get selectPrayerToLog => 'Select a prayer to log status';
-
-  @override
   String get settings => 'Settings';
 
   @override
@@ -1106,8 +1114,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareBasmalah => 'Basmalah';
 
   @override
+  String get shareAttributionPrefix => 'Using';
+
+  @override
   String shareByApp(String appName) {
-    return 'By\n$appName';
+    return 'Using $appName';
   }
 
   @override
@@ -1170,6 +1181,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareSaveImage => 'Save image';
+
+  @override
+  String get sharePreserveLineBreaks => 'Mushaf line breaks';
 
   @override
   String get shareSurahHeader => 'Surah header';
@@ -1370,10 +1384,48 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get a11yNotificationsOn => 'Notifications on';
+  String get scheduleAlertOff => 'Silent';
 
   @override
-  String get a11yNotificationsOff => 'Notifications off';
+  String get scheduleAlertSound => 'Adhan';
+
+  @override
+  String get scheduleAlertIqamahSound => 'Sound';
+
+  @override
+  String get scheduleAlertNotify => 'Notify';
+
+  @override
+  String get scheduleAlertOffHint => 'No alert for this time';
+
+  @override
+  String get scheduleAlertSoundHint => 'Play adhan when the time arrives';
+
+  @override
+  String get scheduleAlertIqamahSoundHint => 'Play alert when the time arrives';
+
+  @override
+  String get scheduleAlertNotifyHint => 'Show a notification without sound';
+
+  @override
+  String scheduleAlertPickerTitle(String event) {
+    return 'Alert for $event';
+  }
+
+  @override
+  String scheduleAlertEventAdhan(String prayer) {
+    return '$prayer adhan';
+  }
+
+  @override
+  String scheduleAlertEventIqamah(String prayer) {
+    return '$prayer iqamah';
+  }
+
+  @override
+  String scheduleAlertEventSunnah(String prayer) {
+    return '$prayer';
+  }
 
   @override
   String get keyboardShortcutsTabTitle => 'Keyboard shortcuts';
@@ -1484,4 +1536,171 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get shortcutFortressThikrPrevDescription =>
       'Go to the previous thikr during focus reading.';
+
+  @override
+  String get adhanSectionTitle => 'Adhan';
+
+  @override
+  String get adhanSectionSubtitle =>
+      'Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.';
+
+  @override
+  String get adhanSoundLabel => 'Adhan sound';
+
+  @override
+  String get adhanMuezzinMisharyAlafasi => 'Mishary Alafasi';
+
+  @override
+  String get adhanMuezzinMakkah => 'Makkah';
+
+  @override
+  String get adhanMuezzinAbedAlbasaei => 'Abed Al-Basaei';
+
+  @override
+  String get adhanMuezzinAhmadNufais => 'Ahmad Nufais';
+
+  @override
+  String get adhanMuezzinGhaziAlSaadoni => 'Ghazi Al-Saadoni';
+
+  @override
+  String get adhanMuezzinHamadDeghreri => 'Hamad Deghreri';
+
+  @override
+  String get adhanMuezzinHamdanAlMalki => 'Hamdan Al-Malki';
+
+  @override
+  String get adhanMuezzinIbrahimAlArkani => 'Ibrahim Al-Arkani';
+
+  @override
+  String get adhanMuezzinMajedAlHamathani => 'Majed Al-Hamathani';
+
+  @override
+  String get adhanMuezzinMansoorAlZahrani => 'Mansoor Az-Zahrani';
+
+  @override
+  String get adhanMuezzinMohammadAlMenshawy => 'Mohammad Al-Menshawy';
+
+  @override
+  String get adhanMuezzinMohammadRefat => 'Mohammad Refat';
+
+  @override
+  String get adhanMuezzinNasserAlQatami => 'Nasser Al-Qatami';
+
+  @override
+  String get adhanMuezzinSuhaibKhatba => 'Suhaib Khatba';
+
+  @override
+  String get adhanVolumeLabel => 'Adhan volume';
+
+  @override
+  String get adhanShowAlertLabel => 'Show adhan alert';
+
+  @override
+  String get adhanShowOsNotificationLabel =>
+      'OS notification when hidden in tray';
+
+  @override
+  String get adhanAlertPositionLabel => 'Alert position';
+
+  @override
+  String get adhanAlertPositionTopEnd => 'Top right';
+
+  @override
+  String get adhanAlertPositionTopStart => 'Top left';
+
+  @override
+  String get adhanAlertPositionCenter => 'Center';
+
+  @override
+  String get adhanStop => 'Stop adhan';
+
+  @override
+  String adhanAlertTitle(String prayer) {
+    return 'Adhan — $prayer';
+  }
+
+  @override
+  String adhanPlayingTitle(String prayer) {
+    return 'Adhan — $prayer';
+  }
+
+  @override
+  String get adhanOsNotificationBody => 'Adhan is playing — tap to focus';
+
+  @override
+  String iqamahAlertTitle(String prayer) {
+    return 'Iqamah — $prayer';
+  }
+
+  @override
+  String iqamahPlayingTitle(String prayer) {
+    return 'Iqamah — $prayer';
+  }
+
+  @override
+  String get iqamahOsNotificationBody => 'Iqamah time — tap to focus';
+
+  @override
+  String sunnahAlertTitle(String prayer) {
+    return '$prayer';
+  }
+
+  @override
+  String get sunnahOsNotificationBody => 'Sunnah time — tap to focus';
+
+  @override
+  String get prayerAlertDismiss => 'Dismiss';
+
+  @override
+  String get iqamahSoundLabel => 'Iqamah call';
+
+  @override
+  String get iqamahMuezzinYasserAlDossari => 'Yasser Al-Dossari';
+
+  @override
+  String get iqamahMuezzinMadinah => 'Madinah';
+
+  @override
+  String get desktopSectionTitle => 'Desktop';
+
+  @override
+  String get desktopSectionSubtitle =>
+      'System tray, window behaviour, and startup on desktop.';
+
+  @override
+  String get desktopLaunchAtLogin => 'Start at login';
+
+  @override
+  String get desktopLaunchAtLoginHint =>
+      'Start hidden in tray was also enabled so adhan alerts work after login.';
+
+  @override
+  String get desktopMinimizeToTrayOnClose =>
+      'Hide to tray when closing the window';
+
+  @override
+  String get desktopMinimizeToTray => 'Hide to tray when minimizing';
+
+  @override
+  String get desktopLaunchToTray => 'Start hidden in tray';
+
+  @override
+  String get trayShowApp => 'Show Tawaq';
+
+  @override
+  String get trayMuteAdhan => 'Mute adhan';
+
+  @override
+  String get trayQuit => 'Quit';
+
+  @override
+  String trayNextPrayer(String prayer) {
+    return 'Next: $prayer';
+  }
+
+  @override
+  String get quranRecitationComingSoon => 'Recitation playback coming soon';
+
+  @override
+  String get quranPlayAyah => 'Play ayah';
 }

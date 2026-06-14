@@ -22,34 +22,53 @@ class ShortcutListRow extends StatelessWidget {
     final l10n = context.l10n;
     final theme = context.theme;
 
+    final labelColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: AppSpacing.xs,
+      children: [
+        Text(
+          definition.label(l10n),
+          style: theme.typography.sm.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        Text(
+          definition.description(l10n),
+          style: theme.typography.xs.copyWith(
+            color: theme.colors.mutedForeground,
+          ),
+        ),
+      ],
+    );
+
+    final indicator = ShortcutIndicator(id: definition.id, showAliases: true);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final stack = constraints.maxWidth < context.theme.breakpoints.sm;
+
+          if (stack) {
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: AppSpacing.xs,
+              spacing: AppSpacing.sm,
               children: [
-                Text(
-                  definition.label(l10n),
-                  style: theme.typography.sm.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  definition.description(l10n),
-                  style: theme.typography.xs.copyWith(
-                    color: theme.colors.mutedForeground,
-                  ),
-                ),
+                labelColumn,
+                indicator,
               ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          ShortcutIndicator(id: definition.id, showAliases: true),
-        ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: AppSpacing.md,
+            children: [
+              Expanded(child: labelColumn),
+              indicator,
+            ],
+          );
+        },
       ),
     );
   }

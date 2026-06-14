@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_mushaf_pages.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_quran_passage.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/theme/theme.dart';
 
+const _kFortressAyahBaseFontSize = 32.0;
+
 /// Renders thikr content with mushaf-backed Quranic passages.
-class FortressThikrBody extends StatelessWidget {
+class FortressThikrBody extends ConsumerWidget {
   /// Creates a thikr body.
   const FortressThikrBody({
     required this.dua,
     super.key,
     this.textAlign = TextAlign.center,
     this.proseStyle,
-    this.ayahFontSize = 32,
     this.muted = false,
   });
 
@@ -29,14 +33,17 @@ class FortressThikrBody extends StatelessWidget {
   /// Style for non-Quranic text.
   final TextStyle? proseStyle;
 
-  /// Base font size for Quranic glyphs.
-  final double ayahFontSize;
-
   /// Whether to use muted colors (e.g. completed state).
   final bool muted;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final quranTextScale = ref.watch(
+      quranScreenSettingsProvider.select(
+        (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
+      ),
+    );
+    final ayahFontSize = _kFortressAyahBaseFontSize * quranTextScale.boost;
     final theme = context.theme;
     final colors = theme.colors;
 
@@ -57,7 +64,7 @@ class FortressThikrBody extends StatelessWidget {
     }
 
     final ayahColor = muted ? colors.mutedForeground : colors.foreground;
-    final ayahStyle = TextStyle(color: ayahColor);
+    final ayahStyle = TextStyle(color: ayahColor, height: 1.6);
     final loading = SizedBox(
       height: ayahFontSize * 1.6,
       child: const Center(child: FCircularProgress.loader()),
@@ -129,12 +136,14 @@ class FortressThikrPreview extends StatelessWidget {
     final theme = context.theme;
     final isQuran = dua.isQuranicPassage;
 
-    final style = theme.typography.sm.copyWith(
+    var style = theme.typography.sm.copyWith(
       color: theme.colors.mutedForeground,
       height: isQuran ? 2 : 1.6,
       fontSize: isQuran ? (isExpanded ? 22 : 20) : null,
-      fontFamily: isQuran ? FontFamily.uthmanicHafs : 'IBMPlexSansArabic',
     );
+    if (isQuran) {
+      style = style.copyWith(fontFamily: FontFamily.uthmanicHafs);
+    }
 
     return Text(
       dua.text,

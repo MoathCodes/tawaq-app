@@ -1,27 +1,21 @@
-import 'dart:ui';
-
-import 'package:hijri_date/hijri.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
+import 'package:tawaq/core/utils/hijri_format.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 
 part 'hijri_provider.g.dart';
 
-/// A provider that emits a formatted Hijri date string every second.
+/// Formatted Hijri date for the current prayer-calendar day.
+///
+/// Invalidates on locale or day change only (not every clock tick).
 @riverpod
-Stream<String> hijriClock(Ref ref) async* {
+String hijriClock(Ref ref) {
+  ref.watch(prayerCalendarDayKeyProvider);
   final langCode = ref.watch(localeProvider);
-  final locale = Locale(langCode);
-  yield _formatHijri(locale);
-  yield* Stream.periodic(
-    const Duration(seconds: 1),
-    (_) => _formatHijri(locale),
+  final now = ref.read(currentLocationTimeProvider);
+  return HijriFormat.formatDate(
+    now,
+    langCode,
+    pattern: 'DDDD, dd MMMM yyyy',
   );
-}
-
-String _formatHijri(Locale? locale) {
-  HijriDate.setLocal(locale?.languageCode ?? 'en');
-  final hijriDate = HijriDate.fromDate(
-    DateTime.now().toLocal(),
-  ).toFormat('DDDD, dd MMMM yyyy');
-  return hijriDate;
 }

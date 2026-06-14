@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
@@ -19,6 +20,7 @@ class JuzSelector extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
     final l10n = context.l10n;
     final allJuzs = useFuture(
       useMemoized(controller.getJuzs),
@@ -51,21 +53,13 @@ class JuzSelector extends HookConsumerWidget {
         child: FSelect<Juz>.searchBuilder(
           enabled: selectorReady,
           label: Text(juzFieldName),
-        // style: .delta(
-        //   fieldStyle: .delta(
-        //     contentTextStyle: .delta([
-        //       .all(
-        //         const .delta(
-        //           fontFamily: 'QCF4_BSML',
-        //           package: 'mushaf_reader',
-        //           fontSize: 22,
-        //           fontWeight: .bold,
-        //         ),
-        //       ),
-        //     ]),
-        //   ),
-        // ),
-        control: FSelectControl.lifted(
+          contentConstraints: selectPopoverPortalConstraints(context),
+          style: selectStyle(
+            colors: theme.colors,
+            style: theme.style,
+            typography: theme.typography,
+          ),
+          control: FSelectControl.lifted(
           value: selectedJuz,
           onChange: (v) async {
             if (v != null) {
@@ -87,12 +81,16 @@ class JuzSelector extends HookConsumerWidget {
                   child: Row(
                     children: [
                       QuranSemantics.decorative(
-                        Text(
-                          v.glyph,
-                          style: const TextStyle(
-                            fontFamily: 'QCF4_BSML',
-                            package: 'mushaf_reader',
-                            fontSize: 36,
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Text(
+                            v.glyph,
+                            style: const TextStyle(
+                              fontFamily: 'QCF4_BSML',
+                              package: 'mushaf_reader',
+                              fontSize: 36,
+                            ),
                           ),
                         ),
                       ),

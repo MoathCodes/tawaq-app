@@ -165,6 +165,7 @@ class FortressLabeledNavButton extends StatelessWidget {
     required this.onPress,
     required this.child,
     this.prefix,
+    this.iconOnly = false,
     super.key,
   });
 
@@ -174,6 +175,9 @@ class FortressLabeledNavButton extends StatelessWidget {
   final Widget child;
   final Widget? prefix;
 
+  /// When true, only [prefix] is shown (accessibility via [label]).
+  final bool iconOnly;
+
   @override
   Widget build(BuildContext context) => NonSelectable(
     child: FButton(
@@ -181,7 +185,7 @@ class FortressLabeledNavButton extends StatelessWidget {
       semanticsLabel: label,
       onPress: enabled ? onPress : null,
       prefix: prefix,
-      child: child,
+      child: iconOnly ? const SizedBox.shrink() : child,
     ),
   );
 }

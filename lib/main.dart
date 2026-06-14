@@ -6,13 +6,16 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
+import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/desktop/desktop_shell.dart';
+import 'package:tawaq/core/desktop/launch_at_login_service.dart';
 import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/tawaq_scroll_behavior.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/adhan/adhan_alert_host.dart';
 import 'package:tawaq/feature/settings/data/models/theme_prefs.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
@@ -38,10 +41,21 @@ void main() async {
   ]);
   Hive.registerAdapters();
   tz.initializeTimeZones();
+  MpvAudioKit.ensureInitialized();
 
-  if (isDesktopPlatform) await _initDesktopWindow();
+  if (isDesktopPlatform) {
+    await initDesktopNotifications();
+    await LaunchAtLoginService.setup();
+    await _initDesktopWindow();
+  }
 
-  runApp(const ProviderScope(child: TawaqApp()));
+  runApp(
+    ProviderScope(
+      child: isDesktopPlatform
+          ? const DesktopShell(child: TawaqApp())
+          : const TawaqApp(),
+    ),
+  );
 }
 
 Future<void> _initDesktopWindow() async {
@@ -53,7 +67,7 @@ Future<void> _initDesktopWindow() async {
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.hidden,
     ),
-    windowManager.show,
+    () async {},
   );
 }
 
@@ -61,8 +75,6 @@ Future<void> _initDesktopWindow() async {
 class TawaqApp extends ConsumerWidget {
   /// Creates a new instance of [TawaqApp].
   const TawaqApp({super.key});
-
-  static const _designSize = Size(1908, 987);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -77,40 +89,30 @@ class TawaqApp extends ConsumerWidget {
       themeMode: prefs.themeMode,
       touch: useTouchTheme,
       textScale: prefs.appTextScale.scalar,
-      isArabic: locale.languageCode == 'ar',
     );
-    return ScreenUtilPlusInit(
-      designSize: _designSize,
-      minTextAdapt: true,
-      autoRebuild: false,
-      splitScreenMode: true,
-      enableScaleWH: () =>
-          ScreenUtilPlus().screenWidth >= _designSize.width &&
-          ScreenUtilPlus().screenHeight >= _designSize.height,
-      builder: (_, _) => MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        scrollBehavior: const TawaqAppScrollBehavior(),
-        themeMode: themePrefs.value?.themeMode,
-        theme: appTheme.toApproximateMaterialTheme().copyWith(
-          scrollbarTheme: const ScrollbarThemeData(
-            thumbVisibility: WidgetStatePropertyAll(false),
-            trackVisibility: WidgetStatePropertyAll(false),
-          ),
-        ),
-        locale: locale,
-        supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: appRouter,
-        onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? '',
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          FLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        builder: (_, child) => FTheme(
-          data: appTheme,
-          child: child!,
+    final materialTheme = appTheme.toApproximateMaterialTheme();
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      scrollBehavior: const TawaqAppScrollBehavior(),
+      themeMode: themePrefs.value?.themeMode,
+      theme: materialTheme.copyWith(
+        scrollbarTheme: tawaqScrollbarTheme(materialTheme.colorScheme),
+      ),
+      locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      routerConfig: appRouter,
+      onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? '',
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        FLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      builder: (_, child) => FTheme(
+        data: appTheme,
+        child: FToaster(
+          child: AdhanAlertHost(child: child!),
         ),
       ),
     );

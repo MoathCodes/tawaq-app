@@ -9,52 +9,6 @@ import 'package:tawaq/l10n/app_localizations.dart';
 abstract final class PrayerSemantics {
   PrayerSemantics._();
 
-  /// Label for an expandable schedule row (name, times, status, action hint).
-  static String scheduleRow({
-    required AppLocalizations l10n,
-    required String prayerName,
-    required String adhanTime,
-    required CompletionStatus status,
-    required bool isCurrentPrayer,
-    required bool isExpanded,
-    String? iqamahTime,
-    String? relativeSubtitle,
-  }) {
-    final parts = <String>[prayerName];
-
-    if (isCurrentPrayer) {
-      parts.add(l10n.currentPrayer);
-    }
-
-    if (status != CompletionStatus.none) {
-      parts.add(status.getLocaleName(l10n));
-    }
-
-    parts.add('${l10n.adhan} $adhanTime');
-
-    if (iqamahTime != null) {
-      parts.add('${l10n.iqamah} $iqamahTime');
-    }
-
-    if (relativeSubtitle != null && relativeSubtitle.isNotEmpty) {
-      parts.add(relativeSubtitle);
-    }
-
-    parts.add(isExpanded ? l10n.collapse : l10n.selectPrayerToLog);
-
-    return parts.join(', ');
-  }
-
-  /// Label for the per-prayer notification toggle.
-  static String notificationToggle({
-    required String prayerName,
-    required bool enabled,
-    required AppLocalizations l10n,
-  }) =>
-      enabled
-          ? '$prayerName, ${l10n.a11yNotificationsOn}'
-          : '$prayerName, ${l10n.a11yNotificationsOff}';
-
   /// Read-only label for a hero header time box (optional caption + time).
   static String heroTimeSquare({
     required String time,
@@ -96,6 +50,15 @@ abstract final class PrayerSemantics {
     required String statusLabel,
   }) =>
       '$value $statusLabel';
+
+  /// Read-only label for the streak banner.
+  static String streakSummary({
+    required AppLocalizations l10n,
+    required int currentStreak,
+    required int bestStreak,
+  }) =>
+      '${l10n.currentStreak}: ${l10n.streakInDays(currentStreak)}, '
+      '${l10n.bestStreak}: ${l10n.streakInDays(bestStreak)}';
 
   /// Read-only label for a sunnah time row (name + time).
   static String sunnahTimeRow({

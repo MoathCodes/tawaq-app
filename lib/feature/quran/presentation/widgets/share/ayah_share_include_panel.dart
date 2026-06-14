@@ -9,6 +9,7 @@ class AyahShareIncludePanel extends StatelessWidget {
   const AyahShareIncludePanel({
     required this.selected,
     required this.basmalahAvailable,
+    required this.lineBreaksToggleAvailable,
     required this.onChanged,
     super.key,
   });
@@ -19,6 +20,9 @@ class AyahShareIncludePanel extends StatelessWidget {
   /// Whether basmalah can be shown for the current ayah range.
   final bool basmalahAvailable;
 
+  /// Whether the partial-page line-break toggle should appear.
+  final bool lineBreaksToggleAvailable;
+
   /// Called when the selected include options change.
   final ValueChanged<Set<AyahShareInclude>> onChanged;
 
@@ -26,6 +30,9 @@ class AyahShareIncludePanel extends StatelessWidget {
     var next = value;
     if (!basmalahAvailable) {
       next = next.difference({AyahShareInclude.basmalah});
+    }
+    if (!lineBreaksToggleAvailable) {
+      next = next.difference({AyahShareInclude.preserveLineBreaks});
     }
     onChanged(next);
   }
@@ -45,6 +52,11 @@ class AyahShareIncludePanel extends StatelessWidget {
           FSelectTile(
             value: AyahShareInclude.basmalah,
             title: Text(l10n.shareBasmalah),
+          ),
+        if (lineBreaksToggleAvailable)
+          FSelectTile(
+            value: AyahShareInclude.preserveLineBreaks,
+            title: Text(l10n.sharePreserveLineBreaks),
           ),
         FSelectTile(
           value: AyahShareInclude.appName,

@@ -26,7 +26,7 @@ part 'quran_page.freezed.dart';
 /// ## Example
 ///
 /// ```dart
-/// final page = await MushafController.instance.getPage(1);
+/// final page = await MushafReaderController().getPage(1);
 ///
 /// print('Page ${page.pageNumber} has ${page.surahs.length} surah(s)');
 /// print('Juz: ${page.juzNumber}');

@@ -29,8 +29,8 @@ void main() {
     });
 
     group('values', () {
-      test('has 4 periods', () {
-        expect(PrayerAnalyticsPeriod.values, hasLength(4));
+      test('has 3 periods', () {
+        expect(PrayerAnalyticsPeriod.values, hasLength(3));
       });
 
       test('contains all expected periods', () {

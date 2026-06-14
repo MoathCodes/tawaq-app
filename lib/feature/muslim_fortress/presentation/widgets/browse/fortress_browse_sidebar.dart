@@ -38,6 +38,7 @@ class FortressCategoryListTile extends StatelessWidget {
 
     return MouseClick(
       onClick: onTap,
+      semanticsLabel: category.title,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(
@@ -52,65 +53,57 @@ class FortressCategoryListTile extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Semantics(
-                button: true,
-                selected: isSelected,
-                label: category.title,
-                child: ExcludeSemantics(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        category.title,
-                        style: theme.typography.md.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: isSelected
-                              ? theme.colors.primary
-                              : theme.colors.foreground,
-                        ),
+              child: FortressExcludeDecorative(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      category.title,
+                      style: theme.typography.md.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? theme.colors.primary
+                            : theme.colors.foreground,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        fortressRecurrenceLabel(category.recurrence, l10n),
-                        style: theme.typography.sm.copyWith(
-                          color: isSelected
-                              ? theme.colors.primary.withAlpha(150)
-                              : theme.colors.mutedForeground,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      fortressRecurrenceLabel(category.recurrence, l10n),
+                      style: theme.typography.sm.copyWith(
+                        color: isSelected
+                            ? theme.colors.primary.withAlpha(150)
+                            : theme.colors.mutedForeground,
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        l10n.fortressSupplicationCount(
-                          category.supplicationCount,
-                        ),
-                        style: theme.typography.xs.copyWith(
-                          color: theme.colors.mutedForeground,
-                        ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      l10n.fortressSupplicationCount(
+                        category.supplicationCount,
                       ),
-                    ],
-                  ),
+                      style: theme.typography.xs.copyWith(
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            Semantics(
-              button: true,
-              label: l10n.fortressFavorites,
-              child: ExcludeSemantics(
-                child: MouseClick(
-                  onClick: onToggleFavorite,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xs),
-                    child: Icon(
-                      FLucideIcons.bookmark,
-                      size: 18,
-                      color: isFavorite
-                          ? theme.colors.primary
-                          : theme.colors.mutedForeground,
-                      fill: isFavorite ? 1.0 : 0.0,
-                    ),
+            MouseClick(
+              onClick: onToggleFavorite,
+              semanticsLabel: l10n.fortressFavorites,
+              child: FortressExcludeDecorative(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xs),
+                  child: Icon(
+                    FLucideIcons.bookmark,
+                    size: 18,
+                    color: isFavorite
+                        ? theme.colors.primary
+                        : theme.colors.mutedForeground,
+                    fill: isFavorite ? 1.0 : 0.0,
                   ),
                 ),
               ),
@@ -137,12 +130,11 @@ class FortressEmptySidePanelState extends StatelessWidget {
         l10n,
         favorites: isFavoritesTab,
       ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
               Icon(
                 isFavoritesTab ? FLucideIcons.bookmark : FLucideIcons.searchX,
                 size: 40,
@@ -169,8 +161,7 @@ class FortressEmptySidePanelState extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );

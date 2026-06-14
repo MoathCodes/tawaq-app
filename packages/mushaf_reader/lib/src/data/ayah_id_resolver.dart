@@ -1,12 +1,18 @@
 import 'package:mushaf_reader/src/data/models/surah.dart';
 
-/// Maps (surah, ayah-in-surah) to the global ayah id (1–6236) without Hive I/O.
+import 'package:mushaf_reader/src/core/mushaf_constants.dart';
+
+/// Maps (surah, ayah-in-surah) to the global ayah id without Hive I/O.
 ///
 /// Uses per-surah verse counts from cached [Surah.ayahCount], with a static
 /// Hafs table as fallback when counts are missing from storage.
+///
+/// For the common case without surah metadata, prefer [Ayah.globalIdFor].
 abstract final class AyahIdResolver {
   /// Total ayahs in the Madinah Mushaf (Hafs).
-  static const int totalAyahs = 6236;
+  ///
+  /// Alias for [MushafConstants.ayahCount].
+  static const int totalAyahs = MushafConstants.ayahCount;
 
   /// Verse count per surah (1–114), standard Hafs enumeration.
   static const List<int> ayahsPerSurah = <int>[

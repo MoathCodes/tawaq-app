@@ -16,7 +16,7 @@ enum AppTextScale {
   extraLarge,
   ;
 
-  /// Multiplier passed to typography scaling and [scaledSp].
+  /// Multiplier passed to Forui typography scaling in [buildAppTheme].
   double get scalar => switch (this) {
     AppTextScale.compact => 0.9,
     AppTextScale.normal => 1.0,

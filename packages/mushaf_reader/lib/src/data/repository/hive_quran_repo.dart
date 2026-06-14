@@ -1,12 +1,13 @@
 import 'dart:async';
 
+import 'package:mushaf_reader/src/core/arabic_search_normalize.dart';
+import 'package:mushaf_reader/src/core/search_index_entry.dart';
 import 'package:mushaf_reader/src/data/ayah_id_resolver.dart';
 import 'package:mushaf_reader/src/data/hive/hive_box_manager.dart';
 import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:mushaf_reader/src/data/models/ayah_fragment.dart';
 import 'package:mushaf_reader/src/data/models/juz.dart';
 import 'package:mushaf_reader/src/data/models/page_layouts.dart';
-import 'package:mushaf_reader/src/data/models/page_line.dart';
 import 'package:mushaf_reader/src/data/models/quran_page.dart';
 import 'package:mushaf_reader/src/data/models/surah.dart';
 import 'package:mushaf_reader/src/data/models/surah_block.dart';
@@ -22,6 +23,8 @@ import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 ///
 /// - **surahs**: `Box<Surah>` keyed by surah number (1-114)
 /// - **ayahs**: `LazyBox<Ayah>` keyed by ayah ID (1-6236)
+/// - **search_index**: `Box<String>` keyed by ayah ID — pre-normalized plain text;
+///   opened on first search via [HiveBoxManager.ensureSearchIndexBoxOpen]
 /// - **juzs**: `Box<Juz>` keyed by juz number (1-30)
 /// - **pageLayouts**: `Box<List<PageLayouts>>` keyed by page number (1-604)
 /// - **metadata**: `Box<String>` for key-value data (e.g., "basmalah")
@@ -46,7 +49,7 @@ import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 ///
 /// See also:
 /// - [IQuranRepository], the abstract interface
-/// - [MushafController], which uses this repository
+/// - [MushafReaderController], which uses this repository
 /// - [HiveBoxManager], which manages the underlying boxes
 class HiveQuranRepository implements IQuranRepository {
   /// The singleton instance of the repository.
@@ -60,9 +63,6 @@ class HiveQuranRepository implements IQuranRepository {
 
   /// Total number of ayahs in the Quran.
   static const int _kAyahCount = 6236;
-
-  /// Regex for alef normalization.
-  static final RegExp _kAlefRegex = RegExp('[أإآٱ]');
 
   /// The Hive box manager.
   HiveBoxManager? _boxManager;
@@ -81,24 +81,6 @@ class HiveQuranRepository implements IQuranRepository {
 
   /// Cached Basmalah glyph.
   String? _basmalahCache;
-
-  /// In-memory index for fast ayah search.
-  final _searchIndex = <_SearchAyahEntry>[];
-
-  /// Surah-scoped search index for faster filtered queries.
-  final _searchIndexBySurah = <int, List<_SearchAyahEntry>>{};
-
-  /// Whether search index initialization is in progress.
-  Completer<void>? _searchIndexCompleter;
-
-  /// Lookup index for ayah IDs by (surah, ayahInSurah).
-  final _ayahIdBySurahAndNumber = <int, int>{};
-
-  /// Lookup index for first page per surah.
-  final _startPageBySurah = <int, int>{};
-
-  /// Lookup index for first page per juz (populated by search index only).
-  final _startPageByJuz = <int, int>{};
 
   /// Global ayah id of the first verse in each surah (index 1–114).
   List<int>? _globalAyahIdStartBySurah;
@@ -134,8 +116,13 @@ class HiveQuranRepository implements IQuranRepository {
     _initCompleter = Completer<void>();
 
     try {
+      // Shares the [HiveBoxManager] singleton with [MushafReaderLibrary].
+      // Prefer calling MushafReaderLibrary.ensureInitialized() first so
+      // [subDirectory] is applied before any box access.
       _boxManager = HiveBoxManager();
-      await _boxManager!.init();
+      if (!_boxManager!.isInitialized) {
+        await _boxManager!.init();
+      }
 
       // Pre-cache all surahs (114 items - small memory footprint)
       for (final key in _boxManager!.surahsBox.keys) {
@@ -213,7 +200,19 @@ class HiveQuranRepository implements IQuranRepository {
   }
 
   @override
-  String? getBasmalahSync() => _basmalahCache;
+  String? getBasmalahSync() {
+    if (_basmalahCache != null) return _basmalahCache;
+
+    // [MushafReaderLibrary.ensureInitialized] may open boxes before this
+    // repository's [ensureReady] runs — hydrate the glyph synchronously when
+    // the shared [HiveBoxManager] is already initialized.
+    final manager = HiveBoxManager();
+    if (manager.isInitialized) {
+      _boxManager ??= manager;
+      _basmalahCache = manager.metadataBox.get('basmalah');
+    }
+    return _basmalahCache;
+  }
 
   @override
   Future<Juz> getJuz(int number) async {
@@ -314,6 +313,9 @@ class HiveQuranRepository implements IQuranRepository {
       ..sort((a, b) => a.number.compareTo(b.number));
   }
 
+  @override
+  Surah? getSurahSync(int number) => _surahCache[number];
+
   /// Builds a complete [QuranPage] from Hive data.
   Future<QuranPage> _buildPage(int page) async {
     // Get page layouts using the helper method
@@ -361,34 +363,9 @@ class HiveQuranRepository implements IQuranRepository {
       );
     }
 
-    // Build lines
-    final lineMap = <int, List<PageLayouts>>{};
-    for (final layout in sortedLayouts) {
-      (lineMap[layout.lineStart] ??= []).add(layout);
-    }
-
-    final sortedLineStarts = lineMap.keys.toList()..sort();
-    final lines = <PageLine>[];
-    var lineIndex = 0;
-
-    for (final lineStart in sortedLineStarts) {
-      final lineLayouts = lineMap[lineStart]!;
-      final lineEnd = lineLayouts.first.lineEnd;
-
-      // Filter fragments for this line
-      final frags = ayahFragments
-          .where((f) => f.start >= lineStart && f.end <= lineEnd)
-          .toList();
-
-      lines.add(
-        PageLine(
-          index: lineIndex++,
-          start: lineStart,
-          end: lineEnd,
-          fragments: frags,
-        ),
-      );
-    }
+    // PageLayouts.lineStart/lineEnd are mushaf line numbers (1-based), not
+    // character indices. Rendering uses [glyphText] and [surahBlocks] only.
+    const lines = <Never>[];
 
     // Build Surah blocks
     final surahBlocks = <SurahBlock>[];
@@ -454,6 +431,12 @@ class HiveQuranRepository implements IQuranRepository {
   }
 
   @override
+  Future<void> warmUpSearchIndex() async {
+    await _ensureReady();
+    await _boxManager!.ensureSearchIndexBoxOpen();
+  }
+
+  @override
   Future<List<Ayah>> searchAyahs(
     String query, {
     int? surahNumber,
@@ -463,24 +446,21 @@ class HiveQuranRepository implements IQuranRepository {
 
     if (maxResults <= 0) return [];
 
-    final normalizedQuery = _normalizeArabic(query.trim());
+    final normalizedQuery = normalizeArabicForSearch(query.trim());
     if (normalizedQuery.isEmpty) return [];
 
-    await _ensureSearchIndexReady();
-
-    final source = surahNumber != null
-        ? _searchIndexBySurah[surahNumber] ?? const <_SearchAyahEntry>[]
-        : _searchIndex;
-
-    // Iterate over a stable snapshot to avoid concurrent modification
-    // when another call is still finalizing index initialization.
-    final sourceSnapshot = List<_SearchAyahEntry>.from(source, growable: false);
+    final searchBox = await _boxManager!.ensureSearchIndexBoxOpen();
 
     final results = <Ayah>[];
-    for (final entry in sourceSnapshot) {
+    for (final ayahId in _searchAyahIds(surahNumber: surahNumber)) {
+      final raw = searchBox.get(ayahId);
+      if (raw == null) continue;
+
+      final entry = parseSearchIndexEntry(raw);
+      if (entry == null) continue;
       if (!entry.normalizedText.contains(normalizedQuery)) continue;
 
-      final ayah = await _boxManager!.ayahsBox.get(entry.ayahId);
+      final ayah = await _boxManager!.ayahsBox.get(ayahId);
       if (ayah == null) continue;
 
       results.add(ayah);
@@ -490,42 +470,27 @@ class HiveQuranRepository implements IQuranRepository {
     return results;
   }
 
-  Future<void> _ensureSearchIndexReady() async {
-    if (_searchIndexCompleter != null) return _searchIndexCompleter!.future;
-    if (_searchIndex.isNotEmpty) return;
-
-    _searchIndexCompleter = Completer<void>();
-
-    try {
-      for (int id = 1; id <= _kAyahCount; id++) {
-        final ayah = await _boxManager!.ayahsBox.get(id);
-        if (ayah == null) continue;
-
-        _ayahIdBySurahAndNumber.putIfAbsent(
-          _toAyahLookupKey(ayah.surahNumber, ayah.numberInSurah),
-          () => id,
-        );
-        _startPageBySurah.putIfAbsent(ayah.surahNumber, () => ayah.page);
-        _startPageByJuz.putIfAbsent(ayah.juz, () => ayah.page);
-
-        final normalizedText = _normalizeArabic(ayah.textPlain ?? '');
-        if (normalizedText.isEmpty) continue;
-
-        final entry = _SearchAyahEntry(
-          ayahId: id,
-          normalizedText: normalizedText,
-        );
-
-        _searchIndex.add(entry);
-        (_searchIndexBySurah[ayah.surahNumber] ??= []).add(entry);
-      }
-
-      _searchIndexCompleter!.complete();
-    } catch (e) {
-      _searchIndexCompleter!.completeError(e);
-      _searchIndexCompleter = null;
-      rethrow;
+  Iterable<int> _searchAyahIds({int? surahNumber}) {
+    if (surahNumber == null) {
+      return Iterable<int>.generate(_kAyahCount, (index) => index + 1);
     }
+
+    final starts = _globalAyahIdStartBySurah;
+    if (starts == null || surahNumber < 1 || surahNumber > 114) {
+      return const Iterable<int>.empty();
+    }
+
+    final startId = starts[surahNumber];
+    if (startId <= 0) return const Iterable<int>.empty();
+
+    final count = _ayahCountForSurah(surahNumber);
+    return Iterable<int>.generate(count, (index) => startId + index);
+  }
+
+  int _ayahCountForSurah(int surahNumber) {
+    final fromCache = _surahCache[surahNumber]?.ayahCount;
+    if (fromCache != null && fromCache > 0) return fromCache;
+    return AyahIdResolver.ayahsPerSurah[surahNumber - 1];
   }
 
   int? _globalAyahId(int surah, int ayahInSurah) {
@@ -539,28 +504,6 @@ class HiveQuranRepository implements IQuranRepository {
     );
   }
 
-  int _toAyahLookupKey(int surahNumber, int ayahInSurah) {
-    return (surahNumber << 16) | ayahInSurah;
-  }
-
-  /// Normalizes Arabic text for search by removing common variations.
-  ///
-  /// This handles:
-  /// - Alef variations (أ إ آ ا)
-  /// - Teh marbuta vs heh (ة ه)
-  /// - Yeh variations (ي ى)
-  String _normalizeArabic(String text) {
-    return text
-        // Normalize alef variations
-        .replaceAll(_kAlefRegex, 'ا')
-        // Normalize teh marbuta to heh
-        .replaceAll('ة', 'ه')
-        // Normalize yeh variations
-        .replaceAll('ى', 'ي')
-        // Remove tatweel (kashida)
-        .replaceAll('ـ', '');
-  }
-
   void _closeAndReset() {
     _boxManager?.dispose();
     _boxManager = null;
@@ -568,12 +511,6 @@ class HiveQuranRepository implements IQuranRepository {
     _surahCache.clear();
     _juzCache.clear();
     _basmalahCache = null;
-    _searchIndex.clear();
-    _searchIndexBySurah.clear();
-    _searchIndexCompleter = null;
-    _ayahIdBySurahAndNumber.clear();
-    _startPageBySurah.clear();
-    _startPageByJuz.clear();
     _globalAyahIdStartBySurah = null;
     _instance = null;
     _refCount = 0;
@@ -582,11 +519,4 @@ class HiveQuranRepository implements IQuranRepository {
   Future<void> _ensureReady() async {
     if (_boxManager == null) await ensureReady();
   }
-}
-
-class _SearchAyahEntry {
-  const _SearchAyahEntry({required this.ayahId, required this.normalizedText});
-
-  final int ayahId;
-  final String normalizedText;
 }

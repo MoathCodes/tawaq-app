@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:free_map/free_map.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
@@ -25,26 +26,13 @@ class LocationControlsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final children = [
+    return NonSelectable(
+      child: ResponsiveFieldRow(
+        children: [
           CitySearchSelect(enabled: enabled),
           TimezoneSelect(enabled: enabled),
-        ];
-
-        return NonSelectable(
-          child: constraints.maxWidth > 500
-              ? Row(
-                  spacing: 12,
-                  children: children.map((c) => Expanded(child: c)).toList(),
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: 12,
-                  children: children,
-                ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

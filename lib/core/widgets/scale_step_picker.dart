@@ -3,7 +3,9 @@ import 'package:forui/forui.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Uniform step buttons for discrete scale presets (no selected-tab typography jump).
+/// Uniform step buttons for discrete scale presets.
+///
+/// Avoids a selected-tab typography jump.
 class ScaleStepPicker extends StatelessWidget {
   /// Creates a [ScaleStepPicker].
   const ScaleStepPicker({
@@ -33,43 +35,69 @@ class ScaleStepPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    final labelStyle = theme.typography.xs.copyWith(
-      fontWeight: FontWeight.w600,
-      height: 1.2,
-    );
+    // final labelStyle = theme.typography.xs.copyWith(
+    //   fontWeight: FontWeight.w600,
+    //   height: 1.2,
+    // );
 
-    return NonSelectable(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = 0; i < labels.length; i++) ...[
-            if (i > 0) const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: wrapStep?.call(
-                    i,
-                    _stepButton(
-                      label: labels[i],
-                      labelStyle: labelStyle,
-                      selected: selectedIndex == i,
-                      onPress: enabled ? () => onChanged(i) : null,
-                    ),
-                  ) ??
-                  _stepButton(
-                    label: labels[i],
-                    labelStyle: labelStyle,
-                    selected: selectedIndex == i,
-                    onPress: enabled ? () => onChanged(i) : null,
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useGrid = constraints.maxWidth < context.theme.breakpoints.sm;
+
+        return NonSelectable(
+          child: useGrid ? _buildGrid(context) : _buildRow(),
+        );
+      },
+    );
+  }
+
+  Widget _buildRow() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: AppSpacing.xs,
+      children: [
+        for (var i = 0; i < labels.length; i++)
+          Expanded(
+            child: _wrapStep(
+              i,
+              _stepButton(
+                label: labels[i],
+                selected: selectedIndex == i,
+                onPress: enabled ? () => onChanged(i) : null,
+              ),
             ),
-          ],
-        ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildGrid(BuildContext context) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: AppSpacing.xs,
+        crossAxisSpacing: AppSpacing.xs,
+        childAspectRatio: 2.8,
+      ),
+      itemCount: labels.length,
+      itemBuilder: (context, i) => _wrapStep(
+        i,
+        _stepButton(
+          label: labels[i],
+          selected: selectedIndex == i,
+          onPress: enabled ? () => onChanged(i) : null,
+        ),
       ),
     );
   }
 
+  Widget _wrapStep(int index, Widget step) =>
+      wrapStep?.call(index, step) ?? step;
+
   Widget _stepButton({
     required String label,
-    required TextStyle labelStyle,
     required bool selected,
     required VoidCallback? onPress,
   }) {
@@ -89,7 +117,7 @@ class ScaleStepPicker extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: labelStyle,
+        // style: labelStyle,
         textAlign: TextAlign.center,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,

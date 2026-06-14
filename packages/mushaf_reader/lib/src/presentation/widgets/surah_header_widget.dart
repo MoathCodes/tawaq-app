@@ -1,37 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:mushaf_reader/src/core/fonts.dart';
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
-import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
+import 'package:vector_graphics/vector_graphics.dart';
 
 /// A decorative banner widget displaying a Surah name.
 ///
-/// This widget renders an ornate PNG banner with the Surah name centered
-/// on top, matching the traditional Mushaf surah header design.
+/// This widget renders an ornate precompiled SVG banner with the Surah name
+/// centered on top, matching the traditional Mushaf surah header design.
 ///
 /// ## Appearance
 ///
 /// The banner features:
-/// - An ornate SVG background (light or dark theme)
+/// - An ornate precompiled SVG background (light or dark theme)
 /// - The Surah name in QCF4_BSML (Basmalah) font
 /// - Scalable width for different screen sizes
 ///
-/// ## Caching
-///
-/// SVG widgets are cached to avoid redundant parsing. Call [clearCache]
-/// when the widget tree is disposed or theme changes.
+/// When [isDark] is null, the light or dark banner is chosen from
+/// [Theme.of] brightness.
 ///
 /// ## Usage
 ///
 /// ```dart
-/// // Light theme banner
+/// // Light theme banner (auto from Theme)
 /// SurahHeaderWidget(
-///   name: 'سُورَةُ ٱلْفَاتِحَة',
+///   surahData: surah,
 ///   width: 400,
 /// )
 ///
 /// // Dark theme banner
 /// SurahHeaderWidget(
-///   name: 'سُورَةُ ٱلْبَقَرَة',
+///   surahData: surah,
 ///   isDark: true,
 ///   width: 500,
 /// )
@@ -54,9 +54,10 @@ class SurahHeaderWidget extends StatefulWidget {
 
   /// Whether to use the dark theme banner variant.
   ///
-  /// When `true`, uses `surah_banner_dark.svg`.
-  /// When `false`, uses `surah_banner.svg`.
-  final bool isDark;
+  /// When `true`, uses the dark header SVG (or [customHeaderImageDark]).
+  /// When `false`, uses the light header SVG (or [customHeaderImageLight]).
+  /// When `null`, derives from [Theme.of] brightness.
+  final bool? isDark;
 
   /// The width of the SVG banner.
   ///
@@ -89,9 +90,22 @@ class SurahHeaderWidget extends StatefulWidget {
   /// Receives the Surah number (1-114).
   final void Function(int surahNumber)? onLongPress;
 
-  /// Optional custom image asset path for the header banner.
+  /// Optional custom light-theme header banner asset path.
   ///
-  /// If provided, this image will be used instead of the default mainframe.png.
+  /// If provided, used instead of [MushafConstants.surahHeaderLightAsset].
+  /// Supports `.svg.vec` (precompiled), `.svg` (runtime parse), or raster.
+  final String? customHeaderImageLight;
+
+  /// Optional custom dark-theme header banner asset path.
+  ///
+  /// If provided, used instead of [MushafConstants.surahHeaderDarkAsset].
+  /// Supports `.svg.vec` (precompiled), `.svg` (runtime parse), or raster.
+  final String? customHeaderImageDark;
+
+  /// Optional custom header banner asset path for light theme.
+  ///
+  /// Deprecated: use [customHeaderImageLight].
+  @Deprecated('Use customHeaderImageLight instead.')
   final String? customHeaderImage;
 
   /// Optional repository for testing.
@@ -103,11 +117,13 @@ class SurahHeaderWidget extends StatefulWidget {
     this.fontSize,
     this.textStyle,
     this.styleModifier,
-    this.isDark = false,
+    this.isDark,
     this.width = 500,
     this.onTap,
     this.onLongPress,
-    this.customHeaderImage,
+    this.customHeaderImageLight,
+    this.customHeaderImageDark,
+    @Deprecated('Use customHeaderImageLight instead.') this.customHeaderImage,
     this.repository,
   }) : _surahData = surahData,
        _surahNumber = null;
@@ -118,11 +134,13 @@ class SurahHeaderWidget extends StatefulWidget {
     this.fontSize,
     this.textStyle,
     this.styleModifier,
-    this.isDark = false,
+    this.isDark,
     this.width = 500,
     this.onTap,
     this.onLongPress,
-    this.customHeaderImage,
+    this.customHeaderImageLight,
+    this.customHeaderImageDark,
+    @Deprecated('Use customHeaderImageLight instead.') this.customHeaderImage,
     this.repository,
   }) : _surahData = null,
        _surahNumber = surahNumber;
@@ -156,15 +174,80 @@ class _SurahHeaderWidgetState extends State<SurahHeaderWidget> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Use custom header image if provided, otherwise use default
-    final bannerImage = Image.asset(
-      widget.customHeaderImage ?? 'assets/images/mainframe.png',
-      package: widget.customHeaderImage == null ? 'mushaf_reader' : null,
+  bool _resolveIsDark(BuildContext context) {
+    return widget.isDark ??
+        Theme.of(context).brightness == Brightness.dark;
+  }
+
+  String? _resolveLightOverride() {
+    return widget.customHeaderImageLight ?? widget.customHeaderImage;
+  }
+
+  String _resolveAssetPath(bool useDark) {
+    if (useDark) {
+      return widget.customHeaderImageDark ??
+          MushafConstants.surahHeaderDarkAsset;
+    }
+    return _resolveLightOverride() ?? MushafConstants.surahHeaderLightAsset;
+  }
+
+  bool _isPackageAsset(String assetPath) {
+    return assetPath == MushafConstants.surahHeaderLightAsset ||
+        assetPath == MushafConstants.surahHeaderDarkAsset;
+  }
+
+  bool _isCompiledSvgAsset(String assetPath) {
+    return assetPath.toLowerCase().endsWith('.svg.vec');
+  }
+
+  bool _isSvgAsset(String assetPath) {
+    return assetPath.toLowerCase().endsWith('.svg');
+  }
+
+  Widget _buildBannerImage(BuildContext context) {
+    final useDark = _resolveIsDark(context);
+    final assetPath = _resolveAssetPath(useDark);
+    final isPackageAsset = _isPackageAsset(assetPath);
+    final bannerKey = ValueKey('surah-header-$assetPath');
+
+    if (_isCompiledSvgAsset(assetPath)) {
+      return SvgPicture(
+        AssetBytesLoader(
+          assetPath,
+          packageName: isPackageAsset ? packageName : null,
+        ),
+        key: bannerKey,
+        width: widget.width,
+        fit: BoxFit.contain,
+      );
+    }
+
+    if (_isSvgAsset(assetPath)) {
+      return SvgPicture.asset(
+        assetPath,
+        key: bannerKey,
+        package: isPackageAsset ? packageName : null,
+        width: widget.width,
+        fit: BoxFit.contain,
+      );
+    }
+
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final cacheWidth = (widget.width * dpr).round().clamp(1, 4096);
+
+    return Image.asset(
+      assetPath,
+      key: bannerKey,
+      package: isPackageAsset ? packageName : null,
       width: widget.width,
       fit: BoxFit.contain,
+      cacheWidth: cacheWidth,
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bannerImage = _buildBannerImage(context);
 
     final effectiveFontSize = widget.fontSize ?? 25.0;
 

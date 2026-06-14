@@ -161,6 +161,18 @@ class MockQuranRepository implements IQuranRepository {
   }
 
   @override
+  Surah? getSurahSync(int number) {
+    if (number < 1 || number > 114) return null;
+    return Surah(
+      number: number,
+      nameArabic: 'Surah $number',
+      nameEnglish: 'Surah $number',
+      glyph: 'S$number',
+      hasBasmalah: number != 9,
+    );
+  }
+
+  @override
   Future<List<Ayah>> searchAyahs(
     String query, {
     int? surahNumber,
@@ -169,4 +181,7 @@ class MockQuranRepository implements IQuranRepository {
     // Return mock results for testing
     return [];
   }
+
+  @override
+  Future<void> warmUpSearchIndex() async {}
 }

@@ -55,7 +55,7 @@ import 'package:mushaf_reader/src/presentation/mushaf_loading.dart';
 /// overridden with the appropriate page font.
 ///
 /// See also:
-/// - [MushafController], for fetching Ayah data
+/// - [MushafReaderController], for fetching Ayah data
 /// - [MushafPage], for displaying complete pages
 /// - [MushafFonts], for font utilities
 class AyahWidget extends StatefulWidget {

@@ -21,7 +21,20 @@ import 'package:flutter/material.dart';
 ///
 /// See also:
 /// - [MushafStyle], which uses this for style customization
+/// - [composeStyleModifiers], for chaining multiple modifiers
 typedef StyleModifier = TextStyle Function(TextStyle defaultStyle);
+
+/// Chains two [StyleModifier]s so [next] runs after [existing].
+///
+/// Returns `null` when both inputs are `null`.
+StyleModifier? composeStyleModifiers(
+  StyleModifier? existing,
+  StyleModifier? next,
+) {
+  if (next == null) return existing;
+  if (existing == null) return next;
+  return (style) => next(existing(style));
+}
 
 /// Scaling configuration for the Mushaf reader.
 ///
@@ -151,6 +164,13 @@ class MushafScale {
 ///
 /// ## Text Style Customization
 ///
+/// Two complementary APIs:
+///
+/// - **[MushafStyle.modify]** / **[MushafStyleCustomization.modify]** — tweak
+///   library defaults with short modifier hooks (`ayah`, `basmalah`, …).
+/// - **Constructor** — full control with explicit [TextStyle] bases and/or
+///   `*StyleModifier` fields when you need both.
+///
 /// You can customize the appearance of various text elements while the
 /// library ensures correct font rendering. The following properties are
 /// preserved from your [TextStyle]:
@@ -168,23 +188,29 @@ class MushafScale {
 /// ## Example
 ///
 /// ```dart
+/// // Modifier-only (most common) — tweak defaults with copyWith
+/// MushafPage(
+///   page: 1,
+///   style: MushafStyle.modify(
+///     ayah: (s) => s.copyWith(color: Color(0xFF1B4332)),
+///     activeAyah: (s) => s.copyWith(
+///       color: Colors.white,
+///       backgroundColor: Color(0xFF2D6A4F),
+///     ),
+///     backgroundColor: Color(0xFFFFFBF0),
+///     scale: MushafScale(minScale: 0.7, maxScale: 1.5),
+///   ),
+/// )
+///
+/// // Full override — explicit TextStyle bases
 /// MushafPage(
 ///   page: 1,
 ///   style: MushafStyle(
-///     // Custom text colors
 ///     ayahStyle: TextStyle(color: Color(0xFF1B4332)),
 ///     activeAyahStyle: TextStyle(
 ///       color: Colors.white,
 ///       backgroundColor: Color(0xFF2D6A4F),
 ///     ),
-///     basmalahStyle: TextStyle(color: Color(0xFF40916C)),
-///     surahNameStyle: TextStyle(color: Color(0xFF52B788)),
-///     juzStyle: TextStyle(color: Color(0xFF74C69D)),
-///     pageNumberStyle: TextStyle(color: Color(0xFF95D5B2)),
-///
-///     // Background and scaling
-///     backgroundColor: Color(0xFFFFFBF0),
-///     scale: MushafScale(minScale: 0.7, maxScale: 1.5),
 ///   ),
 /// )
 /// ```
@@ -192,7 +218,7 @@ class MushafScale {
 /// See also:
 /// - [MushafPage], which uses this style for rendering
 /// - [MushafScale], for detailed scaling control
-/// - [MushafPageController], for controlling Ayah selection
+/// - [MushafReaderController.selectAyah], for controlling Ayah selection
 class MushafStyle {
   /// The text style applied to Ayah text content.
   ///
@@ -289,11 +315,18 @@ class MushafStyle {
   /// See [ayahStyleModifier] for usage pattern.
   final StyleModifier? pageNumberStyleModifier;
 
-  /// Optional custom image asset path for the surah header decoration.
+  /// Optional custom image asset path for the light surah header decoration.
   ///
-  /// If provided, this image will be used instead of the default header banner.
-  /// The image should be an asset path (e.g., 'assets/images/custom_header.png').
+  /// If provided, this image will be used instead of the default light header
+  /// banner. For dark mode, see [surahHeaderImageDark].
+  /// The image should be an asset path (e.g., 'assets/images/custom_header.svg').
   final String? surahHeaderImage;
+
+  /// Optional custom image asset path for the dark surah header decoration.
+  ///
+  /// If provided, this image will be used instead of the default dark header
+  /// banner. When null, the package default dark SVG is used.
+  final String? surahHeaderImageDark;
 
   /// The background color for highlighted/selected Ayahs.
   ///
@@ -313,7 +346,9 @@ class MushafStyle {
   /// default auto-scaling is used based on available width.
   final MushafScale scale;
 
-  /// Creates a [MushafStyle] with the given styling options.
+  /// Creates a [MushafStyle] with explicit [TextStyle] bases and/or modifiers.
+  ///
+  /// Prefer [MushafStyle.modify] when you only need to tweak library defaults.
   ///
   /// All parameters are optional with sensible defaults:
   /// - [highlightColor] defaults to a semi-transparent amber
@@ -335,10 +370,53 @@ class MushafStyle {
     this.pageNumberStyle,
     this.pageNumberStyleModifier,
     this.surahHeaderImage,
+    this.surahHeaderImageDark,
     this.highlightColor = const Color.fromARGB(202, 245, 205, 110),
     this.backgroundColor,
     this.scale = const MushafScale(),
   });
+
+  /// Creates a [MushafStyle] that tweaks library defaults via modifiers.
+  ///
+  /// Short parameter names map to the `*StyleModifier` fields. Use the
+  /// constructor when you need explicit [TextStyle] bases, or both base +
+  /// modifier for the same element.
+  ///
+  /// Chain further tweaks with [MushafStyleCustomization.modify]:
+  ///
+  /// ```dart
+  /// MushafStyle.modify(ayah: (s) => s.copyWith(color: Colors.brown))
+  ///     .modify(scale: MushafScale(readingBoost: 1.08));
+  /// ```
+  factory MushafStyle.modify({
+    StyleModifier? ayah,
+    StyleModifier? activeAyah,
+    StyleModifier? basmalah,
+    StyleModifier? surahName,
+    StyleModifier? headerSurahName,
+    StyleModifier? juz,
+    StyleModifier? pageNumber,
+    String? surahHeaderImage,
+    String? surahHeaderImageDark,
+    Color highlightColor = const Color.fromARGB(202, 245, 205, 110),
+    Color? backgroundColor,
+    MushafScale scale = const MushafScale(),
+  }) {
+    return MushafStyle(
+      ayahStyleModifier: ayah,
+      activeAyahStyleModifier: activeAyah,
+      basmalahStyleModifier: basmalah,
+      surahNameStyleModifier: surahName,
+      headerSurahNameStyleModifier: headerSurahName,
+      juzStyleModifier: juz,
+      pageNumberStyleModifier: pageNumber,
+      surahHeaderImage: surahHeaderImage,
+      surahHeaderImageDark: surahHeaderImageDark,
+      highlightColor: highlightColor,
+      backgroundColor: backgroundColor,
+      scale: scale,
+    );
+  }
 
   /// Creates a copy of this style with the given fields replaced.
   ///
@@ -360,6 +438,7 @@ class MushafStyle {
     TextStyle? pageNumberStyle,
     StyleModifier? pageNumberStyleModifier,
     String? surahHeaderImage,
+    String? surahHeaderImageDark,
     Color? highlightColor,
     Color? backgroundColor,
     MushafScale? scale,
@@ -385,6 +464,7 @@ class MushafStyle {
       pageNumberStyleModifier:
           pageNumberStyleModifier ?? this.pageNumberStyleModifier,
       surahHeaderImage: surahHeaderImage ?? this.surahHeaderImage,
+      surahHeaderImageDark: surahHeaderImageDark ?? this.surahHeaderImageDark,
       highlightColor: highlightColor ?? this.highlightColor,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       scale: scale ?? this.scale,

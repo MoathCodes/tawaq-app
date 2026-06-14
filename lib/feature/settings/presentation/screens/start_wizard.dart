@@ -2,6 +2,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/wizard/wizard_steps.dart';
@@ -99,41 +100,55 @@ class _StartWizardDialog extends HookWidget {
       l10n.wizardStep_iqamahAdjustments,
     ];
 
-    return FDialog(
-      direction: Axis.horizontal,
+    final dialogSize = dialogConstraints(
+      context,
+      preferredWidth: 520,
+      preferredHeight: 560,
+    );
+    final maxBodyHeight = MediaQuery.sizeOf(context).height * 0.55;
+
+    return FDialog.adaptive(
+      constraints: dialogSize,
       title: SettingsSemantics.sectionHeader(
         label: titles[step.value],
         child: Text(titles[step.value]),
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 4),
-        child: _buildStep(
-          step: step.value,
-          method: method,
-          fajrAngle: fajrAngle,
-          ishaAngle: ishaAngle,
-          ishaInterval: ishaInterval,
-          maghribAngle: maghribAngle,
-          is24Hours: is24Hours,
-          locName: locName,
-          lat: lat,
-          lng: lng,
-          iqamah: iqamah,
-          adjust: adjust,
+      body: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxBodyHeight),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: _buildStep(
+              step: step.value,
+              method: method,
+              fajrAngle: fajrAngle,
+              ishaAngle: ishaAngle,
+              ishaInterval: ishaInterval,
+              maghribAngle: maghribAngle,
+              is24Hours: is24Hours,
+              locName: locName,
+              lat: lat,
+              lng: lng,
+              iqamah: iqamah,
+              adjust: adjust,
+            ),
+          ),
         ),
       ),
       actions: [
-        if (step.value > 0)
-          FButton(onPress: () => step.value--, child: Text(l10n.back)),
-        const Spacer(),
-        FButton(
-          onPress: () => Navigator.of(context).pop(),
-          child: Text(l10n.skip),
-        ),
         FButton(
           onPress: next,
           child: Text(step.value < 4 ? l10n.next : l10n.done),
         ),
+        FButton(
+          onPress: () => Navigator.of(context).pop(),
+          child: Text(l10n.skip),
+        ),
+        if (step.value > 0)
+          FButton(
+            onPress: () => step.value--,
+            child: Text(l10n.back),
+          ),
       ],
     );
   }

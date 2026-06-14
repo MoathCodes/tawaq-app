@@ -6,7 +6,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
@@ -121,7 +123,7 @@ class QuranSelectedAyahActionsBar extends ConsumerWidget {
   }
 }
 
-class _AyahActionsBar extends StatelessWidget {
+class _AyahActionsBar extends ConsumerWidget {
   const _AyahActionsBar({
     required this.controller,
     required this.ayah,
@@ -134,66 +136,150 @@ class _AyahActionsBar extends StatelessWidget {
   final VoidCallback onClose;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final durations = theme.durations;
     final l10n = context.l10n;
 
-    return Row(
-          spacing: AppSpacing.sm,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FButton(
-              onPress: () => showAyahShareDialog(
-                context,
-                controller: controller,
-                ayah: ayah,
-              ),
-              child: Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < theme.breakpoints.sm;
+
+        if (compact) {
+          return Row(
+                spacing: AppSpacing.sm,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(l10n.ayahShare),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Icon(FLucideIcons.share2, size: 18),
+                  FTooltip(
+                    tipBuilder: (_, _) => Text(l10n.quranRecitationComingSoon),
+                    child: FButton.icon(
+                      onPress: isDesktopPlatform
+                          ? () => _playAyahStub(context, ref, ayah)
+                          : null,
+                      child: const Icon(FLucideIcons.play, size: 18),
+                    ),
+                  ),
+                  FButton.icon(
+                    onPress: () => showAyahShareDialog(
+                      context,
+                      controller: controller,
+                      ayah: ayah,
+                    ),
+                    child: const Icon(FLucideIcons.share2, size: 18),
+                  ),
+                  FButton.icon(
+                    onPress: () {},
+                    child: const Icon(FLucideIcons.bookmark, size: 18),
+                  ),
+                  FButton.icon(
+                    onPress: () => _copyAyah(context, ayah),
+                    child: const Icon(FLucideIcons.copy, size: 18),
+                  ),
+                  FButton.icon(
+                    onPress: onClose,
+                    child: const Icon(FLucideIcons.x, size: 18),
+                  ),
                 ],
-              ),
-            ),
-            FButton.icon(
-              onPress: () {},
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(l10n.ayahBookmark),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Icon(FLucideIcons.bookmark, size: 18),
-                ],
-              ),
-            ),
-            FButton.icon(
-              onPress: () => _copyAyah(context, ayah),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(l10n.ayahCopy),
-                  const SizedBox(width: AppSpacing.sm),
-                  const Icon(FLucideIcons.copy, size: 18),
-                ],
-              ),
-            ),
-            FButton.icon(
-              onPress: onClose,
-              child: const Icon(FLucideIcons.x, size: 18),
-            ),
-          ],
-        )
-        .animate()
-        .fadeIn(duration: durations.fast, curve: Curves.easeOut)
-        .scale(
-          begin: const Offset(0.9, 0.9),
-          end: const Offset(1, 1),
-          duration: durations.normal,
-          curve: Curves.easeOutBack,
-        );
+              )
+              .animate()
+              .fadeIn(duration: durations.fast, curve: Curves.easeOut)
+              .scale(
+                begin: const Offset(0.9, 0.9),
+                end: const Offset(1, 1),
+                duration: durations.normal,
+                curve: Curves.easeOutBack,
+              );
+        }
+
+        return Row(
+              spacing: AppSpacing.sm,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FTooltip(
+                  tipBuilder: (_, _) => Text(l10n.quranRecitationComingSoon),
+                  child: FButton(
+                    onPress: isDesktopPlatform
+                        ? () => _playAyahStub(context, ref, ayah)
+                        : null,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l10n.quranPlayAyah),
+                        const SizedBox(width: AppSpacing.sm),
+                        const Icon(FLucideIcons.play, size: 18),
+                      ],
+                    ),
+                  ),
+                ),
+                FButton(
+                  onPress: () => showAyahShareDialog(
+                    context,
+                    controller: controller,
+                    ayah: ayah,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(l10n.ayahShare),
+                      const SizedBox(width: AppSpacing.sm),
+                      const Icon(FLucideIcons.share2, size: 18),
+                    ],
+                  ),
+                ),
+                FButton.icon(
+                  onPress: () {},
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(l10n.ayahBookmark),
+                      const SizedBox(width: AppSpacing.sm),
+                      const Icon(FLucideIcons.bookmark, size: 18),
+                    ],
+                  ),
+                ),
+                FButton.icon(
+                  onPress: () => _copyAyah(context, ayah),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(l10n.ayahCopy),
+                      const SizedBox(width: AppSpacing.sm),
+                      const Icon(FLucideIcons.copy, size: 18),
+                    ],
+                  ),
+                ),
+                FButton.icon(
+                  onPress: onClose,
+                  child: const Icon(FLucideIcons.x, size: 18),
+                ),
+              ],
+            )
+            .animate()
+            .fadeIn(duration: durations.fast, curve: Curves.easeOut)
+            .scale(
+              begin: const Offset(0.9, 0.9),
+              end: const Offset(1, 1),
+              duration: durations.normal,
+              curve: Curves.easeOutBack,
+            );
+      },
+    );
+  }
+
+  Future<void> _playAyahStub(
+    BuildContext context,
+    WidgetRef ref,
+    Ayah ayah,
+  ) async {
+    await ref.read(audioPlayerControllerProvider.notifier).playAyah(
+      surah: ayah.surahNumber,
+      ayah: ayah.numberInSurah,
+    );
+    if (!context.mounted) return;
+    showFToast(
+      context: context,
+      title: Text(context.l10n.quranRecitationComingSoon),
+    );
   }
 
   void _copyAyah(BuildContext context, Ayah ayah) {

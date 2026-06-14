@@ -4,6 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/timezone.dart';
 
@@ -30,34 +31,11 @@ class PrayerService {
       final days = await _repo.getFullyCompletedDays(loc);
       if (days.isEmpty) return (current: 0, best: 0);
 
-      var best = 0;
-      var streak = 0;
-      DateTime? prev;
-
-      for (final day in days) {
-        if (prev == null) {
-          streak = 1;
-        } else if (day.difference(prev).inDays == 1) {
-          streak++;
-        } else {
-          if (streak > best) best = streak;
-          streak = 1;
-        }
-        prev = day;
-      }
-      if (streak > best) best = streak;
-
-      var current = 0;
-      if (prev != null) {
-        final today = TZDateTime.now(loc);
-        final diff = DateTime(
-          today.year,
-          today.month,
-          today.day,
-        ).difference(prev).inDays;
-        if (diff <= 1) current = streak;
-      }
-      return (current: current, best: best);
+      final today = TZDateTime.now(loc);
+      return PrayerAnalyticsCalculator.computeStreaks(
+        fullyCompletedDays: days,
+        today: DateTime(today.year, today.month, today.day),
+      );
     } catch (e, st) {
       _log.e('Error computing streaks', error: e, stackTrace: st);
       return (current: 0, best: 0);
@@ -70,7 +48,12 @@ class PrayerService {
     DateTime? date,
   ]) {
     final d = date ?? _now();
-    return _repo.countAllStatusesOnDate(d.subtract(period.duration), d);
+    final range = PrayerAnalyticsCalculator.periodCalendarRange(period, d);
+    return _repo.countAllStatusesOnDate(
+      range.start,
+      range.end,
+      _settings.location,
+    );
   }
 
   /// Counts prayers with a specific status within a given period.
@@ -84,6 +67,7 @@ class PrayerService {
       status,
       d.subtract(period.duration),
       d,
+      _settings.location,
     );
   }
 
@@ -93,12 +77,24 @@ class PrayerService {
   /// Deletes a prayer completion record by its ID.
   Future<void> deleteCompletion(int id) => _repo.deleteCompletion(id);
 
+  /// Deletes all completion rows for [prayer] on [date]'s calendar day.
+  Future<void> deleteCompletionForPrayerOnDate(Prayer prayer, DateTime date) =>
+      _repo.deleteCompletionForPrayerOnDate(
+        prayer,
+        date,
+        _settings.location,
+      );
+
   /// Checks if a prayer completion record exists for the given ID.
   Future<bool> doesCompletionExists(int id) => _repo.doesCompletionExists(id);
 
   /// Returns all prayer completion records.
   Future<List<PrayerCompletion>> getAllCompletions() =>
       _repo.getAllCompletions();
+
+  /// Returns the earliest logged completion time, if any.
+  Future<DateTime?> getEarliestCompletionTime() =>
+      _repo.getEarliestCompletionTime();
 
   /// Returns a single prayer completion record by its ID.
   Future<PrayerCompletion?> getSingleCompletion(int id) =>

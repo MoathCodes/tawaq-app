@@ -7,6 +7,7 @@ import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_exte
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Called when the user selects a title (chapter) search result.
@@ -53,11 +54,10 @@ class FortressSearchResultsPane extends StatelessWidget {
     if (results.isEmpty) {
       return Semantics(
         label: FortressA11y.searchEmptyLabel(l10n, query),
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            child: Column(
-            mainAxisSize: MainAxisSize.min,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
                 FLucideIcons.searchX,
@@ -81,15 +81,17 @@ class FortressSearchResultsPane extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             ],
-            ),
           ),
         ),
       );
     }
 
-    return ListView(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
-      children: [
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: kFortressReadingMaxWidth),
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
+          children: [
         if (results.titles.isNotEmpty) ...[
           _SectionHeader(
             icon: FLucideIcons.folderOpen,
@@ -121,7 +123,9 @@ class FortressSearchResultsPane extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
           ],
         ],
-      ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -173,11 +177,10 @@ class _TitleResultTile extends StatelessWidget {
     final theme = context.theme;
     final l10n = context.l10n;
 
-    return Semantics(
-      button: true,
-      label: category.title,
-      child: MouseClick(
-        onClick: onTap,
+    return MouseClick(
+      onClick: onTap,
+      semanticsLabel: category.title,
+      child: FortressExcludeDecorative(
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
@@ -188,35 +191,35 @@ class _TitleResultTile extends StatelessWidget {
           child: Row(
             children: [
               Icon(category.icon, color: theme.colors.primary),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    category.title,
-                    style: theme.typography.md.copyWith(
-                      fontWeight: FontWeight.w600,
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      category.title,
+                      style: theme.typography.md.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${fortressRecurrenceLabel(category.recurrence, l10n)} · ${l10n.fortressSupplicationCount(category.supplicationCount)}',
-                    style: theme.typography.xs.copyWith(
-                      color: theme.colors.mutedForeground,
+                    const SizedBox(height: 2),
+                    Text(
+                      '${fortressRecurrenceLabel(category.recurrence, l10n)} · ${l10n.fortressSupplicationCount(category.supplicationCount)}',
+                      style: theme.typography.xs.copyWith(
+                        color: theme.colors.mutedForeground,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Icon(
-              FLucideIcons.chevronLeft,
-              size: 16,
-              color: theme.colors.mutedForeground,
-            ),
-          ],
+              Icon(
+                FLucideIcons.chevronLeft,
+                size: 16,
+                color: theme.colors.mutedForeground,
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -237,48 +240,45 @@ class _ContentResultTile extends StatelessWidget {
     final l10n = context.l10n;
     final item = hit.item;
 
-    return Semantics(
-      button: true,
-      label: '${hit.categoryTitle}. ${item.text}',
-      child: ExcludeSemantics(
-        child: MouseClick(
-          onClick: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              borderRadius: theme.radii.md,
-              border: Border.all(color: theme.colors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        hit.categoryTitle,
-                    style: theme.typography.xs.copyWith(
-                      color: theme.colors.primary,
-                      fontWeight: FontWeight.w600,
+    return MouseClick(
+      onClick: onTap,
+      semanticsLabel: '${hit.categoryTitle}. ${item.text}',
+      child: FortressExcludeDecorative(
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            borderRadius: theme.radii.md,
+            border: Border.all(color: theme.colors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      hit.categoryTitle,
+                      style: theme.typography.xs.copyWith(
+                        color: theme.colors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-                if (item.hasCommentary)
-                  FBadge(
-                    variant: .secondary,
-                    child: Text(l10n.fortressSharh),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-                Text(
-                  item.text,
-                  style: theme.typography.sm.copyWith(height: 1.6),
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+                  if (item.hasCommentary)
+                    FBadge(
+                      variant: .secondary,
+                      child: Text(l10n.fortressSharh),
+                    ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                item.text,
+                style: theme.typography.sm.copyWith(height: 1.6),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
           ),
         ),
       ),

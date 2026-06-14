@@ -13,17 +13,16 @@ part 'juz.freezed.dart';
 /// ## Example
 ///
 /// ```dart
-/// // Get Juz information
-/// final juz = await MushafController.instance.getJuz(1);
+/// final controller = MushafReaderController();
+/// final juz = await controller.getJuz(1);
 /// print('Juz ${juz.number} starts on page ${juz.startPage}');
 ///
-/// // Synchronous access (after init)
-/// final juzSync = MushafController.instance.getJuzSync(1);
+/// final juzSync = controller.getJuzSync(1);
 /// ```
 ///
 /// See also:
 /// - [JuzWidget], which displays the Juz glyph
-/// - [MushafController], for retrieving Juz data
+/// - [MushafReaderController], for retrieving Juz data
 @freezed
 abstract class Juz with _$Juz {
   /// Creates a [Juz] with the Juz number and display glyph.

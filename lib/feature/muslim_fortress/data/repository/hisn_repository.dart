@@ -10,7 +10,6 @@ import 'package:tawaq/feature/muslim_fortress/data/sources/hisn_data_source.dart
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_default_bookmarks.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_featured_dua.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 
 part 'hisn_repository.g.dart';
@@ -219,28 +218,6 @@ class HisnRepository {
     );
   }
 
-  /// Featured cards for the welcome layout.
-  List<FortressFeaturedDua> loadFeaturedDuas() {
-    final featuredTitles = _featuredTitleCategories();
-    final result = <FortressFeaturedDua>[];
-
-    for (final title in featuredTitles) {
-      final items = _client.contents.byTitleId(title.chapterId);
-      if (items.isEmpty) continue;
-      final first = items.first;
-      result.add(
-        FortressFeaturedDua(
-          chapterId: title.chapterId,
-          title: title.title,
-          reference: _shortReference(first.source),
-          itemCount: items.length,
-        ),
-      );
-      if (result.length >= 4) break;
-    }
-    return result;
-  }
-
   /// Full commentary for a content id (load on demand for study sheets).
   HisnCommentary? loadCommentaryForContent(int contentId) {
     return _client.commentary.byContentId(contentId);
@@ -296,26 +273,4 @@ class HisnRepository {
         title.id,
     };
   }
-
-  List<FortressCategory> _featuredTitleCategories() {
-    final featuredIds = _featuredTitleIds();
-    final counts = _client.contents.countByTitleId();
-
-    return [
-      for (final title in _client.titles.all())
-        if (featuredIds.contains(title.id))
-          FortressCategory(
-            chapterId: title.id,
-            title: title.name.trim(),
-            recurrence: title.recurrence,
-            supplicationCount: counts[title.id] ?? 0,
-            featured: true,
-          ),
-    ];
-  }
-}
-
-String _shortReference(String reference) {
-  if (reference.length <= 48) return reference;
-  return '${reference.substring(0, 45)}…';
 }

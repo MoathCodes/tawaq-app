@@ -1,84 +1,105 @@
 part of 'hadith_screen.dart';
 
+/// Resolved side/main pane widths for the hadith split layout.
+({
+  double sideExtent,
+  double mainExtent,
+  double sideMin,
+  double mainMin,
+  double sideMax,
+}) _resolveHadithSplitExtents({
+  required double totalWidth,
+  required double sideWidth,
+}) {
+  if (totalWidth <= 0) {
+    return (
+      sideExtent: 0,
+      mainExtent: 0,
+      sideMin: 0,
+      mainMin: 0,
+      sideMax: 0,
+    );
+  }
+
+  final sideMin = kStudyPanelMinExtent.clamp(0.0, totalWidth);
+  final mainMin = kMainPaneMinExtent.clamp(0.0, totalWidth - sideMin);
+  final sideMax = (totalWidth * 0.5).clamp(sideMin, totalWidth - mainMin);
+
+  final extents = resolveSplitExtents(
+    totalWidth: totalWidth,
+    sideWidth: sideWidth,
+    sideMin: sideMin,
+    mainMin: mainMin,
+    sideMax: sideMax,
+  );
+
+  return (
+    sideExtent: extents.sideExtent,
+    mainExtent: extents.mainExtent,
+    sideMin: sideMin,
+    mainMin: mainMin,
+    sideMax: sideMax,
+  );
+}
+
 class _DesktopSplitLayout extends ConsumerWidget {
   const _DesktopSplitLayout();
-
-  static const _minSidePanelWidth = 320.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sidePanelWidth = ref.watch(hadithSidePanelWidthProvider);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final mainPaneWidth = (constraints.maxWidth - sidePanelWidth).clamp(
-          480.0,
-          1200.0,
-        );
+    final textDirection = Directionality.of(context);
 
-        return Directionality(
-          textDirection: TextDirection.ltr,
-          child: FResizable(
-            axis: Axis.horizontal,
-            style: const .delta(
-              thumbStyle: .delta(
-                decoration: .boxDelta(
-                  border: .fromBorderSide(.new(color: Colors.transparent)),
-                ),
-              ),
-            ),
-            control: .managed(
-              onResizeEnd: (value) {
-                ref
-                    .read(hadithScreenControllerProvider.notifier)
-                    .setSidePanelWidth(
-                      value[0].extent.current,
-                    );
-              },
-            ),
+    return PersistedHorizontalSplitPane(
+      sidePanelWidth: sidePanelWidth,
+      sideRegionIndex: 0,
+      resolve: ({required totalWidth, required sideWidth}) {
+        final resolved = _resolveHadithSplitExtents(
+          totalWidth: totalWidth,
+          sideWidth: sideWidth,
+        );
+        return (
+          sideExtent: resolved.sideExtent,
+          mainExtent: resolved.mainExtent,
+          sideMin: resolved.sideMin,
+          mainMin: resolved.mainMin,
+        );
+      },
+      onSidePanelWidthChanged: (width) => ref
+          .read(hadithScreenControllerProvider.notifier)
+          .setSidePanelWidth(width),
+      style: const .delta(
+        thumbStyle: .delta(
+          decoration: .boxDelta(
+            border: .fromBorderSide(.new(color: Colors.transparent)),
+          ),
+        ),
+      ),
+      sidePane: Padding(
+        padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
+        child: Directionality(
+          textDirection: textDirection,
+          child: const _SidePanel(),
+        ),
+      ),
+      mainPane: Padding(
+        padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
+        child: Directionality(
+          textDirection: textDirection,
+          child: const Column(
             children: [
-              FResizableRegion.region(
-                initialExtent: sidePanelWidth,
-                minExtent: _minSidePanelWidth,
-                builder: (_, _, _) => Padding(
-                  padding: const EdgeInsetsDirectional.only(
-                    end: AppSpacing.sm,
-                  ),
-                  child: Directionality(
-                    textDirection: Directionality.of(context),
-                    child: const SizedBox.expand(
-                      child: _SidePanel(),
-                    ),
-                  ),
-                ),
+              _SearchHeader(
+                desktop: true,
+                groupId: HadithPage._filterPopoverGroupId,
               ),
-              FResizableRegion.region(
-                initialExtent: mainPaneWidth,
-                minExtent: 480,
-                builder: (_, _, _) => Padding(
-                  padding: const EdgeInsetsDirectional.only(
-                    start: AppSpacing.sm,
-                  ),
-                  child: Directionality(
-                    textDirection: Directionality.of(context),
-                    child: const Column(
-                      children: [
-                        _SearchHeader(
-                          desktop: true,
-                          groupId: HadithPage._filterPopoverGroupId,
-                        ),
-                        SizedBox(height: AppSpacing.lg),
-                        Expanded(
-                          child: _ResultsList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              SizedBox(height: AppSpacing.lg),
+              Expanded(
+                child: _ResultsList(),
               ),
             ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

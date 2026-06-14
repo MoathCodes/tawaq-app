@@ -1,16 +1,11 @@
-/// A Flutter package for displaying the Holy Quran (Mushaf) with authentic
-/// Uthmanic script rendering using QCF4 (Quran Complex Fonts).
+/// A minimal Flutter building block for rendering Medina Mushaf pages.
 ///
-/// This package provides a complete solution for rendering Quran pages with:
-/// - Page-specific fonts for accurate glyph rendering (QCF4_001 to QCF4_604)
-/// - Ayah highlighting and selection
-/// - Surah headers and Basmalah decorations
-/// - Juz markers
-/// - Page navigation
+/// [mushaf_reader] focuses on authentic Uthmanic script via QCF4 page fonts,
+/// bundled Quran data, and composable widgets. It does **not** ship an app
+/// shell, settings, audio, tafsir, bookmarks, or theming beyond [MushafStyle]
+/// hooks — you bring those.
 ///
-/// ## Getting Started
-///
-/// Initialize the library once in your `main()` function before `runApp()`:
+/// ## Setup
 ///
 /// ```dart
 /// void main() async {
@@ -20,72 +15,49 @@
 /// }
 /// ```
 ///
-/// Then use the reader in your widgets:
+/// ## Quick start
 ///
 /// ```dart
-/// class MyQuranScreen extends StatelessWidget {
-///   @override
-///   Widget build(BuildContext context) {
-///     return MushafReader(
-///       onAyahTap: (ayah) => print('Tapped: ${ayah.reference}'),
-///     );
-///   }
-/// }
-/// ```
-///
-/// ## Basic Usage
-///
-/// Display a single Mushaf page:
-///
-/// ```dart
-/// MushafPage(
-///   page: 1,
-///   onTapAyah: (ayahId) {
-///     print('Tapped ayah: $ayahId');
-///   },
-///   style: MushafStyle(
-///     highlightColor: Colors.amber.withOpacity(0.3),
-///   ),
+/// MushafReader(
+///   onAyahTap: (ayah) => print(ayah.reference),
 /// )
 /// ```
 ///
-/// Display a single Ayah:
+/// For full control, use [MushafPage] with your own [PageView] or
+/// [MushafReaderController] for navigation and data access.
 ///
-/// ```dart
-/// // By global Ayah ID (1-6236)
-/// AyahWidget.fromId(ayahId: 1)
+/// ### Callback naming
 ///
-/// // By Surah and Ayah number
-/// AyahWidget.fromSurahAyah(surah: 1, ayah: 1)
-/// ```
+/// - [MushafReader] (`pagesPerViewport: 1` or `2`): [AyahTapCallback]
+///   (`onAyahTap`) delivers a full [Ayah].
+/// - [MushafPage]: [AyahIdTapCallback] (`onAyahIdTap`) delivers the global
+///   ayah id only — use the controller or repository to resolve the model.
 ///
-/// ## Architecture
-///
-/// The package follows a clean architecture pattern:
-/// - **Models**: Data classes for Ayahs, Pages, Surahs, and Juzs
-/// - **Repository**: Data access layer with pre-populated Hive boxes
-/// - **Controller**: [MushafReaderController] for navigation, selection, and data
-/// - **Widgets**: UI components including [MushafReader] and [MushafPage]
-///
-/// ## Fonts
-///
-/// This package uses QCF4 fonts from the King Fahd Complex for the
-/// Printing of the Holy Quran. Each page has its own font file to ensure
-/// accurate glyph positioning and rendering that matches the printed Mushaf.
+/// See also: [MushafReaderLibrary], [MushafReader], [MushafPage],
+/// [MushafReaderController], [MushafConstants].
 library;
 
 import 'package:mushaf_reader/src/data/hive/hive_box_manager.dart';
 
 // Core utilities
+export 'src/core/callbacks.dart';
+export 'src/core/extensions.dart';
 export 'src/core/fonts.dart'
     show MushafFonts, MushafBaseFontSizes, MushafTextStyleMerger;
+export 'src/core/mushaf_constants.dart';
 export 'src/core/mushaf_layout.dart' show mushafReferencePageHeight;
-export 'src/presentation/widgets/page_ayah_widget.dart';
+export 'src/core/mushaf_page_range_layout.dart';
+// Data layer
+export 'src/data/ayah_id_resolver.dart';
+export 'src/data/repository/i_quran_repo.dart';
 // Core models
 export 'src/data/models/ayah.dart';
+export 'src/data/models/ayah_fragment.dart';
 export 'src/data/models/juz.dart';
+export 'src/data/models/page_line.dart';
 export 'src/data/models/mushaf_page_info.dart';
 export 'src/data/models/mushaf_style.dart';
+export 'src/data/models/mushaf_style_extensions.dart';
 export 'src/data/models/quran_page.dart';
 export 'src/data/models/surah_block.dart';
 export 'src/data/models/revelation_type.dart';
@@ -104,6 +76,7 @@ export 'src/presentation/widgets/juz_widget.dart';
 export 'src/presentation/widgets/page_number_widget.dart';
 export 'src/presentation/widgets/surah_header_widget.dart';
 export 'src/presentation/widgets/surah_name_widget.dart';
+export 'src/presentation/widgets/mushaf_page_range.dart';
 
 /// Global initialization for the Mushaf Reader library.
 ///

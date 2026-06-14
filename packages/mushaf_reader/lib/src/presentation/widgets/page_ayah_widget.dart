@@ -42,7 +42,7 @@ import 'package:mushaf_reader/src/data/models/ayah_fragment.dart';
 /// See also:
 /// - [MushafPage], which uses this widget
 /// - [AyahFragment], for text boundary information
-/// - [MushafPageController], for selection state management
+/// - [MushafReaderController], for selection state management
 class PageAyahWidget extends StatefulWidget {
   /// The complete glyph text from which Ayah fragments are extracted.
   ///
@@ -72,8 +72,9 @@ class PageAyahWidget extends StatefulWidget {
 
   /// Callback invoked when an Ayah is tapped.
   ///
-  /// Receives the global Ayah ID (1-6236).
-  final Function(int ayahNumber) onAyahSelection;
+  /// Receives the global Ayah ID (1-6236). Required when [enableHighlight]
+  /// is `true`.
+  final void Function(int ayahNumber)? onAyahSelection;
 
   /// Callback invoked when an Ayah is long pressed.
   ///
@@ -97,7 +98,7 @@ class PageAyahWidget extends StatefulWidget {
     required this.style,
     this.enableHighlight = true,
     required this.activeStyle,
-    required this.onAyahSelection,
+    this.onAyahSelection,
     this.onAyahLongPress,
     this.selectedAyahId,
     this.removeNewLines = false,
@@ -213,7 +214,7 @@ class _PageAyahWidgetState extends State<PageAyahWidget> {
             ..onLongPressUp = () {
               // If long press wasn't triggered, treat this as a tap
               if (_longPressTriggered[ayahId] != true) {
-                widget.onAyahSelection(ayahId);
+                widget.onAyahSelection?.call(ayahId);
               }
             }
             ..onLongPressCancel = () {
@@ -227,7 +228,7 @@ class _PageAyahWidgetState extends State<PageAyahWidget> {
             frag.ayahId,
             () => TapGestureRecognizer(),
           );
-          tapRecognizer.onTap = () => widget.onAyahSelection(frag.ayahId);
+          tapRecognizer.onTap = () => widget.onAyahSelection?.call(frag.ayahId);
           recognizer = tapRecognizer;
         }
       }

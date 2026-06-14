@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/date_extensions.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
@@ -21,15 +24,31 @@ typedef _TrendCacheKey = (PrayerAnalyticsPeriod, int rangeEndDayKey);
 ///
 /// Rebuilds when completions or the selected analytics period change. Period
 /// selection is persisted via [prayerAnalyticsSettingsProvider].
-@riverpod
+@Riverpod(keepAlive: true)
 class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
   _TrendCacheKey? _cachedTrendKey;
   List<PrayerTrendBucket>? _cachedTrendBuckets;
 
   @override
   FutureOr<PrayerAnalysisSectionData> build() async {
-    final settings = ref.watch(prayerAnalyticsSettingsProvider);
-    final period = settings.value?.period ?? PrayerAnalyticsPeriod.weekly;
+    ref.listen(
+      prayerCompletionProvider,
+      (_, _) => unawaited(_refresh()),
+    );
+    ref.listen(
+      prayerCalendarDayKeyProvider,
+      (_, _) => unawaited(_refresh()),
+    );
+    ref.listen(
+      prayerAnalyticsSettingsProvider,
+      (previous, next) {
+        if (previous?.value?.period != next.value?.period) {
+          unawaited(_refresh());
+        }
+      },
+    );
+
+    final period = _selectedPeriod;
     try {
       return await _computeSection(period);
     } catch (e, stackTrace) {
@@ -44,9 +63,29 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     }
   }
 
-  /// Changes the analytics period and recomputes the section data.
-  void changePeriod(PrayerAnalyticsPeriod period) {
-    ref.read(prayerAnalyticsSettingsProvider.notifier).setPeriod(period);
+  PrayerAnalyticsPeriod get _selectedPeriod =>
+      ref.read(prayerAnalyticsSettingsProvider).value?.period ??
+      PrayerAnalyticsPeriod.weekly;
+
+  /// Recomputes section data in place without returning to [AsyncLoading].
+  Future<void> _refresh() async {
+    if (!ref.mounted) return;
+
+    final period = _selectedPeriod;
+    try {
+      final data = await _computeSection(period);
+      if (ref.mounted) {
+        state = AsyncData(data);
+      }
+    } catch (e, stackTrace) {
+      ref
+          .read(loggerProvider)
+          .e(
+            '[PrayerAnalysisSectionNotifier] Error refreshing analysis section',
+            error: e,
+            stackTrace: stackTrace,
+          );
+    }
   }
 
   Future<PrayerAnalysisSectionData> _computeSection(
@@ -56,8 +95,8 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       return PrayerAnalysisSectionData.empty(period);
     }
 
-    final calendarDayKey = ref.watch(prayerCalendarDayKeyProvider);
-    final completionsAsync = ref.watch(prayerCompletionProvider);
+    final calendarDayKey = ref.read(prayerCalendarDayKeyProvider);
+    final completionsAsync = ref.read(prayerCompletionProvider);
     final log = ref.read(loggerProvider);
     try {
       final service = ref.read(prayerServiceProvider);
@@ -75,11 +114,32 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
           .add(const Duration(days: 1))
           .subtract(const Duration(milliseconds: 1));
 
-      final todayCompletions =
-          completionsAsync.value ??
-          await service.getPrayerCompletionForDate(now);
-      final todayCounts = _countStatuses(todayCompletions);
+      // Always load real today — not the schedule's browsed day.
+      final todayCompletions = await service.getPrayerCompletionForDate(now);
+      final todayCounts = countDedupedStatuses(todayCompletions, location);
+      final todayPrayerStatuses = mapPrayerStatuses(
+        todayCompletions,
+        location,
+        todayStart,
+      );
       final performanceScore = _calculatePerformanceScore(todayCounts);
+
+      final streaks = await service.computeStreaks(location);
+      final periodCounts = await service.countAllStatusesOnPeriod(period, now);
+      final firstRecordedDate = await _resolveFirstRecordedDate(service);
+      final expectedPrayers =
+          PrayerAnalyticsCalculator.calculateExpectedPrayers(
+        period: period,
+        firstRecordedDate: firstRecordedDate,
+        now: now,
+      );
+      final periodAnalytics = PrayerAnalyticsCalculator.calculateAnalytics(
+        period: period,
+        statusCounts: periodCounts,
+        expectedPrayers: expectedPrayers,
+        currentStreak: streaks.current,
+        bestStreak: streaks.best,
+      );
 
       final rangeEndDayKey = todayEnd.year * 10000 +
           todayEnd.month * 100 +
@@ -99,23 +159,33 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
           rangeEnd: todayEnd,
         );
         _cachedTrendKey = trendKey;
-      } else if (completionsAsync.hasValue) {
-        final activeDate = _activeCompletionDate(
-          completionsAsync.value!,
-          location,
-        );
+      } else if (
+        completionsAsync.hasValue &&
+        period == PrayerAnalyticsPeriod.weekly
+      ) {
         _cachedTrendBuckets = _updateBucketForDate(
           buckets: _cachedTrendBuckets!,
-          date: activeDate,
-          completions: completionsAsync.value!,
+          date: todayStart,
+          completions: todayCompletions,
           location: location,
+        );
+      } else if (completionsAsync.hasValue) {
+        // Monthly/yearly buckets span multiple days — re-aggregate fully.
+        _cachedTrendBuckets = await _buildTrendBuckets(
+          period: period,
+          service: service,
+          location: location,
+          rangeStart: _rangeStart(period, todayStart),
+          rangeEnd: todayEnd,
         );
       }
 
       return PrayerAnalysisSectionData(
         period: period,
         todayStatusCounts: todayCounts,
+        todayPrayerStatuses: todayPrayerStatuses,
         todayPerformanceScore: performanceScore,
+        periodAnalytics: periodAnalytics,
         trendBuckets: _cachedTrendBuckets ?? const [],
       );
     } catch (e, stackTrace) {
@@ -126,18 +196,6 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       );
       return PrayerAnalysisSectionData.empty(period);
     }
-  }
-
-  DateTime _activeCompletionDate(
-    List<PrayerCompletion> completions,
-    Location location,
-  ) {
-    if (completions.isEmpty) {
-      final now = TZDateTime.now(location);
-      return DateTime(now.year, now.month, now.day);
-    }
-    final local = completions.first.completionTime.toLocation(location);
-    return DateTime(local.year, local.month, local.day);
   }
 
   List<PrayerTrendBucket> _updateBucketForDate({
@@ -152,7 +210,12 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     if (bucketIndex == -1) return buckets;
 
     final bucket = buckets[bucketIndex];
-    final counts = _countStatuses(completions);
+    final dayCompletions = completions
+        .where(
+          (c) => c.completionTime.isSameCalendarDay(date, location),
+        )
+        .toList();
+    final counts = countDedupedStatuses(dayCompletions, location);
     final updated = [...buckets];
     updated[bucketIndex] = PrayerTrendBucket(
       start: bucket.start,
@@ -161,16 +224,6 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       prayer: bucket.prayer,
     );
     return updated;
-  }
-
-  Map<CompletionStatus, int> _countStatuses(
-    List<PrayerCompletion> completions,
-  ) {
-    final counts = _emptyCounts();
-    for (final completion in completions) {
-      counts[completion.status] = (counts[completion.status] ?? 0) + 1;
-    }
-    return counts;
   }
 
   /// Calculates a weighted performance score from 0.0 to 1.0.
@@ -187,18 +240,10 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
   }
 
   DateTime _rangeStart(PrayerAnalyticsPeriod period, DateTime todayStart) {
-    return switch (period) {
-      PrayerAnalyticsPeriod.weekly => todayStart.subtract(
-        const Duration(days: 6),
-      ),
-      PrayerAnalyticsPeriod.monthly => todayStart.subtract(
-        const Duration(days: 29),
-      ),
-      PrayerAnalyticsPeriod.yearly => DateTime(
-        todayStart.year,
-        todayStart.month - 11,
-      ),
-    };
+    return PrayerAnalyticsCalculator.periodCalendarRange(
+      period,
+      todayStart,
+    ).start;
   }
 
   Future<List<PrayerTrendBucket>> _buildTrendBuckets({
@@ -215,17 +260,18 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
 
     final buckets = _initializeBuckets(period, rangeStart, rangeEnd);
 
-    for (final completion in completions) {
-      final localTime = completion.completionTime.toLocation(location);
-      final bucketIndex = buckets.indexWhere(
-        (b) => localTime.isBetween(b.start, b.end),
-      );
-      if (bucketIndex == -1) continue;
-
-      final bucket = buckets[bucketIndex];
-      final counts = Map<CompletionStatus, int>.from(bucket.statusCounts);
-      counts[completion.status] = (counts[completion.status] ?? 0) + 1;
-      buckets[bucketIndex] = PrayerTrendBucket(
+    for (var i = 0; i < buckets.length; i++) {
+      final bucket = buckets[i];
+      final bucketCompletions = completions
+          .where(
+            (c) => completionCalendarDay(
+              c.completionTime,
+              location,
+            ).isBetween(bucket.start, bucket.end),
+          )
+          .toList();
+      final counts = countDedupedStatuses(bucketCompletions, location);
+      buckets[i] = PrayerTrendBucket(
         start: bucket.start,
         end: bucket.end,
         statusCounts: counts,
@@ -242,7 +288,6 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     DateTime rangeEnd,
   ) {
     final buckets = <PrayerTrendBucket>[];
-    final emptyCounts = _emptyCounts();
 
     switch (period) {
       case PrayerAnalyticsPeriod.weekly:
@@ -255,7 +300,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
             PrayerTrendBucket(
               start: dayStart,
               end: dayEnd,
-              statusCounts: emptyCounts,
+              statusCounts: _emptyCounts(),
             ),
           );
         }
@@ -273,7 +318,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
             PrayerTrendBucket(
               start: cursor,
               end: bucketEnd,
-              statusCounts: emptyCounts,
+              statusCounts: _emptyCounts(),
             ),
           );
           cursor = bucketEnd.add(const Duration(milliseconds: 1));
@@ -292,7 +337,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
             PrayerTrendBucket(
               start: monthStart,
               end: monthEnd,
-              statusCounts: emptyCounts,
+              statusCounts: _emptyCounts(),
             ),
           );
         }
@@ -305,5 +350,19 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     return {
       for (final status in CompletionStatus.values) status: 0,
     };
+  }
+
+  /// Uses persisted first-recorded date, or backfills from the earliest
+  /// completion for users who logged prayers before that setting existed.
+  Future<DateTime?> _resolveFirstRecordedDate(PrayerService service) async {
+    final persisted = ref.read(firstPrayerRecordedDateTimeProvider);
+    if (persisted != null) return persisted;
+
+    final earliest = await service.getEarliestCompletionTime();
+    if (earliest == null) return null;
+
+    final normalized = DateTime(earliest.year, earliest.month, earliest.day);
+    ref.read(firstPrayerRecordedDateProvider.notifier).setIfNull(normalized);
+    return normalized;
   }
 }

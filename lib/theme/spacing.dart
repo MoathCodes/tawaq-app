@@ -1,16 +1,15 @@
 /// Semantic spacing tokens for consistent spacing throughout the app.
 ///
-/// Use these values with `context.edgeInsets()`, `context.verticalSpace()`,
-/// and `context.horizontalSpace()` from flutter_screenutil_plus.
+/// Use with [EdgeInsets], [SizedBox], or Forui widget padding.
 ///
 /// Example:
 /// ```dart
 /// Padding(
-///   padding: context.edgeInsets(all: AppSpacing.lg),
+///   padding: const EdgeInsets.all(AppSpacing.lg),
 ///   child: Column(
 ///     children: [
 ///       Text('Hello'),
-///       context.verticalSpace(AppSpacing.md),
+///       SizedBox(height: AppSpacing.md),
 ///       Text('World'),
 ///     ],
 ///   ),
@@ -18,10 +17,14 @@
 /// ```
 library;
 
+import 'package:flutter/cupertino.dart' show EdgeInsets, SizedBox;
+import 'package:flutter/material.dart' show EdgeInsets, SizedBox;
+import 'package:flutter/widgets.dart' show EdgeInsets, SizedBox;
+
 /// Spacing tokens for the application.
 ///
-/// These are raw double values intended to be used with flutter_screenutil_plus
-/// context extensions which handle responsive scaling automatically.
+/// Fixed logical-pixel values; responsive layout uses Forui breakpoints
+/// (`lib/core/layout/responsive.dart`) rather than scaled spacing.
 abstract final class AppSpacing {
   /// Extra small spacing: 4.0
   static const double xs = 4;

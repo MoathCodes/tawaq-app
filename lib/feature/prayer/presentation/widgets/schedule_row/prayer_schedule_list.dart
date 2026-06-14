@@ -1,20 +1,17 @@
-import 'dart:async';
-
-import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
+import 'package:tawaq/core/utils/hijri_format.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/schedule_prayer_row.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/sunnah_times_card.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Today's prayer schedule with expandable status selectors.
+/// Today's prayer schedule with inline status selectors.
 /// Users can navigate back up to a week to view and edit prayer statuses.
 class PrayerScheduleList extends HookConsumerWidget {
   /// Creates a [PrayerScheduleList] instance.
@@ -25,32 +22,12 @@ class PrayerScheduleList extends HookConsumerWidget {
     final theme = FTheme.of(context);
     final l10n = context.l10n;
     final now = ref.watch(currentLocationTimeProvider);
-    final dateFormat = DateFormat.yMMMd(l10n.localeName);
-
-    // Track the selected date (defaults to today) - this is the source of truth
     final selectedDate = useState<DateTime>(now);
 
     final scheduleRows = ref.watch(
       prayerScheduleProvider(l10n, selectedDate.value),
     );
 
-    // State to track the currently expanded prayer
-    final expandedPrayer = useState<Prayer?>(null);
-
-    final currentPrayer = ref.watch(scheduleCurrentPrayerProvider);
-
-    // Expand the active prayer row once when it becomes available.
-    useEffect(
-      () {
-        if (currentPrayer != null && expandedPrayer.value == null) {
-          expandedPrayer.value = currentPrayer;
-        }
-        return null;
-      },
-      [currentPrayer],
-    );
-
-    // Determine if selected date is today
     final isToday =
         selectedDate.value.year == now.year &&
         selectedDate.value.month == now.month &&
@@ -59,91 +36,165 @@ class PrayerScheduleList extends HookConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header with date navigation
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final stackHeader =
+                  constraints.maxWidth < context.theme.breakpoints.md;
+
+              final titleColumn = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      isToday
+                          ? l10n.todaysSchedule
+                          : HijriFormat.formatDate(
+                              selectedDate.value,
+                              l10n.localeName,
+                            ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.typography.lg.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  ExcludeSemantics(
+                    child: Text(
+                      l10n.logPrayerStatus,
+                      style: theme.typography.sm.copyWith(
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+
+              final calendar = FLineCalendar(
+                control: FLineCalendarControl.lifted(
+                  date: selectedDate.value,
+                  onChange: (value) {
+                    if (value == null) return;
+                    selectedDate.value = value;
+                  },
+                ),
+                scrollControl: FLineCalendarScrollControl.managed(
+                  start: now.subtract(const Duration(days: 6)),
+                  end: now,
+                ),
+                builder: (context, data, _) => _HijriLineCalendarItem(
+                  data: data,
+                  languageCode: l10n.localeName,
+                ),
+              );
+
+              if (stackHeader) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: AppSpacing.md,
                   children: [
-                    Semantics(
-                      header: true,
-                      child: Text(
-                        isToday
-                            ? l10n.todaysSchedule
-                            : dateFormat.format(selectedDate.value),
-                        style: theme.typography.lg.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    ExcludeSemantics(
-                      child: Text(
-                        l10n.selectPrayerToLog,
-                        style: theme.typography.sm.copyWith(
-                          color: theme.colors.mutedForeground,
-                        ),
-                      ),
-                    ),
+                    titleColumn,
+                    calendar,
                   ],
-                ),
-              ),
-              // Week date selector - uses lifted control pattern
-              Expanded(
-                flex: 3,
-                child: FLineCalendar(
-                  control: FLineCalendarControl.lifted(
-                    date: selectedDate.value,
-                    onChange: (value) {
-                      if (value == null) return;
-                      unawaited(
-                        Future<void>(() async {
-                          await ref
-                              .read(prayerCompletionProvider.notifier)
-                              .setDate(value);
-                          selectedDate.value = value;
-                        }),
-                      );
-                    },
-                  ),
-                  scrollControl: FLineCalendarScrollControl.managed(
-                    start: now.subtract(const Duration(days: 6)),
-                    end: now,
-                  ),
-                ),
-              ),
-            ],
+                );
+              }
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(child: titleColumn),
+                  Expanded(child: calendar),
+                ],
+              );
+            },
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        // Prayer rows with smooth animation on date change
+        const SunnahTimesCard(),
+        const SizedBox(height: AppSpacing.lg),
         Column(
           key: ValueKey(selectedDate.value),
+          spacing: AppSpacing.md,
           children: scheduleRows
               .map(
-                (row) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                  child: SchedulePrayerRow(
-                    row: row,
-                    isToday: isToday,
-                    isExpanded: expandedPrayer.value == row.prayer,
-                    onToggle: () {
-                      if (expandedPrayer.value == row.prayer) {
-                        expandedPrayer.value = null;
-                      } else {
-                        expandedPrayer.value = row.prayer;
-                      }
-                    },
-                  ),
+                (row) => SchedulePrayerRow(
+                  row: row,
+                  isToday: isToday,
                 ),
               )
               .toList(),
         ).animate().fadeIn(duration: 200.ms),
       ],
+    );
+  }
+}
+
+class _HijriLineCalendarItem extends StatelessWidget {
+  const _HijriLineCalendarItem({
+    required this.data,
+    required this.languageCode,
+  });
+
+  final FLineCalendarItemData data;
+  final String languageCode;
+
+  @override
+  Widget build(BuildContext context) {
+    final weekday = HijriFormat.shortWeekday(data.date, languageCode);
+    final day = HijriFormat.dayOfMonth(data.date, languageCode);
+    final semanticsLabel = HijriFormat.accessibilityLabel(
+      data.date,
+      languageCode,
+    );
+
+    return Semantics(
+      label: semanticsLabel,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: data.style.decoration.resolve(data.variants),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: data.style.contentEdgeSpacing,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: data.style.contentSpacing,
+                  children: [
+                    DefaultTextStyle.merge(
+                      style: data.style.weekdayTextStyle.resolve(data.variants),
+                      child: Text(weekday),
+                    ),
+                    DefaultTextStyle.merge(
+                      style: data.style.dateTextStyle.resolve(data.variants),
+                      child: Text(day),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (data.variants.contains(FLineCalendarItemVariant.today))
+            Positioned(
+              top: 6,
+              right: 6,
+              child: Container(
+                height: 4,
+                width: 4,
+                decoration: BoxDecoration(
+                  color: data.style.todayIndicatorColor.resolve(data.variants),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

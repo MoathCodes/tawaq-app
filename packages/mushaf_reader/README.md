@@ -1,37 +1,57 @@
+
+
 # mushaf_reader
 
-A Flutter package for rendering Quran pages using QCF4 (Quran Complex Fonts v4) with pixel-perfect Medina Mushaf layout.
+A **minimal Flutter building block** for rendering the Madinah Mushaf using [QCF4](https://qurancomplex.gov.sa/) page fonts. Compose your own reader UI, navigation, settings, and app shell on top.
 
-## What This Package Does
+## What it is
 
-Renders Quran text exactly as it appears in the printed Medina Mushaf using 605 specialized fonts:
-- **604 page fonts** (QCF4_001 to QCF4_604): Each page has its own font with pre-positioned glyphs
-- **1 shared font** (QCF4_BSML): Contains Bismillah, Surah names, and Juz markers
+- Authentic Medina Mushaf layout via 604 page-specific QCF4 fonts plus shared header glyphs
+- Bundled Quran data (ayahs, surahs, juzs, page layouts) — no network required
+- Composable widgets: full-page reader, single page, standalone ayah, decorative pieces
+- Optional `[MushafReaderController](https://pub.dev/documentation/mushaf_reader/latest/mushaf_reader/MushafReaderController-class.html)` for page navigation, ayah selection, and data access
+- `[MushafStyle.modify()](https://pub.dev/documentation/mushaf_reader/latest/mushaf_reader/MushafStyle/MushafStyle.modify.html)` for colors, text styles, and responsive scaling — not a design system
 
-The package includes pre-populated Hive boxes with all Quran data, page layouts, and glyph mappings.
+## What it is not
 
-## Requirements
+This package intentionally does **not** include:
 
-- Flutter SDK ≥3.8.1
-- Dart SDK ≥3.8.1
-- The 605 QCF4 OTF font files in `assets/otf_fonts/`
-- The pre-populated Hive boxes in `assets/hive/`
+- A complete Quran app (no app bar, tabs, bookmarks, or onboarding)
+- Audio recitation, tafsir, translations, or search UI
+- Opinionated theming beyond basic Mushaf styling
+- Global state management — bring Riverpod, Bloc, or your own patterns
+- Loading spinners — pass your own `loadingWidget` if you want one
+
+If you need a full app experience, use this package as the rendering layer and build everything else yourself.
+
+## Features
+
+
+| Area                 | Included                                                                       |
+| -------------------- | ------------------------------------------------------------------------------ |
+| Page rendering       | `MushafPage`, `MushafPageRange`, `MushafReader` (`pagesPerViewport: 1` or `2`) |
+| Ayah tap / highlight | Per-ayah selection with customizable highlight styles                          |
+| Page chrome          | Surah headers, Basmalah, juz marker, page number                               |
+| Data models          | `Ayah`, `Surah`, `Juz`, `QuranPage`, `MushafPageInfo`                          |
+| Navigation API       | `jumpToPage`, `jumpToSurah`, `jumpToJuz`, `jumpToAyah`, `searchAyahs`          |
+| Constants & helpers  | `MushafConstants`, `Ayah.globalIdFor()`, `AyahIdResolver`                      |
+| Callback typedefs    | `AyahTapCallback`, `AyahIdTapCallback`, `SurahTapCallback`, …                  |
+| Fonts & scaling      | `MushafFonts`, `MushafScale`, `MushafTextStyleMerger`                          |
+
 
 ## Installation
 
-Add to your `pubspec.yaml`:
+From your Flutter project root:
 
-```yaml
-dependencies:
-  mushaf_reader:
-    path: packages/mushaf_reader  # or your path
+```bash
+flutter pub add mushaf_reader
 ```
 
-## Setup
+This adds the latest compatible version to `pubspec.yaml` and resolves dependencies. QCF4 fonts, SVG chrome, and Hive Quran data are bundled in the package — no manual asset wiring.
 
-### 1. Initialize the Library
+## Initialization
 
-Call once at app startup in `main()` before `runApp`:
+Call once before `runApp`:
 
 ```dart
 import 'package:flutter/material.dart';
@@ -40,14 +60,30 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MushafReaderLibrary.ensureInitialized();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 ```
 
-### 2. Use the Reader Widget
+Optional: isolate Hive data under a subdirectory of the app documents folder:
+
+```dart
+await MushafReaderLibrary.ensureInitialized(subDirectory: 'my_app');
+```
+
+After updating `mushaf_reader`, run a **full rebuild** (not hot restart) so new Hive assets such as `search_index.hive` are bundled. Hot restart does not pick up new package assets.
+
+```bash
+flutter clean && flutter pub get && flutter run
+```
+
+## Minimal usage
+
+Drop in a swipeable reader with ayah tap handling:
 
 ```dart
 class QuranScreen extends StatefulWidget {
+  const QuranScreen({super.key});
+
   @override
   State<QuranScreen> createState() => _QuranScreenState();
 }
@@ -71,184 +107,237 @@ class _QuranScreenState extends State<QuranScreen> {
   Widget build(BuildContext context) {
     return MushafReader(
       controller: _controller,
-      onAyahTap: (ayah) => print('Tapped ${ayah.reference}'),
+      onAyahTap: (ayah) => debugPrint(ayah.reference),
     );
   }
 }
 ```
 
-### 3. Display a Single Page
+Render a single page inside your own layout:
 
 ```dart
 MushafPage(
-  page: 1,  // 1-604
-  onTapAyah: (int ayahId) {
-    print('Tapped ayah $ayahId');
+  page: 1,
+  onAyahIdTap: (ayahId) => debugPrint('ayah $ayahId'),
+)
+```
+
+## Ayah range
+
+Render a subset of ayahs on one page or across pages — without manually
+filtering fragments or wiring basmalah rules. Wrap with your own card chrome,
+footers, or image capture as needed.
+
+```dart
+// Single-page range
+MushafPageRange.onPage(
+  page: 1,
+  startAyahId: 1,
+  endAyahId: 3,
+  style: MushafStyle.modify(
+    ayah: (s) => s.copyWith(color: const Color(0xFF1B4332)),
+  ),
+  showSurahHeader: true,
+  showBasmalah: true,
+)
+
+// Cross-page contiguous range
+MushafPageRange.contiguous(
+  startAyahId: 5,
+  endAyahId: 12,
+  controller: controller,
+)
+```
+
+Use `[MushafPageRangeLayout](https://pub.dev/documentation/mushaf_reader/latest/mushaf_reader/MushafPageRangeLayout-class.html)` to check whether basmalah or surah headers *could* appear for a selection before enabling host toggles.
+
+## Callbacks
+
+Reader widgets and `MushafPage` use different callback shapes on purpose:
+
+
+| Widget         | Callback      | Receives                                         |
+| -------------- | ------------- | ------------------------------------------------ |
+| `MushafReader` | `onAyahTap`   | Full `Ayah` model                                |
+| `MushafPage`   | `onAyahIdTap` | Global ayah id (`1`–`MushafConstants.ayahCount`) |
+
+
+Resolve an id to a model via the controller or repository:
+
+```dart
+MushafPage(
+  page: 1,
+  onAyahIdTap: (ayahId) async {
+    final ayah = await controller.getAyah(ayahId);
+    debugPrint(ayah.reference);
   },
 )
 ```
 
-### 4. Fetch Individual Ayahs
+## Two-page spread
 
 ```dart
-final controller = MushafReaderController();
-
-final ayah = await controller.getAyah(ayahId);
-print('Surah ${ayah.surahNumber}, Ayah ${ayah.numberInSurah}');
-print('Text: ${ayah.text}');
+MushafReader(
+  pagesPerViewport: 2,
+  onAyahTap: (ayah) => debugPrint(ayah.reference),
+  onSpreadChanged: (info) => debugPrint(info.$1.pageNumber),
+)
 ```
 
-## Architecture
+## Constants & ayah ids
 
-```
-lib/src/
-├── core/
-│   ├── fonts.dart          # MushafFonts - font family helpers
-│   ├── extensions.dart     # Model conversions, Hindu-Arabic numerals
-├── data/
-│   ├── hive/               # Hive storage implementation
-│   ├── models/             # Immutable data models (Freezed)
-│   └── repository/         # Data access layer with LRU caching
-├── logic/
-│   └── mushaf_reader_controller.dart  # Unified controller
-└── presentation/
-    ├── screens/            # MushafPage, MushafReader widgets
-    └── widgets/            # Ayah, Basmalah, Juz, SurahHeader, etc.
-```
-
-## Database Schema
-
-The Hive boxes contain:
-
-- `surahs`: 114 entries (id, name, glyph, etc.)
-- `ayahs`: 6236 entries (id, surah, number, text, page, juz)
-- `juzs`: 30 entries (number, glyph)
-- `pageLayouts`: Glyph positioning data per page
-- `metadata`: Key-value pairs
-
-## Key Classes
-
-### MushafReaderController
-Unified controller for navigation, state, and data access. Provides:
-- `jumpToPage(int)`, `nextPage()`, `previousPage()`
-- `jumpToSurah(int)`, `jumpToJuz(int)`
-- `selectAyah(int)` - Highlight specific ayah
-- `getPageInfo(int)` - Returns `MushafPageInfo`
-
-### QuranPage
-Contains everything needed to render a page:
-- `pageNumber`, `glyphText` (the full page glyph string)
-- `surahs` - List of Surah blocks on this page
-- `lines` - Line layout information
-- `juzNumber` - Juz info
-
-### MushafPage
-The main rendering widget. Handles:
-- Responsive scaling
-- Per-ayah tap detection and highlighting
-- Surah headers, Juz markers, Basmalah
-
-### MushafFonts
-Font helpers:
-```dart
-MushafFonts.forPage(15)       // Returns 'QCF4_015'
-MushafFonts.pageStyle(family) // TextStyle for page content
-MushafFonts.basmalahStyle     // TextStyle for headers
-```
-
-## Platform Support
-
-| Platform | Database Loading |
-|----------|------------------|
-| iOS, Android, macOS, Windows, Linux | Copies from assets to documents directory |
-| Web | Supported via Hive |
-
-## Customization
-
-### Responsive Scaling
-
-The Mushaf automatically scales to fit the available space. Use `MushafScale` to control scaling behavior:
+Use `[MushafConstants](https://pub.dev/documentation/mushaf_reader/latest/mushaf_reader/MushafConstants-class.html)` instead of magic numbers:
 
 ```dart
-MushafPage(
-  page: 1,
-  style: MushafStyle(
-    // Auto-scale with constraints
-    scale: MushafScale(
-      minScale: 0.6,  // Don't shrink below 60%
-      maxScale: 1.5,  // Don't grow above 150%
+PageView.builder(
+  itemCount: MushafConstants.pageCount,
+  itemBuilder: (_, index) => MushafPage(page: index + 1),
+);
+```
+
+Convert surah + verse to a global id without I/O:
+
+```dart
+final id = Ayah.globalIdFor(surah: 2, ayahInSurah: 255); // 262
+```
+
+When you already have surah metadata from storage, `[AyahIdResolver](https://pub.dev/documentation/mushaf_reader/latest/mushaf_reader/AyahIdResolver-class.html)` offers the same mapping with custom start tables.
+
+## Key widgets & controller
+
+
+| API                                         | Role                                                                                                                       |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `MushafReader`                              | Swipeable reader; `pagesPerViewport: 1` (default) or `2` for spreads                                                       |
+| `MushafPage`                                | One Mushaf page — use in custom layouts                                                                                    |
+| `MushafPageRange`                           | Ayah range on one or more pages — excerpts without manual fragment logic                                                   |
+| `MushafReaderController`                    | Navigation, selection, async data (`getAyah`, `getPageInfo`, `searchAyahs`, …); exposes `repository` for direct `IQuranRepository` access |
+| `AyahWidget`                                | Standalone ayah by global id or surah:ayah                                                                                 |
+| `BasmalahWidget`, `SurahHeaderWidget`, etc. | Low-level pieces for custom UIs                                                                                            |
+
+
+### Ayah search
+
+`searchAyahs` reads from a pre-built `search_index.hive` asset. The search box opens on first use (~842 KB RAM); readers that never search pay zero extra memory. Call `warmUpSearchIndex()` when opening search UI to hide open latency on the first query:
+
+```dart
+await controller.warmUpSearchIndex();
+final results = await controller.searchAyahs('الله');
+```
+
+Same method exists on `IQuranRepository` if you use the repository directly.
+
+## Customization hooks
+
+**Styling** — modifier-only setup with `[MushafStyle.modify()](https://pub.dev/documentation/mushaf_reader/latest/mushaf_reader/MushafStyle/MushafStyle.modify.html)`:
+
+```dart
+MushafReader(
+  style: MushafStyle.modify(
+    ayah: (s) => s.copyWith(color: const Color(0xFF1B4332)),
+    activeAyah: (s) => s.copyWith(
+      backgroundColor: const Color(0xFF2D6A4F),
+      color: Colors.white,
     ),
+    scale: MushafScale(readingBoost: 1.08, minScale: 0.6, maxScale: 1.5),
   ),
 )
 ```
 
-#### Fixed Scale Factor
-
-Disable auto-scaling with a fixed multiplier:
+Chain more tweaks with `.modify(...)`:
 
 ```dart
-MushafScale(factor: 1.2)  // Always 20% larger than default
+final style = MushafStyle.modify(
+  ayah: (s) => s.copyWith(color: Colors.brown),
+).modify(
+  activeAyah: (s) => s.copyWith(backgroundColor: Colors.amber),
+  scale: MushafScale(readingBoost: 1.08),
+);
 ```
 
-#### Reading comfort boost
+Use the `MushafStyle(...)` constructor when you need explicit `TextStyle` bases. Legacy `*StyleModifier` constructor params remain supported.
 
-After the page fits the viewport, apply a user preference multiplier:
+**Surah header banners** — light and dark precompiled SVGs (`.svg.vec`) are bundled. Override per theme:
 
 ```dart
-MushafScale(
-  readingBoost: 1.08, // ~8% larger when the page has room
+MushafStyle(
+  surahHeaderImage: 'assets/images/my_light_header.svg.vec',
+  surahHeaderImageDark: 'assets/images/my_dark_header.svg.vec',
+  headerSurahNameStyleModifier: (s) => s.copyWith(color: Colors.white),
 )
 ```
 
-Font sizes stay on real `TextStyle.fontSize` values (snapped to device pixels)
-for crisp QCF rendering. Dense pages automatically shrink to avoid overflow.
+When `isDark` is not set on `SurahHeaderWidget` / `MushafPageRange`, the banner follows `Theme.of(context).brightness`. Style the surah name on the banner with `headerSurahName` (or `surahName`) so ink contrasts with your banner asset.
 
-#### Fixed Font Sizes
+Custom banner overrides support precompiled `.svg.vec` (recommended), raw `.svg` (runtime parse), or raster (`.png`, etc.). To precompile SVGs offline (same workflow as this package):
 
-For precise control, specify exact font sizes (disables auto-fit boost):
+```bash
+dart run vector_graphics_compiler -i my_banner.svg -o assets/my_banner.svg.vec \
+  --no-optimize-masks --no-optimize-clips --no-optimize-overdraw
+```
+
+Sources for the default banners live in `tool/svg/`; regenerate shipped assets with `tool/compile_surah_headers.sh`.
+
+Raster overrides use `Image.asset` with decode-size hints.
+
+**Loading** — the package defaults to no spinner (`MushafLoading.none`). Pass your own:
 
 ```dart
-MushafScale(
-  ayahFontSize: 24,        // Ayah text
-  basmalahFontSize: 18,    // Basmalah, Surah names, Juz labels
-  pageNumberFontSize: 16,  // Page numbers
+MushafReader(
+  loadingWidget: const CircularProgressIndicator(),
+  pageLoadingWidget: const CircularProgressIndicator(),
 )
 ```
 
-When using modifiers, `fontSize` in `ayahStyleModifier` is treated as a
-**maximum** cap, not a fixed override.
-
-### Custom Styling
+**Read-only mushaf** — disable ayah interaction:
 
 ```dart
-MushafPage(
-  page: 1,
-  style: MushafStyle(
-    highlightColor: Colors.amber.withOpacity(0.3),
-    backgroundColor: Color(0xFFFFFBF0),  // Cream background
-    activeAyahStyle: TextStyle(
-      color: Colors.brown,
-      backgroundColor: Colors.amber.withOpacity(0.3),
-    ),
-  ),
-)
+MushafPage(page: 1, enableAyahHighlight: false)
 ```
 
-## Dependencies
+**RTL** — `MushafReader` defaults to `TextDirection.rtl`. Wrap your app or override `textDirection` as needed.
 
-- `hive_ce` + `hive_ce_flutter` - Data storage
-- `freezed_annotation` - Immutable models
-- `flutter_svg` - Surah header banners
-- `path_provider` - Native file paths
+## Example app
 
-## Font Files
+See `[example/](example/)` for a demo catalog (`MushafReader`, two-page spread, `MushafPage`, `MushafPageRange`, standalone widgets). From the package root:
 
-The package expects 605 OTF files in `assets/otf_fonts/`:
-- `QCF4_001.otf` through `QCF4_604.otf`
-- `QCF4_BSML.otf`
+```bash
+cd example && flutter pub get && flutter run
+```
 
-These must be declared in your app's `pubspec.yaml` or bundled with the package.
+## API documentation
 
-## Why Page-Specific Fonts?
+- [pub.dev API reference](https://pub.dev/documentation/mushaf_reader/latest/)
+- Generate locally: `dart doc .`
 
-Standard Unicode text rendering cannot replicate the precise glyph positioning of the Medina Mushaf. Each page font contains glyphs positioned exactly as they appear in the printed edition. The "text" stored in the database is actually a sequence of glyph codes that map to specific positions in each page's font.
+## Bundled assets
+
+Shipped with the package (declared in `pubspec.yaml`):
+
+
+| Asset               | Purpose                                                  |
+| ------------------- | -------------------------------------------------------- |
+| `assets/otf_fonts/` | 604 page-specific QCF4 fonts plus shared header glyphs   |
+| `assets/hive/`      | Offline Quran text, surah/juz metadata, and page layouts |
+| `assets/images/`    | Surah header and banner SVGs                             |
+
+
+Runtime data comes from Hive boxes copied on first launch — not from JSON at runtime. Source JSON under `assets/jsons/` is kept in the repo for maintainers only and is excluded from pub publishes.
+
+The package is large (~600 font files). Plan for app size accordingly.
+
+## Acknowledgments
+
+Incredible resources that informed the design and implementation of this library:
+
+- [Wahy](https://main.wahy.net/en/)
+- [quran_library](https://pub.dev/packages/quran_library)
+
+## Third-party assets
+
+- **QCF4 fonts** — proprietary freeware from the [King Fahd Complex for the Printing of the Holy Quran](https://qurancomplex.gov.sa/). Free to use in applications; **not** covered by the MIT license. Redistribution and modification of the font files are subject to the Complex's terms.
+
+## License
+
+- **Package source code** — [MIT License](LICENSE)
+- **QCF4 font files** — proprietary freeware; see [Third-party assets](#third-party-assets) and the notice at the end of [LICENSE](LICENSE)

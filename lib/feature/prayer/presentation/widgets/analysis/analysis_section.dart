@@ -9,7 +9,6 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/daily_achievement_card.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/trend_analysis_card.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Analysis section containing daily achievement and trends cards.
@@ -23,15 +22,23 @@ class AnalysisSection extends ConsumerWidget {
 
     return analysisState.when(
       data: (data) => _AnalysisContent(data: data),
-      loading: () => Semantics(
-        label: context.l10n.loadingAnalytics,
-        child: FSkeletonizer(
-          child: _AnalysisContent(
-            data: PrayerAnalysisSectionData.empty(PrayerAnalyticsPeriod.weekly),
-            showSkeleton: true,
+      loading: () {
+        final previous = analysisState.asData?.value;
+        if (previous != null) {
+          return _AnalysisContent(data: previous);
+        }
+        return Semantics(
+          label: context.l10n.loadingAnalytics,
+          child: FSkeletonizer(
+            child: _AnalysisContent(
+              data: PrayerAnalysisSectionData.empty(
+                PrayerAnalyticsPeriod.weekly,
+              ),
+              showSkeleton: true,
+            ),
           ),
-        ),
-      ),
+        );
+      },
       error: (e, _) => StaticCard(
         child: FAlert(
           title: Text(
@@ -44,7 +51,7 @@ class AnalysisSection extends ConsumerWidget {
   }
 }
 
-class _AnalysisContent extends ConsumerWidget {
+class _AnalysisContent extends StatelessWidget {
   const _AnalysisContent({
     required this.data,
     this.showSkeleton = false,
@@ -54,27 +61,39 @@ class _AnalysisContent extends ConsumerWidget {
   final bool showSkeleton;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selectedPeriod = ref.watch(
-      prayerAnalyticsSettingsProvider.select(
-        (value) => value.value?.period ?? PrayerAnalyticsPeriod.weekly,
-      ),
-    );
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final sideBySide =
+            constraints.maxWidth >= context.theme.breakpoints.md;
 
-    return Column(
-      children: [
-        DailyAchievementCard(data: data),
-        const SizedBox(height: AppSpacing.md),
-        TrendAnalysisCard(
-          data: data,
-          onPeriodChanged: showSkeleton
-              ? (_) {}
-              : (period) => ref
-                    .read(prayerAnalyticsSettingsProvider.notifier)
-                    .setPeriod(period),
-          selectedPeriod: selectedPeriod,
-        ),
-      ],
+        if (sideBySide) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: AppSpacing.md,
+            children: [
+              Expanded(child: DailyAchievementCard(data: data)),
+              Expanded(
+                child: TrendAnalysisCard(
+                  data: data,
+                  enabled: !showSkeleton,
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Column(
+          spacing: AppSpacing.md,
+          children: [
+            DailyAchievementCard(data: data),
+            TrendAnalysisCard(
+              data: data,
+              enabled: !showSkeleton,
+            ),
+          ],
+        );
+      },
     );
   }
 }

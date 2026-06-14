@@ -408,6 +408,14 @@
   "fortressRecommendedNow": "موصى به الآن",
   "fortressNoRecommendations": "لا توجد توصيات متاحة حالياً",
   "fortressNoFavoriteChapters": "لا توجد أبواب مفضلة بعد — أضف إشارة مرجعية من القائمة الجانبية",
+  "fortressMoreFavoriteChapters": "{count, plural, =1 {إضافةً إلى باب آخر…} other {إضافةً إلى {count} أبواب أخرى…}}",
+  "@fortressMoreFavoriteChapters": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "fortressReadShort": "قراءة قصيرة",
   "fortressReadMedium": "قراءة متوسط",
   "fortressReadLong": "قراءة مطولة",
@@ -485,7 +493,6 @@
   "searchPlaceLabel": "البحث عن موقع",
   "searchQuran": "ابحث في القرآن...",
   "selectAyahToSeeContent": "اختر آية لعرض المحتوى.",
-  "selectPrayerToLog": "اختر صلاة لتسجيل الحالة",
   "selectVerseToAddReflection": "يرجى اختيار آية لإضافة تأمل",
   "settings": "الإعدادات",
   "setupPrayerSettingsSubtitle": "سنرشدك عبر خطوات سريعة. يمكنك تغيير هذه لاحقًا من الإعدادات.",
@@ -496,7 +503,8 @@
   "skip": "تخطي",
   "shareAppName": "اسم التطبيق",
   "shareBasmalah": "البسملة",
-  "shareByApp": "بواسطة\n{appName}",
+  "shareAttributionPrefix": "بإستخدام",
+  "shareByApp": "بإستخدام {appName}",
   "@shareByApp": {
     "placeholders": {
       "appName": {
@@ -576,6 +584,7 @@
     }
   },
   "shareSaveImage": "حفظ الصورة",
+  "sharePreserveLineBreaks": "فواصل أسطر المصحف",
   "shareSurahHeader": "رأس السورة",
   "shareVerseCount": "{count, plural, =1{آية واحدة} =2{آيتان} few{{count} آيات} many{{count} آية} other{{count} آية}}",
   "@shareVerseCount": {
@@ -687,8 +696,46 @@
       }
     }
   },
-  "a11yNotificationsOn": "الإشعارات مفعّلة",
-  "a11yNotificationsOff": "الإشعارات معطّلة",
+  "scheduleAlertOff": "صامت",
+  "scheduleAlertSound": "أذان",
+  "scheduleAlertIqamahSound": "صوت",
+  "scheduleAlertNotify": "تنبيه",
+  "scheduleAlertOffHint": "بدون تنبيه لهذا الوقت",
+  "scheduleAlertSoundHint": "تشغيل الأذان عند حلول الوقت",
+  "scheduleAlertIqamahSoundHint": "تشغيل التنبيه عند حلول الوقت",
+  "scheduleAlertNotifyHint": "إشعار بدون صوت",
+  "scheduleAlertPickerTitle": "تنبيه {event}",
+  "@scheduleAlertPickerTitle": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAlertEventAdhan": "أذان {prayer}",
+  "@scheduleAlertEventAdhan": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAlertEventIqamah": "إقامة {prayer}",
+  "@scheduleAlertEventIqamah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAlertEventSunnah": "{prayer}",
+  "@scheduleAlertEventSunnah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
   "keyboardShortcutsTabTitle": "الإختصارات",
   "keyboardShortcutsSectionTitle": "اختصارات لوحة المفاتيح",
   "keyboardShortcutsSectionSubtitle": "قائمة مرجعية للاختصارات المتاحة على سطح المكتب. تعمل الاختصارات في كل الشاشات بما فيها هذه. لا يمكن تخصيصها.",
@@ -720,5 +767,55 @@
   "shortcutFortressThikrNextLabel": "الذكر التالي",
   "shortcutFortressThikrNextDescription": "الانتقال إلى الذكر التالي أثناء القراءة المركّزة.",
   "shortcutFortressThikrPrevLabel": "الذكر السابق",
-  "shortcutFortressThikrPrevDescription": "العودة إلى الذكر السابق أثناء القراءة المركّزة."
+  "shortcutFortressThikrPrevDescription": "العودة إلى الذكر السابق أثناء القراءة المركّزة.",
+  "adhanSectionTitle": "الأذان",
+  "adhanSectionSubtitle": "تنبيهات وأصوات الأذان على سطح المكتب. يجب أن يبقى التطبيق يعمل في شريط النظام لتشغيل الأذان.",
+  "adhanSoundLabel": "صوت الأذان",
+  "adhanMuezzinMisharyAlafasi": "مشاري العفاسي",
+  "adhanMuezzinMakkah": "مكة المكرمة",
+  "adhanMuezzinAbedAlbasaei": "عبد الباسط عبد الصمد",
+  "adhanMuezzinAhmadNufais": "أحمد النفيس",
+  "adhanMuezzinGhaziAlSaadoni": "غازي السعدوني",
+  "adhanMuezzinHamadDeghreri": "حمد دغريري",
+  "adhanMuezzinHamdanAlMalki": "حمدان المالكي",
+  "adhanMuezzinIbrahimAlArkani": "إبراهيم الأركاني",
+  "adhanMuezzinMajedAlHamathani": "ماجد الحماثني",
+  "adhanMuezzinMansoorAlZahrani": "منصور الزهراني",
+  "adhanMuezzinMohammadAlMenshawy": "محمد المنشاوي",
+  "adhanMuezzinMohammadRefat": "محمد رفعت",
+  "adhanMuezzinNasserAlQatami": "ناصر القطامي",
+  "adhanMuezzinSuhaibKhatba": "صهيب خطاب",
+  "adhanVolumeLabel": "مستوى صوت الأذان",
+  "adhanShowAlertLabel": "إظهار تنبيه الأذان",
+  "adhanShowOsNotificationLabel": "إشعار النظام عند الإخفاء في الشريط",
+  "adhanAlertPositionLabel": "موضع التنبيه",
+  "adhanAlertPositionTopEnd": "أعلى اليمين",
+  "adhanAlertPositionTopStart": "أعلى اليسار",
+  "adhanAlertPositionCenter": "الوسط",
+  "adhanStop": "إيقاف الأذان",
+  "adhanAlertTitle": "الأذان — {prayer}",
+  "adhanPlayingTitle": "الأذان — {prayer}",
+  "adhanOsNotificationBody": "الأذان يعمل — اضغط للتركيز",
+  "iqamahAlertTitle": "الإقامة — {prayer}",
+  "iqamahPlayingTitle": "الإقامة — {prayer}",
+  "iqamahOsNotificationBody": "وقت الإقامة — اضغط للتركيز",
+  "sunnahAlertTitle": "{prayer}",
+  "sunnahOsNotificationBody": "وقت السنة — اضغط للتركيز",
+  "prayerAlertDismiss": "إغلاق",
+  "iqamahSoundLabel": "نداء الإقامة",
+  "iqamahMuezzinYasserAlDossari": "ياسر الدوسري",
+  "iqamahMuezzinMadinah": "المدينة المنورة",
+  "desktopSectionTitle": "سطح المكتب",
+  "desktopSectionSubtitle": "شريط النظام وسلوك النافذة والبدء التلقائي على سطح المكتب.",
+  "desktopLaunchAtLogin": "البدء عند تسجيل الدخول",
+  "desktopLaunchAtLoginHint": "تم تفعيل البدء مخفياً في الشريط أيضاً حتى تعمل تنبيهات الأذان بعد تسجيل الدخول.",
+  "desktopMinimizeToTrayOnClose": "الإخفاء في الشريط عند إغلاق النافذة",
+  "desktopMinimizeToTray": "الإخفاء في الشريط عند التصغير",
+  "desktopLaunchToTray": "البدء مخفياً في الشريط",
+  "trayShowApp": "إظهار تواق",
+  "trayMuteAdhan": "كتم الأذان",
+  "trayQuit": "إنهاء",
+  "trayNextPrayer": "التالي: {prayer}",
+  "quranRecitationComingSoon": "تشغيل التلاوة قريباً",
+  "quranPlayAyah": "تشغيل الآية"
 }

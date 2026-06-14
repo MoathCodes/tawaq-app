@@ -123,13 +123,11 @@ class _CommentaryStyles {
         fontSize: fontSize * 0.88,
         color: colors.mutedForeground,
         height: 1.55,
-        fontFamily: 'IBMPlexSansArabic',
       ),
       verseRef: baseStyle.copyWith(
         fontSize: fontSize * 0.78,
         color: colors.mutedForeground,
         height: 1.6,
-        fontFamily: 'IBMPlexSansArabic',
       ),
       listMarker: baseStyle.copyWith(
         fontWeight: FontWeight.w700,

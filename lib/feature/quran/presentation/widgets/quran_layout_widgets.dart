@@ -1,8 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/layout/persisted_horizontal_split_pane.dart';
+import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
@@ -13,6 +17,55 @@ import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/quran_selected_ayah_actions.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+
+const _kResizableSpacer = 20.0;
+const _kStudyPanelMaxExtent = 480.0;
+
+/// Resolves study-panel and mushaf pane widths for [StudyModeLayout].
+({
+  double sideExtent,
+  double mainExtent,
+  double sideMin,
+  double mainMin,
+  double sideMax,
+}) _resolveStudySplitExtents({
+  required double totalWidth,
+  required double sideWidth,
+}) {
+  final available =
+      (totalWidth - _kResizableSpacer).clamp(0.0, double.infinity);
+  if (available <= 0) {
+    return (
+      sideExtent: 0,
+      mainExtent: 0,
+      sideMin: 0,
+      mainMin: 0,
+      sideMax: 0,
+    );
+  }
+
+  final sideMin = kStudyPanelMinExtent.clamp(0.0, available);
+  final mainMin = kMushafPaneMinExtent.clamp(0.0, available - sideMin);
+  final sideMax = math
+      .min(_kStudyPanelMaxExtent, available * 0.45)
+      .clamp(sideMin, available - mainMin);
+
+  final extents = resolveSplitExtents(
+    totalWidth: available,
+    sideWidth: sideWidth,
+    sideMin: sideMin,
+    mainMin: mainMin,
+    sideMax: sideMax,
+  );
+
+  return (
+    sideExtent: extents.sideExtent,
+    mainExtent: extents.mainExtent,
+    sideMin: sideMin,
+    mainMin: mainMin,
+    sideMax: sideMax,
+  );
+}
 
 /// Stable mushaf subtree shared across reading layouts.
 ///
@@ -138,7 +191,6 @@ class StudyModeLayout extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    const spacer = 20.0;
     final textDirection = Directionality.of(context);
     final isArabic = textDirection == TextDirection.rtl;
 
@@ -153,58 +205,44 @@ class StudyModeLayout extends ConsumerWidget {
       child: Center(child: mushaf),
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final quranWidth =
-            constraints.maxWidth -
-            (ref.read(quranScreenSettingsProvider).value?.sidePanelWidth ??
-                350) -
-            spacer;
+    final sidePanelWidth = ref.watch(
+      quranScreenSettingsProvider.select(
+        (v) => v.value?.sidePanelWidth ?? 350,
+      ),
+    );
 
-        return Directionality(
-          textDirection: TextDirection.ltr,
-          child: FResizable(
-            axis: Axis.horizontal,
-            control: .managed(
-              onResizeEnd: (value) => ref
-                  .read(quranScreenSettingsProvider.notifier)
-                  .setSidePanelWidth(
-                    value[isArabic ? 1 : 0].extent.current,
-                  ),
-            ),
-            children: [
-              FResizableRegion.region(
-                initialExtent: isArabic
-                    ? quranWidth
-                    : ref
-                              .read(quranScreenSettingsProvider)
-                              .value
-                              ?.sidePanelWidth ??
-                          350,
-                minExtent: isArabic ? null : 250,
-                builder: (_, _, _) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: isArabic ? content : panel,
-                ),
-              ),
-              FResizableRegion.region(
-                initialExtent: isArabic
-                    ? ref
-                              .read(quranScreenSettingsProvider)
-                              .value
-                              ?.sidePanelWidth ??
-                          350
-                    : quranWidth,
-                minExtent: isArabic ? 250 : null,
-                builder: (_, _, _) => Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: isArabic ? panel : content,
-                ),
-              ),
-            ],
-          ),
+    return PersistedHorizontalSplitPane(
+      sidePanelWidth: sidePanelWidth,
+      sideRegionIndex: isArabic ? 1 : 0,
+      resolve: ({required totalWidth, required sideWidth}) {
+        final resolved = _resolveStudySplitExtents(
+          totalWidth: totalWidth,
+          sideWidth: sideWidth,
+        );
+        return (
+          sideExtent: resolved.sideExtent,
+          mainExtent: resolved.mainExtent,
+          sideMin: resolved.sideMin,
+          mainMin: resolved.mainMin,
         );
       },
+      onSidePanelWidthChanged: (width) => ref
+          .read(quranScreenSettingsProvider.notifier)
+          .setSidePanelWidth(width),
+      sidePane: Padding(
+        padding: EdgeInsetsDirectional.only(
+          end: isArabic ? 0 : 8,
+          start: isArabic ? 8 : 0,
+        ),
+        child: panel,
+      ),
+      mainPane: Padding(
+        padding: EdgeInsetsDirectional.only(
+          end: isArabic ? 8 : 0,
+          start: isArabic ? 0 : 8,
+        ),
+        child: content,
+      ),
     );
   }
 }

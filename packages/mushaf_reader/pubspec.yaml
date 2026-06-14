@@ -1,23 +1,34 @@
 name: mushaf_reader
-description: "A new Flutter package project."
-version: 0.0.2
-homepage:
+description: >-
+  Minimal Flutter building block for rendering the Madinah Mushaf with QCF4
+  fonts. Compose your own reader UI, navigation, and state on top.
+version: 0.2.0
+license: MIT
+homepage: https://github.com/MoathCodes/mushaf_reader
+repository: https://github.com/MoathCodes/mushaf_reader
+issue_tracker: https://github.com/MoathCodes/mushaf_reader/issues
+documentation: https://pub.dev/documentation/mushaf_reader/latest/
+
+topics:
+  - quran
+  - flutter
+  - islam
+  - mushaf
 
 environment:
   sdk: ^3.10.0
-  flutter: ">=1.17.0"
+  flutter: ">=3.38.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_svg: ^2.2.0
+  flutter_svg: ^2.3.0
   freezed_annotation: ^3.1.0
   hive_ce: ^2.16.0
   hive_ce_flutter: ^2.3.3
   path: ^1.9.1
   path_provider: ^2.1.5
-
-
+  vector_graphics: ^1.2.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -27,6 +38,7 @@ dev_dependencies:
   freezed: ^3.1.0
   hive_ce_generator: ^1.10.0
   crypto: ^3.0.7
+  vector_graphics_compiler: ^1.2.5
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -35,15 +47,12 @@ dev_dependencies:
 flutter:
 
   assets:
-    - assets/images/
-    - assets/jsons/
+    - assets/images/surah-header.svg.vec
+    - assets/images/surah-header-dark.svg.vec
     - assets/otf_fonts/
     - assets/hive/
 
   fonts:
-    - family: arsura
-      fonts:
-        - asset: assets/otf_fonts/arsura.ttf
     - family: QCF4_BSML
       fonts:
         - asset: assets/otf_fonts/QCF4_BSML.otf

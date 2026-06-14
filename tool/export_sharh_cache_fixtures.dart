@@ -59,10 +59,10 @@ Map<String, dynamic> _patternFlags(String raw, String commentary) {
     'has_ay_gloss': commentary.contains('أي:'),
     'has_gloss_chain': RegExp(r'"[^"]+"\s*،\s*أي\s*:').hasMatch(commentary),
     'has_waqil': commentary.contains('وقيل:'),
-    'has_section_lead': RegExp(r'وفي هذا الحديث|في الحديث:|وفيه:')
+    'has_section_lead': RegExp('وفي هذا الحديث|في الحديث:|وفيه:')
         .hasMatch(commentary),
-    'has_ascii_quote': RegExp(r'"[^"]+"').hasMatch(commentary),
-    'has_guillemet': RegExp(r'«[^»]+»').hasMatch(commentary),
+    'has_ascii_quote': RegExp('"[^"]+"').hasMatch(commentary),
+    'has_guillemet': RegExp('«[^»]+»').hasMatch(commentary),
     'has_bracket': RegExp(r'\[[^\]]+\]').hasMatch(commentary),
     'has_scholar_lead': RegExp(r'(?:فقال|قال)\s+').hasMatch(commentary),
   };

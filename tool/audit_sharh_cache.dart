@@ -96,10 +96,10 @@ void main(List<String> args) {
     if (text.contains('بمعنى:')) patterns['بمعنى:'] = patterns['بمعنى:']! + 1;
     if (text.contains('المراد')) patterns['المراد'] = patterns['المراد']! + 1;
     if (text.contains('ومعناها')) patterns['ومعناها'] = patterns['ومعناها']! + 1;
-    if (RegExp(r'"[^"]+"').hasMatch(text)) {
+    if (RegExp('"[^"]+"').hasMatch(text)) {
       patterns['ascii_quotes'] = patterns['ascii_quotes']! + 1;
     }
-    if (RegExp(r'«[^»]+»').hasMatch(text)) {
+    if (RegExp('«[^»]+»').hasMatch(text)) {
       patterns['guillemets'] = patterns['guillemets']! + 1;
     }
     if (RegExp(r'"[^"]+"\s*،\s*أي\s*:').hasMatch(text)) {
@@ -185,8 +185,8 @@ void main(List<String> args) {
     final waqil = 'وقيل:'.allMatches(zones.commentary).length;
     final ay = 'أي:'.allMatches(zones.commentary).length;
     print(
-      '${entry.id}: $family, ${ay}× أي, ${glossChains} gloss chains, '
-      '${waqil}× وقيل, commentary=${zones.commentary.length}',
+      '${entry.id}: $family, $ay× أي, $glossChains gloss chains, '
+      '$waqil× وقيل, commentary=${zones.commentary.length}',
     );
   }
 

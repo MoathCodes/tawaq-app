@@ -44,7 +44,7 @@ class PaletteItem extends ConsumerWidget {
     );
     final appTheme = context.theme;
     final duration = appTheme.durations.instant;
-    final radii = appTheme.radii.xl;
+    final radii = appTheme.radii.md;
     final l10n = context.l10n;
 
     final paletteName = palette.getLocaleName(l10n);
@@ -52,23 +52,13 @@ class PaletteItem extends ConsumerWidget {
     void selectPalette() =>
         ref.read(themeProvider.notifier).setPalette(palette);
 
-    return SettingsSemantics.labeledControl(
-      name: paletteName,
-      value: l10n.colorTheme,
-      button: true,
-      selected: isSelected,
-      enabled: enabled,
-      excludeChild: true,
-      onTap: enabled ? selectPalette : null,
-      child: MouseClick(
-        disabled: !enabled,
-        onClick: enabled ? selectPalette : null,
-        child: AnimatedScale(
-        duration: duration,
-        scale: !isSelected ? 1.0 : 1.05,
+    return MouseClick(
+      disabled: !enabled,
+      onClick: enabled ? selectPalette : null,
+      semanticsLabel: paletteName,
+      child: ExcludeSemantics(
         child: AnimatedContainer(
           duration: duration,
-          margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             borderRadius: radii,
             boxShadow: [
@@ -90,7 +80,9 @@ class PaletteItem extends ConsumerWidget {
                     color: theme.colors.primary.withValues(alpha: 0.8),
                     width: 2,
                   )
-                : null,
+                : Border.all(
+                    color: appTheme.colors.border.withValues(alpha: 0.5),
+                  ),
           ),
           child: Padding(
             padding: const EdgeInsets.all(2),
@@ -99,31 +91,43 @@ class PaletteItem extends ConsumerWidget {
                 borderRadius: radii,
                 color: theme.colors.primary,
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: AppSpacing.md,
-                children: [
-                  Text(
-                    palette.getLocaleName(l10n),
-                    style: theme.typography.md.copyWith(
-                      fontWeight: FontWeight.normal,
-                      color: theme.colors.primaryForeground,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: AppSpacing.xs,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        paletteName,
+                        style: theme.typography.sm.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: theme.colors.primaryForeground,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                  SettingsSemantics.decorative(
-                    Icon(
-                      FLucideIcons.check,
-                      color: theme.colors.primaryForeground,
-                    )
-                        .animate(target: isSelected ? 1 : 0)
-                        .scaleXY(begin: 0, end: 1, duration: duration),
-                  ),
-                ],
+                    SettingsSemantics.decorative(
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: Icon(
+                          FLucideIcons.check,
+                          size: 14,
+                          color: theme.colors.primaryForeground,
+                        )
+                            .animate(target: isSelected ? 1 : 0)
+                            .scaleXY(begin: 0, end: 1, duration: duration),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
       ),
     );
   }

@@ -30,7 +30,6 @@ class QuranHeaderWidget extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final l10n = context.l10n;
     final borderColor = theme.colors.border;
     final layout = ref.watch(
       quranScreenSettingsProvider.select(
@@ -53,72 +52,127 @@ class QuranHeaderWidget extends HookConsumerWidget {
         vertical: AppSpacing.md,
       ),
       child: NonSelectable(
-        child: Row(
-        children: [
-          Expanded(
-            flex: 28,
-            child: FTabs(
-              control: FTabControl.lifted(
-                index: layout.index,
-                onChange: (v) => ref
-                    .read(quranScreenSettingsProvider.notifier)
-                    .setLayout(QuranReadingLayout.values[v]),
-              ),
-              style: const .delta(
-                padding: .value(EdgeInsets.all(2)),
-                indicatorSize: FTabBarIndicatorSize.tab,
-              ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < theme.breakpoints.lg;
+
+            final tabs = _LayoutTabs(
+              layout: layout,
+              compact: compact,
+              onLayoutChanged: (v) => ref
+                  .read(quranScreenSettingsProvider.notifier)
+                  .setLayout(QuranReadingLayout.values[v]),
+            );
+
+            final scaleControl = Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                for (final mode in QuranReadingLayout.values)
-                  FTabEntry(
-                    label: QuranSemantics.mergedChip(
-                      child: Row(
-                        mainAxisAlignment: .center,
-                        spacing: 4,
-                        children: [
-                          QuranSemantics.decorative(Icon(mode.icon)),
-                          Text(mode.getLocaleName(l10n)),
-                        ],
-                      ),
-                    ),
-                    child: const SizedBox.shrink(),
+                QuranSemantics.decorative(
+                  Container(
+                    height: 24,
+                    width: 1,
+                    color: borderColor,
                   ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                const QuranTextScalePopover(),
               ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xl),
-          Expanded(
-            flex: 15,
-            child: SurahSelector(
-              controller: mushafController,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            flex: 20,
-            child: JuzSelector(controller: mushafController),
-          ),
-          const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            flex: 36,
-            child: AyahSearchSelector(
-              controller: mushafController,
-              searchPopoverController: searchPopover,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.xl),
-          QuranSemantics.decorative(
-            Container(
-              height: 24,
-              width: 1,
-              color: borderColor,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          const QuranTextScalePopover(),
-        ],
+            );
+
+            final selectors = Row(
+              children: [
+                Expanded(
+                  flex: 15,
+                  child: SurahSelector(controller: mushafController),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  flex: 20,
+                  child: JuzSelector(controller: mushafController),
+                ),
+                const SizedBox(width: AppSpacing.lg),
+                Expanded(
+                  flex: 36,
+                  child: AyahSearchSelector(
+                    controller: mushafController,
+                    searchPopoverController: searchPopover,
+                  ),
+                ),
+              ],
+            );
+
+            if (compact) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: tabs),
+                      scaleControl,
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  selectors,
+                ],
+              );
+            }
+
+            return Row(
+              children: [
+                Expanded(flex: 28, child: tabs),
+                const SizedBox(width: AppSpacing.xl),
+                Expanded(flex: 71, child: selectors),
+                const SizedBox(width: AppSpacing.xl),
+                scaleControl,
+              ],
+            );
+          },
         ),
       ),
+    );
+  }
+}
+
+class _LayoutTabs extends StatelessWidget {
+  const _LayoutTabs({
+    required this.layout,
+    required this.compact,
+    required this.onLayoutChanged,
+  });
+
+  final QuranReadingLayout layout;
+  final bool compact;
+  final ValueChanged<int> onLayoutChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    return FTabs(
+      control: FTabControl.lifted(
+        index: layout.index,
+        onChange: onLayoutChanged,
+      ),
+      style: const .delta(
+        padding: .value(EdgeInsets.all(2)),
+        indicatorSize: FTabBarIndicatorSize.tab,
+      ),
+      children: [
+        for (final mode in QuranReadingLayout.values)
+          FTabEntry(
+            label: QuranSemantics.mergedChip(
+              child: Row(
+                mainAxisAlignment: .center,
+                spacing: 4,
+                children: [
+                  QuranSemantics.decorative(Icon(mode.icon)),
+                  if (!compact) Text(mode.getLocaleName(l10n)),
+                ],
+              ),
+            ),
+            child: const SizedBox.shrink(),
+          ),
+      ],
     );
   }
 }

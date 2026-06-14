@@ -1,56 +1,53 @@
 import 'dart:async';
 
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/use_cases/compute_prayer_relative_time.dart';
+import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/notification_button.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_icon.dart' show PrayerIcon;
-import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_relative_time.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/status_badge.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/status_selector.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/time_column.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_icon.dart'
+    show PrayerIcon;
+import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/schedule_alert_picker.dart';
+import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
+import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// A single prayer row in the schedule list with expandable status selector.
+/// A single prayer row in the schedule list with inline status logging.
 class SchedulePrayerRow extends ConsumerWidget {
   /// Creates a [SchedulePrayerRow] instance.
   const SchedulePrayerRow({
     required this.row,
-    required this.isExpanded,
     required this.isToday,
-    required this.onToggle,
     super.key,
   });
 
   /// The prayer schedule row data.
   final PrayerScheduleRow row;
 
-  /// Whether this row is expanded.
-  final bool isExpanded;
-
   /// Whether the schedule is showing today (live clock + active prayer).
   final bool isToday;
 
-  /// Callback to toggle expansion.
-  final VoidCallback onToggle;
-
-  static const _animDuration = Duration(milliseconds: 260);
+  static const _animDuration = Duration(milliseconds: 220);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
     final colors = theme.colors;
-    final l10n = context.l10n;
-    final currentPrayer = isToday ? ref.watch(scheduleCurrentPrayerProvider) : null;
+    final currentPrayer = isToday
+        ? ref.watch(scheduleCurrentPrayerProvider)
+        : null;
     final isActive =
         currentPrayer != null &&
         isScheduleRowCurrent(
@@ -59,205 +56,496 @@ class SchedulePrayerRow extends ConsumerWidget {
         );
     final now = ref.watch(currentLocationTimeProvider);
     final canLogStatus = row.prayerTime.isBefore(now);
-
-    return _SchedulePrayerRowBody(
-      row: row,
-      theme: theme,
-      colors: colors,
-      isExpanded: isExpanded,
-      isToday: isToday,
-      isActive: isActive,
-      canLogStatus: canLogStatus,
-      onToggle: onToggle,
-      rowSemanticsLabel: PrayerSemantics.scheduleRow(
-        l10n: l10n,
-        prayerName: row.prayer.getLocaleName(l10n),
-        adhanTime: row.formattedAdhanTime,
-        iqamahTime: row.formattedIqamahTime,
-        relativeSubtitle: row.relativeTimeSubtitle,
-        status: row.completionStatus,
-        isCurrentPrayer: isActive,
-        isExpanded: isExpanded,
-      ),
-    );
-  }
-}
-
-class _SchedulePrayerRowBody extends ConsumerWidget {
-  const _SchedulePrayerRowBody({
-    required this.row,
-    required this.theme,
-    required this.colors,
-    required this.isExpanded,
-    required this.isToday,
-    required this.isActive,
-    required this.canLogStatus,
-    required this.onToggle,
-    required this.rowSemanticsLabel,
-  });
-
-  final PrayerScheduleRow row;
-  final FThemeData theme;
-  final FColors colors;
-  final bool isExpanded;
-  final bool isToday;
-  final bool isActive;
-  final bool canLogStatus;
-  final VoidCallback onToggle;
-  final String rowSemanticsLabel;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final now = ref.watch(currentLocationTimeProvider);
     final completionFallback = DateTime(now.year, now.month, now.day);
 
     return AnimatedContainer(
-      duration: SchedulePrayerRow._animDuration,
-      curve: Curves.easeInOut,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isActive
-            ? colors.primary.withValues(alpha: 0.2)
-            : colors.secondary,
-        border: Border.all(
-          color: isActive ? colors.primary : colors.border,
-          width: isActive ? 2 : 1,
-        ),
-        borderRadius: theme.radii.md,
+      duration: _animDuration,
+      curve: Curves.easeOutCubic,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Semantics(
-                  button: true,
-                  expanded: isExpanded,
-                  label: rowSemanticsLabel,
-                  excludeSemantics: true,
-                  child: MouseClick(
-                    onClick: onToggle,
-                    child: _MainRowContent(
-                      row: row,
-                      theme: theme,
-                      colors: colors,
-                      isActive: isActive,
-                      isToday: isToday,
-                    ),
-                  ),
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: theme.radii.md,
+        border: Border.all(
+          color: isActive
+              ? colors.primary.withValues(alpha: 0.5)
+              : colors.border.withValues(alpha: 0.75),
+          width: isActive ? 1.5 : 1,
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= context.theme.breakpoints.sm;
+
+          if (isWide) {
+            return Row(
+              children: [
+                PrayerIcon(
+                  prayer: row.prayer,
+                  isActive: isActive,
+                  colors: colors,
+                  status: row.completionStatus,
                 ),
-              ),
-              NotificationButton(
-                prayerName: row.prayer.getLocaleName(context.l10n),
-              ),
-            ],
-          ),
-          AnimatedSize(
-            duration: SchedulePrayerRow._animDuration,
-            curve: Curves.easeInOut,
-            child: isExpanded
-                ? StatusSelector(
-                    prayer: row.prayer,
-                    enable: canLogStatus,
-                    currentStatus: row.completionStatus,
-                    completionTime: row.completionDate ?? completionFallback,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _IdentityColumn(
+                    row: row,
+                    theme: theme,
+                    isActive: isActive,
+                    isToday: isToday,
+                    showStatus: true,
+                    canLogStatus: canLogStatus,
+                    completionFallback: completionFallback,
                     onStatusSelected: (status) {
                       unawaited(
                         ref
-                            .read(prayerCompletionProvider.notifier)
-                            .addOrUpdateCompletion(
-                              PrayerCompletion(
-                                id: null,
-                                status: status,
-                                prayer: row.prayer,
-                                completionTime:
-                                    row.completionDate ?? completionFallback,
-                              ),
+                            .read(prayerCompletionActionsProvider.notifier)
+                            .setPrayerStatus(
+                              prayer: row.prayer,
+                              completionDay:
+                                  row.completionDate ?? completionFallback,
+                              status: status,
                             ),
                       );
                     },
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                _TimeRail(row: row),
+              ],
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  PrayerIcon(
+                    prayer: row.prayer,
+                    isActive: isActive,
+                    colors: colors,
+                    status: row.completionStatus,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _IdentityColumn(
+                      row: row,
+                      theme: theme,
+                      isActive: isActive,
+                      isToday: isToday,
+                      showStatus: false,
+                      canLogStatus: canLogStatus,
+                      completionFallback: completionFallback,
+                      onStatusSelected: (status) {
+                        unawaited(
+                          ref
+                              .read(prayerCompletionActionsProvider.notifier)
+                              .setPrayerStatus(
+                                prayer: row.prayer,
+                                completionDay:
+                                    row.completionDate ?? completionFallback,
+                                status: status,
+                              ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: _StatusSelector(
+                      enable: canLogStatus,
+                      currentStatus: row.completionStatus,
+                      onStatusSelected: (status) {
+                        unawaited(
+                          ref
+                              .read(prayerCompletionActionsProvider.notifier)
+                              .setPrayerStatus(
+                                prayer: row.prayer,
+                                completionDay:
+                                    row.completionDate ?? completionFallback,
+                                status: status,
+                              ),
+                        );
+                      },
+                    ),
+                  ),
+                  _TimeRail(row: row),
+                ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-class _MainRowContent extends StatelessWidget {
-  const _MainRowContent({
+class _IdentityColumn extends StatelessWidget {
+  const _IdentityColumn({
     required this.row,
     required this.theme,
-    required this.colors,
     required this.isActive,
     required this.isToday,
+    required this.showStatus,
+    required this.canLogStatus,
+    required this.completionFallback,
+    required this.onStatusSelected,
   });
 
   final PrayerScheduleRow row;
   final FThemeData theme;
-  final FColors colors;
   final bool isActive;
   final bool isToday;
+  final bool showStatus;
+  final bool canLogStatus;
+  final DateTime completionFallback;
+  final ValueChanged<CompletionStatus> onStatusSelected;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final status = row.completionStatus;
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        PrayerIcon(prayer: row.prayer, isActive: isActive, colors: colors),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    row.prayer.getLocaleName(l10n),
-                    style: theme.typography.lg.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (status != CompletionStatus.none) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    StatusBadge(status: status),
-                  ],
-                ],
-              ),
-              PrayerRelativeTimeSubtitle(
-                prayerTime: row.prayerTime,
-                status: status,
-                isToday: isToday,
-                isCurrentPrayer: isActive,
-              ),
-            ],
+        Text(
+          row.prayer.getLocaleName(l10n),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.typography.sm.copyWith(
+            fontWeight: FontWeight.w600,
           ),
         ),
-        Row(
-          children: [
-            if (row.formattedIqamahTime != null) ...[
-              TimeColumn(
-                label: l10n.iqamah.toUpperCase(),
-                time: row.formattedIqamahTime!,
-                theme: theme,
-                colors: colors,
+        const SizedBox(height: 2),
+        _RelativeTimeSubtitle(
+          prayerTime: row.prayerTime,
+          status: status,
+          isToday: isToday,
+          isCurrentPrayer: isActive,
+        ),
+        if (showStatus) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _StatusSelector(
+            enable: canLogStatus,
+            currentStatus: status,
+            onStatusSelected: onStatusSelected,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _RelativeTimeSubtitle extends ConsumerWidget {
+  const _RelativeTimeSubtitle({
+    required this.prayerTime,
+    required this.status,
+    required this.isToday,
+    required this.isCurrentPrayer,
+  });
+
+  final DateTime prayerTime;
+  final CompletionStatus status;
+  final bool isToday;
+  final bool isCurrentPrayer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = FTheme.of(context);
+    final colors = theme.colors;
+    final l10n = context.l10n;
+
+    final now = isToday
+        ? ref.watch(currentLocationTimeProvider)
+        : DateTime(prayerTime.year, prayerTime.month, prayerTime.day);
+
+    final subtitle = computePrayerRelativeTime(
+      prayerTime: prayerTime,
+      now: now,
+      isCurrentPrayer: isCurrentPrayer,
+      status: status,
+      l10n: l10n,
+    );
+
+    if (subtitle == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Text(
+      subtitle,
+      style: theme.typography.sm.copyWith(
+        color: isCurrentPrayer ? colors.primary : colors.mutedForeground,
+      ),
+    );
+  }
+}
+
+class _StatusSelector extends ConsumerWidget {
+  const _StatusSelector({
+    required this.currentStatus,
+    required this.enable,
+    required this.onStatusSelected,
+  });
+
+  final CompletionStatus currentStatus;
+  final bool enable;
+  final ValueChanged<CompletionStatus> onStatusSelected;
+
+  static const _buttonSize = 30.0;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Wrap(
+      spacing: AppSpacing.xs,
+      runSpacing: AppSpacing.xs,
+      children: CompletionStatus.values
+          .where((status) => status != CompletionStatus.none)
+          .map(
+            (status) => _StatusButton(
+              status: status,
+              isSelected: status == currentStatus,
+              onPressed: () => onStatusSelected(status),
+              enable: enable,
+            ),
+          )
+          .toList(),
+    );
+  }
+}
+
+class _StatusButton extends ConsumerWidget {
+  const _StatusButton({
+    required this.status,
+    required this.isSelected,
+    required this.onPressed,
+    required this.enable,
+  });
+
+  final CompletionStatus status;
+  final bool isSelected;
+  final VoidCallback onPressed;
+  final bool enable;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = FTheme.of(context);
+    final colors = theme.colors;
+    final accent = status.getBadgeColor(colors);
+    final icon = status.getIcon();
+    final l10n = context.l10n;
+
+    return MouseClick(
+      disabled: !enable,
+      onClick: enable ? onPressed : null,
+      semanticsLabel: PrayerSemantics.statusOption(
+        l10n: l10n,
+        status: status,
+        enabled: enable,
+      ),
+      child: ExcludeSemantics(
+        child: Opacity(
+          opacity: enable ? 1 : 0.45,
+          child: AnimatedContainer(
+            duration: theme.durations.fast,
+            width: _StatusSelector._buttonSize,
+            height: _StatusSelector._buttonSize,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? accent
+                  : colors.secondary.withValues(alpha: 0.5),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isSelected ? accent : colors.border,
               ),
-            ],
-            const SizedBox(width: AppSpacing.lg),
-            TimeColumn(
-              label: l10n.adhan.toUpperCase(),
-              time: row.formattedAdhanTime,
-              theme: theme,
-              colors: colors,
+            ),
+            child: Icon(
+              icon,
+              size: 14,
+              color: isSelected ? colors.background : colors.foreground,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TimeRail extends StatelessWidget {
+  const _TimeRail({required this.row});
+
+  final PrayerScheduleRow row;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (row.formattedIqamahTime != null) ...[
+          _ObligatoryAlertTimeSlot(
+            prayer: row.prayer,
+            time: row.formattedIqamahTime!,
+            kind: PrayerAlertKind.iqamah,
+          ),
+          Container(
+            width: 1,
+            height: 28,
+            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            color: colors.border.withValues(alpha: 0.65),
+          ),
+        ],
+        _ObligatoryAlertTimeSlot(
+          prayer: row.prayer,
+          time: row.formattedAdhanTime,
+          kind: PrayerAlertKind.adhan,
+        ),
+      ],
+    );
+  }
+}
+
+class _TimeSlot extends StatelessWidget {
+  const _TimeSlot({
+    required this.label,
+    required this.time,
+    required this.eventLabel,
+    required this.mode,
+    required this.modes,
+    required this.interactiveModes,
+    this.alertKind,
+    this.onModeChanged,
+  });
+
+  final String label;
+  final String time;
+  final String eventLabel;
+  final ScheduleAlertMode mode;
+  final List<ScheduleAlertMode> modes;
+  final Set<ScheduleAlertMode> interactiveModes;
+  final PrayerAlertKind? alertKind;
+  final ValueChanged<ScheduleAlertMode>? onModeChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    final colors = theme.colors;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: theme.typography.xs.copyWith(
+                color: colors.mutedForeground,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+                height: 1.1,
+              ),
+            ),
+            Text(
+              time,
+              style: theme.typography.sm.copyWith(
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                height: 1.2,
+              ),
             ),
           ],
         ),
+        if (isDesktopPlatform) ...[
+          const SizedBox(width: AppSpacing.xs),
+          ScheduleAlertPicker(
+            mode: mode,
+            modes: modes,
+            interactiveModes: interactiveModes,
+            eventLabel: eventLabel,
+            alertKind: alertKind,
+            onChanged: onModeChanged,
+          ),
+        ],
       ],
+    );
+  }
+}
+
+class _ObligatoryAlertTimeSlot extends ConsumerWidget {
+  const _ObligatoryAlertTimeSlot({
+    required this.prayer,
+    required this.time,
+    required this.kind,
+  });
+
+  final Prayer prayer;
+  final String time;
+  final PrayerAlertKind kind;
+
+  static const List<ScheduleAlertMode> _modes = [
+    ScheduleAlertMode.off,
+    ScheduleAlertMode.sound,
+    ScheduleAlertMode.notifyOnly,
+  ];
+
+  static const Set<ScheduleAlertMode> _interactiveModes = {
+    ScheduleAlertMode.off,
+    ScheduleAlertMode.sound,
+    ScheduleAlertMode.notifyOnly,
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final settings = ref.watch(adhanSettingsProvider).value;
+    final prayerName = prayer.getLocaleName(l10n);
+    final mode = settings == null
+        ? ScheduleAlertMode.off
+        : adhanSettingsModeFor(
+            settings,
+            kind,
+            prayer,
+          );
+
+    final (label, eventLabel) = switch (kind) {
+      PrayerAlertKind.iqamah => (
+        l10n.iqamah,
+        l10n.scheduleAlertEventIqamah(prayerName),
+      ),
+      _ => (
+        l10n.adhan,
+        l10n.scheduleAlertEventAdhan(prayerName),
+      ),
+    };
+
+    return _TimeSlot(
+      label: label,
+      time: time,
+      eventLabel: eventLabel,
+      mode: mode,
+      modes: _modes,
+      interactiveModes: settings == null ? {} : _interactiveModes,
+      alertKind: kind,
+      onModeChanged: settings == null
+          ? null
+          : (next) => ref
+                .read(adhanSettingsProvider.notifier)
+                .setAlertMode(kind, prayer, next),
     );
   }
 }

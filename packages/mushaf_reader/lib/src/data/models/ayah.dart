@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:mushaf_reader/src/data/ayah_id_resolver.dart';
 import 'package:mushaf_reader/src/data/models/surah.dart';
 
 part 'ayah.freezed.dart';
@@ -116,6 +117,23 @@ abstract class Ayah with _$Ayah {
   }) = _Ayah;
 
   const Ayah._();
+
+  /// Resolves a surah/verse pair to the global ayah id (1–6236) without I/O.
+  ///
+  /// Uses the standard Hafs verse-count table. Returns `null` when [surah] or
+  /// [ayahInSurah] is out of range. Prefer this over [AyahIdResolver.globalId]
+  /// when you do not have surah metadata from storage.
+  static int? globalIdFor({
+    required int surah,
+    required int ayahInSurah,
+  }) {
+    final starts = AyahIdResolver.buildStarts(const {});
+    return AyahIdResolver.globalId(
+      surah: surah,
+      ayahInSurah: ayahInSurah,
+      startsBySurah: starts,
+    );
+  }
 
   /// Returns the QCF4 glyph text for rendering with the appropriate font.
   ///

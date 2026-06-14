@@ -56,7 +56,7 @@ class _SearchHeader extends HookConsumerWidget {
     }
 
     return NonSelectable(
-      child: Container(
+      child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,107 +87,137 @@ class _SearchHeader extends HookConsumerWidget {
                 ],
               )
             else
-              Row(
-                spacing: AppSpacing.sm,
-                children: [
-                  Expanded(
-                    child: FTextField(
-                      focusNode: searchFocusNode,
-                      enabled: !searchBusy,
-                      control: .managed(
-                        controller: queryController,
-                        onChange: (value) => onQueryChanged(value.text),
-                      ),
-                      onSubmit: searchBusy ? null : onQuerySubmitted,
-                      hint: l10n.hadithSearchHint,
-                      label: Text(l10n.hadithSearchHint),
-                      prefixBuilder: (_, _, _) => HadithDecorExcludeSemantics(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm,
-                          ),
-                          child: Icon(
-                            FLucideIcons.search,
-                            size: 18,
-                            color: theme.colors.mutedForeground,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (isSearchMode)
-                    FButton.icon(
-                      onPress: () =>
-                          unawaited(screenController.openBookmarks()),
-                      semanticsLabel: desktop ? null : l10n.bookmarks,
-                      child: desktop
-                          ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              spacing: AppSpacing.xs,
-                              children: [
-                                const Icon(FLucideIcons.bookmark, size: 16),
-                                Text(l10n.bookmarks),
-                              ],
-                            )
-                          : const HadithDecorExcludeSemantics(
-                              child: Icon(FLucideIcons.bookmark, size: 18),
-                            ),
-                    ),
-                  if (desktop && isSearchMode)
-                    FButton.icon(
-                      onPress: searchBusy
-                          ? null
-                          : () {
-                              screenController.setActiveTab(
-                                HadithPanelTab.filters,
-                              );
-                            },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        spacing: AppSpacing.xs,
-                        children: [
-                          const Icon(FLucideIcons.slidersHorizontal, size: 16),
-                          Text(l10n.hadithOpenFilters),
-                          if (activeFilterCount > 0) ...[
-                            _CountDot(count: activeFilterCount),
-                          ],
-                        ],
-                      ),
-                    )
-                  else if (isSearchMode)
-                    FPopover(
-                      groupId: groupId,
-                      popoverAnchor: Alignment.topRight,
-                      childAnchor: Alignment.bottomRight,
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final compactActions =
+                      constraints.maxWidth < context.theme.breakpoints.md;
 
-                      popoverBuilder: (_, controller) => ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          minWidth: 360,
-                          maxWidth: 420,
-                          maxHeight: 620,
+                  return Row(
+                    spacing: AppSpacing.sm,
+                    children: [
+                      Expanded(
+                        child: FTextField(
+                          focusNode: searchFocusNode,
+                          enabled: !searchBusy,
+                          control: .managed(
+                            controller: queryController,
+                            onChange: (value) => onQueryChanged(value.text),
+                          ),
+                          onSubmit: searchBusy ? null : onQuerySubmitted,
+                          hint: l10n.hadithSearchHint,
+                          label: Text(l10n.hadithSearchHint),
+                          prefixBuilder: (_, _, _) =>
+                              HadithDecorExcludeSemantics(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.sm,
+                              ),
+                              child: Icon(
+                                FLucideIcons.search,
+                                size: 18,
+                                color: theme.colors.mutedForeground,
+                              ),
+                            ),
+                          ),
                         ),
-                        child: _FilterPanel(
-                          showHeader: true,
-                          onClose: () => unawaited(controller.hide()),
+                      ),
+                      if (isSearchMode)
+                        FButton.icon(
+                          onPress: () =>
+                              unawaited(screenController.openBookmarks()),
+                          semanticsLabel:
+                              compactActions ? l10n.bookmarks : null,
+                          child: compactActions
+                              ? const HadithDecorExcludeSemantics(
+                                  child: Icon(FLucideIcons.bookmark, size: 18),
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  spacing: AppSpacing.xs,
+                                  children: [
+                                    const Icon(FLucideIcons.bookmark, size: 16),
+                                    Text(l10n.bookmarks),
+                                  ],
+                                ),
                         ),
-                      ),
-                      builder: (_, controller, child) => FButton.icon(
-                        onPress: searchBusy ? null : controller.toggle,
-                        child: child,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        spacing: AppSpacing.xs,
-                        children: [
-                          const Icon(FLucideIcons.slidersHorizontal, size: 16),
-                          Text(l10n.hadithOpenFilters),
-                          if (activeFilterCount > 0) ...[
-                            _CountDot(count: activeFilterCount),
-                          ],
-                        ],
-                      ),
-                    ),
-                ],
+                      if (desktop && isSearchMode)
+                        FButton.icon(
+                          onPress: searchBusy
+                              ? null
+                              : () {
+                                  screenController.setActiveTab(
+                                    HadithPanelTab.filters,
+                                  );
+                                },
+                          semanticsLabel:
+                              compactActions ? l10n.hadithOpenFilters : null,
+                          child: compactActions
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  spacing: AppSpacing.xs,
+                                  children: [
+                                    const Icon(
+                                      FLucideIcons.slidersHorizontal,
+                                      size: 18,
+                                    ),
+                                    if (activeFilterCount > 0)
+                                      _CountDot(count: activeFilterCount),
+                                  ],
+                                )
+                              : Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  spacing: AppSpacing.xs,
+                                  children: [
+                                    const Icon(
+                                      FLucideIcons.slidersHorizontal,
+                                      size: 16,
+                                    ),
+                                    Text(l10n.hadithOpenFilters),
+                                    if (activeFilterCount > 0) ...[
+                                      _CountDot(count: activeFilterCount),
+                                    ],
+                                  ],
+                                ),
+                        )
+                      else if (isSearchMode)
+                        FPopover(
+                          groupId: groupId,
+                          popoverAnchor: Alignment.topRight,
+                          childAnchor: Alignment.bottomRight,
+                          popoverBuilder: (_, controller) => ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              minWidth: 360,
+                              maxWidth: 420,
+                              maxHeight: 620,
+                            ),
+                            child: _FilterPanel(
+                              showHeader: true,
+                              onClose: () => unawaited(controller.hide()),
+                            ),
+                          ),
+                          builder: (_, controller, child) => FButton.icon(
+                            onPress: searchBusy ? null : controller.toggle,
+                            semanticsLabel: l10n.hadithOpenFilters,
+                            child: child,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            spacing: AppSpacing.xs,
+                            children: [
+                              const Icon(
+                                FLucideIcons.slidersHorizontal,
+                                size: 16,
+                              ),
+                              Text(l10n.hadithOpenFilters),
+                              if (activeFilterCount > 0) ...[
+                                _CountDot(count: activeFilterCount),
+                              ],
+                            ],
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
             if (isSearchMode) ...[
               const SizedBox(height: AppSpacing.xs),
@@ -202,7 +232,6 @@ class _SearchHeader extends HookConsumerWidget {
                   ),
                 ),
               _ActiveFiltersSection(
-                desktop: desktop,
                 interactionsEnabled: filterActionsEnabled,
               ),
               if (fieldQuery.trim().isEmpty) ...[
@@ -320,7 +349,7 @@ class _RecentSearchChip extends HookWidget {
     final theme = context.theme;
     final l10n = context.l10n;
     final (:isHovered, :setHovered) = useHoverState();
-    final showRemove = isHovered || !context.breakpoint.isAtLeast(.lg);
+    final showRemove = isHovered || isLessThan(context, FBreakpoint.lg);
 
     return MouseRegion(
       onEnter: (_) => setHovered(value: true),
@@ -355,10 +384,7 @@ class _RecentSearchChip extends HookWidget {
               curve: Curves.easeOut,
               alignment: AlignmentDirectional.centerStart,
               child: showRemove && interactionsEnabled
-                  ? AnimatedOpacity(
-                      duration: theme.durations.fast,
-                      opacity: showRemove ? 1 : 0,
-                      child: FButton.icon(
+                  ? FButton.icon(
                         variant: FButtonVariant.ghost,
                         size: FButtonSizeVariant.sm,
                         semanticsLabel: hadithRemoveRecentSearchSemanticsLabel(
@@ -369,8 +395,7 @@ class _RecentSearchChip extends HookWidget {
                         child: const HadithDecorExcludeSemantics(
                           child: Icon(FLucideIcons.x, size: 12),
                         ),
-                      ),
-                    )
+                      )
                   : const SizedBox.shrink(),
             ),
           ),
@@ -834,11 +859,9 @@ class _LookupSection<T> extends StatelessWidget {
 
 class _ActiveFiltersSection extends ConsumerWidget {
   const _ActiveFiltersSection({
-    required this.desktop,
     required this.interactionsEnabled,
   });
 
-  final bool desktop;
   final bool interactionsEnabled;
 
   @override
@@ -850,33 +873,61 @@ class _ActiveFiltersSection extends ConsumerWidget {
 
     if (chips.isEmpty) return const SizedBox.shrink();
 
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xs),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        spacing: AppSpacing.sm,
-        children: [
-          Semantics(
-            label: desktop ? null : l10n.hadithActiveFilters,
-            child: Icon(
-              FLucideIcons.slidersHorizontal,
-              size: 12,
-              color: theme.colors.mutedForeground,
-            ),
-          ),
-          if (desktop)
-            Text(
-              l10n.hadithActiveFilters,
-              style: theme.typography.xs.copyWith(
-                color: theme.colors.mutedForeground,
-                fontWeight: FontWeight.w600,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < context.theme.breakpoints.md;
+
+        return Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.xs),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: AppSpacing.xs,
+            children: [
+              Row(
+                spacing: AppSpacing.sm,
+                children: [
+                  Semantics(
+                    label: compact ? l10n.hadithActiveFilters : null,
+                    child: Icon(
+                      FLucideIcons.slidersHorizontal,
+                      size: 12,
+                      color: theme.colors.mutedForeground,
+                    ),
+                  ),
+                  if (!compact)
+                    Text(
+                      l10n.hadithActiveFilters,
+                      style: theme.typography.xs.copyWith(
+                        color: theme.colors.mutedForeground,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  if (!compact) const Spacer(),
+                  if (!compact)
+                    FButton(
+                      variant: FButtonVariant.ghost,
+                      size: FButtonSizeVariant.sm,
+                      mainAxisSize: MainAxisSize.min,
+                      semanticsLabel: l10n.hadithClearAllFilters,
+                      onPress: interactionsEnabled
+                          ? () {
+                              unawaited(
+                                ref
+                                    .read(
+                                      hadithScreenControllerProvider.notifier,
+                                    )
+                                    .clearFilters(),
+                              );
+                            }
+                          : null,
+                      child: Text(l10n.hadithClearAllFilters),
+                    ),
+                ],
               ),
-            ),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
+              Wrap(
                 spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   for (final chip in chips)
                     FButton(
@@ -905,50 +956,35 @@ class _ActiveFiltersSection extends ConsumerWidget {
                         child: Icon(FLucideIcons.x, size: 11),
                       ),
                       child: HadithDecorExcludeSemantics(
-                        child: Text(chip.label, softWrap: false),
+                        child: Text(chip.label),
+                      ),
+                    ),
+                  if (compact)
+                    FButton.icon(
+                      variant: FButtonVariant.ghost,
+                      size: FButtonSizeVariant.sm,
+                      semanticsLabel: l10n.hadithClearAllFilters,
+                      onPress: interactionsEnabled
+                          ? () {
+                              unawaited(
+                                ref
+                                    .read(
+                                      hadithScreenControllerProvider.notifier,
+                                    )
+                                    .clearFilters(),
+                              );
+                            }
+                          : null,
+                      child: const HadithDecorExcludeSemantics(
+                        child: Icon(FLucideIcons.rotateCcw, size: 12),
                       ),
                     ),
                 ],
               ),
-            ),
+            ],
           ),
-          if (desktop)
-            FButton(
-              variant: FButtonVariant.ghost,
-              size: FButtonSizeVariant.sm,
-              mainAxisSize: MainAxisSize.min,
-              semanticsLabel: l10n.hadithClearAllFilters,
-              onPress: interactionsEnabled
-                  ? () {
-                      unawaited(
-                        ref
-                            .read(hadithScreenControllerProvider.notifier)
-                            .clearFilters(),
-                      );
-                    }
-                  : null,
-              child: Text(l10n.hadithClearAllFilters),
-            )
-          else
-            FButton.icon(
-              variant: FButtonVariant.ghost,
-              size: FButtonSizeVariant.sm,
-              semanticsLabel: l10n.hadithClearAllFilters,
-              onPress: interactionsEnabled
-                  ? () {
-                      unawaited(
-                        ref
-                            .read(hadithScreenControllerProvider.notifier)
-                            .clearFilters(),
-                      );
-                    }
-                  : null,
-              child: const HadithDecorExcludeSemantics(
-                child: Icon(FLucideIcons.rotateCcw, size: 12),
-              ),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

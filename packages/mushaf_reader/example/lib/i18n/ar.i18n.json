@@ -1,0 +1,79 @@
+{
+  "appTitle": "عروض mushaf_reader",
+  "gettingStarted": "استدعِ MushafReaderLibrary.ensureInitialized(subDirectory: 'my_app') في main() لعزل بيانات Hive لكل تطبيق.",
+  "catalogSections": {
+    "readers": "القرّاء",
+    "pages": "الصفحات والمقتطفات",
+    "buildingBlocks": "الويدجات المنفصلة"
+  },
+  "demos": {
+    "mushafReader": {
+      "title": "MushafReader",
+      "subtitle": "قارئ كامل قابل للتمرير (صفحة واحدة في الشاشة)"
+    },
+    "twoPageSpread": {
+      "title": "عرض صفحتين",
+      "subtitle": "MushafReader مع pagesPerViewport: 2"
+    },
+    "mushafPage": {
+      "title": "MushafPage",
+      "subtitle": "صفحة واحدة مع التعامل مع النقر على الآية"
+    },
+    "shareCard": {
+      "title": "بطاقة مشاركة MushafPageRange",
+      "subtitle": "نطاق آيات داخل بطاقة مشاركة تجريبية"
+    },
+    "crossPageRange": {
+      "title": "نطاق عبر الصفحات",
+      "subtitle": "MushafPageRange.contiguous عبر عدة صفحات"
+    },
+    "standaloneWidgets": {
+      "title": "ويدجات منفصلة",
+      "subtitle": "AyahWidget والترويسات والبسملة والجزء ورقم الصفحة"
+    }
+  },
+  "common": {
+    "previousPage": "الصفحة السابقة",
+    "nextPage": "الصفحة التالية",
+    "pageLabel": "صفحة $page",
+    "pagesSpread": "الصفحات $left – $right",
+    "jumpToPage": "انتقل إلى صفحة",
+    "invalidPage": "أدخل رقماً بين 1 و 604",
+    "loadingPage": "جارٍ تحميل الصفحة…",
+    "retry": "إعادة المحاولة",
+    "loadFailed": "تعذّر تحميل الصفحة",
+    "localeToggle": "تبديل اللغة",
+    "themeToggle": "تبديل السمة",
+    "tappedAyah": "نُقر: $reference",
+    "ayahId": "معرّف الآية: $id",
+    "footer": "مثال mushaf_reader"
+  },
+  "shareCard": {
+    "title": "بطاقة مشاركة تجريبية MushafPageRange",
+    "showSurahHeader": "إظهار ترويسة السورة",
+    "showBasmalah": "إظهار البسملة",
+    "basmalahUnavailable": "غير متاح لهذا النطاق",
+    "rangeEnd": "نهاية النطاق: $reference"
+  },
+  "crossPage": {
+    "title": "MushafPageRange عبر الصفحات",
+    "presetLabel": "نطاق جاهز",
+    "presetPages1to2": "الآيات 1–8 (الصفحات 1–2)",
+    "sliceSummary": "صفحة $page: $count آية"
+  },
+  "standalone": {
+    "title": "ويدجات منفصلة",
+    "ayahFromId": "AyahWidget.fromId",
+    "ayahFromIdHint": "يحمّل آية واحدة بمعرّفها العام من المستودع.",
+    "ayahFromSurahAyah": "AyahWidget.fromSurahAyah",
+    "ayahFromSurahAyahHint": "يحمّل آية برقم السورة والآية.",
+    "basmalah": "BasmalahWidget",
+    "basmalahHint": "يحمّل رمز البسملة QCF4 من المستودع.",
+    "surahHeader": "SurahHeaderWidget",
+    "surahHeaderHint": "استخدم fromSurahNumber() — لا تمرّر نصوص Surah.glyph وهمية.",
+    "surahNameJuz": "SurahNameWidget + JuzWidget",
+    "surahNameJuzHint": "نمط صف الترويسة المستخدم في MushafPage.",
+    "pageNumber": "PageNumberWidget",
+    "pageNumberHint": "يعرض رقم صفحة المصحف لصفحة معيّنة."
+  }
+}

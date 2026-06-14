@@ -43,7 +43,7 @@ Future<void> main(List<String> args) async {
 
       print('Searching: $term');
       final results = await client.searchHadithDetailed(
-        HadithSearchParams(value: term, page: 1),
+        HadithSearchParams(value: term),
       );
 
       var termAdded = 0;

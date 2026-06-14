@@ -3,7 +3,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/hisn_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_featured_dua.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 
 part 'fortress_service.g.dart';
@@ -57,10 +56,6 @@ class FortressService {
     }
     return _repository.search(trimmed, limit: limit);
   }
-
-  /// Featured cards for the welcome layout.
-  List<FortressFeaturedDua> loadFeaturedDuas() =>
-      _repository.loadFeaturedDuas();
 
   /// Full commentary for a content id (load on demand for study sheets).
   HisnCommentary? loadCommentaryForContent(int contentId) =>

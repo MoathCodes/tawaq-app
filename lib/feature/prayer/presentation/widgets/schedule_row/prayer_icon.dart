@@ -1,20 +1,18 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil_plus/flutter_screenutil_plus.dart';
 import 'package:forui/forui.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/utils/scaled_screen_util.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:tawaq/theme/theme_extensions.dart';
 
-/// Rounded icon container for a prayer in the schedule row.
-class PrayerIcon extends ConsumerWidget {
+/// Compact prayer glyph for schedule rows.
+class PrayerIcon extends StatelessWidget {
   /// Creates a [PrayerIcon].
   const PrayerIcon({
     required this.prayer,
     required this.isActive,
     required this.colors,
+    this.status = CompletionStatus.none,
     super.key,
   });
 
@@ -27,25 +25,34 @@ class PrayerIcon extends ConsumerWidget {
   /// Theme colors for styling.
   final FColors colors;
 
+  /// Logged completion status, if any.
+  final CompletionStatus status;
+
+  static const _size = 36.0;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appScale = ref.watch(appTextScaleFactorProvider);
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    final statusColor = status != CompletionStatus.none
+        ? status.getBadgeColor(colors)
+        : null;
+
     return ExcludeSemantics(
       child: Container(
-        width: 44.w,
-        height: 44.w,
+        width: _size,
+        height: _size,
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isActive ? colors.primary : colors.secondary,
-          borderRadius: context.theme.radii.md,
+          borderRadius: BorderRadius.circular(10),
+          border: statusColor != null
+              ? Border.all(color: statusColor, width: 2)
+              : null,
         ),
-        child: Center(
-          child: Icon(
-            prayer.icon,
-            color: isActive
-                ? colors.primaryForeground
-                : colors.secondaryForeground,
-            size: scaledSp(24, appScale),
-          ),
+        child: Icon(
+          prayer.icon,
+          color: isActive ? colors.primaryForeground : colors.foreground,
+          size: theme.typography.lg.fontSize,
         ),
       ),
     );

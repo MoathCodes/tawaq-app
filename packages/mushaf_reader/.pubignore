@@ -1,0 +1,5 @@
+tool/
+assets/jsons/
+devtools_options.yaml
+studentRemainPlanIndex.faces
+.gemini/

@@ -13,9 +13,8 @@ part 'mushaf_page_info.g.dart';
 ///
 /// ```dart
 /// final controller = MushafReaderController();
-/// await controller.init();
+/// await controller.loadCurrentPageInfo();
 ///
-/// // Sync access to current page info
 /// final info = controller.currentPageInfo;
 /// print('Page ${info.pageNumber}, Juz ${info.juzNumber}');
 /// print('Surahs on page: ${info.surahNumbers.join(", ")}');

@@ -161,57 +161,61 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
         ),
     ];
 
-    final children = <Widget>[
-      Text(
-        hadith.hadith,
-        textAlign: TextAlign.justify,
-        style: theme.typography.lg.copyWith(height: 1.8),
-      ),
-      const SizedBox(height: AppSpacing.lg),
-      HadithMetaItem(title: l10n.hadithNarrator, value: hadith.rawi),
-      HadithMetaItem(title: l10n.hadithMuhaddith, value: hadith.mohdith),
-      HadithMetaItem(
-        title: l10n.hadithSource,
-        value: l10n.hadithSourceCitation(
-          hadith.book,
-          hadith.numberOrPage,
-        ),
-      ),
-      HadithMetaItem(
-        title: l10n.hadithGradeExplanation,
-        value: hadith.hukm,
-      ),
-      if ((hadith.takhrij ?? '').trim().isNotEmpty)
-        HadithMetaItem(title: l10n.hadithTakhrij, value: hadith.takhrij!),
-      if (accordionItems.isNotEmpty) ...[
-        const SizedBox(height: AppSpacing.lg),
-        FAccordion(
-          control: FAccordionControl.lifted(
-            expanded: expandedSections.value.contains,
-            onChange: (index, isExpanded) {
-              final next = Set<int>.from(expandedSections.value);
-              if (isExpanded) {
-                next.add(index);
-              } else {
-                next.remove(index);
-              }
-              expandedSections.value = next;
-            },
-          ),
-          style: .delta(
-            dividerStyle: .delta(
-              color: colors.border,
-              padding: const .value(EdgeInsets.zero),
-            ),
-          ),
-          children: accordionItems,
-        ),
-      ],
-    ];
-
     return ListView(
-      padding: const .all(AppSpacing.sm),
-      children: children,
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final narrow =
+                constraints.maxWidth < context.theme.breakpoints.sm;
+            return Text(
+              hadith.hadith,
+              textAlign: narrow ? TextAlign.start : TextAlign.justify,
+              style: theme.typography.lg.copyWith(height: 1.8),
+            );
+          },
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        HadithMetaItem(title: l10n.hadithNarrator, value: hadith.rawi),
+        HadithMetaItem(title: l10n.hadithMuhaddith, value: hadith.mohdith),
+        HadithMetaItem(
+          title: l10n.hadithSource,
+          value: l10n.hadithSourceCitation(
+            hadith.book,
+            hadith.numberOrPage,
+          ),
+        ),
+        HadithMetaItem(
+          title: l10n.hadithGradeExplanation,
+          value: hadith.hukm,
+        ),
+        if ((hadith.takhrij ?? '').trim().isNotEmpty)
+          HadithMetaItem(title: l10n.hadithTakhrij, value: hadith.takhrij!),
+        if (accordionItems.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.lg),
+          FAccordion(
+            control: FAccordionControl.lifted(
+              expanded: expandedSections.value.contains,
+              onChange: (index, isExpanded) {
+                final next = Set<int>.from(expandedSections.value);
+                if (isExpanded) {
+                  next.add(index);
+                } else {
+                  next.remove(index);
+                }
+                expandedSections.value = next;
+              },
+            ),
+            style: .delta(
+              dividerStyle: .delta(
+                color: colors.border,
+                padding: const .value(EdgeInsets.zero),
+              ),
+            ),
+            children: accordionItems,
+          ),
+        ],
+      ],
     );
   }
 }
@@ -257,30 +261,28 @@ class HadithUsulSourceCard extends StatelessWidget {
     final theme = context.theme;
 
     return StaticCard(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.sm,
-          children: [
-            Text(
-              source.source,
-              style: theme.typography.sm.copyWith(
-                color: theme.colors.mutedForeground,
-              ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(
+            source.source,
+            style: theme.typography.sm.copyWith(
+              color: theme.colors.mutedForeground,
             ),
-            Text(
-              source.chain,
-              style: theme.typography.sm,
-              textAlign: TextAlign.justify,
-            ),
-            Text(
-              source.hadithText,
-              style: theme.typography.md,
-              textAlign: TextAlign.justify,
-            ),
-          ],
-        ),
+          ),
+          Text(
+            source.chain,
+            style: theme.typography.sm,
+            textAlign: TextAlign.justify,
+          ),
+          Text(
+            source.hadithText,
+            style: theme.typography.md,
+            textAlign: TextAlign.justify,
+          ),
+        ],
       ),
     );
   }

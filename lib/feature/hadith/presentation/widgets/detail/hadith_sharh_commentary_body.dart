@@ -120,6 +120,7 @@ class HadithSharhCommentaryBody extends HookWidget {
             children: _fragmentsToSpans(fragments, styles),
           ),
           textAlign: textAlign,
+          strutStyle: styles.selectionStrut,
         ),
       );
     }

@@ -1,7 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:tawaq/gen/assets.gen.dart';
-import 'package:tawaq/gen/fonts.gen.dart';
-
 /// Available translation sources as an enum with metadata.
 ///
 /// Use this enum instead of strings to reference translations.
@@ -100,10 +98,5 @@ enum TranslationId {
   /// Font family for rendering this translation's text.
   ///
   /// When null, the UI inherits the theme's default typography.
-  String? get fontFamily {
-    return switch (this) {
-      TranslationId.urdu => FontFamily.iBMPlexSansArabic,
-      _ => null,
-    };
-  }
+  String? get fontFamily => null;
 }

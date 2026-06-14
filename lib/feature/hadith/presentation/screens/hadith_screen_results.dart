@@ -283,23 +283,21 @@ class _ResultsSkeletonList extends StatelessWidget {
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (_, _) {
         return const StaticCard(
-          child: Padding(
-            padding: EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              spacing: AppSpacing.sm,
-              children: [
-                SizedBox(height: 20, width: double.infinity),
-                SizedBox(height: 20, width: double.infinity),
-                SizedBox(height: 20, width: 220),
-                SizedBox(height: AppSpacing.md),
-                SizedBox(height: 14, width: 180),
-                SizedBox(height: AppSpacing.xs),
-                SizedBox(height: 14, width: 220),
-                SizedBox(height: AppSpacing.md),
-                SizedBox(height: 30, width: 120),
-              ],
-            ),
+          padding: EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: AppSpacing.sm,
+            children: [
+              SizedBox(height: 20, width: double.infinity),
+              SizedBox(height: 20, width: double.infinity),
+              SizedBox(height: 20, width: 220),
+              SizedBox(height: AppSpacing.md),
+              SizedBox(height: 14, width: 180),
+              SizedBox(height: AppSpacing.xs),
+              SizedBox(height: 14, width: 220),
+              SizedBox(height: AppSpacing.md),
+              SizedBox(height: 30, width: 120),
+            ],
           ),
         );
       },

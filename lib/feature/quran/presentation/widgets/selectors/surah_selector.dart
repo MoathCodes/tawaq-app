@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
@@ -57,6 +58,7 @@ class SurahSelector extends HookConsumerWidget {
         child: FSelect<Surah>.searchBuilder(
           enabled: selectorReady,
           label: Text(surahFieldName),
+          contentConstraints: selectPopoverPortalConstraints(context),
           style: selectStyle(
             colors: theme.colors,
             style: theme.style,

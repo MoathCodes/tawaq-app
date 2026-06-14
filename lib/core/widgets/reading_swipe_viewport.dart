@@ -308,6 +308,7 @@ class _SwipeNavAffordance extends StatelessWidget {
             scale: scale,
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              spacing: AppSpacing.xs,
               children: [
                 Container(
                   width: 44,
@@ -327,7 +328,6 @@ class _SwipeNavAffordance extends StatelessWidget {
                     textDirection: TextDirection.ltr,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
                 Text(
                   label,
                   style: context.theme.typography.xs.copyWith(

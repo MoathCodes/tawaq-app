@@ -1,6 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
@@ -85,39 +86,29 @@ class MethodStep extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Text(l10n.customParametersLabel),
           const SizedBox(height: AppSpacing.sm),
-          Row(
-            spacing: AppSpacing.md,
+          ResponsiveFieldRow(
             children: [
-              Expanded(
-                child: NumberField(
-                  ctrl: fajr,
-                  label: l10n.fajrAngleLabel,
-                ),
+              NumberField(
+                ctrl: fajr,
+                label: l10n.fajrAngleLabel,
               ),
-              Expanded(
-                child: NumberField(
-                  ctrl: isha,
-                  label: l10n.ishaAngleLabel,
-                ),
+              NumberField(
+                ctrl: isha,
+                label: l10n.ishaAngleLabel,
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            spacing: AppSpacing.md,
+          ResponsiveFieldRow(
             children: [
-              Expanded(
-                child: NumberField(
-                  ctrl: ishaInt,
-                  dec: false,
-                  label: l10n.ishaIntervalLabel,
-                ),
+              NumberField(
+                ctrl: ishaInt,
+                dec: false,
+                label: l10n.ishaIntervalLabel,
               ),
-              Expanded(
-                child: NumberField(
-                  ctrl: maghrib,
-                  label: l10n.maghribAngleLabel,
-                ),
+              NumberField(
+                ctrl: maghrib,
+                label: l10n.maghribAngleLabel,
               ),
             ],
           ),
@@ -143,14 +134,10 @@ class TimeFormatStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Material(
-      
-      child: SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: Text(l10n.use24HourFormat),
-        value: is24Hours.value,
-        onChanged: (v) => is24Hours.value = v,
-      ),
+    return FSwitch(
+      value: is24Hours.value,
+      onChange: (v) => is24Hours.value = v,
+      label: Text(l10n.use24HourFormat),
     );
   }
 }
@@ -186,27 +173,25 @@ class LocationStep extends StatelessWidget {
           label: Text(l10n.searchPlaceLabel),
         ),
         const SizedBox(height: AppSpacing.md),
-        Row(
-          spacing: AppSpacing.md,
+        ResponsiveFieldRow(
           children: [
-            Expanded(
-              child: NumberField(
-                ctrl: lat,
-                signed: true,
-                label: l10n.latitude,
-              ),
+            NumberField(
+              ctrl: lat,
+              signed: true,
+              label: l10n.latitude,
             ),
-            Expanded(
-              child: NumberField(
-                ctrl: lng,
-                signed: true,
-                label: l10n.longitude,
-              ),
+            NumberField(
+              ctrl: lng,
+              signed: true,
+              label: l10n.longitude,
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
+        ResponsiveFieldRow(
+          spacing: AppSpacing.sm,
+          maxColumns: 2,
+          expandChildren: false,
           children: [
             FButton(
               onPress: () => ScaffoldMessenger.of(context).showSnackBar(
@@ -214,7 +199,6 @@ class LocationStep extends StatelessWidget {
               ),
               child: Text(l10n.useDeviceLocation),
             ),
-            const SizedBox(width: AppSpacing.sm),
             FButton(
               onPress: () => ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(l10n.detectTimezoneNotImplemented)),
@@ -254,55 +238,44 @@ class IqamahStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SettingsSemantics.sectionHeader(
-            label: l10n.iqamahAfterAdhan,
-            child: Text(l10n.iqamahAfterAdhan),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            runSpacing: 8,
-            spacing: 12,
-            children: iqamahPrayers
-                .map(
-                  (p) => SizedBox(
-                    width: 140,
-                    child: FTextFormField(
-                      control: FTextFieldControl.managed(controller: iqamah[p]),
-                      label: Text(p.getLocaleName(l10n)),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          SettingsSemantics.sectionHeader(
-            label: l10n.adhanAdjustments,
-            child: Text(l10n.adhanAdjustments),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            runSpacing: 8,
-            spacing: 12,
-            children: adjustmentPrayers
-                .map(
-                  (p) => SizedBox(
-                    width: 140,
-                    child: FTextFormField(
-                      control: FTextFieldControl.managed(controller: adjust[p]),
-                      label: Text(p.getLocaleName(l10n)),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SettingsSemantics.sectionHeader(
+          label: l10n.iqamahAfterAdhan,
+          child: Text(l10n.iqamahAfterAdhan),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ResponsiveFieldRow(
+          maxColumns: 3,
+          children: [
+            for (final p in iqamahPrayers)
+              FTextFormField(
+                control: FTextFieldControl.managed(controller: iqamah[p]),
+                label: Text(p.getLocaleName(l10n)),
+                keyboardType: TextInputType.number,
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        SettingsSemantics.sectionHeader(
+          label: l10n.adhanAdjustments,
+          child: Text(l10n.adhanAdjustments),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        ResponsiveFieldRow(
+          maxColumns: 3,
+          children: [
+            for (final p in adjustmentPrayers)
+              FTextFormField(
+                control: FTextFieldControl.managed(controller: adjust[p]),
+                label: Text(p.getLocaleName(l10n)),
+                keyboardType: TextInputType.number,
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

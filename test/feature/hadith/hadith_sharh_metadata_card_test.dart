@@ -9,9 +9,8 @@ import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_metadata_parse
 import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_zone_splitter.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_metadata_card.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
-import 'package:tawaq/gen/fonts.gen.dart';
-import 'package:tawaq/theme/durations.dart';
-import 'package:tawaq/theme/radii.dart';
+import 'package:tawaq/theme/app_theme_builder.dart';
+import 'package:tawaq/theme/theme_model.dart';
 
 void main() {
   late List<Map<String, dynamic>> fixtures;
@@ -28,12 +27,11 @@ void main() {
 
   Widget wrap(Widget child) {
     return FTheme(
-      data: FThemeData(
-        colors: FThemes.zinc.light.desktop.colors,
-        typography: FThemes.zinc.light.desktop.typography,
-        icons: FThemes.zinc.light.desktop.icons,
+      data: buildAppTheme(
+        palette: AppPalette.zinc,
+        themeMode: ThemeMode.light,
         touch: false,
-        extensions: const [AppRadii.standard(), AppDurations.standard()],
+        textScale: 1,
       ),
       child: MaterialApp(
         home: Scaffold(
@@ -44,10 +42,7 @@ void main() {
   }
 
   TextStyle baseStyle(FThemeData theme) {
-    return theme.typography.sm.copyWith(
-      fontFamily: FontFamily.iBMPlexSansArabic,
-      height: 1.8,
-    );
+    return theme.typography.sm.copyWith(height: 1.8);
   }
 
   Iterable<String> visibleTexts(WidgetTester tester) sync* {

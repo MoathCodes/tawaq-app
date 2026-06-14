@@ -82,6 +82,97 @@ void main() {
         expect(all.first.status, CompletionStatus.jamaah);
       });
 
+      test('collapses pre-existing duplicate rows on update', () async {
+        final date = DateTime(2024, 5, 15, 5);
+
+        await db.insertOrUpdateCompletion(
+          PrayerCompletion(
+            id: null,
+            prayer: Prayer.fajr,
+            completionTime: date,
+            status: CompletionStatus.onTime,
+          ),
+          location,
+        );
+
+        final duplicateId = await box.add(
+          PrayerCompletion(
+            id: null,
+            prayer: Prayer.fajr,
+            completionTime: date.add(const Duration(hours: 1)),
+            status: CompletionStatus.late,
+          ),
+        );
+        await box.put(
+          duplicateId,
+          PrayerCompletion(
+            id: duplicateId,
+            prayer: Prayer.fajr,
+            completionTime: date.add(const Duration(hours: 1)),
+            status: CompletionStatus.late,
+          ),
+        );
+
+        expect(await db.getAllCompletions(), hasLength(2));
+
+        await db.insertOrUpdateCompletion(
+          PrayerCompletion(
+            id: null,
+            prayer: Prayer.fajr,
+            completionTime: date,
+            status: CompletionStatus.jamaah,
+          ),
+          location,
+        );
+
+        final all = await db.getAllCompletions();
+        expect(all, hasLength(1));
+        expect(all.single.prayer, Prayer.fajr);
+        expect(all.single.status, CompletionStatus.jamaah);
+        expect(all.single.id, duplicateId);
+      });
+
+      test('repairDuplicates removes orphan rows', () async {
+        final date = DateTime(2024, 5, 16, 6);
+
+        await db.insertOrUpdateCompletion(
+          PrayerCompletion(
+            id: null,
+            prayer: Prayer.dhuhr,
+            completionTime: date,
+            status: CompletionStatus.onTime,
+          ),
+          location,
+        );
+
+        final duplicateId = await box.add(
+          PrayerCompletion(
+            id: null,
+            prayer: Prayer.dhuhr,
+            completionTime: date.add(const Duration(hours: 2)),
+            status: CompletionStatus.late,
+          ),
+        );
+        await box.put(
+          duplicateId,
+          PrayerCompletion(
+            id: duplicateId,
+            prayer: Prayer.dhuhr,
+            completionTime: date.add(const Duration(hours: 2)),
+            status: CompletionStatus.late,
+          ),
+        );
+
+        final removed = await db.repairDuplicates(location);
+
+        expect(removed, 1);
+        expect(await db.getAllCompletions(), hasLength(1));
+        expect(
+          (await db.getAllCompletions()).single.status,
+          CompletionStatus.late,
+        );
+      });
+
       test('allows different prayers on same date', () async {
         final date = DateTime(2024, 5, 15);
 
@@ -310,6 +401,7 @@ void main() {
         final result = await db.countAllPrayerStatusOnDate(
           baseDate.subtract(const Duration(days: 1)),
           baseDate.add(const Duration(days: 1)),
+          location,
         );
 
         expect(result[CompletionStatus.jamaah], 2);
@@ -323,6 +415,7 @@ void main() {
         final result = await db.countAllPrayerStatusOnDate(
           DateTime(2024, 5),
           DateTime(2024, 5, 31),
+          location,
         );
 
         expect(result[CompletionStatus.jamaah], 0);
@@ -460,6 +553,58 @@ void main() {
         expect(result[0].day, 10);
         expect(result[1].day, 15);
         expect(result[2].day, 20);
+      });
+
+      test('does not count day with 4 obligatory plus sunnah only', () async {
+        final date = DateTime(2024, 5, 15);
+        for (final prayer in [
+          Prayer.fajr,
+          Prayer.dhuhr,
+          Prayer.asr,
+          Prayer.maghrib,
+        ]) {
+          await db.insertOrUpdateCompletion(
+            PrayerCompletion(
+              id: null,
+              prayer: prayer,
+              completionTime: date,
+              status: CompletionStatus.onTime,
+            ),
+            location,
+          );
+        }
+        await db.insertOrUpdateCompletion(
+          PrayerCompletion(
+            id: null,
+            prayer: Prayer.sunrise,
+            completionTime: date,
+            status: CompletionStatus.onTime,
+          ),
+          location,
+        );
+
+        final result = await db.getFullyCompletedDays(location);
+
+        expect(result, isEmpty);
+      });
+
+      test('counts day with all 5 obligatory even if sunnah also logged', () async {
+        final date = DateTime(2024, 5, 16);
+        await seedDay(date, List.filled(5, CompletionStatus.onTime));
+        await db.insertOrUpdateCompletion(
+          PrayerCompletion(
+            id: null,
+            prayer: Prayer.sunrise,
+            completionTime: date,
+            status: CompletionStatus.onTime,
+          ),
+          location,
+        );
+
+        final result = await db.getFullyCompletedDays(location);
+
+        expect(result, hasLength(1));
+        expect(result.first.day, 16);
       });
     });
 

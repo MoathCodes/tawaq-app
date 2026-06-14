@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mushaf_reader/src/data/ayah_id_resolver.dart';
+import 'package:mushaf_reader/mushaf_reader.dart';
 
 void main() {
   group('AyahIdResolver', () {
@@ -47,6 +47,15 @@ void main() {
         ),
         isNull,
       );
+    });
+
+    test('Ayah.globalIdFor matches resolver', () {
+      expect(Ayah.globalIdFor(surah: 2, ayahInSurah: 255), 262);
+      expect(Ayah.globalIdFor(surah: 1, ayahInSurah: 8), isNull);
+    });
+
+    test('MushafConstants align with resolver', () {
+      expect(MushafConstants.ayahCount, AyahIdResolver.totalAyahs);
     });
   });
 }
