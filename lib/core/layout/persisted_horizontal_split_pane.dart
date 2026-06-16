@@ -72,6 +72,26 @@ class _PersistedHorizontalSplitPaneState
   double? _cachedTotalWidth;
   bool _dragging = false;
 
+  // The region widgets are cached (see [_syncRegionsIfNeeded]) so [FResizable]
+  // keeps stable extents across the frequent parent rebuilds. Because those
+  // cached regions are reference-identical, Flutter would otherwise skip
+  // rebuilding their subtrees and freeze the pane contents. Injecting the live
+  // panes through notifiers lets the pane subtrees rebuild on their own when
+  // the content changes, without recreating the regions (which resets extents).
+  final ValueNotifier<Widget> _sidePaneNotifier = ValueNotifier(
+    const SizedBox.shrink(),
+  );
+  final ValueNotifier<Widget> _mainPaneNotifier = ValueNotifier(
+    const SizedBox.shrink(),
+  );
+
+  @override
+  void dispose() {
+    _sidePaneNotifier.dispose();
+    _mainPaneNotifier.dispose();
+    super.dispose();
+  }
+
   void _syncRegionsIfNeeded({
     required double totalWidth,
     required double sideExtent,
@@ -108,13 +128,19 @@ class _PersistedHorizontalSplitPaneState
       key: const ValueKey('persisted-split-side'),
       initialExtent: sideExtent,
       minExtent: sideMin,
-      builder: (_, _, _) => widget.sidePane,
+      builder: (_, _, _) => ValueListenableBuilder<Widget>(
+        valueListenable: _sidePaneNotifier,
+        builder: (_, pane, _) => pane,
+      ),
     );
     final mainRegion = FResizableRegion.region(
       key: const ValueKey('persisted-split-main'),
       initialExtent: mainExtent,
       minExtent: mainMin,
-      builder: (_, _, _) => widget.mainPane,
+      builder: (_, _, _) => ValueListenableBuilder<Widget>(
+        valueListenable: _mainPaneNotifier,
+        builder: (_, pane, _) => pane,
+      ),
     );
 
     _regions = widget.sideRegionIndex == 0
@@ -124,6 +150,11 @@ class _PersistedHorizontalSplitPaneState
 
   @override
   Widget build(BuildContext context) {
+    // Push the latest pane contents into the notifiers so the cached regions'
+    // subtrees rebuild even though the region widgets themselves are reused.
+    _sidePaneNotifier.value = widget.sidePane;
+    _mainPaneNotifier.value = widget.mainPane;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalWidth = constraints.maxWidth;
