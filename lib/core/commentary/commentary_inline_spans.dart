@@ -27,12 +27,13 @@ abstract final class CommentaryInlineSpans {
 
   /// Builds inline spans for commentary prose with quote/scholar/qawl styling.
   static List<InlineSpan> build(
+    BuildContext context,
     String input, {
-    required CommentaryTextStyles styles,
     bool emphasizeQawl = false,
   }) {
     if (input.isEmpty) return const [];
 
+    final styles = CommentaryStyleScope.of(context);
     final key = _BuildCacheKey(
       input: input,
       stylesId: identityHashCode(styles),
@@ -42,8 +43,8 @@ abstract final class CommentaryInlineSpans {
     if (cached != null) return cached;
 
     final spans = _computeBuild(
+      context,
       input,
-      styles: styles,
       emphasizeQawl: emphasizeQawl,
     );
     if (_buildCache.length >= _maxBuildCacheEntries) {
@@ -175,10 +176,11 @@ abstract final class CommentaryInlineSpans {
   }
 
   static List<InlineSpan> _computeBuild(
+    BuildContext context,
     String input, {
-    required CommentaryTextStyles styles,
     required bool emphasizeQawl,
   }) {
+    final styles = CommentaryStyleScope.of(context);
     return tokenizeProse(input, emphasizeQawl: emphasizeQawl)
         .map(
           (token) => TextSpan(

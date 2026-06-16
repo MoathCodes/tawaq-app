@@ -16,6 +16,32 @@ void main() {
     );
   });
 
+  Future<List<InlineSpan>> buildSpans(
+    WidgetTester tester,
+    String input, {
+    bool emphasizeQawl = false,
+  }) async {
+    late List<InlineSpan> spans;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CommentaryStyleScope(
+          styles: styles,
+          child: Builder(
+            builder: (context) {
+              spans = CommentaryInlineSpans.build(
+                context,
+                input,
+                emphasizeQawl: emphasizeQawl,
+              );
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      ),
+    );
+    return spans;
+  }
+
   List<({String text, FontWeight? weight, Color? color})> styledRuns(
     List<InlineSpan> spans,
   ) {
@@ -43,12 +69,9 @@ void main() {
   }
 
   group('CommentaryInlineSpans.build', () {
-    test('styles qawl lead phrases', () {
+    testWidgets('styles qawl lead phrases', (tester) async {
       final runs = styledRuns(
-        CommentaryInlineSpans.build(
-          'وقوله تعالى: ﴿بسم الله﴾',
-          styles: styles,
-        ),
+        await buildSpans(tester, 'وقوله تعالى: ﴿بسم الله﴾'),
       );
 
       expect(runs, hasLength(2));
@@ -59,12 +82,9 @@ void main() {
       expect(runs[1].color, styles.ayah.color);
     });
 
-    test('styles scholar dialogue leads', () {
+    testWidgets('styles scholar dialogue leads', (tester) async {
       final runs = styledRuns(
-        CommentaryInlineSpans.build(
-          'قال ابن عباس: معناه كذا',
-          styles: styles,
-        ),
+        await buildSpans(tester, 'قال ابن عباس: معناه كذا'),
       );
 
       expect(runs.first.text, 'قال ابن عباس: ');
@@ -72,13 +92,11 @@ void main() {
       expect(runs.first.color, styles.scholarLead.color);
     });
 
-    test('styles guillemet-quoted prayer phrases', () {
-      final runs = styledRuns(
-        CommentaryInlineSpans.build(
-          'فقال: «التَّحيَّاتُ لله»، هي جَمعُ تحيَّةٍ «\u200fوالصَّلَواتُ» «\u200fوالطَّيِّباتُ»',
-          styles: styles,
-        ),
-      );
+    testWidgets('styles guillemet-quoted prayer phrases', (tester) async {
+      const input =
+          'فقال: «التَّحيَّاتُ لله»، هي جَمعُ تحيَّةٍ '
+          '«\u200fوالصَّلَواتُ» «\u200fوالطَّيِّباتُ»';
+      final runs = styledRuns(await buildSpans(tester, input));
 
       final quoteRuns = runs
           .where(
@@ -95,11 +113,11 @@ void main() {
       expect(quoteRuns[2].text, '«\u200fوالطَّيِّباتُ»');
     });
 
-    test('styles ayah snippets and verse references', () {
+    testWidgets('styles ayah snippets and verse references', (tester) async {
       final runs = styledRuns(
-        CommentaryInlineSpans.build(
+        await buildSpans(
+          tester,
           'نص ﴿الحمد لله﴾ سورة الفاتحة، الآية: 1 متابعة',
-          styles: styles,
         ),
       );
 

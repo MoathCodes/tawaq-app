@@ -166,3 +166,32 @@ class CommentaryTextStyles {
   /// Surah/ayah cross-references (tafsir `t3` `( N - name )`).
   TextStyle get crossReference => verseRef;
 }
+
+/// Supplies [CommentaryTextStyles] to commentary formatters below in the tree.
+class CommentaryStyleScope extends InheritedWidget {
+  /// Creates a commentary style scope.
+  const CommentaryStyleScope({
+    required this.styles,
+    required super.child,
+    super.key,
+  });
+
+  /// Commentary styles for descendants.
+  final CommentaryTextStyles styles;
+
+  /// Returns the nearest [CommentaryTextStyles] from the tree.
+  static CommentaryTextStyles of(BuildContext context) {
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<CommentaryStyleScope>();
+    assert(
+      scope != null,
+      'CommentaryStyleScope not found in context. '
+      'Wrap commentary widgets in CommentaryStyleScope.',
+    );
+    return scope!.styles;
+  }
+
+  @override
+  bool updateShouldNotify(CommentaryStyleScope oldWidget) =>
+      styles != oldWidget.styles;
+}
