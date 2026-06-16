@@ -26,7 +26,7 @@ class HadithResultCard extends ConsumerWidget {
   });
 
   /// Compact card for nested detail panes (similar/alternate hadith).
-  HadithResultCard.embedded({
+  const HadithResultCard.embedded({
     required DetailedHadith hadith,
     required VoidCallback onSelect,
     Key? key,
@@ -71,7 +71,7 @@ class HadithResultCard extends ConsumerWidget {
     final l10n = context.l10n;
     final hadithKey = hadithStableKey(hadith);
 
-    final bool isFavoriteValue = isFavorite ??
+    final isFavoriteValue = isFavorite ??
         ref.watch(
           hadithSearchControllerProvider.select(
             (value) =>
@@ -79,7 +79,7 @@ class HadithResultCard extends ConsumerWidget {
                     .contains(hadithKey),
           ),
         );
-    final bool isSelectedValue = isSelected ??
+    final isSelectedValue = isSelected ??
         ref.watch(
           hadithSelectorProvider.select(
             (value) {
@@ -90,7 +90,7 @@ class HadithResultCard extends ConsumerWidget {
           ),
         );
 
-    final VoidCallback onSelectAction = onSelect ??
+    final onSelectAction = onSelect ??
         () {
           unawaited(
             ref
