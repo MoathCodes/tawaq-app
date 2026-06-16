@@ -34,12 +34,6 @@ class ScaleStepPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-    // final labelStyle = theme.typography.xs.copyWith(
-    //   fontWeight: FontWeight.w600,
-    //   height: 1.2,
-    // );
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final useGrid = constraints.maxWidth < context.theme.breakpoints.sm;
