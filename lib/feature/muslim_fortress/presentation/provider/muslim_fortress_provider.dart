@@ -2,10 +2,110 @@ import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_flow_state.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_service.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 part 'muslim_fortress_provider.g.dart';
+
+/// Returns the persisted fortress screen state from shared application settings.
+@riverpod
+FortressScreenState fortressUiState(Ref ref) {
+  final settings = ref.watch(fortressScreenSettingsProvider);
+  return settings.asData?.value ?? FortressScreenState.initial();
+}
+
+/// Returns the currently selected fortress chapter.
+@riverpod
+FortressCategory? fortressSelectedCategory(Ref ref) {
+  return ref.watch(fortressScreenControllerProvider).selectedCategory;
+}
+
+/// Returns whether fortress focus-reading mode is active.
+@riverpod
+bool fortressIsFocusMode(Ref ref) {
+  return ref.watch(fortressScreenControllerProvider).isFocusMode;
+}
+
+/// Returns the initial dua index for focus-reading mode.
+@riverpod
+int fortressFocusStartIndex(Ref ref) {
+  return ref.watch(fortressScreenControllerProvider).focusStartIndex;
+}
+
+/// Coordinates fortress screen session state and navigation actions.
+@riverpod
+class FortressScreenController extends _$FortressScreenController {
+  @override
+  FortressFlowState build() => const FortressFlowState();
+
+  /// Selects a chapter in the main pane, or clears selection when tapped again.
+  void selectCategory(FortressCategory category) {
+    if (state.selectedCategory == category) {
+      state = state.copyWith(clearSelectedCategory: true);
+      return;
+    }
+
+    state = state.copyWith(
+      selectedCategory: category,
+      isFocusMode: false,
+    );
+  }
+
+  /// Enters focus-reading mode for the selected chapter.
+  void startFocusReading({int initialIndex = 0}) {
+    if (state.selectedCategory == null) return;
+    state = state.copyWith(
+      isFocusMode: true,
+      focusStartIndex: initialIndex,
+    );
+  }
+
+  /// Leaves focus-reading mode while keeping the selected chapter.
+  void exitFocusMode() {
+    if (!state.isFocusMode) return;
+    state = state.copyWith(isFocusMode: false);
+  }
+
+  /// Switches the sidebar to the favorites tab.
+  void openFavoritesTab() {
+    ref
+        .read(fortressScreenSettingsProvider.notifier)
+        .setSidebarTab(FortressSidebarTab.favorites);
+  }
+
+  /// Clears the global fortress search query.
+  void clearGlobalSearch() {
+    ref.read(muslimFortressSearchQueryProvider.notifier).setQuery('');
+  }
+
+  /// Opens a title search result in the main pane.
+  void selectSearchTitle(FortressCategory category) {
+    clearGlobalSearch();
+    selectCategory(category);
+  }
+
+  /// Opens a content search result in focus-reading mode.
+  Future<void> selectSearchContent(FortressSearchContentHit hit) async {
+    clearGlobalSearch();
+
+    final chapters = await ref.read(muslimFortressChaptersProvider.future);
+    final category = chapters
+        .where((chapter) => chapter.chapterId == hit.chapterId)
+        .firstOrNull;
+    if (category == null) return;
+
+    selectCategory(category);
+
+    final duas = await ref.read(
+      muslimFortressDuasProvider(hit.chapterId).future,
+    );
+    final index = duas.indexWhere((dua) => dua.contentId == hit.item.contentId);
+    startFocusReading(initialIndex: index >= 0 ? index : 0);
+  }
+}
 
 /// All Hisn al-Muslim titles for the fortress UI.
 @riverpod

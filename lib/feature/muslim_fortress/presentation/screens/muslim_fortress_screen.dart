@@ -16,7 +16,6 @@ import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.da
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_service.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_browse_sidebar.dart';
@@ -24,7 +23,6 @@ import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortre
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/muslim_fortress_welcome_pane.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/search/fortress_search_results.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -42,19 +40,13 @@ class MuslimFortressScreen extends HookConsumerWidget {
     final theme = context.theme;
     final l10n = context.l10n;
     final chaptersAsync = ref.watch(muslimFortressChaptersProvider);
-    final day = ref.watch(prayerDayProvider).value;
-    final screenSettings = ref.watch(fortressScreenSettingsProvider);
-    final screenState =
-        screenSettings.asData?.value ?? FortressScreenState.initial();
+    final screenState = ref.watch(fortressUiStateProvider);
     final favoriteChapterIds = screenState.favoriteChapterIds;
     final isFavoritesTab =
         screenState.sidebarTab == FortressSidebarTab.favorites;
-
-    final selectedCategory = useState<FortressCategory?>(null);
+    final selectedCategory = ref.watch(fortressSelectedCategoryProvider);
+    final isFocusMode = ref.watch(fortressIsFocusModeProvider);
     final animatedSidebarChapterIds = useRef(<int>{});
-    final isFocusMode = useState(false);
-    final focusStartIndex = useState(0);
-
     final searchController = useTextEditingController();
     useListenable(searchController);
     final searchFocusNode = useFocusNode();
@@ -63,13 +55,10 @@ class MuslimFortressScreen extends HookConsumerWidget {
       [searchFocusNode],
     );
 
-    useRegisterAppSearchFocus(focusSearch, enabled: !isFocusMode.value);
+    useRegisterAppSearchFocus(focusSearch, enabled: !isFocusMode);
     final sidebarQuery = searchController.text.toLowerCase();
     final globalSearchQuery = ref.watch(muslimFortressSearchQueryProvider);
     final isGlobalSearch = globalSearchQuery.length >= 2;
-    final searchResultsAsync = isGlobalSearch
-        ? ref.watch(muslimFortressSearchResultsProvider)
-        : null;
 
     useEffect(() {
       final timer = Timer(const Duration(milliseconds: 300), () {
@@ -79,6 +68,13 @@ class MuslimFortressScreen extends HookConsumerWidget {
       });
       return timer.cancel;
     }, [searchController.text]);
+
+    useEffect(() {
+      if (searchController.text != globalSearchQuery) {
+        searchController.text = globalSearchQuery;
+      }
+      return null;
+    }, [globalSearchQuery]);
 
     useEffect(() {
       if (!chaptersAsync.hasValue) return null;
@@ -114,73 +110,12 @@ class MuslimFortressScreen extends HookConsumerWidget {
           ).toLowerCase().contains(sidebarQuery);
     }).toList();
 
-    void toggleFavorite(int chapterId) {
-      ref
-          .read(fortressScreenSettingsProvider.notifier)
-          .toggleFavorite(chapterId);
-    }
-
-    void selectCategory(FortressCategory category) {
-      if (selectedCategory.value == category) {
-        selectedCategory.value = null;
-        return;
-      }
-      isFocusMode.value = false;
-      selectedCategory.value = category;
-    }
-
-    final selectedDuasAsync = selectedCategory.value == null
-        ? null
-        : ref.watch(
-            muslimFortressDuasProvider(selectedCategory.value!.chapterId),
-          );
-
-    void startFocusReading({int initialIndex = 0}) {
-      focusStartIndex.value = initialIndex;
-      isFocusMode.value = true;
-    }
-
-    if (isFocusMode.value && selectedCategory.value != null) {
-      return Directionality(
+    if (isFocusMode && selectedCategory != null) {
+      return const Directionality(
         textDirection: TextDirection.rtl,
-        child: selectedDuasAsync!.when(
-          data: (duas) => FortressFocusReadingView(
-            category: selectedCategory.value!,
-            duas: duas,
-            initialIndex: focusStartIndex.value,
-            onExit: () => isFocusMode.value = false,
-          ),
-          loading: () => FSkeletonizer(
-            child: FortressFocusReadingView(
-              category: selectedCategory.value!,
-              duas: const [],
-              onExit: () => isFocusMode.value = false,
-            ),
-          ),
-          error: (e, _) => Scaffold(
-            body: Center(child: Text(e.toString())),
-          ),
-        ),
+        child: FortressFocusReadingView(),
       );
     }
-
-    final recommendedCategories = day == null
-        ? <FortressCategory>[]
-        : recommendFortressCategories(
-            allCategories: allCategories,
-            now: day.now,
-            prayerTimes: day.today,
-            location: day.location,
-          );
-
-    final categoriesByChapterId = {
-      for (final category in allCategories) category.chapterId: category,
-    };
-    final bookmarkCategories = [
-      for (final chapterId in favoriteChapterIds)
-        if (categoriesByChapterId[chapterId] != null)
-          categoriesByChapterId[chapterId]!,
-    ].toList();
 
     if (chaptersAsync.hasError) {
       return Directionality(
@@ -192,32 +127,32 @@ class MuslimFortressScreen extends HookConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                  Icon(
-                    FLucideIcons.circleAlert,
-                    size: 48,
-                    color: theme.colors.error,
+                Icon(
+                  FLucideIcons.circleAlert,
+                  size: 48,
+                  color: theme.colors.error,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Text(
+                  l10n.fortressLoadError,
+                  style: theme.typography.lg.copyWith(
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    l10n.fortressLoadError,
-                    style: theme.typography.lg.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  '$chaptersAsync.error',
+                  style: theme.typography.sm.copyWith(
+                    color: theme.colors.mutedForeground,
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    '$chaptersAsync.error',
-                    style: theme.typography.sm.copyWith(
-                      color: theme.colors.mutedForeground,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  FButton(
-                    onPress: () =>
-                        ref.invalidate(muslimFortressChaptersProvider),
-                    child: Text(l10n.fortressRetry),
-                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                FButton(
+                  onPress: () =>
+                      ref.invalidate(muslimFortressChaptersProvider),
+                  child: Text(l10n.fortressRetry),
+                ),
               ],
             ),
           ),
@@ -283,20 +218,9 @@ class MuslimFortressScreen extends HookConsumerWidget {
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
                       final category = filteredCategories[index];
-                      final isSelected =
-                          selectedCategory.value?.chapterId ==
-                          category.chapterId;
-                      final isFavorite = favoriteChapterIds.contains(
-                        category.chapterId,
-                      );
 
                       final tile = FortressCategoryListTile(
                         category: category,
-                        isSelected: isSelected,
-                        isFavorite: isFavorite,
-                        onTap: () => selectCategory(category),
-                        onToggleFavorite: () =>
-                            toggleFavorite(category.chapterId),
                       );
 
                       if (animatedSidebarChapterIds.value.contains(
@@ -328,80 +252,13 @@ class MuslimFortressScreen extends HookConsumerWidget {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: isGlobalSearch
-            ? searchResultsAsync!.when(
-                data: (results) => FortressSearchResultsPane(
-                  key: ValueKey(globalSearchQuery),
-                  results: results,
-                  query: globalSearchQuery,
-                  onSelectTitle: (category) {
-                    searchController.clear();
-                    ref
-                        .read(muslimFortressSearchQueryProvider.notifier)
-                        .setQuery('');
-                    selectCategory(category);
-                  },
-                  onSelectContent: (hit) async {
-                    searchController.clear();
-                    ref
-                        .read(muslimFortressSearchQueryProvider.notifier)
-                        .setQuery('');
-                    final category = allCategories
-                        .where((c) => c.chapterId == hit.chapterId)
-                        .firstOrNull;
-                    if (category == null) return;
-                    selectCategory(category);
-                    final duas = await ref.read(
-                      muslimFortressDuasProvider(hit.chapterId).future,
-                    );
-                    final index = duas.indexWhere(
-                      (d) => d.contentId == hit.item.contentId,
-                    );
-                    startFocusReading(initialIndex: index >= 0 ? index : 0);
-                  },
-                ),
-                loading: () =>
-                    const Center(child: FCircularProgress.loader()),
-                error: (e, _) => Center(child: Text(e.toString())),
+            ? FortressSearchResultsPane(
+                key: ValueKey(globalSearchQuery),
               )
-            : selectedCategory.value == null
-            ? MuslimFortressWelcomePane(
-                key: const ValueKey('welcome'),
-                recommendedCategories: recommendedCategories,
-                bookmarkCategories: bookmarkCategories,
-                onSelectCategory: selectCategory,
-                onViewAll: () => ref
-                    .read(fortressScreenSettingsProvider.notifier)
-                    .setSidebarTab(.favorites),
-              )
-            : selectedDuasAsync == null
-            ? const SizedBox.shrink()
-            : selectedDuasAsync.when(
-                data: (duas) => FortressCategoryDetailView(
-                  key: ValueKey(selectedCategory.value!.chapterId),
-                  category: selectedCategory.value!,
-                  duas: duas,
-                  isFavorite: favoriteChapterIds.contains(
-                    selectedCategory.value!.chapterId,
-                  ),
-                  onToggleFavorite: () => toggleFavorite(
-                    selectedCategory.value!.chapterId,
-                  ),
-                  onStartReading: startFocusReading,
-                ),
-                loading: () => FortressCategoryDetailView(
-                  key: ValueKey(selectedCategory.value!.chapterId),
-                  category: selectedCategory.value!,
-                  duas: const [],
-                  isFavorite: favoriteChapterIds.contains(
-                    selectedCategory.value!.chapterId,
-                  ),
-                  onToggleFavorite: () => toggleFavorite(
-                    selectedCategory.value!.chapterId,
-                  ),
-                  onStartReading: startFocusReading,
-                  isLoading: true,
-                ),
-                error: (e, _) => Center(child: Text(e.toString())),
+            : selectedCategory == null
+            ? const MuslimFortressWelcomePane(key: ValueKey('welcome'))
+            : FortressCategoryDetailView(
+                key: ValueKey(selectedCategory.chapterId),
               ),
       );
     }

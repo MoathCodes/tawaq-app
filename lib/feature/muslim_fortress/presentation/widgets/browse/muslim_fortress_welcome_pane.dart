@@ -1,38 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Home pane when no chapter is selected (time-based picks + bookmarks).
-class MuslimFortressWelcomePane extends StatelessWidget {
+class MuslimFortressWelcomePane extends ConsumerWidget {
   /// Creates a welcome pane.
-  const MuslimFortressWelcomePane({
-    required this.recommendedCategories,
-    required this.bookmarkCategories,
-    required this.onSelectCategory,
-    required this.onViewAll,
-    super.key,
-  });
-
-  /// Time- or prayer-based chapter suggestions.
-  final List<FortressCategory> recommendedCategories;
-
-  /// User bookmarked chapters (by title string).
-  final List<FortressCategory> bookmarkCategories;
-
-  /// Opens the selected chapter in the main pane.
-  final ValueChanged<FortressCategory> onSelectCategory;
-
-  /// Switches the sidebar to the favorites tab.
-  final VoidCallback onViewAll;
+  const MuslimFortressWelcomePane({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final chaptersAsync = ref.watch(muslimFortressChaptersProvider);
+    final allCategories = chaptersAsync.asData?.value ??
+        const <FortressCategory>[];
+    final day = ref.watch(prayerDayProvider).value;
+    final favoriteChapterIds = ref.watch(
+      fortressUiStateProvider.select((state) => state.favoriteChapterIds),
+    );
+    final controller = ref.read(fortressScreenControllerProvider.notifier);
+
+    final recommendedCategories = day == null
+        ? <FortressCategory>[]
+        : recommendFortressCategories(
+            allCategories: allCategories,
+            now: day.now,
+            prayerTimes: day.today,
+            location: day.location,
+          );
+
+    final categoriesByChapterId = {
+      for (final category in allCategories) category.chapterId: category,
+    };
+    final bookmarkCategories = [
+      for (final chapterId in favoriteChapterIds)
+        if (categoriesByChapterId[chapterId] != null)
+          categoriesByChapterId[chapterId]!,
+    ];
+
     final favoritesPreview = bookmarkCategories.take(4).toList();
     final favoritesOverflow =
         bookmarkCategories.length - favoritesPreview.length;
@@ -56,8 +69,8 @@ class MuslimFortressWelcomePane extends StatelessWidget {
                 : null,
             children: _fortressCategoryTiles(
               context,
+              ref,
               categories: recommendedCategories,
-              onSelectCategory: onSelectCategory,
               prefixForIndex: (index) => index == 0
                   ? FLucideIcons.sparkles
                   : FLucideIcons.bookOpenText,
@@ -76,8 +89,8 @@ class MuslimFortressWelcomePane extends StatelessWidget {
                 : null,
             children: _fortressCategoryTiles(
               context,
+              ref,
               categories: favoritesPreview,
-              onSelectCategory: onSelectCategory,
               prefixForIndex: (_) => FLucideIcons.bookmark,
             ),
           ),
@@ -87,7 +100,7 @@ class MuslimFortressWelcomePane extends StatelessWidget {
               alignment: AlignmentDirectional.centerStart,
               child: FButton(
                 variant: .ghost,
-                onPress: onViewAll,
+                onPress: controller.openFavoritesTab,
                 child: Text(
                   l10n.fortressMoreFavoriteChapters(favoritesOverflow),
                 ),
@@ -153,9 +166,9 @@ class _WelcomeHeader extends StatelessWidget {
 }
 
 List<FTileMixin> _fortressCategoryTiles(
-  BuildContext context, {
+  BuildContext context,
+  WidgetRef ref, {
   required List<FortressCategory> categories,
-  required ValueChanged<FortressCategory> onSelectCategory,
   required IconData Function(int index) prefixForIndex,
 }) {
   final l10n = context.l10n;
@@ -190,7 +203,9 @@ List<FTileMixin> _fortressCategoryTiles(
           recurrence: fortressRecurrenceLabel(categories[i].recurrence, l10n),
           supplicationCount: categories[i].supplicationCount,
         ),
-        onPress: () => onSelectCategory(categories[i]),
+        onPress: () => ref
+            .read(fortressScreenControllerProvider.notifier)
+            .selectCategory(categories[i]),
       ),
   ];
 }

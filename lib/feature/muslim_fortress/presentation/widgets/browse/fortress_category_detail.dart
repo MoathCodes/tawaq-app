@@ -8,31 +8,56 @@ import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_thikr_body.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
-class FortressCategoryDetailView extends HookConsumerWidget {
-  const FortressCategoryDetailView({
+class FortressCategoryDetailView extends ConsumerWidget {
+  const FortressCategoryDetailView({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final category = ref.watch(fortressSelectedCategoryProvider);
+    if (category == null) return const SizedBox.shrink();
+
+    final duasAsync = ref.watch(muslimFortressDuasProvider(category.chapterId));
+
+    return duasAsync.when(
+      data: (duas) => _FortressCategoryDetailBody(
+        category: category,
+        duas: duas,
+      ),
+      loading: () => _FortressCategoryDetailBody(
+        category: category,
+        duas: const [],
+        isLoading: true,
+      ),
+      error: (error, _) => Center(child: Text(error.toString())),
+    );
+  }
+}
+
+class _FortressCategoryDetailBody extends HookConsumerWidget {
+  const _FortressCategoryDetailBody({
     required this.category,
     required this.duas,
-    required this.isFavorite,
-    required this.onToggleFavorite,
-    required this.onStartReading,
     this.isLoading = false,
-    super.key,
   });
 
   final FortressCategory category;
   final List<FortressDuaItem> duas;
-  final bool isFavorite;
-  final VoidCallback onToggleFavorite;
-  final VoidCallback onStartReading;
   final bool isLoading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final favoriteChapterIds = ref.watch(
+      fortressUiStateProvider.select((state) => state.favoriteChapterIds),
+    );
+    final isFavorite = favoriteChapterIds.contains(category.chapterId);
+    final controller = ref.read(fortressScreenControllerProvider.notifier);
     final theme = context.theme;
     final l10n = context.l10n;
     final expandedIndex = useState<int?>(null);
@@ -62,13 +87,17 @@ class FortressCategoryDetailView extends HookConsumerWidget {
                     ),
                   ),
                   MouseClick(
-                    onClick: onToggleFavorite,
+                    onClick: () => ref
+                        .read(fortressScreenSettingsProvider.notifier)
+                        .toggleFavorite(category.chapterId),
                     semanticsLabel: l10n.fortressFavorites,
                     child: FortressExcludeDecorative(
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.xs),
                         child: Icon(
-                          FLucideIcons.bookmark,
+                          isFavorite
+                              ? FLucideIcons.bookmarkCheck
+                              : FLucideIcons.bookmark,
                           size: 22,
                           color: isFavorite
                               ? theme.colors.primary
@@ -92,10 +121,14 @@ class FortressCategoryDetailView extends HookConsumerWidget {
                 child: Text(l10n.fortressSupplicationsInSection(duas.length)),
               ),
               const SizedBox(height: AppSpacing.lg),
-              FButton(
-                onPress: onStartReading,
-                prefix: const Icon(FLucideIcons.bookOpen),
-                child: Text(l10n.fortressStartReading),
+              Row(
+                children: [
+                  FButton(
+                    onPress: controller.startFocusReading,
+                    prefix: const Icon(FLucideIcons.bookOpen),
+                    child: Text(l10n.fortressStartReading),
+                  ),
+                ],
               ),
             ],
           ),
@@ -143,7 +176,12 @@ class FortressCategoryDetailView extends HookConsumerWidget {
 }
 
 class FortressDuaPreviewCard extends StatelessWidget {
-  const FortressDuaPreviewCard({required this.index, required this.dua, required this.isExpanded, required this.onToggleExpanded, super.key,
+  const FortressDuaPreviewCard({
+    required this.index,
+    required this.dua,
+    required this.isExpanded,
+    required this.onToggleExpanded,
+    super.key,
   });
 
   final int index;
@@ -301,4 +339,3 @@ class FortressDuaPreviewPlaceholder extends StatelessWidget {
     );
   }
 }
-

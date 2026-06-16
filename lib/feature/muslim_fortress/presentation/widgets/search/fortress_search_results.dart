@@ -1,49 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Called when the user selects a title (chapter) search result.
-typedef FortressSearchTitleSelected =
-    void Function(
-      FortressCategory category,
-    );
-
-/// Called when the user selects a content search result.
-typedef FortressSearchContentSelected =
-    void Function(
-      FortressSearchContentHit hit,
-    );
-
 /// Displays global Hisn search results for titles and dhikr contents.
-class FortressSearchResultsPane extends StatelessWidget {
+class FortressSearchResultsPane extends ConsumerWidget {
   /// Creates a search results pane.
-  const FortressSearchResultsPane({
+  const FortressSearchResultsPane({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final query = ref.watch(muslimFortressSearchQueryProvider);
+    final resultsAsync = ref.watch(muslimFortressSearchResultsProvider);
+
+    return resultsAsync.when(
+      data: (results) => _FortressSearchResultsBody(
+        results: results,
+        query: query,
+      ),
+      loading: () => const Center(child: FCircularProgress.loader()),
+      error: (error, _) => Center(child: Text(error.toString())),
+    );
+  }
+}
+
+class _FortressSearchResultsBody extends StatelessWidget {
+  const _FortressSearchResultsBody({
     required this.results,
     required this.query,
-    required this.onSelectTitle,
-    required this.onSelectContent,
-    super.key,
   });
 
-  /// Search payload from the fortress search-results provider.
   final FortressSearchResults results;
-
-  /// Active query string (for empty-state copy).
   final String query;
-
-  /// Opens the selected chapter.
-  final FortressSearchTitleSelected onSelectTitle;
-
-  /// Opens the chapter and focuses the selected dhikr.
-  final FortressSearchContentSelected onSelectContent;
 
   @override
   Widget build(BuildContext context) {
@@ -92,37 +89,31 @@ class FortressSearchResultsPane extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
           children: [
-        if (results.titles.isNotEmpty) ...[
-          _SectionHeader(
-            icon: FLucideIcons.folderOpen,
-            title: l10n.fortressSearchTitles,
-            count: results.totalTitles,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          for (final category in results.titles) ...[
-            _TitleResultTile(
-              category: category,
-              onTap: () => onSelectTitle(category),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-          ],
-          const SizedBox(height: AppSpacing.xl),
-        ],
-        if (results.contents.isNotEmpty) ...[
-          _SectionHeader(
-            icon: FLucideIcons.textSearch,
-            title: l10n.fortressSearchContents,
-            count: results.totalContents,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          for (final hit in results.contents) ...[
-            _ContentResultTile(
-              hit: hit,
-              onTap: () => onSelectContent(hit),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-          ],
-        ],
+            if (results.titles.isNotEmpty) ...[
+              _SectionHeader(
+                icon: FLucideIcons.folderOpen,
+                title: l10n.fortressSearchTitles,
+                count: results.totalTitles,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              for (final category in results.titles) ...[
+                _TitleResultTile(category: category),
+                const SizedBox(height: AppSpacing.sm),
+              ],
+              const SizedBox(height: AppSpacing.xl),
+            ],
+            if (results.contents.isNotEmpty) ...[
+              _SectionHeader(
+                icon: FLucideIcons.textSearch,
+                title: l10n.fortressSearchContents,
+                count: results.totalContents,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              for (final hit in results.contents) ...[
+                _ContentResultTile(hit: hit),
+                const SizedBox(height: AppSpacing.sm),
+              ],
+            ],
           ],
         ),
       ),
@@ -163,22 +154,20 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _TitleResultTile extends StatelessWidget {
-  const _TitleResultTile({
-    required this.category,
-    required this.onTap,
-  });
+class _TitleResultTile extends ConsumerWidget {
+  const _TitleResultTile({required this.category});
 
   final FortressCategory category;
-  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
 
     return MouseClick(
-      onClick: onTap,
+      onClick: () => ref
+          .read(fortressScreenControllerProvider.notifier)
+          .selectSearchTitle(category),
       semanticsLabel: category.title,
       child: FortressExcludeDecorative(
         child: Container(
@@ -225,23 +214,21 @@ class _TitleResultTile extends StatelessWidget {
   }
 }
 
-class _ContentResultTile extends StatelessWidget {
-  const _ContentResultTile({
-    required this.hit,
-    required this.onTap,
-  });
+class _ContentResultTile extends ConsumerWidget {
+  const _ContentResultTile({required this.hit});
 
   final FortressSearchContentHit hit;
-  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
     final item = hit.item;
 
     return MouseClick(
-      onClick: onTap,
+      onClick: () => ref
+          .read(fortressScreenControllerProvider.notifier)
+          .selectSearchContent(hit),
       semanticsLabel: '${hit.categoryTitle}. ${item.text}',
       child: FortressExcludeDecorative(
         child: Container(

@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
-class FortressCategoryListTile extends StatelessWidget {
+class FortressCategoryListTile extends ConsumerWidget {
   const FortressCategoryListTile({
     required this.category,
-    required this.isSelected,
-    required this.isFavorite,
-    required this.onTap,
-    required this.onToggleFavorite,
     super.key,
   });
 
   final FortressCategory category;
-  final bool isSelected;
-  final bool isFavorite;
-  final VoidCallback onTap;
-  final VoidCallback onToggleFavorite;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final selectedCategory = ref.watch(fortressSelectedCategoryProvider);
+    final isSelected = selectedCategory?.chapterId == category.chapterId;
+    final favoriteChapterIds = ref.watch(
+      fortressUiStateProvider.select((state) => state.favoriteChapterIds),
+    );
+    final isFavorite = favoriteChapterIds.contains(category.chapterId);
 
     final bgColor = isSelected
         ? theme.colors.primary.withAlpha(20)
@@ -37,7 +38,9 @@ class FortressCategoryListTile extends StatelessWidget {
     final l10n = context.l10n;
 
     return MouseClick(
-      onClick: onTap,
+      onClick: () => ref
+          .read(fortressScreenControllerProvider.notifier)
+          .selectCategory(category),
       semanticsLabel: category.title,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
@@ -92,13 +95,17 @@ class FortressCategoryListTile extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             MouseClick(
-              onClick: onToggleFavorite,
+              onClick: () => ref
+                  .read(fortressScreenSettingsProvider.notifier)
+                  .toggleFavorite(category.chapterId),
               semanticsLabel: l10n.fortressFavorites,
               child: FortressExcludeDecorative(
                 child: Padding(
                   padding: const EdgeInsets.all(AppSpacing.xs),
                   child: Icon(
-                    FLucideIcons.bookmark,
+                    isFavorite
+                        ? FLucideIcons.bookmarkCheck
+                        : FLucideIcons.bookmark,
                     size: 18,
                     color: isFavorite
                         ? theme.colors.primary
@@ -135,32 +142,32 @@ class FortressEmptySidePanelState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-              Icon(
-                isFavoritesTab ? FLucideIcons.bookmark : FLucideIcons.searchX,
-                size: 40,
-                color: theme.colors.mutedForeground.withAlpha(120),
+            Icon(
+              isFavoritesTab ? FLucideIcons.bookmark : FLucideIcons.searchX,
+              size: 40,
+              color: theme.colors.mutedForeground.withAlpha(120),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              isFavoritesTab
+                  ? l10n.fortressEmptyFavoritesTitle
+                  : l10n.fortressEmptySearchTitle,
+              style: theme.typography.md.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colors.foreground,
               ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                isFavoritesTab
-                    ? l10n.fortressEmptyFavoritesTitle
-                    : l10n.fortressEmptySearchTitle,
-                style: theme.typography.md.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colors.foreground,
-                ),
-                textAlign: TextAlign.center,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              isFavoritesTab
+                  ? l10n.fortressEmptyFavoritesHint
+                  : l10n.fortressEmptySearchHint,
+              style: theme.typography.sm.copyWith(
+                color: theme.colors.mutedForeground,
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                isFavoritesTab
-                    ? l10n.fortressEmptyFavoritesHint
-                    : l10n.fortressEmptySearchHint,
-                style: theme.typography.sm.copyWith(
-                  color: theme.colors.mutedForeground,
-                ),
-                textAlign: TextAlign.center,
-              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

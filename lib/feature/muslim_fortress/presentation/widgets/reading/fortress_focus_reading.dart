@@ -5,14 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_scope.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/directional_content_switcher.dart';
+import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/reading_swipe_viewport.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_reading_nav_bar.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_thikr_body.dart';
@@ -22,20 +25,54 @@ import 'package:tawaq/theme/theme.dart';
 /// Maximum readable width for focus-reading thikr and virtue lines.
 const kFortressReadingMaxWidth = 720.0;
 
-class FortressFocusReadingView extends HookWidget {
-  const FortressFocusReadingView({required this.category, required this.duas, required this.onExit, super.key,
-    this.initialIndex = 0,
+class FortressFocusReadingView extends HookConsumerWidget {
+  const FortressFocusReadingView({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final category = ref.watch(fortressSelectedCategoryProvider);
+    if (category == null) return const SizedBox.shrink();
+
+    final duasAsync = ref.watch(muslimFortressDuasProvider(category.chapterId));
+    final initialIndex = ref.watch(fortressFocusStartIndexProvider);
+
+    return duasAsync.when(
+      data: (duas) => _FortressFocusReadingBody(
+        category: category,
+        duas: duas,
+        initialIndex: initialIndex,
+      ),
+      loading: () => FSkeletonizer(
+        child: _FortressFocusReadingBody(
+          category: category,
+          duas: const [],
+          initialIndex: initialIndex,
+        ),
+      ),
+      error: (error, _) => Scaffold(
+        body: Center(child: Text(error.toString())),
+      ),
+    );
+  }
+}
+
+class _FortressFocusReadingBody extends HookConsumerWidget {
+  const _FortressFocusReadingBody({
+    required this.category,
+    required this.duas,
+    required this.initialIndex,
   });
 
   final FortressCategory category;
   final List<FortressDuaItem> duas;
-  final VoidCallback onExit;
   final int initialIndex;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
+    final onExit =
+        ref.read(fortressScreenControllerProvider.notifier).exitFocusMode;
 
     if (duas.isEmpty) {
       return Scaffold(
