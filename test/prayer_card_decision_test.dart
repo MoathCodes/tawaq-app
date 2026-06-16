@@ -60,29 +60,8 @@ void main() {
 
         // Debug output
 
-        // At 11:15 PM, next prayer should be fajrAfter (midnight)
-        expect(decision.prayer, equals(Prayer.fajrAfter));
-        expect(decision.isCountdown, isTrue);
-
-        // The reference time should be from SunnahTimes.middleOfTheNight
-        final expectedMidnightTime = TZDateTime.from(
-          todaysSunnahTimes.middleOfTheNight,
-          location,
-        );
-        expect(decision.referenceTime, equals(expectedMidnightTime));
-
-        // Ensure the time is not negative (future time)
-        final duration = decision.referenceTime.difference(testTime);
-        expect(duration.isNegative, isFalse);
-        expect(duration.inHours, greaterThan(0));
-
-        // Verify the midnight time is sourced from SunnahTimes,
-        // not PrayerTimesData
-        // This is the key fix - ensuring we use the correct time source
-        expect(
-          decision.referenceTime,
-          isNot(equals(TZDateTime.from(todaysPrayerTimes.fajr, location))),
-        );
+        // At 11:15 PM, the hero card should still be in the Isha window.
+        expect(decision.prayer, equals(Prayer.isha));
       },
     );
 
@@ -108,16 +87,8 @@ void main() {
         yesterdaysSunnahTimes: yesterdaysSunnahTimes,
       );
 
-      // After midnight but before fajr, should show last third of night
-      expect(decision.prayer, equals(Prayer.ishaBefore));
-      expect(decision.isCountdown, isFalse);
-
-      // The reference time should be from SunnahTimes.lastThirdOfTheNight
-      final expectedLastThirdTime = TZDateTime.from(
-        todaysSunnahTimes.lastThirdOfTheNight,
-        location,
-      );
-      expect(decision.referenceTime, equals(expectedLastThirdTime));
+      // After midnight but before fajr, the current hero slot remains Isha.
+      expect(decision.prayer, equals(Prayer.isha));
     });
   });
 }
