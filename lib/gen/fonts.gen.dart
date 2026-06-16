@@ -14,6 +14,18 @@ class FontFamily {
   /// Font family: IBMPlexSansArabic
   static const String iBMPlexSansArabic = 'IBMPlexSansArabic';
 
+  /// Font family: NotoNastaliqUrdu
+  static const String notoNastaliqUrdu = 'NotoNastaliqUrdu';
+
+  /// Font family: NotoSans
+  static const String notoSans = 'NotoSans';
+
+  /// Font family: NotoSansBengali
+  static const String notoSansBengali = 'NotoSansBengali';
+
+  /// Font family: NotoSansSC
+  static const String notoSansSC = 'NotoSansSC';
+
   /// Font family: UthmanTN
   static const String uthmanTN = 'UthmanTN';
 
