@@ -104,28 +104,28 @@ class _SearchHeader extends HookConsumerWidget {
                           ),
                           onSubmit: searchBusy ? null : onQuerySubmitted,
                           hint: l10n.hadithSearchHint,
-                          label: Text(l10n.hadithSearchHint),
                           prefixBuilder: (_, _, _) =>
                               HadithDecorExcludeSemantics(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.sm,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.sm,
+                                  ),
+                                  child: Icon(
+                                    FLucideIcons.search,
+                                    size: 18,
+                                    color: theme.colors.mutedForeground,
+                                  ),
+                                ),
                               ),
-                              child: Icon(
-                                FLucideIcons.search,
-                                size: 18,
-                                color: theme.colors.mutedForeground,
-                              ),
-                            ),
-                          ),
                         ),
                       ),
                       if (isSearchMode)
                         FButton.icon(
                           onPress: () =>
                               unawaited(screenController.openBookmarks()),
-                          semanticsLabel:
-                              compactActions ? l10n.bookmarks : null,
+                          semanticsLabel: compactActions
+                              ? l10n.bookmarks
+                              : null,
                           child: compactActions
                               ? const HadithDecorExcludeSemantics(
                                   child: Icon(FLucideIcons.bookmark, size: 18),
@@ -148,8 +148,9 @@ class _SearchHeader extends HookConsumerWidget {
                                     HadithPanelTab.filters,
                                   );
                                 },
-                          semanticsLabel:
-                              compactActions ? l10n.hadithOpenFilters : null,
+                          semanticsLabel: compactActions
+                              ? l10n.hadithOpenFilters
+                              : null,
                           child: compactActions
                               ? Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -363,19 +364,19 @@ class _RecentSearchChip extends HookConsumerWidget {
               alignment: AlignmentDirectional.centerStart,
               child: showRemove && interactionsEnabled
                   ? FButton.icon(
-                        variant: FButtonVariant.ghost,
-                        size: FButtonSizeVariant.sm,
-                        semanticsLabel: hadithRemoveRecentSearchSemanticsLabel(
-                          query,
-                          l10n,
-                        ),
-                        onPress: () {
-                          unawaited(screenController.removeRecentSearch(query));
-                        },
-                        child: const HadithDecorExcludeSemantics(
-                          child: Icon(FLucideIcons.x, size: 12),
-                        ),
-                      )
+                      variant: FButtonVariant.ghost,
+                      size: FButtonSizeVariant.sm,
+                      semanticsLabel: hadithRemoveRecentSearchSemanticsLabel(
+                        query,
+                        l10n,
+                      ),
+                      onPress: () {
+                        unawaited(screenController.removeRecentSearch(query));
+                      },
+                      child: const HadithDecorExcludeSemantics(
+                        child: Icon(FLucideIcons.x, size: 12),
+                      ),
+                    )
                   : const SizedBox.shrink(),
             ),
           ),
@@ -429,8 +430,7 @@ class _RecentSearches extends ConsumerWidget {
               child: Row(
                 spacing: AppSpacing.xs,
                 children: [
-                  for (final query in items)
-                    _RecentSearchChip(query: query),
+                  for (final query in items) _RecentSearchChip(query: query),
                 ],
               ),
             ),
@@ -707,12 +707,15 @@ class _LookupSection extends ConsumerWidget {
 
   Future<Iterable<HadithLookupRef>> _lookup(WidgetRef ref, String query) =>
       switch (field) {
-        _HadithLookupField.scholars =>
-          ref.read(hadithScholarsLookupProvider(query).future),
-        _HadithLookupField.books =>
-          ref.read(hadithBooksLookupProvider(query).future),
-        _HadithLookupField.rawi =>
-          ref.read(hadithRawiLookupProvider(query).future),
+        _HadithLookupField.scholars => ref.read(
+          hadithScholarsLookupProvider(query).future,
+        ),
+        _HadithLookupField.books => ref.read(
+          hadithBooksLookupProvider(query).future,
+        ),
+        _HadithLookupField.rawi => ref.read(
+          hadithRawiLookupProvider(query).future,
+        ),
       };
 
   @override
@@ -748,29 +751,29 @@ class _LookupSection extends ConsumerWidget {
             value: selectedSet,
             onChange: (values) {
               if (!interactionsEnabled) return;
-              values
-                  .where((value) => !selectedSet.contains(value))
-                  .forEach((item) {
-                    if (selected.any((entry) => entry.id == item.id)) {
-                      return;
-                    }
-                    updateFilters(
-                      _withSelected(filters, [...selected, item]),
-                    );
-                  });
+              values.where((value) => !selectedSet.contains(value)).forEach((
+                item,
+              ) {
+                if (selected.any((entry) => entry.id == item.id)) {
+                  return;
+                }
+                updateFilters(
+                  _withSelected(filters, [...selected, item]),
+                );
+              });
 
-              selected
-                  .where((value) => !values.contains(value))
-                  .forEach((item) {
-                    updateFilters(
-                      _withSelected(
-                        filters,
-                        selected
-                            .where((entry) => entry.id != item.id)
-                            .toList(growable: false),
-                      ),
-                    );
-                  });
+              selected.where((value) => !values.contains(value)).forEach((
+                item,
+              ) {
+                updateFilters(
+                  _withSelected(
+                    filters,
+                    selected
+                        .where((entry) => entry.id != item.id)
+                        .toList(growable: false),
+                  ),
+                );
+              });
             },
           ),
           filter: (query) => _lookup(ref, query),

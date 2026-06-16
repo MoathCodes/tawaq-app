@@ -463,7 +463,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithScope => 'نطاق البحث';
 
   @override
-  String get hadithSearchHint => 'ابحث في الحديث...';
+  String get hadithSearchHint => 'ابحث في الدرر السنية...';
 
   @override
   String get hadithSearchMethod => 'طريقة البحث';
