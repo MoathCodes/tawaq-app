@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/coordinates_row.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_controls_row.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_map_section.dart';
@@ -17,13 +16,6 @@ class PrayerSettingsLocationSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final autoLocation = ref.watch(
-      prayerSettingsProvider.select((v) => v.value?.autoLocation ?? false),
-    );
-    final prayerSettingsReady = ref.watch(
-      prayerSettingsProvider.select((v) => v.hasValue),
-    );
-    final enabled = prayerSettingsReady && !autoLocation;
     final l10n = context.l10n;
 
     return SettingsSection(
@@ -31,17 +23,17 @@ class PrayerSettingsLocationSection extends ConsumerWidget {
       title: l10n.locationSectionTitle,
       subtitle: l10n.locationSectionSubtitle,
       child: FCard(
-        child: Column(
+        child: const Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: AppSpacing.lg,
           children: [
-            const UseLocationTile(),
-            const FDivider(),
-            LocationMapSection(enabled: enabled),
-            const FDivider(),
-            CoordinatesRow(enabled: enabled),
-            const FDivider(),
-            LocationControlsRow(enabled: enabled),
+            UseLocationTile(),
+            FDivider(),
+            LocationMapSection(),
+            FDivider(),
+            CoordinatesRow(),
+            FDivider(),
+            LocationControlsRow(),
           ],
         ),
       ),

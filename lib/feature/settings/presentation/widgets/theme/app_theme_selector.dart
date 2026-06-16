@@ -16,9 +16,6 @@ class ColorThemeSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedPalette = ref.watch(
-      themeProvider.select((t) => t.value?.appPalette),
-    );
     final selectedMode = ref.watch(
       themeProvider.select((t) => t.value?.themeMode),
     );
@@ -104,8 +101,6 @@ class ColorThemeSelector extends ConsumerWidget {
                 return PaletteItem(
                   key: ValueKey(palette),
                   palette: palette,
-                  isSelected: selectedPalette == palette,
-                  enabled: themeReady,
                 );
               },
             );

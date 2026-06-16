@@ -14,9 +14,11 @@ import 'package:tawaq/theme/theme.dart';
 Widget buildCalculationMethodSelector(
   BuildContext context,
   WidgetRef ref,
-  CalculationMethod methodValue, {
-  bool enabled = true,
-}) {
+  CalculationMethod methodValue,
+) {
+  final enabled = ref.watch(
+    prayerSettingsProvider.select((value) => value.hasValue),
+  );
   final l10n = context.l10n;
   return NonSelectable(
     child: FSelect<CalculationMethod>.searchBuilder(

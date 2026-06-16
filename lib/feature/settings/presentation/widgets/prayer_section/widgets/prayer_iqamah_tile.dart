@@ -2,10 +2,13 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
+import 'package:tawaq/feature/settings/presentation/provider/iqamah_draft_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -66,74 +69,36 @@ FTextFieldStyleDelta _iqamahStepperFieldStyle({
 }
 
 /// A row for adjusting the iqamah offset of a single prayer.
-class PrayerIqamahTile extends StatelessWidget {
+class PrayerIqamahTile extends ConsumerWidget {
   /// Creates a new [PrayerIqamahTile] instance.
   const PrayerIqamahTile({
     required this.prayer,
-    required this.controller,
-    required this.focusNode,
     required this.allowSigned,
-    required this.onDelta,
-    required this.onSave,
-    required this.onReset,
-    this.enabled = true,
-    this.isUnsaved = false,
     super.key,
   });
 
   /// The prayer this row controls.
   final Prayer prayer;
 
-  /// Text controller for the iqamah value.
-  final TextEditingController controller;
-
-  /// Focus node for the text field.
-  final FocusNode focusNode;
-
   /// Whether negative values are allowed.
   final bool allowSigned;
-
-  /// Called when +/- buttons are tapped, with the delta.
-  final ValueChanged<int> onDelta;
-
-  /// Called when the user saves (submit / editing complete).
-  final VoidCallback onSave;
-
-  /// Called when the user resets this prayer's value.
-  final VoidCallback onReset;
-
-  /// Whether adjustment controls are interactive.
-  final bool enabled;
-
-  /// Whether this row has unsaved edits.
-  final bool isUnsaved;
 
   static const _iconSize = 36.0;
   static const _compactBreakpoint = 520.0;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colors = theme.colors;
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final prayerName = prayer.getLocaleName(l10n);
 
     final label = _PrayerLabel(
       prayer: prayer,
       prayerName: prayerName,
-      colors: colors,
-      theme: theme,
     );
     final stepper = _IqamahStepper(
+      prayer: prayer,
       prayerName: prayerName,
-      controller: controller,
-      focusNode: focusNode,
       allowSigned: allowSigned,
-      enabled: enabled,
-      isUnsaved: isUnsaved,
-      onDelta: onDelta,
-      onSave: onSave,
-      onReset: onReset,
     );
 
     return Padding(
@@ -168,17 +133,16 @@ class _PrayerLabel extends StatelessWidget {
   const _PrayerLabel({
     required this.prayer,
     required this.prayerName,
-    required this.colors,
-    required this.theme,
   });
 
   final Prayer prayer;
   final String prayerName;
-  final FColors colors;
-  final FThemeData theme;
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final colors = theme.colors;
+
     return Row(
       spacing: AppSpacing.sm,
       children: [
@@ -212,31 +176,29 @@ class _PrayerLabel extends StatelessWidget {
   }
 }
 
-class _IqamahStepper extends StatelessWidget {
+class _IqamahStepper extends ConsumerWidget {
   const _IqamahStepper({
+    required this.prayer,
     required this.prayerName,
-    required this.controller,
-    required this.focusNode,
     required this.allowSigned,
-    required this.enabled,
-    required this.isUnsaved,
-    required this.onDelta,
-    required this.onSave,
-    required this.onReset,
   });
 
+  final Prayer prayer;
   final String prayerName;
-  final TextEditingController controller;
-  final FocusNode focusNode;
   final bool allowSigned;
-  final bool enabled;
-  final bool isUnsaved;
-  final ValueChanged<int> onDelta;
-  final VoidCallback onSave;
-  final VoidCallback onReset;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final draft = ref.read(iqamahDraftProvider.notifier);
+    final enabled = ref.watch(
+      prayerSettingsProvider.select((value) => value.hasValue),
+    );
+    final isUnsaved = ref.watch(
+      iqamahDraftProvider.select(
+        (state) => state.unsavedPrayers.contains(prayer),
+      ),
+    );
+
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
@@ -267,15 +229,15 @@ class _IqamahStepper extends StatelessWidget {
                 icon: FLucideIcons.minus,
                 label: SettingsSemantics.decreaseIqamahAction(l10n, prayerName),
                 enabled: enabled,
-                onPress: () => onDelta(-1),
+                onPress: () => draft.applyDelta(prayer, -1),
               ),
               _StepperDivider(color: colors.border),
               ConstrainedBox(
                 constraints: const BoxConstraints(minWidth: 88, maxWidth: 112),
                 child: FTextField(
                   enabled: enabled,
-                  control: .managed(controller: controller),
-                  focusNode: focusNode,
+                  control: .managed(controller: draft.controller(prayer)),
+                  focusNode: draft.focusNode(prayer),
                   textAlign: TextAlign.center,
                   keyboardType: TextInputType.number,
                   style: fieldStyle,
@@ -285,8 +247,8 @@ class _IqamahStepper extends StatelessWidget {
                     else
                       FilteringTextInputFormatter.digitsOnly,
                   ],
-                  onEditingComplete: onSave,
-                  onSubmit: (_) => onSave(),
+                  onEditingComplete: () => draft.save(context, prayer),
+                  onSubmit: (_) => draft.save(context, prayer),
                   suffixBuilder: (context, value, child) => Padding(
                     padding: const EdgeInsetsDirectional.only(end: 6),
                     child: Text(l10n.minute, style: unitStyle),
@@ -298,16 +260,17 @@ class _IqamahStepper extends StatelessWidget {
                 icon: FLucideIcons.plus,
                 label: SettingsSemantics.increaseIqamahAction(l10n, prayerName),
                 enabled: enabled,
-                onPress: () => onDelta(1),
+                onPress: () => draft.applyDelta(prayer, 1),
               ),
               _StepperDivider(color: colors.border),
               FTooltip(
-                tipBuilder: (context, controller) => Text(l10n.resetToDefaults),
+                tipBuilder: (context, controller) =>
+                    Text(l10n.resetToDefaults),
                 child: _StepperIconButton(
                   icon: FLucideIcons.rotateCcw,
                   label: SettingsSemantics.resetIqamahAction(l10n, prayerName),
                   enabled: enabled,
-                  onPress: onReset,
+                  onPress: () => draft.reset(context, prayer),
                 ),
               ),
             ],

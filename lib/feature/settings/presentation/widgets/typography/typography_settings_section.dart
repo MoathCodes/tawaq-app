@@ -4,7 +4,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/translation_source_selector.dart';
-import 'package:tawaq/feature/settings/data/models/app_text_scale.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/typography/settings_scale_step_picker.dart';
@@ -20,15 +19,11 @@ class TypographySettingsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
     final l10n = context.l10n;
-    final appTextScale = ref.watch(
-      themeProvider.select((t) => t.value?.appTextScale ?? AppTextScale.normal),
-    );
     final quranTextScale = ref.watch(
       quranScreenSettingsProvider.select(
         (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
       ),
     );
-    final themeReady = ref.watch(themeProvider.select((t) => t.hasValue));
     final stateReady = ref.watch(
       quranScreenSettingsProvider.select((s) => s.hasValue),
     );
@@ -39,37 +34,11 @@ class TypographySettingsSection extends ConsumerWidget {
       children: [
         _ScalePickerGroup(
           title: l10n.appTextSize,
-          child: SettingsScaleStepPicker(
-            groupLabel: l10n.appTextSize,
-            enabled: themeReady,
-            labels: [
-              l10n.appTextSizeCompact,
-              l10n.appTextSizeNormal,
-              l10n.appTextSizeLarge,
-              l10n.appTextSizeShortExtraLarge,
-            ],
-            selectedIndex: appTextScale.index,
-            onChanged: (i) => ref
-                .read(themeProvider.notifier)
-                .setAppTextScale(AppTextScale.values[i]),
-          ),
+          child: const AppTextScaleStepPicker(),
         ),
         _ScalePickerGroup(
           title: l10n.quranTextSize,
-          child: SettingsScaleStepPicker(
-            groupLabel: l10n.quranTextSize,
-            enabled: stateReady,
-            labels: [
-              l10n.quranTextSizeSmall,
-              l10n.quranTextSizeMedium,
-              l10n.quranTextSizeLarge,
-              l10n.quranTextSizeShortExtraLarge,
-            ],
-            selectedIndex: quranTextScale.index,
-            onChanged: (i) => ref
-                .read(quranScreenSettingsProvider.notifier)
-                .setTextScale(QuranTextScale.values[i]),
-          ),
+          child: const QuranTextScaleStepPicker(),
         ),
         _ScalePickerGroup(
           title: l10n.translation,

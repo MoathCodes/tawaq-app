@@ -10,31 +10,13 @@ import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_controls_row.dart'
+    show manualLocationControlsEnabled;
 
 /// Row of latitude / longitude input fields.
 class CoordinatesRow extends ConsumerWidget {
   /// Creates a new [CoordinatesRow] instance.
-  const CoordinatesRow({required this.enabled, super.key});
-
-  /// Whether the fields are editable.
-  final bool enabled;
-
-  void _updateCoordinate(
-    WidgetRef ref,
-    Coordinates coords,
-    String value,
-    bool isLat,
-  ) {
-    final parsed = double.tryParse(value);
-    if (parsed == null) return;
-
-    final newCoords = isLat
-        ? Coordinates(parsed, coords.longitude)
-        : Coordinates(coords.latitude, parsed);
-    final notifier = ref.read(prayerSettingsProvider.notifier)
-      ..setCoordinates(newCoords);
-    unawaited(notifier.updateLocationData(coordinates: newCoords));
-  }
+  const CoordinatesRow({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -49,20 +31,16 @@ class CoordinatesRow extends ConsumerWidget {
         maxColumns: 2,
         children: [
           CoordinateField(
-            enabled: enabled,
+            isLatitude: true,
             label: l10n.latitude,
-            value: coordinates.latitude.toStringAsFixed(7),
             min: -90,
             max: 90,
-            onChanged: (v) => _updateCoordinate(ref, coordinates, v, true),
           ),
           CoordinateField(
-            enabled: enabled,
+            isLatitude: false,
             label: l10n.longitude,
-            value: coordinates.longitude.toStringAsFixed(7),
             min: -180,
             max: 180,
-            onChanged: (v) => _updateCoordinate(ref, coordinates, v, false),
           ),
         ],
       ),
@@ -71,26 +49,21 @@ class CoordinatesRow extends ConsumerWidget {
 }
 
 /// A single numeric coordinate input field.
-class CoordinateField extends HookWidget {
+class CoordinateField extends HookConsumerWidget {
   /// Creates a new [CoordinateField] instance.
   const CoordinateField({
-    required this.enabled,
+    required this.isLatitude,
     required this.label,
-    required this.value,
     required this.min,
     required this.max,
-    required this.onChanged,
     super.key,
   });
 
-  /// Whether the field is editable.
-  final bool enabled;
+  /// Whether this field edits latitude (otherwise longitude).
+  final bool isLatitude;
 
   /// The label shown above the field.
   final String label;
-
-  /// The current value as a string.
-  final String value;
 
   /// Minimum allowed value.
   final double min;
@@ -98,15 +71,21 @@ class CoordinateField extends HookWidget {
   /// Maximum allowed value.
   final double max;
 
-  /// Called when the user changes the value.
-  final ValueChanged<String> onChanged;
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = manualLocationControlsEnabled(ref);
+    final coordinates = ref.watch(
+      prayerSettingsProvider.select((v) => v.value?.coordinates),
+    );
+    if (coordinates == null) return const SizedBox.shrink();
+
+    final value = isLatitude
+        ? coordinates.latitude.toStringAsFixed(7)
+        : coordinates.longitude.toStringAsFixed(7);
+
     final controller = useTextEditingController(text: value);
     final focusNode = useFocusNode();
 
-    // Sync external value only when not focused.
     useValueChanged<String, void>(value, (_, _) {
       if (!focusNode.hasFocus) controller.text = value;
       return;
@@ -118,12 +97,24 @@ class CoordinateField extends HookWidget {
       control: .managed(
         controller: controller,
         onChange: (v) async {
-          // Only propagate user edits (field focused), not programmatic syncs.
-          if (focusNode.hasFocus && v.text != value) {
-            WidgetsBinding.instance.addPostFrameCallback(
-              (_) => onChanged(v.text),
+          if (!focusNode.hasFocus || v.text == value) return;
+
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final parsed = double.tryParse(v.text);
+            if (parsed == null) return;
+
+            final coords = ref.read(
+              prayerSettingsProvider.select((s) => s.value?.coordinates),
             );
-          }
+            if (coords == null) return;
+
+            final newCoords = isLatitude
+                ? Coordinates(parsed, coords.longitude)
+                : Coordinates(coords.latitude, parsed);
+            final notifier = ref.read(prayerSettingsProvider.notifier)
+              ..setCoordinates(newCoords);
+            unawaited(notifier.updateLocationData(coordinates: newCoords));
+          });
         },
       ),
       label: Text(label),

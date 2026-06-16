@@ -1,9 +1,11 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/feature/settings/presentation/provider/wizard_setup_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -34,35 +36,16 @@ class WelcomeStep extends StatelessWidget {
 }
 
 /// Calculation method selection step for the start wizard.
-class MethodStep extends StatelessWidget {
+class MethodStep extends ConsumerWidget {
   /// Creates a [MethodStep] instance.
-  const MethodStep({
-    required this.method,
-    required this.fajr,
-    required this.isha,
-    required this.ishaInt,
-    required this.maghrib,
-    super.key,
-  });
-
-  /// The selected calculation method.
-  final ValueNotifier<CalculationMethod?> method;
-
-  /// Controller for fajr angle.
-  final TextEditingController fajr;
-
-  /// Controller for isha angle.
-  final TextEditingController isha;
-
-  /// Controller for isha interval.
-  final TextEditingController ishaInt;
-
-  /// Controller for maghrib angle.
-  final TextEditingController maghrib;
+  const MethodStep({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wizard = ref.read(wizardSetupProvider.notifier);
+    final method = ref.watch(wizardSetupProvider.select((s) => s.method));
     final l10n = context.l10n;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -74,26 +57,26 @@ class MethodStep extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         FSelect<CalculationMethod>(
           control: .lifted(
-            value: method.value,
-            onChange: (value) => method.value = value,
+            value: method,
+            onChange: wizard.setMethod,
           ),
           label: Text(l10n.calculationMethod),
           items: {
             for (final m in CalculationMethod.values) m.getLocaleName(l10n): m,
           },
         ),
-        if (method.value == CalculationMethod.other) ...[
+        if (method == CalculationMethod.other) ...[
           const SizedBox(height: AppSpacing.lg),
           Text(l10n.customParametersLabel),
           const SizedBox(height: AppSpacing.sm),
           ResponsiveFieldRow(
             children: [
               NumberField(
-                ctrl: fajr,
+                controller: wizard.fajrAngle,
                 label: l10n.fajrAngleLabel,
               ),
               NumberField(
-                ctrl: isha,
+                controller: wizard.ishaAngle,
                 label: l10n.ishaAngleLabel,
               ),
             ],
@@ -102,12 +85,12 @@ class MethodStep extends StatelessWidget {
           ResponsiveFieldRow(
             children: [
               NumberField(
-                ctrl: ishaInt,
+                controller: wizard.ishaInterval,
                 dec: false,
                 label: l10n.ishaIntervalLabel,
               ),
               NumberField(
-                ctrl: maghrib,
+                controller: wizard.maghribAngle,
                 label: l10n.maghribAngleLabel,
               ),
             ],
@@ -124,64 +107,55 @@ class MethodStep extends StatelessWidget {
 }
 
 /// Time format selection step for the start wizard.
-class TimeFormatStep extends StatelessWidget {
+class TimeFormatStep extends ConsumerWidget {
   /// Creates a [TimeFormatStep] instance.
-  const TimeFormatStep({required this.is24Hours, super.key});
-
-  /// Whether 24-hour format is selected.
-  final ValueNotifier<bool> is24Hours;
+  const TimeFormatStep({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final is24Hours = ref.watch(
+      wizardSetupProvider.select((s) => s.is24Hours),
+    );
     final l10n = context.l10n;
+
     return FSwitch(
-      value: is24Hours.value,
-      onChange: (v) => is24Hours.value = v,
+      value: is24Hours,
+      onChange: (value) {
+        ref.read(wizardSetupProvider.notifier).setIs24Hours(value: value);
+      },
       label: Text(l10n.use24HourFormat),
     );
   }
 }
 
 /// Location configuration step for the start wizard.
-class LocationStep extends StatelessWidget {
+class LocationStep extends ConsumerWidget {
   /// Creates a [LocationStep] instance.
-  const LocationStep({
-    required this.name,
-    required this.lat,
-    required this.lng,
-    super.key,
-  });
-
-  /// Controller for location name.
-  final TextEditingController name;
-
-  /// Controller for latitude.
-  final TextEditingController lat;
-
-  /// Controller for longitude.
-  final TextEditingController lng;
+  const LocationStep({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wizard = ref.read(wizardSetupProvider.notifier);
     final l10n = context.l10n;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         FTextFormField(
-          control: FTextFieldControl.managed(controller: name),
+          control: FTextFieldControl.managed(controller: wizard.locationName),
           label: Text(l10n.searchPlaceLabel),
         ),
         const SizedBox(height: AppSpacing.md),
         ResponsiveFieldRow(
           children: [
             NumberField(
-              ctrl: lat,
+              controller: wizard.latitude,
               signed: true,
               label: l10n.latitude,
             ),
             NumberField(
-              ctrl: lng,
+              controller: wizard.longitude,
               signed: true,
               label: l10n.longitude,
             ),
@@ -213,31 +187,15 @@ class LocationStep extends StatelessWidget {
 }
 
 /// Iqamah and adjustments configuration step for the start wizard.
-class IqamahStep extends StatelessWidget {
+class IqamahStep extends ConsumerWidget {
   /// Creates an [IqamahStep] instance.
-  const IqamahStep({
-    required this.iqamah,
-    required this.adjust,
-    required this.iqamahPrayers,
-    required this.adjustmentPrayers,
-    super.key,
-  });
-
-  /// Controllers for iqamah times.
-  final Map<Prayer, TextEditingController> iqamah;
-
-  /// Controllers for adjustments.
-  final Map<Prayer, TextEditingController> adjust;
-
-  /// List of prayers with iqamah times.
-  final List<Prayer> iqamahPrayers;
-
-  /// List of prayers with adjustments.
-  final List<Prayer> adjustmentPrayers;
+  const IqamahStep({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final wizard = ref.read(wizardSetupProvider.notifier);
     final l10n = context.l10n;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -250,10 +208,12 @@ class IqamahStep extends StatelessWidget {
         ResponsiveFieldRow(
           maxColumns: 3,
           children: [
-            for (final p in iqamahPrayers)
+            for (final prayer in kWizardIqamahPrayers)
               FTextFormField(
-                control: FTextFieldControl.managed(controller: iqamah[p]),
-                label: Text(p.getLocaleName(l10n)),
+                control: FTextFieldControl.managed(
+                  controller: wizard.iqamah[prayer],
+                ),
+                label: Text(prayer.getLocaleName(l10n)),
                 keyboardType: TextInputType.number,
               ),
           ],
@@ -267,10 +227,12 @@ class IqamahStep extends StatelessWidget {
         ResponsiveFieldRow(
           maxColumns: 3,
           children: [
-            for (final p in adjustmentPrayers)
+            for (final prayer in kWizardAdjustmentPrayers)
               FTextFormField(
-                control: FTextFieldControl.managed(controller: adjust[p]),
-                label: Text(p.getLocaleName(l10n)),
+                control: FTextFieldControl.managed(
+                  controller: wizard.adjustments[prayer],
+                ),
+                label: Text(prayer.getLocaleName(l10n)),
                 keyboardType: TextInputType.number,
               ),
           ],
@@ -284,7 +246,7 @@ class IqamahStep extends StatelessWidget {
 class NumberField extends StatelessWidget {
   /// Creates a [NumberField] instance.
   const NumberField({
-    required this.ctrl,
+    required this.controller,
     this.dec = true,
     this.signed = false,
     this.label,
@@ -292,7 +254,7 @@ class NumberField extends StatelessWidget {
   });
 
   /// The text controller.
-  final TextEditingController ctrl;
+  final TextEditingController controller;
 
   /// Whether to allow decimal input.
   final bool dec;
@@ -305,7 +267,7 @@ class NumberField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FTextFormField(
-    control: FTextFieldControl.managed(controller: ctrl),
+    control: FTextFieldControl.managed(controller: controller),
     label: label == null ? null : Text(label!),
     keyboardType: TextInputType.numberWithOptions(decimal: dec, signed: signed),
   );

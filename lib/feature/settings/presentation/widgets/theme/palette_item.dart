@@ -21,22 +21,19 @@ class PaletteItem extends ConsumerWidget {
   /// Creates a new [PaletteItem] instance.
   const PaletteItem({
     required this.palette,
-    required this.isSelected,
-    this.enabled = true,
     super.key,
   });
 
   /// The palette this item represents.
   final AppPalette palette;
 
-  /// Whether this palette is currently selected.
-  final bool isSelected;
-
-  /// Whether the palette can be selected.
-  final bool enabled;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isSelected = ref.watch(
+      themeProvider.select((t) => t.value?.appPalette == palette),
+    );
+    final enabled = ref.watch(themeProvider.select((t) => t.hasValue));
+
     final theme = resolveColorScheme(
       palette,
       ThemeMode.light,

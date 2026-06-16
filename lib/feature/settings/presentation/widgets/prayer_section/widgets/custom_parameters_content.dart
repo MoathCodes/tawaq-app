@@ -1,40 +1,72 @@
+import 'dart:async';
+
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/param_controllers.dart';
+import 'package:tawaq/feature/settings/presentation/provider/custom_parameters_draft_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// The body content of the custom parameters accordion.
-class CustomParametersContent extends StatelessWidget {
+class CustomParametersContent extends ConsumerWidget {
   /// Creates a new [CustomParametersContent] instance.
-  const CustomParametersContent({
-    required this.controllers,
-    required this.onSave,
-    required this.onReset,
-    this.enabled = true,
-    super.key,
-  });
-
-  /// The parameter controllers.
-  final ParamControllers controllers;
-
-  /// Whether fields and actions are interactive.
-  final bool enabled;
-
-  /// Called when the user saves.
-  final VoidCallback onSave;
-
-  /// Called when the user resets.
-  final VoidCallback onReset;
+  const CustomParametersContent({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final c = controllers;
+    final draft = ref.read(customParametersDraftProvider.notifier);
+    final enabled = ref.watch(
+      prayerSettingsProvider.select((value) => value.hasValue),
+    );
+
+    void save() {
+      try {
+        final method = ref.read(prayerSettingsProvider).value?.method;
+        final newMethod = draft.toMethod(method);
+        if (newMethod != method) {
+          unawaited(
+            ref
+                .read(prayerSettingsProvider.notifier)
+                .update(
+                  (s) => s.copyWith(method: newMethod),
+                ),
+          );
+        }
+        showFToast(
+          context: context,
+          title: Text(l10n.parametersSavedTitle),
+          description: Text(l10n.parametersSavedDescription),
+        );
+      } catch (e) {
+        showFToast(
+          context: context,
+          title: Text(l10n.invalidParametersTitle),
+          description: Text(
+            l10n.invalidParametersWithError(
+              l10n.invalidParametersDescription,
+              e.toString(),
+            ),
+          ),
+        );
+      }
+    }
+
+    void reset() {
+      final current = ref.read(prayerSettingsProvider).value?.method;
+      draft.syncFrom(current);
+      save();
+      showFToast(
+        context: context,
+        title: Text(l10n.resetCompleteTitle),
+        description: Text(l10n.resetCompleteDescription),
+      );
+    }
 
     return NonSelectable(
       child: Column(
@@ -50,16 +82,14 @@ class CustomParametersContent extends StatelessWidget {
                   maxColumns: 2,
                   children: [
                     NumericField(
+                      fieldKey: CustomParamFieldKey.fajrAngle,
                       label: l10n.fajrAngleLabel,
-                      controller: c.fajrAngle,
                       decimal: true,
-                      enabled: enabled,
                     ),
                     NumericField(
+                      fieldKey: CustomParamFieldKey.ishaAngle,
                       label: l10n.ishaAngleLabel,
-                      controller: c.ishaAngle,
                       decimal: true,
-                      enabled: enabled,
                     ),
                   ],
                 ),
@@ -67,16 +97,14 @@ class CustomParametersContent extends StatelessWidget {
                   maxColumns: 2,
                   children: [
                     NumericField(
+                      fieldKey: CustomParamFieldKey.ishaInterval,
                       label: l10n.ishaIntervalLabel,
-                      controller: c.ishaInterval,
                       hint: l10n.optionalHint,
-                      enabled: enabled,
                     ),
                     NumericField(
+                      fieldKey: CustomParamFieldKey.maghribAngle,
                       label: l10n.maghribAngleLabel,
-                      controller: c.maghribAngle,
                       decimal: true,
-                      enabled: enabled,
                     ),
                   ],
                 ),
@@ -91,7 +119,7 @@ class CustomParametersContent extends StatelessWidget {
               children: [
                 FSelect<Madhab>(
                   enabled: enabled,
-                  control: .managed(controller: c.madhab),
+                  control: .managed(controller: draft.madhab),
                   items: {
                     l10n.madhab_shafi: Madhab.shafi,
                     l10n.madhab_hanafi: Madhab.hanafi,
@@ -100,7 +128,7 @@ class CustomParametersContent extends StatelessWidget {
                 ),
                 FSelect<HighLatitudeRule>(
                   enabled: enabled,
-                  control: .managed(controller: c.highLatRule),
+                  control: .managed(controller: draft.highLatRule),
                   items: {
                     l10n.highLatitudeRule_middleOfTheNight:
                         HighLatitudeRule.middleOfTheNight,
@@ -124,22 +152,19 @@ class CustomParametersContent extends StatelessWidget {
                   maxColumns: 3,
                   children: [
                     NumericField(
+                      fieldKey: CustomParamFieldKey.adjustmentFajr,
                       label: l10n.fajr,
-                      controller: c.adjustments[Prayer.fajr]!,
                       signed: true,
-                      enabled: enabled,
                     ),
                     NumericField(
+                      fieldKey: CustomParamFieldKey.adjustmentSunrise,
                       label: l10n.sunrise,
-                      controller: c.adjustments[Prayer.sunrise]!,
                       signed: true,
-                      enabled: enabled,
                     ),
                     NumericField(
+                      fieldKey: CustomParamFieldKey.adjustmentDhuhr,
                       label: l10n.dhuhr,
-                      controller: c.adjustments[Prayer.dhuhr]!,
                       signed: true,
-                      enabled: enabled,
                     ),
                   ],
                 ),
@@ -147,22 +172,19 @@ class CustomParametersContent extends StatelessWidget {
                   maxColumns: 3,
                   children: [
                     NumericField(
+                      fieldKey: CustomParamFieldKey.adjustmentAsr,
                       label: l10n.asr,
-                      controller: c.adjustments[Prayer.asr]!,
                       signed: true,
-                      enabled: enabled,
                     ),
                     NumericField(
+                      fieldKey: CustomParamFieldKey.adjustmentMaghrib,
                       label: l10n.maghrib,
-                      controller: c.adjustments[Prayer.maghrib]!,
                       signed: true,
-                      enabled: enabled,
                     ),
                     NumericField(
+                      fieldKey: CustomParamFieldKey.adjustmentIsha,
                       label: l10n.isha,
-                      controller: c.adjustments[Prayer.isha]!,
                       signed: true,
-                      enabled: enabled,
                     ),
                   ],
                 ),
@@ -174,7 +196,7 @@ class CustomParametersContent extends StatelessWidget {
             children: [
               FButton(
                 variant: .secondary,
-                onPress: enabled ? onReset : null,
+                onPress: enabled ? reset : null,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: AppSpacing.sm,
@@ -185,7 +207,7 @@ class CustomParametersContent extends StatelessWidget {
                 ),
               ),
               FButton(
-                onPress: enabled ? onSave : null,
+                onPress: enabled ? save : null,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: AppSpacing.sm,
@@ -203,24 +225,23 @@ class CustomParametersContent extends StatelessWidget {
   }
 }
 
-/// Generic numeric text field.
-class NumericField extends StatelessWidget {
+/// Generic numeric text field bound to [customParametersDraftProvider].
+class NumericField extends ConsumerWidget {
   /// Creates a new [NumericField] instance.
   const NumericField({
+    required this.fieldKey,
     required this.label,
-    required this.controller,
     this.decimal = false,
     this.signed = false,
     this.hint,
-    this.enabled = true,
     super.key,
   });
 
+  /// Draft field key.
+  final CustomParamFieldKey fieldKey;
+
   /// The label shown above the field.
   final String label;
-
-  /// The text controller.
-  final TextEditingController controller;
 
   /// Whether to allow decimal input.
   final bool decimal;
@@ -231,12 +252,16 @@ class NumericField extends StatelessWidget {
   /// Optional hint text.
   final String? hint;
 
-  /// Whether the field is interactive.
-  final bool enabled;
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final enabled = ref.watch(
+      prayerSettingsProvider.select((value) => value.hasValue),
+    );
+    final controller = ref
+        .read(customParametersDraftProvider.notifier)
+        .textController(fieldKey);
+
     return FTextField(
       enabled: enabled,
       control: .managed(controller: controller),

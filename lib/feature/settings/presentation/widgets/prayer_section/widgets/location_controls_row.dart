@@ -16,21 +16,29 @@ import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.d
 import 'package:tawaq/theme/theme.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+/// Whether manual location controls are editable.
+bool manualLocationControlsEnabled(WidgetRef ref) {
+  final ready = ref.watch(
+    prayerSettingsProvider.select((v) => v.hasValue),
+  );
+  final autoLocation = ref.watch(
+    prayerSettingsProvider.select((v) => v.value?.autoLocation ?? false),
+  );
+  return ready && !autoLocation;
+}
+
 /// Responsive row containing city search and timezone selector.
 class LocationControlsRow extends ConsumerWidget {
   /// Creates a new [LocationControlsRow] instance.
-  const LocationControlsRow({required this.enabled, super.key});
-
-  /// Whether the controls are editable.
-  final bool enabled;
+  const LocationControlsRow({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return NonSelectable(
+    return const NonSelectable(
       child: ResponsiveFieldRow(
         children: [
-          CitySearchSelect(enabled: enabled),
-          TimezoneSelect(enabled: enabled),
+          CitySearchSelect(),
+          TimezoneSelect(),
         ],
       ),
     );
@@ -40,13 +48,11 @@ class LocationControlsRow extends ConsumerWidget {
 /// Search-based city selection dropdown.
 class CitySearchSelect extends ConsumerWidget {
   /// Creates a new [CitySearchSelect] instance.
-  const CitySearchSelect({required this.enabled, super.key});
-
-  /// Whether the select is editable.
-  final bool enabled;
+  const CitySearchSelect({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = manualLocationControlsEnabled(ref);
     final locationName = ref.watch(
       prayerSettingsProvider.select((v) => v.value?.locationName),
     );
@@ -99,10 +105,7 @@ class CitySearchSelect extends ConsumerWidget {
 /// Search-based timezone selection dropdown.
 class TimezoneSelect extends ConsumerWidget {
   /// Creates a new [TimezoneSelect] instance.
-  const TimezoneSelect({required this.enabled, super.key});
-
-  /// Whether the select is editable.
-  final bool enabled;
+  const TimezoneSelect({super.key});
 
   Future<void> _setTimezone(
     BuildContext context,
@@ -119,6 +122,7 @@ class TimezoneSelect extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = manualLocationControlsEnabled(ref);
     final location = ref.watch(
       prayerSettingsProvider.select((v) => v.value?.location),
     );
