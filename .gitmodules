@@ -6,9 +6,6 @@
 	path = packages/dorar_hadith
 	url = https://github.com/MoathCodes/dorar_hadith.git
 
-[submodule "packages/dyn_mouse_scroll"]
-	path = packages/dyn_mouse_scroll
-	url = https://github.com/alesimula/dyn_mouse_scroll.git
 [submodule "packages/mushaf_reader"]
 	path = packages/mushaf_reader
 	url = https://github.com/MoathCodes/mushaf_reader.git
