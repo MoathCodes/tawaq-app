@@ -25,6 +25,18 @@ PrayerCardDecision computePrayerCardDecision({
       ? todaysSunnahTimes
       : yesterdaysSunnahTimes;
 
+  // adhan_dart's SunnahTimes are DateTime values which may be anchored to the
+  // same calendar day as "today" even though they conceptually belong to the
+  // night *after* Isha (i.e. after midnight). Normalize them so they always
+  // land after the corresponding Isha anchor.
+  final nightIsha = nightPrayerTimes.isha.toLocation(location);
+  DateTime normalizeNight(DateTime value) {
+    final local = value.toLocation(location);
+    return local.isBefore(nightIsha) ? local.add(const Duration(days: 1)) : local;
+  }
+  final nightMiddle = normalizeNight(nightSunnahTimes.middleOfTheNight);
+  final nightLastThird = normalizeNight(nightSunnahTimes.lastThirdOfTheNight);
+
   // Build an ordered cycle of prayers.
   const orderedPrayers = <Prayer>[
     Prayer.isha,
@@ -38,11 +50,9 @@ PrayerCardDecision computePrayerCardDecision({
   ];
 
   DateTime timeOf(Prayer p) => switch (p) {
-    Prayer.isha => nightPrayerTimes.isha.toLocation(location),
-    Prayer.fajrAfter => nightSunnahTimes.middleOfTheNight.toLocation(location),
-    Prayer.ishaBefore => nightSunnahTimes.lastThirdOfTheNight.toLocation(
-      location,
-    ),
+    Prayer.isha => nightIsha,
+    Prayer.fajrAfter => nightMiddle,
+    Prayer.ishaBefore => nightLastThird,
     Prayer.fajr => fajrToday,
     _ => todaysPrayerTimes.getTimesForPrayer(p, location),
   };
@@ -103,20 +113,26 @@ Prayer getCurrentPrayer({
   // Night anchors (yesterday vs today) and day anchors (today)
   final nIsha = (beforeFajr ? yesterdaysPrayerTimes : todaysPrayerTimes).isha
       .toLocation(location);
-  final nMiddle = (beforeFajr ? yesterdaysSunnahTimes : todaysSunnahTimes)
-      .middleOfTheNight
-      .toLocation(location);
-  final nLastThird = (beforeFajr ? yesterdaysSunnahTimes : todaysSunnahTimes)
-      .lastThirdOfTheNight
-      .toLocation(location);
+  DateTime normalizeNight(DateTime value, DateTime ishaAnchor) {
+    final local = value.toLocation(location);
+    return local.isBefore(ishaAnchor) ? local.add(const Duration(days: 1)) : local;
+  }
+  final nMiddle = normalizeNight(
+    (beforeFajr ? yesterdaysSunnahTimes : todaysSunnahTimes).middleOfTheNight,
+    nIsha,
+  );
+  final nLastThird = normalizeNight(
+    (beforeFajr ? yesterdaysSunnahTimes : todaysSunnahTimes).lastThirdOfTheNight,
+    nIsha,
+  );
 
   final tSunrise = todaysPrayerTimes.sunrise.toLocation(location);
   final tDhuhr = todaysPrayerTimes.dhuhr.toLocation(location);
   final tAsr = todaysPrayerTimes.asr.toLocation(location);
   final tMaghrib = todaysPrayerTimes.maghrib.toLocation(location);
   final tIsha = todaysPrayerTimes.isha.toLocation(location);
-  final tMiddle = todaysSunnahTimes.middleOfTheNight.toLocation(location);
-  final tLastThird = todaysSunnahTimes.lastThirdOfTheNight.toLocation(location);
+  final tMiddle = normalizeNight(todaysSunnahTimes.middleOfTheNight, tIsha);
+  final tLastThird = normalizeNight(todaysSunnahTimes.lastThirdOfTheNight, tIsha);
 
   // Construct an ordered timeline of [start) -> end events with labels.
   // Use start-inclusive, end-exclusive ranges.
