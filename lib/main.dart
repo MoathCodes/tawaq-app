@@ -12,6 +12,7 @@ import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/desktop/desktop_shell.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/tawaq_scroll_behavior.dart';
@@ -33,6 +34,9 @@ bool get _isTouchThemePlatform =>
 /// The entry point of the application.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Enable persistent + release-mode logging before anything else logs.
+  await initFileLogging();
 
   await Future.wait([
     DorarHadithFlutter.ensureInitialized(),
