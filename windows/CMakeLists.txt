@@ -57,6 +57,14 @@ add_subdirectory("runner")
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# mpv_audio_kit uses C++/WinRT, whose coroutine support headers fall back to
+# <experimental/coroutine> under C++17. Newer MSVC (VS 18 / 14.51+) hard-errors
+# on that experimental header. Bumping just this plugin to C++20 makes
+# C++/WinRT use the standard <coroutine> header instead.
+if(TARGET mpv_audio_kit_plugin)
+  target_compile_features(mpv_audio_kit_plugin PUBLIC cxx_std_20)
+endif()
+
 
 # === Installation ===
 # Support files are copied into place next to the executable, so that it can
