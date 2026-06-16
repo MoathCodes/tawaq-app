@@ -1,0 +1,33 @@
+name: desktop_tray
+description: A Flutter plugin for managing system tray icons and menus on desktop platforms (Windows, macOS, Linux).
+version: 2026.4.19
+repository: https://github.com/Matkurban/desktop_tray
+homepage: https://jsontodart.cn
+topics:
+  - tray
+
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.3.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path: ^1.9.1
+
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      linux:
+        pluginClass: DesktopTrayPlugin
+      macos:
+        pluginClass: DesktopTrayPlugin
+      windows:
+        pluginClass: DesktopTrayPlugin
+

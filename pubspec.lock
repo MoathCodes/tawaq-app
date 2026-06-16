@@ -323,10 +323,9 @@ packages:
   desktop_tray:
     dependency: "direct main"
     description:
-      name: desktop_tray
-      sha256: "2cd7810762f26aa406db16fa5498019fadbb93fe79cd95e93416cf8b12f63dfb"
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/desktop_tray"
+      relative: true
+    source: path
     version: "2026.4.19"
   dorar_hadith:
     dependency: "direct main"

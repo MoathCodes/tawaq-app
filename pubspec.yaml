@@ -69,7 +69,11 @@ dependencies:
   timezone: ^0.11.0
   window_manager: ^0.5.1
   screen_retriever: ^0.2.1
-  desktop_tray: ^2026.4.19
+  # Vendored fork of desktop_tray 2026.4.19 with a local Linux patch
+  # (re-export the AppIndicator menu on every setContextMenu so live label /
+  # checkbox updates propagate). Re-apply the patch on any upstream bump.
+  desktop_tray:
+    path: packages/desktop_tray
   mpv_audio_kit: ^0.3.4
   local_notifier: ^0.1.6
   launch_at_startup: ^0.5.1
@@ -132,6 +136,22 @@ flutter:
     - family: UthmanicHafs
       fonts:
         - asset: assets/fonts/hafs_tafseerMouaser_v3_fonts/uthmanic_hafs_v20.ttf
+          weight: 400
+    - family: NotoSansBengali
+      fonts:
+        - asset: assets/fonts/Noto_Sans_Bengali/NotoSansBengali-Regular.ttf
+          weight: 400
+    - family: NotoSansSC
+      fonts:
+        - asset: assets/fonts/Noto_Sans_SC/NotoSansSC.ttf
+          weight: 400
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/Noto_Sans/NotoSans.ttf
+          weight: 400
+    - family: NotoNastaliqUrdu
+      fonts:
+        - asset: assets/fonts/Noto_Nastaliq_Urdu/NotoNastaliqUrdu.ttf
           weight: 400
     # - family: Zain
     #   fonts:
