@@ -162,6 +162,17 @@ abstract class AdhanSettings with _$AdhanSettings {
     @Default(IqamahSound.misharyAlafasi) IqamahSound iqamahSound,
     @Default(80) double volume,
     @Default(false) bool muteAll,
+
+    /// How late (in minutes) a crossing may be noticed and still fire, e.g.
+    /// after the machine wakes from sleep. Beyond this the alert is skipped
+    /// rather than playing a stale adhan.
+    ///
+    /// 20 minutes is a deliberate grace: long enough that a prayer missed while
+    /// the machine slept still fires when you come back shortly after, but
+    /// short enough that it never bleeds into the next prayer (even
+    /// maghrib→isha, which can be only ~30 min apart) or nags you about a call
+    /// you already prayed an hour ago.
+    @Default(20) int catchUpWindowMinutes,
     @Default(true) bool showAdhanAlert,
     @Default(true) bool showOsNotification,
     @Default(AdhanAlertPosition.topEnd) AdhanAlertPosition alertPosition,

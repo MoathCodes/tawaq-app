@@ -17,6 +17,17 @@ part 'prayer_settings_provider.g.dart';
 
 const String _prayerLogPrefix = '[PrayerSettingsNotifier]';
 
+/// Last successfully resolved prayer settings, reused when a (re)build cannot
+/// read storage.
+///
+/// Without it a transient/failed hydrate (e.g. right after the machine wakes
+/// from sleep) silently reverts the whole prayer-time pipeline to the (0,0)
+/// "null island" defaults, which compute prayer times ~2-3h off and fire
+/// alerts at the wrong time. Lives at module scope so it survives the
+/// provider's autoDispose rebuilds, and is seeded with the first-run defaults
+/// so it is never null.
+PrayerSettings _lastGoodPrayerSettings = PrayerSettings.defaultSettings();
+
 /// Notifier for prayer settings.
 ///
 /// Persisted as JSON via [JsonPersist] + Hivez-backed [SettingsStorage].
@@ -26,13 +37,29 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   @override
   Future<PrayerSettings> build() async {
     ref.read(loggerProvider).i('$_prayerLogPrefix Building...');
-    await persist(
-      ref.read(settingsStorageProvider),
-      options: const StorageOptions(
-        cacheTime: StorageCacheTime.unsafe_forever,
-      ),
-    ).future;
-    return state.value ?? PrayerSettings.defaultSettings();
+    // Remember every good value so a later failed read falls back to it
+    // instead of the (0,0) defaults.
+    listenSelf((_, next) {
+      final value = next.value;
+      if (value != null) _lastGoodPrayerSettings = value;
+    });
+    try {
+      await persist(
+        ref.read(settingsStorageProvider),
+        options: const StorageOptions(
+          cacheTime: StorageCacheTime.unsafe_forever,
+        ),
+      ).future;
+    } on Object catch (error, stack) {
+      ref
+          .read(loggerProvider)
+          .e(
+            '$_prayerLogPrefix hydrate failed; keeping last-good settings',
+            error: error,
+            stackTrace: stack,
+          );
+    }
+    return state.value ?? _lastGoodPrayerSettings;
   }
 
   void _update(PrayerSettings Function(PrayerSettings) fn, String field) {

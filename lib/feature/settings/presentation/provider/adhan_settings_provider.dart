@@ -12,19 +12,39 @@ part 'adhan_settings_provider.g.dart';
 
 const _logPrefix = '[AdhanSettingsNotifier]';
 
+/// Last successfully resolved adhan settings, reused when a (re)build cannot
+/// read storage — so a failed hydrate never silently resets alert modes,
+/// sounds or mute state to defaults. Module scope to survive autoDispose
+/// rebuilds; seeded with the first-run defaults so it is never null.
+AdhanSettings _lastGoodAdhanSettings = AdhanSettings.defaults();
+
 /// Persisted prayer alert notification and playback settings.
 @riverpod
 @JsonPersist()
 class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
   @override
   Future<AdhanSettings> build() async {
-    await persist(
-      ref.read(settingsStorageProvider),
-      options: const StorageOptions(
-        cacheTime: StorageCacheTime.unsafe_forever,
-      ),
-    ).future;
-    return state.value ?? AdhanSettings.defaults();
+    listenSelf((_, next) {
+      final value = next.value;
+      if (value != null) _lastGoodAdhanSettings = value;
+    });
+    try {
+      await persist(
+        ref.read(settingsStorageProvider),
+        options: const StorageOptions(
+          cacheTime: StorageCacheTime.unsafe_forever,
+        ),
+      ).future;
+    } on Object catch (error, stack) {
+      ref
+          .read(loggerProvider)
+          .e(
+            '$_logPrefix hydrate failed; keeping last-good settings',
+            error: error,
+            stackTrace: stack,
+          );
+    }
+    return state.value ?? _lastGoodAdhanSettings;
   }
 
   void _update(AdhanSettings Function(AdhanSettings) fn, String field) {
