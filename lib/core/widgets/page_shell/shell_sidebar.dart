@@ -7,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/core/widgets/merged_action_semantics.dart';
 import 'package:tawaq/core/widgets/page_shell/shell_providers.dart';
@@ -21,6 +20,36 @@ const _kCollapsed = 105.0;
 const _kExpanded = 250.0;
 const _kSlideOffset = Offset(-0.2, 0);
 
+Duration _sidebarAnimDuration(BuildContext context) =>
+    context.theme.durations.fast;
+
+Widget _sidebarSlideTransition(
+  BuildContext context,
+  Widget child,
+  Animation<double> animation,
+) =>
+    SlideTransition(
+      textDirection: Directionality.of(context),
+      position: Tween(begin: _kSlideOffset, end: Offset.zero)
+          .animate(animation),
+      child: FadeTransition(opacity: animation, child: child),
+    );
+
+FSidebarItemStyleDelta _sidebarItemStyle(BuildContext context) {
+  final theme = FTheme.of(context);
+  return FSidebarItemStyleDelta.delta(
+    backgroundColor: FVariants(
+      Colors.transparent,
+      variants: {
+        [.selected, .hovered, .pressed]: theme.colors.hover(
+          theme.colors.secondary,
+        ),
+        [.disabled]: Colors.transparent,
+      },
+    ),
+  );
+}
+
 /// The sidebar for the main shell.
 class ShellSidebar extends HookConsumerWidget {
   /// Creates a new instance of [ShellSidebar].
@@ -32,9 +61,7 @@ class ShellSidebar extends HookConsumerWidget {
     final secondaryRoutes = ref.watch(secondaryRoutesProvider);
     final theme = FTheme.of(context);
     final router = GoRouter.of(context);
-    final isRtl = ref.watch(localeProvider) == 'ar';
-    final duration = context.theme.durations.fast;
-    final textDir = isRtl ? TextDirection.rtl : TextDirection.ltr;
+    final duration = _sidebarAnimDuration(context);
     final isTablet = isLessThan(context, FBreakpoint.lg);
     final isCollapsed = ref.watch(shellSidebarCollapsedProvider(isTablet));
 
@@ -60,28 +87,6 @@ class ShellSidebar extends HookConsumerWidget {
       return null;
     }, [isTablet]);
 
-    final itemStyle = useMemoized(
-      () => FSidebarItemStyleDelta.delta(
-        backgroundColor: FVariants(
-          Colors.transparent,
-          variants: {
-            [.selected, .hovered, .pressed]: theme.colors.hover(
-              theme.colors.secondary,
-            ),
-            [.disabled]: Colors.transparent,
-          },
-        ),
-      ),
-      [theme],
-    );
-
-    Widget slideTransition(Widget child, Animation<double> anim) =>
-        SlideTransition(
-          textDirection: textDir,
-          position: Tween(begin: _kSlideOffset, end: Offset.zero).animate(anim),
-          child: FadeTransition(opacity: anim, child: child),
-        );
-
     void toggle() => WidgetsBinding.instance.addPostFrameCallback(
       (_) async => ref
           .read(sidebarSettingsProvider.notifier)
@@ -92,7 +97,6 @@ class ShellSidebar extends HookConsumerWidget {
       animation: animation,
       builder: (_, _) {
         final isExpanded = animation.isForwardOrCompleted;
-        final currentPath = router.state.fullPath;
         final width =
             _kCollapsed + (animation.value * (_kExpanded - _kCollapsed));
 
@@ -131,7 +135,8 @@ class ShellSidebar extends HookConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
             child: AnimatedSwitcher(
               duration: duration,
-              transitionBuilder: slideTransition,
+              transitionBuilder: (child, anim) =>
+                  _sidebarSlideTransition(context, child, anim),
               child: isExpanded
                   ? FButton(
                       key: ValueKey(isExpanded),
@@ -162,14 +167,7 @@ class ShellSidebar extends HookConsumerWidget {
               ('main', mainRoutes),
               ('secondary', secondaryRoutes),
             ])
-              _RouteGroup(
-                routes: routes,
-                groupKey: key,
-                duration: duration,
-                currentPath: currentPath,
-                slideTransition: slideTransition,
-                itemStyle: itemStyle,
-              ),
+              _RouteGroup(routes: routes, groupKey: key),
           ],
         );
       },
@@ -181,17 +179,9 @@ class _RouteGroup extends ConsumerWidget {
   const _RouteGroup({
     required this.routes,
     required this.groupKey,
-    required this.currentPath,
-    required this.duration,
-    required this.slideTransition,
-    required this.itemStyle,
   });
   final List<AppNavigationRoute> routes;
   final String groupKey;
-  final String? currentPath;
-  final Duration duration;
-  final Widget Function(Widget, Animation<double>) slideTransition;
-  final FSidebarItemStyleDelta itemStyle;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -199,10 +189,12 @@ class _RouteGroup extends ConsumerWidget {
     final isTablet = isLessThan(context, FBreakpoint.lg);
     final isCollapsed = ref.watch(shellSidebarCollapsedProvider(isTablet));
     final isExpanded = !isCollapsed;
+    final itemStyle = _sidebarItemStyle(context);
 
     return AnimatedSwitcher(
-      duration: duration,
-      transitionBuilder: slideTransition,
+      duration: _sidebarAnimDuration(context),
+      transitionBuilder: (child, anim) =>
+          _sidebarSlideTransition(context, child, anim),
       child: FSidebarGroup(
         key: ValueKey('$groupKey-${isExpanded ? 'expanded' : 'collapsed'}'),
         children: [
@@ -211,14 +203,12 @@ class _RouteGroup extends ConsumerWidget {
                 ? _expandedSidebarItem(
                     context: context,
                     route: r,
-                    currentPath: currentPath,
                     itemStyle: itemStyle,
                     l10n: l10n,
                   )
                 : _collapsedSidebarItem(
                     context: context,
                     route: r,
-                    currentPath: currentPath,
                     l10n: l10n,
                   ),
         ],
@@ -230,10 +220,10 @@ class _RouteGroup extends ConsumerWidget {
 Widget _expandedSidebarItem({
   required BuildContext context,
   required AppNavigationRoute route,
-  required String? currentPath,
   required FSidebarItemStyleDelta itemStyle,
   required AppLocalizations l10n,
 }) {
+  final currentPath = GoRouter.of(context).state.fullPath;
   final selected = route.containsLocation(currentPath);
   final enabled = route.navigationEnabled;
   final item = FSidebarItem(
@@ -282,9 +272,9 @@ Widget _expandedSidebarItem({
 Widget _collapsedSidebarItem({
   required BuildContext context,
   required AppNavigationRoute route,
-  required String? currentPath,
   required AppLocalizations l10n,
 }) {
+  final currentPath = GoRouter.of(context).state.fullPath;
   final selected = route.containsLocation(currentPath);
   final enabled = route.navigationEnabled;
   return MergedActionSemantics(
