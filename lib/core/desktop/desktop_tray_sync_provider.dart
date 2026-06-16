@@ -41,8 +41,12 @@ void desktopTraySync(Ref ref) {
     final lang = ref.read(localeProvider);
     final l10n = lookupAppLocalizations(Locale(lang));
     final muteChecked = ref.read(adhanSettingsProvider).value?.muteAll ?? false;
+    // Surface next prayer as a header row (the only prayer hint on Linux, which
+    // has no tray tooltip). Suppress when there is nothing but the app name.
+    final tooltip = ref.read(trayTooltipTextProvider);
+    final header = tooltip == l10n.appName ? null : tooltip;
     await service.applyMenu(
-      buildTrayMenu(l10n: l10n, muteChecked: muteChecked),
+      buildTrayMenu(l10n: l10n, muteChecked: muteChecked, headerLabel: header),
     );
   }
 
@@ -54,7 +58,11 @@ void desktopTraySync(Ref ref) {
   ref
     ..listen(localeProvider, (_, _) => unawaited(syncMenu()))
     ..listen(adhanSettingsProvider, (_, _) => unawaited(syncMenu()))
-    ..listen(trayTooltipTextProvider, (_, _) => unawaited(syncTooltip()));
+    // Next-prayer changes (~5x/day) refresh both the menu header and tooltip.
+    ..listen(trayTooltipTextProvider, (_, _) {
+      unawaited(syncMenu());
+      unawaited(syncTooltip());
+    });
 
   unawaited(() async {
     await service.ensureInitialized();

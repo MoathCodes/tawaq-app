@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -10,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/desktop/adhan_alert_controller.dart';
+import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
@@ -20,31 +20,21 @@ import 'package:tawaq/theme/theme.dart';
 class AdhanAlertCard extends HookConsumerWidget {
   /// Creates [AdhanAlertCard].
   const AdhanAlertCard({
-    required this.kind,
-    required this.prayer,
-    required this.scheduledTime,
-    required this.playsSound,
     this.showCloseButton = false,
     super.key,
   });
-
-  /// Alert category.
-  final PrayerAlertKind kind;
-
-  /// Prayer being announced.
-  final Prayer prayer;
-
-  /// Scheduled time.
-  final DateTime scheduledTime;
-
-  /// Whether audio playback is active for this alert.
-  final bool playsSound;
 
   /// Whether to show a dismiss control in the title row (overlay mode).
   final bool showCloseButton;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final alert = ref.watch(adhanAlertControllerProvider);
+    final kind = alert.kind!;
+    final prayer = alert.prayer!;
+    final scheduledTime = alert.scheduledTime!;
+    final playsSound = alert.playsSound;
+
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
@@ -70,7 +60,7 @@ class AdhanAlertCard extends HookConsumerWidget {
         : ((position.data?.inMilliseconds ?? 0) / maxMs).clamp(0.0, 1.0);
 
     Future<void> dismiss() =>
-        ref.read(adhanAlertControllerProvider.notifier).dismiss();
+        ref.read(prayerAlertDispatcherProvider.notifier).dismiss();
 
     return Focus(
       autofocus: true,

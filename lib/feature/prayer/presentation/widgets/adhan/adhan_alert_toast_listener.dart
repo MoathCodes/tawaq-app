@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:tawaq/core/desktop/adhan_alert_controller.dart';
 import 'package:tawaq/core/desktop/adhan_alert_state.dart';
+import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
@@ -70,7 +71,7 @@ class AdhanAlertToastListener extends ConsumerWidget {
         variant: .secondary,
         onPress: () {
           unawaited(
-            ref.read(adhanAlertControllerProvider.notifier).dismiss(),
+            ref.read(prayerAlertDispatcherProvider.notifier).dismiss(),
           );
         },
         child: Text(

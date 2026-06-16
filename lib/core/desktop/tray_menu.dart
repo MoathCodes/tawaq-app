@@ -13,10 +13,7 @@ sealed class TrayMenuEntry {
   String? get key;
 
   /// Builds the native tray menu item for [l10n].
-  TrayMenuItem toTrayMenuItem(
-    AppLocalizations l10n, {
-    required bool muteChecked,
-  });
+  TrayMenuItem toTrayMenuItem(AppLocalizations l10n);
 
   /// Handles a click on this row.
   Future<void> handle(Ref ref);
@@ -31,10 +28,8 @@ final class TrayMenuShow extends TrayMenuEntry {
   String get key => 'show';
 
   @override
-  TrayMenuItem toTrayMenuItem(
-    AppLocalizations l10n, {
-    required bool muteChecked,
-  }) => TrayMenuItem(key: key, label: l10n.trayShowApp);
+  TrayMenuItem toTrayMenuItem(AppLocalizations l10n) =>
+      TrayMenuItem(key: key, label: l10n.trayShowApp);
 
   @override
   Future<void> handle(Ref ref) =>
@@ -49,8 +44,8 @@ final class TrayMenuMute extends TrayMenuEntry {
   @override
   String get key => 'mute';
 
-  @override
-  TrayMenuItem toTrayMenuItem(
+  /// Builds the native tray checkbox item for [l10n].
+  TrayMenuItem toTrayMenuItemWithMute(
     AppLocalizations l10n, {
     required bool muteChecked,
   }) => TrayMenuItem.checkbox(
@@ -58,6 +53,10 @@ final class TrayMenuMute extends TrayMenuEntry {
     label: l10n.trayMuteAdhan,
     checked: muteChecked,
   );
+
+  @override
+  TrayMenuItem toTrayMenuItem(AppLocalizations l10n) =>
+      toTrayMenuItemWithMute(l10n, muteChecked: false);
 
   @override
   Future<void> handle(Ref ref) async {
@@ -76,10 +75,8 @@ final class TrayMenuSeparator extends TrayMenuEntry {
   String? get key => null;
 
   @override
-  TrayMenuItem toTrayMenuItem(
-    AppLocalizations l10n, {
-    required bool muteChecked,
-  }) => TrayMenuItem.separator();
+  TrayMenuItem toTrayMenuItem(AppLocalizations l10n) =>
+      TrayMenuItem.separator();
 
   @override
   Future<void> handle(Ref ref) async {}
@@ -94,10 +91,8 @@ final class TrayMenuQuit extends TrayMenuEntry {
   String get key => 'quit';
 
   @override
-  TrayMenuItem toTrayMenuItem(
-    AppLocalizations l10n, {
-    required bool muteChecked,
-  }) => TrayMenuItem(key: key, label: l10n.trayQuit);
+  TrayMenuItem toTrayMenuItem(AppLocalizations l10n) =>
+      TrayMenuItem(key: key, label: l10n.trayQuit);
 
   @override
   Future<void> handle(Ref ref) async {
@@ -120,12 +115,27 @@ final Map<String, TrayMenuEntry> trayMenuEntryByKey = {
 };
 
 /// Builds the native tray context menu for [l10n].
+///
+/// When [headerLabel] is non-empty, a disabled header row (e.g. the next
+/// prayer) is shown at the top, followed by a separator. This is the only way
+/// to surface prayer state on Linux, where the tray has no tooltip API.
 TrayMenu buildTrayMenu({
   required AppLocalizations l10n,
   required bool muteChecked,
+  String? headerLabel,
 }) => TrayMenu(
   items: [
+    if (headerLabel != null && headerLabel.isNotEmpty) ...[
+      TrayMenuItem(label: headerLabel, disabled: true),
+      TrayMenuItem.separator(),
+    ],
     for (final entry in trayMenuRegistry)
-      entry.toTrayMenuItem(l10n, muteChecked: muteChecked),
+      switch (entry) {
+        TrayMenuMute() => entry.toTrayMenuItemWithMute(
+          l10n,
+          muteChecked: muteChecked,
+        ),
+        _ => entry.toTrayMenuItem(l10n),
+      },
   ],
 );

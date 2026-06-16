@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:desktop_tray/desktop_tray.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -70,6 +71,22 @@ class DesktopTrayService with DesktopTrayListener {
     await dispose();
     if (!_ref.mounted) return;
     await _ref.read(desktopWindowControllerProvider).quit();
+  }
+
+  @override
+  void onTrayIconMouseUp() {
+    // Linux (AppIndicator) opens the menu natively; only Windows/macOS need a
+    // manual response. Left-click restores the main window.
+    if (Platform.isLinux) return;
+    unawaited(_ref.read(desktopWindowControllerProvider).showMainWindow());
+  }
+
+  @override
+  void onTrayIconRightMouseUp() {
+    // Windows/macOS only: the plugin fires the event but does not auto-open
+    // the context menu, so request it explicitly. (macOS uses performClick.)
+    if (Platform.isLinux) return;
+    unawaited(desktopTray.popUpContextMenu());
   }
 
   @override

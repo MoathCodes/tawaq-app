@@ -1,31 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/analysis_widgets.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Card showing today's prayer progress, streaks, and status breakdown.
-class DailyAchievementCard extends StatelessWidget {
+class DailyAchievementCard extends ConsumerWidget {
   /// Creates a [DailyAchievementCard].
-  const DailyAchievementCard({required this.data, super.key});
-
-  /// The analysis data to display.
-  final PrayerAnalysisSectionData data;
+  const DailyAchievementCard({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
     final l10n = context.l10n;
-    final analytics = data.periodAnalytics;
-    final loggedCount = data.todayStatusCounts.values.fold<int>(
+    final analytics = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.periodAnalytics,
+      ),
+    );
+    final todayStatusCounts = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.todayStatusCounts,
+      ),
+    );
+    final todayPerformanceScore = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.todayPerformanceScore ?? 0.0,
+      ),
+    );
+
+    if (analytics == null || todayStatusCounts == null) {
+      return const SizedBox.shrink();
+    }
+
+    final loggedCount = todayStatusCounts.values.fold<int>(
       0,
       (total, count) => total + count,
     );
-    final percent = (data.todayPerformanceScore * 100).round();
+    final percent = (todayPerformanceScore * 100).round();
 
     return StaticCard(
       backgroundColor: Colors.transparent,
@@ -96,9 +113,9 @@ class DailyAchievementCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          TodayPrayerTracker(statuses: data.todayPrayerStatuses),
+          const TodayPrayerTracker(),
           const SizedBox(height: AppSpacing.lg),
-          TodayStatusGrid(counts: data.todayStatusCounts),
+          const TodayStatusGrid(),
         ],
       ),
     );

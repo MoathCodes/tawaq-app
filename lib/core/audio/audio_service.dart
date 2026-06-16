@@ -5,6 +5,17 @@ import 'package:tawaq/core/audio/audio_engine.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
 
+/// Default fade-in applied when [TawaqAudioService.play] is called without an
+/// explicit ramp.
+const kAudioDefaultFadeIn = Duration(milliseconds: 800);
+
+/// Default fade-out applied when [TawaqAudioService.stop] is called without an
+/// explicit ramp.
+const kAudioDefaultFadeOut = Duration(milliseconds: 500);
+
+/// Interval between volume steps while fading.
+const _fadeStep = Duration(milliseconds: 40);
+
 /// Process-wide mpv-backed audio engine for adhan and future Quran playback.
 class TawaqAudioService implements AudioEngine {
   /// Creates a [TawaqAudioService].
@@ -14,16 +25,20 @@ class TawaqAudioService implements AudioEngine {
         autoPlay: true,
       ),
     );
+    // Identify the audio client once; it never changes for the lifetime of the
+    // process.
+    unawaited(_player.setAudioClientName('Tawaq'));
     _subscriptions.addAll([
+      // State is emitted only on real lifecycle transitions. Position/duration
+      // ticks are intentionally NOT bridged here — UI that needs them watches
+      // [positionStream]/[durationStream] directly, which avoids reallocating
+      // and re-broadcasting a full [PlaybackState] many times per second.
       _player.stream.playing.listen((_) => _emitState()),
-      _player.stream.position.listen((_) => _emitState()),
-      _player.stream.duration.listen((_) => _emitState()),
       _player.stream.error.listen((error) {
-        _state = PlaybackError(
-          track: _activeTrack,
-          message: error.toString(),
-        );
-        _stateController.add(_state);
+        final track = _activeTrack;
+        _activeTrack = null;
+        _cancelFade();
+        _emit(PlaybackError(track: track, message: error.toString()));
       }),
       _player.stream.completed.listen((completed) {
         if (completed) unawaited(stop());
@@ -38,6 +53,10 @@ class TawaqAudioService implements AudioEngine {
   AudioTrack? _activeTrack;
   PlaybackState _state = const PlaybackIdle();
 
+  /// Desired output volume (0-100) used as the fade target.
+  double _targetVolume = 100;
+  Timer? _fadeTimer;
+
   @override
   PlaybackState get state => _state;
 
@@ -50,16 +69,24 @@ class TawaqAudioService implements AudioEngine {
   @override
   Stream<Duration> get durationStream => _player.stream.duration;
 
+  /// Low-level player handle for visualizers and advanced UI.
   Player get player => _player;
+
+  void _emit(PlaybackState next) {
+    _state = next;
+    _stateController.add(_state);
+  }
 
   void _emitState() {
     final track = _activeTrack;
     if (track == null) {
-      _state = const PlaybackIdle();
-    } else {
-      final position = _player.state.position;
-      final duration = _player.state.duration;
-      _state = _player.state.playWhenReady
+      _emit(const PlaybackIdle());
+      return;
+    }
+    final position = _player.state.position;
+    final duration = _player.state.duration;
+    _emit(
+      _player.state.playWhenReady
           ? PlaybackPlaying(
               track: track,
               position: position,
@@ -69,26 +96,38 @@ class TawaqAudioService implements AudioEngine {
               track: track,
               position: position,
               duration: duration,
-            );
-    }
-    _stateController.add(_state);
+            ),
+    );
   }
 
   @override
-  Future<void> play(AudioTrack track) async {
-    await stop();
+  Future<void> play(
+    AudioTrack track, {
+    Duration fadeIn = kAudioDefaultFadeIn,
+  }) async {
+    _cancelFade();
     _activeTrack = track;
-    _state = PlaybackLoading(track);
-    _stateController.add(_state);
-    await _player.open(Media(track.uri));
-    await _player.setAudioClientName('Tawaq');
-    await _player.setMediaSession(
-      MediaSession(
-        title: track.title,
-        artist: track.subtitle ?? 'Tawaq',
-      ),
-    );
-    _emitState();
+    _emit(PlaybackLoading(track));
+    try {
+      // Open replaces any current media; with autoPlay it starts immediately.
+      // Pre-set the volume so the first frames already match the fade ramp.
+      await _player.setVolume(fadeIn > Duration.zero ? 0 : _targetVolume);
+      await _player.open(Media(track.uri));
+      await _player.setMediaSession(
+        MediaSession(title: track.title, artist: track.subtitle ?? 'Tawaq'),
+      );
+      if (fadeIn > Duration.zero) {
+        unawaited(_fadeVolume(from: 0, to: _targetVolume, duration: fadeIn));
+      }
+      _emitState();
+    } on Object catch (error) {
+      // A throwing open() (e.g. missing/corrupt asset) must surface as a
+      // terminal error instead of an unhandled async exception, so the alert
+      // pipeline can dismiss rather than hang.
+      _activeTrack = null;
+      _cancelFade();
+      _emit(PlaybackError(track: track, message: error.toString()));
+    }
   }
 
   @override
@@ -104,21 +143,66 @@ class TawaqAudioService implements AudioEngine {
   }
 
   @override
-  Future<void> stop() async {
+  Future<void> stop({Duration fadeOut = Duration.zero}) async {
+    _cancelFade();
+    if (fadeOut > Duration.zero && _activeTrack != null) {
+      await _fadeVolume(from: _targetVolume, to: 0, duration: fadeOut);
+    }
     _activeTrack = null;
     await _player.stop();
     await _player.setMediaSession(null);
-    _state = const PlaybackIdle();
-    _stateController.add(_state);
+    // Restore the configured volume so a subsequent non-fading play is correct.
+    await _player.setVolume(_targetVolume);
+    _emit(const PlaybackIdle());
   }
 
   @override
   Future<void> setVolume(double volume) async {
-    await _player.setVolume(volume.clamp(0, 100));
+    _targetVolume = volume.clamp(0, 100).toDouble();
+    // While a ramp is in flight it owns the volume; it will land on the new
+    // target on completion.
+    if (_fadeTimer == null) {
+      await _player.setVolume(_targetVolume);
+    }
+  }
+
+  /// Ramps the player volume from [from] to [to] over [duration].
+  Future<void> _fadeVolume({
+    required double from,
+    required double to,
+    required Duration duration,
+  }) async {
+    _cancelFade();
+    await _player.setVolume(from.clamp(0, 100).toDouble());
+    if (duration <= Duration.zero || from == to) {
+      await _player.setVolume(to.clamp(0, 100).toDouble());
+      return;
+    }
+    final steps = (duration.inMilliseconds / _fadeStep.inMilliseconds).ceil();
+    final delta = (to - from) / steps;
+    final completer = Completer<void>();
+    var i = 0;
+    _fadeTimer = Timer.periodic(_fadeStep, (timer) {
+      i++;
+      final value = i >= steps ? to : from + delta * i;
+      unawaited(_player.setVolume(value.clamp(0, 100).toDouble()));
+      if (i >= steps) {
+        timer.cancel();
+        _fadeTimer = null;
+        if (!completer.isCompleted) completer.complete();
+      }
+    });
+    await completer.future;
+  }
+
+  void _cancelFade() {
+    _fadeTimer?.cancel();
+    _fadeTimer = null;
   }
 
   /// Releases native handles. Called on app shutdown.
   Future<void> dispose() async {
+    _cancelFade();
     for (final sub in _subscriptions) {
       await sub.cancel();
     }

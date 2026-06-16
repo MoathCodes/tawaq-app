@@ -16,8 +16,11 @@ abstract interface class AudioEngine {
   /// Emits the active track duration when known.
   Stream<Duration> get durationStream;
 
-  /// Opens and optionally starts [track].
-  Future<void> play(AudioTrack track);
+  /// Opens and starts [track].
+  ///
+  /// When [fadeIn] is greater than zero the output volume ramps from silence
+  /// up to the configured volume over that duration.
+  Future<void> play(AudioTrack track, {Duration fadeIn});
 
   /// Pauses playback.
   Future<void> pause();
@@ -26,7 +29,10 @@ abstract interface class AudioEngine {
   Future<void> resume();
 
   /// Stops playback and clears the active track.
-  Future<void> stop();
+  ///
+  /// When [fadeOut] is greater than zero the output volume ramps down to
+  /// silence over that duration before the player is stopped.
+  Future<void> stop({Duration fadeOut});
 
   /// Sets volume from 0 to 100.
   Future<void> setVolume(double volume);

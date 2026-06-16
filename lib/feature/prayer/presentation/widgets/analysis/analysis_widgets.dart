@@ -12,6 +12,7 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart'
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -150,19 +151,23 @@ class _StreakHighlight extends StatelessWidget {
 }
 
 /// Row of five prayer slots showing today's logged status.
-class TodayPrayerTracker extends StatelessWidget {
-  const TodayPrayerTracker({
-    required this.statuses,
-    super.key,
-  });
-
-  final Map<Prayer, CompletionStatus> statuses;
+class TodayPrayerTracker extends ConsumerWidget {
+  const TodayPrayerTracker({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
     final colors = theme.colors;
     final l10n = context.l10n;
+    final statuses = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.todayPrayerStatuses,
+      ),
+    );
+
+    if (statuses == null) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -170,7 +175,6 @@ class TodayPrayerTracker extends StatelessWidget {
         for (final prayer in kObligatoryPrayers) ...[
           _PrayerTrackerRow(
             prayer: prayer,
-            status: statuses[prayer] ?? CompletionStatus.none,
             label: prayer.getLocaleName(l10n),
           ),
           if (prayer != kObligatoryPrayers.last)
@@ -186,18 +190,22 @@ class TodayPrayerTracker extends StatelessWidget {
 class _PrayerTrackerRow extends HookConsumerWidget {
   const _PrayerTrackerRow({
     required this.prayer,
-    required this.status,
     required this.label,
   });
 
   final Prayer prayer;
-  final CompletionStatus status;
   final String label;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
     final colors = theme.colors;
+    final status = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) =>
+            state.value?.todayPrayerStatuses[prayer] ?? CompletionStatus.none,
+      ),
+    );
     final isLogged = status != CompletionStatus.none;
     final statusColor = isLogged
         ? status.getBadgeColor(colors)
@@ -318,10 +326,8 @@ class _TodayStackedBar extends StatelessWidget {
 }
 
 /// Compact 2x2 grid of today's status counts.
-class TodayStatusGrid extends StatelessWidget {
-  const TodayStatusGrid({required this.counts, super.key});
-
-  final Map<CompletionStatus, int> counts;
+class TodayStatusGrid extends ConsumerWidget {
+  const TodayStatusGrid({super.key});
 
   static const List<CompletionStatus> _statuses = [
     CompletionStatus.jamaah,
@@ -331,7 +337,17 @@ class TodayStatusGrid extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final counts = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.todayStatusCounts,
+      ),
+    );
+
+    if (counts == null) {
+      return const SizedBox.shrink();
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = constraints.maxWidth >= 320 ? 4 : 2;
@@ -487,45 +503,43 @@ class PeriodCompletionSummary extends StatelessWidget {
 }
 
 /// Horizontal rate bars for period status breakdown.
-class PeriodRateBars extends StatelessWidget {
-  const PeriodRateBars({
-    required this.jamaahRate,
-    required this.onTimeRate,
-    required this.lateRate,
-    required this.missedRate,
-    super.key,
-  });
-
-  final double jamaahRate;
-  final double onTimeRate;
-  final double lateRate;
-  final double missedRate;
+class PeriodRateBars extends ConsumerWidget {
+  const PeriodRateBars({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final analytics = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.periodAnalytics,
+      ),
+    );
+
+    if (analytics == null) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       spacing: AppSpacing.sm,
       children: [
         _RateBarRow(
           label: l10n.jamaahRate,
-          value: jamaahRate,
+          value: analytics.jamaahPercentage,
           status: CompletionStatus.jamaah,
         ),
         _RateBarRow(
           label: l10n.onTimeRate,
-          value: onTimeRate,
+          value: analytics.onTimePercentage,
           status: CompletionStatus.onTime,
         ),
         _RateBarRow(
           label: l10n.lateRate,
-          value: lateRate,
+          value: analytics.latePercentage,
           status: CompletionStatus.late,
         ),
         _RateBarRow(
           label: l10n.missedRate,
-          value: missedRate,
+          value: analytics.missedPercentage,
           status: CompletionStatus.missed,
         ),
       ],

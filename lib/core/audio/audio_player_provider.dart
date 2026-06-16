@@ -34,10 +34,13 @@ class AudioPlayerController extends _$AudioPlayerController {
 
   TawaqAudioService get _service => ref.read(tawaqAudioServiceProvider);
 
-  /// Plays a single [track].
-  Future<void> playTrack(AudioTrack track) async {
+  /// Plays a single [track], optionally ramping the volume up over [fadeIn].
+  Future<void> playTrack(
+    AudioTrack track, {
+    Duration fadeIn = kAudioDefaultFadeIn,
+  }) async {
     _queue = null;
-    await _service.play(track);
+    await _service.play(track, fadeIn: fadeIn);
   }
 
   /// Plays [queue] from its current index.
@@ -61,10 +64,10 @@ class AudioPlayerController extends _$AudioPlayerController {
   /// Resumes the active track.
   Future<void> resume() => _service.resume();
 
-  /// Stops playback.
-  Future<void> stop() async {
+  /// Stops playback, optionally ramping the volume down over [fadeOut].
+  Future<void> stop({Duration fadeOut = Duration.zero}) async {
     _queue = null;
-    await _service.stop();
+    await _service.stop(fadeOut: fadeOut);
   }
 
   /// Sets output volume from 0 to 100.

@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/utils/hijri_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Pill-shaped widget showing the Hijri date.
 class HijriDatePill extends ConsumerWidget {
   /// Creates a [HijriDatePill].
-  const HijriDatePill({required this.hijriDate, super.key});
-
-  /// The Hijri date string to display.
-  final String hijriDate;
+  const HijriDatePill({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
-    final dateLabel = hijriDate;
+    final dateLabel = ref.watch(hijriClockProvider);
 
     return Semantics(
       label: dateLabel,

@@ -1,4 +1,3 @@
-import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -6,6 +5,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
@@ -15,22 +15,15 @@ import 'package:tawaq/theme/theme.dart';
 /// Button that lets the user log a prayer's completion status via a popover.
 class StatusSelectorButton extends ConsumerWidget {
   /// Creates a [StatusSelectorButton].
-  const StatusSelectorButton({
-    required this.prayer,
-    required this.canSetStatus,
-    super.key,
-  });
-
-  /// The prayer to set status for.
-  final Prayer prayer;
-
-  /// Whether the user is allowed to set the status (prayer time has passed).
-  final bool canSetStatus;
+  const StatusSelectorButton({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final l10n = context.l10n;
+    final card = ref.watch(prayerCardProvider);
+    final prayer = card.prayer;
+    final canSetStatus = card.canSetStatus;
     final now = ref.watch(currentLocationTimeProvider);
     final completionDay = DateTime(now.year, now.month, now.day);
     final status =

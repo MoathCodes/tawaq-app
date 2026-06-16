@@ -12,6 +12,7 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart'
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/analysis_widgets.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -20,17 +21,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Card showing period trends, rates, and a stacked activity chart.
 class TrendAnalysisCard extends ConsumerWidget {
   /// Creates a [TrendAnalysisCard].
-  const TrendAnalysisCard({
-    required this.data,
-    this.enabled = true,
-    super.key,
-  });
-
-  /// The analysis data to display.
-  final PrayerAnalysisSectionData data;
-
-  /// When false, period tabs are not interactive (e.g. skeleton state).
-  final bool enabled;
+  const TrendAnalysisCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,6 +30,16 @@ class TrendAnalysisCard extends ConsumerWidget {
     final selectedPeriod = ref.watch(
       prayerAnalyticsSettingsProvider.select(
         (value) => value.value?.period ?? PrayerAnalyticsPeriod.weekly,
+      ),
+    );
+    final dataPeriod = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.period ?? PrayerAnalyticsPeriod.weekly,
+      ),
+    );
+    final enabled = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.asData?.value != null || !state.isLoading,
       ),
     );
 
@@ -69,8 +70,8 @@ class TrendAnalysisCard extends ConsumerWidget {
               for (final period in PrayerAnalyticsPeriod.values)
                 FTabEntry(
                   label: Text(period.getLocaleName(l10n)),
-                  child: data.period == period
-                      ? _PeriodTrendBody(data: data, period: period)
+                  child: dataPeriod == period
+                      ? const _PeriodTrendBody()
                       : const SizedBox.shrink(),
                 ),
             ],
@@ -81,16 +82,10 @@ class TrendAnalysisCard extends ConsumerWidget {
   }
 }
 
-class _PeriodTrendBody extends StatelessWidget {
-  const _PeriodTrendBody({
-    required this.data,
-    required this.period,
-  });
+class _PeriodTrendBody extends ConsumerWidget {
+  const _PeriodTrendBody();
 
-  final PrayerAnalysisSectionData data;
-  final PrayerAnalyticsPeriod period;
-
-  String _periodSubtitle(AppLocalizations l10n) {
+  String _periodSubtitle(AppLocalizations l10n, PrayerAnalyticsPeriod period) {
     return switch (period) {
       PrayerAnalyticsPeriod.weekly => l10n.onTimePrayersLast7Days,
       PrayerAnalyticsPeriod.monthly => l10n.onTimePrayersLast30Days,
@@ -99,9 +94,22 @@ class _PeriodTrendBody extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final analytics = data.periodAnalytics;
+    final period = ref.watch(
+      prayerAnalyticsSettingsProvider.select(
+        (value) => value.value?.period ?? PrayerAnalyticsPeriod.weekly,
+      ),
+    );
+    final analytics = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.periodAnalytics,
+      ),
+    );
+
+    if (analytics == null) {
+      return const SizedBox.shrink();
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,33 +117,34 @@ class _PeriodTrendBody extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         PeriodCompletionSummary(
           completionPercentage: analytics.completionPercentage,
-          subtitle: _periodSubtitle(l10n),
+          subtitle: _periodSubtitle(l10n, period),
         ),
         const SizedBox(height: AppSpacing.lg),
-        PeriodRateBars(
-          jamaahRate: analytics.jamaahPercentage,
-          onTimeRate: analytics.onTimePercentage,
-          lateRate: analytics.latePercentage,
-          missedRate: analytics.missedPercentage,
-        ),
+        const PeriodRateBars(),
         const SizedBox(height: AppSpacing.lg),
-        _TrendChart(data: data, period: period),
+        const _TrendChart(),
       ],
     );
   }
 }
 
-class _TrendChart extends StatelessWidget {
-  const _TrendChart({required this.data, required this.period});
-
-  final PrayerAnalysisSectionData data;
-  final PrayerAnalyticsPeriod period;
+class _TrendChart extends ConsumerWidget {
+  const _TrendChart();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
     final l10n = context.l10n;
-    final buckets = data.trendBuckets;
+    final period = ref.watch(
+      prayerAnalyticsSettingsProvider.select(
+        (value) => value.value?.period ?? PrayerAnalyticsPeriod.weekly,
+      ),
+    );
+    final buckets = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.trendBuckets ?? const <PrayerTrendBucket>[],
+      ),
+    );
 
     if (buckets.isEmpty) {
       return SizedBox(
@@ -282,7 +291,6 @@ class _TrendChart extends StatelessWidget {
                           getTitlesWidget: (value, meta) => _BottomTitle(
                             index: value.toInt(),
                             buckets: buckets,
-                            period: period,
                             meta: meta,
                           ),
                         ),
@@ -373,29 +381,32 @@ class _TrendChart extends StatelessWidget {
   }
 }
 
-class _BottomTitle extends StatelessWidget {
+class _BottomTitle extends ConsumerWidget {
   const _BottomTitle({
     required this.index,
     required this.buckets,
-    required this.period,
     required this.meta,
   });
 
   final int index;
   final List<PrayerTrendBucket> buckets;
-  final PrayerAnalyticsPeriod period;
   final TitleMeta meta;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (index < 0 || index >= buckets.length) {
       return const SizedBox.shrink();
     }
 
     final bucket = buckets[index];
     final locale = context.l10n.localeName;
-    final theme = FTheme.of(context);
+    final theme = context.theme;
     final colors = theme.colors;
+    final period = ref.watch(
+      prayerAnalyticsSettingsProvider.select(
+        (value) => value.value?.period ?? PrayerAnalyticsPeriod.weekly,
+      ),
+    );
 
     final label = switch (period) {
       PrayerAnalyticsPeriod.yearly => DateFormat.MMM(

@@ -63,6 +63,7 @@ class PrayerDay extends _$PrayerDay {
   Stream<PrayerDaySnapshot> build() async* {
     ref.watch(prayerSettingsProvider);
     final service = ref.watch(prayerServiceProvider);
+    final log = ref.read(loggerProvider);
 
     PrayerDaySnapshot snapshot() {
       final settings =
@@ -83,8 +84,29 @@ class PrayerDay extends _$PrayerDay {
       );
     }
 
-    yield snapshot();
-    yield* Stream.periodic(_tickInterval, (_) => snapshot());
+    // A transient failure in [snapshot] — most likely the day-boundary
+    // recompute in [_ensureCache], or a hiccup right after the machine wakes
+    // from sleep — must never terminate the clock. If the generator stops, the
+    // stream completes and every dependant (the prayer card, the alert
+    // scheduler) freezes on a stale `now` until the app restarts. So a bad tick
+    // is logged and skipped, and the loop keeps ticking.
+    PrayerDaySnapshot? safeSnapshot() {
+      try {
+        return snapshot();
+      } on Object catch (error, stack) {
+        log.e('PrayerDay tick failed', error: error, stackTrace: stack);
+        return null;
+      }
+    }
+
+    final initial = safeSnapshot();
+    if (initial != null) yield initial;
+
+    while (true) {
+      await Future<void>.delayed(_tickInterval);
+      final next = safeSnapshot();
+      if (next != null) yield next;
+    }
   }
 
   void _ensureCache(

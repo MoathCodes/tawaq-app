@@ -48,16 +48,11 @@ class AdhanAlertHost extends ConsumerWidget {
               child: compact
                   ? ColoredBox(
                       color: colors.background,
-                      child: SafeArea(
+                      child: const SafeArea(
                         child: Padding(
-                          padding: const EdgeInsets.all(AppSpacing.md),
+                          padding: EdgeInsets.all(AppSpacing.md),
                           child: Center(
-                            child: AdhanAlertCard(
-                              kind: alert.kind!,
-                              prayer: alert.prayer!,
-                              scheduledTime: alert.scheduledTime!,
-                              playsSound: alert.playsSound,
-                            ),
+                            child: AdhanAlertCard(),
                           ),
                         ),
                       ),
@@ -68,15 +63,9 @@ class AdhanAlertHost extends ConsumerWidget {
                           constraints: BoxConstraints(
                             maxWidth: kAdhanAlertCompactSize.width,
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppSpacing.xl),
-                            child: AdhanAlertCard(
-                              kind: alert.kind!,
-                              prayer: alert.prayer!,
-                              scheduledTime: alert.scheduledTime!,
-                              playsSound: alert.playsSound,
-                              showCloseButton: true,
-                            ),
+                          child: const Padding(
+                            padding: EdgeInsets.all(AppSpacing.xl),
+                            child: AdhanAlertCard(showCloseButton: true),
                           ),
                         ),
                       ),

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/hijri_format.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/schedule_selected_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/schedule_prayer_row.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/sunnah_times_card.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Today's prayer schedule with inline status selectors.
 /// Users can navigate back up to a week to view and edit prayer statuses.
-class PrayerScheduleList extends HookConsumerWidget {
+class PrayerScheduleList extends ConsumerWidget {
   /// Creates a [PrayerScheduleList] instance.
   const PrayerScheduleList({super.key});
 
@@ -22,16 +22,16 @@ class PrayerScheduleList extends HookConsumerWidget {
     final theme = FTheme.of(context);
     final l10n = context.l10n;
     final now = ref.watch(currentLocationTimeProvider);
-    final selectedDate = useState<DateTime>(now);
+    final selectedDate = ref.watch(scheduleSelectedDateProvider);
 
     final scheduleRows = ref.watch(
-      prayerScheduleProvider(l10n, selectedDate.value),
+      prayerScheduleProvider(l10n, selectedDate),
     );
 
     final isToday =
-        selectedDate.value.year == now.year &&
-        selectedDate.value.month == now.month &&
-        selectedDate.value.day == now.day;
+        selectedDate.year == now.year &&
+        selectedDate.month == now.month &&
+        selectedDate.day == now.day;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,7 +52,7 @@ class PrayerScheduleList extends HookConsumerWidget {
                       isToday
                           ? l10n.todaysSchedule
                           : HijriFormat.formatDate(
-                              selectedDate.value,
+                              selectedDate,
                               l10n.localeName,
                             ),
                       maxLines: 1,
@@ -76,10 +76,12 @@ class PrayerScheduleList extends HookConsumerWidget {
 
               final calendar = FLineCalendar(
                 control: FLineCalendarControl.lifted(
-                  date: selectedDate.value,
+                  date: selectedDate,
                   onChange: (value) {
                     if (value == null) return;
-                    selectedDate.value = value;
+                    ref
+                        .read(scheduleSelectedDateProvider.notifier)
+                        .select(value);
                   },
                 ),
                 scrollControl: FLineCalendarScrollControl.managed(
@@ -117,15 +119,10 @@ class PrayerScheduleList extends HookConsumerWidget {
         const SunnahTimesCard(),
         const SizedBox(height: AppSpacing.lg),
         Column(
-          key: ValueKey(selectedDate.value),
+          key: ValueKey(selectedDate),
           spacing: AppSpacing.md,
           children: scheduleRows
-              .map(
-                (row) => SchedulePrayerRow(
-                  row: row,
-                  isToday: isToday,
-                ),
-              )
+              .map((row) => SchedulePrayerRow(row: row))
               .toList(),
         ).animate().fadeIn(duration: 200.ms),
       ],

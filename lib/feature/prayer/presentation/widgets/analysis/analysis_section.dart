@@ -4,8 +4,6 @@ import 'package:forui/forui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/daily_achievement_card.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/trend_analysis_card.dart';
@@ -21,21 +19,16 @@ class AnalysisSection extends ConsumerWidget {
     final analysisState = ref.watch(prayerAnalysisSectionProvider);
 
     return analysisState.when(
-      data: (data) => _AnalysisContent(data: data),
+      data: (_) => const _AnalysisContent(),
       loading: () {
         final previous = analysisState.asData?.value;
         if (previous != null) {
-          return _AnalysisContent(data: previous);
+          return const _AnalysisContent();
         }
         return Semantics(
           label: context.l10n.loadingAnalytics,
-          child: FSkeletonizer(
-            child: _AnalysisContent(
-              data: PrayerAnalysisSectionData.empty(
-                PrayerAnalyticsPeriod.weekly,
-              ),
-              showSkeleton: true,
-            ),
+          child: const FSkeletonizer(
+            child: _AnalysisContent(),
           ),
         );
       },
@@ -52,13 +45,7 @@ class AnalysisSection extends ConsumerWidget {
 }
 
 class _AnalysisContent extends StatelessWidget {
-  const _AnalysisContent({
-    required this.data,
-    this.showSkeleton = false,
-  });
-
-  final PrayerAnalysisSectionData data;
-  final bool showSkeleton;
+  const _AnalysisContent();
 
   @override
   Widget build(BuildContext context) {
@@ -68,29 +55,21 @@ class _AnalysisContent extends StatelessWidget {
             constraints.maxWidth >= context.theme.breakpoints.md;
 
         if (sideBySide) {
-          return Row(
+          return const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             spacing: AppSpacing.md,
             children: [
-              Expanded(child: DailyAchievementCard(data: data)),
-              Expanded(
-                child: TrendAnalysisCard(
-                  data: data,
-                  enabled: !showSkeleton,
-                ),
-              ),
+              Expanded(child: DailyAchievementCard()),
+              Expanded(child: TrendAnalysisCard()),
             ],
           );
         }
 
-        return Column(
+        return const Column(
           spacing: AppSpacing.md,
           children: [
-            DailyAchievementCard(data: data),
-            TrendAnalysisCard(
-              data: data,
-              enabled: !showSkeleton,
-            ),
+            DailyAchievementCard(),
+            TrendAnalysisCard(),
           ],
         );
       },

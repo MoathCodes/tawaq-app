@@ -14,6 +14,7 @@ class PrayerAlertTarget {
     required this.kind,
     required this.prayer,
     required this.scheduledTime,
+    this.windowEnd,
   });
 
   /// Alert category.
@@ -24,6 +25,12 @@ class PrayerAlertTarget {
 
   /// Local scheduled time for the event.
   final DateTime scheduledTime;
+
+  /// Onset of the next obligatory prayer, past which a late catch-up of this
+  /// alert is stale and must be dropped (so maghrib is never announced once
+  /// isha has begun). Null when there is no near boundary — the day's last
+  /// prayer (isha) and sunnah alerts — leaving only the flat catch-up window.
+  final DateTime? windowEnd;
 }
 
 /// Resolved delivery channels for a fired alert.
@@ -65,12 +72,20 @@ List<PrayerAlertTarget> scheduledPrayerAlertTargets({
     adjustments: prayerSettings.adhanAdjustments,
   );
 
-  for (final prayer in obligatoryAlertPrayers) {
+  for (var i = 0; i < obligatoryAlertPrayers.length; i++) {
+    final prayer = obligatoryAlertPrayers[i];
+    // Cap the catch-up at the next obligatory prayer's onset; isha (the last)
+    // has no same-day boundary, so it relies on the flat window only.
+    final windowEnd = i + 1 < obligatoryAlertPrayers.length
+        ? adhanTimes[obligatoryAlertPrayers[i + 1]]
+        : null;
+
     targets.add(
       PrayerAlertTarget(
         kind: PrayerAlertKind.adhan,
         prayer: prayer,
         scheduledTime: adhanTimes[prayer]!,
+        windowEnd: windowEnd,
       ),
     );
 
@@ -83,6 +98,7 @@ List<PrayerAlertTarget> scheduledPrayerAlertTargets({
           scheduledTime: adhanTimes[prayer]!.add(
             Duration(minutes: iqamahMinutes),
           ),
+          windowEnd: windowEnd,
         ),
       );
     }
