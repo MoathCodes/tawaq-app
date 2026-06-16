@@ -2,6 +2,7 @@ import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/data/repository/translation_repository.dart';
 import 'package:tawaq/feature/quran/data/sources/quran_content_registry.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
+import 'package:tawaq/feature/quran/domain/services/translation_text_normalizer.dart';
 
 /// Service layer for translation-related business logic.
 ///
@@ -20,7 +21,7 @@ class TranslationService {
     int aya,
   ) async {
     final translation = await _repository.getTranslation(source, sura, aya);
-    return translation?.withSourceMetadata(fontFamily: source.fontFamily);
+    return _withSourceMetadata(translation, source);
   }
 
   /// Gets all translations for a surah from the given source.
@@ -30,12 +31,29 @@ class TranslationService {
   ) async {
     final translations = await _repository.getTranslationsForSura(source, sura);
     return translations
-        .map(
-          (translation) => translation.withSourceMetadata(
-            fontFamily: source.fontFamily,
-          ),
-        )
+        .map((translation) => _decorate(translation, source))
         .toList();
+  }
+
+  Translation? _withSourceMetadata(
+    Translation? translation,
+    TranslationId source,
+  ) {
+    if (translation == null) return null;
+    return _decorate(translation, source);
+  }
+
+  Translation _decorate(Translation translation, TranslationId source) {
+    return Translation(
+      id: translation.id,
+      sura: translation.sura,
+      aya: translation.aya,
+      translation: TranslationTextNormalizer.normalize(translation.translation),
+      footnotes: translation.footnotes == null
+          ? null
+          : TranslationTextNormalizer.normalize(translation.footnotes!),
+      fontFamily: source.fontFamily,
+    );
   }
 
   /// Returns the list of available translation sources.

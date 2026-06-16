@@ -4,13 +4,12 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/use_cases/navigate_study_ayah.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 /// Keeps [MushafReaderController] highlight aligned with persisted selection.
-void useQuranAyahSelectionSync(
-  WidgetRef ref,
-  MushafReaderController controller,
-) {
+void useQuranAyahSelectionSync(WidgetRef ref) {
+  final controller = ref.watch(quranMushafControllerProvider);
   final selectedAyahId = ref.watch(
     quranScreenSettingsProvider.select(
       (v) => v.value?.selectedAyah?.ayahId,
@@ -29,11 +28,8 @@ void useQuranAyahSelectionSync(
 }
 
 /// Updates mushaf highlight and persisted ayah selection together.
-void setQuranSelectedAyah(
-  WidgetRef ref,
-  MushafReaderController controller,
-  Ayah? ayah,
-) {
+void setQuranSelectedAyah(WidgetRef ref, Ayah? ayah) {
+  final controller = ref.read(quranMushafControllerProvider);
   ref.read(quranScreenSettingsProvider.notifier).selectAyah(ayah);
   if (ayah == null) {
     controller.clearSelection();
@@ -43,30 +39,23 @@ void setQuranSelectedAyah(
 }
 
 /// Jumps to an ayah and selects it in both mushaf and persisted state.
-Future<void> jumpToQuranAyah(
-  WidgetRef ref,
-  MushafReaderController controller,
-  Ayah ayah,
-) async {
+Future<void> jumpToQuranAyah(WidgetRef ref, Ayah ayah) async {
+  final controller = ref.read(quranMushafControllerProvider);
   ref.read(quranScreenSettingsProvider.notifier).selectAyah(ayah);
   await controller.jumpToAyah(ayah.ayahId, select: true);
 }
 
 /// Toggles selection for the tapped ayah across mushaf and persisted state.
-void toggleQuranAyahSelection(
-  WidgetRef ref,
-  MushafReaderController controller,
-  Ayah ayah,
-) {
+void toggleQuranAyahSelection(WidgetRef ref, Ayah ayah) {
   final previousId = ref.read(
     quranScreenSettingsProvider.select(
       (v) => v.value?.selectedAyah?.ayahId,
     ),
   );
   if (previousId == ayah.ayahId) {
-    setQuranSelectedAyah(ref, controller, null);
+    setQuranSelectedAyah(ref, null);
   } else {
-    setQuranSelectedAyah(ref, controller, ayah);
+    setQuranSelectedAyah(ref, ayah);
   }
 }
 
@@ -74,10 +63,10 @@ void toggleQuranAyahSelection(
 /// ayah on the current page when nothing is selected.
 Future<void> navigateStudyAyah({
   required WidgetRef ref,
-  required MushafReaderController controller,
   required int? currentAyahId,
   required int delta,
 }) async {
+  final controller = ref.read(quranMushafControllerProvider);
   if (currentAyahId == null) {
     final page = await controller.getPage(controller.currentPage);
     if (page.surahs.isEmpty) return;
@@ -86,7 +75,7 @@ Future<void> navigateStudyAyah({
     if (firstFragment == null) return;
 
     final ayah = await controller.getAyah(firstFragment.ayahId);
-    await jumpToQuranAyah(ref, controller, ayah);
+    await jumpToQuranAyah(ref, ayah);
     return;
   }
 
@@ -94,5 +83,5 @@ Future<void> navigateStudyAyah({
   if (newAyahId == null) return;
 
   final ayah = await controller.getAyah(newAyahId);
-  await jumpToQuranAyah(ref, controller, ayah);
+  await jumpToQuranAyah(ref, ayah);
 }

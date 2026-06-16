@@ -7,21 +7,21 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_notes_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Notes section for the study panel.
 class NotesSection extends HookConsumerWidget {
   /// Creates a [NotesSection] instance.
-  const NotesSection({
-    required this.ayahId,
-    super.key,
-  });
-
-  /// The ayah ID.
-  final int? ayahId;
+  const NotesSection({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final ayahId = ref.watch(
+      quranScreenSettingsProvider.select(
+        (v) => v.value?.selectedAyah?.ayahId,
+      ),
+    );
     final theme = context.theme;
     final colors = theme.colors;
     final typography = theme.typography;

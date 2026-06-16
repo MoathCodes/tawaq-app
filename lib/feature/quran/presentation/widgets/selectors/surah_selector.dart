@@ -6,6 +6,7 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -13,13 +14,11 @@ import 'package:tawaq/theme/theme.dart';
 /// A dropdown selector for choosing a Surah in the Quran reader.
 class SurahSelector extends HookConsumerWidget {
   /// Creates a [SurahSelector] instance.
-  const SurahSelector({required this.controller, super.key});
-
-  /// The mushaf reader controller.
-  final MushafReaderController controller;
+  const SurahSelector({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.watch(quranMushafControllerProvider);
     final theme = context.theme;
     final l10n = context.l10n;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';

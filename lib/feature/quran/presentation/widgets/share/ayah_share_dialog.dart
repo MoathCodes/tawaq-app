@@ -17,6 +17,7 @@ import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/models/ayah_share_include.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_card.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_include_panel.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_range_slider.dart';
@@ -68,15 +69,11 @@ Future<AyahSharePageReferences> _loadPageAyahReferences(
 /// Opens the ayah share dialog for exporting verses as an image.
 Future<void> showAyahShareDialog(
   BuildContext context, {
-  required MushafReaderController controller,
   required Ayah ayah,
 }) {
   return showFDialog<void>(
     context: context,
-    builder: (context, style, animation) => AyahShareDialog(
-      controller: controller,
-      ayah: ayah,
-    ),
+    builder: (context, style, animation) => AyahShareDialog(ayah: ayah),
   );
 }
 
@@ -84,16 +81,15 @@ Future<void> showAyahShareDialog(
 class AyahShareDialog extends HookConsumerWidget {
   /// Creates the share dialog.
   const AyahShareDialog({
-    required this.controller,
     required this.ayah,
     super.key,
   });
 
-  final MushafReaderController controller;
   final Ayah ayah;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.watch(quranMushafControllerProvider);
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
@@ -202,8 +198,9 @@ class AyahShareDialog extends HookConsumerWidget {
 
     Widget buildShareCard() {
       final ids = selectedAyahIds.value;
-      final preserveLineBreaks =
-          included.value.contains(AyahShareInclude.preserveLineBreaks);
+      final preserveLineBreaks = included.value.contains(
+        AyahShareInclude.preserveLineBreaks,
+      );
       return AyahShareCard(
         key: ValueKey('${ids.join(',')}-$preserveLineBreaks'),
         boundaryKey: boundaryKey,
@@ -289,7 +286,7 @@ class AyahShareDialog extends HookConsumerWidget {
     final dialogSize = dialogConstraints(
       context,
       preferredWidth: isDesktopPlatform ? 920 : 680,
-      preferredHeight: isDesktopPlatform ? 460 : 560,
+      preferredHeight: isDesktopPlatform ? 500 : 560,
       minWidth: 320,
     );
 

@@ -5,6 +5,7 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -14,18 +15,18 @@ import 'package:tawaq/theme/theme.dart';
 class AyahSearchSelector extends ConsumerWidget {
   /// Creates an [AyahSearchSelector] instance.
   const AyahSearchSelector({
-    required this.controller,
     this.searchPopoverController,
     super.key,
   });
 
-  /// The mushaf reader controller.
-  final MushafReaderController controller;
-
   /// Optional popover controller used to open search via keyboard shortcut.
   final FPopoverController? searchPopoverController;
 
-  String _surahName(int surahNumber, AppLocalizations l10n) {
+  String _surahName(
+    MushafReaderController controller,
+    int surahNumber,
+    AppLocalizations l10n,
+  ) {
     final surah = controller.getSurahSync(surahNumber);
     return surah?.nameArabic ??
         surah?.nameEnglish ??
@@ -34,6 +35,7 @@ class AyahSearchSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.watch(quranMushafControllerProvider);
     final theme = context.theme;
     final colors = theme.colors;
     final typography = theme.typography;
@@ -50,7 +52,7 @@ class AyahSearchSelector extends ConsumerWidget {
       name: l10n.searchQuran,
       value: selectedAyah != null
           ? l10n.surahAyahInfo(
-              _surahName(selectedAyah.surahNumber, l10n),
+              _surahName(controller, selectedAyah.surahNumber, l10n),
               selectedAyah.numberInSurah,
             )
           : null,
@@ -92,7 +94,7 @@ class AyahSearchSelector extends ConsumerWidget {
         ),
       ),
       format: (v) => l10n.surahAyahInfo(
-        _surahName(v.surahNumber, l10n),
+        _surahName(controller, v.surahNumber, l10n),
         v.numberInSurah,
       ),
       filter: (query) async {
@@ -131,14 +133,14 @@ class AyahSearchSelector extends ConsumerWidget {
         value: selectedAyah,
         onChange: (v) async {
           if (v == null) {
-            setQuranSelectedAyah(ref, controller, null);
+            setQuranSelectedAyah(ref, null);
             return;
           }
-          await jumpToQuranAyah(ref, controller, v);
+          await jumpToQuranAyah(ref, v);
         },
       ),
       contentBuilder: (context, style, ayahs) => ayahs.map((ayah) {
-        final surahName = _surahName(ayah.surahNumber, l10n);
+        final surahName = _surahName(controller, ayah.surahNumber, l10n);
 
         // Truncate text for preview
         final preview = ayah.textPlain != null

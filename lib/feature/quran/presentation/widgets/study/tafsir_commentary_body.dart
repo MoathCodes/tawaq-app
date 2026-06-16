@@ -25,20 +25,22 @@ class TafsirCommentaryBody extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final body = useMemoized(
-      () => _buildBody(segments: segments, styles: styles),
-      [segments, styles],
+    return CommentaryStyleScope(
+      styles: styles,
+      child: _TafsirCommentaryBodyContent(segments: segments),
     );
-
-    return body ?? const SizedBox.shrink();
   }
 
-  static Widget? _buildBody({
+  /// Builds the commentary widget tree from [segments].
+  ///
+  /// [context] must be under a [CommentaryStyleScope].
+  static Widget? buildBody(
+    BuildContext context, {
     required List<TafsirTextSegment> segments,
-    required CommentaryTextStyles styles,
   }) {
     if (segments.isEmpty) return null;
 
+    final styles = CommentaryStyleScope.of(context);
     final children = <Widget>[];
     var inlineStart = 0;
 
@@ -46,10 +48,10 @@ class TafsirCommentaryBody extends HookWidget {
       if (inlineStart >= end) return;
 
       final spans = _buildInlineSpans(
+        context: context,
         segments: segments,
         start: inlineStart,
         end: end,
-        styles: styles,
       );
       if (spans.isEmpty) return;
 
@@ -93,11 +95,12 @@ class TafsirCommentaryBody extends HookWidget {
   }
 
   static List<InlineSpan> _buildInlineSpans({
+    required BuildContext context,
     required List<TafsirTextSegment> segments,
     required int start,
     required int end,
-    required CommentaryTextStyles styles,
   }) {
+    final styles = CommentaryStyleScope.of(context);
     final spans = <InlineSpan>[];
     TafsirTextSegment? previous;
 
@@ -113,7 +116,7 @@ class TafsirCommentaryBody extends HookWidget {
       }
 
       final next = i + 1 < segments.length ? segments[i + 1] : null;
-      spans.addAll(_spansForSegment(segment, styles, next: next));
+      spans.addAll(_spansForSegment(context, segment, next: next));
       previous = segment;
     }
 
@@ -170,14 +173,15 @@ class TafsirCommentaryBody extends HookWidget {
   }
 
   static List<InlineSpan> _spansForSegment(
-    TafsirTextSegment segment,
-    CommentaryTextStyles styles, {
+    BuildContext context,
+    TafsirTextSegment segment, {
     TafsirTextSegment? next,
   }) {
+    final styles = CommentaryStyleScope.of(context);
     return switch (segment.kind) {
       TafsirSegmentKind.commentary => CommentaryInlineSpans.build(
+        context,
         segment.text,
-        styles: styles,
       ),
       TafsirSegmentKind.ayah => [
         TextSpan(
@@ -284,5 +288,31 @@ class _TafsirPoetryRow extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class _TafsirCommentaryBodyContent extends HookWidget {
+  const _TafsirCommentaryBodyContent({required this.segments});
+
+  final List<TafsirTextSegment> segments;
+
+  @override
+  Widget build(BuildContext context) {
+    final styles = CommentaryStyleScope.of(context);
+    final body = useMemoized(
+      () => TafsirCommentaryBody.buildBody(context, segments: segments),
+      [
+        segments,
+        styles.prose,
+        styles.ayah,
+        styles.quote,
+        styles.reference,
+        styles.gloss,
+        styles.crossReference,
+        styles.selectionStrut,
+      ],
+    );
+
+    return body ?? const SizedBox.shrink();
   }
 }

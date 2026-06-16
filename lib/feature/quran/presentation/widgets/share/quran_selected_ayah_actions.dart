@@ -12,32 +12,31 @@ import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_dialog.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Wraps the mushaf reader and overlays a floating actions bar when an
 /// ayah is selected.
-class QuranReaderWithAyahActions extends StatelessWidget {
+class QuranReaderWithAyahActions extends ConsumerWidget {
   /// Creates a reader shell with selection actions.
   const QuranReaderWithAyahActions({
     required this.reader,
-    required this.controller,
-    required this.layout,
     super.key,
   });
 
   /// The mushaf reader widget.
   final Widget reader;
 
-  /// Controller used to clear mushaf highlight when dismissing the bar.
-  final MushafReaderController controller;
-
-  /// Active reading layout (controls action bar placement).
-  final QuranReadingLayout layout;
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final layout = ref.watch(
+      quranScreenSettingsProvider.select(
+        (v) => v.value?.layout ?? QuranReadingLayout.studyMode,
+      ),
+    );
+
     return Stack(
       fit: StackFit.expand,
       clipBehavior: Clip.none,
@@ -55,7 +54,7 @@ class QuranReaderWithAyahActions extends StatelessWidget {
                     ? AppSpacing.lg
                     : 0,
               ),
-              child: QuranSelectedAyahActionsBar(controller: controller),
+              child: const QuranSelectedAyahActionsBar(),
             ),
           ),
         ),
@@ -82,9 +81,7 @@ Alignment _ayahActionsAlignment(
 /// Animated floating bar for copy, share, and bookmark on the selected ayah.
 class QuranSelectedAyahActionsBar extends ConsumerWidget {
   /// Creates the selection actions bar.
-  const QuranSelectedAyahActionsBar({required this.controller, super.key});
-
-  final MushafReaderController controller;
+  const QuranSelectedAyahActionsBar({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -113,35 +110,29 @@ class QuranSelectedAyahActionsBar extends ConsumerWidget {
       },
       child: selectedAyah == null
           ? const SizedBox.shrink(key: ValueKey('ayah-actions-hidden'))
-          : _AyahActionsBar(
+          : _buildActionsBar(
+              context,
+              ref,
               key: ValueKey(selectedAyah.ayahId),
-              controller: controller,
               ayah: selectedAyah,
-              onClose: () => setQuranSelectedAyah(ref, controller, null),
             ),
     );
   }
-}
 
-class _AyahActionsBar extends ConsumerWidget {
-  const _AyahActionsBar({
-    required this.controller,
-    required this.ayah,
-    required this.onClose,
-    super.key,
-  });
-
-  final MushafReaderController controller;
-  final Ayah ayah;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget _buildActionsBar(
+    BuildContext context,
+    WidgetRef ref, {
+    required Key key,
+    required Ayah ayah,
+  }) {
     final theme = context.theme;
     final durations = theme.durations;
     final l10n = context.l10n;
 
+    void onClose() => setQuranSelectedAyah(ref, null);
+
     return LayoutBuilder(
+      key: key,
       builder: (context, constraints) {
         final compact = constraints.maxWidth < theme.breakpoints.sm;
 
@@ -160,11 +151,7 @@ class _AyahActionsBar extends ConsumerWidget {
                     ),
                   ),
                   FButton.icon(
-                    onPress: () => showAyahShareDialog(
-                      context,
-                      controller: controller,
-                      ayah: ayah,
-                    ),
+                    onPress: () => showAyahShareDialog(context, ayah: ayah),
                     child: const Icon(FLucideIcons.share2, size: 18),
                   ),
                   FButton.icon(
@@ -172,7 +159,7 @@ class _AyahActionsBar extends ConsumerWidget {
                     child: const Icon(FLucideIcons.bookmark, size: 18),
                   ),
                   FButton.icon(
-                    onPress: () => _copyAyah(context, ayah),
+                    onPress: () => _copyAyah(context, ref, ayah),
                     child: const Icon(FLucideIcons.copy, size: 18),
                   ),
                   FButton.icon(
@@ -212,11 +199,7 @@ class _AyahActionsBar extends ConsumerWidget {
                   ),
                 ),
                 FButton(
-                  onPress: () => showAyahShareDialog(
-                    context,
-                    controller: controller,
-                    ayah: ayah,
-                  ),
+                  onPress: () => showAyahShareDialog(context, ayah: ayah),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -238,7 +221,7 @@ class _AyahActionsBar extends ConsumerWidget {
                   ),
                 ),
                 FButton.icon(
-                  onPress: () => _copyAyah(context, ayah),
+                  onPress: () => _copyAyah(context, ref, ayah),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -282,7 +265,8 @@ class _AyahActionsBar extends ConsumerWidget {
     );
   }
 
-  void _copyAyah(BuildContext context, Ayah ayah) {
+  void _copyAyah(BuildContext context, WidgetRef ref, Ayah ayah) {
+    final controller = ref.read(quranMushafControllerProvider);
     final l10n = context.l10n;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final reference = localizedAyahReference(

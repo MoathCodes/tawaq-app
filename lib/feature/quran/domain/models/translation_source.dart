@@ -1,5 +1,6 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:tawaq/gen/assets.gen.dart';
+import 'package:tawaq/gen/fonts.gen.dart';
 /// Available translation sources as an enum with metadata.
 ///
 /// Use this enum instead of strings to reference translations.
@@ -98,5 +99,23 @@ enum TranslationId {
   /// Font family for rendering this translation's text.
   ///
   /// When null, the UI inherits the theme's default typography.
-  String? get fontFamily => null;
+  String? get fontFamily => switch (this) {
+    TranslationId.bengali => FontFamily.notoSansBengali,
+    TranslationId.chinese => FontFamily.notoSansSC,
+    TranslationId.russian => FontFamily.notoSans,
+    TranslationId.urdu => FontFamily.notoNastaliqUrdu,
+    _ => null,
+  };
+
+  /// Whether the study panel should render this translation in italic.
+  ///
+  /// Latin-script editions use a quoted italic style; other scripts use upright
+  /// glyphs from their dedicated fonts.
+  bool get usesItalicQuoteStyle => switch (this) {
+    TranslationId.bengali ||
+    TranslationId.chinese ||
+    TranslationId.russian ||
+    TranslationId.urdu => false,
+    _ => true,
+  };
 }

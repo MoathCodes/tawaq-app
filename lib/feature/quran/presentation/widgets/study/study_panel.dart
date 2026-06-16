@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_scope.dart';
@@ -22,13 +21,7 @@ import 'package:tawaq/theme/theme.dart';
 /// A study companion panel for the Quran screen.
 class StudyPanel extends HookConsumerWidget {
   /// Creates a study panel.
-  const StudyPanel({
-    required this.controller,
-    super.key,
-  });
-
-  /// The mushaf reader controller.
-  final MushafReaderController controller;
+  const StudyPanel({super.key});
 
   Future<void> _navigateAyah(WidgetRef ref, int delta) async {
     final currentAyahId = ref.read(
@@ -38,7 +31,6 @@ class StudyPanel extends HookConsumerWidget {
     );
     await navigateStudyAyah(
       ref: ref,
-      controller: controller,
       currentAyahId: currentAyahId,
       delta: delta,
     );
@@ -46,20 +38,11 @@ class StudyPanel extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pageInfo = ref.watch(
-      quranScreenSettingsProvider.select(
-        (value) => value.value?.pageInfo,
-      ),
-    );
     final selectedAyah = ref.watch(
       quranScreenSettingsProvider.select(
         (value) => value.value?.selectedAyah,
       ),
     );
-
-    // Get surah and ayah numbers for fetching content
-    final sura = selectedAyah?.surahNumber ?? 1;
-    final aya = selectedAyah?.numberInSurah ?? 1;
     final ayaId = selectedAyah?.ayahId;
 
     // Track previous ayahId to determine animation direction
@@ -77,18 +60,12 @@ class StudyPanel extends HookConsumerWidget {
       [ayaId],
     );
 
-    final studyContent = Column(
+    const studyContent = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ContentAccordion(
-          sura: sura,
-          aya: aya,
-          hasSelectedAyah: selectedAyah != null,
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        NotesSection(
-          ayahId: ayaId,
-        ),
+        ContentAccordion(),
+        SizedBox(height: AppSpacing.xl),
+        NotesSection(),
       ],
     );
 
@@ -103,13 +80,7 @@ class StudyPanel extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            StudyPanelHeader(
-              controller: controller,
-              surahNumber:
-                  selectedAyah?.surahNumber ?? pageInfo?.primarySurahNumber,
-              ayahNumber: selectedAyah?.numberInSurah,
-              currentAyahId: ayaId,
-            ),
+            const StudyPanelHeader(),
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {

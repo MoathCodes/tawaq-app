@@ -12,6 +12,9 @@ import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/mushaf_page_shortcut_scope.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/quran_selected_ayah_actions.dart';
@@ -73,32 +76,16 @@ const _kStudyPanelMaxExtent = 480.0;
 /// changes instead of tearing down shortcuts, semantics, and ayah actions.
 class QuranMushafPane extends HookConsumerWidget {
   /// Creates a [QuranMushafPane] instance.
-  const QuranMushafPane({
-    required this.controller,
-    required this.layout,
-    required this.buildStyle,
-    required this.onPageChanged,
-    required this.onAyahTapped,
-    super.key,
-  });
-
-  /// The mushaf reader controller.
-  final MushafReaderController controller;
-
-  /// Active reading layout (single-page vs two-page reader).
-  final QuranReadingLayout layout;
-
-  /// Function to build the mushaf style.
-  final MushafStyle Function(FThemeData, [QuranTextScale]) buildStyle;
-
-  /// Callback when page changes.
-  final void Function(MushafPageInfo) onPageChanged;
-
-  /// Callback when an ayah is tapped.
-  final void Function(Ayah) onAyahTapped;
+  const QuranMushafPane({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.watch(quranMushafControllerProvider);
+    final layout = ref.watch(
+      quranScreenSettingsProvider.select(
+        (v) => v.value?.layout ?? QuranReadingLayout.studyMode,
+      ),
+    );
     final targetViewport = layout == QuranReadingLayout.doublePage ? 2 : 1;
     useEffect(() {
       if (controller.pagesPerViewport != targetViewport) {
@@ -107,13 +94,20 @@ class QuranMushafPane extends HookConsumerWidget {
       return null;
     }, [targetViewport]);
 
+    void onAyahTapped(Ayah info) {
+      toggleQuranAyahSelection(ref, info);
+    }
+
+    void savePageInfo(MushafPageInfo info) =>
+        ref.read(quranScreenSettingsProvider.notifier).setLastPageInfo(info);
+
     final theme = context.theme;
     final textScale = ref.watch(
       quranScreenSettingsProvider.select(
         (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
       ),
     );
-    final style = buildStyle(theme, textScale);
+    final style = buildQuranMushafStyle(theme, textScale);
 
     final reader = layout == QuranReadingLayout.doublePage
         ? MushafTwoPageReader(
@@ -122,24 +116,24 @@ class QuranMushafPane extends HookConsumerWidget {
             pageLoadingWidget: const FCircularProgress.loader(),
             style: style,
             onAyahTap: onAyahTapped,
-            onPageChanged: (info) => onPageChanged(info.$1),
+            onPageChanged: (info) => savePageInfo(info.$1),
           )
         : MushafReader(
             controller: controller,
             loadingWidget: const FCircularProgress.loader(),
             pageLoadingWidget: const FCircularProgress.loader(),
             style: style,
-            onPageChanged: onPageChanged,
+            onPageChanged: savePageInfo,
             onAyahTap: onAyahTapped,
           );
 
     return MushafPageShortcutScope(
-      controller: controller,
-      child: _MushafReadingSemantics(
-        child: QuranReaderWithAyahActions(
-          controller: controller,
-          layout: layout,
-          reader: NonSelectable(child: reader),
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+        child: _MushafReadingSemantics(
+          child: QuranReaderWithAyahActions(
+            reader: NonSelectable(child: reader),
+          ),
         ),
       ),
     );
@@ -178,13 +172,9 @@ class DoublePageLayout extends StatelessWidget {
 class StudyModeLayout extends ConsumerWidget {
   /// Creates a [StudyModeLayout] instance.
   const StudyModeLayout({
-    required this.controller,
     required this.mushaf,
     super.key,
   });
-
-  /// The mushaf reader controller (for the study side panel).
-  final MushafReaderController controller;
 
   /// The shared mushaf reading pane.
   final Widget mushaf;
@@ -197,7 +187,7 @@ class StudyModeLayout extends ConsumerWidget {
     final panel = RepaintBoundary(
       child: Directionality(
         textDirection: textDirection,
-        child: StudyPanel(controller: controller),
+        child: const StudyPanel(),
       ),
     );
 

@@ -5,7 +5,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:forui_hooks/forui_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/use_register_app_search_focus.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
@@ -22,10 +21,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Header widget for the Quran screen containing navigation controls.
 class QuranHeaderWidget extends HookConsumerWidget {
   /// Creates a [QuranHeaderWidget] instance.
-  const QuranHeaderWidget({required this.mushafController, super.key});
-
-  /// The mushaf reader controller.
-  final MushafReaderController mushafController;
+  const QuranHeaderWidget({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -81,20 +77,19 @@ class QuranHeaderWidget extends HookConsumerWidget {
 
             final selectors = Row(
               children: [
-                Expanded(
+                const Expanded(
                   flex: 15,
-                  child: SurahSelector(controller: mushafController),
+                  child: SurahSelector(),
                 ),
                 const SizedBox(width: AppSpacing.md),
-                Expanded(
+                const Expanded(
                   flex: 20,
-                  child: JuzSelector(controller: mushafController),
+                  child: JuzSelector(),
                 ),
                 const SizedBox(width: AppSpacing.lg),
                 Expanded(
                   flex: 36,
                   child: AyahSearchSelector(
-                    controller: mushafController,
                     searchPopoverController: searchPopover,
                   ),
                 ),
