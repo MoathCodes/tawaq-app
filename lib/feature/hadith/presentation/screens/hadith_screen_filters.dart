@@ -1,25 +1,18 @@
 part of 'hadith_screen.dart';
 
 class _SearchHeader extends HookConsumerWidget {
-  const _SearchHeader({
-    required this.desktop,
-    required this.groupId,
-  });
-
-  final bool desktop;
-  final Object groupId;
+  const _SearchHeader();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final desktop = isAtLeast(context, FBreakpoint.lg);
     final queryController = useTextEditingController();
     useListenable(queryController);
     final filters = ref.watch(hadithFiltersProvider);
     final viewMode = ref.watch(hadithViewModeProvider);
     final isSearchMode = ref.watch(hadithIsSearchModeProvider);
     final searchBusy = ref.watch(hadithSearchBusyProvider);
-    final filterActionsEnabled = ref.watch(
-      hadithFilterInteractionsEnabledProvider,
-    );
+    final queryFromState = ref.watch(hadithQueryProvider);
     final isBookmarksMode = viewMode == HadithViewMode.bookmarks;
     final screenController = ref.read(hadithScreenControllerProvider.notifier);
     final visibleResults = ref.watch(hadithVisibleResultsProvider);
@@ -27,7 +20,6 @@ class _SearchHeader extends HookConsumerWidget {
       AsyncData(:final value) => value.length,
       _ => 0,
     };
-    final recentSearches = ref.watch(hadithVisibleRecentSearchesProvider);
     final searchFocusNode = useFocusNode();
     final focusSearch = useCallback(
       searchFocusNode.requestFocus,
@@ -35,6 +27,13 @@ class _SearchHeader extends HookConsumerWidget {
     );
 
     useRegisterAppSearchFocus(focusSearch, enabled: !isBookmarksMode);
+
+    useEffect(() {
+      if (queryController.text != queryFromState) {
+        queryController.text = queryFromState;
+      }
+      return null;
+    }, [queryFromState]);
 
     final theme = context.theme;
     final l10n = context.l10n;
@@ -181,7 +180,7 @@ class _SearchHeader extends HookConsumerWidget {
                         )
                       else if (isSearchMode)
                         FPopover(
-                          groupId: groupId,
+                          groupId: HadithPage._filterPopoverGroupId,
                           popoverAnchor: Alignment.topRight,
                           childAnchor: Alignment.bottomRight,
                           popoverBuilder: (_, controller) => ConstrainedBox(
@@ -231,32 +230,11 @@ class _SearchHeader extends HookConsumerWidget {
                     ),
                   ),
                 ),
-              _ActiveFiltersSection(
-                interactionsEnabled: filterActionsEnabled,
-              ),
+              const _ActiveFiltersSection(),
               if (fieldQuery.trim().isEmpty) ...[
                 if (activeFilterCount > 0)
                   const SizedBox(height: AppSpacing.xs),
-                _RecentSearches(
-                  recentSearches: recentSearches,
-                  interactionsEnabled: !searchBusy,
-                  onQuerySelected: (query) {
-                    queryController.text = query;
-                    onQuerySubmitted(query);
-                  },
-                  onRemove: (query) {
-                    unawaited(
-                      ref
-                          .read(hadithScreenControllerProvider.notifier)
-                          .removeRecentSearch(query),
-                    );
-                  },
-                  onClearAll: () {
-                    return ref
-                        .read(hadithScreenControllerProvider.notifier)
-                        .clearRecentSearches();
-                  },
-                ),
+                const _RecentSearches(),
               ],
             ],
           ],
@@ -331,23 +309,17 @@ class _SearchMetaSectionHeader extends StatelessWidget {
   }
 }
 
-class _RecentSearchChip extends HookWidget {
-  const _RecentSearchChip({
-    required this.query,
-    required this.interactionsEnabled,
-    required this.onSelect,
-    required this.onRemove,
-  });
+class _RecentSearchChip extends HookConsumerWidget {
+  const _RecentSearchChip({required this.query});
 
   final String query;
-  final bool interactionsEnabled;
-  final VoidCallback onSelect;
-  final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
+    final interactionsEnabled = !ref.watch(hadithSearchBusyProvider);
+    final screenController = ref.read(hadithScreenControllerProvider.notifier);
     final (:isHovered, :setHovered) = useHoverState();
     final showRemove = isHovered || isLessThan(context, FBreakpoint.lg);
 
@@ -362,7 +334,13 @@ class _RecentSearchChip extends HookWidget {
             size: FButtonSizeVariant.sm,
             mainAxisSize: MainAxisSize.min,
             semanticsLabel: hadithRecentSearchChipSemanticsLabel(query, l10n),
-            onPress: interactionsEnabled ? onSelect : null,
+            onPress: interactionsEnabled
+                ? () {
+                    unawaited(
+                      screenController.setQuery(query, debounced: false),
+                    );
+                  }
+                : null,
             child: HadithDecorExcludeSemantics(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -391,7 +369,9 @@ class _RecentSearchChip extends HookWidget {
                           query,
                           l10n,
                         ),
-                        onPress: onRemove,
+                        onPress: () {
+                          unawaited(screenController.removeRecentSearch(query));
+                        },
                         child: const HadithDecorExcludeSemantics(
                           child: Icon(FLucideIcons.x, size: 12),
                         ),
@@ -405,25 +385,16 @@ class _RecentSearchChip extends HookWidget {
   }
 }
 
-class _RecentSearches extends StatelessWidget {
-  const _RecentSearches({
-    required this.recentSearches,
-    required this.onQuerySelected,
-    required this.onRemove,
-    required this.onClearAll,
-    required this.interactionsEnabled,
-  });
-
-  final AsyncValue<List<String>> recentSearches;
-  final ValueChanged<String> onQuerySelected;
-  final ValueChanged<String> onRemove;
-  final Future<void> Function() onClearAll;
-  final bool interactionsEnabled;
+class _RecentSearches extends ConsumerWidget {
+  const _RecentSearches();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
+    final recentSearches = ref.watch(hadithVisibleRecentSearchesProvider);
+    final interactionsEnabled = !ref.watch(hadithSearchBusyProvider);
+    final screenController = ref.read(hadithScreenControllerProvider.notifier);
 
     return recentSearches.when(
       data: (items) {
@@ -448,7 +419,7 @@ class _RecentSearches extends StatelessWidget {
                 size: FButtonSizeVariant.sm,
                 mainAxisSize: MainAxisSize.min,
                 onPress: interactionsEnabled
-                    ? () => unawaited(onClearAll())
+                    ? () => unawaited(screenController.clearRecentSearches())
                     : null,
                 child: Text(l10n.hadithClearAllRecents),
               ),
@@ -459,12 +430,7 @@ class _RecentSearches extends StatelessWidget {
                 spacing: AppSpacing.xs,
                 children: [
                   for (final query in items)
-                    _RecentSearchChip(
-                      query: query,
-                      interactionsEnabled: interactionsEnabled,
-                      onSelect: () => onQuerySelected(query),
-                      onRemove: () => onRemove(query),
-                    ),
+                    _RecentSearchChip(query: query),
                 ],
               ),
             ),
@@ -600,88 +566,22 @@ class _FilterPanel extends ConsumerWidget {
         },
       ),
       const SizedBox(height: AppSpacing.lg),
-      _LookupSection<HadithLookupRef>(
+      _LookupSection(
+        field: _HadithLookupField.scholars,
         title: l10n.hadithScholars,
-        selected: filters.scholars,
-        label: (item) => item.name,
         hint: l10n.hadithTypeToSearch,
-        interactionsEnabled: panelEnabled,
-        filter: (query) {
-          return ref.read(hadithScholarsLookupProvider(query).future);
-        },
-        onRemove: (item) {
-          updateFilters(
-            filters.copyWith(
-              scholars: filters.scholars
-                  .where((entry) => entry.id != item.id)
-                  .toList(growable: false),
-            ),
-          );
-        },
-        onSelect: (item) {
-          if (filters.scholars.any((entry) => entry.id == item.id)) {
-            return;
-          }
-          updateFilters(
-            filters.copyWith(scholars: [...filters.scholars, item]),
-          );
-        },
       ),
       const SizedBox(height: AppSpacing.md),
-      _LookupSection<HadithLookupRef>(
+      _LookupSection(
+        field: _HadithLookupField.books,
         title: l10n.hadithBooks,
-        selected: filters.books,
-        label: (item) => item.name,
         hint: l10n.hadithTypeToSearch,
-        interactionsEnabled: panelEnabled,
-        filter: (query) {
-          return ref.read(hadithBooksLookupProvider(query).future);
-        },
-        onRemove: (item) {
-          updateFilters(
-            filters.copyWith(
-              books: filters.books
-                  .where((entry) => entry.id != item.id)
-                  .toList(growable: false),
-            ),
-          );
-        },
-        onSelect: (item) {
-          if (filters.books.any((entry) => entry.id == item.id)) {
-            return;
-          }
-          updateFilters(
-            filters.copyWith(books: [...filters.books, item]),
-          );
-        },
       ),
       const SizedBox(height: AppSpacing.md),
-      _LookupSection<HadithLookupRef>(
+      _LookupSection(
+        field: _HadithLookupField.rawi,
         title: l10n.hadithNarrators,
-        selected: filters.rawi,
-        label: (item) => item.name,
         hint: l10n.hadithTypeToSearch,
-        interactionsEnabled: panelEnabled,
-        filter: (query) {
-          return ref.read(hadithRawiLookupProvider(query).future);
-        },
-        onRemove: (item) {
-          updateFilters(
-            filters.copyWith(
-              rawi: filters.rawi
-                  .where((entry) => entry.id != item.id)
-                  .toList(growable: false),
-            ),
-          );
-        },
-        onSelect: (item) {
-          if (filters.rawi.any((entry) => entry.id == item.id)) {
-            return;
-          }
-          updateFilters(
-            filters.copyWith(rawi: [...filters.rawi, item]),
-          );
-        },
       ),
     ];
 
@@ -689,7 +589,7 @@ class _FilterPanel extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (showHeader) _FilterHeader(theme: theme, onClose: onClose),
+          if (showHeader) _FilterHeader(onClose: onClose),
           Expanded(
             child: ListView(
               padding: const EdgeInsetsDirectional.only(
@@ -745,16 +645,14 @@ class _FilterPanel extends ConsumerWidget {
 }
 
 class _FilterHeader extends StatelessWidget {
-  const _FilterHeader({
-    required this.theme,
-    required this.onClose,
-  });
+  const _FilterHeader({required this.onClose});
 
-  final FThemeData theme;
   final VoidCallback? onClose;
 
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
@@ -779,31 +677,58 @@ class _FilterHeader extends StatelessWidget {
   }
 }
 
-class _LookupSection<T> extends StatelessWidget {
+enum _HadithLookupField { scholars, books, rawi }
+
+class _LookupSection extends ConsumerWidget {
   const _LookupSection({
+    required this.field,
     required this.title,
-    required this.selected,
-    required this.label,
     required this.hint,
-    required this.filter,
-    required this.onSelect,
-    required this.onRemove,
-    required this.interactionsEnabled,
   });
 
+  final _HadithLookupField field;
   final String title;
-  final List<T> selected;
-  final String Function(T) label;
   final String hint;
-  final Future<Iterable<T>> Function(String query) filter;
-  final ValueChanged<T> onSelect;
-  final ValueChanged<T> onRemove;
-  final bool interactionsEnabled;
+
+  List<HadithLookupRef> _selected(HadithFilters filters) => switch (field) {
+    _HadithLookupField.scholars => filters.scholars,
+    _HadithLookupField.books => filters.books,
+    _HadithLookupField.rawi => filters.rawi,
+  };
+
+  HadithFilters _withSelected(
+    HadithFilters filters,
+    List<HadithLookupRef> selected,
+  ) => switch (field) {
+    _HadithLookupField.scholars => filters.copyWith(scholars: selected),
+    _HadithLookupField.books => filters.copyWith(books: selected),
+    _HadithLookupField.rawi => filters.copyWith(rawi: selected),
+  };
+
+  Future<Iterable<HadithLookupRef>> _lookup(WidgetRef ref, String query) =>
+      switch (field) {
+        _HadithLookupField.scholars =>
+          ref.read(hadithScholarsLookupProvider(query).future),
+        _HadithLookupField.books =>
+          ref.read(hadithBooksLookupProvider(query).future),
+        _HadithLookupField.rawi =>
+          ref.read(hadithRawiLookupProvider(query).future),
+      };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
+    final filters = ref.watch(hadithFiltersProvider);
+    final interactionsEnabled = !ref.watch(hadithSearchBusyProvider);
+    final selected = _selected(filters);
     final selectedSet = selected.toSet();
+
+    void updateFilters(HadithFilters next) {
+      if (!interactionsEnabled) return;
+      unawaited(
+        ref.read(hadithScreenControllerProvider.notifier).setFilters(next),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -815,31 +740,43 @@ class _LookupSection<T> extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
-        FMultiSelect<T>.searchBuilder(
+        FMultiSelect<HadithLookupRef>.searchBuilder(
           enabled: interactionsEnabled,
           hint: Text(hint),
-          format: (item) => Text(label(item)),
-          control: FMultiValueControl<T>.lifted(
+          format: (item) => Text(item.name),
+          control: FMultiValueControl<HadithLookupRef>.lifted(
             value: selectedSet,
             onChange: (values) {
               if (!interactionsEnabled) return;
               values
-                  .where(
-                    (value) => !selectedSet.contains(value),
-                  )
-                  .forEach(onSelect);
+                  .where((value) => !selectedSet.contains(value))
+                  .forEach((item) {
+                    if (selected.any((entry) => entry.id == item.id)) {
+                      return;
+                    }
+                    updateFilters(
+                      _withSelected(filters, [...selected, item]),
+                    );
+                  });
 
               selected
-                  .where(
-                    (value) => !values.contains(value),
-                  )
-                  .forEach(onRemove);
+                  .where((value) => !values.contains(value))
+                  .forEach((item) {
+                    updateFilters(
+                      _withSelected(
+                        filters,
+                        selected
+                            .where((entry) => entry.id != item.id)
+                            .toList(growable: false),
+                      ),
+                    );
+                  });
             },
           ),
-          filter: filter,
+          filter: (query) => _lookup(ref, query),
           contentBuilder: (_, _, data) => [
             for (final item in data)
-              FSelectItem(title: Text(label(item)), value: item),
+              FSelectItem(title: Text(item.name), value: item),
           ],
           contentLoadingBuilder: (_, _) => const FCircularProgress(),
           contentEmptyBuilder: (_, _) => Padding(
@@ -858,15 +795,14 @@ class _LookupSection<T> extends StatelessWidget {
 }
 
 class _ActiveFiltersSection extends ConsumerWidget {
-  const _ActiveFiltersSection({
-    required this.interactionsEnabled,
-  });
-
-  final bool interactionsEnabled;
+  const _ActiveFiltersSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final filters = ref.watch(hadithFiltersProvider);
+    final interactionsEnabled = ref.watch(
+      hadithFilterInteractionsEnabledProvider,
+    );
     final theme = context.theme;
     final l10n = context.l10n;
     final chips = _buildActiveFilterChips(filters, l10n);

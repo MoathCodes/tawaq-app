@@ -1,24 +1,18 @@
 part of 'hadith_screen.dart';
 
 class _ResultsList extends ConsumerWidget {
-  const _ResultsList({
-    this.enableDetailsPopover = false,
-  });
-
-  final bool enableDetailsPopover;
+  const _ResultsList();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedHadith = ref.watch(
-      hadithSelectorProvider.select((value) => value.value),
-    );
+    final enableDetailsPopover = !isAtLeast(context, FBreakpoint.lg);
+    final mode = ref.watch(hadithViewModeProvider);
+    final visibleResults = ref.watch(hadithVisibleResultsProvider);
     final state = ref.watch(
       hadithSearchControllerProvider.select(
         (value) => value.value ?? const HadithSearchState(),
       ),
     );
-    final mode = ref.watch(hadithViewModeProvider);
-    final visibleResults = ref.watch(hadithVisibleResultsProvider);
     final theme = context.theme;
     final visibleCount = switch (visibleResults) {
       AsyncData(:final value) => value.length,
@@ -30,10 +24,10 @@ class _ResultsList extends ConsumerWidget {
       context,
       ref,
       state,
-      selectedHadith,
       theme,
       mode,
       visibleResults,
+      enableDetailsPopover: enableDetailsPopover,
     );
     final showSearchLoadingSemantics =
         mode == HadithViewMode.search && state.isLoading;
@@ -74,11 +68,11 @@ class _ResultsList extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     HadithSearchState state,
-    DetailedHadith? selectedHadith,
     FThemeData theme,
     HadithViewMode mode,
-    AsyncValue<List<DetailedHadith>> visibleResults,
-  ) {
+    AsyncValue<List<DetailedHadith>> visibleResults, {
+    required bool enableDetailsPopover,
+  }) {
     final l10n = context.l10n;
 
     if (mode != HadithViewMode.search) {
@@ -119,9 +113,9 @@ class _ResultsList extends ConsumerWidget {
             context,
             ref,
             state,
-            selectedHadith,
             hadithList,
             enablePagination: false,
+            enableDetailsPopover: enableDetailsPopover,
           );
         },
       );
@@ -167,9 +161,9 @@ class _ResultsList extends ConsumerWidget {
       context,
       ref,
       state,
-      selectedHadith,
       state.results,
       enablePagination: true,
+      enableDetailsPopover: enableDetailsPopover,
     );
   }
 
@@ -177,9 +171,9 @@ class _ResultsList extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     HadithSearchState state,
-    DetailedHadith? selectedHadith,
     List<DetailedHadith> hadithList, {
     required bool enablePagination,
+    required bool enableDetailsPopover,
   }) {
     final itemCount = hadithList.length + (enablePagination ? 1 : 0);
 
@@ -218,32 +212,7 @@ class _ResultsList extends ConsumerWidget {
         }
 
         final hadith = hadithList[index];
-        final isFavorite = state.favoriteKeys.contains(
-          hadithStableKey(hadith),
-        );
-        final isSelected =
-            selectedHadith != null &&
-            hadithStableKey(hadith) == hadithStableKey(selectedHadith);
-
-        final card = HadithResultCard(
-          hadith: hadith,
-          isFavorite: isFavorite,
-          isSelected: isSelected,
-          onToggleFavorite: () {
-            unawaited(
-              ref
-                  .read(hadithSearchControllerProvider.notifier)
-                  .toggleFavorite(hadith),
-            );
-          },
-          onSelect: () {
-            unawaited(
-              ref
-                  .read(hadithScreenControllerProvider.notifier)
-                  .selectHadith(hadith),
-            );
-          },
-        );
+        final card = HadithResultCard(hadith: hadith);
 
         if (!enableDetailsPopover) return card;
 
@@ -306,4 +275,3 @@ class _ResultsSkeletonList extends StatelessWidget {
     );
   }
 }
-

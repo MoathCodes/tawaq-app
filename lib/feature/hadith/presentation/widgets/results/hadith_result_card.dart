@@ -1,14 +1,23 @@
+import 'dart:async';
+
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
 import 'package:tawaq/theme/theme.dart';
 
-class HadithResultCard extends StatelessWidget {
-  const HadithResultCard({required this.hadith, required this.isFavorite, required this.isSelected, super.key,
+class HadithResultCard extends ConsumerWidget {
+  const HadithResultCard({
+    required this.hadith,
+    super.key,
+    this.isFavorite,
+    this.isSelected,
     this.onToggleFavorite,
     this.onSelect,
     this.showMetadataAvailability = true,
@@ -16,9 +25,25 @@ class HadithResultCard extends StatelessWidget {
     this.hadithMaxLines = 4,
   });
 
+  /// Compact card for nested detail panes (similar/alternate hadith).
+  HadithResultCard.embedded({
+    required DetailedHadith hadith,
+    required VoidCallback onSelect,
+    Key? key,
+  }) : this(
+         hadith: hadith,
+         onSelect: onSelect,
+         isFavorite: false,
+         isSelected: false,
+         showMetadataAvailability: false,
+         showFavoriteAction: false,
+         hadithMaxLines: 6,
+         key: key,
+       );
+
   final DetailedHadith hadith;
-  final bool isFavorite;
-  final bool isSelected;
+  final bool? isFavorite;
+  final bool? isSelected;
   final VoidCallback? onToggleFavorite;
   final VoidCallback? onSelect;
   final bool showMetadataAvailability;
@@ -40,23 +65,67 @@ class HadithResultCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
+    final hadithKey = hadithStableKey(hadith);
 
-    final favoriteButton = showFavoriteAction && onToggleFavorite != null
+    final bool isFavoriteValue = isFavorite ??
+        ref.watch(
+          hadithSearchControllerProvider.select(
+            (value) =>
+                (value.asData?.value.favoriteKeys ?? const <String>[])
+                    .contains(hadithKey),
+          ),
+        );
+    final bool isSelectedValue = isSelected ??
+        ref.watch(
+          hadithSelectorProvider.select(
+            (value) {
+              final selected = value.asData?.value;
+              return selected != null &&
+                  hadithStableKey(selected) == hadithKey;
+            },
+          ),
+        );
+
+    final VoidCallback onSelectAction = onSelect ??
+        () {
+          unawaited(
+            ref
+                .read(hadithScreenControllerProvider.notifier)
+                .selectHadith(hadith),
+          );
+        };
+
+    final onToggleFavoriteAction = onToggleFavorite ??
+        (showFavoriteAction
+            ? () {
+                unawaited(
+                  ref
+                      .read(hadithSearchControllerProvider.notifier)
+                      .toggleFavorite(hadith),
+                );
+              }
+            : null);
+
+    final favoriteButton = showFavoriteAction && onToggleFavoriteAction != null
         ? FButton.icon(
             variant: FButtonVariant.ghost,
             semanticsLabel: hadithFavoriteToggleSemanticsLabel(
-              isFavorite: isFavorite,
+              isFavorite: isFavoriteValue,
               l10n: l10n,
             ),
-            onPress: onToggleFavorite,
+            onPress: onToggleFavoriteAction,
             child: HadithDecorExcludeSemantics(
               child: Icon(
-                isFavorite ? FLucideIcons.bookmarkCheck : FLucideIcons.bookmark,
-                color: isFavorite ? colors.primary : colors.mutedForeground,
+                isFavoriteValue
+                    ? FLucideIcons.bookmarkCheck
+                    : FLucideIcons.bookmark,
+                color: isFavoriteValue
+                    ? colors.primary
+                    : colors.mutedForeground,
               ),
             ),
           )
@@ -68,9 +137,8 @@ class HadithResultCard extends StatelessWidget {
       final textAlign = _hadithTextAlign(maxWidth, breakpoints);
 
       return HoverCard(
-        enableHoverEffect: onSelect != null,
         backgroundColor: colors.background,
-        borderColor: isSelected
+        borderColor: isSelectedValue
             ? colors.primary
             : colors.border.withValues(alpha: 0.6),
         activeBorderColor: colors.primary,
@@ -144,22 +212,16 @@ class HadithResultCard extends StatelessWidget {
     final rowLabel = hadithResultRowSemanticsLabel(
       hadith,
       l10n,
-      isFavorite: isFavorite,
-      isSelected: isSelected,
+      isFavorite: isFavoriteValue,
+      isSelected: isSelectedValue,
     );
 
     Widget buildRow(Widget card) {
-      final onCardSelect = onSelect;
-      return onCardSelect == null
-          ? HadithResultRowSemantics(
-              label: rowLabel,
-              child: card,
-            )
-          : MouseClick(
-              onClick: onCardSelect,
-              semanticsLabel: rowLabel,
-              child: card,
-            );
+      return MouseClick(
+        onClick: onSelectAction,
+        semanticsLabel: rowLabel,
+        child: card,
+      );
     }
 
     return LayoutBuilder(

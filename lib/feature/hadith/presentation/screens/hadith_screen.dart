@@ -18,7 +18,6 @@ import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_flow_state.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_locale_extensions.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_screen_state.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_search_state.dart';
@@ -65,14 +64,9 @@ class HadithPage extends HookConsumerWidget {
           ? const _DesktopSplitLayout()
           : const Column(
               children: [
-                _SearchHeader(
-                  desktop: false,
-                  groupId: _filterPopoverGroupId,
-                ),
+                _SearchHeader(),
                 SizedBox(height: AppSpacing.lg),
-                Expanded(
-                  child: _ResultsList(enableDetailsPopover: true),
-                ),
+                Expanded(child: _ResultsList()),
               ],
             ),
     );

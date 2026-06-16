@@ -101,7 +101,7 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
                 spacing: AppSpacing.sm,
                 children: items
                     .map(
-                      (item) => HadithResultCard(
+                      (item) => HadithResultCard.embedded(
                         hadith: item,
                         onSelect: () {
                           unawaited(
@@ -115,11 +115,6 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
                                 ),
                           );
                         },
-                        isFavorite: false,
-                        isSelected: false,
-                        showMetadataAvailability: false,
-                        showFavoriteAction: false,
-                        hadithMaxLines: 6,
                       ),
                     )
                     .toList(growable: false),
@@ -141,7 +136,7 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
                 return const HadithSectionPlaceholder();
               }
 
-              return HadithResultCard(
+              return HadithResultCard.embedded(
                 hadith: alternate,
                 onSelect: () {
                   unawaited(
@@ -150,11 +145,6 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
                         .selectHadith(alternate),
                   );
                 },
-                isFavorite: false,
-                isSelected: false,
-                showMetadataAvailability: false,
-                showFavoriteAction: false,
-                hadithMaxLines: 6,
               );
             },
           ),

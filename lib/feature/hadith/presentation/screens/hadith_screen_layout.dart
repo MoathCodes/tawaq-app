@@ -88,14 +88,9 @@ class _DesktopSplitLayout extends ConsumerWidget {
           textDirection: textDirection,
           child: const Column(
             children: [
-              _SearchHeader(
-                desktop: true,
-                groupId: HadithPage._filterPopoverGroupId,
-              ),
+              _SearchHeader(),
               SizedBox(height: AppSpacing.lg),
-              Expanded(
-                child: _ResultsList(),
-              ),
+              Expanded(child: _ResultsList()),
             ],
           ),
         ),
