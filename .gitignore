@@ -79,3 +79,10 @@ build/
 # Local Dart/Cursor skills install cache (cloned registries)
 .dart_skills/
 
+# ---------------------------------------------------------------------------
+# Linux packaging artifacts (RPM)
+# ---------------------------------------------------------------------------
+*.rpm
+*.src.rpm
+
+pics/
