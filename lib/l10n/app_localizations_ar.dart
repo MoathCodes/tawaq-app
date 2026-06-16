@@ -1670,7 +1670,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get adhanOsNotificationBody => 'الأذان يعمل — اضغط للتركيز';
+  String get adhanOsNotificationBody => 'الأذان يعمل ';
 
   @override
   String iqamahAlertTitle(String prayer) {
@@ -1683,7 +1683,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get iqamahOsNotificationBody => 'وقت الإقامة — اضغط للتركيز';
+  String get iqamahOsNotificationBody => 'وقت الإقامة ';
 
   @override
   String sunnahAlertTitle(String prayer) {
@@ -1691,7 +1691,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get sunnahOsNotificationBody => 'وقت السنة — اضغط للتركيز';
+  String get sunnahOsNotificationBody => 'وقت السنة ';
 
   @override
   String get prayerAlertDismiss => 'إغلاق';
