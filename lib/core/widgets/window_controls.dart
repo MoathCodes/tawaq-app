@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/desktop/desktop_window_controller.dart';
+import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
@@ -31,10 +32,10 @@ class MacOSWindowControls extends StatelessWidget {
   final VoidCallback onMinimize;
 
   /// The callback that is called when the fullscreen button is tapped.
-  final void Function(AsyncSnapshot<bool> snapshot) onFullscreen;
+  final VoidCallback onFullscreen;
 
-  /// A stream that emits whether the window is maximized.
-  final Stream<bool> isMaximized;
+  /// Whether the window is currently maximized.
+  final bool isMaximized;
 
   @override
   Widget build(BuildContext context) {
@@ -57,17 +58,14 @@ class MacOSWindowControls extends StatelessWidget {
           semanticsLabel: ShellA11y.windowMinimize(l10n),
           onPressed: onMinimize,
         ),
-        StreamBuilder(
-          stream: isMaximized,
-          builder: (context, snapshot) => _MacOSControlButton(
-            color: const Color(0xFF28CA42), // Green
-            hoverColor: const Color(0xFF00FF57),
-            icon: Icons.fullscreen,
-            semanticsLabel: (snapshot.data ?? false)
-                ? ShellA11y.windowRestore(l10n)
-                : ShellA11y.windowMaximize(l10n),
-            onPressed: () => onFullscreen(snapshot),
-          ),
+        _MacOSControlButton(
+          color: const Color(0xFF28CA42), // Green
+          hoverColor: const Color(0xFF00FF57),
+          icon: Icons.fullscreen,
+          semanticsLabel: isMaximized
+              ? ShellA11y.windowRestore(l10n)
+              : ShellA11y.windowMaximize(l10n),
+          onPressed: onFullscreen,
         ),
       ],
     );
@@ -84,23 +82,21 @@ class WindowControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isMaximized = windowManager.isMaximized().asStream();
+    final maximized = ref.watch(windowMaximizedProvider).value ?? false;
     final theme = FTheme.of(context);
     final l10n = context.l10n;
     final isMacStyle = Platform.isMacOS || (forceMacStyle ?? false);
+    final reverseOrder = Directionality.of(context) == TextDirection.ltr && !isMacStyle; 
 
     if (isMacStyle) {
       return MacOSWindowControls(
         onClose: () => _closeWindow(ref),
         onMinimize: () => _minimizeWindow(ref),
-        isMaximized: isMaximized,
-        onFullscreen: _maximizeWindow,
+        isMaximized: maximized,
+        onFullscreen: () => _maximizeWindow(maximized: maximized),
       );
     }
-
-    return Row(
-      spacing: 6,
-      children: [
+    final children =  [
         MergedActionSemantics(
           label: ShellA11y.windowClose(l10n),
           child: FButton.icon(
@@ -113,28 +109,22 @@ class WindowControls extends ConsumerWidget {
             child: const Icon(FLucideIcons.x, size: 14),
           ),
         ),
-        StreamBuilder(
-          stream: isMaximized,
-          builder: (context, asyncSnapshot) {
-            final maximized = asyncSnapshot.data ?? false;
-            return MergedActionSemantics(
-              label: maximized
-                  ? ShellA11y.windowRestore(l10n)
-                  : ShellA11y.windowMaximize(l10n),
-              child: FButton.icon(
-                style: windowControlButtonStyle(
-                  colors: theme.colors,
-                  typography: theme.typography,
-                  style: theme.style,
-                ),
-                onPress: () => _maximizeWindow(asyncSnapshot),
-                child: Icon(
-                  maximized ? FLucideIcons.maximize2 : FLucideIcons.square,
-                  size: 14,
-                ),
-              ),
-            );
-          },
+        MergedActionSemantics(
+          label: maximized
+              ? ShellA11y.windowRestore(l10n)
+              : ShellA11y.windowMaximize(l10n),
+          child: FButton.icon(
+            style: windowControlButtonStyle(
+              colors: theme.colors,
+              typography: theme.typography,
+              style: theme.style,
+            ),
+            onPress: () => _maximizeWindow(maximized: maximized),
+            child: Icon(
+              maximized ? FLucideIcons.maximize2 : FLucideIcons.square,
+              size: 14,
+            ),
+          ),
         ),
         MergedActionSemantics(
           label: ShellA11y.windowMinimize(l10n),
@@ -148,7 +138,11 @@ class WindowControls extends ConsumerWidget {
             child: const Icon(FLucideIcons.minus, size: 14),
           ),
         ),
-      ],
+      ];
+
+    return Row(
+      spacing: 6,
+      children: reverseOrder ? children.reversed.toList() : children,
     );
   }
 
@@ -160,8 +154,8 @@ class WindowControls extends ConsumerWidget {
     await windowManager.close();
   }
 
-  Future<void> _maximizeWindow(AsyncSnapshot<bool> asyncSnapshot) async {
-    if (asyncSnapshot.data ?? false) {
+  Future<void> _maximizeWindow({required bool maximized}) async {
+    if (maximized) {
       await windowManager.unmaximize();
     } else {
       await windowManager.maximize();

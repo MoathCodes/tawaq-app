@@ -11,6 +11,17 @@ import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
+/// Further normalizes Arabic text for fuzzy search, beyond
+/// [Surah.nameArabicSimplified], by folding letters that are commonly
+/// typed interchangeably (e.g. on keyboards without a dedicated key):
+/// alef maksura/ya (ى/ي) and teh marbuta/ha (ة/ه).
+///
+/// Must be applied to both the search query and the candidate field so
+/// the two sides stay comparable.
+String _normalizeArabicForSearch(String s) {
+  return s.replaceAll('ى', 'ي').replaceAll('ة', 'ه');
+}
+
 /// A dropdown selector for choosing a Surah in the Quran reader.
 class SurahSelector extends HookConsumerWidget {
   /// Creates a [SurahSelector] instance.
@@ -75,6 +86,7 @@ class SurahSelector extends HookConsumerWidget {
         filter: (q) {
           if (q.isEmpty) return allSurahs.data ?? [];
           final query = q.toLowerCase().trim();
+          final arabicQuery = _normalizeArabicForSearch(query);
           final queryNum = int.tryParse(query);
 
           // Efficient multi-field search with relevance scoring
@@ -96,7 +108,10 @@ class SurahSelector extends HookConsumerWidget {
               score = 70;
             }
             // 4. Arabic name starts with query
-            else if (surah.nameArabicSimplified?.startsWith(q) ?? false) {
+            else if (surah.nameArabicSimplified != null &&
+                _normalizeArabicForSearch(
+                  surah.nameArabicSimplified!,
+                ).startsWith(arabicQuery)) {
               score = 70;
             }
             // 5. English translation starts with query (e.g., "The Opening")
@@ -119,7 +134,10 @@ class SurahSelector extends HookConsumerWidget {
               score = 45;
             }
             // 8. Arabic name contains query
-            else if (surah.nameArabicSimplified?.contains(q) ?? false) {
+            else if (surah.nameArabicSimplified != null &&
+                _normalizeArabicForSearch(
+                  surah.nameArabicSimplified!,
+                ).contains(arabicQuery)) {
               score = 50;
             }
 

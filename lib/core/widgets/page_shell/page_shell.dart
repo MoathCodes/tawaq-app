@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +30,23 @@ class PageShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isMobile = isLessThan(context, FBreakpoint.sm);
 
+    // Place window controls on the platform-conventional side: macOS keeps
+    // them at the leading edge (top-left), Windows/Linux at the trailing edge
+    // (top-right). Using logical start/end lets RTL locales mirror this
+    // automatically.
+    final controlsAtStart = Platform.isMacOS;
+    final dragArea = Expanded(
+      child: ExcludeSemantics(
+        child: GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onPanStart: (_) {
+            unawaited(windowManager.startDragging());
+          },
+        ),
+      ),
+    );
+    const controls = WindowControls();
+
     return Column(
       crossAxisAlignment: .stretch,
       children: [
@@ -38,19 +56,9 @@ class PageShell extends ConsumerWidget {
             padding: const .all(6),
             height: 40,
             child: Row(
-              children: [
-                const WindowControls(),
-                Expanded(
-                  child: ExcludeSemantics(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.translucent,
-                      onPanStart: (_) {
-                        unawaited(windowManager.startDragging());
-                      },
-                    ),
-                  ),
-                ),
-              ],
+              children: controlsAtStart
+                  ? [controls, dragArea]
+                  : [dragArea, controls],
             ),
           ),
         ),
