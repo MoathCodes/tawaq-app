@@ -71,26 +71,29 @@ class HadithResultCard extends ConsumerWidget {
     final l10n = context.l10n;
     final hadithKey = hadithStableKey(hadith);
 
-    final isFavoriteValue = isFavorite ??
+    final isFavoriteValue =
+        isFavorite ??
         ref.watch(
           hadithSearchControllerProvider.select(
-            (value) =>
-                (value.asData?.value.favoriteKeys ?? const <String>[])
-                    .contains(hadithKey),
+            (value) => (value.asData?.value.favoriteKeys ?? const <String>[])
+                .contains(hadithKey),
           ),
-        );
-    final isSelectedValue = isSelected ??
+        ) ??
+        false;
+    final isSelectedValue =
+        isSelected ??
         ref.watch(
           hadithSelectorProvider.select(
             (value) {
               final selected = value.asData?.value;
-              return selected != null &&
-                  hadithStableKey(selected) == hadithKey;
+              return selected != null && hadithStableKey(selected) == hadithKey;
             },
           ),
-        );
+        ) ??
+        false;
 
-    final onSelectAction = onSelect ??
+    final onSelectAction =
+        onSelect ??
         () {
           unawaited(
             ref
@@ -99,7 +102,8 @@ class HadithResultCard extends ConsumerWidget {
           );
         };
 
-    final onToggleFavoriteAction = onToggleFavorite ??
+    final onToggleFavoriteAction =
+        onToggleFavorite ??
         (showFavoriteAction
             ? () {
                 unawaited(
@@ -332,20 +336,20 @@ class HadithInfoMiniChip extends StatelessWidget {
 
     return HadithDecorExcludeSemantics(
       child: FBadge(
-      variant: .secondary,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        spacing: AppSpacing.xs,
-        children: [
-          Icon(icon, size: 12, color: theme.colors.mutedForeground),
-          Text(
-            text,
-            style: theme.typography.xs.copyWith(
-              color: theme.colors.mutedForeground,
+        variant: .secondary,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: AppSpacing.xs,
+          children: [
+            Icon(icon, size: 12, color: theme.colors.mutedForeground),
+            Text(
+              text,
+              style: theme.typography.xs.copyWith(
+                color: theme.colors.mutedForeground,
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }

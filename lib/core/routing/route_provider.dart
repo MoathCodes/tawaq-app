@@ -1,6 +1,8 @@
 // The GoRouter setup reads BuildContext for localization and error widgets.
 // ignore_for_file: avoid_build_context_in_providers
 
+import 'dart:async';
+
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
@@ -9,6 +11,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/not_found_screen.dart';
 import 'package:tawaq/core/widgets/page_shell/page_shell.dart';
+import 'package:tawaq/feature/about/presentation/about_dialog.dart';
+import 'package:tawaq/feature/about/presentation/screens/about_screen.dart';
 import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
 import 'package:tawaq/feature/prayer/presentation/screens/prayer_screen.dart';
@@ -76,6 +80,12 @@ abstract class AppNavigationRoute extends GoRouteData {
   ///
   /// When false, shell chrome shows the route but disables its control.
   bool get navigationEnabled => true;
+
+  /// Activates this destination from shell navigation.
+  ///
+  /// Defaults to navigating to the route. Override to run a custom action —
+  /// e.g. showing a dialog — instead of changing the current route.
+  void activate(BuildContext context) => go(context);
 
   /// Whether this route (or one of its nested sub-routes) matches [location].
   bool containsLocation(String? location) {
@@ -222,9 +232,14 @@ class AboutRoute extends AppNavigationRoute with $AboutRoute {
       _labelLocalization(localization?.about, 'عن التطبيق');
 
   @override
-  /// Builds the about screen.
+  /// Opens the about dialog instead of navigating to a route.
+  void activate(BuildContext context) =>
+      unawaited(showAboutAppDialog(context));
+
+  @override
+  /// Builds the about screen (fallback for direct `/about` navigation).
   Widget build(BuildContext context, GoRouterState state) {
-    return const QuranScreen();
+    return const AboutScreen();
   }
 }
 

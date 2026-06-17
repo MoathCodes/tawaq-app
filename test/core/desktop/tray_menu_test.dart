@@ -28,25 +28,50 @@ void main() {
 
   group('buildTrayMenu', () {
     test('builds show and quit as plain items', () {
-      final menu = buildTrayMenu(l10n: l10n, muteChecked: false);
+      final menu = buildTrayMenu(
+        l10n: l10n,
+        muteChecked: false,
+        windowVisible: false,
+      );
       expect(menu.items[0].key, 'show');
       expect(menu.items[0].label, l10n.trayShowApp);
       expect(menu.items[3].key, 'quit');
       expect(menu.items[3].label, l10n.trayQuit);
     });
 
+    test('shows hide label when window is visible', () {
+      final menu = buildTrayMenu(
+        l10n: l10n,
+        muteChecked: false,
+        windowVisible: true,
+      );
+      expect(menu.items[0].label, l10n.trayHideApp);
+    });
+
     test('builds separator at index 2', () {
-      final menu = buildTrayMenu(l10n: l10n, muteChecked: false);
+      final menu = buildTrayMenu(
+        l10n: l10n,
+        muteChecked: false,
+        windowVisible: false,
+      );
       expect(menu.items[2].type, TrayMenuItemType.separator);
     });
 
     test('reflects mute checkbox checked state', () {
-      final unchecked = buildTrayMenu(l10n: l10n, muteChecked: false);
+      final unchecked = buildTrayMenu(
+        l10n: l10n,
+        muteChecked: false,
+        windowVisible: false,
+      );
       final muteUnchecked = unchecked.items[1];
       expect(muteUnchecked.type, TrayMenuItemType.checkbox);
       expect(muteUnchecked.checked, isFalse);
 
-      final checked = buildTrayMenu(l10n: l10n, muteChecked: true);
+      final checked = buildTrayMenu(
+        l10n: l10n,
+        muteChecked: true,
+        windowVisible: false,
+      );
       expect(checked.items[1].checked, isTrue);
       expect(checked.items[1].label, l10n.trayMuteAdhan);
     });

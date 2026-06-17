@@ -51,9 +51,22 @@ class _DesktopShellState extends ConsumerState<DesktopShell>
 
     if (settings.launchToTray) {
       await windowManager.hide();
+      ref
+          .read(desktopMainWindowVisibleProvider.notifier)
+          .setVisible(value: false);
     } else {
       await windowManager.show();
+      ref
+          .read(desktopMainWindowVisibleProvider.notifier)
+          .setVisible(value: true);
     }
+  }
+
+  @override
+  void onWindowEvent(String eventName) {
+    unawaited(
+      ref.read(desktopMainWindowVisibleProvider.notifier).refreshFromWindow(),
+    );
   }
 
   @override

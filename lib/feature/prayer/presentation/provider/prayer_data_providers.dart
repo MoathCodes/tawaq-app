@@ -19,12 +19,15 @@ PrayerService prayerService(Ref ref) {
   final log = ref.read(loggerProvider);
   final settings = ref.watch(prayerSettingsProvider);
 
+  // While loading or after an error, build from the last good settings rather
+  // than (0,0) defaults — a (0,0) service computes null-island times that get
+  // baked into [PrayerDay]'s cache and fire alerts hours off.
   return settings.when(
     data: (d) => PrayerService(repo, d, log),
-    loading: () => PrayerService(repo, PrayerSettings.defaultSettings(), log),
+    loading: () => PrayerService(repo, lastGoodPrayerSettings(), log),
     error: (e, st) {
       log.e('Error loading settings', error: e, stackTrace: st);
-      return PrayerService(repo, PrayerSettings.defaultSettings(), log);
+      return PrayerService(repo, lastGoodPrayerSettings(), log);
     },
   );
 }
@@ -67,8 +70,7 @@ class PrayerDay extends _$PrayerDay {
 
     PrayerDaySnapshot snapshot() {
       final settings =
-          ref.read(prayerSettingsProvider).value ??
-          PrayerSettings.defaultSettings();
+          ref.read(prayerSettingsProvider).value ?? lastGoodPrayerSettings();
       final now = TZDateTime.now(settings.location);
       _ensureCache(settings, now, service);
       final cache = _cache!;
@@ -114,6 +116,14 @@ class PrayerDay extends _$PrayerDay {
     TZDateTime now,
     PrayerService service,
   ) {
+    // (0,0) is the "no location set" sentinel. Computing from it yields
+    // null-island times (~2-3h off) which, once cached, persist for the day and
+    // fire alerts at the wrong time. Refuse to compute/cache from it: keep any
+    // previously cached good times and wait for real coordinates to arrive (the
+    // settings change then triggers a refresh below).
+    final coords = settings.coordinates;
+    if (coords.latitude == 0 && coords.longitude == 0) return;
+
     final anchorDate = TZDateTime(
       settings.location,
       now.year,
@@ -183,8 +193,7 @@ class PrayerDay extends _$PrayerDay {
 PrayerTimes prayerTimesForDate(Ref ref, DateTime date) {
   final service = ref.watch(prayerServiceProvider);
   final settings =
-      ref.read(prayerSettingsProvider).value ??
-      PrayerSettings.defaultSettings();
+      ref.read(prayerSettingsProvider).value ?? lastGoodPrayerSettings();
   final anchor = TZDateTime(
     settings.location,
     date.year,
@@ -228,8 +237,7 @@ TZDateTime currentLocationTime(Ref ref) {
   final snapshot = ref.watch(prayerDayProvider).value;
   if (snapshot != null) return snapshot.now;
 
-  final settings = ref.read(prayerSettingsProvider).value;
-  return TZDateTime.now(
-    settings?.location ?? PrayerSettings.defaultSettings().location,
-  );
+  final settings =
+      ref.read(prayerSettingsProvider).value ?? lastGoodPrayerSettings();
+  return TZDateTime.now(settings.location);
 }

@@ -229,7 +229,7 @@ Widget _expandedSidebarItem({
   final item = FSidebarItem(
     key: ValueKey(route.path),
     style: itemStyle,
-    onPress: enabled ? () => route.go(context) : null,
+    onPress: enabled ? () => route.activate(context) : null,
     icon: Icon(route.icon),
     selected: selected,
     label: Text(route.localizedLabel(l10n)),
@@ -242,7 +242,7 @@ Widget _expandedSidebarItem({
             final subItem = FSidebarItem(
               key: ValueKey(sub.path),
               style: itemStyle,
-              onPress: subEnabled ? () => sub.go(context) : null,
+              onPress: subEnabled ? () => sub.activate(context) : null,
               icon: Icon(sub.icon),
               selected: subSelected,
               label: Text(sub.localizedLabel(l10n)),
@@ -284,7 +284,7 @@ Widget _collapsedSidebarItem({
     selected: selected,
     enabled: enabled,
     child: FButton.icon(
-      onPress: enabled ? () => route.go(context) : null,
+      onPress: enabled ? () => route.activate(context) : null,
       selected: selected,
       variant: selected ? .secondary : .ghost,
       child: Icon(route.icon),

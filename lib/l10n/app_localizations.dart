@@ -3030,6 +3030,12 @@ abstract class AppLocalizations {
   /// **'Show Tawaq'**
   String get trayShowApp;
 
+  /// No description provided for @trayHideApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Tawaq'**
+  String get trayHideApp;
+
   /// No description provided for @trayMuteAdhan.
   ///
   /// In en, this message translates to:

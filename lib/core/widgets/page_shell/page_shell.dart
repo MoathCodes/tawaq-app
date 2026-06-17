@@ -4,7 +4,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/layout/responsive.dart';
+import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/page_shell/app_bar.dart';
 import 'package:tawaq/core/widgets/page_shell/shell_navigation_bar.dart';
@@ -34,13 +36,22 @@ class PageShell extends ConsumerWidget {
     // them at the leading edge (top-left), Windows/Linux at the trailing edge
     // (top-right). Using logical start/end lets RTL locales mirror this
     // automatically.
-    final controlsAtStart = Platform.isMacOS;
+    final controlsAtStart = Platform.isMacOS || Platform.isWindows;
+    final maximized = ref.watch(windowMaximizedProvider).value ?? false;
     final dragArea = Expanded(
       child: ExcludeSemantics(
         child: GestureDetector(
           behavior: HitTestBehavior.translucent,
           onPanStart: (_) {
             unawaited(windowManager.startDragging());
+          },
+          onDoubleTap: () {
+            if (!isDesktopPlatform) return;
+            unawaited(
+              maximized
+                  ? windowManager.unmaximize()
+                  : windowManager.maximize(),
+            );
           },
         ),
       ),

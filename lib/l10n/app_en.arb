@@ -849,6 +849,7 @@
   "desktopMinimizeToTray": "Hide to tray when minimizing",
   "desktopLaunchToTray": "Start hidden in tray",
   "trayShowApp": "Show Tawaq",
+  "trayHideApp": "Hide Tawaq",
   "trayMuteAdhan": "Mute adhan",
   "trayQuit": "Quit",
   "trayNextPrayer": "Next: {prayer}",

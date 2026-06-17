@@ -86,7 +86,10 @@ class WindowControls extends ConsumerWidget {
     final theme = FTheme.of(context);
     final l10n = context.l10n;
     final isMacStyle = Platform.isMacOS || (forceMacStyle ?? false);
-    final reverseOrder = Directionality.of(context) == TextDirection.ltr && !isMacStyle; 
+    final reverseOrder =
+        Directionality.of(context) == TextDirection.ltr &&
+        !isMacStyle &&
+        !Platform.isWindows;
 
     if (isMacStyle) {
       return MacOSWindowControls(
@@ -96,49 +99,49 @@ class WindowControls extends ConsumerWidget {
         onFullscreen: () => _maximizeWindow(maximized: maximized),
       );
     }
-    final children =  [
-        MergedActionSemantics(
-          label: ShellA11y.windowClose(l10n),
-          child: FButton.icon(
-            style: closeButtonStyle(
-              colors: theme.colors,
-              typography: theme.typography,
-              style: theme.style,
-            ),
-            onPress: () => _closeWindow(ref),
-            child: const Icon(FLucideIcons.x, size: 14),
+    final children = [
+      MergedActionSemantics(
+        label: ShellA11y.windowClose(l10n),
+        child: FButton.icon(
+          style: closeButtonStyle(
+            colors: theme.colors,
+            typography: theme.typography,
+            style: theme.style,
+          ),
+          onPress: () => _closeWindow(ref),
+          child: const Icon(FLucideIcons.x, size: 14),
+        ),
+      ),
+      MergedActionSemantics(
+        label: maximized
+            ? ShellA11y.windowRestore(l10n)
+            : ShellA11y.windowMaximize(l10n),
+        child: FButton.icon(
+          style: windowControlButtonStyle(
+            colors: theme.colors,
+            typography: theme.typography,
+            style: theme.style,
+          ),
+          onPress: () => _maximizeWindow(maximized: maximized),
+          child: Icon(
+            maximized ? FLucideIcons.maximize2 : FLucideIcons.square,
+            size: 14,
           ),
         ),
-        MergedActionSemantics(
-          label: maximized
-              ? ShellA11y.windowRestore(l10n)
-              : ShellA11y.windowMaximize(l10n),
-          child: FButton.icon(
-            style: windowControlButtonStyle(
-              colors: theme.colors,
-              typography: theme.typography,
-              style: theme.style,
-            ),
-            onPress: () => _maximizeWindow(maximized: maximized),
-            child: Icon(
-              maximized ? FLucideIcons.maximize2 : FLucideIcons.square,
-              size: 14,
-            ),
+      ),
+      MergedActionSemantics(
+        label: ShellA11y.windowMinimize(l10n),
+        child: FButton.icon(
+          style: windowControlButtonStyle(
+            colors: theme.colors,
+            typography: theme.typography,
+            style: theme.style,
           ),
+          onPress: () => _minimizeWindow(ref),
+          child: const Icon(FLucideIcons.minus, size: 14),
         ),
-        MergedActionSemantics(
-          label: ShellA11y.windowMinimize(l10n),
-          child: FButton.icon(
-            style: windowControlButtonStyle(
-              colors: theme.colors,
-              typography: theme.typography,
-              style: theme.style,
-            ),
-            onPress: () => _minimizeWindow(ref),
-            child: const Icon(FLucideIcons.minus, size: 14),
-          ),
-        ),
-      ];
+      ),
+    ];
 
     return Row(
       spacing: 6,

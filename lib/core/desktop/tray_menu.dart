@@ -27,13 +27,29 @@ final class TrayMenuShow extends TrayMenuEntry {
   @override
   String get key => 'show';
 
-  @override
-  TrayMenuItem toTrayMenuItem(AppLocalizations l10n) =>
-      TrayMenuItem(key: key, label: l10n.trayShowApp);
+  /// Builds the native tray menu item for [l10n] and [windowVisible].
+  TrayMenuItem toTrayMenuItemWithVisibility(
+    AppLocalizations l10n, {
+    required bool windowVisible,
+  }) => TrayMenuItem(
+    key: key,
+    label: windowVisible ? l10n.trayHideApp : l10n.trayShowApp,
+  );
 
   @override
-  Future<void> handle(Ref ref) =>
-      ref.read(desktopWindowControllerProvider).showMainWindow();
+  TrayMenuItem toTrayMenuItem(AppLocalizations l10n) =>
+      toTrayMenuItemWithVisibility(l10n, windowVisible: false);
+
+  @override
+  Future<void> handle(Ref ref) async {
+    final controller = ref.read(desktopWindowControllerProvider);
+    final visible = ref.read(desktopMainWindowVisibleProvider);
+    if (visible) {
+      await controller.hideMainWindow();
+    } else {
+      await controller.showMainWindow();
+    }
+  }
 }
 
 /// Toggles mute-all adhan playback.
@@ -122,6 +138,7 @@ final Map<String, TrayMenuEntry> trayMenuEntryByKey = {
 TrayMenu buildTrayMenu({
   required AppLocalizations l10n,
   required bool muteChecked,
+  required bool windowVisible,
   String? headerLabel,
 }) => TrayMenu(
   items: [
@@ -131,6 +148,10 @@ TrayMenu buildTrayMenu({
     ],
     for (final entry in trayMenuRegistry)
       switch (entry) {
+        TrayMenuShow() => entry.toTrayMenuItemWithVisibility(
+          l10n,
+          windowVisible: windowVisible,
+        ),
         TrayMenuMute() => entry.toTrayMenuItemWithMute(
           l10n,
           muteChecked: muteChecked,

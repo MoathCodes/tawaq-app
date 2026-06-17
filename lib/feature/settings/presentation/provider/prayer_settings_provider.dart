@@ -28,6 +28,16 @@ const String _prayerLogPrefix = '[PrayerSettingsNotifier]';
 /// so it is never null.
 PrayerSettings _lastGoodPrayerSettings = PrayerSettings.defaultSettings();
 
+/// The most recently resolved prayer settings, or the first-run defaults if
+/// none has loaded yet.
+///
+/// Consumers that need a non-null [PrayerSettings] when the provider is still
+/// loading or has errored must use this instead of
+/// [PrayerSettings.defaultSettings], otherwise a transient read reverts the
+/// prayer-time pipeline to the (0,0) "null island" defaults and fires alerts
+/// hours off. See the [_lastGoodPrayerSettings] doc for the full rationale.
+PrayerSettings lastGoodPrayerSettings() => _lastGoodPrayerSettings;
+
 /// Notifier for prayer settings.
 ///
 /// Persisted as JSON via [JsonPersist] + Hivez-backed [SettingsStorage].

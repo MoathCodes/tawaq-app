@@ -1688,6 +1688,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trayShowApp => 'Show Tawaq';
 
   @override
+  String get trayHideApp => 'Hide Tawaq';
+
+  @override
   String get trayMuteAdhan => 'Mute adhan';
 
   @override

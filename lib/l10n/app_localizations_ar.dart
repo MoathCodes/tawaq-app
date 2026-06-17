@@ -1733,6 +1733,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trayShowApp => 'إظهار تواق';
 
   @override
+  String get trayHideApp => 'إخفاء تواق';
+
+  @override
   String get trayMuteAdhan => 'كتم الأذان';
 
   @override
