@@ -45,6 +45,7 @@ void prayerAlertScheduler(Ref ref) {
   PrayerSettings? cachedSettings;
   var cachedTargets = <PrayerAlertTarget>[];
 
+  
   ref.listen(prayerDayProvider, (previous, next) {
     final snapshot = next.value;
     if (snapshot == null) return;

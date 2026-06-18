@@ -59,12 +59,14 @@ class _HorizontalLayout extends StatelessWidget {
             children: [
               AnimationEntry(
                 delay: 100.ms,
+                animateOnce: true,
                 child: const PrayerHeroHeader(
                   key: ValueKey('prayer_hero_header'),
                 ),
               ),
               AnimationEntry(
                 delay: 250.ms,
+                animateOnce: true,
                 child: const PrayerScheduleList(
                   key: ValueKey('prayer_schedule_list'),
                 ),
@@ -77,6 +79,7 @@ class _HorizontalLayout extends StatelessWidget {
           flex: 4,
           child: AnimationEntry(
             delay: 400.ms,
+            animateOnce: true,
             child: const AnalysisSection(
               key: ValueKey('prayer_analysis_section'),
             ),
@@ -98,16 +101,19 @@ class _VerticalLayout extends StatelessWidget {
       children: [
         AnimationEntry(
           delay: 100.ms,
+          animateOnce: true,
           child: const PrayerHeroHeader(key: ValueKey('prayer_hero_header')),
         ),
         AnimationEntry(
           delay: 250.ms,
+          animateOnce: true,
           child: const PrayerScheduleList(
             key: ValueKey('prayer_schedule_list'),
           ),
         ),
         AnimationEntry(
           delay: 400.ms,
+          animateOnce: true,
           child: const AnalysisSection(
             key: ValueKey('prayer_analysis_section'),
           ),

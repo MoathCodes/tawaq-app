@@ -1,14 +1,18 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:tawaq/core/utils/platform.dart';
-import 'package:tawaq/core/widgets/desktop_selection.dart' show DesktopSelectionArea, ScopedSelectableText;
+import 'package:tawaq/core/widgets/desktop_selection.dart'
+    show DesktopSelectionArea, ScopedSelectableText;
 
-/// Builds a minimal scrollbar theme: no track, thin always-visible thumb.
+/// Builds a minimal scrollbar theme: no track, thin auto-hiding thumb.
+///
+/// The thumb is not pinned (`thumbVisibility` false) so it fades out shortly
+/// after scrolling stops. See [kScrollbarTimeToFade] / [kScrollbarFadeDuration].
 ScrollbarThemeData tawaqScrollbarTheme(ColorScheme colorScheme) {
   final thumbBase = colorScheme.onSurface;
 
   return ScrollbarThemeData(
-    thumbVisibility: const WidgetStatePropertyAll(true),
+    thumbVisibility: const WidgetStatePropertyAll(false),
     trackVisibility: const WidgetStatePropertyAll(false),
     thickness: const WidgetStatePropertyAll(3),
     radius: const Radius.circular(4),
@@ -27,8 +31,16 @@ ScrollbarThemeData tawaqScrollbarTheme(ColorScheme colorScheme) {
   );
 }
 
+/// Delay after the last scroll before the thumb starts fading out.
+///
+/// Kept short so the thumb dismisses almost immediately once scrolling stops.
+const Duration kScrollbarTimeToFade = Duration(milliseconds: 100);
+
+/// Duration of the thumb fade-out animation.
+const Duration kScrollbarFadeDuration = Duration(milliseconds: 150);
+
 /// Minimum scroll overflow before showing a scrollbar thumb.
-const double kScrollbarMinScrollExtent = 64;
+const double kScrollbarMinScrollExtent = 512;
 
 /// Minimum overflow as a fraction of the viewport (e.g. 0.08 → 8%).
 const double kScrollbarMinOverflowFraction = 0.08;
@@ -90,6 +102,12 @@ class _MeaningfulScrollbar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Pull the visual styling from the shared theme so the auto-hiding thumb
+    // looks identical to the pinned one it replaces. RawScrollbar does not read
+    // ScrollbarThemeData itself, so resolve the values here.
+    final scrollbarTheme = Theme.of(context).scrollbarTheme;
+    const states = <WidgetState>{};
+
     return AnimatedBuilder(
       animation: controller,
       builder: (context, scrollChild) {
@@ -98,18 +116,26 @@ class _MeaningfulScrollbar extends StatelessWidget {
         }
 
         final position = controller.position;
-        final showThumb = position.hasContentDimensions &&
-            isMeaningfulScroll(position);
+        final showThumb =
+            position.hasContentDimensions && isMeaningfulScroll(position);
 
         if (!showThumb) {
           return scrollChild!;
         }
 
-        return Scrollbar(
+        return RawScrollbar(
           controller: controller,
-          thumbVisibility: true,
+          thumbVisibility: false,
           trackVisibility: false,
           interactive: true,
+          thickness: scrollbarTheme.thickness?.resolve(states),
+          radius: scrollbarTheme.radius,
+          thumbColor: scrollbarTheme.thumbColor?.resolve(states),
+          crossAxisMargin: scrollbarTheme.crossAxisMargin ?? 0,
+          mainAxisMargin: scrollbarTheme.mainAxisMargin ?? 0,
+          minThumbLength: scrollbarTheme.minThumbLength ?? 18,
+          timeToFade: kScrollbarTimeToFade,
+          fadeDuration: kScrollbarFadeDuration,
           child: scrollChild!,
         );
       },

@@ -94,13 +94,10 @@ class StudyPanel extends HookConsumerWidget {
                     canGoPrevious: canGoPrevious,
                     onNext: () => unawaited(_navigateAyah(ref, 1)),
                     onPrevious: () => unawaited(_navigateAyah(ref, -1)),
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: DirectionalContentSwitcher(
-                        currentKey: ayaId,
-                        slideDirection: slideDirection.value,
-                        child: studyContent,
-                      ),
+                    child: DirectionalContentSwitcher(
+                      currentKey: ayaId,
+                      slideDirection: slideDirection.value,
+                      child: studyContent,
                     ),
                   );
                 },

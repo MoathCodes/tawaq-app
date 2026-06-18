@@ -73,6 +73,7 @@ class PrayerDay extends _$PrayerDay {
           ref.read(prayerSettingsProvider).value ?? lastGoodPrayerSettings();
       final now = TZDateTime.now(settings.location);
       _ensureCache(settings, now, service);
+
       final cache = _cache!;
 
       return PrayerDaySnapshot(

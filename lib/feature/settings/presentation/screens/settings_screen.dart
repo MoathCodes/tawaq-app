@@ -100,30 +100,27 @@ class SettingsScreen extends HookWidget {
 
     return CenteredViewportShell(
       maxContentWidth: _maxContentWidth,
-      header: Material(
-        color: Colors.transparent,
-        child: DecoratedBox(
-          decoration: tabsStyle.decoration,
-          child: TabBar(
-            controller: tabController,
-            tabs: [
-              for (final entry in entries)
-                Tab(height: tabsStyle.height, child: entry.label),
-            ],
-            padding: tabsStyle.padding,
-            indicator: tabsStyle.indicatorDecoration,
-            indicatorSize: TabBarIndicatorSize.tab,
-            dividerColor: Colors.transparent,
-            labelStyle: tabsStyle.labelTextStyle.resolve({
-              context.platformVariant,
-              FTabVariant.selected,
-            }),
-            unselectedLabelStyle: tabsStyle.labelTextStyle.resolve({
-              context.platformVariant,
-            }),
-            overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-            splashFactory: NoSplash.splashFactory,
-          ),
+      header: DecoratedBox(
+        decoration: tabsStyle.decoration,
+        child: TabBar(
+          controller: tabController,
+          tabs: [
+            for (final entry in entries)
+              Tab(height: tabsStyle.height, child: entry.label),
+          ],
+          padding: tabsStyle.padding,
+          indicator: tabsStyle.indicatorDecoration,
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
+          labelStyle: tabsStyle.labelTextStyle.resolve({
+            context.platformVariant,
+            FTabVariant.selected,
+          }),
+          unselectedLabelStyle: tabsStyle.labelTextStyle.resolve({
+            context.platformVariant,
+          }),
+          overlayColor: const WidgetStatePropertyAll(Colors.transparent),
+          splashFactory: NoSplash.splashFactory,
         ),
       ),
       body: Column(

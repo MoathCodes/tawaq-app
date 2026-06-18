@@ -69,9 +69,8 @@ Future<void> _initDesktopWindow() async {
       center: true,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
-      titleBarStyle: TitleBarStyle.hidden,
+      titleBarStyle: .hidden,
     ),
-    () async {},
   );
 }
 

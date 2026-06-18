@@ -135,36 +135,42 @@ class SunnahTimesCard extends ConsumerWidget {
                         constraints.maxWidth >= context.theme.breakpoints.sm;
 
                     if (useColumns) {
-                      return IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            for (var i = 0; i < entries.length; i++) ...[
-                              if (i > 0)
-                                Container(
-                                  width: 1,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.sm,
-                                  ),
-                                  color: colors.border.withValues(alpha: 0.65),
+                      // Cells share an identical single-line layout, so their
+                      // heights match without an IntrinsicHeight pass. The
+                      // separators use a text-scaled fixed height instead of
+                      // stretching to the row, which avoids the extra layout
+                      // pass IntrinsicHeight forces over the whole subtree.
+                      final separatorHeight = MediaQuery.textScalerOf(
+                        context,
+                      ).scale(36);
+                      return Row(
+                        children: [
+                          for (var i = 0; i < entries.length; i++) ...[
+                            if (i > 0)
+                              Container(
+                                width: 1,
+                                height: separatorHeight,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: AppSpacing.sm,
                                 ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: AppSpacing.xs,
-                                  ),
-                                  child: _SunnahStripCell(
-                                    prayer: entries[i].prayer,
-                                    timeLabel: entries[i].timeLabel,
-                                    colors: colors,
-                                    theme: theme,
-                                    layout: _SunnahCellLayout.compact,
-                                  ),
+                                color: colors.border.withValues(alpha: 0.65),
+                              ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.xs,
+                                ),
+                                child: _SunnahStripCell(
+                                  prayer: entries[i].prayer,
+                                  timeLabel: entries[i].timeLabel,
+                                  colors: colors,
+                                  theme: theme,
+                                  layout: _SunnahCellLayout.compact,
                                 ),
                               ),
-                            ],
+                            ),
                           ],
-                        ),
+                        ],
                       );
                     }
 

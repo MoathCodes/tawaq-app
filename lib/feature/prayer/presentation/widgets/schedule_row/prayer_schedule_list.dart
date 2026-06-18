@@ -33,6 +33,57 @@ class PrayerScheduleList extends ConsumerWidget {
         selectedDate.month == now.month &&
         selectedDate.day == now.day;
 
+    // Built in the build phase (not inside LayoutBuilder.builder) so this work
+    // does not run during the layout pass on every relayout.
+    final titleColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Semantics(
+          header: true,
+          child: Text(
+            isToday
+                ? l10n.todaysSchedule
+                : HijriFormat.formatDate(
+                    selectedDate,
+                    l10n.localeName,
+                  ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.typography.lg.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        ExcludeSemantics(
+          child: Text(
+            l10n.logPrayerStatus,
+            style: theme.typography.sm.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
+          ),
+        ),
+      ],
+    );
+
+    final calendar = FLineCalendar(
+      control: FLineCalendarControl.lifted(
+        date: selectedDate,
+        onChange: (value) {
+          if (value == null) return;
+          ref.read(scheduleSelectedDateProvider.notifier).select(value);
+        },
+      ),
+      scrollControl: FLineCalendarScrollControl.managed(
+        start: now.subtract(const Duration(days: 6)),
+        end: now,
+      ),
+      builder: (context, data, _) => _HijriLineCalendarItem(
+        data: data,
+        languageCode: l10n.localeName,
+      ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -42,57 +93,6 @@ class PrayerScheduleList extends ConsumerWidget {
             builder: (context, constraints) {
               final stackHeader =
                   constraints.maxWidth < context.theme.breakpoints.md;
-
-              final titleColumn = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      isToday
-                          ? l10n.todaysSchedule
-                          : HijriFormat.formatDate(
-                              selectedDate,
-                              l10n.localeName,
-                            ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.typography.lg.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  ExcludeSemantics(
-                    child: Text(
-                      l10n.logPrayerStatus,
-                      style: theme.typography.sm.copyWith(
-                        color: theme.colors.mutedForeground,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-
-              final calendar = FLineCalendar(
-                control: FLineCalendarControl.lifted(
-                  date: selectedDate,
-                  onChange: (value) {
-                    if (value == null) return;
-                    ref
-                        .read(scheduleSelectedDateProvider.notifier)
-                        .select(value);
-                  },
-                ),
-                scrollControl: FLineCalendarScrollControl.managed(
-                  start: now.subtract(const Duration(days: 6)),
-                  end: now,
-                ),
-                builder: (context, data, _) => _HijriLineCalendarItem(
-                  data: data,
-                  languageCode: l10n.localeName,
-                ),
-              );
 
               if (stackHeader) {
                 return Column(

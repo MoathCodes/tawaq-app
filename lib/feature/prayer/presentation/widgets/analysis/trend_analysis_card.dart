@@ -187,116 +187,121 @@ class _TrendChart extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ExcludeSemantics(
-              child: SizedBox(
-                height: chartHeight,
-                child: BarChart(
-                  BarChartData(
-                    maxY: maxY,
-                    minY: 0,
-                    groupsSpace: groupsSpace,
-                    gridData: FlGridData(
-                      drawVerticalLine: false,
-                      horizontalInterval: maxY / 4,
-                      getDrawingHorizontalLine: (value) => FlLine(
-                        color: theme.colors.border.withValues(alpha: 0.25),
-                        strokeWidth: 1,
-                      ),
-                    ),
-                    borderData: FlBorderData(show: false),
-                    barTouchData: BarTouchData(
-                      enabled: true,
-                      touchTooltipData: BarTouchTooltipData(
-                        tooltipPadding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.sm,
+              child: RepaintBoundary(
+                child: SizedBox(
+                  height: chartHeight,
+                  child: BarChart(
+                    BarChartData(
+                      maxY: maxY,
+                      minY: 0,
+                      groupsSpace: groupsSpace,
+                      gridData: FlGridData(
+                        drawVerticalLine: false,
+                        horizontalInterval: maxY / 4,
+                        getDrawingHorizontalLine: (value) => FlLine(
+                          color: theme.colors.border.withValues(alpha: 0.25),
+                          strokeWidth: 1,
                         ),
-                        tooltipMargin: 12,
-                        getTooltipColor: (_) =>
-                            theme.colors.background.withValues(alpha: 0.96),
-                        getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                          final bucket = buckets[group.x];
-                          final counts = bucket.statusCounts;
-                          final jamaah = counts[CompletionStatus.jamaah] ?? 0;
-                          final onTime = counts[CompletionStatus.onTime] ?? 0;
-                          final late = counts[CompletionStatus.late] ?? 0;
-                          final missed = counts[CompletionStatus.missed] ?? 0;
-                          final total = jamaah + onTime + late + missed;
-
-                          final title = DateFormat.MMMd(
-                            l10n.localeName,
-                          ).format(bucket.start);
-
-                          return BarTooltipItem(
-                            '$title\n',
-                            theme.typography.sm.copyWith(
-                              color: theme.colors.foreground,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: '${l10n.total}: $total\n',
-                                style: theme.typography.xs.copyWith(
-                                  color: theme.colors.mutedForeground,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              TextSpan(
-                                text: '\u25cf ${l10n.jamaah}: $jamaah\n',
-                                style: theme.typography.xs.copyWith(
-                                  color: CompletionStatus.jamaah.getBadgeColor(
-                                    theme.colors,
-                                  ),
-                                ),
-                              ),
-                              TextSpan(
-                                text: '\u25cf ${l10n.onTime}: $onTime\n',
-                                style: theme.typography.xs.copyWith(
-                                  color: CompletionStatus.onTime.getBadgeColor(
-                                    theme.colors,
-                                  ),
-                                ),
-                              ),
-                              TextSpan(
-                                text: '\u25cf ${l10n.late}: $late\n',
-                                style: theme.typography.xs.copyWith(
-                                  color: CompletionStatus.late.getBadgeColor(
-                                    theme.colors,
-                                  ),
-                                ),
-                              ),
-                              TextSpan(
-                                text: '\u25cf ${l10n.missed}: $missed',
-                                style: theme.typography.xs.copyWith(
-                                  color: CompletionStatus.missed.getBadgeColor(
-                                    theme.colors,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
                       ),
-                    ),
-                    titlesData: FlTitlesData(
-                      leftTitles: const AxisTitles(),
-                      rightTitles: const AxisTitles(),
-                      topTitles: const AxisTitles(),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: period == PrayerAnalyticsPeriod.weekly
-                              ? 42
-                              : 28,
-                          interval: 1,
-                          getTitlesWidget: (value, meta) => _BottomTitle(
-                            index: value.toInt(),
-                            buckets: buckets,
-                            meta: meta,
+                      borderData: FlBorderData(show: false),
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        touchTooltipData: BarTouchTooltipData(
+                          tooltipPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
+                          tooltipMargin: 12,
+                          getTooltipColor: (_) =>
+                              theme.colors.background.withValues(alpha: 0.96),
+                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                            final bucket = buckets[group.x];
+                            final counts = bucket.statusCounts;
+                            final jamaah = counts[CompletionStatus.jamaah] ?? 0;
+                            final onTime = counts[CompletionStatus.onTime] ?? 0;
+                            final late = counts[CompletionStatus.late] ?? 0;
+                            final missed = counts[CompletionStatus.missed] ?? 0;
+                            final total = jamaah + onTime + late + missed;
+
+                            final title = DateFormat.MMMd(
+                              l10n.localeName,
+                            ).format(bucket.start);
+
+                            return BarTooltipItem(
+                              '$title\n',
+                              theme.typography.sm.copyWith(
+                                color: theme.colors.foreground,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: '${l10n.total}: $total\n',
+                                  style: theme.typography.xs.copyWith(
+                                    color: theme.colors.mutedForeground,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '\u25cf ${l10n.jamaah}: $jamaah\n',
+                                  style: theme.typography.xs.copyWith(
+                                    color: CompletionStatus.jamaah
+                                        .getBadgeColor(
+                                          theme.colors,
+                                        ),
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '\u25cf ${l10n.onTime}: $onTime\n',
+                                  style: theme.typography.xs.copyWith(
+                                    color: CompletionStatus.onTime
+                                        .getBadgeColor(
+                                          theme.colors,
+                                        ),
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '\u25cf ${l10n.late}: $late\n',
+                                  style: theme.typography.xs.copyWith(
+                                    color: CompletionStatus.late.getBadgeColor(
+                                      theme.colors,
+                                    ),
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '\u25cf ${l10n.missed}: $missed',
+                                  style: theme.typography.xs.copyWith(
+                                    color: CompletionStatus.missed
+                                        .getBadgeColor(
+                                          theme.colors,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                      titlesData: FlTitlesData(
+                        leftTitles: const AxisTitles(),
+                        rightTitles: const AxisTitles(),
+                        topTitles: const AxisTitles(),
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: period == PrayerAnalyticsPeriod.weekly
+                                ? 42
+                                : 28,
+                            interval: 1,
+                            getTitlesWidget: (value, meta) => _BottomTitle(
+                              index: value.toInt(),
+                              buckets: buckets,
+                              meta: meta,
+                            ),
                           ),
                         ),
                       ),
+                      barGroups: groups,
                     ),
-                    barGroups: groups,
                   ),
                 ),
               ),

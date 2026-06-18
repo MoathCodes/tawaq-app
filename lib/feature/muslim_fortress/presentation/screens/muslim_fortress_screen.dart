@@ -149,8 +149,7 @@ class MuslimFortressScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 FButton(
-                  onPress: () =>
-                      ref.invalidate(muslimFortressChaptersProvider),
+                  onPress: () => ref.invalidate(muslimFortressChaptersProvider),
                   child: Text(l10n.fortressRetry),
                 ),
               ],
@@ -175,6 +174,16 @@ class MuslimFortressScreen extends HookConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                FTextField(
+                  focusNode: searchFocusNode,
+                  hint: l10n.fortressSearchHint,
+                  control: FTextFieldControl.managed(
+                    controller: searchController,
+                  ),
+                  prefixBuilder: (context, style, variants) =>
+                      const Icon(FLucideIcons.search),
+                ),
+                const SizedBox(height: AppSpacing.lg),
                 FTabs(
                   control: .lifted(
                     index: isFavoritesTab ? 1 : 0,
@@ -194,16 +203,6 @@ class MuslimFortressScreen extends HookConsumerWidget {
                       child: const SizedBox.shrink(),
                     ),
                   ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                FTextField(
-                  focusNode: searchFocusNode,
-                  hint: l10n.fortressSearchHint,
-                  control: FTextFieldControl.managed(
-                    controller: searchController,
-                  ),
-                  prefixBuilder: (context, style, variants) =>
-                      const Icon(FLucideIcons.search),
                 ),
               ],
             ),
@@ -313,7 +312,8 @@ class MuslimFortressScreen extends HookConsumerWidget {
   double sideMin,
   double mainMin,
   double sideMax,
-}) _resolveFortressSplitExtents({
+})
+_resolveFortressSplitExtents({
   required double totalWidth,
   required double sideWidth,
 }) {

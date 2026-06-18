@@ -2,9 +2,8 @@ import 'dart:async';
 
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
@@ -12,7 +11,7 @@ import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_te
 import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
 import 'package:tawaq/theme/theme.dart';
 
-class HadithSelectedDetailsPane extends HookConsumerWidget {
+class HadithSelectedDetailsPane extends ConsumerWidget {
   const HadithSelectedDetailsPane({required this.hadith, super.key});
 
   final DetailedHadith hadith;
@@ -30,12 +29,7 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
-    final expandedSections = useState<Set<int>>({});
     final hadithId = hadith.hadithId;
-    const sharhSectionIndex = 0;
-    final isSharhExpanded =
-        hadith.hasSharhMetadata &&
-        expandedSections.value.contains(sharhSectionIndex);
 
     final accordionItems = <FAccordionItem>[
       if (hadith.hasSharhMetadata)
@@ -45,20 +39,18 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
             FLucideIcons.bookOpenText,
             l10n.hadithSharh,
           ),
-          child: isSharhExpanded
-              ? HadithAsyncDetailsSection<Sharh>(
-                  value: ref.watch(
-                    hadithSharhProvider(hadith.sharhMetadata!.id),
-                  ),
-                  dataBuilder: (sharh) {
-                    final text = sharh.sharhText;
-                    if (text == null || text.trim().isEmpty) {
-                      return const HadithSectionPlaceholder();
-                    }
-                    return HadithSharhText(text: text);
-                  },
-                )
-              : const SizedBox.shrink(),
+          child: HadithAsyncDetailsSection<Sharh>(
+            value: ref.watch(
+              hadithSharhProvider(hadith.sharhMetadata!.id),
+            ),
+            dataBuilder: (sharh) {
+              final text = sharh.sharhText;
+              if (text == null || text.trim().isEmpty) {
+                return const HadithSectionPlaceholder();
+              }
+              return HadithSharhText(text: text);
+            },
+          ),
         ),
       if (hadith.hasUsulHadith && hadithId != null)
         FAccordionItem(
@@ -151,61 +143,52 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
         ),
     ];
 
-    return ListView(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.sm),
-      children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final narrow =
-                constraints.maxWidth < context.theme.breakpoints.sm;
-            return Text(
-              hadith.hadith,
-              textAlign: narrow ? TextAlign.start : TextAlign.justify,
-              style: theme.typography.lg.copyWith(height: 1.8),
-            );
-          },
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        HadithMetaItem(title: l10n.hadithNarrator, value: hadith.rawi),
-        HadithMetaItem(title: l10n.hadithMuhaddith, value: hadith.mohdith),
-        HadithMetaItem(
-          title: l10n.hadithSource,
-          value: l10n.hadithSourceCitation(
-            hadith.book,
-            hadith.numberOrPage,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final narrow =
+                  constraints.maxWidth < context.theme.breakpoints.sm;
+              return Text(
+                hadith.hadith,
+                textAlign: narrow ? TextAlign.start : TextAlign.justify,
+                style: theme.typography.lg.copyWith(height: 1.8),
+              );
+            },
           ),
-        ),
-        HadithMetaItem(
-          title: l10n.hadithGradeExplanation,
-          value: hadith.hukm,
-        ),
-        if ((hadith.takhrij ?? '').trim().isNotEmpty)
-          HadithMetaItem(title: l10n.hadithTakhrij, value: hadith.takhrij!),
-        if (accordionItems.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.lg),
-          FAccordion(
-            control: FAccordionControl.lifted(
-              expanded: expandedSections.value.contains,
-              onChange: (index, isExpanded) {
-                final next = Set<int>.from(expandedSections.value);
-                if (isExpanded) {
-                  next.add(index);
-                } else {
-                  next.remove(index);
-                }
-                expandedSections.value = next;
-              },
+          HadithMetaItem(title: l10n.hadithNarrator, value: hadith.rawi),
+          HadithMetaItem(title: l10n.hadithMuhaddith, value: hadith.mohdith),
+          HadithMetaItem(
+            title: l10n.hadithSource,
+            value: l10n.hadithSourceCitation(
+              hadith.book,
+              hadith.numberOrPage,
             ),
-            style: .delta(
-              dividerStyle: .delta(
-                color: colors.border,
-                padding: const .value(EdgeInsets.zero),
-              ),
-            ),
-            children: accordionItems,
           ),
+          HadithMetaItem(
+            title: l10n.hadithGradeExplanation,
+            value: hadith.hukm,
+          ),
+          if ((hadith.takhrij ?? '').trim().isNotEmpty)
+            HadithMetaItem(title: l10n.hadithTakhrij, value: hadith.takhrij!),
+          if (accordionItems.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.lg),
+            FAccordion(
+              style: .delta(
+                dividerStyle: .delta(
+                  color: colors.border,
+                  padding: const .value(EdgeInsets.zero),
+                ),
+              ),
+              children: accordionItems,
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }

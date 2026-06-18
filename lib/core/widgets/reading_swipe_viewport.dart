@@ -188,7 +188,7 @@ class ReadingSwipeViewport extends HookWidget {
       child: Container(
         width: double.infinity,
         constraints: BoxConstraints(minHeight: viewportMinHeight),
-        alignment: Alignment.center,
+        // alignment: Alignment.center,
         child: Transform.translate(
           offset: Offset(offset * _contentShiftFactor, 0),
           child: child,
