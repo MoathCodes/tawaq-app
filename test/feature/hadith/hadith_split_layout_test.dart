@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_screen_state.dart';
@@ -11,7 +12,6 @@ import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
-import 'package:hivez_flutter/hivez_flutter.dart';
 
 class _TestHadithScreenSettings extends HadithScreenSettingsNotifier {
   @override
@@ -43,7 +43,9 @@ void main() {
         dorarInitProvider.overrideWith((ref) async {}),
         hiveCoreInitProvider.overrideWith((ref) async {}),
         stateSettingsLegacyMigrationProvider.overrideWith((ref) async {}),
-        hadithScreenSettingsProvider.overrideWith(_TestHadithScreenSettings.new),
+        hadithScreenSettingsProvider.overrideWith(
+          _TestHadithScreenSettings.new,
+        ),
       ],
       child: FTheme(
         data: theme,
@@ -52,10 +54,15 @@ void main() {
           supportedLocales: AppLocalizations.supportedLocales,
           home: MediaQuery(
             data: const MediaQueryData(size: Size(1024, 768)),
-            child: SizedBox(
-              width: containerWidth,
-              height: 700,
-              child: child,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: containerWidth,
+                  height: 700,
+                  child: child,
+                ),
+                const Spacer(),
+              ],
             ),
           ),
         ),
@@ -64,30 +71,40 @@ void main() {
   }
 
   group('Hadith split layout', () {
-    testWidgets('uses stacked layout when container is narrower than split minimum',
-        (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          containerWidth: 742,
-          child: const HadithPage(),
-        ),
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      'uses stacked layout when container is narrower than split minimum',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            containerWidth: 742,
+            child: const HadithPage(),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.byType(FResizable), findsNothing);
-    });
+        expect(
+          find.byKey(const ValueKey('persisted-split-side')),
+          findsNothing,
+        );
+      },
+    );
 
-    testWidgets('uses horizontal split when container can honor pane minimums',
-        (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          containerWidth: 900,
-          child: const HadithPage(),
-        ),
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      'uses horizontal split when container can honor pane minimums',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            containerWidth: 900,
+            child: const HadithPage(),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.byType(FResizable), findsOneWidget);
-    });
+        expect(
+          find.byKey(const ValueKey('persisted-split-side')),
+          findsOneWidget,
+        );
+      },
+    );
   });
 }
