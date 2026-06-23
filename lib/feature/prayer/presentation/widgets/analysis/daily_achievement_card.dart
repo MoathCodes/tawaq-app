@@ -59,7 +59,7 @@ class DailyAchievementCard extends ConsumerWidget {
                   header: true,
                   child: Text(
                     l10n.todayAchievement,
-                    style: theme.typography.lg.copyWith(
+                    style: theme.typography.body.lg.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -88,7 +88,7 @@ class DailyAchievementCard extends ConsumerWidget {
                     children: [
                       Text(
                         '$loggedCount/${PrayerAnalyticsCalculator.prayersPerDay} · $percent%',
-                        style: theme.typography.sm.copyWith(
+                        style: theme.typography.body.sm.copyWith(
                           color: theme.colors.primary,
                           fontWeight: FontWeight.w700,
                         ),

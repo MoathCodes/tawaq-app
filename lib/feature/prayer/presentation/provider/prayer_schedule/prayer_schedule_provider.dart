@@ -12,6 +12,7 @@ import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
@@ -68,7 +69,7 @@ List<PrayerScheduleRow> prayerSchedule(
   // (non-equal) list, rebuilding the whole schedule. Live relative-time labels
   // are handled by leaf widgets watching currentLocationTimeProvider.
   final todayKey = ref.watch(prayerCalendarDayKeyProvider);
-  final DateTime? targetDate = forDate != null
+  final targetDate = forDate != null
       ? DateTime(forDate.year, forDate.month, forDate.day)
       : todayKey != 0
       ? dateFromCalendarDayKey(todayKey)
@@ -76,14 +77,6 @@ List<PrayerScheduleRow> prayerSchedule(
   if (targetDate == null) return [];
 
   final completionDay = normalizeCompletionDay(forDate ?? targetDate);
-  final completions =
-      ref.watch(prayerCompletionsForDateProvider(completionDay)).value ?? [];
-  final completionStatuses = mapPrayerStatuses(
-    completions,
-    settings.location,
-    completionDay,
-  );
-
   final times = ref.watch(prayerTimesForDateProvider(targetDate));
   if (times == null) return [];
 
@@ -92,8 +85,32 @@ List<PrayerScheduleRow> prayerSchedule(
     times: times,
     targetDate: targetDate,
     settings: settings,
-    completionStatuses: completionStatuses,
+    completionDay: completionDay,
   );
+}
+
+/// Per-row completion status with `.select()` so only the changed prayer
+/// rebuilds its schedule row.
+@riverpod
+CompletionStatus schedulePrayerStatus(
+  Ref ref,
+  Prayer prayer,
+  DateTime completionDay,
+) {
+  final normalized = normalizeCompletionDay(completionDay);
+  final location = ref.watch(prayerTimeInputsProvider)?.location;
+  if (location == null) return CompletionStatus.none;
+
+  final completionsAsync = ref.watch(
+    prayerCompletionsForDateProvider(normalized),
+  );
+  if (!completionsAsync.hasValue) return CompletionStatus.none;
+  return mapPrayerStatuses(
+        completionsAsync.value!,
+        location,
+        normalized,
+      )[prayer] ??
+      CompletionStatus.none;
 }
 
 List<PrayerScheduleRow> _buildRows({
@@ -101,7 +118,7 @@ List<PrayerScheduleRow> _buildRows({
   required PrayerTimes times,
   required DateTime targetDate,
   required PrayerSettings settings,
-  required Map<Prayer, CompletionStatus> completionStatuses,
+  required DateTime completionDay,
 }) {
   final location = settings.location;
   final completionDate = DateTime(
@@ -127,8 +144,6 @@ List<PrayerScheduleRow> _buildRows({
           prayerTime: prayerTime,
           iqamahMinutes: settings.iqamahSettings[prayer] ?? 0,
         ),
-        completionStatus:
-            completionStatuses[prayer] ?? CompletionStatus.none,
         completionDate: completionDate,
       ),
     );

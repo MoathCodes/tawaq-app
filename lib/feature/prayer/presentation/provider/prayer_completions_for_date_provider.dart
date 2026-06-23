@@ -4,7 +4,7 @@ import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_service_provider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 
 part 'prayer_completions_for_date_provider.g.dart';
 
@@ -20,12 +20,12 @@ Future<List<PrayerCompletion>> prayerCompletionsForDate(
   DateTime day,
 ) {
   final normalized = normalizeCompletionDay(day);
-  final settings = ref.watch(effectivePrayerSettingsProvider);
-  if (settings == null) return Future.value(const []);
+  final location = ref.watch(prayerTimeInputsProvider)?.location;
+  if (location == null) return Future.value(const []);
 
   return ref
       .read(prayerServiceProvider)
-      .getPrayerCompletionForDate(normalized, settings.location);
+      .getPrayerCompletionForDate(normalized, location);
 }
 
 /// Canonical status for [prayer] on today's calendar day.
@@ -36,13 +36,13 @@ Future<CompletionStatus> prayerTodayStatus(Ref ref, Prayer prayer) async {
   if (now == null) return CompletionStatus.none;
 
   final today = normalizeCompletionDay(now);
-  final settings = ref.read(effectivePrayerSettingsProvider);
-  if (settings == null) return CompletionStatus.none;
+  final location = ref.read(prayerTimeInputsProvider)?.location;
+  if (location == null) return CompletionStatus.none;
 
   final completions = await ref.watch(
     prayerCompletionsForDateProvider(today).future,
   );
-  return mapPrayerStatuses(completions, settings.location, today)[prayer] ??
+  return mapPrayerStatuses(completions, location, today)[prayer] ??
       CompletionStatus.none;
 }
 

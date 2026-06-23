@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/hijri_format.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils.dart';
@@ -39,6 +40,9 @@ class PrayerScheduleList extends ConsumerWidget {
     );
 
     final isToday = todayKey != 0 && selectedKey == todayKey;
+    final currentPrayer = isToday
+        ? ref.watch(scheduleCurrentPrayerProvider)
+        : null;
 
     // Built in the build phase (not inside LayoutBuilder.builder) so this work
     // does not run during the layout pass on every relayout.
@@ -56,7 +60,7 @@ class PrayerScheduleList extends ConsumerWidget {
                   ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.typography.lg.copyWith(
+            style: theme.typography.body.lg.copyWith(
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -65,7 +69,7 @@ class PrayerScheduleList extends ConsumerWidget {
         ExcludeSemantics(
           child: Text(
             l10n.logPrayerStatus,
-            style: theme.typography.sm.copyWith(
+            style: theme.typography.body.sm.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),
@@ -98,8 +102,11 @@ class PrayerScheduleList extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final stackHeader =
-                  constraints.maxWidth < context.theme.breakpoints.md;
+              final stackHeader = !isContainerAtLeast(
+                context,
+                constraints,
+                FBreakpoint.lg,
+              );
 
               if (stackHeader) {
                 return Column(
@@ -115,7 +122,7 @@ class PrayerScheduleList extends ConsumerWidget {
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(child: titleColumn),
+                  Expanded(flex: 2, child: titleColumn),
                   Expanded(child: calendar),
                 ],
               );
@@ -129,7 +136,13 @@ class PrayerScheduleList extends ConsumerWidget {
           key: ValueKey(selectedDate),
           spacing: AppSpacing.md,
           children: scheduleRows
-              .map((row) => SchedulePrayerRow(row: row))
+              .map(
+                (row) => SchedulePrayerRow(
+                  row: row,
+                  isToday: isToday,
+                  currentPrayer: currentPrayer,
+                ),
+              )
               .toList(),
         ).animate().fadeIn(duration: 200.ms),
       ],

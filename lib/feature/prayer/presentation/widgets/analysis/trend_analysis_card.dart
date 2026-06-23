@@ -53,7 +53,7 @@ class TrendAnalysisCard extends ConsumerWidget {
             header: true,
             child: Text(
               l10n.playerAnalytics,
-              style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
+              style: theme.typography.body.lg.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -152,7 +152,7 @@ class _TrendChart extends ConsumerWidget {
         child: Center(
           child: Text(
             l10n.noDataAvailable,
-            style: theme.typography.sm.copyWith(
+            style: theme.typography.body.sm.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),
@@ -162,148 +162,160 @@ class _TrendChart extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final chartHeight = constraints.maxWidth < theme.breakpoints.sm
+        final width = constraints.maxWidth;
+        final chartHeight = width < context.theme.breakpoints.sm
             ? 180.0
-            : constraints.maxWidth < theme.breakpoints.md
+            : width < context.theme.breakpoints.md
             ? 200.0
             : 220.0;
-        final barWidth = constraints.maxWidth < theme.breakpoints.sm
-            ? 18.0
-            : constraints.maxWidth < theme.breakpoints.md
-            ? 22.0
-            : 26.0;
-        final groupsSpace = constraints.maxWidth < theme.breakpoints.sm
-            ? 10.0
-            : 14.0;
+        final bucketCount = buckets.length;
+        final groupsSpace = width < context.theme.breakpoints.sm ? 8.0 : 10.0;
+        const minBarWidth = 8.0;
+        const maxBarWidth = 26.0;
+        final spacingTotal = groupsSpace * math.max(0, bucketCount - 1);
+        final proportionalBarWidth = bucketCount == 0
+            ? maxBarWidth
+            : ((width - spacingTotal) / bucketCount).clamp(
+                minBarWidth,
+                maxBarWidth,
+              );
+        final chartContentWidth =
+            bucketCount * proportionalBarWidth + spacingTotal;
+        final needsHorizontalScroll = chartContentWidth > width + 1;
 
         final groups = _buildGroups(
           buckets,
           theme.colors,
-          barWidth: barWidth,
+          barWidth: proportionalBarWidth,
         );
         final maxY = _resolveMaxY(period, groups);
+
+        final chart = SizedBox(
+          height: chartHeight,
+          width: needsHorizontalScroll ? chartContentWidth : width,
+          child: BarChart(
+            BarChartData(
+              maxY: maxY,
+              minY: 0,
+              groupsSpace: groupsSpace,
+              gridData: FlGridData(
+                drawVerticalLine: false,
+                horizontalInterval: maxY / 4,
+                getDrawingHorizontalLine: (value) => FlLine(
+                  color: theme.colors.border.withValues(alpha: 0.25),
+                  strokeWidth: 1,
+                ),
+              ),
+              borderData: FlBorderData(show: false),
+              barTouchData: BarTouchData(
+                enabled: true,
+                touchTooltipData: BarTouchTooltipData(
+                  tooltipPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  tooltipMargin: 12,
+                  getTooltipColor: (_) =>
+                      theme.colors.background.withValues(alpha: 0.96),
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    final bucket = buckets[group.x];
+                    final counts = bucket.statusCounts;
+                    final jamaah = counts[CompletionStatus.jamaah] ?? 0;
+                    final onTime = counts[CompletionStatus.onTime] ?? 0;
+                    final late = counts[CompletionStatus.late] ?? 0;
+                    final missed = counts[CompletionStatus.missed] ?? 0;
+                    final total = jamaah + onTime + late + missed;
+
+                    final title = DateFormat.MMMd(
+                      l10n.localeName,
+                    ).format(bucket.start);
+
+                    return BarTooltipItem(
+                      '$title\n',
+                      theme.typography.body.sm.copyWith(
+                        color: theme.colors.foreground,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: '${l10n.total}: $total\n',
+                          style: theme.typography.body.xs.copyWith(
+                            color: theme.colors.mutedForeground,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '\u25cf ${l10n.jamaah}: $jamaah\n',
+                          style: theme.typography.body.xs.copyWith(
+                            color: CompletionStatus.jamaah.getBadgeColor(
+                              theme.colors,
+                            ),
+                          ),
+                        ),
+                        TextSpan(
+                          text: '\u25cf ${l10n.onTime}: $onTime\n',
+                          style: theme.typography.body.xs.copyWith(
+                            color: CompletionStatus.onTime.getBadgeColor(
+                              theme.colors,
+                            ),
+                          ),
+                        ),
+                        TextSpan(
+                          text: '\u25cf ${l10n.late}: $late\n',
+                          style: theme.typography.body.xs.copyWith(
+                            color: CompletionStatus.late.getBadgeColor(
+                              theme.colors,
+                            ),
+                          ),
+                        ),
+                        TextSpan(
+                          text: '\u25cf ${l10n.missed}: $missed',
+                          style: theme.typography.body.xs.copyWith(
+                            color: CompletionStatus.missed.getBadgeColor(
+                              theme.colors,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              titlesData: FlTitlesData(
+                leftTitles: const AxisTitles(),
+                rightTitles: const AxisTitles(),
+                topTitles: const AxisTitles(),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    reservedSize: period == PrayerAnalyticsPeriod.weekly
+                        ? 42
+                        : 28,
+                    interval: 1,
+                    getTitlesWidget: (value, meta) => _BottomTitle(
+                      index: value.toInt(),
+                      buckets: buckets,
+                      meta: meta,
+                    ),
+                  ),
+                ),
+              ),
+              barGroups: groups,
+            ),
+          ),
+        );
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             ExcludeSemantics(
               child: RepaintBoundary(
-                child: SizedBox(
-                  height: chartHeight,
-                  child: BarChart(
-                    BarChartData(
-                      maxY: maxY,
-                      minY: 0,
-                      groupsSpace: groupsSpace,
-                      gridData: FlGridData(
-                        drawVerticalLine: false,
-                        horizontalInterval: maxY / 4,
-                        getDrawingHorizontalLine: (value) => FlLine(
-                          color: theme.colors.border.withValues(alpha: 0.25),
-                          strokeWidth: 1,
-                        ),
-                      ),
-                      borderData: FlBorderData(show: false),
-                      barTouchData: BarTouchData(
-                        enabled: true,
-                        touchTooltipData: BarTouchTooltipData(
-                          tooltipPadding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.sm,
-                          ),
-                          tooltipMargin: 12,
-                          getTooltipColor: (_) =>
-                              theme.colors.background.withValues(alpha: 0.96),
-                          getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                            final bucket = buckets[group.x];
-                            final counts = bucket.statusCounts;
-                            final jamaah = counts[CompletionStatus.jamaah] ?? 0;
-                            final onTime = counts[CompletionStatus.onTime] ?? 0;
-                            final late = counts[CompletionStatus.late] ?? 0;
-                            final missed = counts[CompletionStatus.missed] ?? 0;
-                            final total = jamaah + onTime + late + missed;
-
-                            final title = DateFormat.MMMd(
-                              l10n.localeName,
-                            ).format(bucket.start);
-
-                            return BarTooltipItem(
-                              '$title\n',
-                              theme.typography.sm.copyWith(
-                                color: theme.colors.foreground,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              children: [
-                                TextSpan(
-                                  text: '${l10n.total}: $total\n',
-                                  style: theme.typography.xs.copyWith(
-                                    color: theme.colors.mutedForeground,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '\u25cf ${l10n.jamaah}: $jamaah\n',
-                                  style: theme.typography.xs.copyWith(
-                                    color: CompletionStatus.jamaah
-                                        .getBadgeColor(
-                                          theme.colors,
-                                        ),
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '\u25cf ${l10n.onTime}: $onTime\n',
-                                  style: theme.typography.xs.copyWith(
-                                    color: CompletionStatus.onTime
-                                        .getBadgeColor(
-                                          theme.colors,
-                                        ),
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '\u25cf ${l10n.late}: $late\n',
-                                  style: theme.typography.xs.copyWith(
-                                    color: CompletionStatus.late.getBadgeColor(
-                                      theme.colors,
-                                    ),
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: '\u25cf ${l10n.missed}: $missed',
-                                  style: theme.typography.xs.copyWith(
-                                    color: CompletionStatus.missed
-                                        .getBadgeColor(
-                                          theme.colors,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                      ),
-                      titlesData: FlTitlesData(
-                        leftTitles: const AxisTitles(),
-                        rightTitles: const AxisTitles(),
-                        topTitles: const AxisTitles(),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: period == PrayerAnalyticsPeriod.weekly
-                                ? 42
-                                : 28,
-                            interval: 1,
-                            getTitlesWidget: (value, meta) => _BottomTitle(
-                              index: value.toInt(),
-                              buckets: buckets,
-                              meta: meta,
-                            ),
-                          ),
-                        ),
-                      ),
-                      barGroups: groups,
-                    ),
-                  ),
-                ),
+                child: needsHorizontalScroll
+                    ? SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: chart,
+                      )
+                    : chart,
               ),
             ),
             const SizedBox(height: AppSpacing.sm),
@@ -443,7 +455,7 @@ class _BottomTitle extends ConsumerWidget {
             ),
           Text(
             label,
-            style: theme.typography.xs.copyWith(
+            style: theme.typography.body.xs.copyWith(
               color: theme.colors.mutedForeground,
               fontWeight: showStreakMarker ? FontWeight.w700 : FontWeight.w500,
             ),
@@ -510,7 +522,7 @@ class _LegendItem extends StatelessWidget {
           const SizedBox(width: AppSpacing.xs),
           Text(
             label,
-            style: theme.typography.xs.copyWith(
+            style: theme.typography.body.xs.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),

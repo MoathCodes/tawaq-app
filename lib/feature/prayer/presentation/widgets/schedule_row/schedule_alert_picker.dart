@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
@@ -137,16 +138,27 @@ class ScheduleAlertPicker extends StatelessWidget {
 
     return FPopover(
       popoverBuilder: (context, controller) {
-        final optionTitleStyle = theme.typography.xs.copyWith(
+        final optionTitleStyle = theme.typography.body.xs.copyWith(
           fontWeight: FontWeight.w600,
         );
-        final optionHintStyle = theme.typography.xs.copyWith(
+        final optionHintStyle = theme.typography.body.xs.copyWith(
           color: colors.mutedForeground,
           height: 1.15,
         );
+        final popoverConstraints = dialogConstraints(
+          context,
+          preferredWidth: 248,
+          minWidth: 192,
+        );
+        final tileMaxHeight = switch (
+          selectPopoverPortalConstraints(context, maxHeight: 168)
+        ) {
+          FAutoWidthPortalConstraints(:final maxHeight) => maxHeight,
+          _ => 168.0,
+        };
 
         return ConstrainedBox(
-          constraints: const BoxConstraints(minWidth: 192, maxWidth: 248),
+          constraints: popoverConstraints,
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xs),
             child: Column(
@@ -162,7 +174,7 @@ class ScheduleAlertPicker extends StatelessWidget {
                   ),
                   child: Text(
                     l10n.scheduleAlertPickerTitle(eventLabel),
-                    style: theme.typography.xs.copyWith(
+                    style: theme.typography.body.xs.copyWith(
                       fontWeight: FontWeight.w700,
                       color: colors.foreground,
                       height: 1.2,
@@ -184,7 +196,7 @@ class ScheduleAlertPicker extends StatelessWidget {
                     child: FSelectTileGroup<ScheduleAlertMode>(
                       key: ValueKey(mode),
                       divider: FItemDivider.full,
-                      maxHeight: 168,
+                      maxHeight: tileMaxHeight,
                       control: FMultiValueControl.managedRadio(
                         initial: mode,
                         onChange: (selected) {

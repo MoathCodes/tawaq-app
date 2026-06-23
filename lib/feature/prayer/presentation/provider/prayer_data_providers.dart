@@ -8,9 +8,11 @@ import 'package:tawaq/core/utils/date_formatter.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_day_computer.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_time_resolver.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:timezone/timezone.dart';
 
@@ -26,26 +28,33 @@ const _tickInterval = Duration(seconds: 1);
 @Riverpod(keepAlive: true)
 class PrayerDay extends _$PrayerDay {
   PrayerDayBundle? _cache;
-  PrayerSettings? _cachedSettings;
+  PrayerTimeInputs? _cachedInputs;
   TZDateTime? _cachedAnchorDate;
 
   @override
   Stream<PrayerDaySnapshot> build() async* {
-    ref.watch(effectivePrayerSettingsProvider);
+    // Re-run when inputs hydrate (no busy-wait loop — that blocked stream
+    // cancellation and left isLoading stuck true).
+    ref.watch(prayerTimeInputsProvider);
     final repo = ref.watch(prayerRepoProvider);
     final log = ref.read(loggerProvider);
 
-    PrayerDaySnapshot? snapshot() {
-      final settings = ref.read(effectivePrayerSettingsProvider);
-      if (settings == null) return null;
+    final inputs = ref.read(prayerTimeInputsProvider);
+    if (inputs == null) {
+      return;
+    }
 
-      final now = TZDateTime.now(settings.location);
-      final bundle = _ensureCache(settings, now, repo, log);
+    PrayerDaySnapshot? snapshot() {
+      final inputs = ref.read(prayerTimeInputsProvider);
+      if (inputs == null) return null;
+
+      final now = TZDateTime.now(inputs.location);
+      final bundle = _ensureCache(inputs, now, repo, log);
       if (bundle == null) return null;
 
       return PrayerDaySnapshot(
         now: now,
-        location: settings.location,
+        location: inputs.location,
         bundle: bundle,
       );
     }
@@ -70,15 +79,13 @@ class PrayerDay extends _$PrayerDay {
   }
 
   PrayerDayBundle? _ensureCache(
-    PrayerSettings settings,
+    PrayerTimeInputs inputs,
     TZDateTime now,
     PrayerRepo repo,
     Logger log,
   ) {
-    if (!settings.isLocationReady) return _cache;
-
     final anchorDate = TZDateTime(
-      settings.location,
+      inputs.location,
       now.year,
       now.month,
       now.day,
@@ -86,13 +93,13 @@ class PrayerDay extends _$PrayerDay {
 
     final needsRefresh =
         _cache == null ||
-        _cachedSettings != settings ||
+        _cachedInputs != inputs ||
         _cachedAnchorDate != anchorDate;
 
     if (!needsRefresh) return _cache;
 
     final bundle = computePrayerDayBundle(
-      settings: settings,
+      inputs: inputs,
       anchorNow: now,
       repo: repo,
       log: log,
@@ -100,28 +107,61 @@ class PrayerDay extends _$PrayerDay {
     if (bundle == null) return _cache;
 
     _cache = bundle;
-    _cachedSettings = settings;
+    _cachedInputs = inputs;
     _cachedAnchorDate = anchorDate;
     return _cache;
+  }
+}
+
+/// Live today/yesterday bundle from [PrayerDay] without 1 Hz rebuilds.
+///
+/// Recomputes when the calendar day or [prayerTimeInputsProvider] changes, or
+/// when [PrayerDay] emits a new bundle reference (midnight / location change).
+@Riverpod(keepAlive: true)
+class TodayPrayerDayBundle extends _$TodayPrayerDayBundle {
+  @override
+  PrayerDayBundle? build() {
+    ref
+      ..watch(prayerCalendarDayKeyProvider)
+      ..watch(prayerTimeInputsProvider)
+      ..listen(
+        prayerDayProvider,
+        (_, next) {
+          final nextBundle = next.value?.bundle;
+          if (nextBundle != state) {
+            state = nextBundle;
+          }
+        },
+        fireImmediately: true,
+      );
+
+    return ref.read(prayerDayProvider).value?.bundle;
   }
 }
 
 /// Prayer bundle for a calendar date via the shared computation engine.
 @riverpod
 PrayerDayBundle? prayerDayBundleForDate(Ref ref, DateTime date) {
-  final settings = ref.watch(effectivePrayerSettingsProvider);
-  if (settings == null) return null;
+  final inputs = ref.watch(prayerTimeInputsProvider);
+  if (inputs == null) return null;
+
+  final normalized = DateTime(date.year, date.month, date.day);
+  final todayKey = ref.watch(prayerCalendarDayKeyProvider);
+  if (todayKey != 0 &&
+      calendarDayKeyFromDate(normalized) == todayKey) {
+    return ref.watch(todayPrayerDayBundleProvider);
+  }
 
   final repo = ref.watch(prayerRepoProvider);
   final anchor = TZDateTime(
-    settings.location,
+    inputs.location,
     date.year,
     date.month,
     date.day,
     12,
   );
   return computePrayerDayBundle(
-    settings: settings,
+    inputs: inputs,
     anchorNow: anchor,
     repo: repo,
   );
@@ -158,16 +198,29 @@ int currentMinuteBucket(Ref ref) {
   return (now?.millisecondsSinceEpoch ?? 0) ~/ 60000;
 }
 
+/// Whether the live prayer-day stream has yet to produce its first snapshot.
+///
+/// Projects [prayerDayProvider] to a `bool` so the hero skeleton toggles only
+/// at the load boundary rather than rebuilding on every 1 Hz tick.
+@riverpod
+bool prayerDayIsLoading(Ref ref) {
+  final inputs = ref.watch(prayerTimeInputsProvider);
+  if (inputs != null) {
+    final day = ref.watch(prayerDayProvider);
+    return day.isLoading || !day.hasValue;
+  }
+  return ref.watch(prayerSettingsProvider).isLoading;
+}
+
 /// Formatted sunnah time labels (sunrise / fajrAfter / ishaBefore).
 ///
-/// Recomputed on each 1 Hz tick but returned as a value-equal record, so
-/// dependents rebuild only when a displayed label actually changes (≈ at the
-/// fajr crossing or midnight) rather than every second.
+/// Recomputed once per minute when labels may change (fajr crossing, midnight).
 @riverpod
 ({String sunrise, String fajrAfter, String ishaBefore})? sunnahTimeLabels(
   Ref ref,
 ) {
-  final day = ref.watch(prayerDayProvider).value;
+  ref.watch(currentMinuteBucketProvider);
+  final day = ref.read(prayerDayProvider).value;
   if (day == null) return null;
   final formatter = ref.watch(timeFormatterProvider);
   String label(Prayer prayer) =>

@@ -44,22 +44,22 @@ class HeroTimeSquare extends StatelessWidget {
       HeroTimeSquareDensity.normal => (
         AppSpacing.xl,
         AppSpacing.lg,
-        theme.typography.sm,
-        theme.typography.xl2,
+        theme.typography.body.sm,
+        theme.typography.body.xl2,
         112.0,
       ),
       HeroTimeSquareDensity.compact => (
         AppSpacing.lg,
         AppSpacing.md,
-        theme.typography.xs,
-        theme.typography.xl,
+        theme.typography.body.xs,
+        theme.typography.body.xl,
         96.0,
       ),
       HeroTimeSquareDensity.ultraCompact => (
         AppSpacing.sm,
         AppSpacing.xs,
-        theme.typography.xs,
-        theme.typography.lg,
+        theme.typography.body.xs,
+        theme.typography.body.lg,
         80.0,
       ),
     };

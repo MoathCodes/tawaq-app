@@ -262,6 +262,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     final completions = await service.getCompletionsBetween(
       rangeStart,
       rangeEnd,
+      location,
     );
 
     final buckets = _initializeBuckets(period, rangeStart, rangeEnd);

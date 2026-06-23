@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/layout/responsive.dart';
+import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
@@ -52,7 +54,8 @@ class _AnalysisContent extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final sideBySide =
-            constraints.maxWidth >= context.theme.breakpoints.md;
+            constraints.maxWidth >= 2 * kMainPaneMinExtent ||
+            isContainerAtLeast(context, constraints, FBreakpoint.lg);
 
         if (sideBySide) {
           return const Row(

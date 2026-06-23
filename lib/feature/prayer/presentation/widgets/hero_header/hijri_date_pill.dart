@@ -34,7 +34,7 @@ class HijriDatePill extends ConsumerWidget {
               child: Icon(
                 FLucideIcons.calendar,
                 color: Colors.white.withValues(alpha: 0.8),
-                size: theme.typography.sm.fontSize,
+                size: theme.typography.body.sm.fontSize,
               ),
             ),
             const SizedBox(width: AppSpacing.xs),
@@ -43,7 +43,7 @@ class HijriDatePill extends ConsumerWidget {
                 dateLabel,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.typography.xs.copyWith(
+                style: theme.typography.body.xs.copyWith(
                   color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),

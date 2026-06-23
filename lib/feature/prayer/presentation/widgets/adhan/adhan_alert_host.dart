@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/desktop/adhan_alert_controller.dart';
+import 'package:tawaq/core/desktop/adhan_alert_state.dart';
 import 'package:tawaq/core/desktop/window_snapshot.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/adhan/adhan_alert_card.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Root overlay that renders the dismissible adhan alert above app content.
-class AdhanAlertHost extends ConsumerWidget {
+///
+/// Uses [OverlayPortal] plus [ref.listen] so alert state changes rebuild only
+/// this host, not the router subtree wrapped by [child].
+class AdhanAlertHost extends ConsumerStatefulWidget {
   /// Creates [AdhanAlertHost].
   const AdhanAlertHost({required this.child, super.key});
 
@@ -16,63 +20,105 @@ class AdhanAlertHost extends ConsumerWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final alert = ref.watch(adhanAlertControllerProvider);
+  ConsumerState<AdhanAlertHost> createState() => _AdhanAlertHostState();
+}
+
+class _AdhanAlertHostState extends ConsumerState<AdhanAlertHost> {
+  final _portalController = OverlayPortalController();
+  var _showing = false;
+  var _compact = false;
+
+  void _syncAlertState(AdhanAlertState alert) {
     final showing = alert.isShowing;
     final compact = showing && alert.isCompactMorph;
+    if (showing == _showing && compact == _compact) return;
+
+    setState(() {
+      _showing = showing;
+      _compact = compact;
+    });
+
+    if (showing && !_portalController.isShowing) {
+      _portalController.show();
+    } else if (!showing && _portalController.isShowing) {
+      _portalController.hide();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncAlertState(ref.read(adhanAlertControllerProvider));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(adhanAlertControllerProvider, (_, next) => _syncAlertState(next));
+
+    final wrappedChild = _compact
+        ? Offstage(child: widget.child)
+        : IgnorePointer(ignoring: _showing, child: widget.child);
+
+    return OverlayPortal(
+      controller: _portalController,
+      overlayChildBuilder: (context) => const _AdhanAlertOverlay(),
+      child: wrappedChild,
+    );
+  }
+}
+
+class _AdhanAlertOverlay extends ConsumerWidget {
+  const _AdhanAlertOverlay();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final alert = ref.watch(adhanAlertControllerProvider);
+    if (!alert.isShowing) return const SizedBox.shrink();
+
+    final compact = alert.isCompactMorph;
     final colors = context.theme.colors;
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        // Keep the router subtree mounted. Removing it during compact morph
-        // unmounts InheritedWidgets while dependents still exist.
-        Offstage(
-          offstage: compact,
-          child: IgnorePointer(
-            ignoring: showing,
-            child: child,
-          ),
-        ),
-        if (showing) ...[
-          if (!compact)
-            Positioned.fill(
-              child: ModalBarrier(
-                color: colors.barrier.withValues(alpha: 0.45),
-                dismissible: false,
-              ),
-            ),
+        if (!compact)
           Positioned.fill(
-            child: FocusScope(
-              autofocus: true,
-              child: compact
-                  ? ColoredBox(
-                      color: colors.background,
-                      child: const SafeArea(
-                        child: Padding(
-                          padding: EdgeInsets.all(AppSpacing.md),
-                          child: Center(
-                            child: AdhanAlertCard(),
-                          ),
-                        ),
+            child: ModalBarrier(
+              color: colors.barrier.withValues(alpha: 0.45),
+              dismissible: false,
+            ),
+          ),
+        Positioned.fill(
+          child: FocusScope(
+            autofocus: true,
+            child: compact
+                ? ColoredBox(
+                    color: colors.background,
+                    child: const SafeArea(
+                      child: Padding(
+                        padding: EdgeInsets.all(AppSpacing.md),
+                        child: Center(child: AdhanAlertCard()),
                       ),
-                    )
-                  : Center(
-                      child: AnimationEntry(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: kAdhanAlertCompactSize.width,
-                          ),
-                          child: const Padding(
-                            padding: EdgeInsets.all(AppSpacing.xl),
-                            child: AdhanAlertCard(showCloseButton: true),
-                          ),
+                    ),
+                  )
+                : Center(
+                    child: AnimationEntry(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: kAdhanAlertCompactSize.width,
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.all(AppSpacing.xl),
+                          child: AdhanAlertCard(showCloseButton: true),
                         ),
                       ),
                     ),
-            ),
+                  ),
           ),
-        ],
+        ),
       ],
     );
   }

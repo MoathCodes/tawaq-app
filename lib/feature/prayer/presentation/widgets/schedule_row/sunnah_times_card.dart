@@ -2,6 +2,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
@@ -80,7 +81,7 @@ class SunnahTimesCard extends ConsumerWidget {
                     const SizedBox(width: AppSpacing.xs),
                     Text(
                       l10n.sunnahTimes,
-                      style: theme.typography.xs.copyWith(
+                      style: theme.typography.body.xs.copyWith(
                         fontWeight: FontWeight.w600,
                         color: colors.mutedForeground,
                         letterSpacing: 0.2,
@@ -103,8 +104,11 @@ class SunnahTimesCard extends ConsumerWidget {
                 ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final useColumns =
-                        constraints.maxWidth >= context.theme.breakpoints.sm;
+                    final useColumns = isContainerAtLeast(
+                      context,
+                      constraints,
+                      FBreakpoint.lg,
+                    );
 
                     if (useColumns) {
                       final separatorHeight = MediaQuery.textScalerOf(
@@ -213,16 +217,21 @@ class _SunnahStripCell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final settings = ref.watch(adhanSettingsProvider).value;
+    // Project to the rendered mode + availability so this cell rebuilds only
+    // when its own sunnah alert setting changes, not on any settings edit.
+    final (mode, hasSettings) = ref.watch(
+      adhanSettingsProvider.select((s) {
+        final settings = s.value;
+        return (
+          settings == null
+              ? ScheduleAlertMode.off
+              : adhanSettingsModeFor(settings, PrayerAlertKind.sunnah, prayer),
+          settings != null,
+        );
+      }),
+    );
     final prayerName = prayer.getLocaleName(l10n);
     final accent = _sunnahAccent(colors, prayer);
-    final mode = settings == null
-        ? ScheduleAlertMode.off
-        : adhanSettingsModeFor(
-            settings,
-            PrayerAlertKind.sunnah,
-            prayer,
-          );
 
     final icon = ExcludeSemantics(
       child: Container(
@@ -246,7 +255,7 @@ class _SunnahStripCell extends ConsumerWidget {
       prayerName,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: theme.typography.xs.copyWith(
+      style: theme.typography.body.xs.copyWith(
         fontWeight: FontWeight.w600,
         height: 1.2,
       ),
@@ -255,7 +264,7 @@ class _SunnahStripCell extends ConsumerWidget {
     final time = Text(
       timeLabel,
       maxLines: 1,
-      style: theme.typography.sm.copyWith(
+      style: theme.typography.body.sm.copyWith(
         fontWeight: FontWeight.w700,
         fontFeatures: const [FontFeature.tabularFigures()],
         height: 1.1,
@@ -266,10 +275,10 @@ class _SunnahStripCell extends ConsumerWidget {
         ? ScheduleAlertPicker(
             mode: mode,
             modes: _modes,
-            interactiveModes: settings == null ? const {} : _interactiveModes,
+            interactiveModes: hasSettings ? _interactiveModes : const {},
             eventLabel: l10n.scheduleAlertEventSunnah(prayerName),
             alertKind: PrayerAlertKind.sunnah,
-            onChanged: settings == null
+            onChanged: !hasSettings
                 ? null
                 : (next) => ref
                       .read(adhanSettingsProvider.notifier)

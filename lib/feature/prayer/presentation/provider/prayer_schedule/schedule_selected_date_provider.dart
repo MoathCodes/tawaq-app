@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:timezone/timezone.dart';
 
 part 'schedule_selected_date_provider.g.dart';
@@ -16,12 +16,12 @@ class ScheduleSelectedDate extends _$ScheduleSelectedDate {
   @override
   DateTime build() {
     ref.listen(prayerCalendarDayKeyProvider, (previous, next) {
-      final prevKey = previous ?? 0;
-      final nextKey = next ?? 0;
-      if (prevKey == 0 || nextKey == 0 || prevKey == nextKey) return;
+      if (previous == null || previous == 0 || next == 0 || previous == next) {
+        return;
+      }
 
-      if (isSameCalendarDayKey(state, prevKey)) {
-        state = dateFromCalendarDayKey(nextKey);
+      if (isSameCalendarDayKey(state, previous)) {
+        state = dateFromCalendarDayKey(next);
       }
     });
 

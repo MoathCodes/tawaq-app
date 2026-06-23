@@ -23,7 +23,7 @@ class StatusSelectorButton extends ConsumerWidget {
     final theme = context.theme;
     final l10n = context.l10n;
     final (prayer, canSetStatus) = ref.watch(
-      prayerCardProvider.select((c) => (c.prayer, c.canSetStatus)),
+      prayerCardStaticProvider.select((c) => (c.prayer, c.canSetStatus)),
     );
     final dayKey = ref.watch(prayerCalendarDayKeyProvider);
     if (!canSetStatus || dayKey == 0) {
@@ -94,7 +94,7 @@ class StatusSelectorButton extends ConsumerWidget {
                         Icon(
                           status.getIcon(),
                           color: theme.colors.secondaryForeground,
-                          size: theme.typography.md.fontSize,
+                          size: theme.typography.body.md.fontSize,
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Flexible(
@@ -102,7 +102,7 @@ class StatusSelectorButton extends ConsumerWidget {
                             status.getLocaleName(l10n),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.typography.sm.copyWith(
+                            style: theme.typography.body.sm.copyWith(
                               color: theme.colors.secondaryForeground,
                               fontWeight: FontWeight.w700,
                             ),
@@ -112,14 +112,14 @@ class StatusSelectorButton extends ConsumerWidget {
                         Icon(
                           FLucideIcons.chevronDown,
                           color: theme.colors.secondaryForeground,
-                          size: theme.typography.sm.fontSize,
+                          size: theme.typography.body.sm.fontSize,
                         ),
                       ] else ...[
                         Text(
                           l10n.logPrayerStatus,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.typography.sm.copyWith(
+                          style: theme.typography.body.sm.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.w600,
                           ),

@@ -28,7 +28,8 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
   @override
   void build() {}
 
-  Location? get _location => ref.read(effectivePrayerSettingsProvider)?.location;
+  Location? get _location =>
+      ref.read(prayerTimeInputsProvider)?.location;
 
   /// Sets or clears the completion status for [prayer] on [completionDay].
   Future<void> setPrayerStatus({

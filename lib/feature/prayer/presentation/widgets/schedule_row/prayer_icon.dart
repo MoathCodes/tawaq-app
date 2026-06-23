@@ -52,7 +52,7 @@ class PrayerIcon extends StatelessWidget {
         child: Icon(
           prayer.icon,
           color: isActive ? colors.primaryForeground : colors.foreground,
-          size: theme.typography.lg.fontSize,
+          size: theme.typography.body.lg.fontSize,
         ),
       ),
     );

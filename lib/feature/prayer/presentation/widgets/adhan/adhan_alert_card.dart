@@ -113,13 +113,13 @@ class AdhanAlertCard extends HookConsumerWidget {
                         children: [
                           Text(
                             title,
-                            style: theme.typography.lg.copyWith(
+                            style: theme.typography.body.lg.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
                             timeLabel,
-                            style: theme.typography.sm.copyWith(
+                            style: theme.typography.body.sm.copyWith(
                               color: colors.mutedForeground,
                             ),
                           ),

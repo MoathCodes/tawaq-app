@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/hooks/hooks.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
@@ -109,7 +110,7 @@ class _StreakHighlight extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     final colors = theme.colors;
-    final valueStyle = (emphasized ? theme.typography.xl : theme.typography.lg)
+    final valueStyle = (emphasized ? theme.typography.body.xl : theme.typography.body.lg)
         .copyWith(
           fontWeight: FontWeight.w800,
           color: emphasized ? colors.primary : colors.foreground,
@@ -138,7 +139,7 @@ class _StreakHighlight extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.typography.xs.copyWith(
+                style: theme.typography.body.xs.copyWith(
                   color: colors.mutedForeground,
                 ),
               ),
@@ -257,7 +258,7 @@ class _PrayerTrackerRow extends HookConsumerWidget {
         Expanded(
           child: Text(
             label,
-            style: theme.typography.sm.copyWith(
+            style: theme.typography.body.sm.copyWith(
               color: isLogged ? colors.foreground : colors.mutedForeground,
               fontWeight: isLogged ? FontWeight.w600 : FontWeight.w500,
             ),
@@ -265,7 +266,7 @@ class _PrayerTrackerRow extends HookConsumerWidget {
         ),
         Text(
           isLogged ? status.getLocaleName(context.l10n) : '—',
-          style: theme.typography.xs.copyWith(
+          style: theme.typography.body.xs.copyWith(
             color: isLogged ? statusColor : colors.mutedForeground,
             fontWeight: FontWeight.w600,
           ),
@@ -316,7 +317,7 @@ class _TodayStackedBar extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         Text(
           context.l10n.performanceIndicator,
-          style: theme.typography.xs.copyWith(
+          style: theme.typography.body.xs.copyWith(
             color: theme.colors.mutedForeground,
           ),
         ),
@@ -350,7 +351,11 @@ class TodayStatusGrid extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 320 ? 4 : 2;
+        final columns = responsiveColumnCount(
+          context,
+          constraints.maxWidth,
+          maxColumns: 4,
+        );
 
         return Wrap(
           spacing: AppSpacing.sm,
@@ -410,7 +415,7 @@ class _StatusChip extends StatelessWidget {
               ],
               Text(
                 '$value',
-                style: theme.typography.lg.copyWith(
+                style: theme.typography.body.lg.copyWith(
                   fontWeight: FontWeight.w800,
                   color: color,
                 ),
@@ -422,7 +427,7 @@ class _StatusChip extends StatelessWidget {
             status.getLocaleName(context.l10n),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.typography.xs.copyWith(
+            style: theme.typography.body.xs.copyWith(
               color: colors.mutedForeground,
             ),
           ),
@@ -458,7 +463,7 @@ class PeriodCompletionSummary extends StatelessWidget {
           children: [
             Text(
               '$percent%',
-              style: theme.typography.xl3.copyWith(
+              style: theme.typography.body.xl3.copyWith(
                 fontWeight: FontWeight.w800,
                 color: fillColor,
                 height: 1,
@@ -470,7 +475,7 @@ class PeriodCompletionSummary extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                 child: Text(
                   subtitle,
-                  style: theme.typography.xs.copyWith(
+                  style: theme.typography.body.xs.copyWith(
                     color: colors.mutedForeground,
                   ),
                 ),
@@ -567,13 +572,13 @@ class _RateBarRow extends StatelessWidget {
 
     return Row(
       children: [
-        SizedBox(
-          width: 88,
+        Flexible(
+          flex: 2,
           child: Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.typography.xs.copyWith(
+            style: theme.typography.body.xs.copyWith(
               color: colors.mutedForeground,
             ),
           ),
@@ -592,7 +597,7 @@ class _RateBarRow extends StatelessWidget {
           child: Text(
             '$percent%',
             textAlign: TextAlign.end,
-            style: theme.typography.xs.copyWith(
+            style: theme.typography.body.xs.copyWith(
               color: color,
               fontWeight: FontWeight.w700,
             ),

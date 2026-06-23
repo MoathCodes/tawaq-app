@@ -72,7 +72,7 @@ class HeroContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dayLoading = ref.watch(prayerDayProvider).isLoading;
+    final dayLoading = ref.watch(prayerDayIsLoadingProvider);
 
     if (dayLoading) {
       return Semantics(
@@ -95,7 +95,12 @@ class _HeroBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final prayer = ref.watch(prayerCardProvider.select((card) => card.prayer));
+    final prayer = ref.watch(
+      prayerCardStaticProvider.select((card) => card.prayer),
+    );
+    final showIqamah = ref.watch(
+      prayerCardStaticProvider.select((card) => card.showIqamah),
+    );
     final (gradientStart, gradientEnd) = PrayerHeroHeader.getPrayerGradient(
       prayer,
     );
@@ -108,13 +113,13 @@ class _HeroBody extends ConsumerWidget {
         final breakpoints = theme.breakpoints;
         final width = constraints.maxWidth;
         // Stack the bottom row when the main column is narrow (e.g. horizontal
-        // prayer layout at lg gives ~540–720 px).
-        final stackBottomRow = width < breakpoints.md;
-        final timeSquareDensity = width >= breakpoints.lg
-            ? HeroTimeSquareDensity.normal
-            : width >= breakpoints.sm
-            ? HeroTimeSquareDensity.compact
-            : HeroTimeSquareDensity.ultraCompact;
+        // prayer layout gives ~480–720 px to the hero column).
+        final timeSquareDensity = _resolveTimeSquareDensity(
+          width: width,
+          breakpoints: breakpoints,
+          showIqamah: showIqamah,
+        );
+        final stackBottomRow = width < breakpoints.lg;
         final watermarkSize = math.min(160, width * 0.32).toDouble();
 
         return Container(
@@ -216,6 +221,41 @@ class _HeroBody extends ConsumerWidget {
       },
     );
   }
+
+  static HeroTimeSquareDensity _resolveTimeSquareDensity({
+    required double width,
+    required FBreakpoints breakpoints,
+    required bool showIqamah,
+  }) {
+    const normalMin = 112.0;
+    const compactMin = 96.0;
+    const ultraMin = 80.0;
+    const statusReserve = 120.0;
+    final squareCount = showIqamah ? 2 : 1;
+    final squareSpacing = showIqamah ? AppSpacing.lg : 0.0;
+    final squaresWidth = squareCount == 2
+        ? normalMin + compactMin + squareSpacing
+        : normalMin;
+
+    if (width >= breakpoints.lg && width >= squaresWidth + statusReserve) {
+      return HeroTimeSquareDensity.normal;
+    }
+    if (width >= breakpoints.sm) {
+      final compactWidth = squareCount == 2
+          ? compactMin * 2 + squareSpacing
+          : compactMin;
+      if (width >= compactWidth + statusReserve) {
+        return HeroTimeSquareDensity.compact;
+      }
+    }
+    final ultraWidth = squareCount == 2
+        ? ultraMin * 2 + squareSpacing
+        : ultraMin;
+    if (width >= ultraWidth) {
+      return HeroTimeSquareDensity.ultraCompact;
+    }
+    return HeroTimeSquareDensity.ultraCompact;
+  }
 }
 
 class _HeroPrayerTitle extends ConsumerWidget {
@@ -225,13 +265,15 @@ class _HeroPrayerTitle extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final prayer = ref.watch(prayerCardProvider.select((card) => card.prayer));
+    final prayer = ref.watch(
+      prayerCardStaticProvider.select((card) => card.prayer),
+    );
 
     return Text(
       prayer.getLocaleName(l10n),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: theme.typography.xl4.copyWith(
+      style: theme.typography.body.xl4.copyWith(
         color: Colors.white,
         fontWeight: FontWeight.bold,
       ),
@@ -246,13 +288,13 @@ class _HeroNextPrayerLine extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final time = ref.watch(prayerCardProvider.select((card) => card.time));
+    final time = ref.watch(prayerCardCountdownProvider);
 
     return Text(
       '${l10n.nextPrayer}: $time',
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: theme.typography.lg.copyWith(
+      style: theme.typography.body.lg.copyWith(
         color: Colors.white.withValues(alpha: 0.9),
       ),
     );
@@ -267,11 +309,13 @@ class _HeroAdhanTimeSquare extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final card = ref.watch(prayerCardProvider);
+    final (adhanTime, prayer) = ref.watch(
+      prayerCardStaticProvider.select((c) => (c.adhanTime, c.prayer)),
+    );
 
     return HeroTimeSquare(
-      time: card.adhanTime,
-      label: card.prayer.isObligatory ? l10n.adhan : null,
+      time: adhanTime,
+      label: prayer.isObligatory ? l10n.adhan : null,
       density: density,
     );
   }
@@ -289,7 +333,7 @@ class _HeroIqamahTimeSquare extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final showIqamah = ref.watch(
-      prayerCardProvider.select((card) => card.showIqamah),
+      prayerCardStaticProvider.select((card) => card.showIqamah),
     );
     if (!showIqamah) {
       return const SizedBox.shrink();
@@ -297,7 +341,7 @@ class _HeroIqamahTimeSquare extends ConsumerWidget {
 
     final l10n = context.l10n;
     final iqamahTime = ref.watch(
-      prayerCardProvider.select((card) => card.iqamahTime),
+      prayerCardStaticProvider.select((card) => card.iqamahTime),
     );
 
     final square = HeroTimeSquare(

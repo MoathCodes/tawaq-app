@@ -4,6 +4,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
@@ -16,7 +17,6 @@ import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_u
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/schedule_selected_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_icon.dart'
     show PrayerIcon;
@@ -30,11 +30,19 @@ class SchedulePrayerRow extends ConsumerWidget {
   /// Creates a [SchedulePrayerRow] instance.
   const SchedulePrayerRow({
     required this.row,
+    required this.isToday,
+    required this.currentPrayer,
     super.key,
   });
 
   /// The prayer schedule row data.
   final PrayerScheduleRow row;
+
+  /// Whether the schedule list is showing today's calendar day.
+  final bool isToday;
+
+  /// Current obligatory prayer when [isToday]; otherwise null.
+  final Prayer? currentPrayer;
 
   static const _animDuration = Duration(milliseconds: 220);
 
@@ -42,21 +50,20 @@ class SchedulePrayerRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final colors = theme.colors;
-    final selectedDate = ref.watch(scheduleSelectedDateProvider);
-    final todayKey = ref.watch(prayerCalendarDayKeyProvider);
-    final selectedKey =
-        selectedDate.year * 10000 +
-        selectedDate.month * 100 +
-        selectedDate.day;
-    final isToday = todayKey != 0 && selectedKey == todayKey;
-    final currentPrayer = isToday
-        ? ref.watch(scheduleCurrentPrayerProvider)
-        : null;
+    final completionDay = row.completionDate ??
+        DateTime(
+          row.prayerTime.year,
+          row.prayerTime.month,
+          row.prayerTime.day,
+        );
+    final completionStatus = ref.watch(
+      schedulePrayerStatusProvider(row.prayer, completionDay),
+    );
     final isActive =
         currentPrayer != null &&
         isScheduleRowCurrent(
           rowPrayer: row.prayer,
-          currentPrayer: currentPrayer,
+          currentPrayer: currentPrayer!,
         );
 
     return AnimatedContainer(
@@ -78,7 +85,12 @@ class SchedulePrayerRow extends ConsumerWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= theme.breakpoints.sm;
+          final isWide = isContainerAtLeast(
+            context,
+            constraints,
+            FBreakpoint.md,
+          );
+          final hasIqamah = row.formattedIqamahTime != null;
 
           if (isWide) {
             return Row(
@@ -87,7 +99,7 @@ class SchedulePrayerRow extends ConsumerWidget {
                   prayer: row.prayer,
                   isActive: isActive,
                   colors: colors,
-                  status: row.completionStatus,
+                  status: completionStatus,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
@@ -95,10 +107,51 @@ class SchedulePrayerRow extends ConsumerWidget {
                     row: row,
                     isActive: isActive,
                     showStatus: true,
+                    completionStatus: completionStatus,
+                    isToday: isToday,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 _TimeRail(row: row),
+              ],
+            );
+          }
+
+          if (hasIqamah) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    PrayerIcon(
+                      prayer: row.prayer,
+                      isActive: isActive,
+                      colors: colors,
+                      status: completionStatus,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _IdentityColumn(
+                        row: row,
+                        isActive: isActive,
+                        showStatus: false,
+                        completionStatus: completionStatus,
+                        isToday: isToday,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                _StatusSelector(
+                  row: row,
+                  completionStatus: completionStatus,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: _TimeRail(row: row),
+                ),
               ],
             );
           }
@@ -113,7 +166,7 @@ class SchedulePrayerRow extends ConsumerWidget {
                     prayer: row.prayer,
                     isActive: isActive,
                     colors: colors,
-                    status: row.completionStatus,
+                    status: completionStatus,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
@@ -121,6 +174,8 @@ class SchedulePrayerRow extends ConsumerWidget {
                       row: row,
                       isActive: isActive,
                       showStatus: false,
+                      completionStatus: completionStatus,
+                      isToday: isToday,
                     ),
                   ),
                 ],
@@ -130,7 +185,12 @@ class SchedulePrayerRow extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Expanded(child: _StatusSelector(row: row)),
+                  Expanded(
+                    child: _StatusSelector(
+                      row: row,
+                      completionStatus: completionStatus,
+                    ),
+                  ),
                   _TimeRail(row: row),
                 ],
               ),
@@ -147,11 +207,15 @@ class _IdentityColumn extends StatelessWidget {
     required this.row,
     required this.isActive,
     required this.showStatus,
+    required this.completionStatus,
+    required this.isToday,
   });
 
   final PrayerScheduleRow row;
   final bool isActive;
   final bool showStatus;
+  final CompletionStatus completionStatus;
+  final bool isToday;
 
   @override
   Widget build(BuildContext context) {
@@ -166,19 +230,23 @@ class _IdentityColumn extends StatelessWidget {
           row.prayer.getLocaleName(l10n),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: theme.typography.sm.copyWith(
+          style: theme.typography.body.sm.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 2),
         _RelativeTimeSubtitle(
           prayerTime: row.prayerTime,
-          status: row.completionStatus,
+          status: completionStatus,
           isCurrentPrayer: isActive,
+          isToday: isToday,
         ),
         if (showStatus) ...[
           const SizedBox(height: AppSpacing.sm),
-          _StatusSelector(row: row),
+          _StatusSelector(
+            row: row,
+            completionStatus: completionStatus,
+          ),
         ],
       ],
     );
@@ -190,11 +258,13 @@ class _RelativeTimeSubtitle extends ConsumerWidget {
     required this.prayerTime,
     required this.status,
     required this.isCurrentPrayer,
+    required this.isToday,
   });
 
   final DateTime prayerTime;
   final CompletionStatus status;
   final bool isCurrentPrayer;
+  final bool isToday;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -202,17 +272,10 @@ class _RelativeTimeSubtitle extends ConsumerWidget {
     final colors = theme.colors;
     final l10n = context.l10n;
 
-    final selectedDate = ref.watch(scheduleSelectedDateProvider);
     // Relative-time text is minute-resolution, so tick once per minute rather
     // than every second; read the precise instant non-reactively.
     ref.watch(currentMinuteBucketProvider);
     final clockNow = ref.read(currentLocationTimeProvider);
-    final todayKey = ref.watch(prayerCalendarDayKeyProvider);
-    final selectedKey =
-        selectedDate.year * 10000 +
-        selectedDate.month * 100 +
-        selectedDate.day;
-    final isToday = todayKey != 0 && selectedKey == todayKey;
     if (isToday && clockNow == null) {
       return const SizedBox.shrink();
     }
@@ -234,22 +297,26 @@ class _RelativeTimeSubtitle extends ConsumerWidget {
 
     return Text(
       subtitle,
-      style: theme.typography.sm.copyWith(
+      style: theme.typography.body.sm.copyWith(
         color: isCurrentPrayer ? colors.primary : colors.mutedForeground,
       ),
     );
   }
 }
 
-class _StatusSelector extends ConsumerWidget {
-  const _StatusSelector({required this.row});
+class _StatusSelector extends StatelessWidget {
+  const _StatusSelector({
+    required this.row,
+    required this.completionStatus,
+  });
 
   final PrayerScheduleRow row;
+  final CompletionStatus completionStatus;
 
   static const _buttonSize = 30.0;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Wrap(
       spacing: AppSpacing.xs,
       runSpacing: AppSpacing.xs,
@@ -259,7 +326,7 @@ class _StatusSelector extends ConsumerWidget {
             (status) => _StatusButton(
               row: row,
               status: status,
-              isSelected: status == row.completionStatus,
+              isSelected: status == completionStatus,
             ),
           )
           .toList(),
@@ -439,7 +506,7 @@ class _ObligatoryAlertTimeSlot extends ConsumerWidget {
           children: [
             Text(
               label,
-              style: theme.typography.xs.copyWith(
+              style: theme.typography.body.xs.copyWith(
                 color: colors.mutedForeground,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.3,
@@ -448,7 +515,7 @@ class _ObligatoryAlertTimeSlot extends ConsumerWidget {
             ),
             Text(
               time,
-              style: theme.typography.sm.copyWith(
+              style: theme.typography.body.sm.copyWith(
                 fontWeight: FontWeight.w700,
                 fontFeatures: const [FontFeature.tabularFigures()],
                 height: 1.2,
