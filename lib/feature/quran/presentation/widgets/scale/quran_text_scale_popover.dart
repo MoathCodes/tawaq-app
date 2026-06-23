@@ -5,8 +5,8 @@ import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/scale/quran_scale_step_picker.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/typography/quran_text_scale_control.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -45,26 +45,14 @@ class QuranTextScalePopover extends ConsumerWidget {
               children: [
                 Text(
                   l10n.quranTextSize,
-                  style: theme.typography.sm.copyWith(
+                  style: theme.typography.body.sm.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                QuranScaleStepPicker(
-                  groupLabel: l10n.quranTextSize,
-                  labels: [
-                    l10n.quranTextSizeSmall,
-                    l10n.quranTextSizeMedium,
-                    l10n.quranTextSizeLarge,
-                    l10n.quranTextSizeShortExtraLarge,
-                  ],
-                  selectedIndex: quranTextScale.index,
-                  onChanged: (i) => ref
-                      .read(quranScreenSettingsProvider.notifier)
-                      .setTextScale(QuranTextScale.values[i]),
-                ),
+                const QuranTextScaleControl(),
                 Text(
                   l10n.quranTextSizePreviewLabel,
-                  style: theme.typography.xs.copyWith(
+                  style: theme.typography.body.xs.copyWith(
                     color: colors.mutedForeground,
                   ),
                 ),

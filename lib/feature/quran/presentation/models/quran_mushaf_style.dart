@@ -1,6 +1,12 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/theme/app_theme_builder.dart';
+
+part 'quran_mushaf_style.g.dart';
 
 /// Builds the themed [MushafStyle] used by the Quran reader layouts.
 MushafStyle buildQuranMushafStyle(
@@ -24,3 +30,15 @@ MushafStyle buildQuranMushafStyle(
     color: theme.colors.secondaryForeground,
   ),
 );
+
+/// Stable mushaf style keyed by palette, brightness, and [QuranTextScale].
+@Riverpod(keepAlive: true)
+MushafStyle mushafStyle(Ref ref) {
+  final theme = ref.watch(appThemeDataProvider);
+  final textScale = ref.watch(
+    quranScreenSettingsProvider.select(
+      (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
+    ),
+  );
+  return buildQuranMushafStyle(theme, textScale);
+}

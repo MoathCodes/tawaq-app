@@ -1,6 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:tawaq/gen/assets.gen.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
+
 /// Available translation sources as an enum with metadata.
 ///
 /// Use this enum instead of strings to reference translations.
@@ -82,8 +83,7 @@ enum TranslationId {
   /// Asset path to the SQLite database file.
   String get databasePath {
     return switch (this) {
-      TranslationId.saheehInternational =>
-        Assets.database.saheehInternational,
+      TranslationId.saheehInternational => Assets.database.saheehInternational,
       TranslationId.bengali => Assets.database.quranBn,
       TranslationId.spanish => Assets.database.quranEs,
       TranslationId.french => Assets.database.quranFr,

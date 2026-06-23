@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_share_logic.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 
 /// Reference strings for ayahs on a share-dialog page.
 class AyahSharePageReferences {
@@ -128,9 +129,9 @@ class _AyahShareRangeSliderState extends State<AyahShareRangeSlider> {
         width: AyahShareRangeSlider._markLabelMaxWidth,
         child: FittedBox(
           fit: BoxFit.scaleDown,
-          child: Text(
+          child: AyahReferenceText(
             compact,
-            style: theme.typography.xs,
+            style: theme.typography.body.xs,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -147,9 +148,9 @@ class _AyahShareRangeSliderState extends State<AyahShareRangeSlider> {
         references: widget.references.compact,
         fallback: '${widget.pageAyahIds.first}',
       );
-      return Text(
+      return AyahReferenceText(
         ref,
-        style: context.theme.typography.sm.copyWith(
+        style: context.theme.typography.body.sm.copyWith(
           color: context.theme.colors.mutedForeground,
         ),
       );

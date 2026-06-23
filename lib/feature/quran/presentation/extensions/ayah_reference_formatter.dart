@@ -62,8 +62,7 @@ bool showSurahNameInCompactLabel({
   final ayah = orderedAyahs[index];
   final count = orderedAyahs.length;
 
-  if (index > 0 &&
-      ayah.surahNumber != orderedAyahs[index - 1].surahNumber) {
+  if (index > 0 && ayah.surahNumber != orderedAyahs[index - 1].surahNumber) {
     return true;
   }
   if (index == count - 1 &&

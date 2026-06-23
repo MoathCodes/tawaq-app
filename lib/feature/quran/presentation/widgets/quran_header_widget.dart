@@ -5,14 +5,16 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:forui_hooks/forui_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/shortcuts/use_register_app_search_focus.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_layout_ui.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/scale/quran_text_scale_popover.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_search_selector.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/juz_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/surah_selector.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
@@ -50,11 +52,21 @@ class QuranHeaderWidget extends HookConsumerWidget {
       child: NonSelectable(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final compact = constraints.maxWidth < theme.breakpoints.lg;
+            final compactTabs = !isContainerAtLeast(
+              context,
+              constraints,
+              FBreakpoint.lg,
+            );
+            final narrowSelectors = !isContainerAtLeast(
+              context,
+              constraints,
+              FBreakpoint.md,
+            );
+            final hideSelectorLabels = compactTabs || narrowSelectors;
 
             final tabs = _LayoutTabs(
               layout: layout,
-              compact: compact,
+              compact: compactTabs,
               onLayoutChanged: (v) => ref
                   .read(quranScreenSettingsProvider.notifier)
                   .setLayout(QuranReadingLayout.values[v]),
@@ -75,28 +87,13 @@ class QuranHeaderWidget extends HookConsumerWidget {
               ],
             );
 
-            final selectors = Row(
-              children: [
-                const Expanded(
-                  flex: 15,
-                  child: SurahSelector(),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                const Expanded(
-                  flex: 20,
-                  child: JuzSelector(),
-                ),
-                const SizedBox(width: AppSpacing.lg),
-                Expanded(
-                  flex: 36,
-                  child: AyahSearchSelector(
-                    searchPopoverController: searchPopover,
-                  ),
-                ),
-              ],
+            final selectors = _HeaderSelectors(
+              narrow: narrowSelectors,
+              showLabel: !hideSelectorLabels,
+              searchPopover: searchPopover,
             );
 
-            if (compact) {
+            if (compactTabs) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -124,6 +121,82 @@ class QuranHeaderWidget extends HookConsumerWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+class _HeaderSelectors extends StatelessWidget {
+  const _HeaderSelectors({
+    required this.narrow,
+    required this.showLabel,
+    required this.searchPopover,
+  });
+
+  final bool narrow;
+  final bool showLabel;
+  final FPopoverController searchPopover;
+
+  @override
+  Widget build(BuildContext context) {
+    if (narrow) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: SurahSelector(showLabel: showLabel),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: JuzSelector(showLabel: showLabel),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: HizbSelector(showLabel: showLabel),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: AyahSearchSelector(
+                  showLabel: showLabel,
+                  searchPopoverController: searchPopover,
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 14,
+          child: SurahSelector(showLabel: showLabel),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          flex: 12,
+          child: JuzSelector(showLabel: showLabel),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          flex: 18,
+          child: HizbSelector(showLabel: showLabel),
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        Expanded(
+          flex: 36,
+          child: AyahSearchSelector(
+            showLabel: showLabel,
+            searchPopoverController: searchPopover,
+          ),
+        ),
+      ],
     );
   }
 }

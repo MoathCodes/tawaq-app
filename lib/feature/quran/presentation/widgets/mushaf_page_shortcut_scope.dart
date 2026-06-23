@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_scope.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 
@@ -24,18 +24,18 @@ class MushafPageShortcutScope extends ConsumerWidget {
     return AppShortcutScope(
       autofocus: true,
       shortcuts: const {
-        AppShortcutId.quranPageNext,
-        AppShortcutId.quranPagePrev,
-        AppShortcutId.quranPageNextSpace,
+        AppShortcut.quranPageNext,
+        AppShortcut.quranPagePrev,
+        AppShortcut.quranPageNextSpace,
       },
       handlers: {
-        AppShortcutId.quranPageNext: () => unawaited(
+        AppShortcut.quranPageNext: () => unawaited(
           controller.animateToPage(controller.currentPage + 1),
         ),
-        AppShortcutId.quranPagePrev: () => unawaited(
+        AppShortcut.quranPagePrev: () => unawaited(
           controller.animateToPage(controller.currentPage - 1),
         ),
-        AppShortcutId.quranPageNextSpace: () => unawaited(
+        AppShortcut.quranPageNextSpace: () => unawaited(
           controller.animateToPage(controller.currentPage + 1),
         ),
       },

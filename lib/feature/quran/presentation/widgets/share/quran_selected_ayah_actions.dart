@@ -6,13 +6,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/range_repeat_dialog.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_pick_resolver.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_dialog.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -141,22 +142,18 @@ class QuranSelectedAyahActionsBar extends ConsumerWidget {
                 spacing: AppSpacing.sm,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  FTooltip(
-                    tipBuilder: (_, _) => Text(l10n.quranRecitationComingSoon),
-                    child: FButton.icon(
-                      onPress: isDesktopPlatform
-                          ? () => _playAyahStub(context, ref, ayah)
-                          : null,
+                  _playMenu(
+                    context,
+                    ref,
+                    ayah,
+                    trigger: (toggle) => FButton.icon(
+                      onPress: toggle,
                       child: const Icon(FLucideIcons.play, size: 18),
                     ),
                   ),
                   FButton.icon(
                     onPress: () => showAyahShareDialog(context, ayah: ayah),
                     child: const Icon(FLucideIcons.share2, size: 18),
-                  ),
-                  FButton.icon(
-                    onPress: () {},
-                    child: const Icon(FLucideIcons.bookmark, size: 18),
                   ),
                   FButton.icon(
                     onPress: () => _copyAyah(context, ref, ayah),
@@ -182,18 +179,18 @@ class QuranSelectedAyahActionsBar extends ConsumerWidget {
               spacing: AppSpacing.sm,
               mainAxisSize: MainAxisSize.min,
               children: [
-                FTooltip(
-                  tipBuilder: (_, _) => Text(l10n.quranRecitationComingSoon),
-                  child: FButton(
-                    onPress: isDesktopPlatform
-                        ? () => _playAyahStub(context, ref, ayah)
-                        : null,
+                _playMenu(
+                  context,
+                  ref,
+                  ayah,
+                  trigger: (toggle) => FButton(
+                    onPress: toggle,
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(l10n.quranPlayAyah),
+                        Text(l10n.quranRecitationPlay),
                         const SizedBox(width: AppSpacing.sm),
-                        const Icon(FLucideIcons.play, size: 18),
+                        const Icon(FLucideIcons.chevronDown, size: 18),
                       ],
                     ),
                   ),
@@ -206,17 +203,6 @@ class QuranSelectedAyahActionsBar extends ConsumerWidget {
                       Text(l10n.ayahShare),
                       const SizedBox(width: AppSpacing.sm),
                       const Icon(FLucideIcons.share2, size: 18),
-                    ],
-                  ),
-                ),
-                FButton.icon(
-                  onPress: () {},
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(l10n.ayahBookmark),
-                      const SizedBox(width: AppSpacing.sm),
-                      const Icon(FLucideIcons.bookmark, size: 18),
                     ],
                   ),
                 ),
@@ -249,19 +235,115 @@ class QuranSelectedAyahActionsBar extends ConsumerWidget {
     );
   }
 
-  Future<void> _playAyahStub(
+  /// Play button that opens a menu: this ayah / this surah / a range.
+  Widget _playMenu(
+    BuildContext context,
+    WidgetRef ref,
+    Ayah ayah, {
+    required Widget Function(VoidCallback toggle) trigger,
+  }) {
+    final l10n = context.l10n;
+    return FPopoverMenu(
+      menu: [
+        FItemGroup(
+          children: [
+            FItem(
+              prefix: const Icon(FLucideIcons.play),
+              title: Text(l10n.quranPlayAyah),
+              onPress: () => unawaited(_playAyahAction(context, ref, ayah)),
+            ),
+            FItem(
+              prefix: const Icon(FLucideIcons.bookOpen),
+              title: Text(l10n.quranPlaySurah),
+              onPress: () => unawaited(_playSurahAction(context, ref, ayah)),
+            ),
+            FItem(
+              prefix: const Icon(FLucideIcons.repeat),
+              title: Text(l10n.quranPlayRange),
+              onPress: () => unawaited(_playRangeAction(context, ref, ayah)),
+            ),
+          ],
+        ),
+      ],
+      builder: (context, controller, _) => trigger(controller.toggle),
+    );
+  }
+
+  void _showRecitationUnavailableToast(BuildContext context) {
+    showFToast(
+      context: context,
+      variant: .destructive,
+      icon: const Icon(FLucideIcons.triangleAlert),
+      title: Text(context.l10n.quranRecitationUnavailable),
+    );
+  }
+
+  void _showNoTimingToast(BuildContext context) {
+    showFToast(
+      context: context,
+      variant: .destructive,
+      icon: const Icon(FLucideIcons.triangleAlert),
+      title: Text(context.l10n.quranRecitationNoTiming),
+    );
+  }
+
+  Future<void> _playAyahAction(
     BuildContext context,
     WidgetRef ref,
     Ayah ayah,
   ) async {
-    await ref.read(audioPlayerControllerProvider.notifier).playAyah(
+    final pick = await resolveReciterForAyahPlayback(context, ref);
+    if (pick == null) return;
+    final started = await ref
+        .read(recitationControllerProvider.notifier)
+        .playRange(
+          reciter: pick.reciter,
+          moshaf: pick.moshaf,
+          surah: ayah.surahNumber,
+          startAyah: ayah.numberInSurah,
+          endAyah: ayah.numberInSurah,
+        );
+    if (!started && context.mounted) {
+      _showNoTimingToast(context);
+    }
+  }
+
+  Future<void> _playSurahAction(
+    BuildContext context,
+    WidgetRef ref,
+    Ayah ayah,
+  ) async {
+    final pick = await resolveReciterForSurahPlayback(ref);
+    if (pick == null) {
+      if (context.mounted) _showRecitationUnavailableToast(context);
+      return;
+    }
+    if (!pick.moshaf.hasSurah(ayah.surahNumber)) {
+      if (context.mounted) _showRecitationUnavailableToast(context);
+      return;
+    }
+    await ref.read(recitationControllerProvider.notifier).playSurah(
+      reciter: pick.reciter,
+      moshaf: pick.moshaf,
       surah: ayah.surahNumber,
-      ayah: ayah.numberInSurah,
     );
-    if (!context.mounted) return;
-    showFToast(
-      context: context,
-      title: Text(context.l10n.quranRecitationComingSoon),
+  }
+
+  Future<void> _playRangeAction(
+    BuildContext context,
+    WidgetRef ref,
+    Ayah ayah,
+  ) async {
+    final pick = await resolveReciterForAyahPlayback(context, ref);
+    if (pick == null || !context.mounted) return;
+    await showRangeRepeatDialog(
+      context,
+      initial: RangeRepeatInit(
+        reciter: pick.reciter,
+        moshaf: pick.moshaf,
+        surah: ayah.surahNumber,
+        startAyah: ayah.numberInSurah,
+      ),
     );
   }
 

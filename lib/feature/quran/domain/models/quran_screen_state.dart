@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_content_source_converter.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
@@ -49,8 +50,11 @@ abstract class QuranScreenState with _$QuranScreenState {
     @Default(TafsirId.tafseerMouaser)
     TafsirId selectedTafsir,
 
-    /// Width of the study side panel in logical pixels.
-    @Default(350) double sidePanelWidth,
+    /// Width of the study side panel as a fraction of the total width (0..1).
+    @Default(SidePanelDefaults.quranRatio) double sidePanelRatio,
+
+    /// Whether the study side panel is collapsed.
+    @Default(SidePanelDefaults.collapsed) bool sidePanelCollapsed,
   }) = _QuranScreenState;
   const QuranScreenState._();
 
@@ -78,5 +82,6 @@ Map<String, dynamic> _migrateQuranScreenJson(Map<String, dynamic> json) {
       migrated.containsKey('fontSize')) {
     migrated['quranTextScale'] = migrated.remove('fontSize');
   }
+  migrateSidePanelJson(migrated);
   return migrated;
 }

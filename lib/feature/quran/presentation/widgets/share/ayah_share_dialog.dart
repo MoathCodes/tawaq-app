@@ -12,6 +12,7 @@ import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/clipboard_image.dart';
 import 'package:tawaq/core/utils/platform.dart';
+import 'package:tawaq/core/utils/reveal_folder.dart';
 import 'package:tawaq/core/utils/widget_to_image.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
@@ -266,9 +267,28 @@ class AyahShareDialog extends HookConsumerWidget {
         );
         await file.writeAsBytes(bytes);
         if (context.mounted) {
+          final folderPath = directory.path;
+          final fileName = p.basename(file.path);
           showFToast(
             context: context,
-            title: Text(l10n.shareImageSaved(file.path)),
+            icon: Icon(FLucideIcons.circleCheck, color: colors.primary),
+            title: Text(l10n.shareImageSavedTitle),
+            description: Text(fileName),
+            suffixBuilder: (toastContext, entry) => FButton(
+              variant: .secondary,
+              onPress: () async {
+                final opened = await revealFolderInFileManager(folderPath);
+                if (!opened && toastContext.mounted) {
+                  showFToast(
+                    context: toastContext,
+                    variant: .destructive,
+                    icon: const Icon(FLucideIcons.triangleAlert),
+                    title: Text(l10n.openFolderFailed),
+                  );
+                }
+              },
+              child: Text(l10n.openFolder),
+            ),
           );
         }
       } on Object catch (error) {
@@ -307,7 +327,7 @@ class AyahShareDialog extends HookConsumerWidget {
             children: [
               Text(
                 l10n.sharePreview,
-                style: theme.typography.sm.copyWith(
+                style: theme.typography.body.sm.copyWith(
                   color: colors.mutedForeground,
                   fontWeight: FontWeight.w600,
                 ),

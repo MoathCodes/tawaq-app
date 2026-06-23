@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/core/widgets/select_empty_content.dart';
 import 'package:tawaq/feature/quran/data/sources/quran_content_registry.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
@@ -94,26 +95,7 @@ class TranslationSourceSelector extends ConsumerWidget {
             colors,
             typography,
           ),
-          contentEmptyBuilder: (_, _) => Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: AppSpacing.sm,
-              children: [
-                Icon(
-                  FLucideIcons.searchX,
-                  size: 16,
-                  color: colors.mutedForeground,
-                ),
-                Text(
-                  l10n.noResults,
-                  style: typography.sm.copyWith(
-                    color: colors.mutedForeground,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          contentEmptyBuilder: (_, _) => const SelectEmptyContent(),
         ),
       ),
     );
@@ -137,7 +119,7 @@ List<FSelectItemMixin> _buildTranslationSections(
       FSelectSection<TranslationId>.rich(
         label: Text(
           languages[i],
-          style: typography.xs.copyWith(
+          style: typography.body.xs.copyWith(
             fontWeight: FontWeight.w600,
             color: colors.mutedForeground,
           ),
