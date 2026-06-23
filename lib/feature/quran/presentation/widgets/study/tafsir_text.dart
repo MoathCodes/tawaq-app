@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:tawaq/core/commentary/commentary_text_styles.dart';
+import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_parse_result.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/tafsir_commentary_body.dart';
@@ -16,14 +17,21 @@ import 'package:tawaq/theme/theme.dart';
 class TafsirText extends HookWidget {
   /// Creates a tafsir text widget.
   const TafsirText({
-    required this.text,
     required this.baseStyle,
+    this.parseResult,
+    this.text,
     this.tafsirId,
     super.key,
-  });
+  }) : assert(
+         parseResult != null || text != null,
+         'Provide either parseResult or text',
+       );
 
-  /// The raw tafsir text containing potential span tags.
-  final String text;
+  /// Pre-parsed segments from the tafsir parse cache provider.
+  final TafsirParseResult? parseResult;
+
+  /// Raw tafsir text for direct rendering (widget tests and fallbacks).
+  final String? text;
 
   /// The base text style for the tafsir commentary.
   final TextStyle baseStyle;
@@ -37,26 +45,18 @@ class TafsirText extends HookWidget {
     final colors = theme.colors;
     final isDark = theme.isDark;
 
-    final styles = useMemoized(
-      () => CommentaryTextStyles.from(
-        baseStyle: baseStyle,
-        colors: colors,
-        isDark: isDark,
-        useUthmanTnProse: true,
-        includeSelectionStrut: true,
-      ),
-      [
-        baseStyle,
-        isDark,
-        colors.primary,
-        colors.foreground,
-        colors.mutedForeground,
-      ],
+    final styles = useCommentaryTextStyles(
+      baseStyle: baseStyle,
+      colors: colors,
+      isDark: isDark,
+      useUthmanTnProse: true,
     );
 
     final parsed = useMemoized(
-      () => TafsirTextParser.parse(text, tafsirId: tafsirId),
-      [text, tafsirId],
+      () =>
+          parseResult ??
+          TafsirTextParser.parse(text!, tafsirId: tafsirId),
+      [parseResult, text, tafsirId],
     );
 
     final body = TafsirCommentaryBody(
@@ -104,7 +104,7 @@ class _TruncationFootnote extends StatelessWidget {
           Expanded(
             child: Text(
               context.l10n.tafsirTextMayBeIncomplete,
-              style: typography.xs.copyWith(
+              style: typography.body.xs.copyWith(
                 color: colors.mutedForeground,
                 fontStyle: FontStyle.italic,
                 height: 1.45,

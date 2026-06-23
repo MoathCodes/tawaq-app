@@ -22,7 +22,10 @@ abstract final class TafsirTextNormalizer {
     var result = text.trim();
 
     if (result.startsWith(ayahOpen) && result.endsWith(ayahClose)) {
-      result = result.substring(ayahOpen.length, result.length - ayahClose.length);
+      result = result.substring(
+        ayahOpen.length,
+        result.length - ayahClose.length,
+      );
     }
 
     for (final (:open, :close) in [

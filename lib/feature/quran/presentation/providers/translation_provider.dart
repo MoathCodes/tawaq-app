@@ -1,9 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/database/asset_database_service.dart';
+import 'package:tawaq/core/utils/lru_ayah_cache.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/data/repository/translation_repository.dart';
 import 'package:tawaq/feature/quran/data/sources/quran_content_registry.dart';
+import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/domain/services/translation_service.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
@@ -23,6 +25,30 @@ TranslationService translationService(Ref ref) {
   return TranslationService(repository);
 }
 
+/// In-memory LRU for recently fetched translation database rows.
+@Riverpod(keepAlive: true)
+LruAyahCache<Translation> ayahTranslationRowLru(Ref ref) =>
+    LruAyahCache<Translation>();
+
+/// Raw translation row for a specific ayah and source, with LRU row caching.
+@Riverpod(keepAlive: true)
+Future<Translation?> ayahTranslationRow(
+  Ref ref,
+  TranslationId source,
+  int sura,
+  int aya,
+) async {
+  final lru = ref.read(ayahTranslationRowLruProvider);
+  final cached = lru.lookup(source.name, sura, aya);
+  if (cached.hit) return cached.value;
+
+  final result = await ref
+      .read(translationServiceProvider)
+      .getTranslation(source, sura, aya);
+  lru.store(source.name, sura, aya, result);
+  return result;
+}
+
 /// Translation text for a specific ayah using the persisted source selection.
 @riverpod
 Future<Translation?> ayahTranslation(Ref ref, int sura, int aya) {
@@ -33,5 +59,5 @@ Future<Translation?> ayahTranslation(Ref ref, int sura, int aya) {
           QuranContentRegistry.defaultTranslation,
     ),
   );
-  return ref.read(translationServiceProvider).getTranslation(source, sura, aya);
+  return ref.watch(ayahTranslationRowProvider(source, sura, aya).future);
 }

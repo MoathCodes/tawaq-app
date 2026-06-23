@@ -187,7 +187,9 @@ abstract final class TafsirSegmentRepair {
     return repaired;
   }
 
-  static List<TafsirTextSegment>? _splitChainedBareAyahInCommentary(String text) {
+  static List<TafsirTextSegment>? _splitChainedBareAyahInCommentary(
+    String text,
+  ) {
     final matches = _chainedBareAyahAfterQawl.allMatches(text).toList();
     if (matches.isEmpty) return null;
 
@@ -241,7 +243,9 @@ abstract final class TafsirSegmentRepair {
     return segments.length > 1 ? segments : null;
   }
 
-  static ({String prefix, String quote})? _splitAyahBeforeReference(String text) {
+  static ({String prefix, String quote})? _splitAyahBeforeReference(
+    String text,
+  ) {
     for (final splitter in [
       _splitOrphanCloseParen,
       _splitUnclosedOpenParen,
@@ -297,7 +301,9 @@ abstract final class TafsirSegmentRepair {
       if (ayahPart != null &&
           ayahPart.length >= 10 &&
           ayahPart.length <= _maxAyahQuoteLength) {
-        final hadithPart = quote.substring(0, revelationMatch.start).trimRight();
+        final hadithPart = quote
+            .substring(0, revelationMatch.start)
+            .trimRight();
         if (hadithPart.isNotEmpty) {
           return (prefix: '$prefix$hadithPart ', quote: ayahPart);
         }
@@ -315,7 +321,9 @@ abstract final class TafsirSegmentRepair {
       return null;
     }
 
-    final hadithPart = quote.substring(0, lastQalIndex + 'قال:'.length).trimRight();
+    final hadithPart = quote
+        .substring(0, lastQalIndex + 'قال:'.length)
+        .trimRight();
     if (hadithPart.isEmpty) return null;
 
     return (prefix: '$prefix$hadithPart ', quote: afterQal);

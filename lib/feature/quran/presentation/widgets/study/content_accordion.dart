@@ -1,29 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/quran/data/models/tafsir.dart';
-import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/data/sources/quran_content_registry.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
-import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
-import 'package:tawaq/feature/quran/presentation/models/study_panel_text_styles.dart';
-import 'package:tawaq/feature/quran/presentation/providers/tafsir_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/translation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/tafsir_source_selector.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/translation_source_selector.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/tafsir_text.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/tafsir_accordion_section.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/translation_accordion_section.dart';
 import 'package:tawaq/feature/settings/presentation/provider/ui_state_settings_providers.dart';
-import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Content accordion displaying tafsir and translation for the selected ayah.
 class ContentAccordion extends ConsumerWidget {
   /// Creates a [ContentAccordion] instance.
-  const ContentAccordion({super.key});
+  const ContentAccordion({this.panelWidth, super.key});
+
+  /// Allocated study-panel width for density-aware layout.
+  final double? panelWidth;
 
   Widget _sectionTitle(
     FColors colors,
@@ -49,20 +42,6 @@ class ContentAccordion extends ConsumerWidget {
     ],
   );
 
-  Widget _errorPlaceholder(
-    FColors colors,
-    FTypography typography,
-    String message,
-  ) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-    child: Text(
-      message,
-      style: typography.sm.copyWith(
-        color: colors.mutedForeground,
-      ),
-    ),
-  );
-
   Widget _noAyahSelectedMessage(
     FColors colors,
     FTypography typography,
@@ -80,7 +59,7 @@ class ContentAccordion extends ConsumerWidget {
         Expanded(
           child: Text(
             message,
-            style: typography.sm.copyWith(
+            style: typography.body.sm.copyWith(
               color: colors.mutedForeground,
               fontStyle: FontStyle.italic,
             ),
@@ -127,12 +106,10 @@ class ContentAccordion extends ConsumerWidget {
       ),
     );
 
-    final tafsirAsync = hasSelectedAyah
-        ? ref.watch(ayahTafsirProvider(sura, aya))
-        : const AsyncData<Tafsir?>(null);
-    final translationAsync = hasSelectedAyah
-        ? ref.watch(ayahTranslationProvider(sura, aya))
-        : const AsyncData<Translation?>(null);
+    final narrowPanel = panelWidth != null
+        ? panelWidth! < context.theme.breakpoints.sm
+        : isLessThan(context, FBreakpoint.sm);
+    final sectionMinHeight = narrowPanel ? 72.0 : 120.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -192,16 +169,12 @@ class ContentAccordion extends ConsumerWidget {
                     ),
                   ),
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 120),
-                    child: _buildTafsirContent(
-                      context,
-                      l10n,
-                      colors,
-                      typography,
-                      tafsirAsync,
-                      selectedTafsir,
-                      sura,
-                      aya,
+                    constraints: BoxConstraints(minHeight: sectionMinHeight),
+                    child: TafsirAccordionSection(
+                      sura: sura,
+                      aya: aya,
+                      source: selectedTafsir,
+                      enabled: hasSelectedAyah && tafsirEnabled,
                     ),
                   ),
                 ),
@@ -222,15 +195,12 @@ class ContentAccordion extends ConsumerWidget {
                     ),
                   ),
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 120),
-                    child: _buildTranslationContent(
-                      l10n,
-                      colors,
-                      typography,
-                      translationAsync,
-                      selectedTranslation,
-                      sura,
-                      aya,
+                    constraints: BoxConstraints(minHeight: sectionMinHeight),
+                    child: TranslationAccordionSection(
+                      sura: sura,
+                      aya: aya,
+                      source: selectedTranslation,
+                      enabled: hasSelectedAyah && translationEnabled,
                     ),
                   ),
                 ),
@@ -247,183 +217,6 @@ class ContentAccordion extends ConsumerWidget {
           ),
         ],
       ],
-    );
-  }
-
-  Widget _buildTafsirContent(
-    BuildContext context,
-    AppLocalizations l10n,
-    FColors colors,
-    FTypography typography,
-    AsyncValue<Tafsir?> asyncValue,
-    TafsirId? source,
-    int sura,
-    int aya,
-  ) {
-    return asyncValue.when(
-      loading: () => const Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TafsirSourceSelector(),
-          SizedBox(height: AppSpacing.md),
-          FCircularProgress(),
-        ],
-      ),
-      error: (_, _) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const TafsirSourceSelector(),
-          const SizedBox(height: AppSpacing.md),
-          _errorPlaceholder(
-            colors,
-            typography,
-            l10n.errorLoadingTafsir,
-          ),
-        ],
-      ),
-      data: (tafsir) {
-        if (tafsir == null) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const TafsirSourceSelector(),
-              const SizedBox(height: AppSpacing.md),
-              _errorPlaceholder(
-                colors,
-                typography,
-                l10n.noTafsirAvailable,
-              ),
-            ],
-          );
-        }
-
-        final tafsirText = tafsir.ayaTafseer;
-
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child:
-              Padding(
-                    key: ValueKey('${source?.name ?? ''}-$sura-$aya'),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.md,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const TafsirSourceSelector(),
-                        const SizedBox(height: AppSpacing.lg),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return TafsirText(
-                              text: tafsirText,
-                              tafsirId: source,
-                              baseStyle: StudyPanelTextStyles.tafsirBase(
-                                typography: typography,
-                                colors: colors,
-                                breakpoints: context.theme.breakpoints,
-                                containerWidth: constraints.maxWidth,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 250.ms, curve: Curves.easeOut)
-                  .slideY(
-                    begin: 0.02,
-                    end: 0,
-                    duration: 250.ms,
-                    curve: Curves.easeOut,
-                  ),
-        );
-      },
-    );
-  }
-
-  Widget _buildTranslationContent(
-    AppLocalizations l10n,
-    FColors colors,
-    FTypography typography,
-    AsyncValue<Translation?> asyncValue,
-    TranslationId source,
-    int sura,
-    int aya,
-  ) {
-    return asyncValue.when(
-      loading: () => const Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TranslationSourceSelector(),
-          SizedBox(height: AppSpacing.md),
-          FCircularProgress(),
-        ],
-      ),
-      error: (_, _) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const TranslationSourceSelector(),
-          const SizedBox(height: AppSpacing.md),
-          _errorPlaceholder(
-            colors,
-            typography,
-            l10n.errorLoadingTranslation,
-          ),
-        ],
-      ),
-      data: (translation) {
-        if (translation == null) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const TranslationSourceSelector(),
-              const SizedBox(height: AppSpacing.md),
-              _errorPlaceholder(
-                colors,
-                typography,
-                l10n.noTranslationAvailable,
-              ),
-            ],
-          );
-        }
-
-        final translationText = translation.translation;
-
-        return AnimatedSwitcher(
-          duration: const Duration(milliseconds: 200),
-          child:
-              Padding(
-                    key: ValueKey('${source.name}-$sura-$aya'),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.md,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const TranslationSourceSelector(),
-                        const SizedBox(height: AppSpacing.lg),
-                        SelectableText(
-                          l10n.quranTranslationQuoted(translationText),
-                          style: StudyPanelTextStyles.translation(
-                            typography: typography,
-                            colors: colors,
-                            source: source,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 250.ms, curve: Curves.easeOut)
-                  .slideY(
-                    begin: 0.02,
-                    end: 0,
-                    duration: 250.ms,
-                    curve: Curves.easeOut,
-                  ),
-        );
-      },
     );
   }
 }

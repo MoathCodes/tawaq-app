@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 
@@ -8,18 +9,31 @@ import 'package:tawaq/gen/fonts.gen.dart';
 /// Uses scaled [FTypography] tokens from the app theme so content respects
 /// the global app text-size setting.
 abstract final class StudyPanelTextStyles {
-  /// Container-width–responsive base style for Arabic tafsir commentary.
+  /// Viewport-bucket base style for Arabic tafsir commentary.
+  ///
+  /// Typography is chosen from discrete breakpoint tiers so split-pane resize
+  /// does not recompute styles on every pixel of container width. Pass
+  /// [containerWidth] when the style is scoped to a study-panel column.
   static TextStyle tafsirBase({
+    required BuildContext context,
     required FTypography typography,
     required FColors colors,
-    required FBreakpoints breakpoints,
-    required double containerWidth,
+    double? containerWidth,
   }) {
-    final base = containerWidth < breakpoints.sm
-        ? typography.sm
-        : containerWidth < breakpoints.md
-        ? typography.md
-        : typography.lg;
+    final base = containerWidth != null
+        ? responsiveValueForWidth(
+            context,
+            containerWidth,
+            belowSm: typography.body.sm,
+            sm: typography.body.md,
+            md: typography.body.lg,
+          )
+        : responsiveValue(
+            context,
+            belowSm: typography.body.sm,
+            sm: typography.body.md,
+            md: typography.body.lg,
+          );
 
     return base.copyWith(
       color: colors.foreground,
@@ -34,7 +48,7 @@ abstract final class StudyPanelTextStyles {
     required FColors colors,
     required TranslationId source,
   }) {
-    final base = typography.sm.copyWith(
+    final base = typography.body.sm.copyWith(
       color: colors.foreground,
       height: source == TranslationId.urdu ? 2.0 : 1.6,
       fontStyle: source.usesItalicQuoteStyle

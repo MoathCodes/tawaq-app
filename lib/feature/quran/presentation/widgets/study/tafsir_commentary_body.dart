@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/commentary/commentary_inline_run_builder.dart';
 import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
 import 'package:tawaq/core/commentary/commentary_text_styles.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_segment_repair.dart';
@@ -56,31 +58,37 @@ class TafsirCommentaryBody extends HookWidget {
       if (spans.isEmpty) return;
 
       children.add(
-        ScopedSelectableRichText(
-          TextSpan(style: styles.prose, children: spans),
-          textAlign: TextAlign.start,
-          strutStyle: styles.selectionStrut,
+        CommentaryInlineRunBuilder.richTextRun(
+          spans: spans,
+          styles: styles,
         ),
       );
     }
 
     for (var i = 0; i < segments.length; i++) {
-      final segment = segments[i];
-      if (!_isRenderablePoetry(segment)) continue;
+      if (!_isRenderablePoetry(segments[i])) continue;
 
       flushInlineRun(i);
+
+      final poetryRun = <List<String>>[];
+      var j = i;
+      while (j < segments.length && _isRenderablePoetry(segments[j])) {
+        poetryRun.add(segments[j].poetryHemistichs!);
+        j++;
+      }
 
       children.add(
         Padding(
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-          child: _TafsirPoetryRow(
-            hemistichs: segment.poetryHemistichs!,
+          child: _TafsirPoetryBlock(
+            hemistichRuns: poetryRun,
             style: styles.prose,
           ),
         ),
       );
 
-      inlineStart = i + 1;
+      inlineStart = j;
+      i = j - 1;
     }
 
     flushInlineRun(segments.length);
@@ -224,32 +232,43 @@ class TafsirCommentaryBody extends HookWidget {
   }
 }
 
-/// Two hemistichs laid out in a responsive diwan-style row.
-class _TafsirPoetryRow extends StatelessWidget {
-  const _TafsirPoetryRow({
-    required this.hemistichs,
+/// One or more consecutive poetry segments rendered as a single selectable run.
+class _TafsirPoetryBlock extends StatelessWidget {
+  const _TafsirPoetryBlock({
+    required this.hemistichRuns,
     required this.style,
   });
 
-  final List<String> hemistichs;
+  final List<List<String>> hemistichRuns;
   final TextStyle style;
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final colors = theme.colors;
+    final poetryStyle = style.copyWith(fontStyle: FontStyle.italic);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final stackVertically = constraints.maxWidth < theme.breakpoints.sm;
+        final stackVertically =
+            !isContainerAtLeast(context, constraints, FBreakpoint.sm);
+        final spans = <InlineSpan>[];
 
-        Widget buildHemistich(String text, TextAlign align) {
-          return ScopedSelectableText(
-            text,
-            style: style.copyWith(fontStyle: FontStyle.italic),
-            textAlign: align,
-            textDirection: TextDirection.rtl,
-          );
+        for (var runIndex = 0; runIndex < hemistichRuns.length; runIndex++) {
+          if (runIndex > 0) {
+            spans.add(const TextSpan(text: '\n\n'));
+          }
+
+          final hemistichs = hemistichRuns[runIndex];
+          spans.add(TextSpan(text: hemistichs[0], style: poetryStyle));
+
+          if (stackVertically) {
+            spans.add(const TextSpan(text: '\n'));
+          } else {
+            spans.add(const TextSpan(text: '    '));
+          }
+
+          spans.add(TextSpan(text: hemistichs[1], style: poetryStyle));
         }
 
         return DecoratedBox(
@@ -263,27 +282,10 @@ class _TafsirPoetryRow extends StatelessWidget {
               horizontal: AppSpacing.md,
               vertical: AppSpacing.sm,
             ),
-            child: stackVertically
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      buildHemistich(hemistichs[0], TextAlign.start),
-                      const SizedBox(height: AppSpacing.sm),
-                      buildHemistich(hemistichs[1], TextAlign.end),
-                    ],
-                  )
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: buildHemistich(hemistichs[0], TextAlign.start),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: buildHemistich(hemistichs[1], TextAlign.end),
-                      ),
-                    ],
-                  ),
+            child: ScopedSelectableRichText(
+              TextSpan(style: poetryStyle, children: spans),
+              textAlign: stackVertically ? TextAlign.start : TextAlign.justify,
+            ),
           ),
         );
       },

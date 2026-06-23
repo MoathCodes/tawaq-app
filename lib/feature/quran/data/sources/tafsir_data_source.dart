@@ -27,7 +27,8 @@ class SqliteTafsirDataSource implements ITafsirDataSource {
   @override
   Tafsir? getTafsir(int suraNo, int ayaNo) {
     final result = _database.select(
-      'SELECT * FROM tafseer WHERE sura_no = ? AND aya_no = ?',
+      'SELECT id, sura_no, aya_no, aya_tafseer '
+      'FROM tafseer WHERE sura_no = ? AND aya_no = ?',
       [suraNo, ayaNo],
     );
 
@@ -40,7 +41,8 @@ class SqliteTafsirDataSource implements ITafsirDataSource {
   @override
   List<Tafsir> getTafsirForSura(int suraNo) {
     final result = _database.select(
-      'SELECT * FROM tafseer WHERE sura_no = ? ORDER BY aya_no',
+      'SELECT id, sura_no, aya_no, aya_tafseer '
+      'FROM tafseer WHERE sura_no = ? ORDER BY aya_no',
       [suraNo],
     );
 
@@ -71,7 +73,8 @@ class SqliteCompactTafsirDataSource implements ITafsirDataSource {
   @override
   Tafsir? getTafsir(int suraNo, int ayaNo) {
     final result = _database.select(
-      'SELECT * FROM "$_tableName" WHERE SURA_num = ? AND AYA_num = ?',
+      'SELECT SURA_num, AYA_num, Tafsir '
+      'FROM "$_tableName" WHERE SURA_num = ? AND AYA_num = ?',
       [suraNo, ayaNo],
     );
 
@@ -89,7 +92,8 @@ class SqliteCompactTafsirDataSource implements ITafsirDataSource {
   @override
   List<Tafsir> getTafsirForSura(int suraNo) {
     final result = _database.select(
-      'SELECT * FROM "$_tableName" WHERE SURA_num = ? ORDER BY AYA_num',
+      'SELECT SURA_num, AYA_num, Tafsir '
+      'FROM "$_tableName" WHERE SURA_num = ? ORDER BY AYA_num',
       [suraNo],
     );
 

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_scope.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/directional_content_switcher.dart';
@@ -60,15 +60,6 @@ class StudyPanel extends HookConsumerWidget {
       [ayaId],
     );
 
-    const studyContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ContentAccordion(),
-        SizedBox(height: AppSpacing.xl),
-        NotesSection(),
-      ],
-    );
-
     final canGoNext = ayaId == null || ayaId < kMaxQuranAyahId;
     final canGoPrevious = ayaId == null || ayaId > 1;
 
@@ -97,7 +88,7 @@ class StudyPanel extends HookConsumerWidget {
                     child: DirectionalContentSwitcher(
                       currentKey: ayaId,
                       slideDirection: slideDirection.value,
-                      child: studyContent,
+                      child: _StudyPanelBody(panelWidth: constraints.maxWidth),
                     ),
                   );
                 },
@@ -111,14 +102,32 @@ class StudyPanel extends HookConsumerWidget {
     return AppShortcutScope(
       autofocus: true,
       shortcuts: const {
-        AppShortcutId.quranAyahNext,
-        AppShortcutId.quranAyahPrev,
+        AppShortcut.quranAyahNext,
+        AppShortcut.quranAyahPrev,
       },
       handlers: {
-        AppShortcutId.quranAyahNext: () => unawaited(_navigateAyah(ref, 1)),
-        AppShortcutId.quranAyahPrev: () => unawaited(_navigateAyah(ref, -1)),
+        AppShortcut.quranAyahNext: () => unawaited(_navigateAyah(ref, 1)),
+        AppShortcut.quranAyahPrev: () => unawaited(_navigateAyah(ref, -1)),
       },
       child: panelContent,
+    );
+  }
+}
+
+class _StudyPanelBody extends StatelessWidget {
+  const _StudyPanelBody({this.panelWidth});
+
+  final double? panelWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ContentAccordion(panelWidth: panelWidth),
+        const SizedBox(height: AppSpacing.xl),
+        NotesSection(panelWidth: panelWidth),
+      ],
     );
   }
 }

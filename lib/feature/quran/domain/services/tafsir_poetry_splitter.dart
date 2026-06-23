@@ -125,7 +125,9 @@ abstract final class TafsirPoetrySplitter {
       pendingAfterMarker = false;
 
       final lineSegments = _splitLine(line);
-      if (lineSegments.any((segment) => segment.kind == TafsirSegmentKind.poetry)) {
+      if (lineSegments.any(
+        (segment) => segment.kind == TafsirSegmentKind.poetry,
+      )) {
         flushProse();
         result.addAll(lineSegments);
       } else {
@@ -213,13 +215,14 @@ abstract final class TafsirPoetrySplitter {
   }
 
   static ({List<TafsirTextSegment> segments, int extraLinesConsumed})
-      _splitWideGapLine(
+  _splitWideGapLine(
     String line, {
     String? nextLine,
   }) {
     final lineSegments = _splitLine(line);
-    final poetrySegments =
-        lineSegments.where((segment) => segment.kind == TafsirSegmentKind.poetry).toList();
+    final poetrySegments = lineSegments
+        .where((segment) => segment.kind == TafsirSegmentKind.poetry)
+        .toList();
     if (poetrySegments.length != 1) {
       return (segments: lineSegments, extraLinesConsumed: 0);
     }
@@ -230,8 +233,9 @@ abstract final class TafsirPoetrySplitter {
       return (segments: lineSegments, extraLinesConsumed: 0);
     }
 
-    final prefixSegments =
-        lineSegments.where((segment) => segment.kind != TafsirSegmentKind.poetry).toList();
+    final prefixSegments = lineSegments
+        .where((segment) => segment.kind != TafsirSegmentKind.poetry)
+        .toList();
 
     if (nextLine != null && _isContinuationHemistich(nextLine)) {
       final mergedSecond = '${hemistichs[1]} ${nextLine.trim()}'.trim();
@@ -295,7 +299,9 @@ abstract final class TafsirPoetrySplitter {
     final result = <TafsirTextSegment>[];
 
     final prosePrefix = _prosePrefixBeforePoetry(first);
-    final firstHemistich = prosePrefix == null ? first : first.substring(prosePrefix.length);
+    final firstHemistich = prosePrefix == null
+        ? first
+        : first.substring(prosePrefix.length);
 
     if (prosePrefix != null && prosePrefix.trim().isNotEmpty) {
       result.add(
