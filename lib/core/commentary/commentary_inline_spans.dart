@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tawaq/core/commentary/commentary_text_styles.dart';
 import 'package:tawaq/core/text/qawl_patterns.dart';
+import 'package:tawaq/core/utils/lru_map.dart';
 
 /// Shared inline span builders for Arabic commentary prose.
 abstract final class CommentaryInlineSpans {
@@ -22,8 +23,7 @@ abstract final class CommentaryInlineSpans {
     r'﴿([^﴾]+)﴾\s*(سورة\s+[^،]+،\s*الآية:\s*\d+)?',
   );
 
-  static final _buildCache = <_BuildCacheKey, List<InlineSpan>>{};
-  static const _maxBuildCacheEntries = 256;
+  static final _buildCache = LruMap<_BuildCacheKey, List<InlineSpan>>(256);
 
   /// Builds inline spans for commentary prose with quote/scholar/qawl styling.
   static List<InlineSpan> build(
@@ -47,9 +47,6 @@ abstract final class CommentaryInlineSpans {
       input,
       emphasizeQawl: emphasizeQawl,
     );
-    if (_buildCache.length >= _maxBuildCacheEntries) {
-      _buildCache.clear();
-    }
     _buildCache[key] = spans;
     return spans;
   }
