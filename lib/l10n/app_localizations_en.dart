@@ -9,6 +9,30 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get menuOpen => 'Open';
+
+  @override
+  String get menuCopyText => 'Copy text';
+
+  @override
+  String get menuAddBookmark => 'Add bookmark';
+
+  @override
+  String get menuRemoveBookmark => 'Remove bookmark';
+
+  @override
+  String get menuAddFavorite => 'Add to favorites';
+
+  @override
+  String get menuRemoveFavorite => 'Remove from favorites';
+
+  @override
+  String get hadithCopied => 'Hadith copied';
+
+  @override
+  String get fortressDhikrCopied => 'Dhikr copied';
+
+  @override
   String get about => 'About';
 
   @override
@@ -142,6 +166,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collapse => 'Collapse';
 
   @override
+  String get collapsePanel => 'Collapse panel';
+
+  @override
+  String get expandPanel => 'Expand panel';
+
+  @override
   String get colorTheme => 'Color Theme';
 
   @override
@@ -156,6 +186,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appTextSize => 'App text size';
+
+  @override
+  String get appTextSizeSubtitle =>
+      'Controls menus, labels, and other interface text.';
+
+  @override
+  String get scrollMoreHint => 'More below';
 
   @override
   String get appTextSizeCompact => 'Compact';
@@ -613,6 +650,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String hizbLabel(int number) {
+    return 'Hizb $number';
+  }
+
+  @override
   String get karachi => 'University of Islamic Sciences, Karachi';
 
   @override
@@ -644,6 +686,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadingSchedule => 'Loading schedule';
+
+  @override
+  String get prayerLocationRequiredTitle => 'Set your location';
+
+  @override
+  String get prayerLocationRequiredSubtitle =>
+      'Prayer times need your coordinates. Open location settings to pick a city on the map or enter them manually.';
+
+  @override
+  String get prayerLocationRequiredAction => 'Open location settings';
 
   @override
   String get loadingLocationSettings => 'Loading Location Settings';
@@ -946,6 +998,132 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onTimeRate => 'On Time Rate';
 
   @override
+  String get onboardingFinishAction => 'Get started';
+
+  @override
+  String get onboardingFinishPreviewUnavailable =>
+      'Set your location to preview today\'s prayer times.';
+
+  @override
+  String get onboardingFinishSubtitle =>
+      'Your prayer times are ready. You can adjust any setting later from Settings.';
+
+  @override
+  String get onboardingFinishTitle => 'You\'re all set';
+
+  @override
+  String get onboardingLanguageArabic => 'العربية';
+
+  @override
+  String get onboardingLanguageArabicSubtitle =>
+      'Right-to-left layout with Arabic interface';
+
+  @override
+  String get onboardingLanguageEnglish => 'English';
+
+  @override
+  String get onboardingLanguageEnglishSubtitle =>
+      'Left-to-right layout with English interface';
+
+  @override
+  String get onboardingLanguageStepHint =>
+      'Choose the language you prefer for menus and labels.';
+
+  @override
+  String get onboardingLocationTipSubtitle =>
+      'We use your city only to calculate accurate prayer times. Your location is stored on this device.';
+
+  @override
+  String get onboardingLocationTipTitle => 'Why we need your location';
+
+  @override
+  String get onboardingOpenSetupAction => 'Open setup';
+
+  @override
+  String get onboardingRerunSubtitle =>
+      'Walk through language, location, prayer times, and notifications again.';
+
+  @override
+  String get onboardingRerunTitle => 'Run setup again';
+
+  @override
+  String get onboardingSetUpLater => 'Set up later';
+
+  @override
+  String get onboardingStepFinish => 'Ready to go';
+
+  @override
+  String onboardingStepFinishSubtitle(String appName) {
+    return 'Review today\'s schedule and start using $appName.';
+  }
+
+  @override
+  String get onboardingStepIqamah => 'Iqamah offsets';
+
+  @override
+  String get onboardingStepIqamahSubtitle =>
+      'Minutes after adhan until iqamah for each prayer.';
+
+  @override
+  String get onboardingStepLanguage => 'Language';
+
+  @override
+  String get onboardingStepLanguageSubtitle =>
+      'Pick how you\'d like to use the app.';
+
+  @override
+  String get onboardingStepLocation => 'Your location';
+
+  @override
+  String get onboardingStepLocationSubtitle =>
+      'Set your city so prayer times match where you are.';
+
+  @override
+  String get onboardingStepNotifications => 'Notifications';
+
+  @override
+  String get onboardingStepNotificationsSubtitle =>
+      'Choose adhan sounds and how alerts appear.';
+
+  @override
+  String get onboardingStepPrayerTimes => 'Prayer times';
+
+  @override
+  String get onboardingStepPrayerTimesSubtitle =>
+      'Calculation method and time format.';
+
+  @override
+  String get onboardingStepTheme => 'Appearance';
+
+  @override
+  String get onboardingStepThemeSubtitle =>
+      'Theme palette and interface text size.';
+
+  @override
+  String get onboardingStepWelcome => 'Welcome';
+
+  @override
+  String onboardingStepWelcomeSubtitle(String appName) {
+    return 'A quick setup to personalize $appName for you.';
+  }
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'We\'ll help you set up prayer times, notifications, and appearance in a few guided steps.';
+
+  @override
+  String get onboardingWelcomeTipSubtitle =>
+      'You can revisit any of these choices later in Settings.';
+
+  @override
+  String get onboardingWelcomeTipTitle => 'Take your time';
+
+  @override
+  String onboardingWelcomeTitle(String appName) {
+    return 'Welcome to $appName';
+  }
+
+  @override
   String get optionalHint => 'Optional';
 
   @override
@@ -1032,6 +1210,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quranLayoutStudyMode => 'Study Mode';
+
+  @override
+  String get quranDoublePageWidthFallback =>
+      'Not enough width for a two-page spread — showing one page.';
 
   @override
   String get red => 'Red';
@@ -1150,9 +1332,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String shareImageSaved(String path) {
-    return 'Saved to $path';
-  }
+  String get shareImageSavedTitle => 'Image saved';
+
+  @override
+  String get openFolder => 'Open folder';
+
+  @override
+  String get openFolderFailed => 'Could not open folder';
 
   @override
   String get shareIncludeInImage => 'Include in image';
@@ -1315,24 +1501,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcomeToApp => 'Welcome to the app!';
 
   @override
-  String get wizardStep_calculationMethod => 'Calculation Method';
-
-  @override
-  String get wizardStep_getStarted => 'Get Started';
-
-  @override
-  String get wizardStep_iqamahAdjustments => 'Iqamah & Adjustments';
-
-  @override
-  String get wizardStep_location => 'Location';
-
-  @override
-  String get wizardStep_timeFormat => 'Time Format';
-
-  @override
-  String get wizardStep_welcome => 'Welcome';
-
-  @override
   String get yearly => 'Yearly';
 
   @override
@@ -1364,9 +1532,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get a11yWindowClose => 'Close window';
-
-  @override
-  String get a11yOpenSetupWizard => 'Open setup wizard';
 
   @override
   String get a11yOpenLocationSettings => 'Open location settings';
@@ -1454,6 +1619,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutCategoryFortress => 'Muslim Fortress';
 
   @override
+  String get shortcutCategoryHadith => 'Hadith';
+
+  @override
   String get shortcutToggleThemeLabel => 'Toggle theme';
 
   @override
@@ -1539,6 +1707,20 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get shortcutFortressThikrPrevDescription =>
       'Go to the previous thikr during focus reading.';
+
+  @override
+  String get shortcutHadithResultNextLabel => 'Next hadith';
+
+  @override
+  String get shortcutHadithResultNextDescription =>
+      'Select the next hadith in the results list.';
+
+  @override
+  String get shortcutHadithResultPrevLabel => 'Previous hadith';
+
+  @override
+  String get shortcutHadithResultPrevDescription =>
+      'Select the previous hadith in the results list.';
 
   @override
   String get adhanSectionTitle => 'Adhan';
@@ -1708,5 +1890,257 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranRecitationComingSoon => 'Recitation playback coming soon';
 
   @override
-  String get quranPlayAyah => 'Play ayah';
+  String get quranPlayAyah => 'Play this ayah';
+
+  @override
+  String get quranPlaySurah => 'Play this surah';
+
+  @override
+  String get quranPlayRange => 'Play a range…';
+
+  @override
+  String get quranPlaySelection => 'Play selection';
+
+  @override
+  String get quranSelectReciter => 'Select reciter';
+
+  @override
+  String get quranReciterTimed => 'Synced';
+
+  @override
+  String get quranRecitationStop => 'Stop';
+
+  @override
+  String get quranRecitationPlay => 'Play';
+
+  @override
+  String get quranRecitationPause => 'Pause';
+
+  @override
+  String get quranRecitationNext => 'Next';
+
+  @override
+  String get quranRecitationPrevious => 'Previous';
+
+  @override
+  String get quranRecitationDownloading => 'Caching…';
+
+  @override
+  String get quranRecitationVolume => 'Volume';
+
+  @override
+  String get quranRecitationNoTiming =>
+      'Per-ayah playback isn\'t available for this reciter';
+
+  @override
+  String get quranRecitationUnavailable =>
+      'No reciter is available for playback';
+
+  @override
+  String quranRecitationPlaybackFailed(String error) {
+    return 'Playback failed: $error';
+  }
+
+  @override
+  String get quranRecitationModeStopAtEnd => 'Stop at end';
+
+  @override
+  String get quranRecitationModeRepeat => 'Repeat selection';
+
+  @override
+  String get quranRecitationModeContinue => 'Continue to next surah';
+
+  @override
+  String quranSurahLabel(String surah) {
+    return 'Surah $surah';
+  }
+
+  @override
+  String get quranRecitationOpenPlayer => 'Open player';
+
+  @override
+  String get quranRecitationClosePlayer => 'Close player';
+
+  @override
+  String get quranRecitationSwitchReciter => 'Switch reciter';
+
+  @override
+  String get quranRecitationRangeRepeat => 'Range & repeat';
+
+  @override
+  String get quranRecitationQueue => 'Queue';
+
+  @override
+  String get quranRecitationQueueSubtitle => 'Ayahs in this selection';
+
+  @override
+  String get quranRecitationQueueEmpty =>
+      'No timed ayahs to queue for this reciter.';
+
+  @override
+  String get quranRecitationQueueClear => 'Stop & clear';
+
+  @override
+  String get quranRecitationSleepTimer => 'Sleep timer';
+
+  @override
+  String get quranRecitationSleepOff => 'Off';
+
+  @override
+  String get quranRecitationSleepEndOfAyah => 'End of current ayah';
+
+  @override
+  String get quranRecitationSleepEndOfRange => 'End of range';
+
+  @override
+  String get quranRecitationSleepEndOfSurah => 'End of surah';
+
+  @override
+  String quranRecitationSleepAfter(String minutes) {
+    return 'After $minutes minutes';
+  }
+
+  @override
+  String get quranRecitationAutoScroll => 'Auto-scroll';
+
+  @override
+  String get quranRecitationHighlight => 'Highlight ayah';
+
+  @override
+  String get quranRecitationOfflineFiles => 'Offline files';
+
+  @override
+  String get quranRecitationOfflineSubtitle => 'Saved recitations';
+
+  @override
+  String get quranRecitationOfflineAutoSave =>
+      'Recitations are saved automatically while you listen.';
+
+  @override
+  String get quranRecitationOfflineOpenFolder => 'Open folder';
+
+  @override
+  String get quranRecitationOfflineInFolder => 'In this folder';
+
+  @override
+  String get quranRecitationOfflineEmpty => 'No recitations saved yet.';
+
+  @override
+  String get quranRecitationOfflineStorageUsed => 'Storage used';
+
+  @override
+  String quranRecitationOfflineFileCount(int count) {
+    return '$count files';
+  }
+
+  @override
+  String get quranReciterRiwayahTitle => 'Reciter & riwayah';
+
+  @override
+  String get quranReciterSearchHint => 'Search for a reciter…';
+
+  @override
+  String quranReciterRiwayahCount(int count) {
+    return '$count riwayat';
+  }
+
+  @override
+  String get quranReciterFilters => 'Filters';
+
+  @override
+  String get quranReciterSurahOnly => 'Surah playback only';
+
+  @override
+  String get quranReciterFilterDownloaded => 'Downloaded';
+
+  @override
+  String get quranReciterStyleMurattal => 'Murattal';
+
+  @override
+  String get quranReciterStyleMujawwad => 'Mujawwad';
+
+  @override
+  String get quranNoMatchingReciters => 'No matching reciters';
+
+  @override
+  String get quranRangeTitle => 'Range & repeat for memorization';
+
+  @override
+  String get quranRangeScope => 'Range';
+
+  @override
+  String get quranRangePresetAyah => 'This ayah';
+
+  @override
+  String get quranRangePresetSurah => 'This surah';
+
+  @override
+  String get quranRangePresetJuz => 'This juz';
+
+  @override
+  String get quranRangePresetHizb => 'This hizb';
+
+  @override
+  String get quranRangePresetCustom => 'Custom';
+
+  @override
+  String get quranRangeFromSurah => 'From — surah';
+
+  @override
+  String get quranRangeFromAyah => 'From — ayah';
+
+  @override
+  String get quranRangeToSurah => 'To — surah';
+
+  @override
+  String get quranRangeToAyah => 'To — ayah';
+
+  @override
+  String get quranRangeFrom => 'From — surah & ayah';
+
+  @override
+  String get quranRangeTo => 'To — surah & ayah';
+
+  @override
+  String get quranRangeRepeatWhole => 'Repeat whole range';
+
+  @override
+  String get quranRangePlay => 'Play selection';
+
+  @override
+  String get quranRangeJuzNotFound => 'Could not find the juz for this ayah';
+
+  @override
+  String get quranRangeHizbNotFound => 'Could not find the hizb for this ayah';
+
+  @override
+  String get quranRangeJuzBoundsNotFound => 'Could not load juz boundaries';
+
+  @override
+  String get quranRangeHizbBoundsNotFound => 'Could not load hizb boundaries';
+
+  @override
+  String get quranRangePresetFailed => 'Could not apply this range preset';
+
+  @override
+  String get quranRangeFromShort => 'From';
+
+  @override
+  String get quranRangeToShort => 'To';
+
+  @override
+  String get quranRangeRepeatOnce => 'Once';
+
+  @override
+  String get quranRangeRepeatTwice => 'Twice';
+
+  @override
+  String quranRangeRepeatTimes(int count) {
+    return '$count times';
+  }
+
+  @override
+  String quranRangeRepeatChip(int count) {
+    return '×$count';
+  }
 }

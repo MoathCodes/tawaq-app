@@ -9,6 +9,30 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get menuOpen => 'فتح';
+
+  @override
+  String get menuCopyText => 'نسخ النص';
+
+  @override
+  String get menuAddBookmark => 'إضافة إشارة مرجعية';
+
+  @override
+  String get menuRemoveBookmark => 'إزالة الإشارة المرجعية';
+
+  @override
+  String get menuAddFavorite => 'إضافة إلى المفضلة';
+
+  @override
+  String get menuRemoveFavorite => 'إزالة من المفضلة';
+
+  @override
+  String get hadithCopied => 'تم نسخ الحديث';
+
+  @override
+  String get fortressDhikrCopied => 'تم نسخ الذكر';
+
+  @override
   String get about => 'عن التطبيق';
 
   @override
@@ -162,6 +186,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get collapse => 'طي';
 
   @override
+  String get collapsePanel => 'طي اللوحة';
+
+  @override
+  String get expandPanel => 'توسيع اللوحة';
+
+  @override
   String get colorTheme => 'نمط الألوان';
 
   @override
@@ -176,6 +206,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get appTextSize => 'حجم نص التطبيق';
+
+  @override
+  String get appTextSizeSubtitle => 'يتحكم في القوائم والعناوين ونص الواجهة.';
+
+  @override
+  String get scrollMoreHint => 'المزيد بالأسفل';
 
   @override
   String get appTextSizeCompact => 'مضغوط';
@@ -641,6 +677,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String hizbLabel(int number) {
+    return 'الحزب $number';
+  }
+
+  @override
   String get karachi => 'جامعة العلوم الإسلامية، كراتشي';
 
   @override
@@ -672,6 +713,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get loadingSchedule => 'جارٍ تحميل الجدول';
+
+  @override
+  String get prayerLocationRequiredTitle => 'حدّد موقعك';
+
+  @override
+  String get prayerLocationRequiredSubtitle =>
+      'تحتاج أوقات الصلاة إلى إحداثيات موقعك. افتح إعدادات الموقع لاختيار مدينة على الخريطة أو إدخال الإحداثيات يدويًا.';
+
+  @override
+  String get prayerLocationRequiredAction => 'فتح إعدادات الموقع';
 
   @override
   String get loadingLocationSettings => 'جارٍ تحميل إعدادات الموقع';
@@ -983,6 +1034,129 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onTimeRate => 'نسبة الانتظام';
 
   @override
+  String get onboardingFinishAction => 'ابدأ';
+
+  @override
+  String get onboardingFinishPreviewUnavailable =>
+      'حدّد موقعك لمعاينة مواقيت اليوم.';
+
+  @override
+  String get onboardingFinishSubtitle =>
+      'مواقيت صلاتك جاهزة. يمكنك تعديل أي إعداد لاحقًا من الإعدادات.';
+
+  @override
+  String get onboardingFinishTitle => 'كل شيء جاهز';
+
+  @override
+  String get onboardingLanguageArabic => 'العربية';
+
+  @override
+  String get onboardingLanguageArabicSubtitle =>
+      'واجهة عربية مع تخطيط من اليمين لليسار';
+
+  @override
+  String get onboardingLanguageEnglish => 'English';
+
+  @override
+  String get onboardingLanguageEnglishSubtitle =>
+      'واجهة إنجليزية مع تخطيط من اليسار لليمين';
+
+  @override
+  String get onboardingLanguageStepHint =>
+      'اختر اللغة التي تفضّلها للقوائم والعناوين.';
+
+  @override
+  String get onboardingLocationTipSubtitle =>
+      'نستخدم مدينتك فقط لحساب مواقيت الصلاة بدقة. يُخزَّن موقعك على هذا الجهاز.';
+
+  @override
+  String get onboardingLocationTipTitle => 'لماذا نحتاج موقعك';
+
+  @override
+  String get onboardingOpenSetupAction => 'فتح الإعداد';
+
+  @override
+  String get onboardingRerunSubtitle =>
+      'أعد خطوات اللغة والموقع ومواقيت الصلاة والتنبيهات.';
+
+  @override
+  String get onboardingRerunTitle => 'إعادة الإعداد';
+
+  @override
+  String get onboardingSetUpLater => 'الإعداد لاحقًا';
+
+  @override
+  String get onboardingStepFinish => 'جاهز للبدء';
+
+  @override
+  String onboardingStepFinishSubtitle(String appName) {
+    return 'راجع جدول اليوم وابدأ استخدام $appName.';
+  }
+
+  @override
+  String get onboardingStepIqamah => 'فواصل الإقامة';
+
+  @override
+  String get onboardingStepIqamahSubtitle =>
+      'الدقائق بعد الأذان حتى الإقامة لكل صلاة.';
+
+  @override
+  String get onboardingStepLanguage => 'اللغة';
+
+  @override
+  String get onboardingStepLanguageSubtitle => 'اختر كيف تريد استخدام التطبيق.';
+
+  @override
+  String get onboardingStepLocation => 'موقعك';
+
+  @override
+  String get onboardingStepLocationSubtitle =>
+      'حدّد مدينتك لتطابق مواقيت الصلاة مكانك.';
+
+  @override
+  String get onboardingStepNotifications => 'التنبيهات';
+
+  @override
+  String get onboardingStepNotificationsSubtitle =>
+      'اختر صوت الأذان وكيفية ظهور التنبيهات.';
+
+  @override
+  String get onboardingStepPrayerTimes => 'مواقيت الصلاة';
+
+  @override
+  String get onboardingStepPrayerTimesSubtitle => 'طريقة الحساب وتنسيق الوقت.';
+
+  @override
+  String get onboardingStepTheme => 'المظهر';
+
+  @override
+  String get onboardingStepThemeSubtitle => 'لوحة الألوان وحجم نص الواجهة.';
+
+  @override
+  String get onboardingStepWelcome => 'مرحبًا';
+
+  @override
+  String onboardingStepWelcomeSubtitle(String appName) {
+    return 'إعداد سريع لتخصيص $appName لك.';
+  }
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'سنساعدك على ضبط مواقيت الصلاة والتنبيهات والمظهر في خطوات موجّهة.';
+
+  @override
+  String get onboardingWelcomeTipSubtitle =>
+      'يمكنك مراجعة أي من هذه الخيارات لاحقًا من الإعدادات.';
+
+  @override
+  String get onboardingWelcomeTipTitle => 'خذ وقتك';
+
+  @override
+  String onboardingWelcomeTitle(String appName) {
+    return 'مرحبًا بك في $appName';
+  }
+
+  @override
   String get optionalHint => 'اختياري';
 
   @override
@@ -1066,6 +1240,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quranLayoutStudyMode => 'وضع الدراسة';
+
+  @override
+  String get quranDoublePageWidthFallback =>
+      'العرض غير كافٍ لصفحتين — يُعرض صفحة واحدة.';
 
   @override
   String get red => 'أحمر';
@@ -1184,9 +1362,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String shareImageSaved(String path) {
-    return 'تم الحفظ في $path';
-  }
+  String get shareImageSavedTitle => 'تم حفظ الصورة';
+
+  @override
+  String get openFolder => 'فتح المجلد';
+
+  @override
+  String get openFolderFailed => 'تعذر فتح المجلد';
 
   @override
   String get shareIncludeInImage => 'تضمين في الصورة';
@@ -1361,24 +1543,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get welcomeToApp => 'مرحبًا بك في التطبيق!';
 
   @override
-  String get wizardStep_calculationMethod => 'طريقة الحساب';
-
-  @override
-  String get wizardStep_getStarted => 'ابدأ';
-
-  @override
-  String get wizardStep_iqamahAdjustments => 'الإقامة والتعديلات';
-
-  @override
-  String get wizardStep_location => 'الموقع';
-
-  @override
-  String get wizardStep_timeFormat => 'تنسيق الوقت';
-
-  @override
-  String get wizardStep_welcome => 'مرحبًا';
-
-  @override
   String get yearly => 'سنوي';
 
   @override
@@ -1410,9 +1574,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get a11yWindowClose => 'إغلاق النافذة';
-
-  @override
-  String get a11yOpenSetupWizard => 'فتح معالج الإعداد';
 
   @override
   String get a11yOpenLocationSettings => 'فتح إعدادات الموقع';
@@ -1500,6 +1661,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shortcutCategoryFortress => 'حصن المسلم';
 
   @override
+  String get shortcutCategoryHadith => 'الأحاديث';
+
+  @override
   String get shortcutToggleThemeLabel => 'تبديل المظهر';
 
   @override
@@ -1584,6 +1748,20 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get shortcutFortressThikrPrevDescription =>
       'العودة إلى الذكر السابق أثناء القراءة المركّزة.';
+
+  @override
+  String get shortcutHadithResultNextLabel => 'الحديث التالي';
+
+  @override
+  String get shortcutHadithResultNextDescription =>
+      'اختيار الحديث التالي في قائمة النتائج.';
+
+  @override
+  String get shortcutHadithResultPrevLabel => 'الحديث السابق';
+
+  @override
+  String get shortcutHadithResultPrevDescription =>
+      'اختيار الحديث السابق في قائمة النتائج.';
 
   @override
   String get adhanSectionTitle => 'الأذان';
@@ -1753,5 +1931,255 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranRecitationComingSoon => 'تشغيل التلاوة قريباً';
 
   @override
-  String get quranPlayAyah => 'تشغيل الآية';
+  String get quranPlayAyah => 'تشغيل هذه الآية';
+
+  @override
+  String get quranPlaySurah => 'تشغيل هذه السورة';
+
+  @override
+  String get quranPlayRange => 'تشغيل مقطع…';
+
+  @override
+  String get quranPlaySelection => 'تشغيل المحدد';
+
+  @override
+  String get quranSelectReciter => 'اختر القارئ';
+
+  @override
+  String get quranReciterTimed => 'متزامن';
+
+  @override
+  String get quranRecitationStop => 'إيقاف';
+
+  @override
+  String get quranRecitationPlay => 'تشغيل';
+
+  @override
+  String get quranRecitationPause => 'إيقاف مؤقت';
+
+  @override
+  String get quranRecitationNext => 'التالي';
+
+  @override
+  String get quranRecitationPrevious => 'السابق';
+
+  @override
+  String get quranRecitationDownloading => 'جارٍ التخزين…';
+
+  @override
+  String get quranRecitationVolume => 'مستوى الصوت';
+
+  @override
+  String get quranRecitationNoTiming =>
+      'تشغيل الآيات منفردة غير متاح لهذا القارئ';
+
+  @override
+  String get quranRecitationUnavailable => 'لا يوجد قارئ متاح للتشغيل';
+
+  @override
+  String quranRecitationPlaybackFailed(String error) {
+    return 'فشل التشغيل: $error';
+  }
+
+  @override
+  String get quranRecitationModeStopAtEnd => 'التوقف عند النهاية';
+
+  @override
+  String get quranRecitationModeRepeat => 'تكرار المحدد';
+
+  @override
+  String get quranRecitationModeContinue => 'المتابعة للسورة التالية';
+
+  @override
+  String quranSurahLabel(String surah) {
+    return 'سورة $surah';
+  }
+
+  @override
+  String get quranRecitationOpenPlayer => 'فتح المشغّل';
+
+  @override
+  String get quranRecitationClosePlayer => 'إغلاق المشغّل';
+
+  @override
+  String get quranRecitationSwitchReciter => 'تبديل القارئ';
+
+  @override
+  String get quranRecitationRangeRepeat => 'المدى والتكرار';
+
+  @override
+  String get quranRecitationQueue => 'قائمة التشغيل';
+
+  @override
+  String get quranRecitationQueueSubtitle => 'آيات هذا المقطع';
+
+  @override
+  String get quranRecitationQueueEmpty => 'لا توجد آيات مؤقّتة لهذا القارئ.';
+
+  @override
+  String get quranRecitationQueueClear => 'إيقاف وإفراغ';
+
+  @override
+  String get quranRecitationSleepTimer => 'مؤقّت النوم';
+
+  @override
+  String get quranRecitationSleepOff => 'إيقاف';
+
+  @override
+  String get quranRecitationSleepEndOfAyah => 'نهاية الآية الحالية';
+
+  @override
+  String get quranRecitationSleepEndOfRange => 'نهاية المدى';
+
+  @override
+  String get quranRecitationSleepEndOfSurah => 'نهاية السورة';
+
+  @override
+  String quranRecitationSleepAfter(String minutes) {
+    return 'بعد $minutes دقيقة';
+  }
+
+  @override
+  String get quranRecitationAutoScroll => 'تمرير تلقائي';
+
+  @override
+  String get quranRecitationHighlight => 'تظليل الآية';
+
+  @override
+  String get quranRecitationOfflineFiles => 'الملفات دون اتصال';
+
+  @override
+  String get quranRecitationOfflineSubtitle => 'التلاوات المحفوظة';
+
+  @override
+  String get quranRecitationOfflineAutoSave =>
+      'تُحفظ التلاوات تلقائيًا أثناء الاستماع.';
+
+  @override
+  String get quranRecitationOfflineOpenFolder => 'فتح المجلد';
+
+  @override
+  String get quranRecitationOfflineInFolder => 'في هذا المجلد';
+
+  @override
+  String get quranRecitationOfflineEmpty => 'لا توجد تلاوات محفوظة بعد.';
+
+  @override
+  String get quranRecitationOfflineStorageUsed => 'التخزين المستخدم';
+
+  @override
+  String quranRecitationOfflineFileCount(int count) {
+    return '$count ملفات';
+  }
+
+  @override
+  String get quranReciterRiwayahTitle => 'القارئ والرواية';
+
+  @override
+  String get quranReciterSearchHint => 'ابحث عن قارئ…';
+
+  @override
+  String quranReciterRiwayahCount(int count) {
+    return '$count روايات';
+  }
+
+  @override
+  String get quranReciterFilters => 'تصفية';
+
+  @override
+  String get quranReciterSurahOnly => 'تشغيل السورة فقط';
+
+  @override
+  String get quranReciterFilterDownloaded => 'المحفوظة';
+
+  @override
+  String get quranReciterStyleMurattal => 'مرتل';
+
+  @override
+  String get quranReciterStyleMujawwad => 'مجوّد';
+
+  @override
+  String get quranNoMatchingReciters => 'لا يوجد قراء مطابقون';
+
+  @override
+  String get quranRangeTitle => 'المدى والتكرار للحفظ';
+
+  @override
+  String get quranRangeScope => 'المدى';
+
+  @override
+  String get quranRangePresetAyah => 'هذه الآية';
+
+  @override
+  String get quranRangePresetSurah => 'هذه السورة';
+
+  @override
+  String get quranRangePresetJuz => 'هذا الجزء';
+
+  @override
+  String get quranRangePresetHizb => 'هذا الحزب';
+
+  @override
+  String get quranRangePresetCustom => 'مخصص';
+
+  @override
+  String get quranRangeFromSurah => 'من — السورة';
+
+  @override
+  String get quranRangeFromAyah => 'من — الآية';
+
+  @override
+  String get quranRangeToSurah => 'إلى — السورة';
+
+  @override
+  String get quranRangeToAyah => 'إلى — الآية';
+
+  @override
+  String get quranRangeFrom => 'من — السورة والآية';
+
+  @override
+  String get quranRangeTo => 'إلى — السورة والآية';
+
+  @override
+  String get quranRangeRepeatWhole => 'كرّر المدى كاملاً';
+
+  @override
+  String get quranRangePlay => 'تشغيل المقطع';
+
+  @override
+  String get quranRangeJuzNotFound => 'تعذّر تحديد الجزء لهذه الآية';
+
+  @override
+  String get quranRangeHizbNotFound => 'تعذّر تحديد الحزب لهذه الآية';
+
+  @override
+  String get quranRangeJuzBoundsNotFound => 'تعذّر تحميل حدود الجزء';
+
+  @override
+  String get quranRangeHizbBoundsNotFound => 'تعذّر تحميل حدود الحزب';
+
+  @override
+  String get quranRangePresetFailed => 'تعذّر تطبيق هذا الاختيار للمدى';
+
+  @override
+  String get quranRangeFromShort => 'من';
+
+  @override
+  String get quranRangeToShort => 'إلى';
+
+  @override
+  String get quranRangeRepeatOnce => 'مرة واحدة';
+
+  @override
+  String get quranRangeRepeatTwice => 'مرتان';
+
+  @override
+  String quranRangeRepeatTimes(int count) {
+    return '$count مرات';
+  }
+
+  @override
+  String quranRangeRepeatChip(int count) {
+    return '×$count';
+  }
 }

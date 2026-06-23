@@ -1,5 +1,13 @@
 {
   "@@locale": "en",
+  "menuOpen": "Open",
+  "menuCopyText": "Copy text",
+  "menuAddBookmark": "Add bookmark",
+  "menuRemoveBookmark": "Remove bookmark",
+  "menuAddFavorite": "Add to favorites",
+  "menuRemoveFavorite": "Remove from favorites",
+  "hadithCopied": "Hadith copied",
+  "fortressDhikrCopied": "Dhikr copied",
   "about": "About",
   "addReflection": "Add a reflection...",
   "adhan": "Adhan",
@@ -73,11 +81,15 @@
   "chooseCalculationMethod": "Choose your calculation method",
   "chooseLocation": "Choose Location",
   "collapse": "Collapse",
+  "collapsePanel": "Collapse panel",
+  "expandPanel": "Expand panel",
   "colorTheme": "Color Theme",
   "colorThemeSubtitle": "Change the apps color themes.",
   "typographySectionTitle": "Text & scaling",
   "typographySectionSubtitle": "Adjust UI text size and Quran reading size separately.",
   "appTextSize": "App text size",
+  "appTextSizeSubtitle": "Controls menus, labels, and other interface text.",
+  "scrollMoreHint": "More below",
   "appTextSizeCompact": "Compact",
   "appTextSizeNormal": "Default",
   "appTextSizeLarge": "Large",
@@ -304,6 +316,14 @@
       }
     }
   },
+  "hizbLabel": "Hizb {number}",
+  "@hizbLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "karachi": "University of Islamic Sciences, Karachi",
   "kuwait": "Kuwait",
   "languageLabel": "Language",
@@ -315,6 +335,9 @@
   "loading": "Loading...",
   "loadingAnalytics": "Loading Analytics",
   "loadingSchedule": "Loading schedule",
+  "prayerLocationRequiredTitle": "Set your location",
+  "prayerLocationRequiredSubtitle": "Prayer times need your coordinates. Open location settings to pick a city on the map or enter them manually.",
+  "prayerLocationRequiredAction": "Open location settings",
   "loadingLocationSettings": "Loading Location Settings",
   "locationCoordinatesLookupFailed": "Could not determine timezone from coordinates.",
   "locationNoPlaceFound": "No place found at {coordinates}.",
@@ -435,6 +458,62 @@
   "onTimePrayersLast7Days": "On time prayers (last 7 days)",
   "onTimePrayersToday": "On time prayers (today)",
   "onTimeRate": "On Time Rate",
+  "onboardingFinishAction": "Get started",
+  "onboardingFinishPreviewUnavailable": "Set your location to preview today's prayer times.",
+  "onboardingFinishSubtitle": "Your prayer times are ready. You can adjust any setting later from Settings.",
+  "onboardingFinishTitle": "You're all set",
+  "onboardingLanguageArabic": "العربية",
+  "onboardingLanguageArabicSubtitle": "Right-to-left layout with Arabic interface",
+  "onboardingLanguageEnglish": "English",
+  "onboardingLanguageEnglishSubtitle": "Left-to-right layout with English interface",
+  "onboardingLanguageStepHint": "Choose the language you prefer for menus and labels.",
+  "onboardingLocationTipSubtitle": "We use your city only to calculate accurate prayer times. Your location is stored on this device.",
+  "onboardingLocationTipTitle": "Why we need your location",
+  "onboardingOpenSetupAction": "Open setup",
+  "onboardingRerunSubtitle": "Walk through language, location, prayer times, and notifications again.",
+  "onboardingRerunTitle": "Run setup again",
+  "onboardingSetUpLater": "Set up later",
+  "onboardingStepFinish": "Ready to go",
+  "onboardingStepFinishSubtitle": "Review today's schedule and start using {appName}.",
+  "@onboardingStepFinishSubtitle": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingStepIqamah": "Iqamah offsets",
+  "onboardingStepIqamahSubtitle": "Minutes after adhan until iqamah for each prayer.",
+  "onboardingStepLanguage": "Language",
+  "onboardingStepLanguageSubtitle": "Pick how you'd like to use the app.",
+  "onboardingStepLocation": "Your location",
+  "onboardingStepLocationSubtitle": "Set your city so prayer times match where you are.",
+  "onboardingStepNotifications": "Notifications",
+  "onboardingStepNotificationsSubtitle": "Choose adhan sounds and how alerts appear.",
+  "onboardingStepPrayerTimes": "Prayer times",
+  "onboardingStepPrayerTimesSubtitle": "Calculation method and time format.",
+  "onboardingStepTheme": "Appearance",
+  "onboardingStepThemeSubtitle": "Theme palette and interface text size.",
+  "onboardingStepWelcome": "Welcome",
+  "onboardingStepWelcomeSubtitle": "A quick setup to personalize {appName} for you.",
+  "@onboardingStepWelcomeSubtitle": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingWelcomeSubtitle": "We'll help you set up prayer times, notifications, and appearance in a few guided steps.",
+  "onboardingWelcomeTipSubtitle": "You can revisit any of these choices later in Settings.",
+  "onboardingWelcomeTipTitle": "Take your time",
+  "onboardingWelcomeTitle": "Welcome to {appName}",
+  "@onboardingWelcomeTitle": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
   "optionalHint": "Optional",
   "orange": "Orange",
   "other": "Other",
@@ -478,6 +557,7 @@
   "quran": "Holy Quran",
   "quranLayoutDoublePage": "Double Page",
   "quranLayoutStudyMode": "Study Mode",
+  "quranDoublePageWidthFallback": "Not enough width for a two-page spread — showing one page.",
   "red": "Red",
   "reflectionPlaceholder": "Write your thoughts about this verse...",
   "remembrance": "Remembrance",
@@ -541,14 +621,9 @@
       }
     }
   },
-  "shareImageSaved": "Saved to {path}",
-  "@shareImageSaved": {
-    "placeholders": {
-      "path": {
-        "type": "String"
-      }
-    }
-  },
+  "shareImageSavedTitle": "Image saved",
+  "openFolder": "Open folder",
+  "openFolderFailed": "Could not open folder",
   "shareIncludeInImage": "Include in image",
   "sharePreview": "Preview",
   "shareRangeDescription": "{startReference} – {endReference} ({verseCount})",
@@ -655,12 +730,6 @@
   "violet": "Violet",
   "weekly": "Weekly",
   "welcomeToApp": "Welcome to the app!",
-  "wizardStep_calculationMethod": "Calculation Method",
-  "wizardStep_getStarted": "Get Started",
-  "wizardStep_iqamahAdjustments": "Iqamah & Adjustments",
-  "wizardStep_location": "Location",
-  "wizardStep_timeFormat": "Time Format",
-  "wizardStep_welcome": "Welcome",
   "yearly": "Yearly",
   "yellow": "Yellow",
   "zinc": "Zinc",
@@ -672,7 +741,6 @@
   "a11yWindowMaximize": "Maximize window",
   "a11yWindowRestore": "Restore window",
   "a11yWindowClose": "Close window",
-  "a11yOpenSetupWizard": "Open setup wizard",
   "a11yOpenLocationSettings": "Open location settings",
   "a11ySettingsDecreaseIqamah": "Decrease {prayer} iqamah minutes",
   "@a11ySettingsDecreaseIqamah": {
@@ -745,6 +813,7 @@
   "shortcutCategoryGlobal": "Global",
   "shortcutCategoryQuran": "Quran",
   "shortcutCategoryFortress": "Muslim Fortress",
+  "shortcutCategoryHadith": "Hadith",
   "shortcutToggleThemeLabel": "Toggle theme",
   "shortcutToggleThemeDescription": "Switch between light and dark mode.",
   "shortcutToggleLocaleLabel": "Toggle language",
@@ -770,6 +839,10 @@
   "shortcutFortressThikrNextDescription": "Go to the next thikr during focus reading.",
   "shortcutFortressThikrPrevLabel": "Previous thikr",
   "shortcutFortressThikrPrevDescription": "Go to the previous thikr during focus reading.",
+  "shortcutHadithResultNextLabel": "Next hadith",
+  "shortcutHadithResultNextDescription": "Select the next hadith in the results list.",
+  "shortcutHadithResultPrevLabel": "Previous hadith",
+  "shortcutHadithResultPrevDescription": "Select the previous hadith in the results list.",
   "adhanSectionTitle": "Adhan",
   "adhanSectionSubtitle": "Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.",
   "adhanSoundLabel": "Adhan sound",
@@ -862,5 +935,132 @@
     }
   },
   "quranRecitationComingSoon": "Recitation playback coming soon",
-  "quranPlayAyah": "Play ayah"
+  "quranPlayAyah": "Play this ayah",
+  "quranPlaySurah": "Play this surah",
+  "quranPlayRange": "Play a range…",
+  "quranPlaySelection": "Play selection",
+  "quranSelectReciter": "Select reciter",
+  "quranReciterTimed": "Synced",
+  "quranRecitationStop": "Stop",
+  "quranRecitationPlay": "Play",
+  "quranRecitationPause": "Pause",
+  "quranRecitationNext": "Next",
+  "quranRecitationPrevious": "Previous",
+  "quranRecitationDownloading": "Caching…",
+  "quranRecitationVolume": "Volume",
+  "quranRecitationNoTiming": "Per-ayah playback isn't available for this reciter",
+  "quranRecitationUnavailable": "No reciter is available for playback",
+  "quranRecitationPlaybackFailed": "Playback failed: {error}",
+  "@quranRecitationPlaybackFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "quranRecitationModeStopAtEnd": "Stop at end",
+  "quranRecitationModeRepeat": "Repeat selection",
+  "quranRecitationModeContinue": "Continue to next surah",
+  "quranSurahLabel": "Surah {surah}",
+  "@quranSurahLabel": {
+    "placeholders": {
+      "surah": {
+        "type": "String"
+      }
+    }
+  },
+  "quranRecitationOpenPlayer": "Open player",
+  "quranRecitationClosePlayer": "Close player",
+  "quranRecitationSwitchReciter": "Switch reciter",
+  "quranRecitationRangeRepeat": "Range & repeat",
+  "quranRecitationQueue": "Queue",
+  "quranRecitationQueueSubtitle": "Ayahs in this selection",
+  "quranRecitationQueueEmpty": "No timed ayahs to queue for this reciter.",
+  "quranRecitationQueueClear": "Stop & clear",
+  "quranRecitationSleepTimer": "Sleep timer",
+  "quranRecitationSleepOff": "Off",
+  "quranRecitationSleepEndOfAyah": "End of current ayah",
+  "quranRecitationSleepEndOfRange": "End of range",
+  "quranRecitationSleepEndOfSurah": "End of surah",
+  "quranRecitationSleepAfter": "After {minutes} minutes",
+  "@quranRecitationSleepAfter": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "quranRecitationAutoScroll": "Auto-scroll",
+  "quranRecitationHighlight": "Highlight ayah",
+  "quranRecitationOfflineFiles": "Offline files",
+  "quranRecitationOfflineSubtitle": "Saved recitations",
+  "quranRecitationOfflineAutoSave": "Recitations are saved automatically while you listen.",
+  "quranRecitationOfflineOpenFolder": "Open folder",
+  "quranRecitationOfflineInFolder": "In this folder",
+  "quranRecitationOfflineEmpty": "No recitations saved yet.",
+  "quranRecitationOfflineStorageUsed": "Storage used",
+  "quranRecitationOfflineFileCount": "{count} files",
+  "@quranRecitationOfflineFileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranReciterRiwayahTitle": "Reciter & riwayah",
+  "quranReciterSearchHint": "Search for a reciter…",
+  "quranReciterRiwayahCount": "{count} riwayat",
+  "@quranReciterRiwayahCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranReciterFilters": "Filters",
+  "quranReciterSurahOnly": "Surah playback only",
+  "quranReciterFilterDownloaded": "Downloaded",
+  "quranReciterStyleMurattal": "Murattal",
+  "quranReciterStyleMujawwad": "Mujawwad",
+  "quranNoMatchingReciters": "No matching reciters",
+  "quranRangeTitle": "Range & repeat for memorization",
+  "quranRangeScope": "Range",
+  "quranRangePresetAyah": "This ayah",
+  "quranRangePresetSurah": "This surah",
+  "quranRangePresetJuz": "This juz",
+  "quranRangePresetHizb": "This hizb",
+  "quranRangePresetCustom": "Custom",
+  "quranRangeFromSurah": "From — surah",
+  "quranRangeFromAyah": "From — ayah",
+  "quranRangeToSurah": "To — surah",
+  "quranRangeToAyah": "To — ayah",
+  "quranRangeFrom": "From — surah & ayah",
+  "quranRangeTo": "To — surah & ayah",
+  "quranRangeRepeatWhole": "Repeat whole range",
+  "quranRangePlay": "Play selection",
+  "quranRangeJuzNotFound": "Could not find the juz for this ayah",
+  "quranRangeHizbNotFound": "Could not find the hizb for this ayah",
+  "quranRangeJuzBoundsNotFound": "Could not load juz boundaries",
+  "quranRangeHizbBoundsNotFound": "Could not load hizb boundaries",
+  "quranRangePresetFailed": "Could not apply this range preset",
+  "quranRangeFromShort": "From",
+  "quranRangeToShort": "To",
+  "quranRangeRepeatOnce": "Once",
+  "quranRangeRepeatTwice": "Twice",
+  "quranRangeRepeatTimes": "{count} times",
+  "@quranRangeRepeatTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranRangeRepeatChip": "×{count}",
+  "@quranRangeRepeatChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
