@@ -126,7 +126,7 @@ class ManuscriptTheme {
       sizes: FSizes.inherit(touch: touch),
       iconStyle: IconThemeData(
         color: colors.foreground,
-        size: typography.lg.fontSize,
+        size: typography.body.lg.fontSize,
       ),
       tappableStyle: FTappableStyle(),
     );

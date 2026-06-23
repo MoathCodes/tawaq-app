@@ -29,7 +29,7 @@ class AppDurations extends ThemeExtension<AppDurations> {
       slow = const Duration(milliseconds: 400),
       slower = const Duration(milliseconds: 600);
 
-  /// Instant/micro interaction: 50ms
+  /// Instant/micro interaction: 100ms
   final Duration instant;
 
   /// Fast animation: 150ms

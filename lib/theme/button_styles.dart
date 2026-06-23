@@ -173,12 +173,12 @@ FButtonSizeStyles _buttonSizeStyles({
       decoration: decoration(style.borderRadius.md),
       foregroundColor: foregroundColor,
       disabledForegroundColor: disabledForegroundColor,
-      textStyle: typography.sm,
+      textStyle: typography.body.sm,
       contentConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
       contentSpacing: 6,
       iconConstraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-      iconSize: typography.md.fontSize ?? 18,
+      iconSize: typography.body.md.fontSize ?? 18,
       iconPadding: const EdgeInsets.all(13),
     );
 
@@ -191,7 +191,7 @@ FButtonSizeStyles _buttonSizeStyles({
             decoration: decoration(style.borderRadius.sm),
             foregroundColor: foregroundColor,
             disabledForegroundColor: disabledForegroundColor,
-            textStyle: typography.xs,
+            textStyle: typography.body.xs,
             contentConstraints: const BoxConstraints(
               minWidth: 32,
               minHeight: 32,
@@ -202,7 +202,7 @@ FButtonSizeStyles _buttonSizeStyles({
             ),
             contentSpacing: 4,
             iconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-            iconSize: typography.sm.fontSize ?? 16,
+            iconSize: typography.body.sm.fontSize ?? 16,
             iconPadding: const EdgeInsets.all(8),
           ),
           [.sm]: _buttonStyle(
@@ -210,7 +210,7 @@ FButtonSizeStyles _buttonSizeStyles({
             decoration: decoration(style.borderRadius.md),
             foregroundColor: foregroundColor,
             disabledForegroundColor: disabledForegroundColor,
-            textStyle: typography.sm,
+            textStyle: typography.body.sm,
             contentConstraints: const BoxConstraints(
               minWidth: 40,
               minHeight: 40,
@@ -221,7 +221,7 @@ FButtonSizeStyles _buttonSizeStyles({
             ),
             contentSpacing: 4,
             iconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-            iconSize: typography.md.fontSize ?? 18,
+            iconSize: typography.body.md.fontSize ?? 18,
             iconPadding: const EdgeInsets.all(11),
           ),
           [.md]: md,
@@ -230,7 +230,7 @@ FButtonSizeStyles _buttonSizeStyles({
             decoration: decoration(style.borderRadius.md),
             foregroundColor: foregroundColor,
             disabledForegroundColor: disabledForegroundColor,
-            textStyle: typography.sm,
+            textStyle: typography.body.sm,
             contentConstraints: const BoxConstraints(
               minWidth: 48,
               minHeight: 48,
@@ -241,7 +241,7 @@ FButtonSizeStyles _buttonSizeStyles({
             ),
             contentSpacing: 6,
             iconConstraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            iconSize: typography.lg.fontSize ?? 20,
+            iconSize: typography.body.lg.fontSize ?? 20,
             iconPadding: const EdgeInsets.all(14),
           ),
         },
@@ -254,12 +254,12 @@ FButtonSizeStyles _buttonSizeStyles({
     decoration: decoration(style.borderRadius.md),
     foregroundColor: foregroundColor,
     disabledForegroundColor: disabledForegroundColor,
-    textStyle: typography.sm,
+    textStyle: typography.body.sm,
     contentConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
     contentSpacing: 6,
     iconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-    iconSize: typography.md.fontSize ?? 16,
+    iconSize: typography.body.md.fontSize ?? 16,
     iconPadding: const EdgeInsets.all(10),
   );
 
@@ -272,7 +272,7 @@ FButtonSizeStyles _buttonSizeStyles({
           decoration: decoration(style.borderRadius.sm),
           foregroundColor: foregroundColor,
           disabledForegroundColor: disabledForegroundColor,
-          textStyle: typography.xs,
+          textStyle: typography.body.xs,
           contentConstraints: const BoxConstraints(minWidth: 24, minHeight: 24),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 8,
@@ -280,7 +280,7 @@ FButtonSizeStyles _buttonSizeStyles({
           ),
           contentSpacing: 4,
           iconConstraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-          iconSize: typography.sm.fontSize ?? 14,
+          iconSize: typography.body.sm.fontSize ?? 14,
           iconPadding: const EdgeInsets.all(5),
         ),
         [.sm]: _buttonStyle(
@@ -288,7 +288,7 @@ FButtonSizeStyles _buttonSizeStyles({
           decoration: decoration(style.borderRadius.md),
           foregroundColor: foregroundColor,
           disabledForegroundColor: disabledForegroundColor,
-          textStyle: typography.sm,
+          textStyle: typography.body.sm,
           contentConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 10,
@@ -296,7 +296,7 @@ FButtonSizeStyles _buttonSizeStyles({
           ),
           contentSpacing: 4,
           iconConstraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-          iconSize: typography.md.fontSize ?? 16,
+          iconSize: typography.body.md.fontSize ?? 16,
           iconPadding: const EdgeInsets.all(8),
         ),
         [.md]: md,
@@ -305,7 +305,7 @@ FButtonSizeStyles _buttonSizeStyles({
           decoration: decoration(style.borderRadius.md),
           foregroundColor: foregroundColor,
           disabledForegroundColor: disabledForegroundColor,
-          textStyle: typography.sm,
+          textStyle: typography.body.sm,
           contentConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 10,
@@ -313,7 +313,7 @@ FButtonSizeStyles _buttonSizeStyles({
           ),
           contentSpacing: 6,
           iconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-          iconSize: typography.lg.fontSize ?? 18,
+          iconSize: typography.body.lg.fontSize ?? 18,
           iconPadding: const EdgeInsets.all(11),
         ),
       },
@@ -409,12 +409,12 @@ FButtonStyle buttonStyle({
     ),
     foregroundColor: foregroundColor,
     disabledForegroundColor: disabledForeground,
-    textStyle: typography.md,
+    textStyle: typography.body.md,
     contentConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 11),
     contentSpacing: 6,
     iconConstraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-    iconSize: typography.md.fontSize ?? 16,
+    iconSize: typography.body.md.fontSize ?? 16,
     iconPadding: const EdgeInsets.all(10),
   );
 }
@@ -497,7 +497,7 @@ FButtonStyle _windowButton({
         },
       ),
       textStyle: FVariants.from(
-        typography.sm.copyWith(
+        typography.body.sm.copyWith(
           color: normalColor,
           fontWeight: .w500,
           height: 1,
