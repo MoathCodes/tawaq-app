@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/adapters.dart';
 import 'package:mushaf_reader/src/data/hive/hive_registrar.g.dart';
 import 'package:mushaf_reader/src/data/models/ayah.dart';
+import 'package:mushaf_reader/src/data/models/hizb.dart';
 import 'package:mushaf_reader/src/data/models/juz.dart';
 import 'package:mushaf_reader/src/data/models/page_layouts.dart';
 import 'package:mushaf_reader/src/data/models/surah.dart';
@@ -66,6 +67,7 @@ class HiveBoxManager {
   Completer<Box<String>>? _searchIndexOpenCompleter;
 
   Box<Juz>? _juzsBox;
+  Box<Hizb>? _hizbsBox;
   Box<PageLayouts>? _pageLayoutsBox;
   Box<String>? _metadataBox;
 
@@ -122,6 +124,12 @@ class HiveBoxManager {
   Box<Juz> get juzsBox {
     _ensureInitialized();
     return _juzsBox!;
+  }
+
+  /// The hizbs box (60 hizbs keyed by number).
+  Box<Hizb> get hizbsBox {
+    _ensureInitialized();
+    return _hizbsBox!;
   }
 
   /// The metadata box (key-value string data).
@@ -224,6 +232,7 @@ class HiveBoxManager {
       _surahsBox = await Hive.openBox<Surah>('surahs');
       _ayahsBox = await Hive.openLazyBox<Ayah>('ayahs');
       _juzsBox = await Hive.openBox<Juz>('juzs');
+      _hizbsBox = await Hive.openBox<Hizb>('hizbs');
       _pageLayoutsBox = await Hive.openBox<PageLayouts>('pagelayouts');
       _metadataBox = await Hive.openBox<String>('metadata');
 
@@ -265,6 +274,7 @@ class HiveBoxManager {
     _ayahsBox?.close();
     _searchIndexBox?.close();
     _juzsBox?.close();
+    _hizbsBox?.close();
     _pageLayoutsBox?.close();
     _metadataBox?.close();
 
@@ -273,6 +283,7 @@ class HiveBoxManager {
     _searchIndexBox = null;
     _searchIndexOpenCompleter = null;
     _juzsBox = null;
+    _hizbsBox = null;
     _pageLayoutsBox = null;
     _metadataBox = null;
     _layoutsByPage.clear();
@@ -298,6 +309,7 @@ class HiveBoxManager {
       'ayahs',
       'search_index',
       'juzs',
+      'hizbs',
       'pagelayouts',
       'metadata',
     ];

@@ -5,6 +5,8 @@ import 'package:mushaf_reader/src/data/models/surah_block.dart';
 import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 
 class MockQuranRepository implements IQuranRepository {
+  static const int _kAyahCount = 6236;
+
   @override
   void dispose() {}
 
@@ -59,26 +61,90 @@ class MockQuranRepository implements IQuranRepository {
   @override
   String? getBasmalahSync() => 'Basmalah';
 
-  @override
-  Future<Juz> getJuz(int number) async {
-    return Juz(number: number, glyph: 'Juz $number');
+  Juz _mockJuz(int number) {
+    final bounds = juzAyahBounds(number);
+    return Juz(
+      number: number,
+      glyph: 'Juz $number',
+      startPage: (number - 1) * 20 + 2,
+      startAyahId: bounds?.startAyahId,
+      endAyahId: bounds?.endAyahId,
+    );
   }
 
   @override
+  Future<Juz> getJuz(int number) async => _mockJuz(number);
+
+  @override
   Future<List<Juz>> getJuzs() async {
-    return List.generate(30, (i) => Juz(number: i + 1, glyph: 'Juz ${i + 1}'));
+    return List.generate(30, (i) => _mockJuz(i + 1));
   }
 
   @override
   Map<int, Juz> getJuzsSync() {
-    return {for (var i = 1; i <= 30; i++) i: Juz(number: i, glyph: 'Juz $i')};
+    return {for (var i = 1; i <= 30; i++) i: _mockJuz(i)};
   }
 
   @override
   Future<int> getJuzStartPage(int juzNumber) async => (juzNumber - 1) * 20 + 2;
 
   @override
-  Juz? getJuzSync(int number) => Juz(number: number, glyph: 'Juz $number');
+  Juz? getJuzSync(int number) {
+    if (number < 1 || number > 30) return null;
+    return _mockJuz(number);
+  }
+
+  @override
+  ({int startAyahId, int endAyahId})? juzAyahBounds(int juzNumber) {
+    if (juzNumber < 1 || juzNumber > 30) return null;
+    final start = (juzNumber - 1) * 200 + 1;
+    final end = juzNumber == 30 ? _kAyahCount : juzNumber * 200;
+    return (startAyahId: start, endAyahId: end);
+  }
+
+  Hizb _mockHizb(int number) {
+    final bounds = hizbAyahBounds(number);
+    return Hizb(
+      number: number,
+      startPage: (number - 1) * 10 + 1,
+      startAyahId: bounds?.startAyahId,
+      endAyahId: bounds?.endAyahId,
+      startSurahNumber: 1,
+      startAyahInSurah: 1,
+      startHizbQuarter: (number - 1) * 4 + 1,
+    );
+  }
+
+  @override
+  Future<Hizb> getHizb(int number) async => _mockHizb(number);
+
+  @override
+  Future<List<Hizb>> getHizbs() async {
+    return List.generate(60, (i) => _mockHizb(i + 1));
+  }
+
+  @override
+  Map<int, Hizb> getHizbsSync() {
+    return {for (var i = 1; i <= 60; i++) i: _mockHizb(i)};
+  }
+
+  @override
+  Future<int> getHizbStartPage(int hizbNumber) async =>
+      (hizbNumber - 1) * 10 + 1;
+
+  @override
+  Hizb? getHizbSync(int number) {
+    if (number < 1 || number > 60) return null;
+    return _mockHizb(number);
+  }
+
+  @override
+  ({int startAyahId, int endAyahId})? hizbAyahBounds(int hizbNumber) {
+    if (hizbNumber < 1 || hizbNumber > 60) return null;
+    final start = (hizbNumber - 1) * 100 + 1;
+    final end = hizbNumber == 60 ? _kAyahCount : hizbNumber * 100;
+    return (startAyahId: start, endAyahId: end);
+  }
 
   @override
   QuranPage? peekCachedPage(int page) => null;

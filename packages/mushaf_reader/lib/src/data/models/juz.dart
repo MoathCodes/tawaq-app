@@ -47,6 +47,11 @@ abstract class Juz with _$Juz {
     ///
     /// This is the ID of the first Ayah in the Juz.
     int? startAyahId,
+
+    /// The global Ayah ID where this Juz ends (1-6236).
+    ///
+    /// This is the ID of the last Ayah in the Juz.
+    int? endAyahId,
   }) = _Juz;
 
   const Juz._();

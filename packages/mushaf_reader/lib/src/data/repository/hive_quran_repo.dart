@@ -6,6 +6,7 @@ import 'package:mushaf_reader/src/data/ayah_id_resolver.dart';
 import 'package:mushaf_reader/src/data/hive/hive_box_manager.dart';
 import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:mushaf_reader/src/data/models/ayah_fragment.dart';
+import 'package:mushaf_reader/src/data/models/hizb.dart';
 import 'package:mushaf_reader/src/data/models/juz.dart';
 import 'package:mushaf_reader/src/data/models/page_layouts.dart';
 import 'package:mushaf_reader/src/data/models/quran_page.dart';
@@ -26,6 +27,8 @@ import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 /// - **search_index**: `Box<String>` keyed by ayah ID — pre-normalized plain text;
 ///   opened on first search via [HiveBoxManager.ensureSearchIndexBoxOpen]
 /// - **juzs**: `Box<Juz>` keyed by juz number (1-30)
+/// - **hizbs**: `Box<Hizb>` keyed by hizb number (1-60); bounds derived from
+///   per-ayah `hizbQuarter` at generation time
 /// - **pageLayouts**: `Box<List<PageLayouts>>` keyed by page number (1-604)
 /// - **metadata**: `Box<String>` for key-value data (e.g., "basmalah")
 ///
@@ -58,8 +61,23 @@ class HiveQuranRepository implements IQuranRepository {
   /// Reference count for automatic cleanup.
   static int _refCount = 0;
 
-  /// Maximum number of pages to keep in the LRU cache.
-  static const int _kMaxCacheSize = 10;
+  /// Default LRU capacity (single-page viewport).
+  static const int kDefaultPageCacheCapacity = 16;
+
+  /// LRU capacity for two-page viewport.
+  static const int kTwoPageCacheCapacity = 20;
+
+  int _maxCacheSize = kDefaultPageCacheCapacity;
+
+  /// Maximum number of rendered pages kept in the LRU cache (16–20).
+  int get pageCacheCapacity => _maxCacheSize;
+
+  set pageCacheCapacity(int value) {
+    _maxCacheSize = value.clamp(kDefaultPageCacheCapacity, kTwoPageCacheCapacity);
+    while (_pageCache.length > _maxCacheSize) {
+      _pageCache.remove(_pageCache.keys.first);
+    }
+  }
 
   /// Total number of ayahs in the Quran.
   static const int _kAyahCount = 6236;
@@ -78,6 +96,9 @@ class HiveQuranRepository implements IQuranRepository {
 
   /// Cached Juz data for quick access.
   final _juzCache = <int, Juz>{};
+
+  /// Cached Hizb data for quick access.
+  final _hizbCache = <int, Hizb>{};
 
   /// Cached Basmalah glyph.
   String? _basmalahCache;
@@ -137,6 +158,14 @@ class HiveQuranRepository implements IQuranRepository {
         final juz = _boxManager!.juzsBox.get(key);
         if (juz != null) {
           _juzCache[juz.number] = juz;
+        }
+      }
+
+      // Pre-cache all hizbs (60 items)
+      for (final key in _boxManager!.hizbsBox.keys) {
+        final hizb = _boxManager!.hizbsBox.get(key);
+        if (hizb != null) {
+          _hizbCache[hizb.number] = hizb;
         }
       }
 
@@ -251,6 +280,73 @@ class HiveQuranRepository implements IQuranRepository {
   Juz? getJuzSync(int number) => _juzCache[number];
 
   @override
+  ({int startAyahId, int endAyahId})? juzAyahBounds(int juzNumber) {
+    final juz = _juzCache[juzNumber];
+    final start = juz?.startAyahId;
+    if (start == null) return null;
+    final end = juz?.endAyahId ?? _fallbackJuzEndAyahId(juzNumber);
+    if (end == null) return null;
+    return (startAyahId: start, endAyahId: end);
+  }
+
+  int? _fallbackJuzEndAyahId(int juzNumber) {
+    if (juzNumber >= 30) return _kAyahCount;
+    final nextStart = _juzCache[juzNumber + 1]?.startAyahId;
+    return nextStart == null ? null : nextStart - 1;
+  }
+
+  @override
+  Future<Hizb> getHizb(int number) async {
+    await _ensureReady();
+    final hizb = _hizbCache[number];
+    if (hizb == null) throw ArgumentError('Hizb $number not found');
+    return hizb;
+  }
+
+  @override
+  Future<List<Hizb>> getHizbs() async {
+    await _ensureReady();
+    return _hizbCache.values.toList()
+      ..sort((a, b) => a.number.compareTo(b.number));
+  }
+
+  @override
+  Map<int, Hizb> getHizbsSync() => Map.unmodifiable(_hizbCache);
+
+  @override
+  Future<int> getHizbStartPage(int hizbNumber) async {
+    await _ensureReady();
+    final hizb = _hizbCache[hizbNumber];
+    if (hizb?.startPage != null) {
+      return hizb!.startPage!;
+    }
+    final startAyahId = hizb?.startAyahId;
+    if (startAyahId != null) {
+      return getPageForAyah(startAyahId);
+    }
+    throw ArgumentError('Hizb $hizbNumber not found');
+  }
+
+  @override
+  Hizb? getHizbSync(int number) => _hizbCache[number];
+
+  @override
+  ({int startAyahId, int endAyahId})? hizbAyahBounds(int hizbNumber) {
+    final hizb = _hizbCache[hizbNumber];
+    final start = hizb?.startAyahId;
+    if (start == null) return null;
+    final end = hizb?.endAyahId ?? _fallbackHizbEndAyahId(hizbNumber);
+    if (end == null) return null;
+    return (startAyahId: start, endAyahId: end);
+  }
+
+  int? _fallbackHizbEndAyahId(int hizbNumber) {
+    if (hizbNumber >= 60) return _kAyahCount;
+    final nextStart = _hizbCache[hizbNumber + 1]?.startAyahId;
+    return nextStart == null ? null : nextStart - 1;
+  }
+
+  @override
   QuranPage? peekCachedPage(int page) {
     if (_pageCache.containsKey(page)) {
       final data = _pageCache.remove(page)!;
@@ -272,7 +368,7 @@ class HiveQuranRepository implements IQuranRepository {
     _pageCache[page] = data;
 
     // Evict oldest if cache is full
-    if (_pageCache.length > _kMaxCacheSize) {
+    if (_pageCache.length > _maxCacheSize) {
       _pageCache.remove(_pageCache.keys.first);
     }
 
@@ -510,6 +606,7 @@ class HiveQuranRepository implements IQuranRepository {
     _initCompleter = null;
     _surahCache.clear();
     _juzCache.clear();
+    _hizbCache.clear();
     _basmalahCache = null;
     _globalAyahIdStartBySurah = null;
     _instance = null;

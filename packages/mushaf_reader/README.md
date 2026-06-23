@@ -32,9 +32,10 @@ If you need a full app experience, use this package as the rendering layer and b
 | Page rendering       | `MushafPage`, `MushafPageRange`, `MushafReader` (`pagesPerViewport: 1` or `2`) |
 | Ayah tap / highlight | Per-ayah selection with customizable highlight styles                          |
 | Page chrome          | Surah headers, Basmalah, juz marker, page number                               |
-| Data models          | `Ayah`, `Surah`, `Juz`, `QuranPage`, `MushafPageInfo`                          |
-| Navigation API       | `jumpToPage`, `jumpToSurah`, `jumpToJuz`, `jumpToAyah`, `searchAyahs`          |
-| Constants & helpers  | `MushafConstants`, `Ayah.globalIdFor()`, `AyahIdResolver`                      |
+| Data models          | `Ayah`, `Surah`, `Juz`, `Hizb`, `QuranPage`, `MushafPageInfo`                  |
+| Navigation API       | `jumpToPage`, `jumpToSurah`, `jumpToJuz`, `jumpToHizb`, `jumpToAyah`, `searchAyahs` |
+| Division bounds      | `juzAyahBounds`, `hizbAyahBounds` — global ayah id ranges per juz/hizb         |
+| Constants & helpers  | `MushafConstants`, `Ayah.globalIdFor()`, `Ayah.hizb`, `AyahIdResolver`       |
 | Callback typedefs    | `AyahTapCallback`, `AyahIdTapCallback`, `SurahTapCallback`, …                  |
 | Fonts & scaling      | `MushafFonts`, `MushafScale`, `MushafTextStyleMerger`                          |
 
@@ -211,7 +212,7 @@ When you already have surah metadata from storage, `[AyahIdResolver](https://pub
 | `MushafReader`                              | Swipeable reader; `pagesPerViewport: 1` (default) or `2` for spreads                                                       |
 | `MushafPage`                                | One Mushaf page — use in custom layouts                                                                                    |
 | `MushafPageRange`                           | Ayah range on one or more pages — excerpts without manual fragment logic                                                   |
-| `MushafReaderController`                    | Navigation, selection, async data (`getAyah`, `getPageInfo`, `searchAyahs`, …); exposes `repository` for direct `IQuranRepository` access |
+| `MushafReaderController`                    | Navigation (`jumpToJuz`, `jumpToHizb`, …), selection, async data (`getAyah`, `getHizb`, `getPageInfo`, `searchAyahs`, …); `juzAyahBounds` / `hizbAyahBounds`; exposes `repository` for direct `IQuranRepository` access |
 | `AyahWidget`                                | Standalone ayah by global id or surah:ayah                                                                                 |
 | `BasmalahWidget`, `SurahHeaderWidget`, etc. | Low-level pieces for custom UIs                                                                                            |
 
@@ -318,7 +319,7 @@ Shipped with the package (declared in `pubspec.yaml`):
 | Asset               | Purpose                                                  |
 | ------------------- | -------------------------------------------------------- |
 | `assets/otf_fonts/` | 604 page-specific QCF4 fonts plus shared header glyphs   |
-| `assets/hive/`      | Offline Quran text, surah/juz metadata, and page layouts |
+| `assets/hive/`      | Offline Quran text, surah/juz/hizb metadata, and page layouts |
 | `assets/images/`    | Surah header and banner SVGs                             |
 
 

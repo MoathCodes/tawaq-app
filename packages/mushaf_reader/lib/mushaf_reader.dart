@@ -53,6 +53,7 @@ export 'src/data/repository/i_quran_repo.dart';
 // Core models
 export 'src/data/models/ayah.dart';
 export 'src/data/models/ayah_fragment.dart';
+export 'src/data/models/hizb.dart';
 export 'src/data/models/juz.dart';
 export 'src/data/models/page_line.dart';
 export 'src/data/models/mushaf_page_info.dart';
@@ -62,8 +63,10 @@ export 'src/data/models/quran_page.dart';
 export 'src/data/models/surah_block.dart';
 export 'src/data/models/revelation_type.dart';
 export 'src/data/models/surah.dart';
+export 'src/data/models/surah_timing.dart';
 // Controller
 export 'src/logic/mushaf_reader_controller.dart';
+export 'src/logic/mushaf_reader_listenables.dart';
 // Screens
 export 'src/presentation/screens/mushaf_page.dart';
 export 'src/presentation/screens/mushaf_reader.dart';

@@ -7,6 +7,7 @@
 /// - `ayahs.hive` - All 6236 ayahs keyed by ayah ID
 /// - `surahs.hive` - All 114 surahs keyed by surah number
 /// - `juzs.hive` - All 30 juzs keyed by juz number
+/// - `hizbs.hive` - All 60 hizbs keyed by hizb number (derived from hizbQuarter)
 /// - `pageLayouts.hive` - Page layouts keyed by page number (1-604)
 /// - `search_index.hive` - Pre-normalized plain text for ayah search
 /// - `metadata.hive` - Key-value metadata (e.g., basmalah glyph)
@@ -19,9 +20,11 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mushaf_reader/src/core/arabic_search_normalize.dart';
+import 'package:mushaf_reader/src/core/hizb_quarter.dart';
 import 'package:mushaf_reader/src/core/search_index_entry.dart';
 import 'package:mushaf_reader/src/data/hive/hive_adapters.dart';
 import 'package:mushaf_reader/src/data/models/ayah.dart';
+import 'package:mushaf_reader/src/data/models/hizb.dart';
 import 'package:mushaf_reader/src/data/models/juz.dart';
 import 'package:mushaf_reader/src/data/models/page_layouts.dart';
 import 'package:mushaf_reader/src/data/models/revelation_type.dart';
@@ -59,6 +62,7 @@ Future<void> main() async {
   // Register adapters
   Hive
     ..registerAdapter(JuzAdapter())
+    ..registerAdapter(HizbAdapter())
     ..registerAdapter(AyahAdapter())
     ..registerAdapter(PageLayoutsAdapter())
     ..registerAdapter(SurahAdapter())
@@ -95,9 +99,13 @@ Future<void> main() async {
   print('Generating search_index.hive...');
   await _generateSearchIndexBox(surahsData);
 
-  // Generate Juzs box (needs surahsData to calculate start page/ayah)
+  // Generate Juzs box (needs surahsData to calculate start/end ayah)
   print('Generating juzs.hive...');
   await _generateJuzsBox(juzsData, surahsData);
+
+  // Generate Hizbs box (derived from hizbQuarter during ayah scan)
+  print('Generating hizbs.hive...');
+  await _generateHizbsBox(surahsData);
 
   // Generate PageLayouts box
   print('Generating pageLayouts.hive...');
@@ -295,18 +303,19 @@ Future<void> _generateJuzsBox(
 ) async {
   final box = await Hive.openBox<Juz>('juzs');
 
-  // Build a map of juz number -> first ayah info (for startPage, startAyahId)
+  // Build a map of juz number -> first/last ayah info
   final juzFirstAyah = <int, Map<String, int>>{};
+  final juzLastAyahId = <int, int>{};
   for (final s in surahsData) {
     final ayahs = s['ayahs'] as List<dynamic>;
     for (final a in ayahs) {
       final juzNum = a['juz'] as int;
       final ayahId = a['number'] as int;
       final page = a['page'] as int;
-      // Only store if this is the first ayah we've seen for this juz
       if (!juzFirstAyah.containsKey(juzNum)) {
         juzFirstAyah[juzNum] = {'ayahId': ayahId, 'page': page};
       }
+      juzLastAyahId[juzNum] = ayahId;
     }
   }
 
@@ -321,6 +330,7 @@ Future<void> _generateJuzsBox(
       glyph: glyph,
       startPage: firstAyah?['page'],
       startAyahId: firstAyah?['ayahId'],
+      endAyahId: juzLastAyahId[number],
     );
     await box.put(number, juz);
   }
@@ -328,6 +338,58 @@ Future<void> _generateJuzsBox(
   final count = box.length;
   await box.close();
   print('  - $count juzs written');
+}
+
+Future<void> _generateHizbsBox(List<dynamic> surahsData) async {
+  final box = await Hive.openBox<Hizb>('hizbs');
+
+  final hizbFirst = <int, Map<String, int>>{};
+  final hizbLastAyahId = <int, int>{};
+
+  for (final s in surahsData) {
+    final surahNumber = s['number'] as int;
+    final ayahs = s['ayahs'] as List<dynamic>;
+
+    for (final a in ayahs) {
+      final hizbQuarter = a['hizbQuarter'] as int?;
+      if (hizbQuarter == null) continue;
+
+      final hizbNum = hizbNumberFromQuarter(hizbQuarter);
+      final ayahId = a['number'] as int;
+      final page = a['page'] as int;
+      final ayahInSurah = a['numberInSurah'] as int;
+
+      if (!hizbFirst.containsKey(hizbNum)) {
+        hizbFirst[hizbNum] = {
+          'ayahId': ayahId,
+          'page': page,
+          'surahNumber': surahNumber,
+          'ayahInSurah': ayahInSurah,
+          'hizbQuarter': hizbQuarter,
+        };
+      }
+      hizbLastAyahId[hizbNum] = ayahId;
+    }
+  }
+
+  for (var hizbNum = 1; hizbNum <= 60; hizbNum++) {
+    final first = hizbFirst[hizbNum];
+    final hizb = Hizb(
+      number: hizbNum,
+      startAyahId: first?['ayahId'],
+      endAyahId: hizbLastAyahId[hizbNum],
+      startPage: first?['page'],
+      startSurahNumber: first?['surahNumber'],
+      startAyahInSurah: first?['ayahInSurah'],
+      startHizbQuarter:
+          first?['hizbQuarter'] ?? startHizbQuarterForHizb(hizbNum),
+    );
+    await box.put(hizbNum, hizb);
+  }
+
+  final count = box.length;
+  await box.close();
+  print('  - $count hizbs written');
 }
 
 Future<void> _generateMetadataBox(List<dynamic> basmalahData) async {

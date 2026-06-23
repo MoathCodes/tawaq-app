@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:mushaf_reader/src/core/hizb_quarter.dart';
 import 'package:mushaf_reader/src/data/ayah_id_resolver.dart';
 import 'package:mushaf_reader/src/data/models/surah.dart';
 
@@ -117,6 +118,14 @@ abstract class Ayah with _$Ayah {
   }) = _Ayah;
 
   const Ayah._();
+
+  /// Hizb number (1–60) derived from [hizbQuarter].
+  int? get hizb =>
+      hizbQuarter == null ? null : hizbNumberFromQuarter(hizbQuarter!);
+
+  /// Quarter within the hizb (1–4) derived from [hizbQuarter].
+  int? get quarterInHizb =>
+      hizbQuarter == null ? null : quarterInHizbFromQuarter(hizbQuarter!);
 
   /// Resolves a surah/verse pair to the global ayah id (1–6236) without I/O.
   ///

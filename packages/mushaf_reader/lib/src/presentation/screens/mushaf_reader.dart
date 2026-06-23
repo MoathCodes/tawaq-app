@@ -159,8 +159,19 @@ class _MushafReaderState extends State<MushafReader> {
   }
 
   @override
+  void didUpdateWidget(MushafReader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != null &&
+        widget.pagesPerViewport != oldWidget.pagesPerViewport) {
+      _controller.pagesPerViewport = widget.pagesPerViewport;
+      if (_isInitialized) {
+        setState(() {});
+      }
+    }
+  }
+
+  @override
   void dispose() {
-    _controller.removeListener(_onControllerChanged);
     if (_ownsController) {
       _controller.dispose();
     }
@@ -181,24 +192,25 @@ class _MushafReaderState extends State<MushafReader> {
       );
       _ownsController = true;
     }
-    _controller.addListener(_onControllerChanged);
     _initController();
   }
 
   Widget _buildSinglePage(int page) {
-    return MushafPage(
-      key: ValueKey(page),
-      page: page,
-      controller: _controller,
-      style: widget.style,
-      loadingWidget: widget.pageLoadingWidget,
-      hideHeader: widget.hideHeader,
-      onAyahIdTap: widget.onAyahTap != null
-          ? (ayahId) => _handleAyahTap(ayahId)
-          : null,
-      onAyahIdLongPress: widget.onAyahLongPress != null
-          ? (ayahId) => _handleAyahLongPress(ayahId)
-          : null,
+    return RepaintBoundary(
+      child: MushafPage(
+        key: ValueKey(page),
+        page: page,
+        controller: _controller,
+        style: widget.style,
+        loadingWidget: widget.pageLoadingWidget,
+        hideHeader: widget.hideHeader,
+        onAyahIdTap: widget.onAyahTap != null
+            ? (ayahId) => _handleAyahTap(ayahId)
+            : null,
+        onAyahIdLongPress: widget.onAyahLongPress != null
+            ? (ayahId) => _handleAyahLongPress(ayahId)
+            : null,
+      ),
     );
   }
 
@@ -240,12 +252,6 @@ class _MushafReaderState extends State<MushafReader> {
     }
   }
 
-  void _onControllerChanged() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
   void _onPageChanged(int index) {
     _controller.onPageChanged(index);
 
@@ -269,6 +275,6 @@ class _MushafReaderState extends State<MushafReader> {
       }
     }
 
-    _controller.preloadAdjacentPages(count: 2);
+    _controller.preloadAdjacentPages();
   }
 }

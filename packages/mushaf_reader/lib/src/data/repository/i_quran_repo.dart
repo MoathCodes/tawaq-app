@@ -1,4 +1,5 @@
 import 'package:mushaf_reader/src/data/models/ayah.dart';
+import 'package:mushaf_reader/src/data/models/hizb.dart';
 import 'package:mushaf_reader/src/data/models/juz.dart';
 import 'package:mushaf_reader/src/data/models/quran_page.dart';
 import 'package:mushaf_reader/src/data/models/surah.dart';
@@ -132,6 +133,35 @@ abstract class IQuranRepository {
   ///
   /// Returns null if not cached. Call [ensureReady] first.
   Juz? getJuzSync(int number);
+
+  /// Global ayah id bounds for [juzNumber] (1–30), when known.
+  ({int startAyahId, int endAyahId})? juzAyahBounds(int juzNumber);
+
+  /// Retrieves a Hizb by its number.
+  ///
+  /// [number] must be in the range 1-60.
+  Future<Hizb> getHizb(int number);
+
+  /// Retrieves all 60 Hizbs.
+  Future<List<Hizb>> getHizbs();
+
+  /// Gets all Hizbs synchronously from cache.
+  ///
+  /// Returns empty map if not cached. Call [ensureReady] first.
+  Map<int, Hizb> getHizbsSync();
+
+  /// Gets the first page of a specific Hizb.
+  ///
+  /// [hizbNumber] must be in the range 1-60.
+  Future<int> getHizbStartPage(int hizbNumber);
+
+  /// Gets a Hizb synchronously from cache.
+  ///
+  /// Returns null if not cached. Call [ensureReady] first.
+  Hizb? getHizbSync(int number);
+
+  /// Global ayah id bounds for [hizbNumber] (1–60), when known.
+  ({int startAyahId, int endAyahId})? hizbAyahBounds(int hizbNumber);
 
   /// Retrieves a complete Mushaf page with all content and layout data.
   ///

@@ -187,16 +187,6 @@ class _MushafPageState extends State<MushafPage>
       return widget.loadingWidget ?? MushafLoading.none;
     }
 
-    if (_controller != null && widget.enableAyahHighlight) {
-      return ListenableBuilder(
-        listenable: _controller!,
-        builder: (context, child) {
-          return _buildPageContent(_pageData!);
-        },
-      );
-    }
-
-    // Otherwise just build the content
     return _buildPageContent(_pageData!);
   }
 
@@ -341,15 +331,39 @@ class _MushafPageState extends State<MushafPage>
                 if (widget.hideHeader != true)
                   _buildHeader(data, contentWidth, basmalahFontSize, style),
                 const Spacer(),
-                ..._buildSurahBlocks(
-                  data,
-                  contentWidth,
-                  scale,
-                  defaultAyahStyle,
-                  activeStyle,
-                  style,
-                  basmalahFontSize,
-                ),
+                if (widget.enableAyahHighlight && _controller != null)
+                  ListenableBuilder(
+                    listenable: _controller!.selection,
+                    builder: (context, _) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ..._buildSurahBlocks(
+                            data,
+                            contentWidth,
+                            scale,
+                            defaultAyahStyle,
+                            activeStyle,
+                            style,
+                            basmalahFontSize,
+                            addTrailingSpacer: false,
+                          ),
+                        ],
+                      );
+                    },
+                  )
+                else
+                  ..._buildSurahBlocks(
+                    data,
+                    contentWidth,
+                    scale,
+                    defaultAyahStyle,
+                    activeStyle,
+                    style,
+                    basmalahFontSize,
+                  ),
+                if (widget.enableAyahHighlight && _controller != null)
+                  const Spacer(),
                 PageNumberWidget(
                   page: widget.page,
                   fontSize: pageNumberFontSize,
@@ -381,8 +395,9 @@ class _MushafPageState extends State<MushafPage>
     TextStyle defaultAyahStyle,
     TextStyle activeStyle,
     MushafStyle mushafStyle,
-    double basmalahFontSize,
-  ) {
+    double basmalahFontSize, {
+    bool addTrailingSpacer = true,
+  }) {
     return MushafPageSurahBlocks.build(
       data: data,
       pageNumber: widget.page,
@@ -393,12 +408,21 @@ class _MushafPageState extends State<MushafPage>
       mushafStyle: mushafStyle,
       basmalahFontSize: basmalahFontSize,
       enableAyahHighlight: widget.enableAyahHighlight,
+      addTrailingSpacer: addTrailingSpacer,
       selectedAyahId: widget.enableAyahHighlight
           ? (_controller?.selectedAyahId ?? _selectedAyahId)
           : null,
       onAyahSelection: (ayahId) {
         if (!widget.enableAyahHighlight) return;
-        final currentSelection = _controller?.selectedAyahId ?? _selectedAyahId;
+
+        // When the host provides a tap callback, delegate selection to it alone.
+        if (widget.onAyahIdTap != null) {
+          widget.onAyahIdTap!(ayahId);
+          return;
+        }
+
+        final currentSelection =
+            _controller?.selectedAyahId ?? _selectedAyahId;
         if (currentSelection == ayahId) {
           if (_controller != null) {
             _controller!.clearSelection();
@@ -412,7 +436,6 @@ class _MushafPageState extends State<MushafPage>
             setState(() => _selectedAyahId = ayahId);
           }
         }
-        widget.onAyahIdTap?.call(ayahId);
       },
       onAyahLongPress: widget.enableAyahHighlight
           ? widget.onAyahIdLongPress

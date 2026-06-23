@@ -77,7 +77,7 @@ class _TwoPageReaderDemoState extends State<TwoPageReaderDemo> {
       body: Column(
         children: [
           ListenableBuilder(
-            listenable: _controller,
+            listenable: _controller.page,
             builder: (context, _) {
               final left = _controller.currentPage;
               final right = (left + 1).clamp(1, MushafConstants.pageCount);

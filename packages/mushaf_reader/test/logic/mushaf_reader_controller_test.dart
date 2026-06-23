@@ -75,6 +75,26 @@ void main() {
       expect(controller.currentPage, 22);
     });
 
+    test('jumpToHizb navigates correctly', () async {
+      await controller.jumpToHizb(5);
+      // Mock repo: (5-1)*10 + 1 = 41
+      expect(controller.currentPage, 41);
+    });
+
+    test('juzAyahBounds returns mock bounds', () {
+      final bounds = controller.juzAyahBounds(2);
+      expect(bounds, isNotNull);
+      expect(bounds!.startAyahId, 201);
+      expect(bounds.endAyahId, 400);
+    });
+
+    test('hizbAyahBounds returns mock bounds', () {
+      final bounds = controller.hizbAyahBounds(3);
+      expect(bounds, isNotNull);
+      expect(bounds!.startAyahId, 201);
+      expect(bounds.endAyahId, 300);
+    });
+
     test('getSurahSync returns null when surah is missing', () async {
       await controller.ensureReady();
       expect(controller.getSurahSync(999), isNull);
