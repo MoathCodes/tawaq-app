@@ -1,54 +1,84 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
+import 'package:tawaq/core/shortcuts/app_shortcut_invocation.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_registry.dart';
 
-/// Builds a [CallbackShortcuts] binding map from registry definitions and
-/// handlers.
+/// Builds activator bindings for global shortcuts via [GlobalAppShortcut.invokeGlobal].
+Map<ShortcutActivator, VoidCallback> buildGlobalShortcutBindings({
+  required Iterable<GlobalAppShortcut> shortcuts,
+  required AppShortcutInvocation Function() invocationFor,
+  bool Function(AppShortcut shortcut)? shouldSuppress,
+}) {
+  final bindings = <ShortcutActivator, VoidCallback>{};
+  final usedKeys = <String, GlobalAppShortcut>{};
+
+  for (final shortcut in shortcuts) {
+    for (final activator in shortcut.activators) {
+      final key = activatorKey(activator);
+      if (kDebugMode) {
+        final existing = usedKeys[key];
+        assert(
+          existing == null || identical(existing, shortcut),
+          'Duplicate activator "$key" for $existing and $shortcut',
+        );
+      }
+      usedKeys[key] = shortcut;
+
+      bindings[activator] = () {
+        if (shouldSuppress != null && shouldSuppress(shortcut)) {
+          return;
+        }
+        shortcut.invokeGlobal(invocationFor());
+      };
+    }
+  }
+
+  return bindings;
+}
+
+/// Builds a [CallbackShortcuts] binding map for route/contextual shortcuts.
 Map<ShortcutActivator, VoidCallback> buildAppShortcutBindings({
-  required Set<AppShortcutId> shortcuts,
-  required Map<AppShortcutId, VoidCallback> handlers,
-  bool Function(AppShortcutDefinition definition)? shouldInclude,
-  bool Function(AppShortcutDefinition definition)? shouldSuppress,
+  required Set<AppShortcut> shortcuts,
+  required Map<AppShortcut, VoidCallback> handlers,
+  bool Function(AppShortcut shortcut)? shouldSuppress,
 }) {
   if (kDebugMode) {
-    for (final id in shortcuts) {
+    for (final shortcut in shortcuts) {
       assert(
-        handlers.containsKey(id),
-        'Missing handler for AppShortcutId.$id',
+        shortcut is! GlobalAppShortcut,
+        'Global shortcuts belong in ShellShortcutScope, not AppShortcutScope: '
+        '$shortcut',
+      );
+      assert(
+        handlers.containsKey(shortcut),
+        'Missing handler for $shortcut',
       );
     }
   }
 
   final bindings = <ShortcutActivator, VoidCallback>{};
-  final usedKeys = <String, AppShortcutId>{};
+  final usedKeys = <String, AppShortcut>{};
 
-  for (final id in shortcuts) {
-    final definition = appShortcutById[id];
-    if (definition == null) {
-      assert(false, 'Unknown AppShortcutId: $id');
+  for (final shortcut in shortcuts) {
+    final handler = handlers[shortcut];
+    if (handler == null) {
       continue;
     }
-    if (shouldInclude != null && !shouldInclude(definition)) continue;
 
-    final handler = handlers[id];
-    if (handler == null) continue;
-
-    for (final activator in definition.activators) {
+    for (final activator in shortcut.activators) {
       final key = activatorKey(activator);
       if (kDebugMode) {
         final existing = usedKeys[key];
         assert(
-          existing == null || existing == id,
-          'Duplicate activator "$key" for ${existing.name} and ${id.name}',
+          existing == null || identical(existing, shortcut),
+          'Duplicate activator "$key" for $existing and $shortcut',
         );
       }
-      usedKeys[key] = id;
+      usedKeys[key] = shortcut;
 
       bindings[activator] = () {
-        if (shouldSuppress != null && shouldSuppress(definition)) {
+        if (shouldSuppress != null && shouldSuppress(shortcut)) {
           return;
         }
         handler();
@@ -70,8 +100,8 @@ bool isTextInputFocused() {
   return context.findAncestorWidgetOfExactType<EditableText>() != null;
 }
 
-/// Returns true when [definition] should be suppressed due to text-field focus.
-bool shouldSuppressForTextFieldFocus(AppShortcutDefinition definition) {
-  if (definition.allowWhenTextFieldFocused) return false;
+/// Returns true when [shortcut] should be suppressed due to text-field focus.
+bool shouldSuppressForTextFieldFocus(AppShortcut shortcut) {
+  if (shortcut.allowWhenTextFieldFocused) return false;
   return isTextInputFocused();
 }

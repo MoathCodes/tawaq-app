@@ -1,13 +1,14 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/date_extensions.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_database.g.dart';
@@ -17,6 +18,7 @@ const _repairMetaKey = 'repaired_v1';
 /// Provides a singleton instance of the [PrayerDatabase].
 @Riverpod(keepAlive: true)
 PrayerDatabase prayerDatabase(Ref ref) {
+  ref.watch(hiveCoreInitProvider);
   final completionBox = Box<int, PrayerCompletion>('prayer_completions');
   final prayerDatabase = PrayerDatabase(completionBox);
   ref.onDispose(() async {
@@ -28,12 +30,13 @@ PrayerDatabase prayerDatabase(Ref ref) {
 /// One-time duplicate repair for legacy prayer completion rows.
 @Riverpod(keepAlive: true)
 Future<void> prayerCompletionsRepair(Ref ref) async {
+  await ref.watch(hiveCoreInitProvider.future);
   final repairedBox = Box<String, int>('prayer_completions_meta');
   final alreadyRepaired = (await repairedBox.get(_repairMetaKey) ?? 0) == 1;
   if (alreadyRepaired) return;
 
-  final settings = ref.read(prayerSettingsProvider).value;
-  final location = settings?.location ?? local;
+  final location =
+      ref.read(prayerTimeInputsProvider)?.location ?? local;
   final removed = await ref
       .read(prayerDatabaseProvider)
       .repairDuplicates(location);

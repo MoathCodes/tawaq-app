@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart' show FPopoverController;
-import 'package:forui/widgets/popover.dart' show FPopoverController;
+import 'package:tawaq/core/shortcuts/app_shortcut.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_bindings.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 
-/// Binds a set of registry shortcuts to keyboard activators.
+/// Binds route/contextual catalog shortcuts to keyboard activators.
 ///
-/// Uses Flutter's [CallbackShortcuts] with an optional [Focus] wrapper — the
-/// same pattern as pre-engine Quran/Fortress shortcuts. Screen-specific focus
-/// (search fields, popovers) is delegated to Forui widgets via their own
-/// [FocusNode] / [FPopoverController] APIs, not managed here.
+/// Uses Flutter's [CallbackShortcuts] with an optional [Focus] wrapper.
+/// Global shortcuts belong in shell shortcut scope instead.
 class AppShortcutScope extends StatefulWidget {
   /// Creates a shortcut scope.
   const AppShortcutScope({
@@ -22,11 +18,11 @@ class AppShortcutScope extends StatefulWidget {
     this.shouldIgnore,
   });
 
-  /// Shortcut IDs active in this scope.
-  final Set<AppShortcutId> shortcuts;
+  /// Shortcuts active in this scope (route or contextual only).
+  final Set<AppShortcut> shortcuts;
 
-  /// Handlers keyed by [AppShortcutId].
-  final Map<AppShortcutId, VoidCallback> handlers;
+  /// Handlers keyed by [AppShortcut].
+  final Map<AppShortcut, VoidCallback> handlers;
 
   /// Child widget tree.
   final Widget child;
@@ -43,7 +39,7 @@ class AppShortcutScope extends StatefulWidget {
 
 class _AppShortcutScopeState extends State<AppShortcutScope> {
   Map<ShortcutActivator, VoidCallback>? _bindings;
-  Set<AppShortcutId>? _boundShortcuts;
+  Set<AppShortcut>? _boundShortcuts;
 
   @override
   Widget build(BuildContext context) {
@@ -72,21 +68,18 @@ class _AppShortcutScopeState extends State<AppShortcutScope> {
       return;
     }
 
-    _boundShortcuts = Set<AppShortcutId>.from(widget.shortcuts);
+    _boundShortcuts = Set<AppShortcut>.from(widget.shortcuts);
     _bindings = buildAppShortcutBindings(
       shortcuts: widget.shortcuts,
-      handlers: {
-        for (final id in widget.shortcuts)
-          id: () => widget.handlers[id]?.call(),
-      },
-      shouldSuppress: (definition) {
+      handlers: widget.handlers,
+      shouldSuppress: (shortcut) {
         if (widget.shouldIgnore?.call() ?? false) return true;
-        return shouldSuppressForTextFieldFocus(definition);
+        return shouldSuppressForTextFieldFocus(shortcut);
       },
     );
   }
 
-  bool _setEquals(Set<AppShortcutId>? a, Set<AppShortcutId> b) {
+  bool _setEquals(Set<AppShortcut>? a, Set<AppShortcut> b) {
     if (a == null) return false;
     if (a.length != b.length) return false;
     return a.containsAll(b);

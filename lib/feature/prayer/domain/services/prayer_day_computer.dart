@@ -4,31 +4,27 @@ import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
 import 'package:timezone/timezone.dart';
 
 /// Shared rounding policy for all prayer-time reads (live and historical).
 const kPrayerTimesRoundToMinutes = false;
 
-/// Computes prayer times for [anchor] using [settings].
-///
-/// Returns null when [settings] coordinates are the (0,0) sentinel.
+/// Computes prayer times for [anchor] using [inputs].
 PrayerTimes? computePrayerTimesForAnchor({
-  required PrayerSettings settings,
+  required PrayerTimeInputs inputs,
   required DateTime anchor,
   required PrayerRepo repo,
   Logger? log,
 }) {
-  if (!settings.isLocationReady) return null;
-
   var times = repo.getPrayerTimes(
     anchor,
-    settings.coordinates,
-    settings.method,
+    inputs.coordinates,
+    inputs.method,
     roundToMinutes: kPrayerTimesRoundToMinutes,
   );
 
-  if (HijriDate.fromDate(anchor).hMonth == 9 && settings.method is UmmAlQura) {
+  if (HijriDate.fromDate(anchor).hMonth == 9 && inputs.method is UmmAlQura) {
     log?.d('Adjusting Isha for Ramadan');
     times = times.copyWith(isha: times.isha.add(const Duration(minutes: 30)));
   }
@@ -37,27 +33,23 @@ PrayerTimes? computePrayerTimesForAnchor({
 }
 
 /// Builds today/yesterday prayer bundles for the calendar day of [anchorNow].
-///
-/// Returns null when location is not ready (0,0 coordinates).
 PrayerDayBundle? computePrayerDayBundle({
-  required PrayerSettings settings,
+  required PrayerTimeInputs inputs,
   required TZDateTime anchorNow,
   required PrayerRepo repo,
   Logger? log,
 }) {
-  if (!settings.isLocationReady) return null;
-
-  final location = settings.location;
+  final location = inputs.location;
   final localNow = TZDateTime.from(anchorNow, location);
 
   final today = computePrayerTimesForAnchor(
-    settings: settings,
+    inputs: inputs,
     anchor: localNow,
     repo: repo,
     log: log,
   );
   final yesterday = computePrayerTimesForAnchor(
-    settings: settings,
+    inputs: inputs,
     anchor: localNow.subtract(const Duration(days: 1)),
     repo: repo,
     log: log,

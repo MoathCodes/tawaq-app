@@ -30,7 +30,8 @@ Five features follow clean architecture (`data/` → `domain/` → `presentation
 | ----------------- | ---------------------- | ---------------------------------------------------------------------------------------------- |
 | `prayer`          | `/prayer`              | Hive completions + adhan_dart                                                                  |
 | `quran`           | `/quran`               | mushaf_reader + SQLite tafsir/translations; uses `data/sources/` and `presentation/providers/` |
-| `settings`        | `/settings`, `/wizard` | Persisted prefs + onboarding wizard                                                            |
+| `settings`        | `/settings`            | Persisted prefs                                                                                |
+| `onboarding`      | `/onboarding`          | First-run locale + setup flow (standalone, outside shell)                                      |
 | `hadith`          | `/hadith`              | Dorar API + local Hive favorites/recents                                                       |
 | `muslim_fortress` | `/muslim_fortress`     | hisn_elmoslem package + SQLite assets                                                          |
 
@@ -68,9 +69,9 @@ Settings notifiers use `@JsonPersist()` (from `riverpod_annotation/experimental/
 - **UI state** (split from legacy monolith) in `ui_state_settings_providers.dart`:
   - `SidebarSettingsNotifier` — shell sidebar collapsed
   - `PrayerAnalyticsSettingsNotifier` — analytics period
-  - `QuranScreenSettingsNotifier` — page, layout, ayah, side width, tafsir/translation toggles, `**QuranTextScale`**
-  - `HadithScreenSettingsNotifier` — filters, tab, side width
-  - `FortressScreenSettingsNotifier` — sidebar tab, favorites, side width
+  - `QuranScreenSettingsNotifier` — page, layout, ayah, side panel ratio + collapsed, tafsir/translation toggles, `**QuranTextScale`**
+  - `HadithScreenSettingsNotifier` — filters, tab, side panel ratio + collapsed
+  - `FortressScreenSettingsNotifier` — sidebar tab, favorites, side panel ratio + collapsed
 - `FirstPrayerRecordedDate` — ISO date of first recorded prayer (analytics)
 
 Common internal pattern: `_update()` helper that guards against null state, applies a transform, and logs the changed field name. Async notifiers call `persist()` in `build()` after `await .future`; `LocaleNotifier` calls `persist()` synchronously. All use `StorageOptions(cacheTime: unsafe_forever)`. One-time migration: `stateSettingsLegacyMigrationProvider` splits the old monolithic blob.
@@ -85,7 +86,7 @@ Typed **go_router** setup in `lib/core/routing/route_provider.dart`:
 - `appRouterProvider` — root `GoRouter`, initial `/prayer`
 - `AppShellRoute` wraps nested navigator in `PageShell`
 - `mainRoutesProvider` (prayer, quran, hadith, muslim_fortress) + `secondaryRoutesProvider` (settings, about)
-- `WizardRoute` at `/wizard` (standalone, outside shell)
+- `OnboardingRoute` at `/onboarding` (standalone, outside shell)
 - Navigation: typed `.go(context)` on route classes; sidebar/bottom nav consume route providers
 
 ## Storage
@@ -103,7 +104,7 @@ The entire UI is built with **forui** (see `pubspec.yaml`). Access theme via:
 - `context.theme.colors` → `FColors`
 - `context.theme.isDark` → `bool` (custom extension checking `colors.brightness`)
 - `FTheme.of(context)` → alternative explicit lookup (same as `context.theme`)
-- `context.theme.buttonStyles` / `selectStyle()` — custom button/select styles in `lib/theme/button_styles.dart`, `lib/theme/select_style.dart`
+- `selectStyle()` — custom select styles in `lib/theme/select_style.dart`; per-control button styling uses Forui defaults plus `windowControlButtonStyle()` / `closeButtonStyle()` in `lib/theme/button_styles.dart` (full `buttonStyles()` factory is not wired to `FThemeData` yet)
 
 ### FColors — key property reference
 
@@ -151,13 +152,18 @@ Defined in `lib/theme/theme_extensions.dart`:
 
 | File                               | API                                                                                                             | Used by                       |
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------------- | ----------------------------- |
-| `responsive.dart`                  | Viewport helpers, `FBreakpoint` enum                                                                            | All features                  |
-| `split_pane_constraints.dart`      | `kStudyPanelMinExtent` (320), `kMainPaneMinExtent` (480), `kMushafPaneMinExtent` (400), `resolveSplitExtents()` | Hadith, Quran study, Fortress |
+| `responsive.dart`                  | Viewport helpers (`isAtLeast`, `isLessThan`), `isContainerAtLeast` for `LayoutBuilder` widths, `FBreakpoint` enum | All features                  |
+| `split_pane_constraints.dart`      | `kStudyPanelMinExtent` (320), `kMainPaneMinExtent` (480), `kMushafPaneMinExtent` (400), `resolveSplitExtents()`, `migrateSidePanelWidthToRatio()`, `minSplitContainerWidth()`, `canUseHorizontalSplit()` | Hadith, Quran study, Fortress |
+| `persisted_horizontal_split_pane.dart` | `PersistedHorizontalSplitPane` — `FResizableRegion.flex` split that persists a **ratio**; stable regions across rebuilds | Hadith, Quran study, Fortress |
+| `collapsible_horizontal_split_pane.dart` | `CollapsibleHorizontalSplitPane` — wraps the above; collapses the side pane via `FCollapsible(axis: horizontal)` with a divider-edge handle + rail | Hadith, Quran study, Fortress |
 | `viewport_dialog_constraints.dart` | `dialogConstraints()`, `selectPopoverPortalConstraints()`                                                       | Dialogs, Quran selectors      |
 | `responsive_field_row.dart`        | `ResponsiveFieldRow` — column below 640px, row above                                                            | Settings forms, wizard        |
+| `lazy_tab_content.dart`            | `LazyTabContent` (Material `TabController`) and `LazyIndexedContent` (index-controlled tabs e.g. Forui `FTabs`) | Settings, Hadith filters    |
 
 
-**FResizable split-pane convention:** `LayoutBuilder` → feature-specific extent resolver → `resolveSplitExtents()` → wrap `FResizable` in `Directionality(textDirection: TextDirection.ltr)` for consistent resize handles in RTL; restore user `Directionality` inside each region. Persist side width via feature screen-settings notifier on `onResizeEnd`.
+**FResizable split-pane convention:** prefer the shared `PersistedHorizontalSplitPane` / `CollapsibleHorizontalSplitPane` over hand-rolled `FResizable`. Pattern: `LayoutBuilder` → feature-specific extent resolver → `resolveSplitExtents()` → `FResizableRegion.flex` regions inside a `Directionality(textDirection: TextDirection.ltr)` (consistent resize handles in RTL); restore user `Directionality` inside each region. Side size is persisted as a **ratio** (0..1, not pixels) via the feature screen-settings notifier on `onResizeEnd`, so panels keep their share across monitor sizes; legacy pixel state upgrades through `migrateSidePanelWidthToRatio()`. Collapsed state is a separate persisted bool per screen.
+
+**Split gating:** before rendering a horizontal split, check `canUseHorizontalSplit(containerWidth: constraints.maxWidth, sideMin: kStudyPanelMinExtent, mainMin: kMainPaneMinExtent)` (or `kMushafPaneMinExtent` for Quran study). When false, fall back to a stacked layout and prefer showing `mainPane` only inside `PersistedHorizontalSplitPane` when normalized extents collapse to zero.
 
 ### Text scaling
 
@@ -177,15 +183,14 @@ When colors need to represent a hierarchy (best→worst, active→inactive), use
 .missed => Color.lerp(colors.primary, colors.mutedForeground, 0.85)!,
 ```
 
-This adapts automatically to every theme palette. **Never hardcode status/accent colors.**
+This adapts automatically to every theme palette. **Never hardcode status/accent colors.** Exception: `PrayerHeroHeader` uses fixed per-prayer gradient pairs for visual identity; sunnah times use theme-adaptive `Color.lerp` instead.
 
 ## Scroll behavior
 
 Defined in `lib/core/widgets/tawaq_scroll_behavior.dart`:
 
-- `**TawaqAppScrollBehavior`** — app-wide via `MaterialApp.scrollBehavior` in `main.dart`. Thin always-visible thumb only when `isMeaningfulScroll()` (min 64px overflow, 8% of viewport).
-- `**tawaqScrollbarTheme()**` — thin thumb, no track (`main.dart`).
-- `**TawaqScrollBehavior**` — scoped desktop behavior excluding trackpad from `dragDevices`. **Must NOT be app-wide** (breaks Linux trackpad scroll).
+- `**TawaqAppScrollBehavior**` — app-wide via `MaterialApp.scrollBehavior` in `main.dart`. Thin auto-hiding thumb only when `isMeaningfulScroll()` (min 512px overflow, 8% of viewport).
+- `**tawaqScrollbarTheme()**` — thin thumb, no track (`main.dart`). Theme sets `thumbVisibility: false` so the thumb fades out shortly after scrolling stops; `_MeaningfulScrollbar` wraps eligible scrollables with `RawScrollbar` using `kScrollbarTimeToFade` / `kScrollbarFadeDuration`.
 
 ## App shell & desktop
 
@@ -193,7 +198,7 @@ Defined in `lib/core/widgets/tawaq_scroll_behavior.dart`:
 
 - **Sidebar** ≥ sm (640px); **bottom nav** < sm (640px)
 - Sidebar auto-collapse default on tablet < lg (1024px) via `shellSidebarCollapsedProvider`
-- **Custom title bar:** 28px drag strip with `WindowControls` + `window_manager.startDragging()`
+- **Custom title bar:** 52px drag strip with `WindowControls` + `window_manager.startDragging()`
 - `**ShellShortcutScope`** — global keyboard shortcuts (desktop only)
 - `**NonSelectable**` on chrome (sidebar, app bar, window controls)
 - `**ShellBottomNavigationBar**`, `**ShellAppBar**`, `**ShellA11y**` labels
@@ -206,13 +211,13 @@ Defined in `lib/core/widgets/tawaq_scroll_behavior.dart`:
 
 ### Keyboard shortcuts (`lib/core/shortcuts/`)
 
-Registry-driven: `appShortcutRegistry` → `ShellShortcutScope` (global) + `AppShortcutScope` (route/contextual). `useRegisterAppSearchFocus` hook for Ctrl+K search focus. UI helpers in `lib/core/widgets/shortcuts/`.
+Sealed catalog: `AppShortcut.all` → `ShellShortcutScope` (global `invokeGlobal`) + `AppShortcutScope` (route/contextual handler maps). `useRegisterAppSearchFocus` hook for Ctrl+K search focus. UI helpers in `lib/core/widgets/shortcuts/`.
 
 ### Accessibility
 
 - `**MergedActionSemantics**` — single semantics node for icon-only shell controls (chrome only, not page body)
 - `**ShellA11y**` — localized labels for shell nav, window controls, theme toggle
-- Feature mirrors: `quran_semantics.dart`, `hadith_accessibility.dart`, `fortress_a11y.dart`, `settings_semantics.dart`
+- Feature mirrors (6 modules): `shell_a11y.dart`, `prayer_semantics.dart`, `quran_semantics.dart`, `hadith_accessibility.dart` (not `hadith_semantics.dart`), `fortress_a11y.dart`, `settings_semantics.dart`
 
 ## Core infrastructure
 
@@ -224,7 +229,8 @@ Registry-driven: `appShortcutRegistry` → `ShellShortcutScope` (global) + `AppS
 | Asset DB    | `core/database/asset_database_service.dart` | SQLite copy-from-assets                            |
 | Commentary  | `core/commentary/`, `core/text/`            | Shared Arabic normalization + rich text rendering  |
 | Platform    | `core/utils/platform.dart`                  | `isDesktopPlatform` (Linux/Windows/macOS, not web) |
-| Hijri clock | `core/utils/hijri_provider.dart`            | Live Hijri date for shell chip                     |
+| Hijri clock | `core/utils/hijri_provider.dart`            | Live Hijri date for prayer hero header and schedule UI         |
+| Bootstrap   | `core/bootstrap/app_init_providers.dart`    | `appBootstrapReadyProvider` (Hive + desktop); mushaf/dorar lazy per screen |
 
 
 ## Reusable widgets & hooks
@@ -238,8 +244,9 @@ Registry-driven: `appShortcutRegistry` → `ShellShortcutScope` (global) + `AppS
 
 - `useHoverState()` → returns `({bool isHovered, void Function({required bool value}) setHovered})`
 - `useMapController` — for `free_map` widget
-- `useMushafController` — in `use_mushaf_controller.dart` (import directly, not in barrel)
-- `useRegisterAppSearchFocus` — in `core/shortcuts/` (import directly; registers Ctrl+K search handler)
+- `useMushafController` — mushaf page controller sync with persisted ayah selection (exported from `hooks.dart`)
+- `useDebouncedCallback` — debounced `VoidCallback` for search/filter UI (default 400ms)
+- `useRegisterAppSearchFocus` — in `core/shortcuts/shortcuts.dart` (registers Ctrl+K search handler)
 
 ### Other common widgets (`lib/core/widgets/`)
 
@@ -247,9 +254,9 @@ Registry-driven: `appShortcutRegistry` → `ShellShortcutScope` (global) + `AppS
 - `AnimationEntry` — staggered fade-in + slide-up + scale using `flutter_animate`
 - `AnimatedIconButton` — rotates between two icons with animation
 - `FSkeletonizer` — forui-themed `Skeletonizer` wrapper (shimmer, pulse, fade effects)
-- `IconBadge` — forui `FBadge` with icon + label
 - `ScaleStepPicker` — discrete text-scale UI
 - `MergedActionSemantics` — single semantics node for icon-only shell controls
+- `PlayerDialogShell` — shared modal chrome for Quran recitation dialogs (`lib/core/widgets/dialog_shell.dart`)
 - `ReadingSwipeViewport`, `DirectionalContentSwitcher` — reading pane navigation
 
 ### Barrel exports
@@ -269,7 +276,7 @@ Powered by `hisn_elmoslem` package. Chapters, duas, search, commentary, focus re
 
 ### Prayer
 
-**Single source of truth for prayer times:** `prayerDayProvider` (live 1 Hz `PrayerDaySnapshot`) for today; `prayerDayBundleForDateProvider` / `prayerTimesForDateProvider` for historical schedule days. All computation goes through `PrayerDayComputer` + `effectivePrayerSettingsProvider`. Never compute times via `PrayerService` (completions/analytics only). Sunnah display and alerts share `resolveSunnahTime`.
+**Single source of truth for prayer times:** `prayerDayProvider` (live 1 Hz `PrayerDaySnapshot`) for today; `prayerDayBundleForDateProvider` / `prayerTimesForDateProvider` for historical schedule days. All computation goes through `PrayerDayComputer` + `prayerTimeInputsProvider` / `effectivePrayerSettingsProvider` in `feature/prayer/presentation/provider/prayer_effective_settings_provider.dart` (re-exported via `settings_provider.dart`). Never compute times via `PrayerService` (completions/analytics only). Sunnah display and alerts share `resolveSunnahTime`.
 
 `PrayerDay` (`@Riverpod(keepAlive: true)`) emits snapshot every 1s — **all live time UI** should watch this, not local timers. Derived providers (`scheduleCurrentPrayerProvider`, `prayerCardProvider`, `prayerCalendarDayKeyProvider`) minimize rebuilds.
 

@@ -2,14 +2,19 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/utils/date_extensions.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_repo.g.dart';
 
 /// Provides a singleton instance of the [PrayerRepo].
-@riverpod
+@Riverpod(keepAlive: true)
 PrayerRepo prayerRepo(Ref ref) {
   ref.watch(prayerCompletionsRepairProvider);
   final database = ref.read(prayerDatabaseProvider);
@@ -17,16 +22,24 @@ PrayerRepo prayerRepo(Ref ref) {
   return PrayerRepo(prayerDatabase: database, log: log);
 }
 
-/// A repository for accessing prayer data.
+/// A repository for accessing prayer data with an in-memory day-key index.
 class PrayerRepo {
   /// Creates a new instance of the [PrayerRepo].
-  const PrayerRepo({required this.prayerDatabase, required this.log});
+  PrayerRepo({required this.prayerDatabase, required this.log});
 
   /// The database for the prayer data.
   final PrayerDatabase prayerDatabase;
 
   /// The logger for the application.
   final Logger log;
+
+  final Map<int, List<PrayerCompletion>> _byDayKey = {};
+  final Map<int, Map<CompletionStatus, int>> _statusCountsByDayKey = {};
+  final List<int> _fullyCompletedDayKeys = [];
+  Location? _indexedLocation;
+  bool _indexLoaded = false;
+  ({int current, int best})? _cachedStreaks;
+  DateTime? _cachedStreaksToday;
 
   /// Adds or updates a prayer completion.
   Future<void> addOrUpdateCompletion(
@@ -35,6 +48,7 @@ class PrayerRepo {
   ) async {
     try {
       await prayerDatabase.insertOrUpdateCompletion(completion, location);
+      await _refreshDayInIndex(completion.completionTime, location);
     } catch (e, stackTrace) {
       log.e(
         'Error adding/updating completion',
@@ -50,8 +64,28 @@ class PrayerRepo {
     DateTime from,
     DateTime to,
     Location location,
-  ) {
-    return prayerDatabase.countAllPrayerStatusOnDate(from, to, location);
+  ) async {
+    await _ensureIndex(location);
+    final fromKey = completionDayKey(from, location);
+    final toKey = completionDayKey(to, location);
+    final counts = _emptyStatusCounts();
+    for (final entry in _statusCountsByDayKey.entries) {
+      if (entry.key < fromKey || entry.key > toKey) continue;
+      for (final status in CompletionStatus.values) {
+        counts[status] = (counts[status] ?? 0) + (entry.value[status] ?? 0);
+      }
+    }
+    return counts;
+  }
+
+  /// Counts deduped status totals for [period] ending on [anchor]'s calendar day.
+  Future<Map<CompletionStatus, int>> countAllStatusesOnPeriod(
+    PrayerAnalyticsPeriod period,
+    Location location,
+    DateTime anchor,
+  ) async {
+    final range = PrayerAnalyticsCalculator.periodCalendarRange(period, anchor);
+    return countAllStatusesOnDate(range.start, range.end, location);
   }
 
   /// Counts deduped prayers with [status] between [from] and [to].
@@ -60,13 +94,39 @@ class PrayerRepo {
     DateTime from,
     DateTime to,
     Location location,
-  ) {
-    return prayerDatabase.countPrayerStatusOnDate(status, from, to, location);
+  ) async {
+    final counts = await countAllStatusesOnDate(from, to, location);
+    return counts[status] ?? 0;
+  }
+
+  /// Computes current and best streaks from the maintained day index.
+  Future<({int current, int best})> computeStreaks(Location location) async {
+    await _ensureIndex(location);
+    final today = TZDateTime.now(location);
+    final todayNorm = DateTime(today.year, today.month, today.day);
+    if (_cachedStreaks != null && _cachedStreaksToday == todayNorm) {
+      return _cachedStreaks!;
+    }
+
+    final days = _fullyCompletedDayKeys.map(_dayKeyToDate).toList();
+    final result = PrayerAnalyticsCalculator.computeStreaks(
+      fullyCompletedDays: days,
+      today: todayNorm,
+    );
+    _cachedStreaks = result;
+    _cachedStreaksToday = todayNorm;
+    return result;
   }
 
   /// Deletes a prayer completion.
-  Future<void> deleteCompletion(int id) {
-    return prayerDatabase.deleteCompletion(id);
+  Future<void> deleteCompletion(int id, Location location) async {
+    final existing = await prayerDatabase.getCompletionById(id);
+    await prayerDatabase.deleteCompletion(id);
+    if (existing != null) {
+      await _refreshDayInIndex(existing.completionTime, location);
+    } else {
+      _invalidateIndex();
+    }
   }
 
   /// Deletes all completions for [prayer] on [date]'s calendar day.
@@ -74,12 +134,13 @@ class PrayerRepo {
     Prayer prayer,
     DateTime date,
     Location location,
-  ) {
-    return prayerDatabase.deleteCompletionForPrayerOnDate(
+  ) async {
+    await prayerDatabase.deleteCompletionForPrayerOnDate(
       prayer,
       date,
       location,
     );
+    await _refreshDayInIndex(date, location);
   }
 
   /// Returns whether a prayer completion exists.
@@ -98,24 +159,44 @@ class PrayerRepo {
   }
 
   /// Returns a list of dates on which all prayers were completed.
-  Future<List<DateTime>> getFullyCompletedDays(Location loc) {
-    return prayerDatabase.getFullyCompletedDays(loc);
+  Future<List<DateTime>> getFullyCompletedDays(Location loc) async {
+    await _ensureIndex(loc);
+    return _fullyCompletedDayKeys.map(_dayKeyToDate).toList();
   }
 
   /// Returns prayer completions recorded on [date].
   Future<List<PrayerCompletion>> getPrayerCompletionForDate(
     DateTime date,
     Location location,
-  ) {
-    return prayerDatabase.getCompletionsForDate(date, location);
+  ) async {
+    await _ensureIndex(location);
+    final dayKey = completionDayKey(date, location);
+    final raw = _byDayKey[dayKey] ?? const [];
+    return dedupeCompletions(raw, location);
   }
 
-  /// Returns all prayer completions between [from] and [to] (inclusive).
+  /// Returns deduped completions whose calendar day falls in [from, to].
   Future<List<PrayerCompletion>> getCompletionsBetween(
     DateTime from,
     DateTime to,
-  ) {
-    return prayerDatabase.getCompletionsBetween(from, to);
+    Location location,
+  ) async {
+    await _ensureIndex(location);
+    final fromKey = completionDayKey(from, location);
+    final toKey = completionDayKey(to, location);
+    final result = <PrayerCompletion>[];
+    for (final entry in _byDayKey.entries) {
+      if (entry.key < fromKey || entry.key > toKey) continue;
+      result.addAll(dedupeCompletions(entry.value, location));
+    }
+    return result
+        .where((c) => c.completionTime.isBetween(from, to))
+        .toList();
+  }
+
+  /// Returns a prayer completion by its ID.
+  Future<PrayerCompletion?> getSingleCompletion(int id) {
+    return prayerDatabase.getCompletionById(id);
   }
 
   /// Returns the prayer times for a given date, coordinates, and calculation
@@ -126,22 +207,118 @@ class PrayerRepo {
     CalculationMethod calculationMethod, {
     bool roundToMinutes = true,
   }) {
-    final prayerTimes = PrayerTimes(
+    return PrayerTimes(
       date: date,
       coordinates: coordinates,
       calculationMethod: calculationMethod,
       roundToMinutes: roundToMinutes,
     );
-    return prayerTimes;
-  }
-
-  /// Returns a prayer completion by its ID.
-  Future<PrayerCompletion?> getSingleCompletion(int id) {
-    return prayerDatabase.getCompletionById(id);
   }
 
   /// Returns the sunnah times for a given prayer times.
   SunnahTimes getSunnahTime(PrayerTimes prayerTimes) {
     return SunnahTimes(prayerTimes);
+  }
+
+  Future<void> _ensureIndex(Location location) async {
+    if (_indexLoaded && _indexedLocation == location) return;
+    await _rebuildIndex(location);
+  }
+
+  Future<void> _rebuildIndex(Location location) async {
+    _byDayKey.clear();
+    _statusCountsByDayKey.clear();
+    _fullyCompletedDayKeys.clear();
+    _cachedStreaks = null;
+    _cachedStreaksToday = null;
+
+    final all = await prayerDatabase.getAllCompletions();
+    for (final completion in all) {
+      final dayKey = completionDayKey(completion.completionTime, location);
+      _byDayKey.putIfAbsent(dayKey, () => []).add(completion);
+    }
+
+    for (final dayKey in _byDayKey.keys.toList()..sort()) {
+      _recomputeDayBucket(dayKey, location);
+    }
+
+    _indexedLocation = location;
+    _indexLoaded = true;
+  }
+
+  Future<void> _refreshDayInIndex(DateTime date, Location location) async {
+    await _ensureIndex(location);
+    final dayKey = completionDayKey(date, location);
+    final fresh = await prayerDatabase.getCompletionsForDate(date, location);
+    if (fresh.isEmpty) {
+      _byDayKey.remove(dayKey);
+    } else {
+      _byDayKey[dayKey] = fresh;
+    }
+    _recomputeDayBucket(dayKey, location);
+  }
+
+  void _recomputeDayBucket(int dayKey, Location location) {
+    final raw = _byDayKey[dayKey];
+    if (raw == null || raw.isEmpty) {
+      _statusCountsByDayKey.remove(dayKey);
+      _fullyCompletedDayKeys.remove(dayKey);
+      _cachedStreaks = null;
+      return;
+    }
+
+    final deduped = dedupeCompletions(raw, location);
+    _statusCountsByDayKey[dayKey] = countDedupedStatuses(deduped, location);
+    _updateFullyCompletedDayKey(dayKey, deduped, location);
+  }
+
+  void _updateFullyCompletedDayKey(
+    int dayKey,
+    List<PrayerCompletion> deduped,
+    Location location,
+  ) {
+    final statuses = mapPrayerStatuses(
+      deduped,
+      location,
+      _dayKeyToDate(dayKey),
+    );
+    final complete = kObligatoryPrayers.every((prayer) {
+      final status = statuses[prayer] ?? CompletionStatus.none;
+      return status != CompletionStatus.none &&
+          status != CompletionStatus.missed;
+    });
+
+    final index = _fullyCompletedDayKeys.indexOf(dayKey);
+    if (complete && index == -1) {
+      _fullyCompletedDayKeys.add(dayKey);
+      _fullyCompletedDayKeys.sort();
+    } else if (!complete && index != -1) {
+      _fullyCompletedDayKeys.removeAt(index);
+    }
+    _cachedStreaks = null;
+  }
+
+  void _invalidateIndex() {
+    _indexLoaded = false;
+    _indexedLocation = null;
+    _byDayKey.clear();
+    _statusCountsByDayKey.clear();
+    _fullyCompletedDayKeys.clear();
+    _cachedStreaks = null;
+    _cachedStreaksToday = null;
+  }
+
+  DateTime _dayKeyToDate(int dayKey) {
+    return DateTime(
+      dayKey ~/ 10000,
+      (dayKey % 10000) ~/ 100,
+      dayKey % 100,
+    );
+  }
+
+  Map<CompletionStatus, int> _emptyStatusCounts() {
+    return {
+      for (final status in CompletionStatus.values) status: 0,
+    };
   }
 }

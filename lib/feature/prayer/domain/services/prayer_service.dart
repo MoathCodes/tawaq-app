@@ -3,7 +3,6 @@ import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
-import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:timezone/timezone.dart';
 
 /// Service for prayer completion persistence and analytics queries.
@@ -23,14 +22,7 @@ class PrayerService {
   /// Computes the current and best streaks of fully completed prayer days.
   Future<({int current, int best})> computeStreaks(Location loc) async {
     try {
-      final days = await _repo.getFullyCompletedDays(loc);
-      if (days.isEmpty) return (current: 0, best: 0);
-
-      final today = TZDateTime.now(loc);
-      return PrayerAnalyticsCalculator.computeStreaks(
-        fullyCompletedDays: days,
-        today: DateTime(today.year, today.month, today.day),
-      );
+      return await _repo.computeStreaks(loc);
     } catch (e, st) {
       _log.e('Error computing streaks', error: e, stackTrace: st);
       return (current: 0, best: 0);
@@ -44,12 +36,7 @@ class PrayerService {
     DateTime? date,
   ]) {
     final d = date ?? TZDateTime.now(location);
-    final range = PrayerAnalyticsCalculator.periodCalendarRange(period, d);
-    return _repo.countAllStatusesOnDate(
-      range.start,
-      range.end,
-      location,
-    );
+    return _repo.countAllStatusesOnPeriod(period, location, d);
   }
 
   /// Counts prayers with a specific status within a given period.
@@ -69,7 +56,8 @@ class PrayerService {
   }
 
   /// Deletes a prayer completion record by its ID.
-  Future<void> deleteCompletion(int id) => _repo.deleteCompletion(id);
+  Future<void> deleteCompletion(int id, Location location) =>
+      _repo.deleteCompletion(id, location);
 
   /// Deletes all completion rows for [prayer] on [date]'s calendar day.
   Future<void> deleteCompletionForPrayerOnDate(
@@ -108,5 +96,6 @@ class PrayerService {
   Future<List<PrayerCompletion>> getCompletionsBetween(
     DateTime from,
     DateTime to,
-  ) => _repo.getCompletionsBetween(from, to);
+    Location location,
+  ) => _repo.getCompletionsBetween(from, to, location);
 }

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/not_found_screen.dart';
 import 'package:tawaq/core/widgets/page_shell/page_shell.dart';
@@ -15,26 +16,27 @@ import 'package:tawaq/feature/about/presentation/about_dialog.dart';
 import 'package:tawaq/feature/about/presentation/screens/about_screen.dart';
 import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
+import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
+import 'package:tawaq/feature/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:tawaq/feature/prayer/presentation/screens/prayer_screen.dart';
 import 'package:tawaq/feature/quran/presentation/screens/quran_screen.dart';
 import 'package:tawaq/feature/settings/presentation/models/settings_destination.dart';
 import 'package:tawaq/feature/settings/presentation/screens/settings_screen.dart';
-import 'package:tawaq/feature/settings/presentation/screens/start_wizard.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 part 'route_provider.g.dart';
 
-/// Route for the startup wizard screen.
-@TypedGoRoute<WizardRoute>(path: '/wizard')
+/// Route for the first-run onboarding screen.
+@TypedGoRoute<OnboardingRoute>(path: '/onboarding')
 @immutable
-class WizardRoute extends GoRouteData with $WizardRoute {
-  /// Creates the wizard route.
-  const WizardRoute();
+class OnboardingRoute extends GoRouteData with $OnboardingRoute {
+  /// Creates the onboarding route.
+  const OnboardingRoute();
 
   @override
-  /// Builds the startup wizard screen.
+  /// Builds the onboarding screen.
   Widget build(BuildContext context, GoRouterState state) {
-    return const StartedScreen();
+    return const OnboardingScreen();
   }
 }
 
@@ -97,10 +99,9 @@ abstract class AppNavigationRoute extends GoRouteData {
 
   @override
   Page<void> buildPage(BuildContext context, GoRouterState state) {
-    return _buildDesktopTransitionPage(
-      state.pageKey,
-      build(context, state),
-      barrierColor: FTheme.of(context).colors.background,
+    return NoTransitionPage<void>(
+      key: state.pageKey,
+      child: build(context, state),
     );
   }
 }
@@ -250,9 +251,29 @@ class AboutRoute extends AppNavigationRoute with $AboutRoute {
 /// Configures the root [GoRouter] used by the application shell.
 @riverpod
 GoRouter appRouter(Ref ref) {
+  final refresh = ValueNotifier(0);
+  ref
+    ..listen(appBootstrapReadyProvider, (_, _) => refresh.value++)
+    ..listen(onboardingStateProvider, (_, _) => refresh.value++)
+    ..listen(onboardingNeededProvider, (_, _) => refresh.value++);
+
+  final onboardingPath = const OnboardingRoute().location;
+
   final appRouter = GoRouter(
     routes: $appRoutes,
     initialLocation: const PrayerRoute().location,
+    refreshListenable: refresh,
+    redirect: (context, state) {
+      final bootstrap = ref.read(appBootstrapReadyProvider);
+      if (!bootstrap.hasValue) return null;
+
+      final onOnboarding = state.matchedLocation == onboardingPath;
+      final needed = ref.read(onboardingNeededProvider);
+
+      if (needed && !onOnboarding) return onboardingPath;
+      if (!needed && onOnboarding) return const PrayerRoute().location;
+      return null;
+    },
     errorPageBuilder: (context, state) => NoTransitionPage(
       key: state.pageKey,
       child: NotFoundScreen(
@@ -282,52 +303,6 @@ List<AppNavigationRoute> secondaryRoutes(Ref ref) {
     SettingsRoute(),
     AboutRoute(),
   ];
-}
-
-/// A desktop-style transition that fades in the content with a subtle slide
-/// and scale effect.
-CustomTransitionPage<void> _buildDesktopTransitionPage(
-  LocalKey key,
-  Widget child, {
-  required Color barrierColor,
-}) {
-  return CustomTransitionPage<void>(
-    key: key,
-    child: child,
-    barrierColor: barrierColor,
-    opaque: false,
-    transitionDuration: const Duration(milliseconds: 400),
-    reverseTransitionDuration: const Duration(milliseconds: 280),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final motion = CurvedAnimation(
-        parent: animation,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
-      );
-      final fade = CurvedAnimation(
-        parent: animation,
-        curve: Curves.linearToEaseOut,
-        reverseCurve: Curves.easeIn,
-      );
-
-      final slide = Tween<Offset>(
-        begin: const Offset(0, 0.02),
-        end: Offset.zero,
-      ).animate(motion);
-      final scale = Tween<double>(begin: 0.985, end: 1).animate(motion);
-
-      return FadeTransition(
-        opacity: Tween<double>(begin: 0, end: 1).animate(fade),
-        child: SlideTransition(
-          position: slide,
-          child: ScaleTransition(
-            scale: scale,
-            child: child,
-          ),
-        ),
-      );
-    },
-  );
 }
 
 /// Returns the localized label if available,
