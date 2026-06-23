@@ -1,8 +1,4 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:tawaq/core/utils/platform.dart';
-import 'package:tawaq/core/widgets/desktop_selection.dart'
-    show DesktopSelectionArea, ScopedSelectableText;
 
 /// Builds a minimal scrollbar theme: no track, thin auto-hiding thumb.
 ///
@@ -91,7 +87,7 @@ class TawaqAppScrollBehavior extends MaterialScrollBehavior {
   }
 }
 
-class _MeaningfulScrollbar extends StatelessWidget {
+class _MeaningfulScrollbar extends StatefulWidget {
   const _MeaningfulScrollbar({
     required this.controller,
     required this.child,
@@ -101,71 +97,72 @@ class _MeaningfulScrollbar extends StatelessWidget {
   final Widget child;
 
   @override
+  State<_MeaningfulScrollbar> createState() => _MeaningfulScrollbarState();
+}
+
+class _MeaningfulScrollbarState extends State<_MeaningfulScrollbar> {
+  bool _showThumb = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_syncThumbVisibility);
+  }
+
+  @override
+  void didUpdateWidget(covariant _MeaningfulScrollbar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_syncThumbVisibility);
+      widget.controller.addListener(_syncThumbVisibility);
+      _syncThumbVisibility();
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_syncThumbVisibility);
+    super.dispose();
+  }
+
+  void _syncThumbVisibility() {
+    if (!widget.controller.hasClients) {
+      if (_showThumb) setState(() => _showThumb = false);
+      return;
+    }
+
+    final show =
+        widget.controller.position.hasContentDimensions &&
+        isMeaningfulScroll(widget.controller.position);
+    if (show != _showThumb) {
+      setState(() => _showThumb = show);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Pull the visual styling from the shared theme so the auto-hiding thumb
-    // looks identical to the pinned one it replaces. RawScrollbar does not read
-    // ScrollbarThemeData itself, so resolve the values here.
+    final scrollChild = widget.child;
+    if (!_showThumb) {
+      return scrollChild;
+    }
+
     final scrollbarTheme = Theme.of(context).scrollbarTheme;
     const states = <WidgetState>{};
 
-    return AnimatedBuilder(
-      animation: controller,
-      builder: (context, scrollChild) {
-        if (!controller.hasClients) {
-          return scrollChild!;
-        }
-
-        final position = controller.position;
-        final showThumb =
-            position.hasContentDimensions && isMeaningfulScroll(position);
-
-        if (!showThumb) {
-          return scrollChild!;
-        }
-
-        return RawScrollbar(
-          controller: controller,
-          thumbVisibility: false,
-          trackVisibility: false,
-          interactive: true,
-          thickness: scrollbarTheme.thickness?.resolve(states),
-          radius: scrollbarTheme.radius,
-          thumbColor: scrollbarTheme.thumbColor?.resolve(states),
-          crossAxisMargin: scrollbarTheme.crossAxisMargin ?? 0,
-          mainAxisMargin: scrollbarTheme.mainAxisMargin ?? 0,
-          minThumbLength: scrollbarTheme.minThumbLength ?? 18,
-          timeToFade: kScrollbarTimeToFade,
-          fadeDuration: kScrollbarFadeDuration,
-          child: scrollChild!,
-        );
-      },
-      child: child,
+    return RawScrollbar(
+      controller: widget.controller,
+      thumbVisibility: false,
+      trackVisibility: false,
+      interactive: true,
+      thickness: scrollbarTheme.thickness?.resolve(states),
+      radius: scrollbarTheme.radius,
+      thumbColor: scrollbarTheme.thumbColor?.resolve(states),
+      crossAxisMargin: scrollbarTheme.crossAxisMargin ?? 0,
+      mainAxisMargin: scrollbarTheme.mainAxisMargin ?? 0,
+      minThumbLength: scrollbarTheme.minThumbLength ?? 18,
+      timeToFade: kScrollbarTimeToFade,
+      fadeDuration: kScrollbarFadeDuration,
+      child: scrollChild,
     );
-  }
-}
-
-/// Desktop scroll behavior that avoids trackpad press-drag vs text selection.
-///
-/// Flutter lets [PointerDeviceKind.trackpad] drag-scroll ancestor
-/// [Scrollable]s, which often wins over [SelectionArea] press-drag
-/// (flutter/flutter#153004).
-///
-/// **Do not apply app-wide** via [MaterialApp.scrollBehavior]: excluding
-/// [PointerDeviceKind.trackpad] from [dragDevices] breaks two-finger
-/// trackpad scrolling on Linux/desktop (only the scrollbar thumb remains).
-/// Prefer scoped [DesktopSelectionArea] / [ScopedSelectableText] instead.
-class TawaqScrollBehavior extends MaterialScrollBehavior {
-  /// Creates scroll behavior tuned for desktop text selection.
-  const TawaqScrollBehavior();
-
-  @override
-  Set<PointerDeviceKind> get dragDevices {
-    if (!isDesktopPlatform) return super.dragDevices;
-
-    return const <PointerDeviceKind>{
-      PointerDeviceKind.touch,
-      PointerDeviceKind.stylus,
-      PointerDeviceKind.invertedStylus,
-    };
   }
 }

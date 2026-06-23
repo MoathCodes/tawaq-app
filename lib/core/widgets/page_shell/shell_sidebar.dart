@@ -27,13 +27,11 @@ Widget _sidebarSlideTransition(
   BuildContext context,
   Widget child,
   Animation<double> animation,
-) =>
-    SlideTransition(
-      textDirection: Directionality.of(context),
-      position: Tween(begin: _kSlideOffset, end: Offset.zero)
-          .animate(animation),
-      child: FadeTransition(opacity: animation, child: child),
-    );
+) => SlideTransition(
+  textDirection: Directionality.of(context),
+  position: Tween(begin: _kSlideOffset, end: Offset.zero).animate(animation),
+  child: FadeTransition(opacity: animation, child: child),
+);
 
 FSidebarItemStyleDelta _sidebarItemStyle(BuildContext context) {
   final theme = FTheme.of(context);
@@ -64,10 +62,14 @@ class ShellSidebar extends HookConsumerWidget {
     final duration = _sidebarAnimDuration(context);
     final isTablet = isLessThan(context, FBreakpoint.lg);
     final isCollapsed = ref.watch(shellSidebarCollapsedProvider(isTablet));
+    final wasTablet = useRef<bool?>(null);
 
     useListenable(router.routeInformationProvider);
 
-    final controller = useAnimationController(duration: duration);
+    final controller = useAnimationController(
+      duration: duration,
+      initialValue: isCollapsed ? 0.0 : 1.0,
+    );
     final animation = CurveTween(curve: Curves.easeInOut).animate(controller);
 
     useEffect(() {
@@ -76,9 +78,13 @@ class ShellSidebar extends HookConsumerWidget {
           : unawaited(controller.forward());
       return null;
     }, [isCollapsed]);
+
     useEffect(() {
-      if (isTablet && context.mounted) {
+      final previous = wasTablet.value;
+      wasTablet.value = isTablet;
+      if (previous != null && !previous && isTablet) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
           ref
               .read(sidebarSettingsProvider.notifier)
               .setCollapsed(collapsed: true);
@@ -96,12 +102,30 @@ class ShellSidebar extends HookConsumerWidget {
     return AnimatedBuilder(
       animation: animation,
       builder: (_, _) {
-        final isExpanded = animation.isForwardOrCompleted;
+        // Defer expanded chrome until the width animation finishes so labels
+        // and the footer button are not laid out in a still-narrow sidebar.
+        final isVisuallyExpanded =
+            animation.status == AnimationStatus.completed;
         final width =
             _kCollapsed + (animation.value * (_kExpanded - _kCollapsed));
 
         return FSidebar(
           style: FSidebarStyleDelta.delta(
+            // Adopt the "chrome" surface so the sidebar reads as one piece with
+            // the title bar. Forui's default paints `colors.background`, which
+            // would erase the scaffold's sidebar colour — so we set it here and
+            // keep the trailing hairline toward the content.
+            decoration: .value(
+              BoxDecoration(
+                color: theme.colors.card,
+                border: BorderDirectional(
+                  end: BorderSide(
+                    color: theme.colors.border,
+                    width: theme.style.borderWidth,
+                  ),
+                ),
+              ),
+            ),
             headerPadding: const .value(
               EdgeInsets.symmetric(
                 horizontal: 10,
@@ -117,13 +141,13 @@ class ShellSidebar extends HookConsumerWidget {
                 layout: .vertical,
                 child: Text(
                   'توّاق',
-                  style: theme.typography.lg.copyWith(
+                  style: theme.typography.body.lg.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize:
-                        theme.typography.lg.fontSize! +
+                        theme.typography.body.lg.fontSize! +
                         (animation.value *
-                            (theme.typography.xl2.fontSize! -
-                                theme.typography.lg.fontSize!)),
+                            (theme.typography.body.xl2.fontSize! -
+                                theme.typography.body.lg.fontSize!)),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -131,43 +155,68 @@ class ShellSidebar extends HookConsumerWidget {
               const FDivider(),
             ],
           ),
-          footer: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: AnimatedSwitcher(
-              duration: duration,
-              transitionBuilder: (child, anim) =>
-                  _sidebarSlideTransition(context, child, anim),
-              child: isExpanded
-                  ? FButton(
-                      key: ValueKey(isExpanded),
-                      variant: .outline,
-                      style: const .delta(
-                        contentStyle: .delta(
-                          padding: .value(
-                            EdgeInsets.all(AppSpacing.sm),
+          footer: Column(
+            children: [
+              for (final (key, route) in [
+                ('secondary', secondaryRoutes),
+              ])
+                _RouteGroup(
+                  routes: route,
+                  groupKey: key,
+                  expanded: isVisuallyExpanded,
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: AnimatedSwitcher(
+                  duration: duration,
+                  transitionBuilder: (child, anim) =>
+                      _sidebarSlideTransition(context, child, anim),
+                  child: isVisuallyExpanded
+                      ? FButton(
+                          key: ValueKey(isVisuallyExpanded),
+                          variant: .ghost,
+                          style: .delta(
+                            decoration: .delta([
+                              .all(.boxDelta(color: theme.colors.background)),
+                            ]),
+                            contentStyle: const .delta(
+                              padding: .value(
+                                EdgeInsets.all(AppSpacing.sm),
+                              ),
+                            ),
+                          ),
+                          mainAxisAlignment: .spaceBetween,
+                          onPress: toggle,
+                          suffix: const Icon(FLucideIcons.panelRightOpen),
+                          child: Text(context.l10n.collapse, overflow: .clip),
+                        )
+                      : MergedActionSemantics(
+                          key: ValueKey(isVisuallyExpanded),
+                          label: ShellA11y.expandSidebarLabel(context.l10n),
+                          child: FButton.icon(
+                            onPress: toggle,
+                            variant: .ghost,
+                            style: .delta(
+                              decoration: .delta([
+                                .all(.boxDelta(color: theme.colors.background)),
+                              ]),
+                            ),
+                            child: const Icon(FLucideIcons.panelRightClose),
                           ),
                         ),
-                      ),
-                      onPress: toggle,
-                      prefix: const Icon(FLucideIcons.panelRightOpen),
-                      child: Text(context.l10n.collapse, overflow: .clip),
-                    )
-                  : MergedActionSemantics(
-                      key: ValueKey(isExpanded),
-                      label: ShellA11y.expandSidebarLabel(context.l10n),
-                      child: FButton.icon(
-                        onPress: toggle,
-                        child: const Icon(FLucideIcons.panelRightOpen),
-                      ),
-                    ),
-            ),
+                ),
+              ),
+            ],
           ),
           children: [
             for (final (key, routes) in [
               ('main', mainRoutes),
-              ('secondary', secondaryRoutes),
             ])
-              _RouteGroup(routes: routes, groupKey: key),
+              _RouteGroup(
+                routes: routes,
+                groupKey: key,
+                expanded: isVisuallyExpanded,
+              ),
           ],
         );
       },
@@ -179,16 +228,15 @@ class _RouteGroup extends ConsumerWidget {
   const _RouteGroup({
     required this.routes,
     required this.groupKey,
+    required this.expanded,
   });
   final List<AppNavigationRoute> routes;
   final String groupKey;
+  final bool expanded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final isTablet = isLessThan(context, FBreakpoint.lg);
-    final isCollapsed = ref.watch(shellSidebarCollapsedProvider(isTablet));
-    final isExpanded = !isCollapsed;
     final itemStyle = _sidebarItemStyle(context);
 
     return AnimatedSwitcher(
@@ -196,10 +244,10 @@ class _RouteGroup extends ConsumerWidget {
       transitionBuilder: (child, anim) =>
           _sidebarSlideTransition(context, child, anim),
       child: FSidebarGroup(
-        key: ValueKey('$groupKey-${isExpanded ? 'expanded' : 'collapsed'}'),
+        key: ValueKey('$groupKey-${expanded ? 'expanded' : 'collapsed'}'),
         children: [
           for (final r in routes)
-            isExpanded
+            expanded
                 ? _expandedSidebarItem(
                     context: context,
                     route: r,

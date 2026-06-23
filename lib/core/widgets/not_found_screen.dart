@@ -15,83 +15,78 @@ class NotFoundScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    return FScaffold(
-      child: Center(
-        child: Padding(
-          padding: const .all(AppSpacing.xl),
-          child: Column(
-            children: [
-              ExcludeSemantics(
-                child: Container(
-                  padding: const .all(AppSpacing.xl),
-                  decoration: BoxDecoration(
-                    color: theme.colors.destructive.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    FLucideIcons.bug,
-                    size: 64,
-                    color: theme.colors.destructive,
-                  ),
+    return Center(
+      child: Padding(
+        padding: const .all(AppSpacing.xl),
+        child: Column(
+          children: [
+            ExcludeSemantics(
+              child: Container(
+                padding: const .all(AppSpacing.xl),
+                decoration: BoxDecoration(
+                  color: theme.colors.destructive.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  FLucideIcons.bug,
+                  size: 64,
+                  color: theme.colors.destructive,
                 ),
               ),
+            ),
 
-              const SizedBox(height: AppSpacing.xxl),
+            const SizedBox(height: AppSpacing.xxl),
 
-              Semantics(
-                header: true,
-                child: Text(
-                  context.l10n.pageNotFound,
-                style: theme.typography.xl2.copyWith(
+            Semantics(
+              header: true,
+              child: Text(
+                context.l10n.pageNotFound,
+                style: theme.typography.body.xl2.copyWith(
                   fontWeight: FontWeight.bold,
                   color: theme.colors.foreground,
                 ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+
+            Text(
+              context.l10n.pageNotFoundDescription,
+              style: theme.typography.body.lg.copyWith(
+                color: theme.colors.mutedForeground,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
+            const SizedBox(height: AppSpacing.sm),
+
+            if (errorMsg.isNotEmpty) ...[
+              Container(
+                padding: const .all(AppSpacing.md),
+                margin: const .symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: context.theme.colors.muted,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  errorMsg,
+                  style: theme.typography.body.sm.copyWith(
+                    color: theme.colors.mutedForeground,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
-
-              const SizedBox(height: AppSpacing.lg),
-
-              // Description
-              Text(
-                context.l10n.pageNotFoundDescription,
-                style: theme.typography.lg.copyWith(
-                  color: theme.colors.mutedForeground,
-                ),
-                textAlign: TextAlign.center,
-              ),
-
-              const SizedBox(height: AppSpacing.sm),
-
-              // Error message if provided
-              if (errorMsg.isNotEmpty) ...[
-                Container(
-                  padding: const .all(AppSpacing.md),
-                  margin: const .symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: context.theme.colors.muted,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    errorMsg,
-                    style: theme.typography.sm.copyWith(
-                      color: theme.colors.mutedForeground,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-
-              const SizedBox(height: AppSpacing.xxl),
-
-              // Action button
-              FButton(
-                onPress: () => const PrayerRoute().go(context),
-                prefix: const Icon(FLucideIcons.clock, size: 18),
-                child: Text(context.l10n.goToPrayerPage),
-              ),
             ],
-          ),
+
+            const SizedBox(height: AppSpacing.xxl),
+
+            FButton(
+              onPress: () => const PrayerRoute().go(context),
+              prefix: const Icon(FLucideIcons.clock, size: 18),
+              child: Text(context.l10n.goToPrayerPage),
+            ),
+          ],
         ),
       ),
     );

@@ -40,34 +40,39 @@ class MacOSWindowControls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 8,
-      children: [
-        _MacOSControlButton(
-          color: const Color(0xFFFF5F57), // Red
-          hoverColor: const Color(0xFFFF4A40),
-          icon: Icons.close,
-          semanticsLabel: ShellA11y.windowClose(l10n),
-          onPressed: onClose,
-        ),
-        _MacOSControlButton(
-          color: const Color(0xFFFFBD2E), // Yellow
-          hoverColor: const Color(0xFFFFAA00),
-          icon: Icons.minimize,
-          semanticsLabel: ShellA11y.windowMinimize(l10n),
-          onPressed: onMinimize,
-        ),
-        _MacOSControlButton(
-          color: const Color(0xFF28CA42), // Green
-          hoverColor: const Color(0xFF00FF57),
-          icon: Icons.fullscreen,
-          semanticsLabel: isMaximized
-              ? ShellA11y.windowRestore(l10n)
-              : ShellA11y.windowMaximize(l10n),
-          onPressed: onFullscreen,
-        ),
-      ],
+    // Always left-to-right: red (close) · yellow (minimize) · green
+    // (fullscreen) — the canonical macOS order, even under an RTL locale.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 8,
+        children: [
+          _MacOSControlButton(
+            color: const Color(0xFFFF5F57), // Red
+            hoverColor: const Color(0xFFFF4A40),
+            icon: Icons.close,
+            semanticsLabel: ShellA11y.windowClose(l10n),
+            onPressed: onClose,
+          ),
+          _MacOSControlButton(
+            color: const Color(0xFFFFBD2E), // Yellow
+            hoverColor: const Color(0xFFFFAA00),
+            icon: Icons.minimize,
+            semanticsLabel: ShellA11y.windowMinimize(l10n),
+            onPressed: onMinimize,
+          ),
+          _MacOSControlButton(
+            color: const Color(0xFF28CA42), // Green
+            hoverColor: const Color(0xFF00FF57),
+            icon: Icons.fullscreen,
+            semanticsLabel: isMaximized
+                ? ShellA11y.windowRestore(l10n)
+                : ShellA11y.windowMaximize(l10n),
+            onPressed: onFullscreen,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -86,10 +91,6 @@ class WindowControls extends ConsumerWidget {
     final theme = FTheme.of(context);
     final l10n = context.l10n;
     final isMacStyle = Platform.isMacOS || (forceMacStyle ?? false);
-    final reverseOrder =
-        Directionality.of(context) == TextDirection.ltr &&
-        !isMacStyle &&
-        !Platform.isWindows;
 
     if (isMacStyle) {
       return MacOSWindowControls(
@@ -143,9 +144,16 @@ class WindowControls extends ConsumerWidget {
       ),
     ];
 
-    return Row(
-      spacing: 6,
-      children: reverseOrder ? children.reversed.toList() : children,
+    // `children` is [close, maximize, minimize]; reversed gives the Windows/
+    // Linux order minimize · maximize · close (close at the far right). Forced
+    // LTR keeps that order fixed regardless of the app's language direction.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 6,
+        children: children.reversed.toList(),
+      ),
     );
   }
 

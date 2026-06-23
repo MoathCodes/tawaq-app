@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_registry.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_display.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Renders keyboard shortcut key caps in a Forui-native style.
 class ShortcutIndicator extends StatelessWidget {
-  /// Creates a shortcut indicator from a registry [id].
+  /// Creates a shortcut indicator from a catalog [shortcut].
   const ShortcutIndicator({
-    required this.id,
+    required this.shortcut,
     super.key,
     this.showAliases = false,
   }) : activators = null;
@@ -19,12 +18,12 @@ class ShortcutIndicator extends StatelessWidget {
     required this.activators,
     super.key,
     this.showAliases = false,
-  }) : id = null;
+  }) : shortcut = null;
 
-  /// Registry shortcut to display.
-  final AppShortcutId? id;
+  /// Catalog shortcut to display.
+  final AppShortcut? shortcut;
 
-  /// Raw activators when not using a registry [id].
+  /// Raw activators when not using a catalog [shortcut].
   final List<SingleActivator>? activators;
 
   /// When true, shows alternate activators separated by "or".
@@ -32,7 +31,7 @@ class ShortcutIndicator extends StatelessWidget {
 
   List<SingleActivator> get _resolvedActivators {
     if (activators != null) return activators!;
-    return appShortcutById[id]?.activators ?? const [];
+    return shortcut?.activators ?? const [];
   }
 
   @override
@@ -57,7 +56,7 @@ class ShortcutIndicator extends StatelessWidget {
           if (i > 0)
             Text(
               'or',
-              style: context.theme.typography.xs.copyWith(
+              style: context.theme.typography.body.xs.copyWith(
                 color: context.theme.colors.mutedForeground,
               ),
             ),
@@ -72,12 +71,12 @@ class ShortcutIndicator extends StatelessWidget {
 class ShortcutIndicatorGroup extends StatelessWidget {
   /// Creates a group of shortcut indicators.
   const ShortcutIndicatorGroup({
-    required this.ids,
+    required this.shortcuts,
     super.key,
   });
 
-  /// Registry shortcut IDs to display.
-  final List<AppShortcutId> ids;
+  /// Catalog shortcuts to display.
+  final List<AppShortcut> shortcuts;
 
   @override
   Widget build(BuildContext context) {
@@ -86,15 +85,15 @@ class ShortcutIndicatorGroup extends StatelessWidget {
       runSpacing: AppSpacing.xs,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        for (var i = 0; i < ids.length; i++) ...[
+        for (var i = 0; i < shortcuts.length; i++) ...[
           if (i > 0)
             Text(
               '/',
-              style: context.theme.typography.xs.copyWith(
+              style: context.theme.typography.body.xs.copyWith(
                 color: context.theme.colors.mutedForeground,
               ),
             ),
-          ShortcutIndicator(id: ids[i]),
+          ShortcutIndicator(shortcut: shortcuts[i]),
         ],
       ],
     );
@@ -117,7 +116,7 @@ class _ShortcutCombo extends StatelessWidget {
           if (i > 0)
             Text(
               '+',
-              style: theme.typography.xs.copyWith(
+              style: theme.typography.body.xs.copyWith(
                 color: theme.colors.mutedForeground,
               ),
             ),
@@ -148,7 +147,7 @@ class _KeyCap extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: theme.typography.xs.copyWith(
+        style: theme.typography.body.xs.copyWith(
           color: theme.colors.mutedForeground,
           fontWeight: FontWeight.w500,
         ),

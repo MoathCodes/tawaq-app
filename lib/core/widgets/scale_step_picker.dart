@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Uniform step buttons for discrete scale presets.
+/// Default preview font sizes for the four standard scale steps.
+const List<double> kDefaultScalePreviewSizes = <double>[12, 14, 16, 18];
+
+/// Compact chip-style picker for discrete scale presets.
 ///
-/// Avoids a selected-tab typography jump.
+/// Renders options in a [Wrap] with optional typographic previews instead of
+/// large block buttons.
 class ScaleStepPicker extends StatelessWidget {
   /// Creates a [ScaleStepPicker].
   const ScaleStepPicker({
@@ -13,11 +18,12 @@ class ScaleStepPicker extends StatelessWidget {
     required this.selectedIndex,
     required this.onChanged,
     this.enabled = true,
+    this.previewSizes = kDefaultScalePreviewSizes,
     this.wrapStep,
     super.key,
   });
 
-  /// Labels for each step (same visual weight for every option).
+  /// Labels for each step.
   final List<String> labels;
 
   /// Currently selected step index.
@@ -29,92 +35,112 @@ class ScaleStepPicker extends StatelessWidget {
   /// Whether steps can be selected.
   final bool enabled;
 
+  /// Optional per-step preview sizes for the leading “Aa” sample.
+  final List<double>? previewSizes;
+
   /// Optional wrapper for each step (e.g. accessibility semantics).
   final Widget Function(int index, Widget step)? wrapStep;
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final useGrid = constraints.maxWidth < context.theme.breakpoints.sm;
-
-        return NonSelectable(
-          child: useGrid ? _buildGrid(context) : _buildRow(),
-        );
-      },
-    );
-  }
-
-  Widget _buildRow() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: AppSpacing.xs,
-      children: [
-        for (var i = 0; i < labels.length; i++)
-          Expanded(
-            child: _wrapStep(
-              i,
-              _stepButton(
-                label: labels[i],
-                selected: selectedIndex == i,
-                onPress: enabled ? () => onChanged(i) : null,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildGrid(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: AppSpacing.xs,
-        crossAxisSpacing: AppSpacing.xs,
-        childAspectRatio: 2.8,
-      ),
-      itemCount: labels.length,
-      itemBuilder: (context, i) => _wrapStep(
-        i,
-        _stepButton(
-          label: labels[i],
-          selected: selectedIndex == i,
-          onPress: enabled ? () => onChanged(i) : null,
-        ),
+    return NonSelectable(
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            _wrapStep(i, _ScaleStepChip(
+              label: labels[i],
+              selected: selectedIndex == i,
+              enabled: enabled,
+              previewSize: previewSizes != null && i < previewSizes!.length
+                  ? previewSizes![i]
+                  : null,
+              onPress: enabled ? () => onChanged(i) : null,
+            )),
+        ],
       ),
     );
   }
 
   Widget _wrapStep(int index, Widget step) =>
       wrapStep?.call(index, step) ?? step;
+}
 
-  Widget _stepButton({
-    required String label,
-    required bool selected,
-    required VoidCallback? onPress,
-  }) {
-    return FButton(
-      variant: selected ? .primary : .outline,
-      selected: selected,
-      onPress: onPress,
-      style: const FButtonStyleDelta.delta(
-        contentStyle: FButtonContentStyleDelta.delta(
-          padding: EdgeInsetsGeometryDelta.value(
-            EdgeInsets.symmetric(
-              horizontal: 4,
-              vertical: 10,
-            ),
+class _ScaleStepChip extends StatelessWidget {
+  const _ScaleStepChip({
+    required this.label,
+    required this.selected,
+    required this.enabled,
+    required this.onPress,
+    this.previewSize,
+  });
+
+  final String label;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback? onPress;
+  final double? previewSize;
+
+  static const _minWidth = 72.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final colors = theme.colors;
+    final duration = theme.durations.fast;
+
+    return MouseClick(
+      disabled: !enabled,
+      onClick: onPress,
+      semanticsLabel: label,
+      child: AnimatedContainer(
+        duration: duration,
+        constraints: const BoxConstraints(minWidth: _minWidth),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? colors.primary.withValues(alpha: 0.12)
+              : colors.secondary,
+          borderRadius: theme.radii.md,
+          border: Border.all(
+            color: selected
+                ? colors.primary.withValues(alpha: 0.75)
+                : colors.border.withValues(alpha: 0.65),
+            width: selected ? 1.5 : 1,
           ),
         ),
-      ),
-      child: Text(
-        label,
-        // style: labelStyle,
-        textAlign: TextAlign.center,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: AppSpacing.xs,
+          children: [
+            if (previewSize != null)
+              Text(
+                'Aa',
+                style: theme.typography.body.sm.copyWith(
+                  fontSize: previewSize,
+                  fontWeight: FontWeight.w600,
+                  height: 1,
+                  color: selected ? colors.primary : colors.foreground,
+                ),
+              ),
+            Text(
+              label,
+              style: theme.typography.body.xs.copyWith(
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                color: selected
+                    ? colors.foreground
+                    : colors.mutedForeground,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }

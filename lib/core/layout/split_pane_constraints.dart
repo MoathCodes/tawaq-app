@@ -16,9 +16,53 @@ const kMainPaneMinExtent = 480.0;
 /// Minimum width reserved for the mushaf reading pane in study mode.
 const kMushafPaneMinExtent = 400.0;
 
+/// Minimum container width before a horizontal split can honor nominal pane mins.
+double minSplitContainerWidth({
+  required double sideMin,
+  required double mainMin,
+  double spacer = 0,
+}) =>
+    sideMin + mainMin + spacer;
+
+/// Whether [containerWidth] can fit a horizontal split with [sideMin] and
+/// [mainMin] panes (plus optional [spacer] for dividers or padding).
+bool canUseHorizontalSplit({
+  required double containerWidth,
+  required double sideMin,
+  required double mainMin,
+  double spacer = 0,
+}) =>
+    containerWidth >=
+    minSplitContainerWidth(
+      sideMin: sideMin,
+      mainMin: mainMin,
+      spacer: spacer,
+    );
+
 /// Slack required between pane minimums and [totalWidth] so [FResizable] can
 /// initialize (Forui asserts `extent.min < extent.max` per region).
 const kResizableSplitSlack = 1.0;
+
+/// Reference window width used to convert a legacy pixel-based side-panel width
+/// into a ratio when migrating persisted state.
+const kSidePanelRatioMigrationWidth = 1280.0;
+
+/// In-place migration of a legacy `sidePanelWidth` (pixels) entry to a
+/// `sidePanelRatio` (0..1) entry on a decoded JSON [map].
+///
+/// Side panels are now persisted as a fraction of the window width. Older state
+/// stored an absolute pixel width; convert it against a typical window width and
+/// clamp to a sane range. No-op when already migrated or absent.
+void migrateSidePanelWidthToRatio(Map<String, dynamic> map) {
+  if (map.containsKey('sidePanelRatio')) return;
+  final legacy = map.remove('sidePanelWidth');
+  if (legacy is num) {
+    map['sidePanelRatio'] = (legacy / kSidePanelRatioMigrationWidth).clamp(
+      0.15,
+      0.5,
+    );
+  }
+}
 
 /// Resolved initial extents for a two-pane horizontal split.
 class SplitExtents {

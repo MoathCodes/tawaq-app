@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/animated_icon_button.dart';
 import 'package:tawaq/core/widgets/merged_action_semantics.dart';
 import 'package:tawaq/core/widgets/shell_a11y.dart';
@@ -18,10 +18,11 @@ class ThemeModeButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
-    final isDark = themeMode.value?.themeMode == ThemeMode.dark;
+    final isDark = ref.watch(
+      themeProvider.select((s) => s.value?.themeMode == ThemeMode.dark),
+    );
     return ShortcutTooltip(
-      id: AppShortcutId.toggleTheme,
+      shortcut: AppShortcut.toggleTheme,
       child: MergedActionSemantics(
         label: ShellA11y.themeToggleLabel(context.l10n, isDark: isDark),
         child: AnimatedIconButton(
@@ -29,6 +30,8 @@ class ThemeModeButton extends ConsumerWidget {
           secondaryIcon: FLucideIcons.moon,
           animationDuration: const Duration(milliseconds: 300),
           variant: .ghost,
+          size: FButtonSizeVariant.xs,
+          iconSize: 16,
           isSecondaryActive: isDark,
           onPressed: () {
             ref.read(themeProvider.notifier).toggleThemeMode();

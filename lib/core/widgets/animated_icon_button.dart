@@ -19,6 +19,7 @@ class AnimatedIconButton extends HookWidget {
     super.key,
     this.onPressed,
     this.variant,
+    this.size = FButtonSizeVariant.md,
     this.iconSize = 20,
     this.animationDuration = const Duration(milliseconds: 500),
     this.opacityDuration = const Duration(milliseconds: 300),
@@ -48,6 +49,9 @@ class AnimatedIconButton extends HookWidget {
   /// The variant of the button.
   final FButtonVariant? variant;
 
+  /// The button size. Defaults to [FButtonSizeVariant.md].
+  final FButtonSizeVariant size;
+
   @override
   Widget build(BuildContext context) {
     final animationController = useAnimationController(
@@ -71,6 +75,7 @@ class AnimatedIconButton extends HookWidget {
     return NonSelectable(
       child: FButton(
       variant: variant ?? .ghost,
+      size: size,
       onPress: onPressed,
       child: AnimatedBuilder(
         animation: animationController,

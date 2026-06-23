@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_indicator.dart';
 
@@ -8,13 +8,13 @@ import 'package:tawaq/core/widgets/shortcuts/shortcut_indicator.dart';
 class ShortcutTooltip extends StatelessWidget {
   /// Creates a shortcut tooltip wrapper.
   const ShortcutTooltip({
-    required this.id,
+    required this.shortcut,
     required this.child,
     super.key,
   });
 
-  /// Registry shortcut to display in the tooltip.
-  final AppShortcutId id;
+  /// Catalog shortcut to display in the tooltip.
+  final AppShortcut shortcut;
 
   /// The control that triggers the tooltip on hover.
   final Widget child;
@@ -27,7 +27,7 @@ class ShortcutTooltip extends StatelessWidget {
 
     return FTooltip(
       tipBuilder: (context, controller) => ShortcutIndicator(
-        id: id,
+        shortcut: shortcut,
         showAliases: true,
       ),
       child: child,

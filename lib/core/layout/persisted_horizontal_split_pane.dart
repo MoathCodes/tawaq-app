@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
@@ -21,9 +23,9 @@ typedef ResolvedHorizontalSplit = ({
 class PersistedHorizontalSplitPane extends StatefulWidget {
   /// Creates a persisted horizontal split pane.
   const PersistedHorizontalSplitPane({
-    required this.sidePanelWidth,
+    required this.sidePanelRatio,
     required this.resolve,
-    required this.onSidePanelWidthChanged,
+    required this.onSidePanelRatioChanged,
     required this.sidePane,
     required this.mainPane,
     required this.sideRegionIndex,
@@ -31,18 +33,25 @@ class PersistedHorizontalSplitPane extends StatefulWidget {
     super.key,
   });
 
-  /// Persisted width of the side pane, in logical pixels.
-  final double sidePanelWidth;
+  /// Persisted width of the side pane as a fraction of the total width (0..1).
+  ///
+  /// The pane keeps this share of the container as it resizes, capped by the
+  /// `sideMax` returned from [resolve]; beyond the cap the main pane absorbs the
+  /// extra space.
+  final double sidePanelRatio;
 
   /// Resolves extents and minimums for the current container width.
+  ///
+  /// [sideWidth] is the desired side width in logical pixels, derived from
+  /// [sidePanelRatio] and the live container width.
   final ResolvedHorizontalSplit Function({
     required double totalWidth,
     required double sideWidth,
   })
   resolve;
 
-  /// Called when the user finishes resizing the split.
-  final ValueChanged<double> onSidePanelWidthChanged;
+  /// Called with the new side-pane ratio (0..1) when the user finishes resizing.
+  final ValueChanged<double> onSidePanelRatioChanged;
 
   /// Content shown in the side (study / filter / browse) pane.
   final Widget sidePane;
@@ -64,13 +73,15 @@ class PersistedHorizontalSplitPane extends StatefulWidget {
 class _PersistedHorizontalSplitPaneState
     extends State<PersistedHorizontalSplitPane> {
   List<FResizableRegion>? _regions;
-  double? _cachedSideExtent;
-  double? _cachedMainExtent;
-  double? _cachedSideMin;
-  double? _cachedMainMin;
+  int? _cachedSideFlex;
+  int? _cachedMainFlex;
+  int? _cachedSideMinFlex;
+  int? _cachedMainMinFlex;
   int? _cachedSideRegionIndex;
   double? _cachedTotalWidth;
   bool _dragging = false;
+  Widget? _cachedSidePane;
+  Widget? _cachedMainPane;
 
   // The region widgets are cached (see [_syncRegionsIfNeeded]) so [FResizable]
   // keeps stable extents across the frequent parent rebuilds. Because those
@@ -94,10 +105,10 @@ class _PersistedHorizontalSplitPaneState
 
   void _syncRegionsIfNeeded({
     required double totalWidth,
-    required double sideExtent,
-    required double mainExtent,
-    required double sideMin,
-    required double mainMin,
+    required int sideFlex,
+    required int mainFlex,
+    required int sideMinFlex,
+    required int mainMinFlex,
   }) {
     final totalWidthChanged =
         _cachedTotalWidth != null && _cachedTotalWidth != totalWidth;
@@ -110,33 +121,33 @@ class _PersistedHorizontalSplitPaneState
     _cachedTotalWidth = totalWidth;
 
     if (_regions != null &&
-        _cachedSideExtent == sideExtent &&
-        _cachedMainExtent == mainExtent &&
-        _cachedSideMin == sideMin &&
-        _cachedMainMin == mainMin &&
+        _cachedSideFlex == sideFlex &&
+        _cachedMainFlex == mainFlex &&
+        _cachedSideMinFlex == sideMinFlex &&
+        _cachedMainMinFlex == mainMinFlex &&
         _cachedSideRegionIndex == widget.sideRegionIndex) {
       return;
     }
 
-    _cachedSideExtent = sideExtent;
-    _cachedMainExtent = mainExtent;
-    _cachedSideMin = sideMin;
-    _cachedMainMin = mainMin;
+    _cachedSideFlex = sideFlex;
+    _cachedMainFlex = mainFlex;
+    _cachedSideMinFlex = sideMinFlex;
+    _cachedMainMinFlex = mainMinFlex;
     _cachedSideRegionIndex = widget.sideRegionIndex;
 
-    final sideRegion = FResizableRegion.region(
+    final sideRegion = FResizableRegion.flex(
       key: const ValueKey('persisted-split-side'),
-      initialExtent: sideExtent,
-      minExtent: sideMin,
+      flex: sideFlex,
+      minFlex: sideMinFlex,
       builder: (_, _, _) => ValueListenableBuilder<Widget>(
         valueListenable: _sidePaneNotifier,
         builder: (_, pane, _) => pane,
       ),
     );
-    final mainRegion = FResizableRegion.region(
+    final mainRegion = FResizableRegion.flex(
       key: const ValueKey('persisted-split-main'),
-      initialExtent: mainExtent,
-      minExtent: mainMin,
+      flex: mainFlex,
+      minFlex: mainMinFlex,
       builder: (_, _, _) => ValueListenableBuilder<Widget>(
         valueListenable: _mainPaneNotifier,
         builder: (_, pane, _) => pane,
@@ -148,19 +159,32 @@ class _PersistedHorizontalSplitPaneState
         : [mainRegion, sideRegion];
   }
 
+  bool _paneChanged(Widget? cached, Widget next) {
+    return !identical(cached, next) || cached?.key != next.key;
+  }
+
+  void _syncPaneNotifiers() {
+    if (_paneChanged(_cachedSidePane, widget.sidePane)) {
+      _cachedSidePane = widget.sidePane;
+      _sidePaneNotifier.value = widget.sidePane;
+    }
+    if (_paneChanged(_cachedMainPane, widget.mainPane)) {
+      _cachedMainPane = widget.mainPane;
+      _mainPaneNotifier.value = widget.mainPane;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Push the latest pane contents into the notifiers so the cached regions'
-    // subtrees rebuild even though the region widgets themselves are reused.
-    _sidePaneNotifier.value = widget.sidePane;
-    _mainPaneNotifier.value = widget.mainPane;
+    _syncPaneNotifiers();
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalWidth = constraints.maxWidth;
+        final desiredSideWidth = widget.sidePanelRatio * totalWidth;
         final resolved = widget.resolve(
           totalWidth: totalWidth,
-          sideWidth: widget.sidePanelWidth,
+          sideWidth: desiredSideWidth,
         );
         final layout = normalizeSplitExtentsForResizable(
           totalWidth: totalWidth,
@@ -171,15 +195,23 @@ class _PersistedHorizontalSplitPaneState
         );
 
         if (layout.sideExtent <= 0 || layout.mainExtent <= 0) {
-          return const SizedBox.shrink();
+          return widget.mainPane;
         }
+
+        // Flex regions distribute the available width as flex / totalFlex, so
+        // rounded pixel extents reproduce the capped proportions. Recreating
+        // regions when these change re-applies the cap on window resize.
+        final sideFlex = math.max(1, layout.sideExtent.round());
+        final mainFlex = math.max(1, layout.mainExtent.round());
+        final sideMinFlex = layout.sideMin.round().clamp(1, sideFlex);
+        final mainMinFlex = layout.mainMin.round().clamp(1, mainFlex);
 
         _syncRegionsIfNeeded(
           totalWidth: totalWidth,
-          sideExtent: layout.sideExtent,
-          mainExtent: layout.mainExtent,
-          sideMin: layout.sideMin,
-          mainMin: layout.mainMin,
+          sideFlex: sideFlex,
+          mainFlex: mainFlex,
+          sideMinFlex: sideMinFlex,
+          mainMinFlex: mainMinFlex,
         );
 
         return Directionality(
@@ -207,7 +239,10 @@ class _PersistedHorizontalSplitPaneState
                   mainMin: reResolved.mainMin,
                 );
                 setState(() => _dragging = false);
-                widget.onSidePanelWidthChanged(normalized.sideExtent);
+                final ratio = totalWidth > 0
+                    ? (normalized.sideExtent / totalWidth).clamp(0.0, 1.0)
+                    : widget.sidePanelRatio;
+                widget.onSidePanelRatioChanged(ratio);
               },
             ),
             children: _regions!,

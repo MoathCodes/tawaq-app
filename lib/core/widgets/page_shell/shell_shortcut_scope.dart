@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
-import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/locale/locale_provider.dart';
-import 'package:tawaq/core/routing/route_provider.dart';
-import 'package:tawaq/core/shortcuts/app_search_focus_registry.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_bindings.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
+import 'package:tawaq/core/shortcuts/app_shortcut_invocation.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
-import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 
 /// Global keyboard shortcuts for the application shell.
 ///
@@ -22,12 +17,13 @@ class ShellShortcutScope extends ConsumerStatefulWidget {
   /// Child widget tree.
   final Widget child;
 
-  static const Set<AppShortcutId> globalShortcuts = {
-    AppShortcutId.toggleTheme,
-    AppShortcutId.toggleLocale,
-    AppShortcutId.openSettings,
-    AppShortcutId.focusSearch,
-  };
+  /// Global shortcuts dispatched via [GlobalAppShortcut.invokeGlobal].
+  static const List<GlobalAppShortcut> globalShortcuts = [
+    AppShortcut.toggleTheme,
+    AppShortcut.toggleLocale,
+    AppShortcut.openSettings,
+    AppShortcut.focusSearch,
+  ];
 
   @override
   ConsumerState<ShellShortcutScope> createState() => _ShellShortcutScopeState();
@@ -35,14 +31,10 @@ class ShellShortcutScope extends ConsumerStatefulWidget {
 
 class _ShellShortcutScopeState extends ConsumerState<ShellShortcutScope> {
   late final Map<ShortcutActivator, VoidCallback> _bindings =
-      buildAppShortcutBindings(
+      buildGlobalShortcutBindings(
         shortcuts: ShellShortcutScope.globalShortcuts,
-        handlers: {
-          AppShortcutId.toggleTheme: _toggleTheme,
-          AppShortcutId.toggleLocale: _toggleLocale,
-          AppShortcutId.openSettings: _openSettings,
-          AppShortcutId.focusSearch: _handleFocusSearch,
-        },
+        invocationFor: () => AppShortcutInvocation(ref: ref, context: context),
+        shouldSuppress: shouldSuppressForTextFieldFocus,
       );
 
   @override
@@ -76,33 +68,5 @@ class _ShellShortcutScopeState extends ConsumerState<ShellShortcutScope> {
       }
     }
     return false;
-  }
-
-  void _toggleTheme() {
-    ref.read(themeProvider.notifier).toggleThemeMode();
-  }
-
-  void _toggleLocale() {
-    ref.read(localeProvider.notifier).toggleLocale();
-  }
-
-  void _openSettings() {
-    if (!mounted) return;
-    const SettingsRoute().go(context);
-  }
-
-  void _handleFocusSearch() {
-    if (AppSearchFocusRegistry.instance.focus()) {
-      return;
-    }
-
-    if (!mounted) {
-      return;
-    }
-
-    showFToast(
-      context: context,
-      title: Text(context.l10n.shortcutFocusSearchUnavailable),
-    );
   }
 }

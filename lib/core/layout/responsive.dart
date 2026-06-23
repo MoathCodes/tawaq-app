@@ -49,6 +49,17 @@ bool isAtLeast(BuildContext context, FBreakpoint tier) {
 bool isLessThan(BuildContext context, FBreakpoint tier) =>
     !isAtLeast(context, tier);
 
+/// Whether an allocated layout width (e.g. inside [LayoutBuilder]) is at least
+/// [tier] wide.
+bool isContainerAtLeast(
+  BuildContext context,
+  BoxConstraints constraints,
+  FBreakpoint tier,
+) {
+  final breakpoints = context.theme.breakpoints;
+  return constraints.maxWidth >= tier.threshold(breakpoints);
+}
+
 T _pickResponsiveValue<T>(List<T?> tiers) {
   for (final tier in tiers) {
     if (tier != null) return tier;
@@ -90,14 +101,53 @@ T responsiveValue<T>(
   return _pickResponsiveValue([belowSm, sm, md, lg, xl, xl2]);
 }
 
+/// Picks a value for an allocated layout width using Forui breakpoint tiers.
+///
+/// Same cascade rules as [responsiveValue], but uses [width] instead of the
+/// viewport — for split panes, sidebars, and other container-scoped layouts.
+T responsiveValueForWidth<T>(
+  BuildContext context,
+  double width, {
+  T? belowSm,
+  T? sm,
+  T? md,
+  T? lg,
+  T? xl,
+  T? xl2,
+}) {
+  final breakpoints = context.theme.breakpoints;
+
+  if (width >= breakpoints.xl2) {
+    return _pickResponsiveValue([xl2, xl, lg, md, sm, belowSm]);
+  }
+  if (width >= breakpoints.xl) {
+    return _pickResponsiveValue([xl, lg, md, sm, belowSm]);
+  }
+  if (width >= breakpoints.lg) {
+    return _pickResponsiveValue([lg, md, sm, belowSm]);
+  }
+  if (width >= breakpoints.md) {
+    return _pickResponsiveValue([md, sm, belowSm]);
+  }
+  if (width >= breakpoints.sm) {
+    return _pickResponsiveValue([sm, belowSm]);
+  }
+  return _pickResponsiveValue([belowSm, sm, md, lg, xl, xl2]);
+}
+
 /// Column count for a container of [maxWidth].
 int responsiveColumnCount(
   BuildContext context,
   double maxWidth, {
   required int maxColumns,
+  int minColumns = 1,
 }) {
   final breakpoints = context.theme.breakpoints;
-  if (maxWidth < breakpoints.sm) return 1;
-  if (maxWidth < breakpoints.md) return maxColumns >= 2 ? 2 : 1;
-  return maxColumns.clamp(1, 3);
+  final min = minColumns.clamp(1, maxColumns);
+  if (maxWidth < breakpoints.sm) return min;
+  if (maxWidth < breakpoints.md) {
+    final mid = maxColumns >= 2 ? 2 : min;
+    return mid.clamp(min, maxColumns);
+  }
+  return maxColumns;
 }

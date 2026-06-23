@@ -31,7 +31,13 @@ class IconLabel extends StatelessWidget {
           ExcludeSemantics(child: iconWidget)
         else
           iconWidget,
-        Text(label),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }

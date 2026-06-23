@@ -196,70 +196,78 @@ class ReadingSwipeViewport extends HookWidget {
       ),
     );
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        SingleChildScrollView(
-          padding: EdgeInsets.fromLTRB(
-            horizontalPadding,
-            topPadding,
-            horizontalPadding,
-            bottomPadding,
-          ),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: viewportMinHeight),
-            child: semanticsLabel == null
-                ? swipeRegion
-                : Semantics(
-                    container: true,
-                    label: semanticsLabel,
-                    child: swipeRegion,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final showAffordanceLabels = constraints.maxWidth >= 480;
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                topPadding,
+                horizontalPadding,
+                bottomPadding,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: viewportMinHeight),
+                child: semanticsLabel == null
+                    ? swipeRegion
+                    : Semantics(
+                        container: true,
+                        label: semanticsLabel,
+                        child: swipeRegion,
+                      ),
+              ),
+            ),
+            if (nextProgress > 0.04)
+              Positioned(
+                right: _isRtl ? null : AppSpacing.lg,
+                left: _isRtl ? AppSpacing.lg : null,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: ExcludeSemantics(
+                    child: _SwipeNavAffordance(
+                      progress: nextProgress,
+                      label: l10n.next,
+                      showLabel: showAffordanceLabels,
+                      icon: _isRtl
+                          ? FLucideIcons.chevronLeft
+                          : FLucideIcons.chevronRight,
+                      colors: colors,
+                      radii: theme.radii,
+                      slideFromStart: _isRtl,
+                    ),
                   ),
-          ),
-        ),
-        if (nextProgress > 0.04)
-          Positioned(
-            right: _isRtl ? null : AppSpacing.lg,
-            left: _isRtl ? AppSpacing.lg : null,
-            top: 0,
-            bottom: 0,
-            child: Center(
-              child: ExcludeSemantics(
-                child: _SwipeNavAffordance(
-                  progress: nextProgress,
-                  label: l10n.next,
-                  icon: _isRtl
-                      ? FLucideIcons.chevronLeft
-                      : FLucideIcons.chevronRight,
-                  colors: colors,
-                  radii: theme.radii,
-                  slideFromStart: _isRtl,
                 ),
               ),
-            ),
-          ),
-        if (previousProgress > 0.04)
-          Positioned(
-            left: _isRtl ? null : AppSpacing.lg,
-            right: _isRtl ? AppSpacing.lg : null,
-            top: 0,
-            bottom: 0,
-            child: Center(
-              child: ExcludeSemantics(
-                child: _SwipeNavAffordance(
-                  progress: previousProgress,
-                  label: l10n.fortressPrevious,
-                  icon: _isRtl
-                      ? FLucideIcons.chevronRight
-                      : FLucideIcons.chevronLeft,
-                  colors: colors,
-                  radii: theme.radii,
-                  slideFromStart: !_isRtl,
+            if (previousProgress > 0.04)
+              Positioned(
+                left: _isRtl ? null : AppSpacing.lg,
+                right: _isRtl ? AppSpacing.lg : null,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: ExcludeSemantics(
+                    child: _SwipeNavAffordance(
+                      progress: previousProgress,
+                      label: l10n.fortressPrevious,
+                      showLabel: showAffordanceLabels,
+                      icon: _isRtl
+                          ? FLucideIcons.chevronRight
+                          : FLucideIcons.chevronLeft,
+                      colors: colors,
+                      radii: theme.radii,
+                      slideFromStart: !_isRtl,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-      ],
+          ],
+        );
+      },
     );
   }
 }
@@ -268,6 +276,7 @@ class _SwipeNavAffordance extends StatelessWidget {
   const _SwipeNavAffordance({
     required this.progress,
     required this.label,
+    required this.showLabel,
     required this.icon,
     required this.colors,
     required this.radii,
@@ -276,6 +285,7 @@ class _SwipeNavAffordance extends StatelessWidget {
 
   final double progress;
   final String label;
+  final bool showLabel;
   final IconData icon;
   final FColors colors;
   final AppRadii radii;
@@ -328,13 +338,14 @@ class _SwipeNavAffordance extends StatelessWidget {
                     textDirection: TextDirection.ltr,
                   ),
                 ),
-                Text(
-                  label,
-                  style: context.theme.typography.xs.copyWith(
-                    color: iconColor,
-                    fontWeight: ready ? FontWeight.w600 : FontWeight.w500,
+                if (showLabel)
+                  Text(
+                    label,
+                    style: context.theme.typography.body.xs.copyWith(
+                      color: iconColor,
+                      fontWeight: ready ? FontWeight.w600 : FontWeight.w500,
+                    ),
                   ),
-                ),
               ],
             ),
           ),

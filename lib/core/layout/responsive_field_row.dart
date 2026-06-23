@@ -2,7 +2,6 @@
 library;
 
 import 'package:flutter/widgets.dart';
-import 'package:forui/forui.dart';
 
 import 'package:tawaq/core/layout/responsive.dart';
 
@@ -45,8 +44,7 @@ class ResponsiveFieldRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final sm = context.theme.breakpoints.sm;
-        if (constraints.maxWidth < sm) {
+        if (!isContainerAtLeast(context, constraints, FBreakpoint.sm)) {
           return Column(
             spacing: spacing,
             crossAxisAlignment: columnCrossAxisAlignment,

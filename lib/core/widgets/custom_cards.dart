@@ -5,7 +5,6 @@ import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/theme/theme.dart';
 
-const _kBorderRadius = 15.0;
 const _kBorderOpacity = 100;
 const _kAnimDuration = Duration(milliseconds: 260);
 
@@ -51,8 +50,12 @@ class HoverCard extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final (:isHovered, :setHovered) = useHoverState();
-    final colors = FTheme.of(context).colors;
+    final theme = context.theme;
+    final colors = theme.colors;
     final hovered = isHovered && enableHoverEffect;
+    final radius = borderRadius != null
+        ? BorderRadius.circular(borderRadius!)
+        : theme.radii.xl;
 
     return MouseClick(
       disabled: !enableHoverEffect,
@@ -64,7 +67,7 @@ class HoverCard extends HookWidget {
         padding: padding,
         decoration: BoxDecoration(
           color: backgroundColor ?? colors.secondary,
-          borderRadius: BorderRadius.circular(borderRadius ?? _kBorderRadius),
+          borderRadius: radius,
           border: Border.all(
             color: hovered
                 ? activeBorderColor ?? colors.primary
@@ -128,12 +131,13 @@ class StaticCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = FTheme.of(context).colors;
+    final theme = context.theme;
+    final colors = theme.colors;
     return Container(
       padding: padding ?? const .all(AppSpacing.sm),
       decoration: BoxDecoration(
         color: backgroundColor ?? colors.secondary,
-        borderRadius: BorderRadius.circular(_kBorderRadius),
+        borderRadius: borderRadius ?? theme.radii.xl,
         border: Border.all(
           color:
               borderColor ??
