@@ -61,7 +61,7 @@ void main() {
                   height: 700,
                   child: child,
                 ),
-                const Spacer(),
+                const Expanded(child: SizedBox.shrink()),
               ],
             ),
           ),
@@ -70,15 +70,29 @@ void main() {
     );
   }
 
+  Future<void> pumpHadithLayout(
+    WidgetTester tester, {
+    required double containerWidth,
+    required Widget child,
+  }) async {
+    await tester.binding.setSurfaceSize(const Size(1024, 768));
+    addTearDown(tester.binding.setSurfaceSize);
+    await tester.pumpWidget(
+      wrap(
+        containerWidth: containerWidth,
+        child: child,
+      ),
+    );
+  }
+
   group('Hadith split layout', () {
     testWidgets(
       'uses stacked layout when container is narrower than split minimum',
       (tester) async {
-        await tester.pumpWidget(
-          wrap(
-            containerWidth: 742,
-            child: const HadithPage(),
-          ),
+        await pumpHadithLayout(
+          tester,
+          containerWidth: 742,
+          child: const HadithPage(),
         );
         await tester.pumpAndSettle();
 
@@ -92,11 +106,10 @@ void main() {
     testWidgets(
       'uses horizontal split when container can honor pane minimums',
       (tester) async {
-        await tester.pumpWidget(
-          wrap(
-            containerWidth: 900,
-            child: const HadithPage(),
-          ),
+        await pumpHadithLayout(
+          tester,
+          containerWidth: 900,
+          child: const HadithPage(),
         );
         await tester.pumpAndSettle();
 
