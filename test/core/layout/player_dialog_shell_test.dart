@@ -34,7 +34,6 @@ void main() {
           child: const Center(
             child: PlayerDialogShell(
               title: 'Reciter',
-              width: 520,
               child: SizedBox(height: 120),
             ),
           ),
@@ -59,7 +58,6 @@ void main() {
           child: const Center(
             child: PlayerDialogShell(
               title: 'Reciter',
-              width: 520,
               child: SizedBox(height: 120),
             ),
           ),

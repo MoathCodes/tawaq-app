@@ -24,7 +24,124 @@ class _TestQuranScreenSettings extends QuranScreenSettingsNotifier {
   }
 }
 
+class _MushafViewportTestRepo implements IQuranRepository {
+  @override
+  void dispose() {}
+
+  @override
+  Future<void> ensureReady() async {}
+
+  @override
+  Future<List<Surah>> getAllSurahs() async => [];
+
+  @override
+  Future<Ayah> getAyah(int ayahId, [bool removeNewLines = true]) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Ayah> getAyahBySurah(
+    int surah,
+    int ayahInSurah, [
+    bool removeNewLines = true,
+  ]) =>
+      throw UnimplementedError();
+
+  @override
+  Future<String> getBasmalah() async => '';
+
+  @override
+  String? getBasmalahSync() => '';
+
+  @override
+  Future<Juz> getJuz(int number) => throw UnimplementedError();
+
+  @override
+  Future<List<Juz>> getJuzs() async => [];
+
+  @override
+  Map<int, Juz> getJuzsSync() => {};
+
+  @override
+  Future<int> getJuzStartPage(int juzNumber) async => 1;
+
+  @override
+  Juz? getJuzSync(int number) => null;
+
+  @override
+  ({int startAyahId, int endAyahId})? juzAyahBounds(int juzNumber) => null;
+
+  @override
+  Future<Hizb> getHizb(int number) => throw UnimplementedError();
+
+  @override
+  Future<List<Hizb>> getHizbs() async => [];
+
+  @override
+  Map<int, Hizb> getHizbsSync() => {};
+
+  @override
+  Future<int> getHizbStartPage(int hizbNumber) async => 1;
+
+  @override
+  Hizb? getHizbSync(int number) => null;
+
+  @override
+  ({int startAyahId, int endAyahId})? hizbAyahBounds(int hizbNumber) => null;
+
+  @override
+  Future<QuranPage> getPage(int page) async {
+    return QuranPage(
+      pageNumber: page,
+      glyphText: '',
+      lines: const [],
+      surahs: const [],
+      juzNumber: 1,
+    );
+  }
+
+  @override
+  QuranPage? peekCachedPage(int page) => null;
+
+  @override
+  Future<int> getPageForAyah(int ayahId) async => 1;
+
+  @override
+  Future<int> getStartPageForSurah(int surahNumber) async => 1;
+
+  @override
+  Future<Surah?> getSurah(int surahNumber) async => null;
+
+  @override
+  List<Surah> getSurahsSync() => [];
+
+  @override
+  Surah? getSurahSync(int number) => null;
+
+  @override
+  Future<List<Ayah>> searchAyahs(
+    String query, {
+    int? surahNumber,
+    int maxResults = 100,
+  }) async =>
+      [];
+
+  @override
+  Future<void> warmUpSearchIndex() async {}
+}
+
 void main() {
+  late MushafReaderController controller;
+
+  setUp(() {
+    controller = MushafReaderController.withRepository(
+      repository: _MushafViewportTestRepo(),
+    );
+  });
+
+  tearDown(() {
+    controller.dispose();
+  });
+
   Widget wrap({
     required double width,
     required Widget child,
@@ -41,9 +158,7 @@ void main() {
         mushafLibraryInitProvider.overrideWith((ref) async {}),
         stateSettingsLegacyMigrationProvider.overrideWith((ref) async {}),
         quranScreenSettingsProvider.overrideWith(_TestQuranScreenSettings.new),
-        quranMushafControllerProvider.overrideWithValue(
-          MushafReaderController(),
-        ),
+        quranMushafControllerProvider.overrideWithValue(controller),
         appThemeDataProvider.overrideWithValue(theme),
       ],
       child: FTheme(
@@ -65,37 +180,41 @@ void main() {
   }
 
   group('QuranMushafPane double-page guard', () {
-    testWidgets('falls back to single page below 2× mushaf minimum width',
-        (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          width: 700,
-          child: const QuranMushafPane(),
-        ),
-      );
-      await tester.pump();
+    testWidgets(
+      'falls back to single page below 2× mushaf minimum width',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            width: 700,
+            child: const QuranMushafPane(),
+          ),
+        );
+        await tester.pump();
 
-      final reader = tester.widget<MushafReader>(find.byType(MushafReader));
-      expect(reader.pagesPerViewport, 1);
-      expect(
-        find.text(AppLocalizationsEn().quranDoublePageWidthFallback),
-        findsOneWidget,
-      );
-    });
+        final reader = tester.widget<MushafReader>(find.byType(MushafReader));
+        expect(reader.pagesPerViewport, 1);
+        expect(
+          find.text(AppLocalizationsEn().quranDoublePageWidthFallback),
+          findsOneWidget,
+        );
+      },
+    );
 
-    testWidgets('keeps two-page spread when container is wide enough',
-        (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          width: 800,
-          child: const QuranMushafPane(),
-        ),
-      );
-      await tester.pump();
+    testWidgets(
+      'keeps two-page spread when container is wide enough',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            width: 800,
+            child: const QuranMushafPane(),
+          ),
+        );
+        await tester.pump();
 
-      final reader = tester.widget<MushafReader>(find.byType(MushafReader));
-      expect(reader.pagesPerViewport, 2);
-      expect(find.byType(FAlert), findsNothing);
-    });
+        final reader = tester.widget<MushafReader>(find.byType(MushafReader));
+        expect(reader.pagesPerViewport, 2);
+        expect(find.byType(FAlert), findsNothing);
+      },
+    );
   });
 }
