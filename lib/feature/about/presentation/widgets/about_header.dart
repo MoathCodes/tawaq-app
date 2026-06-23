@@ -49,13 +49,15 @@ class AboutHeader extends StatelessWidget {
         Text(
           content.appName,
           textAlign: TextAlign.center,
-          style: typography.xl2.copyWith(fontWeight: FontWeight.bold),
+          style: typography.body.xl2.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(
           content.latinName,
           textAlign: TextAlign.center,
-          style: typography.sm.copyWith(
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: typography.body.sm.copyWith(
             color: colors.mutedForeground,
             fontWeight: FontWeight.w600,
             letterSpacing: 4,
@@ -70,7 +72,7 @@ class AboutHeader extends StatelessWidget {
         Text(
           content.tagline.resolve(context),
           textAlign: TextAlign.center,
-          style: typography.sm.copyWith(color: colors.mutedForeground),
+          style: typography.body.sm.copyWith(color: colors.mutedForeground),
         ),
       ],
     );

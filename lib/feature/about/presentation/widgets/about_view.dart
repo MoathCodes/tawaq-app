@@ -30,7 +30,7 @@ class AboutView extends StatelessWidget {
       Text(
         content.description.resolve(context),
         textAlign: TextAlign.center,
-        style: theme.typography.sm.copyWith(
+        style: theme.typography.body.sm.copyWith(
           color: colors.mutedForeground,
           height: 1.6,
         ),
@@ -72,8 +72,9 @@ class AboutView extends StatelessWidget {
         Text(
           content.legal!.resolve(context),
           textAlign: TextAlign.center,
-          style: theme.typography.xs.copyWith(color: colors.mutedForeground),
+          style: theme.typography.body.xs.copyWith(color: colors.mutedForeground),
         ),
+      const SizedBox(height: AppSpacing.xs),
     ];
 
     return Column(
@@ -157,7 +158,7 @@ class _AboutSection extends StatelessWidget {
             Icon(icon, size: 16, color: colors.mutedForeground),
             Text(
               title,
-              style: theme.typography.sm.copyWith(
+              style: theme.typography.body.sm.copyWith(
                 color: colors.mutedForeground,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
@@ -216,13 +217,13 @@ class _FactChip extends StatelessWidget {
             Icon(fact.icon, size: 14, color: colors.mutedForeground),
             Text(
               fact.label.resolve(context),
-              style: theme.typography.xs.copyWith(
+              style: theme.typography.body.xs.copyWith(
                 color: colors.mutedForeground,
               ),
             ),
             Text(
               fact.value.resolve(context),
-              style: theme.typography.xs.copyWith(fontWeight: FontWeight.w700),
+              style: theme.typography.body.xs.copyWith(fontWeight: FontWeight.w700),
             ),
           ],
         ),

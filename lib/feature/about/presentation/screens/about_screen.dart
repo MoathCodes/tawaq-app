@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
+import 'package:tawaq/core/layout/centered_viewport_shell.dart';
 import 'package:tawaq/feature/about/data/about_info.dart';
 import 'package:tawaq/feature/about/presentation/widgets/about_view.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -15,15 +15,11 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FScaffold(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 560),
-          child: const SingleChildScrollView(
-            padding: EdgeInsets.all(AppSpacing.xl),
-            child: AboutView(content: aboutContent),
-          ),
-        ),
+    return centeredViewportScrollTab(
+      maxContentWidth: 560,
+      child: const Padding(
+        padding: EdgeInsets.all(AppSpacing.xl),
+        child: AboutView(content: aboutContent),
       ),
     );
   }
