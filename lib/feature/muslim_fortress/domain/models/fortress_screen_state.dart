@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 
 part 'fortress_screen_state.freezed.dart';
 part 'fortress_screen_state.g.dart';
@@ -20,13 +21,21 @@ abstract class FortressScreenState with _$FortressScreenState {
     @Default(FortressSidebarTab.allChapters) FortressSidebarTab sidebarTab,
     @Default([]) List<int> favoriteChapterIds,
     @Default(false) bool defaultBookmarksSeeded,
-    @Default(300) double sidePanelWidth,
+    @Default(SidePanelDefaults.fortressRatio) double sidePanelRatio,
+    @Default(SidePanelDefaults.collapsed) bool sidePanelCollapsed,
   }) = _FortressScreenState;
 
   /// Deserializes the fortress screen state from JSON.
   factory FortressScreenState.fromJson(Map<String, dynamic> json) =>
-      _$FortressScreenStateFromJson(json);
+      _$FortressScreenStateFromJson(
+        _migrateFortressScreenJson(Map<String, dynamic>.from(json)),
+      );
 
   /// Returns the default initial screen state.
   factory FortressScreenState.initial() => const FortressScreenState();
+}
+
+Map<String, dynamic> _migrateFortressScreenJson(Map<String, dynamic> json) {
+  migrateSidePanelJson(json);
+  return json;
 }

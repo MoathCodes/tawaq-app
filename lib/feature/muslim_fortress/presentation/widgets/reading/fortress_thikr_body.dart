@@ -49,7 +49,7 @@ class FortressThikrBody extends ConsumerWidget {
 
     final fallbackStyle =
         proseStyle ??
-        theme.typography.xl3.copyWith(
+        theme.typography.body.xl3.copyWith(
           fontWeight: FontWeight.w600,
           height: 2,
           color: muted ? colors.mutedForeground : colors.foreground,
@@ -136,7 +136,7 @@ class FortressThikrPreview extends StatelessWidget {
     final theme = context.theme;
     final isQuran = dua.isQuranicPassage;
 
-    var style = theme.typography.sm.copyWith(
+    var style = theme.typography.body.sm.copyWith(
       color: theme.colors.mutedForeground,
       height: isQuran ? 2 : 1.6,
       fontSize: isQuran ? (isExpanded ? 22 : 20) : null,

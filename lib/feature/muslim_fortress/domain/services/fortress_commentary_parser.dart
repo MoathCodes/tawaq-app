@@ -12,8 +12,23 @@ abstract final class FortressCommentaryParser {
   static final _spaceTabPattern = RegExp(r'[ \t]+');
   static final _newlinePattern = RegExp(r'\n+');
 
+  static final _parseCache = <String, List<FortressCommentaryBlock>>{};
+  static const _maxParseCacheEntries = 128;
+
   /// Parses [text] into intro and numbered blocks.
   static List<FortressCommentaryBlock> parse(String text) {
+    final cached = _parseCache[text];
+    if (cached != null) return cached;
+
+    final blocks = _parseUncached(text);
+    if (_parseCache.length >= _maxParseCacheEntries) {
+      _parseCache.clear();
+    }
+    _parseCache[text] = blocks;
+    return blocks;
+  }
+
+  static List<FortressCommentaryBlock> _parseUncached(String text) {
     final normalized = text.replaceAll('\r\n', '\n').trim();
     if (normalized.isEmpty) return const [];
 

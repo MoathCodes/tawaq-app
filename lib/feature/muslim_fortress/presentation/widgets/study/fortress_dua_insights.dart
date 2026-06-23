@@ -132,7 +132,7 @@ class FortressDuaStudyNavAction extends StatelessWidget {
                           Flexible(
                             child: Text(
                               label,
-                              style: theme.typography.sm.copyWith(
+                              style: theme.typography.body.sm.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
                               maxLines: 1,
@@ -144,7 +144,7 @@ class FortressDuaStudyNavAction extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         sections.join(' · '),
-                        style: theme.typography.xs.copyWith(
+                        style: theme.typography.body.xs.copyWith(
                           color: theme.colors.mutedForeground,
                           height: 1.3,
                         ),
@@ -164,7 +164,7 @@ class FortressDuaStudyNavAction extends StatelessWidget {
                       Flexible(
                         child: Text(
                           label,
-                          style: theme.typography.sm.copyWith(
+                          style: theme.typography.body.sm.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                           maxLines: 1,
@@ -223,7 +223,7 @@ class FortressDuaVirtueLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final proseStyle = theme.typography.sm.copyWith(
+    final proseStyle = theme.typography.body.sm.copyWith(
       color: theme.colors.mutedForeground,
       height: 1.75,
     );
@@ -253,7 +253,7 @@ class FortressDuaSourceLine extends StatelessWidget {
 
     return ScopedSelectableText(
       reference,
-      style: theme.typography.sm.copyWith(
+      style: theme.typography.body.sm.copyWith(
         color: theme.colors.mutedForeground,
         height: 1.6,
       ),
@@ -348,7 +348,7 @@ class FortressDuaStudyContent extends HookConsumerWidget {
   final bool compact;
 
   TextStyle _proseStyle(FTypography typography, FColors colors) {
-    final scale = compact ? typography.sm : typography.md;
+    final scale = compact ? typography.body.sm : typography.body.md;
     return scale.copyWith(
       color: colors.foreground,
       height: 1.75,
@@ -374,7 +374,7 @@ class FortressDuaStudyContent extends HookConsumerWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             title,
-            style: (prominent ? typography.md : typography.sm).copyWith(
+            style: (prominent ? typography.body.md : typography.body.sm).copyWith(
               fontWeight: FontWeight.w700,
               color: prominent ? colors.primary : colors.foreground,
             ),
@@ -506,7 +506,7 @@ class _FortressSecondaryInsights extends HookWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             title,
-            style: typography.sm.copyWith(
+            style: typography.body.sm.copyWith(
               fontWeight: FontWeight.w600,
               color: colors.foreground,
             ),

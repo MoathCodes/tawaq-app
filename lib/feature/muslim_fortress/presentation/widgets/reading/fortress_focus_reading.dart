@@ -7,10 +7,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_scope.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/directional_content_switcher.dart';
+import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/reading_swipe_viewport.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
@@ -33,6 +34,7 @@ class FortressFocusReadingView extends HookConsumerWidget {
     final category = ref.watch(fortressSelectedCategoryProvider);
     if (category == null) return const SizedBox.shrink();
 
+    final l10n = context.l10n;
     final duasAsync = ref.watch(muslimFortressDuasProvider(category.chapterId));
     final initialIndex = ref.watch(fortressFocusStartIndexProvider);
 
@@ -50,7 +52,16 @@ class FortressFocusReadingView extends HookConsumerWidget {
         ),
       ),
       error: (error, _) => Scaffold(
-        body: Center(child: Text(error.toString())),
+        body: Center(
+          child: ErrorStatePanel(
+            message: l10n.fortressLoadError,
+            detail: '$error',
+            retryLabel: l10n.fortressRetry,
+            onRetry: () => ref.invalidate(
+              muslimFortressDuasProvider(category.chapterId),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -79,16 +90,20 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
         body: Center(
           child: Text(
             l10n.fortressNoAdhkarInChapter,
-            style: theme.typography.md,
+            style: theme.typography.body.md,
           ),
         ),
       );
     }
-    final currentIndex = useState(
-      initialIndex.clamp(0, duas.isEmpty ? 0 : duas.length - 1),
+    final currentIndex = useMemoized(
+      () => ValueNotifier(
+        initialIndex.clamp(0, duas.isEmpty ? 0 : duas.length - 1),
+      ),
+      [duas, initialIndex],
     );
-    final remainingCounts = useState(
-      duas.map((d) => d.targetCount).toList(growable: false),
+    final remainingCounts = useMemoized(
+      () => ValueNotifier(duas.map((d) => d.targetCount).toList(growable: false)),
+      [duas],
     );
     final advanceTimer = useRef<Timer?>(null);
     final slideDirection = useRef(1);
@@ -98,17 +113,20 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
     final tapFeedback = useState<(Offset position, int tick)?>(null);
 
     useEffect(
+      () {
+        return () {
+          currentIndex.dispose();
+          remainingCounts.dispose();
+        };
+      },
+      [currentIndex, remainingCounts],
+    );
+
+    useEffect(
       () =>
           () => advanceTimer.value?.cancel(),
       const [],
     );
-
-    final currentDua = duas[currentIndex.value];
-    final remaining = remainingCounts.value[currentIndex.value];
-    final isDone = remaining <= 0;
-    final progress = isDone
-        ? 1.0
-        : 1.0 - (remaining / currentDua.targetCount).clamp(0.0, 1.0);
 
     void goToIndex(int index) {
       if (index < 0 || index >= duas.length) return;
@@ -148,15 +166,16 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
     }
 
     void decrement([Offset? localPosition]) {
+      final index = currentIndex.value;
+      final remaining = remainingCounts.value[index];
       if (remaining <= 0) return;
 
       final next = List<int>.from(remainingCounts.value);
-      next[currentIndex.value] = remaining - 1;
+      next[index] = remaining - 1;
       remainingCounts.value = next;
       triggerFeedback(localPosition);
 
-      if (next[currentIndex.value] <= 0 &&
-          currentIndex.value < duas.length - 1) {
+      if (next[index] <= 0 && index < duas.length - 1) {
         advanceTimer.value?.cancel();
         advanceTimer.value = Timer(const Duration(milliseconds: 600), () {
           if (context.mounted) {
@@ -177,285 +196,470 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
       }
     }
 
-    final canGoNext = currentIndex.value < duas.length - 1;
-    final canGoPrevious = currentIndex.value > 0;
-
     final counterScale = Tween<double>(begin: 1, end: 0.88).animate(
       CurvedAnimation(parent: pulseController, curve: Curves.easeOutCubic),
     );
 
-    return Scaffold(
-      backgroundColor: theme.colors.background,
-      body: AppShortcutScope(
-        autofocus: true,
-        shortcuts: const {
-          AppShortcutId.fortressCount,
-          AppShortcutId.fortressThikrNext,
-          AppShortcutId.fortressThikrPrev,
-        },
-        handlers: {
-          AppShortcutId.fortressCount: decrement,
-          AppShortcutId.fortressThikrNext: goToNext,
-          AppShortcutId.fortressThikrPrev: goToPrevious,
-        },
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              FortressExcludeDecorative(
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(end: progress),
-                  duration: const Duration(milliseconds: 280),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, _) {
-                    return LinearProgressIndicator(
-                      value: value,
-                      minHeight: 3,
-                      backgroundColor: theme.colors.muted.withAlpha(80),
-                      valueColor: AlwaysStoppedAnimation(
-                        isDone
-                            ? theme.colors.primary
-                            : theme.colors.primary.withAlpha(200),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              NonSelectable(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.md,
-                    AppSpacing.lg,
-                    AppSpacing.sm,
-                  ),
-                  child: LayoutBuilder(
-                    builder: (context, toolbarConstraints) {
-                      final compactToolbar = toolbarConstraints.maxWidth <
-                          context.theme.breakpoints.sm;
+    return LayoutBuilder(
+      builder: (context, bodyConstraints) {
+        final shortHeight = bodyConstraints.maxHeight < 560;
 
-                      return Row(
-                        children: [
-                          FortressLabeledNavButton(
-                            label: l10n.fortressFinish,
-                            enabled: true,
-                            onPress: onExit,
-                            iconOnly: compactToolbar,
-                            prefix: const Icon(FLucideIcons.x, size: 18),
-                            child: Text(l10n.fortressFinish),
-                          ),
-                          const Spacer(),
-                          Flexible(
-                            child: Semantics(
-                              header: true,
-                              label: category.title,
-                              child: Text(
-                                category.title,
-                                style: theme.typography.sm.copyWith(
-                                  color: theme.colors.mutedForeground,
-                                ),
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                          const Spacer(),
-                          Semantics(
-                            liveRegion: true,
-                            label: isDone
-                                ? l10n.fortressCompleted
-                                : l10n.fortressRemainingCount(remaining),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                ScaleTransition(
-                                  scale: counterScale,
-                                  child: Text(
-                                    isDone ? '✓' : '$remaining',
-                                    style: theme.typography.xl3.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      height: 1,
-                                      color: isDone
-                                          ? theme.colors.primary
-                                          : theme.colors.foreground,
-                                      fontFeatures: const [
-                                        FontFeature.tabularFigures(),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${currentIndex.value + 1} / ${duas.length}',
-                                  style: theme.typography.xs.copyWith(
-                                    color: theme.colors.mutedForeground,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      );
-                    },
+        return Scaffold(
+          backgroundColor: theme.colors.background,
+          body: AppShortcutScope(
+            autofocus: true,
+            shortcuts: const {
+              AppShortcut.fortressCount,
+              AppShortcut.fortressThikrNext,
+              AppShortcut.fortressThikrPrev,
+            },
+            handlers: {
+              AppShortcut.fortressCount: decrement,
+              AppShortcut.fortressThikrNext: goToNext,
+              AppShortcut.fortressThikrPrev: goToPrevious,
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _FortressFocusProgressBar(
+                  currentIndex: currentIndex,
+                  remainingCounts: remainingCounts,
+                  duas: duas,
+                ),
+                _FortressFocusToolbar(
+                  category: category,
+                  duas: duas,
+                  currentIndex: currentIndex,
+                  remainingCounts: remainingCounts,
+                  counterScale: counterScale,
+                  onExit: onExit,
+                ),
+                Expanded(
+                  child: _FortressFocusThikrPane(
+                    category: category,
+                    duas: duas,
+                    currentIndex: currentIndex,
+                    remainingCounts: remainingCounts,
+                    slideDirection: slideDirection,
+                    tapFeedback: tapFeedback.value,
+                    onDecrement: decrement,
+                    onNext: goToNext,
+                    onPrevious: goToPrevious,
+                    onHorizontalScroll: handleHorizontalScroll,
+                    showReadingHint: !shortHeight,
                   ),
                 ),
-              ),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    const horizontalPadding = AppSpacing.xxl;
-                    const verticalPadding = AppSpacing.xl;
-                    final hintReserve = isDone
-                        ? AppSpacing.lg
-                        : AppSpacing.xxl + AppSpacing.md;
+                if (!shortHeight)
+                  ValueListenableBuilder<int>(
+                    valueListenable: currentIndex,
+                    builder: (context, index, _) {
+                      final currentDua = duas[index];
+                      if (!currentDua.hasVirtue) return const SizedBox.shrink();
 
-                    final viewportMinHeight = (constraints.maxHeight -
-                            verticalPadding * 2 -
-                            hintReserve)
-                        .clamp(0.0, double.infinity);
+                      return LayoutBuilder(
+                        builder: (context, virtueConstraints) {
+                          final horizontalPadding =
+                              virtueConstraints.maxWidth < 480
+                              ? AppSpacing.lg
+                              : virtueConstraints.maxWidth < 640
+                              ? AppSpacing.xl
+                              : AppSpacing.xxl;
 
-                    return Listener(
-                      onPointerSignal: (event) {
-                        if (event is PointerScrollEvent) {
-                          if (event.scrollDelta.dx.abs() >
-                              event.scrollDelta.dy.abs()) {
-                            handleHorizontalScroll(event.scrollDelta.dx);
-                          }
-                        }
-                      },
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          ReadingSwipeViewport(
-                            viewportMinHeight: viewportMinHeight,
-                            horizontalPadding: horizontalPadding,
-                            topPadding: verticalPadding,
-                            bottomPadding: verticalPadding + hintReserve,
-                            textDirection: kReadingPageTurnDirection,
-                            canGoNext: canGoNext,
-                            canGoPrevious: canGoPrevious,
-                            onNext: goToNext,
-                            onPrevious: goToPrevious,
-                            semanticsLabel: l10n.fortressReadingHint,
-                            onTapDown: decrement,
-                            child: NonSelectable(
+                          return Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              horizontalPadding,
+                              AppSpacing.md,
+                              horizontalPadding,
+                              AppSpacing.sm,
+                            ),
+                            child: Center(
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(
                                   maxWidth: kFortressReadingMaxWidth,
                                 ),
-                                child: DirectionalContentSwitcher(
-                                  currentKey: currentIndex.value,
-                                  slideDirection: slideDirection.value,
-                                  child: Semantics(
-                                    container: true,
-                                    label: FortressA11y.thikrSectionLabel(
-                                      l10n: l10n,
-                                      categoryTitle: category.title,
-                                      index: currentIndex.value,
-                                      total: duas.length,
-                                      remaining: remaining,
-                                      targetCount: currentDua.targetCount,
-                                      isDone: isDone,
-                                    ),
-                                    child: FortressThikrBody(
-                                      dua: currentDua,
-                                      muted: isDone,
-                                      proseStyle: theme.typography.xl3
-                                          .copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            height: 2,
-                                            color: isDone
-                                                ? theme.colors.mutedForeground
-                                                : theme.colors.foreground,
-                                          ),
-                                    ),
+                                child: FortressDuaVirtueLine(
+                                  virtue: currentDua.virtue!,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ValueListenableBuilder<int>(
+                  valueListenable: currentIndex,
+                  builder: (context, index, _) {
+                    return ValueListenableBuilder<List<int>>(
+                      valueListenable: remainingCounts,
+                      builder: (context, counts, _) {
+                        final currentDua = duas[index];
+                        final remaining = counts[index];
+                        final isDone = remaining <= 0;
+
+                        return SafeArea(
+                          top: false,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.lg,
+                              AppSpacing.sm,
+                              AppSpacing.lg,
+                              AppSpacing.lg,
+                            ),
+                            child: FortressReadingNavBar(
+                              canGoPrevious: index > 0,
+                              canGoNext: index < duas.length - 1,
+                              onPrevious: goToPrevious,
+                              onNext: goToNext,
+                              studyDua: currentDua.hasFocusStudyAction
+                                  ? currentDua
+                                  : null,
+                              center: Text(
+                                isDone
+                                    ? l10n.fortressCompleted
+                                    : l10n.fortressRemainingCount(remaining),
+                                style: theme.typography.body.sm.copyWith(
+                                  color: theme.colors.mutedForeground,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FortressFocusProgressBar extends StatelessWidget {
+  const _FortressFocusProgressBar({
+    required this.currentIndex,
+    required this.remainingCounts,
+    required this.duas,
+  });
+
+  final ValueNotifier<int> currentIndex;
+  final ValueNotifier<List<int>> remainingCounts;
+  final List<FortressDuaItem> duas;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+
+    return FortressExcludeDecorative(
+      child: ValueListenableBuilder<int>(
+        valueListenable: currentIndex,
+        builder: (context, index, _) {
+          return ValueListenableBuilder<List<int>>(
+            valueListenable: remainingCounts,
+            builder: (context, counts, _) {
+              final currentDua = duas[index];
+              final remaining = counts[index];
+              final isDone = remaining <= 0;
+              final progress = isDone
+                  ? 1.0
+                  : 1.0 - (remaining / currentDua.targetCount).clamp(0.0, 1.0);
+
+              return TweenAnimationBuilder<double>(
+                tween: Tween(end: progress),
+                duration: const Duration(milliseconds: 280),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, _) {
+                  return LinearProgressIndicator(
+                    value: value,
+                    minHeight: 3,
+                    backgroundColor: theme.colors.muted.withAlpha(80),
+                    valueColor: AlwaysStoppedAnimation(
+                      isDone
+                          ? theme.colors.primary
+                          : theme.colors.primary.withAlpha(200),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FortressFocusToolbar extends StatelessWidget {
+  const _FortressFocusToolbar({
+    required this.category,
+    required this.duas,
+    required this.currentIndex,
+    required this.remainingCounts,
+    required this.counterScale,
+    required this.onExit,
+  });
+
+  final FortressCategory category;
+  final List<FortressDuaItem> duas;
+  final ValueNotifier<int> currentIndex;
+  final ValueNotifier<List<int>> remainingCounts;
+  final Animation<double> counterScale;
+  final VoidCallback onExit;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = context.l10n;
+
+    return NonSelectable(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.md,
+          AppSpacing.lg,
+          AppSpacing.sm,
+        ),
+        child: LayoutBuilder(
+          builder: (context, toolbarConstraints) {
+            final compactToolbar =
+                toolbarConstraints.maxWidth < context.theme.breakpoints.sm;
+
+            return Row(
+              children: [
+                FortressLabeledNavButton(
+                  label: l10n.fortressFinish,
+                  enabled: true,
+                  onPress: onExit,
+                  iconOnly: compactToolbar,
+                  prefix: const Icon(FLucideIcons.x, size: 18),
+                  child: Text(l10n.fortressFinish),
+                ),
+                const Spacer(),
+                Flexible(
+                  child: Semantics(
+                    header: true,
+                    label: category.title,
+                    child: Text(
+                      category.title,
+                      style: theme.typography.body.sm.copyWith(
+                        color: theme.colors.mutedForeground,
+                      ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                ValueListenableBuilder<int>(
+                  valueListenable: currentIndex,
+                  builder: (context, index, _) {
+                    return ValueListenableBuilder<List<int>>(
+                      valueListenable: remainingCounts,
+                      builder: (context, counts, _) {
+                        final remaining = counts[index];
+                        final isDone = remaining <= 0;
+
+                        return Semantics(
+                          liveRegion: true,
+                          label: isDone
+                              ? l10n.fortressCompleted
+                              : l10n.fortressRemainingCount(remaining),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              ScaleTransition(
+                                scale: counterScale,
+                                child: Text(
+                                  isDone ? '✓' : '$remaining',
+                                  style: theme.typography.body.xl3.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    height: 1,
+                                    color: isDone
+                                        ? theme.colors.primary
+                                        : theme.colors.foreground,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${index + 1} / ${duas.length}',
+                                style: theme.typography.body.xs.copyWith(
+                                  color: theme.colors.mutedForeground,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _FortressFocusThikrPane extends StatelessWidget {
+  const _FortressFocusThikrPane({
+    required this.category,
+    required this.duas,
+    required this.currentIndex,
+    required this.remainingCounts,
+    required this.slideDirection,
+    required this.tapFeedback,
+    required this.onDecrement,
+    required this.onNext,
+    required this.onPrevious,
+    required this.onHorizontalScroll,
+    this.showReadingHint = true,
+  });
+
+  final FortressCategory category;
+  final List<FortressDuaItem> duas;
+  final ValueNotifier<int> currentIndex;
+  final ValueNotifier<List<int>> remainingCounts;
+  final ObjectRef<int> slideDirection;
+  final (Offset position, int tick)? tapFeedback;
+  final void Function([Offset? localPosition]) onDecrement;
+  final VoidCallback onNext;
+  final VoidCallback onPrevious;
+  final void Function(double delta) onHorizontalScroll;
+  final bool showReadingHint;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = context.l10n;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final horizontalPadding = constraints.maxWidth < 480
+            ? AppSpacing.lg
+            : constraints.maxWidth < 640
+            ? AppSpacing.xl
+            : AppSpacing.xxl;
+        const verticalPadding = AppSpacing.xl;
+
+        return ValueListenableBuilder<int>(
+          valueListenable: currentIndex,
+          builder: (context, index, _) {
+            return ValueListenableBuilder<List<int>>(
+              valueListenable: remainingCounts,
+              builder: (context, counts, _) {
+                final currentDua = duas[index];
+                final remaining = counts[index];
+                final isDone = remaining <= 0;
+                final canGoNext = index < duas.length - 1;
+                final canGoPrevious = index > 0;
+                final hintReserve = showReadingHint && !isDone
+                    ? AppSpacing.xxl + AppSpacing.md
+                    : AppSpacing.lg;
+                final viewportMinHeight = (constraints.maxHeight -
+                        verticalPadding * 2 -
+                        hintReserve)
+                    .clamp(0.0, double.infinity);
+
+                return Listener(
+                  onPointerSignal: (event) {
+                    if (event is PointerScrollEvent) {
+                      if (event.scrollDelta.dx.abs() >
+                          event.scrollDelta.dy.abs()) {
+                        onHorizontalScroll(event.scrollDelta.dx);
+                      }
+                    }
+                  },
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ReadingSwipeViewport(
+                        viewportMinHeight: viewportMinHeight,
+                        horizontalPadding: horizontalPadding,
+                        topPadding: verticalPadding,
+                        bottomPadding: verticalPadding + hintReserve,
+                        textDirection: kReadingPageTurnDirection,
+                        canGoNext: canGoNext,
+                        canGoPrevious: canGoPrevious,
+                        onNext: onNext,
+                        onPrevious: onPrevious,
+                        semanticsLabel: l10n.fortressReadingHint,
+                        onTapDown: onDecrement,
+                        child: NonSelectable(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(
+                              maxWidth: kFortressReadingMaxWidth,
+                            ),
+                            child: DirectionalContentSwitcher(
+                              currentKey: index,
+                              slideDirection: slideDirection.value,
+                              child: Semantics(
+                                container: true,
+                                label: FortressA11y.thikrSectionLabel(
+                                  l10n: l10n,
+                                  categoryTitle: category.title,
+                                  index: index,
+                                  total: duas.length,
+                                  remaining: remaining,
+                                  targetCount: currentDua.targetCount,
+                                  isDone: isDone,
+                                ),
+                                child: FortressThikrBody(
+                                  dua: currentDua,
+                                  muted: isDone,
+                                  proseStyle: theme.typography.body.xl3.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    height: 2,
+                                    color: isDone
+                                        ? theme.colors.mutedForeground
+                                        : theme.colors.foreground,
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                          if (!isDone)
-                            Positioned(
-                              left: 0,
-                              right: 0,
-                              bottom: AppSpacing.lg,
-                              child: FortressExcludeDecorative(
-                                child: IgnorePointer(
-                                  child: Text(
-                                    l10n.fortressReadingHint,
-                                    style: theme.typography.xs.copyWith(
-                                      color: theme.colors.mutedForeground
-                                          .withAlpha(160),
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
+                        ),
+                      ),
+                      if (showReadingHint && !isDone)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: AppSpacing.lg,
+                          child: FortressExcludeDecorative(
+                            child: IgnorePointer(
+                              child: Text(
+                                l10n.fortressReadingHint,
+                                style: theme.typography.body.xs.copyWith(
+                                  color: theme.colors.mutedForeground
+                                      .withAlpha(160),
                                 ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
-                          if (tapFeedback.value case (
-                            final position,
-                            final tick,
-                          ))
-                            FortressTapRippleFeedback(
-                              key: ValueKey(tick),
-                              position: position,
-                              color: theme.colors.primary,
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-              if (currentDua.hasVirtue)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.xxl,
-                    AppSpacing.md,
-                    AppSpacing.xxl,
-                    AppSpacing.sm,
+                          ),
+                        ),
+                      if (tapFeedback case (final position, final tick))
+                        FortressTapRippleFeedback(
+                          key: ValueKey(tick),
+                          position: position,
+                          color: theme.colors.primary,
+                        ),
+                    ],
                   ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: kFortressReadingMaxWidth,
-                      ),
-                      child: FortressDuaVirtueLine(
-                        virtue: currentDua.virtue!,
-                      ),
-                    ),
-                  ),
-                ),
-              SafeArea(
-                top: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.sm,
-                    AppSpacing.lg,
-                    AppSpacing.lg,
-                  ),
-                  child: FortressReadingNavBar(
-                    canGoPrevious: canGoPrevious,
-                    canGoNext: canGoNext,
-                    onPrevious: goToPrevious,
-                    onNext: goToNext,
-                    studyDua: currentDua.hasFocusStudyAction
-                        ? currentDua
-                        : null,
-                    center: Text(
-                      isDone
-                          ? l10n.fortressCompleted
-                          : l10n.fortressRemainingCount(remaining),
-                      style: theme.typography.sm.copyWith(
-                        color: theme.colors.mutedForeground,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

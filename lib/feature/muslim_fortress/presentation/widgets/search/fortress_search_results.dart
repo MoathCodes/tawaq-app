@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/custom_cards.dart';
+import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
@@ -10,6 +12,7 @@ import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Displays global Hisn search results for titles and dhikr contents.
@@ -22,13 +25,22 @@ class FortressSearchResultsPane extends ConsumerWidget {
     final query = ref.watch(muslimFortressSearchQueryProvider);
     final resultsAsync = ref.watch(muslimFortressSearchResultsProvider);
 
+    final l10n = context.l10n;
+
     return resultsAsync.when(
       data: (results) => _FortressSearchResultsBody(
         results: results,
         query: query,
       ),
       loading: () => const Center(child: FCircularProgress.loader()),
-      error: (error, _) => Center(child: Text(error.toString())),
+      error: (error, _) => Center(
+        child: ErrorStatePanel(
+          message: l10n.fortressLoadError,
+          detail: '$error',
+          retryLabel: l10n.fortressRetry,
+          onRetry: () => ref.invalidate(muslimFortressSearchResultsProvider),
+        ),
+      ),
     );
   }
 }
@@ -44,79 +56,127 @@ class _FortressSearchResultsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colors = theme.colors;
     final l10n = context.l10n;
 
     if (results.isEmpty) {
-      return Semantics(
-        label: FortressA11y.searchEmptyLabel(l10n, query),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                FLucideIcons.searchX,
-                size: 48,
-                color: colors.mutedForeground.withAlpha(120),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                l10n.fortressNoSearchResults,
-                style: theme.typography.lg.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                '"$query"',
-                style: theme.typography.sm.copyWith(
-                  color: colors.mutedForeground,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+      return EmptyStatePanel(
+        icon: FLucideIcons.searchX,
+        title: l10n.fortressNoSearchResults,
+        hint: '"$query"',
+        iconSize: 48,
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        semanticsLabel: FortressA11y.searchEmptyLabel(l10n, query),
       );
     }
 
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: kFortressReadingMaxWidth),
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
-          children: [
-            if (results.titles.isNotEmpty) ...[
-              _SectionHeader(
-                icon: FLucideIcons.folderOpen,
-                title: l10n.fortressSearchTitles,
-                count: results.totalTitles,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              for (final category in results.titles) ...[
-                _TitleResultTile(category: category),
-                const SizedBox(height: AppSpacing.sm),
-              ],
-              const SizedBox(height: AppSpacing.xl),
-            ],
-            if (results.contents.isNotEmpty) ...[
-              _SectionHeader(
-                icon: FLucideIcons.textSearch,
-                title: l10n.fortressSearchContents,
-                count: results.totalContents,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              for (final hit in results.contents) ...[
-                _ContentResultTile(hit: hit),
-                const SizedBox(height: AppSpacing.sm),
-              ],
-            ],
-          ],
+        child: _FortressSearchResultsList(
+          results: results,
+          l10n: l10n,
         ),
       ),
+    );
+  }
+}
+
+enum _SearchListEntryKind { titleHeader, title, contentHeader, content }
+
+class _SearchListEntry {
+  const _SearchListEntry._(this.kind, {this.category, this.hit});
+
+  const _SearchListEntry.titleHeader() : this._(_SearchListEntryKind.titleHeader);
+
+  const _SearchListEntry.title(FortressCategory category)
+    : this._(_SearchListEntryKind.title, category: category);
+
+  const _SearchListEntry.contentHeader()
+    : this._(_SearchListEntryKind.contentHeader);
+
+  const _SearchListEntry.content(FortressSearchContentHit hit)
+    : this._(_SearchListEntryKind.content, hit: hit);
+
+  final _SearchListEntryKind kind;
+  final FortressCategory? category;
+  final FortressSearchContentHit? hit;
+}
+
+class _FortressSearchResultsList extends StatelessWidget {
+  const _FortressSearchResultsList({
+    required this.results,
+    required this.l10n,
+  });
+
+  final FortressSearchResults results;
+  final AppLocalizations l10n;
+
+  List<_SearchListEntry> _buildEntries() {
+    final entries = <_SearchListEntry>[];
+
+    if (results.titles.isNotEmpty) {
+      entries.add(const _SearchListEntry.titleHeader());
+      for (final category in results.titles) {
+        entries.add(_SearchListEntry.title(category));
+      }
+    }
+
+    if (results.contents.isNotEmpty) {
+      entries.add(const _SearchListEntry.contentHeader());
+      for (final hit in results.contents) {
+        entries.add(_SearchListEntry.content(hit));
+      }
+    }
+
+    return entries;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = _buildEntries();
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
+      itemCount: entries.length,
+      itemBuilder: (context, index) {
+        final entry = entries[index];
+        final isLast = index == entries.length - 1;
+        final nextKind = isLast ? null : entries[index + 1].kind;
+
+        final child = switch (entry.kind) {
+          _SearchListEntryKind.titleHeader => _SectionHeader(
+            icon: FLucideIcons.folderOpen,
+            title: l10n.fortressSearchTitles,
+            count: results.totalTitles,
+          ),
+          _SearchListEntryKind.title => _TitleResultTile(
+            category: entry.category!,
+          ),
+          _SearchListEntryKind.contentHeader => _SectionHeader(
+            icon: FLucideIcons.textSearch,
+            title: l10n.fortressSearchContents,
+            count: results.totalContents,
+          ),
+          _SearchListEntryKind.content => _ContentResultTile(hit: entry.hit!),
+        };
+
+        final trailingGap = switch (entry.kind) {
+          _SearchListEntryKind.titleHeader ||
+          _SearchListEntryKind.contentHeader =>
+            AppSpacing.md,
+          _SearchListEntryKind.title || _SearchListEntryKind.content =>
+            nextKind == _SearchListEntryKind.contentHeader ||
+                    nextKind == _SearchListEntryKind.titleHeader ||
+                    nextKind == null
+                ? AppSpacing.xl
+                : AppSpacing.sm,
+        };
+
+        return Padding(
+          padding: EdgeInsets.only(bottom: trailingGap),
+          child: child,
+        );
+      },
     );
   }
 }
@@ -142,9 +202,15 @@ class _SectionHeader extends StatelessWidget {
         children: [
           Icon(icon, size: 18, color: theme.colors.primary),
           const SizedBox(width: AppSpacing.sm),
-          Text(
-            title,
-            style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
+          Expanded(
+            child: Text(
+              title,
+              style: theme.typography.body.lg.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           FBadge(child: Text('$count')),
@@ -170,13 +236,11 @@ class _TitleResultTile extends ConsumerWidget {
           .selectSearchTitle(category),
       semanticsLabel: category.title,
       child: FortressExcludeDecorative(
-        child: Container(
+        child: StaticCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: theme.colors.secondary.withAlpha(80),
-            borderRadius: theme.radii.md,
-            border: Border.all(color: theme.colors.border),
-          ),
+          borderRadius: theme.radii.md,
+          backgroundColor: theme.colors.secondary.withAlpha(80),
+          borderColor: theme.colors.border,
           child: Row(
             children: [
               Icon(category.icon, color: theme.colors.primary),
@@ -187,14 +251,14 @@ class _TitleResultTile extends ConsumerWidget {
                   children: [
                     Text(
                       category.title,
-                      style: theme.typography.md.copyWith(
+                      style: theme.typography.body.md.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${fortressRecurrenceLabel(category.recurrence, l10n)} · ${l10n.fortressSupplicationCount(category.supplicationCount)}',
-                      style: theme.typography.xs.copyWith(
+                      style: theme.typography.body.xs.copyWith(
                         color: theme.colors.mutedForeground,
                       ),
                     ),
@@ -231,12 +295,9 @@ class _ContentResultTile extends ConsumerWidget {
           .selectSearchContent(hit),
       semanticsLabel: '${hit.categoryTitle}. ${item.text}',
       child: FortressExcludeDecorative(
-        child: Container(
+        child: StaticCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            borderRadius: theme.radii.md,
-            border: Border.all(color: theme.colors.border),
-          ),
+          borderRadius: theme.radii.md,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -245,7 +306,7 @@ class _ContentResultTile extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       hit.categoryTitle,
-                      style: theme.typography.xs.copyWith(
+                      style: theme.typography.body.xs.copyWith(
                         color: theme.colors.primary,
                         fontWeight: FontWeight.w600,
                       ),
@@ -261,7 +322,7 @@ class _ContentResultTile extends ConsumerWidget {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 item.text,
-                style: theme.typography.sm.copyWith(height: 1.6),
+                style: theme.typography.body.sm.copyWith(height: 1.6),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),

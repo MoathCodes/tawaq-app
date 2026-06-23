@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -41,64 +43,69 @@ class MuslimFortressWelcomePane extends ConsumerWidget {
     final favoritesOverflow =
         bookmarkCategories.length - favoritesPreview.length;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const _WelcomeHeader(),
-          const SizedBox(height: AppSpacing.xxl),
-          FTileGroup(
-            label: Text(l10n.fortressRecommendedNow),
-            description: recommendedCategories.isEmpty
-                ? Text(
-                    l10n.fortressNoRecommendations,
-                    style: context.theme.typography.sm.copyWith(
-                      color: context.theme.colors.mutedForeground,
-                    ),
-                  )
-                : null,
-            children: _fortressCategoryTiles(
-              context,
-              ref,
-              categories: recommendedCategories,
-              prefixForIndex: (index) => index == 0
-                  ? FLucideIcons.sparkles
-                  : FLucideIcons.bookOpenText,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          FTileGroup(
-            label: Text(l10n.fortressFavorites),
-            description: favoritesPreview.isEmpty
-                ? Text(
-                    l10n.fortressNoFavoriteChapters,
-                    style: context.theme.typography.sm.copyWith(
-                      color: context.theme.colors.mutedForeground,
-                    ),
-                  )
-                : null,
-            children: _fortressCategoryTiles(
-              context,
-              ref,
-              categories: favoritesPreview,
-              prefixForIndex: (_) => FLucideIcons.bookmark,
-            ),
-          ),
-          if (favoritesOverflow > 0) ...[
-            const SizedBox(height: AppSpacing.sm),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: FButton(
-                variant: .ghost,
-                onPress: controller.openFavoritesTab,
-                child: Text(
-                  l10n.fortressMoreFavoriteChapters(favoritesOverflow),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: kFortressReadingMaxWidth),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const _WelcomeHeader(),
+              const SizedBox(height: AppSpacing.xxl),
+              FTileGroup(
+                label: Text(l10n.fortressRecommendedNow),
+                description: recommendedCategories.isEmpty
+                    ? Text(
+                        l10n.fortressNoRecommendations,
+                        style: context.theme.typography.body.sm.copyWith(
+                          color: context.theme.colors.mutedForeground,
+                        ),
+                      )
+                    : null,
+                children: _fortressCategoryTiles(
+                  context,
+                  ref,
+                  categories: recommendedCategories,
+                  prefixForIndex: (index) => index == 0
+                      ? FLucideIcons.sparkles
+                      : FLucideIcons.bookOpenText,
                 ),
               ),
-            ),
-          ],
-        ],
+              const SizedBox(height: AppSpacing.xl),
+              FTileGroup(
+                label: Text(l10n.fortressFavorites),
+                description: favoritesPreview.isEmpty
+                    ? Text(
+                        l10n.fortressNoFavoriteChapters,
+                        style: context.theme.typography.body.sm.copyWith(
+                          color: context.theme.colors.mutedForeground,
+                        ),
+                      )
+                    : null,
+                children: _fortressCategoryTiles(
+                  context,
+                  ref,
+                  categories: favoritesPreview,
+                  prefixForIndex: (_) => FLucideIcons.bookmark,
+                ),
+              ),
+              if (favoritesOverflow > 0) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: FButton(
+                    variant: .ghost,
+                    onPress: controller.openFavoritesTab,
+                    child: Text(
+                      l10n.fortressMoreFavoriteChapters(favoritesOverflow),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -116,16 +123,15 @@ class _WelcomeHeader extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
+        StaticCard(
           padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: colors.primary.withValues(alpha: 0.12),
-            borderRadius: theme.radii.md,
-          ),
+          borderRadius: theme.radii.md,
+          backgroundColor: colors.primary.withValues(alpha: 0.12),
+          borderColor: Colors.transparent,
           child: Icon(
             FLucideIcons.shieldHalf,
             color: colors.primary,
-            size: theme.typography.xl2.fontSize,
+            size: theme.typography.body.xl2.fontSize,
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -135,7 +141,7 @@ class _WelcomeHeader extends StatelessWidget {
             children: [
               Text(
                 l10n.fortressWelcomeTitle,
-                style: theme.typography.xl2.copyWith(
+                style: theme.typography.body.xl2.copyWith(
                   fontWeight: FontWeight.w700,
                   height: 1.25,
                 ),
@@ -143,7 +149,7 @@ class _WelcomeHeader extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 l10n.fortressWelcomeSubtitle,
-                style: theme.typography.md.copyWith(
+                style: theme.typography.body.md.copyWith(
                   color: colors.mutedForeground,
                   height: 1.55,
                 ),
@@ -170,7 +176,7 @@ List<FTileMixin> _fortressCategoryTiles(
       FTileMixin.tile(
         prefix: Icon(
           prefixForIndex(i),
-          size: theme.typography.md.fontSize,
+          size: theme.typography.body.md.fontSize,
           color: theme.colors.primary,
         ),
         title: Text(
@@ -185,7 +191,7 @@ List<FTileMixin> _fortressCategoryTiles(
         ),
         suffix: Icon(
           FLucideIcons.chevronRight,
-          size: theme.typography.sm.fontSize,
+          size: theme.typography.body.sm.fontSize,
           color: theme.colors.mutedForeground,
         ),
         semanticsLabel: FortressA11y.categoryCardLabel(

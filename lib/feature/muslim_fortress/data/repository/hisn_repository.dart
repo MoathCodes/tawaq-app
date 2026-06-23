@@ -123,12 +123,31 @@ class HisnRepository {
 
   final HisnDataSource _source;
 
+  Map<int, int>? _countsByTitleId;
+  Map<int, String>? _titleNamesById;
+  Set<int>? _featuredTitleIds;
+
   HisnClient get _client => _source.client;
+
+  void _ensureChapterCaches() {
+    if (_countsByTitleId != null &&
+        _titleNamesById != null &&
+        _featuredTitleIds != null) {
+      return;
+    }
+
+    _countsByTitleId = _client.contents.countByTitleId();
+    _titleNamesById = {
+      for (final title in _client.titles.all()) title.id: title.name.trim(),
+    };
+    _featuredTitleIds = _resolveFeaturedTitleIds();
+  }
 
   /// All titles as sidebar/browse categories.
   List<FortressCategory> loadChapters() {
-    final counts = _client.contents.countByTitleId();
-    final featuredIds = _featuredTitleIds();
+    _ensureChapterCaches();
+    final counts = _countsByTitleId!;
+    final featuredIds = _featuredTitleIds!;
 
     return [
       for (final title in _client.titles.all())
@@ -150,9 +169,18 @@ class HisnRepository {
     int titleId, {
     String categoryTitle = '',
   }) {
+    final items = _client.contents.byTitleId(titleId);
+    final flagsById = _client.commentary.flagsForContentIds({
+      for (final item in items) item.id,
+    });
+
     return [
-      for (final item in _client.contents.byTitleId(titleId))
-        _mapContent(item, categoryTitle: categoryTitle),
+      for (final item in items)
+        _mapContent(
+          item,
+          categoryTitle: categoryTitle,
+          flags: flagsById[item.id],
+        ),
     ];
   }
 
@@ -186,10 +214,13 @@ class HisnRepository {
     final (totalContents, contents) = _client.search.searchContents(
       contentQuery,
     );
-    final counts = _client.contents.countByTitleId();
-    final titleNames = {
-      for (final title in _client.titles.all()) title.id: title.name.trim(),
-    };
+    _ensureChapterCaches();
+    final counts = _countsByTitleId!;
+    final titleNames = _titleNamesById!;
+    final featuredIds = _featuredTitleIds!;
+    final flagsById = _client.commentary.flagsForContentIds({
+      for (final item in contents) item.id,
+    });
 
     return FortressSearchResults(
       totalTitles: totalTitles,
@@ -201,7 +232,7 @@ class HisnRepository {
             title: title.name.trim(),
             recurrence: title.recurrence,
             supplicationCount: counts[title.id] ?? 0,
-            featured: _featuredTitleIds().contains(title.id),
+            featured: featuredIds.contains(title.id),
           ),
       ],
       contents: [
@@ -212,6 +243,7 @@ class HisnRepository {
             item: _mapContent(
               item,
               categoryTitle: titleNames[item.titleId] ?? '',
+              flags: flagsById[item.id],
             ),
           ),
       ],
@@ -247,9 +279,8 @@ class HisnRepository {
   FortressDuaItem _mapContent(
     HisnContent item, {
     required String categoryTitle,
+    HisnCommentaryFlags? flags,
   }) {
-    final flags = _client.commentary.flagsForContentId(item.id);
-
     return FortressDuaItem(
       contentId: item.id,
       category: categoryTitle,
@@ -265,7 +296,7 @@ class HisnRepository {
     );
   }
 
-  Set<int> _featuredTitleIds() {
+  Set<int> _resolveFeaturedTitleIds() {
     return {
       for (final title in _client.titles.byNameFragments(
         HisnFeaturedTitles.fragments,

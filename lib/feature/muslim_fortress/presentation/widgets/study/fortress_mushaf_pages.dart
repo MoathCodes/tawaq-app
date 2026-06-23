@@ -38,33 +38,40 @@ class FortressMushafPages extends ConsumerWidget {
         (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
       ),
     );
-    final maxPageHeight =
-        MediaQuery.sizeOf(context).height * _maxViewportHeightFraction;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (var i = 0; i < pages.length; i++) ...[
-          if (i > 0) const SizedBox(height: AppSpacing.lg),
-          QuranSemantics.mushafReadingRegion(
-            label: context.l10n.pageLabel(pages[i]),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxHeight: maxPageHeight),
-              child: AspectRatio(
-                aspectRatio: _referenceWidth / _referenceHeight,
-                child: MushafPage(
-                  page: pages[i],
-                  hideHeader: true,
-                  enableAyahHighlight: false,
-                  loadingWidget: loadingWidget,
-                  style: buildQuranMushafStyle(theme, quranTextScale),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final paneHeight = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : MediaQuery.sizeOf(context).height;
+        final maxPageHeight = paneHeight * _maxViewportHeightFraction;
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < pages.length; i++) ...[
+              if (i > 0) const SizedBox(height: AppSpacing.lg),
+              QuranSemantics.mushafReadingRegion(
+                label: context.l10n.pageLabel(pages[i]),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxHeight: maxPageHeight),
+                  child: AspectRatio(
+                    aspectRatio: _referenceWidth / _referenceHeight,
+                    child: MushafPage(
+                      page: pages[i],
+                      hideHeader: true,
+                      enableAyahHighlight: false,
+                      loadingWidget: loadingWidget,
+                      style: buildQuranMushafStyle(theme, quranTextScale),
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
-        ],
-      ],
+            ],
+          ],
+        );
+      },
     );
   }
 }

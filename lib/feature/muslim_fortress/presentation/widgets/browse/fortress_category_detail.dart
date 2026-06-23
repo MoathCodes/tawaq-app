@@ -1,8 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/context_menu_action.dart';
+import 'package:tawaq/core/widgets/custom_cards.dart';
+import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
@@ -23,6 +29,7 @@ class FortressCategoryDetailView extends ConsumerWidget {
     final category = ref.watch(fortressSelectedCategoryProvider);
     if (category == null) return const SizedBox.shrink();
 
+    final l10n = context.l10n;
     final duasAsync = ref.watch(muslimFortressDuasProvider(category.chapterId));
 
     return duasAsync.when(
@@ -35,7 +42,16 @@ class FortressCategoryDetailView extends ConsumerWidget {
         duas: const [],
         isLoading: true,
       ),
-      error: (error, _) => Center(child: Text(error.toString())),
+      error: (error, _) => Center(
+        child: ErrorStatePanel(
+          message: l10n.fortressLoadError,
+          detail: '$error',
+          retryLabel: l10n.fortressRetry,
+          onRetry: () => ref.invalidate(
+            muslimFortressDuasProvider(category.chapterId),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -62,16 +78,18 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
     final l10n = context.l10n;
     final expandedIndex = useState<int?>(null);
 
+    void toggleFavorite() => ref
+        .read(fortressScreenSettingsProvider.notifier)
+        .toggleFavorite(category.chapterId);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
+        StaticCard(
           padding: const EdgeInsets.all(AppSpacing.xl),
-          decoration: BoxDecoration(
-            color: theme.colors.secondary.withAlpha(80),
-            borderRadius: theme.radii.lg,
-            border: Border.all(color: theme.colors.border.withAlpha(100)),
-          ),
+          borderRadius: theme.radii.lg,
+          backgroundColor: theme.colors.secondary.withAlpha(80),
+          borderColor: theme.colors.border.withAlpha(100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -81,15 +99,13 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
                   Expanded(
                     child: Text(
                       category.title,
-                      style: theme.typography.xl2.copyWith(
+                      style: theme.typography.body.xl2.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                   MouseClick(
-                    onClick: () => ref
-                        .read(fortressScreenSettingsProvider.notifier)
-                        .toggleFavorite(category.chapterId),
+                    onClick: toggleFavorite,
                     semanticsLabel: l10n.fortressFavorites,
                     child: FortressExcludeDecorative(
                       child: Padding(
@@ -112,7 +128,7 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 fortressRecurrenceLabel(category.recurrence, l10n),
-                style: theme.typography.md.copyWith(
+                style: theme.typography.body.md.copyWith(
                   color: theme.colors.mutedForeground,
                 ),
               ),
@@ -141,7 +157,7 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
                 ? Center(
                     child: Text(
                       context.l10n.noResultsFound,
-                      style: theme.typography.md.copyWith(
+                      style: theme.typography.body.md.copyWith(
                         color: theme.colors.mutedForeground,
                       ),
                     ),
@@ -158,13 +174,53 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
                       final dua = duas[index];
                       final isExpanded = expandedIndex.value == index;
 
-                      return FortressDuaPreviewCard(
-                        index: index,
-                        dua: dua,
-                        isExpanded: isExpanded,
-                        onToggleExpanded: () {
-                          expandedIndex.value = isExpanded ? null : index;
-                        },
+                      return FContextMenu(
+                        menuBuilder: (context, menuController, _) => [
+                          FItemGroup(
+                            children: [
+                              contextMenuAction(
+                                controller: menuController,
+                                icon: FLucideIcons.copy,
+                                label: l10n.menuCopyText,
+                                onPressed: () {
+                                  unawaited(
+                                    Clipboard.setData(
+                                      ClipboardData(text: dua.text.trim()),
+                                    ),
+                                  );
+                                  showFToast(
+                                    context: context,
+                                    title: Text(l10n.fortressDhikrCopied),
+                                  );
+                                },
+                              ),
+                              contextMenuAction(
+                                controller: menuController,
+                                icon: isFavorite
+                                    ? FLucideIcons.bookmarkX
+                                    : FLucideIcons.bookmark,
+                                label: isFavorite
+                                    ? l10n.menuRemoveFavorite
+                                    : l10n.menuAddFavorite,
+                                onPressed: toggleFavorite,
+                              ),
+                              contextMenuAction(
+                                controller: menuController,
+                                icon: FLucideIcons.bookOpen,
+                                label: l10n.fortressStartReading,
+                                onPressed: controller.startFocusReading,
+                              ),
+                            ],
+                          ),
+                        ],
+                        child: FortressDuaPreviewCard(
+                          index: index,
+                          dua: dua,
+                          isExpanded: isExpanded,
+                          onToggleExpanded: () {
+                            expandedIndex.value = isExpanded ? null : index;
+                          },
+                        ),
                       );
                     },
                   ),
@@ -225,7 +281,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
               children: [
                 Text(
                   '${index + 1}.',
-                  style: theme.typography.sm.copyWith(
+                  style: theme.typography.body.sm.copyWith(
                     color: theme.colors.mutedForeground,
                     fontWeight: FontWeight.w600,
                   ),
@@ -257,7 +313,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
                     children: [
                       Text(
                         '×${dua.targetCount}',
-                        style: theme.typography.xs.copyWith(
+                        style: theme.typography.body.xs.copyWith(
                           color: theme.colors.primary,
                           fontWeight: FontWeight.w600,
                         ),
@@ -282,7 +338,12 @@ class FortressDuaPreviewCard extends StatelessWidget {
               FortressDuaVirtueLine(virtue: dua.virtue!),
               const SizedBox(height: AppSpacing.md),
             ],
-            FortressDuaStudyAccess(dua: dua),
+            LayoutBuilder(
+              builder: (context, constraints) => FortressDuaStudyAccess(
+                dua: dua,
+                useSheet: constraints.maxWidth < 480,
+              ),
+            ),
           ],
         ],
       ),
@@ -310,7 +371,7 @@ class FortressDuaPreviewPlaceholder extends StatelessWidget {
         children: [
           Text(
             '${index + 1}.',
-            style: theme.typography.sm.copyWith(
+            style: theme.typography.body.sm.copyWith(
               color: theme.colors.mutedForeground,
               fontWeight: FontWeight.w600,
             ),
