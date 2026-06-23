@@ -8,17 +8,17 @@ import 'package:forui/theme.dart';
 /// `Text` widget while preserving any explicitly provided properties.
 extension FTextSizing on Text {
   /// Applies the base (default) typographic style from the current theme.
-  Widget get base => _withStyle((ctx) => FTheme.of(ctx).typography.md);
+  Widget get base => _withStyle((ctx) => FTheme.of(ctx).typography.body.md);
 
   // /// Applies a bold font weight to the text.
   // Widget get bold => _withStyle(
   //   (ctx) =>
   //       style?.copyWith(fontWeight: FontWeight.bold) ??
-  //       FTheme.of(ctx).typography.md.copyWith(fontWeight: FontWeight.bold),
+  //       FTheme.of(ctx).typography.body.md.copyWith(fontWeight: FontWeight.bold),
   // );
 
   /// Applies the large text style from the current theme.
-  Widget get lg => _withStyle((ctx) => FTheme.of(ctx).typography.lg);
+  Widget get lg => _withStyle((ctx) => FTheme.of(ctx).typography.body.lg);
 
   /// Applies the muted foreground color from the current theme.
   Widget get mute => _withStyle(
@@ -26,38 +26,38 @@ extension FTextSizing on Text {
         style?.copyWith(color: FTheme.of(ctx).colors.muted) ??
         FTheme.of(
           ctx,
-        ).typography.md.copyWith(color: FTheme.of(ctx).colors.muted),
+        ).typography.body.md.copyWith(color: FTheme.of(ctx).colors.muted),
   );
 
   /// Applies the small text style from the current theme.
-  Widget get sm => _withStyle((ctx) => FTheme.of(ctx).typography.sm);
+  Widget get sm => _withStyle((ctx) => FTheme.of(ctx).typography.body.sm);
 
   /// Applies the extra-large text style (level 1) from the current theme.
-  Widget get xl => _withStyle((ctx) => FTheme.of(ctx).typography.xl);
+  Widget get xl => _withStyle((ctx) => FTheme.of(ctx).typography.body.xl);
 
   /// Applies the extra-large text style (level 2) from the current theme.
-  Widget get xl2 => _withStyle((ctx) => FTheme.of(ctx).typography.xl2);
+  Widget get xl2 => _withStyle((ctx) => FTheme.of(ctx).typography.body.xl2);
 
   /// Applies the extra-large text style (level 3) from the current theme.
-  Widget get xl3 => _withStyle((ctx) => FTheme.of(ctx).typography.xl3);
+  Widget get xl3 => _withStyle((ctx) => FTheme.of(ctx).typography.body.xl3);
 
   /// Applies the extra-large text style (level 4) from the current theme.
-  Widget get xl4 => _withStyle((ctx) => FTheme.of(ctx).typography.xl4);
+  Widget get xl4 => _withStyle((ctx) => FTheme.of(ctx).typography.body.xl4);
 
   /// Applies the extra-large text style (level 5) from the current theme.
-  Widget get xl5 => _withStyle((ctx) => FTheme.of(ctx).typography.xl5);
+  Widget get xl5 => _withStyle((ctx) => FTheme.of(ctx).typography.body.xl5);
 
   /// Applies the extra-large text style (level 6) from the current theme.
-  Widget get xl6 => _withStyle((ctx) => FTheme.of(ctx).typography.xl6);
+  Widget get xl6 => _withStyle((ctx) => FTheme.of(ctx).typography.body.xl6);
 
   /// Applies the extra-large text style (level 7) from the current theme.
-  Widget get xl7 => _withStyle((ctx) => FTheme.of(ctx).typography.xl7);
+  Widget get xl7 => _withStyle((ctx) => FTheme.of(ctx).typography.body.xl7);
 
   /// Applies the extra-large text style (level 8) from the current theme.
-  Widget get xl8 => _withStyle((ctx) => FTheme.of(ctx).typography.xl8);
+  Widget get xl8 => _withStyle((ctx) => FTheme.of(ctx).typography.body.xl8);
 
   /// Applies the extra-small text style from the current theme.
-  Widget get xs => _withStyle((ctx) => FTheme.of(ctx).typography.xs);
+  Widget get xs => _withStyle((ctx) => FTheme.of(ctx).typography.body.xs);
 
   /// A private helper that rebuilds the [Text] widget with a new style.
   ///
