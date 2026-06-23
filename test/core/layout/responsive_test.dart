@@ -23,6 +23,55 @@ void main() {
     );
   }
 
+  group('isContainerAtLeast', () {
+    testWidgets('uses container width not viewport width', (tester) async {
+      late bool wideContainer;
+      late bool narrowContainer;
+
+      await tester.pumpWidget(
+        wrap(
+          width: 400,
+          child: LayoutBuilder(
+            builder: (context, viewportConstraints) {
+              return Row(
+                children: [
+                  SizedBox(
+                    width: 900,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        wideContainer = isContainerAtLeast(
+                          context,
+                          constraints,
+                          FBreakpoint.md,
+                        );
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        narrowContainer = isContainerAtLeast(
+                          context,
+                          constraints,
+                          FBreakpoint.md,
+                        );
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      );
+
+      expect(wideContainer, isTrue);
+      expect(narrowContainer, isFalse);
+    });
+  });
+
   group('responsiveColumnCount', () {
     testWidgets('uses one column below sm and three at md+', (tester) async {
       late int narrowCount;

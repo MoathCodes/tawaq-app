@@ -42,7 +42,7 @@ void main() {
   }
 
   TextStyle baseStyle(FThemeData theme) {
-    return theme.typography.sm.copyWith(height: 1.8);
+    return theme.typography.body.sm.copyWith(height: 1.8);
   }
 
   Iterable<String> visibleTexts(WidgetTester tester) sync* {

@@ -1,29 +1,26 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_id.dart';
+import 'package:tawaq/core/shortcuts/app_shortcut.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_registry.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_display.dart';
 
 void main() {
-  group('appShortcutRegistry', () {
-    test('every AppShortcutId has a registry entry', () {
-      for (final id in AppShortcutId.values) {
-        expect(appShortcutById.containsKey(id), isTrue, reason: id.name);
+  group('AppShortcut catalog', () {
+    test('all shortcuts are unique singletons', () {
+      expect(
+        AppShortcut.all.toSet().length,
+        AppShortcut.all.length,
+      );
+    });
+
+    test('visible shortcuts stay in sync with catalog', () {
+      for (final shortcut in visibleAppShortcuts) {
+        expect(AppShortcut.all, contains(shortcut));
       }
     });
 
-    test('registry size matches enum length', () {
-      expect(appShortcutRegistry.length, AppShortcutId.values.length);
-    });
-
-    test('visible shortcuts have unique ids', () {
-      final ids = appShortcutRegistry.map((definition) => definition.id);
-      expect(ids.toSet().length, ids.length);
-    });
-
     test('no duplicate activators within the same scope', () {
-      final duplicates = findDuplicateActivatorsInRegistry();
+      final duplicates = findDuplicateActivators();
       expect(
         duplicates,
         isEmpty,

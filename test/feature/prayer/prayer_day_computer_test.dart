@@ -5,10 +5,17 @@ import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_day_computer.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
+
+PrayerTimeInputs inputsFromSettings(PrayerSettings settings) => PrayerTimeInputs(
+      method: settings.method,
+      coordinates: settings.coordinates,
+      location: settings.location,
+    );
 
 void main() {
   setUpAll(tz.initializeTimeZones);
@@ -31,35 +38,36 @@ void main() {
   });
 
   group('computePrayerTimesForAnchor', () {
-    test('returns null for (0,0) coordinates', () {
+    test('computes times for sentinel (0,0) when inputs are provided', () {
       final settings = PrayerSettings.defaultSettings();
       expect(settings.isLocationReady, isFalse);
 
       final result = computePrayerTimesForAnchor(
-        settings: settings,
+        inputs: inputsFromSettings(settings),
         anchor: TZDateTime(getLocation('Asia/Riyadh'), 2026, 6, 18),
         repo: repo,
       );
 
-      expect(result, isNull);
+      // Location readiness is enforced by [prayerTimeInputsProvider], not here.
+      expect(result, isNotNull);
     });
   });
 
   group('computePrayerDayBundle', () {
-    test('returns null for (0,0) coordinates', () {
+    test('builds bundle for sentinel (0,0) when inputs are provided', () {
       final settings = PrayerSettings.defaultSettings();
       final result = computePrayerDayBundle(
-        settings: settings,
+        inputs: inputsFromSettings(settings),
         anchorNow: TZDateTime(getLocation('Asia/Riyadh'), 2026, 6, 18, 12),
         repo: repo,
       );
-      expect(result, isNull);
+      expect(result, isNotNull);
     });
 
     test('produces consistent today times for Jeddah', () {
       final anchor = TZDateTime(getLocation('Asia/Riyadh'), 2026, 6, 18, 16, 3);
       final bundle = computePrayerDayBundle(
-        settings: jeddahSettings,
+        inputs: inputsFromSettings(jeddahSettings),
         anchorNow: anchor,
         repo: repo,
       );
@@ -78,12 +86,12 @@ void main() {
       final evening = TZDateTime(getLocation('Asia/Riyadh'), 2026, 6, 18, 20);
 
       final morningBundle = computePrayerDayBundle(
-        settings: jeddahSettings,
+        inputs: inputsFromSettings(jeddahSettings),
         anchorNow: morning,
         repo: repo,
       );
       final eveningBundle = computePrayerDayBundle(
-        settings: jeddahSettings,
+        inputs: inputsFromSettings(jeddahSettings),
         anchorNow: evening,
         repo: repo,
       );
@@ -109,12 +117,12 @@ void main() {
       );
 
       final liveBundle = computePrayerDayBundle(
-        settings: jeddahSettings,
+        inputs: inputsFromSettings(jeddahSettings),
         anchorNow: liveAnchor,
         repo: repo,
       );
       final dateOnly = computePrayerTimesForAnchor(
-        settings: jeddahSettings,
+        inputs: inputsFromSettings(jeddahSettings),
         anchor: dateAnchor,
         repo: repo,
       );
