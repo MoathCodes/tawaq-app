@@ -5,8 +5,10 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:tawaq/feature/settings/data/location_constants.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
@@ -17,36 +19,6 @@ part 'prayer_settings_provider.g.dart';
 
 const String _prayerLogPrefix = '[PrayerSettingsNotifier]';
 
-/// Last successfully resolved prayer settings, reused when a (re)build cannot
-/// read storage.
-///
-/// Without it a transient/failed hydrate (e.g. right after the machine wakes
-/// from sleep) silently reverts the whole prayer-time pipeline to the (0,0)
-/// "null island" defaults, which compute prayer times ~2-3h off and fire
-/// alerts at the wrong time. Lives at module scope so it survives the
-/// provider's autoDispose rebuilds, and is seeded with the first-run defaults
-/// so it is never null.
-PrayerSettings _lastGoodPrayerSettings = PrayerSettings.defaultSettings();
-
-/// Synchronous prayer settings safe for time math and completions.
-///
-/// Returns the hydrated settings when location is ready, otherwise the last
-/// good stored settings. Null when no valid coordinates exist yet.
-@Riverpod(keepAlive: true)
-PrayerSettings? effectivePrayerSettings(Ref ref) {
-  ref.watch(prayerSettingsProvider);
-  final current = ref.read(prayerSettingsProvider).value;
-  if (current != null && current.isLocationReady) return current;
-  if (_lastGoodPrayerSettings.isLocationReady) return _lastGoodPrayerSettings;
-  return null;
-}
-
-/// Whether prayer times can be computed from stored coordinates.
-@Riverpod(keepAlive: true)
-bool prayerLocationReady(Ref ref) {
-  return ref.watch(effectivePrayerSettingsProvider) != null;
-}
-
 /// Notifier for prayer settings.
 ///
 /// Persisted as JSON via [JsonPersist] + Hivez-backed [SettingsStorage].
@@ -55,12 +27,13 @@ bool prayerLocationReady(Ref ref) {
 class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   @override
   Future<PrayerSettings> build() async {
+    await ref.watch(hiveCoreInitProvider.future);
     ref.read(loggerProvider).i('$_prayerLogPrefix Building...');
     // Remember every good value so a later failed read falls back to it
     // instead of the (0,0) defaults.
     listenSelf((_, next) {
       final value = next.value;
-      if (value != null) _lastGoodPrayerSettings = value;
+      if (value != null) lastGoodPrayerSettings = value;
     });
     try {
       await persist(
@@ -78,7 +51,7 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
             stackTrace: stack,
           );
     }
-    return state.value ?? _lastGoodPrayerSettings;
+    return state.value ?? lastGoodPrayerSettings;
   }
 
   void _update(PrayerSettings Function(PrayerSettings) fn, String field) {
@@ -142,8 +115,8 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     );
   }
 
-  /// Updates location-related data in prayer settings.
-  Future<void> updateLocationData({
+  /// Atomically updates location fields in a single persist write.
+  Future<void> updateLocation({
     Coordinates? coordinates,
     String? locationName,
     Location? location,
@@ -165,6 +138,7 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     );
     if (s == newSettings) return;
     state = AsyncData(newSettings);
+    ref.read(loggerProvider).i('$_prayerLogPrefix Location updated');
   }
 
   /// Fetches and sets the current device location.
@@ -172,7 +146,7 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     final svc = ref.read(locationServiceProvider);
     final pos = await svc.getCurrentPosition();
     final details = await svc.getPlaceDetails(pos.coordinates);
-    await updateLocationData(
+    await updateLocation(
       coordinates: pos.coordinates,
       locationName: details.name.isNotEmpty
           ? details.name

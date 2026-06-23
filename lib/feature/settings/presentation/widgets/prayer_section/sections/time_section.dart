@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/settings/presentation/provider/iqamah_draft_provider.dart';
@@ -13,10 +14,32 @@ import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widge
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/theme/theme.dart';
 
+/// Which prayer-time blocks to show in [PrayerSettingsTimeSection].
+enum PrayerSettingsTimeSectionMode {
+  /// Calculation method, custom parameters, and time format.
+  calculationOnly,
+
+  /// Iqamah offset editors only.
+  iqamahOnly,
+
+  /// All blocks (settings screen default).
+  full,
+}
+
 /// Widget for the prayer time settings section.
 class PrayerSettingsTimeSection extends HookConsumerWidget {
   /// Creates a new [PrayerSettingsTimeSection] instance.
-  const PrayerSettingsTimeSection({super.key});
+  const PrayerSettingsTimeSection({
+    this.embedded = false,
+    this.mode = PrayerSettingsTimeSectionMode.full,
+    super.key,
+  });
+
+  /// When true, omits the outer [SettingsSection] chrome for onboarding.
+  final bool embedded;
+
+  /// Controls which sub-sections are rendered.
+  final PrayerSettingsTimeSectionMode mode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,8 +48,13 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
     );
     final draft = ref.read(iqamahDraftProvider.notifier);
 
+    final showIqamah = mode != PrayerSettingsTimeSectionMode.calculationOnly;
+    final showCalculation = mode != PrayerSettingsTimeSectionMode.iqamahOnly;
+
     useEffect(
       () {
+        if (!showIqamah) return null;
+
         final listeners = <Prayer, VoidCallback>{};
         for (final prayer in kIqamahDraftPrayers) {
           void listener() {
@@ -45,7 +73,7 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
           }
         };
       },
-      const [],
+      [showIqamah],
     );
 
     final method = ref.watch(
@@ -60,78 +88,134 @@ class PrayerSettingsTimeSection extends HookConsumerWidget {
     );
     final l10n = context.l10n;
 
+    final children = <Widget>[];
+
+    if (showCalculation) {
+      children.addAll([
+        SettingsGroup(
+          title: l10n.calculationMethod,
+          child: Column(
+            spacing: AppSpacing.md,
+            children: [
+              buildCalculationMethodSelector(
+                context,
+                ref,
+                method,
+              ),
+              const PrayerSettingsCustomParametersCard(),
+            ],
+          ),
+        ),
+        const FDivider(),
+        SettingsGroup(
+          title: l10n.timeFormat,
+          child: NonSelectable(
+            child: _TimeFormatSwitch(is24Hours: is24Hours ?? false),
+          ),
+        ),
+      ]);
+    }
+
+    if (showIqamah) {
+      if (children.isNotEmpty) children.add(const FDivider());
+
+      final saveButton = mode == PrayerSettingsTimeSectionMode.full
+          ? NonSelectable(
+              child: FTooltip(
+                tipBuilder: (ctx, ctrl) => Text(l10n.save),
+                child: FButton(
+                  variant: unsavedPrayers.isEmpty ? .outline : .primary,
+                  prefix: const Icon(FLucideIcons.save, size: 16),
+                  style: const FButtonStyleDelta.delta(
+                    contentStyle: FButtonContentStyleDelta.delta(
+                      padding: EdgeInsetsGeometryDelta.value(
+                        EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                      ),
+                    ),
+                  ),
+                  onPress: unsavedPrayers.isEmpty
+                      ? null
+                      : () => draft.saveAll(context),
+                  child: Text(l10n.save),
+                ),
+              ),
+            )
+          : null;
+
+      children.add(
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final stackHeader = !isContainerAtLeast(
+              context,
+              constraints,
+              FBreakpoint.sm,
+            );
+
+            if (!stackHeader || saveButton == null) {
+              return SettingsGroup(
+                title: l10n.iqamahAdjustment,
+                subtitle: l10n.iqamahAfterAdhan,
+                trailing: saveButton,
+                child: IqamahPrayerList(
+                  children: kIqamahDraftPrayers
+                      .map(
+                        (prayer) => PrayerIqamahTile(
+                          key: ValueKey(prayer),
+                          prayer: prayer,
+                          allowSigned: false,
+                        ),
+                      )
+                      .toList(),
+                ),
+              );
+            }
+
+            return SettingsGroup(
+              title: l10n.iqamahAdjustment,
+              subtitle: l10n.iqamahAfterAdhan,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: AppSpacing.sm,
+                children: [
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: saveButton,
+                  ),
+                  IqamahPrayerList(
+                    children: kIqamahDraftPrayers
+                        .map(
+                          (prayer) => PrayerIqamahTile(
+                            key: ValueKey(prayer),
+                            prayer: prayer,
+                            allowSigned: false,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
+    }
+
+    final body = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.lg,
+      children: children,
+    );
+
+    if (embedded) return body;
+
     return SettingsSection(
       crossAxisAlignment: CrossAxisAlignment.center,
       title: l10n.timeSectionTitle,
       subtitle: l10n.timeSectionSubtitle,
-      child: FCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: AppSpacing.lg,
-          children: [
-            SettingsGroup(
-              title: l10n.calculationMethod,
-              child: Column(
-                spacing: AppSpacing.md,
-                children: [
-                  buildCalculationMethodSelector(
-                    context,
-                    ref,
-                    method,
-                  ),
-                  const PrayerSettingsCustomParametersCard(),
-                ],
-              ),
-            ),
-            const FDivider(),
-            SettingsGroup(
-              title: l10n.timeFormat,
-              child: NonSelectable(
-                child: _TimeFormatSwitch(is24Hours: is24Hours ?? false),
-              ),
-            ),
-            const FDivider(),
-            SettingsGroup(
-              title: l10n.iqamahAdjustment,
-              subtitle: l10n.iqamahAfterAdhan,
-              trailing: NonSelectable(
-                child: FTooltip(
-                  tipBuilder: (ctx, ctrl) => Text(l10n.save),
-                  child: FButton(
-                    variant: unsavedPrayers.isEmpty ? .outline : .primary,
-                    prefix: const Icon(FLucideIcons.save, size: 16),
-                    style: const FButtonStyleDelta.delta(
-                      contentStyle: FButtonContentStyleDelta.delta(
-                        padding: EdgeInsetsGeometryDelta.value(
-                          EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                        ),
-                      ),
-                    ),
-                    onPress: unsavedPrayers.isEmpty
-                        ? null
-                        : () => draft.saveAll(context),
-                    child: Text(l10n.save),
-                  ),
-                ),
-              ),
-              child: IqamahPrayerList(
-                children: kIqamahDraftPrayers
-                    .map(
-                      (prayer) => PrayerIqamahTile(
-                        key: ValueKey(prayer),
-                        prayer: prayer,
-                        allowSigned: false,
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: FCard(child: body),
     );
   }
 }

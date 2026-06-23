@@ -12,6 +12,8 @@ part 'theme_settings_provider.g.dart';
 
 const String _themeLogPrefix = '[ThemeNotifier]';
 
+ThemePrefs _lastGoodThemePrefs = ThemePrefs.defaults();
+
 /// Notifier for theme settings.
 ///
 /// Persisted [ThemePrefs] (palette + mode) via [JsonPersist].
@@ -21,13 +23,25 @@ class ThemeNotifier extends _$ThemeNotifier {
   @override
   Future<ThemePrefs> build() async {
     ref.read(loggerProvider).i('$_themeLogPrefix Building...');
-    await persist(
-      ref.read(settingsStorageProvider),
-      options: const StorageOptions(
-        cacheTime: StorageCacheTime.unsafe_forever,
-      ),
-    ).future;
-    return state.value ?? ThemePrefs.defaults();
+    listenSelf((_, next) {
+      final value = next.value;
+      if (value != null) _lastGoodThemePrefs = value;
+    });
+    try {
+      await persist(
+        ref.read(settingsStorageProvider),
+        options: const StorageOptions(
+          cacheTime: StorageCacheTime.unsafe_forever,
+        ),
+      ).future;
+    } on Object catch (error, stack) {
+      ref.read(loggerProvider).e(
+        '$_themeLogPrefix hydrate failed; keeping last-good prefs',
+        error: error,
+        stackTrace: stack,
+      );
+    }
+    return state.value ?? _lastGoodThemePrefs;
   }
 
   /// Sets the application palette.

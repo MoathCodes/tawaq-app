@@ -1,4 +1,5 @@
 export 'package:tawaq/core/locale/locale_provider.dart';
+export 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 export 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
 export 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart';
 export 'package:tawaq/feature/settings/presentation/provider/first_prayer_recorded_provider.dart';

@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/settings/side_panel_settings_mixin.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_screen_state.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
@@ -10,6 +11,8 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_mode.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/settings/data/migration/state_settings_legacy_migration.dart';
@@ -80,7 +83,8 @@ class PrayerAnalyticsSettingsNotifier extends _$PrayerAnalyticsSettingsNotifier 
 /// Persisted Quran screen UI state.
 @riverpod
 @JsonPersist()
-class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
+class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier
+    with SidePanelSettingsMixin<QuranScreenState> {
   @override
   Future<QuranScreenState> build() async {
     await ref.watch(stateSettingsLegacyMigrationProvider.future);
@@ -105,9 +109,17 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
     _logUiStateUpdate(ref, 'QuranScreenSettingsNotifier', field);
   }
 
-  /// Sets the last Quran page info.
-  void setLastPageInfo(MushafPageInfo info) =>
-      _update((s) => s.copyWith(pageInfo: info), 'Last Quran page');
+  /// Persists only navigation-critical page fields after debounced reading.
+  void commitSlimPageInfo(MushafPageInfo info) => _update((s) {
+    final current = s.pageInfo;
+    if (current.pageNumber == info.pageNumber &&
+        current.juzNumber == info.juzNumber &&
+        current.primarySurahNumber == info.primarySurahNumber &&
+        current.firstAyahId == info.firstAyahId) {
+      return s;
+    }
+    return s.copyWith(pageInfo: info);
+  }, 'Slim Quran page');
 
   /// Sets the reading layout.
   void setLayout(QuranReadingLayout layout) =>
@@ -121,9 +133,11 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
   void selectAyah(Ayah? ayah) =>
       _update((s) => s.copyWith(selectedAyah: ayah), 'Selected ayah');
 
-  /// Sets the Quran side panel width.
-  void setSidePanelWidth(double width) =>
-      _update((s) => s.copyWith(sidePanelWidth: width), 'Quran side panel width');
+  @override
+  void updateSidePanelSetting(
+    QuranScreenState Function(QuranScreenState) transform,
+    String logField,
+  ) => _update(transform, logField);
 
   /// Sets the tafsir accordion expanded state.
   void setTafsirEnabled({required bool enabled}) =>
@@ -148,10 +162,84 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
   );
 }
 
+/// Persisted Quran recitation preferences.
+@riverpod
+@JsonPersist()
+class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
+  double? _volumePreview;
+
+  /// Ephemeral volume while dragging a slider (not persisted).
+  double? get volumePreview => _volumePreview;
+
+  @override
+  Future<RecitationSettings> build() async {
+    await ref.watch(stateSettingsLegacyMigrationProvider.future);
+    await persist(
+      ref.read(settingsStorageProvider),
+      options: const StorageOptions(
+        cacheTime: StorageCacheTime.unsafe_forever,
+      ),
+    ).future;
+    return state.value ?? RecitationSettings.initial();
+  }
+
+  void _update(
+    RecitationSettings Function(RecitationSettings) fn,
+    String field,
+  ) {
+    if (!state.hasValue) return;
+    final current = state.value!;
+    final next = fn(current);
+    if (current == next) return;
+    state = AsyncData(next);
+    _logUiStateUpdate(ref, 'RecitationSettingsNotifier', field);
+  }
+
+  /// Persists the selected reciter and moshaf.
+  void setReciter({required int reciterId, int? moshafId}) => _update(
+    (s) => s.copyWith(reciterId: reciterId, moshafId: moshafId),
+    'Reciter',
+  );
+
+  /// Persists the end-of-selection mode.
+  void setMode(RecitationMode mode) =>
+      _update((s) => s.copyWith(mode: mode), 'Mode');
+
+  /// Persists the output volume (0-100).
+  void setVolume(double volume) {
+    _volumePreview = null;
+    _update((s) => s.copyWith(volume: volume), 'Volume');
+  }
+
+  /// Updates volume in memory during slider drag without persisting.
+  void setVolumePreview(double volume) {
+    if (!state.hasValue) return;
+    _volumePreview = volume.clamp(0, 100);
+  }
+
+  /// Persists the final volume after the user releases the slider.
+  void commitVolume(double volume) => setVolume(volume);
+
+  /// Persists whether the played ayah is highlighted in the mushaf.
+  void setHighlightAyah({required bool value}) =>
+      _update((s) => s.copyWith(highlightAyah: value), 'Highlight ayah');
+
+  /// Persists whether the page follows the played ayah.
+  void setAutoScroll({required bool value}) =>
+      _update((s) => s.copyWith(autoScroll: value), 'Auto scroll');
+
+  /// Persists how many times the selection repeats (clamped 1-99).
+  void setRepeatCount(int count) => _update(
+    (s) => s.copyWith(repeatCount: count.clamp(1, 99)),
+    'Repeat count',
+  );
+}
+
 /// Persisted Hadith screen UI state.
 @riverpod
 @JsonPersist()
-class HadithScreenSettingsNotifier extends _$HadithScreenSettingsNotifier {
+class HadithScreenSettingsNotifier extends _$HadithScreenSettingsNotifier
+    with SidePanelSettingsMixin<HadithScreenState> {
   @override
   Future<HadithScreenState> build() async {
     await ref.watch(stateSettingsLegacyMigrationProvider.future);
@@ -184,15 +272,18 @@ class HadithScreenSettingsNotifier extends _$HadithScreenSettingsNotifier {
   void setFilters(HadithFilters filters) =>
       _update((s) => s.copyWith(filters: filters), 'Hadith filters');
 
-  /// Sets the hadith side panel width.
-  void setSidePanelWidth(double width) =>
-      _update((s) => s.copyWith(sidePanelWidth: width), 'Hadith side panel width');
+  @override
+  void updateSidePanelSetting(
+    HadithScreenState Function(HadithScreenState) transform,
+    String logField,
+  ) => _update(transform, logField);
 }
 
 /// Persisted Muslim Fortress screen UI state.
 @riverpod
 @JsonPersist()
-class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier {
+class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier
+    with SidePanelSettingsMixin<FortressScreenState> {
   @override
   Future<FortressScreenState> build() async {
     await ref.watch(stateSettingsLegacyMigrationProvider.future);
@@ -241,9 +332,11 @@ class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier {
     );
   }, 'Fortress default bookmarks');
 
-  /// Sets the fortress browse sidebar width.
-  void setSidePanelWidth(double width) =>
-      _update((s) => s.copyWith(sidePanelWidth: width), 'Fortress side panel width');
+  @override
+  void updateSidePanelSetting(
+    FortressScreenState Function(FortressScreenState) transform,
+    String logField,
+  ) => _update(transform, logField);
 }
 
 /// Persisted settings screen tab selection.

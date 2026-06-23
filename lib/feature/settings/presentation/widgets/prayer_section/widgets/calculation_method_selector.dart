@@ -2,11 +2,12 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/core/widgets/select_empty_content.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:tawaq/theme/theme.dart';
 
 /// Builds a search [FSelect] for [CalculationMethod] tied to prayer settings.
 ///
@@ -23,6 +24,7 @@ Widget buildCalculationMethodSelector(
   return NonSelectable(
     child: FSelect<CalculationMethod>.searchBuilder(
       enabled: enabled,
+      contentConstraints: selectPopoverPortalConstraints(context),
       control: .lifted(
         value: methodValue,
         onChange: (value) async {
@@ -54,17 +56,7 @@ Widget buildCalculationMethodSelector(
             ),
           )
           .toList(),
-      contentEmptyBuilder: (_, _) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 8,
-          children: [
-            const Icon(FLucideIcons.searchX),
-            Text(l10n.noResults),
-          ],
-        ),
-      ),
+      contentEmptyBuilder: (_, _) => const SelectEmptyContent(),
       contentLoadingBuilder: (_, _) => const FCircularProgress(),
     ),
   );

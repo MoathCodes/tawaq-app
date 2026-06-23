@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/translation_source_selector.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/typography/quran_text_scale_control.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/typography/settings_scale_step_picker.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -24,38 +26,33 @@ class TypographySettingsSection extends ConsumerWidget {
         (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
       ),
     );
-    final stateReady = ref.watch(
-      quranScreenSettingsProvider.select((s) => s.hasValue),
-    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.lg,
       children: [
-        _ScalePickerGroup(
-          title: l10n.appTextSize,
-          child: const AppTextScaleStepPicker(),
-        ),
-        _ScalePickerGroup(
-          title: l10n.quranTextSize,
-          child: const QuranTextScaleStepPicker(),
-        ),
-        _ScalePickerGroup(
-          title: l10n.translation,
-          child: TranslationSourceSelector(
-            enabled: stateReady,
-            showLabel: false,
-          ),
+        ResponsiveFieldRow(
+          maxColumns: 2,
+          children: [
+            SettingsGroup(
+              title: l10n.appTextSize,
+              child: const AppTextScaleStepPicker(showLabel: false),
+            ),
+            SettingsGroup(
+              title: l10n.quranTextSize,
+              child: const QuranTextScaleControl(),
+            ),
+          ],
         ),
         Text(
           l10n.quranTextSizeIndependentNote,
-          style: theme.typography.sm.copyWith(
+          style: theme.typography.body.sm.copyWith(
             color: theme.colors.mutedForeground,
           ),
         ),
         Text(
           l10n.quranTextSizePreviewLabel,
-          style: theme.typography.xs.copyWith(
+          style: theme.typography.body.xs.copyWith(
             color: theme.colors.mutedForeground,
           ),
         ),
@@ -74,38 +71,6 @@ class TypographySettingsSection extends ConsumerWidget {
             ),
           ),
         ),
-      ],
-    );
-  }
-}
-
-class _ScalePickerGroup extends StatelessWidget {
-  const _ScalePickerGroup({
-    required this.title,
-    required this.child,
-  });
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: AppSpacing.sm,
-      children: [
-        SettingsSemantics.sectionHeader(
-          label: title,
-          child: Text(
-            title,
-            style: theme.typography.md.copyWith(
-              fontWeight: FontWeight.w500,
-              color: theme.colors.mutedForeground,
-            ),
-          ),
-        ),
-        child,
       ],
     );
   }

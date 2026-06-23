@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/locale/locale_select_tile_group.dart';
+import 'package:tawaq/feature/onboarding/presentation/widgets/onboarding_rerun_tile.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/desktop_settings_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/keyboard_shortcuts/keyboard_shortcuts_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/adhan_section.dart';
@@ -181,17 +183,19 @@ Widget settingsDestinationBody(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.lg,
       children: [
+        const OnboardingRerunTile(),
+        const DesktopSettingsSection(),
         SettingsSection(
-          title: l10n.colorTheme,
-          subtitle: l10n.colorThemeSubtitle,
-          child: const ColorThemeSelector(),
+          title: l10n.languageLabel,
+          subtitle: l10n.onboardingLanguageStepHint,
+          child: const LocaleSelectTileGroup(),
         ),
+        const ColorThemeSelector(),
         SettingsSection(
           title: l10n.typographySectionTitle,
           subtitle: l10n.typographySectionSubtitle,
           child: const TypographySettingsSection(),
         ),
-        const DesktopSettingsSection(),
       ],
     ),
     SettingsPrayerTimesDestination() => const Column(
@@ -203,10 +207,6 @@ Widget settingsDestinationBody(
       ],
     ),
     SettingsLocationDestination() => const PrayerSettingsLocationSection(),
-    SettingsKeyboardShortcutsDestination() => SettingsSection(
-      title: l10n.keyboardShortcutsSectionTitle,
-      subtitle: l10n.keyboardShortcutsSectionSubtitle,
-      child: const KeyboardShortcutsSection(),
-    ),
+    SettingsKeyboardShortcutsDestination() => const KeyboardShortcutsSection(),
   };
 }

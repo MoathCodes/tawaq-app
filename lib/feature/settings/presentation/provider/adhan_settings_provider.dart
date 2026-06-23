@@ -22,6 +22,11 @@ AdhanSettings _lastGoodAdhanSettings = AdhanSettings.defaults();
 @riverpod
 @JsonPersist()
 class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
+  double? _volumePreview;
+
+  /// Ephemeral volume while dragging a slider (not persisted).
+  double? get volumePreview => _volumePreview;
+
   @override
   Future<AdhanSettings> build() async {
     listenSelf((_, next) {
@@ -77,9 +82,20 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
   void setIqamahSound(IqamahSound sound) =>
       _update((s) => s.copyWith(iqamahSound: sound), 'Iqamah sound');
 
-  /// Sets playback volume (0–100).
-  void setVolume(double volume) =>
-      _update((s) => s.copyWith(volume: volume.clamp(0, 100)), 'Volume');
+  /// Sets playback volume (0–100) and persists immediately.
+  void setVolume(double volume) {
+    _volumePreview = null;
+    _update((s) => s.copyWith(volume: volume.clamp(0, 100)), 'Volume');
+  }
+
+  /// Updates volume in memory during slider drag without persisting.
+  void setVolumePreview(double volume) {
+    if (!state.hasValue) return;
+    _volumePreview = volume.clamp(0, 100);
+  }
+
+  /// Persists the final volume after the user releases the slider.
+  void commitVolume(double volume) => setVolume(volume);
 
   /// Sets whether the in-app alert overlay is shown.
   void setShowAdhanAlert({required bool value}) =>

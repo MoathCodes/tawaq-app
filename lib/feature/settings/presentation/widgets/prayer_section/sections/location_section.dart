@@ -12,31 +12,36 @@ import 'package:tawaq/theme/theme.dart';
 /// Widget for the prayer location settings section with inline map.
 class PrayerSettingsLocationSection extends ConsumerWidget {
   /// Creates a new [PrayerSettingsLocationSection] instance.
-  const PrayerSettingsLocationSection({super.key});
+  const PrayerSettingsLocationSection({this.embedded = false, super.key});
+
+  /// When true, omits the outer [SettingsSection] chrome for onboarding.
+  final bool embedded;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
 
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.lg,
+      children: [
+        const UseLocationTile(),
+        const FDivider(),
+        LocationMapSection(compact: embedded),
+        const FDivider(),
+        const CoordinatesRow(),
+        const FDivider(),
+        const LocationControlsRow(),
+      ],
+    );
+
+    if (embedded) return content;
+
     return SettingsSection(
       crossAxisAlignment: .center,
       title: l10n.locationSectionTitle,
       subtitle: l10n.locationSectionSubtitle,
-      child: FCard(
-        child: const Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: AppSpacing.lg,
-          children: [
-            UseLocationTile(),
-            FDivider(),
-            LocationMapSection(),
-            FDivider(),
-            CoordinatesRow(),
-            FDivider(),
-            LocationControlsRow(),
-          ],
-        ),
-      ),
+      child: FCard(child: content),
     );
   }
 }

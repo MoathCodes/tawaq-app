@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
@@ -84,7 +85,6 @@ class PrayerIqamahTile extends ConsumerWidget {
   final bool allowSigned;
 
   static const _iconSize = 36.0;
-  static const _compactBreakpoint = 520.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -108,7 +108,11 @@ class PrayerIqamahTile extends ConsumerWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final compact = constraints.maxWidth < _compactBreakpoint;
+          final compact = !isContainerAtLeast(
+            context,
+            constraints,
+            FBreakpoint.sm,
+          );
           if (compact) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -165,7 +169,7 @@ class _PrayerLabel extends StatelessWidget {
         Expanded(
           child: Text(
             prayerName,
-            style: theme.typography.md.copyWith(
+            style: theme.typography.body.md.copyWith(
               fontWeight: FontWeight.w600,
               color: colors.foreground,
             ),
@@ -202,7 +206,7 @@ class _IqamahStepper extends ConsumerWidget {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
-    final unitStyle = theme.typography.xs.copyWith(
+    final unitStyle = theme.typography.body.xs.copyWith(
       color: colors.mutedForeground,
     );
     final borderColor = isUnsaved

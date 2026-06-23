@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:free_map/free_map.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/core/widgets/select_empty_content.dart';
 import 'package:tawaq/feature/settings/presentation/provider/location_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_display.dart';
@@ -61,13 +64,14 @@ class CitySearchSelect extends ConsumerWidget {
 
     return FSelect<FmData>.searchBuilder(
       enabled: enabled,
+      contentConstraints: selectPopoverPortalConstraints(context),
       control: .managed(
         onChange: (place) {
           if (place != null) {
             unawaited(
               ref
                   .read(prayerSettingsProvider.notifier)
-                  .updateLocationData(
+                  .updateLocation(
                     coordinates: place.coordinates,
                     locationName: place.name,
                   ),
@@ -96,7 +100,7 @@ class CitySearchSelect extends ConsumerWidget {
             value: place,
           ),
       ],
-      contentEmptyBuilder: (_, _) => buildEmptyContent(context),
+      contentEmptyBuilder: (_, _) => buildSelectEmptyContent(context),
       contentLoadingBuilder: (_, _) => const FCircularProgress(),
     );
   }
@@ -129,62 +133,89 @@ class TimezoneSelect extends ConsumerWidget {
     final l10n = context.l10n;
     final colors = context.theme.colors;
 
-    return FSelect<tz.Location>.searchBuilder(
-      enabled: enabled,
-      control: .lifted(
-        value: location,
-        onChange: (v) {
-          if (v != null) unawaited(_setTimezone(context, ref, v));
-        },
-      ),
-      label: Text(l10n.timezone),
-      format: (loc) => loc.name,
-      searchFieldProperties: FSelectSearchFieldProperties(
-        hint: l10n.searchForMore,
-      ),
-      prefixBuilder: (_, _, _) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Icon(
-          FLucideIcons.clock,
-          color: colors.secondaryForeground,
+    final locateButton = FTooltip(
+      tipBuilder: (_, _) => Text(l10n.useSystemTimezone),
+      child: SettingsSemantics.iconAction(
+        label: SettingsSemantics.useSystemTimezoneAction(l10n),
+        enabled: enabled,
+        child: FButton.icon(
+          variant: .ghost,
+          onPress: enabled ? () => unawaited(_setTimezone(context, ref)) : null,
+          child: const Icon(FLucideIcons.locate),
         ),
       ),
-      filter: (query) async {
-        final locations = await ref.read(loadTimezonesProvider.future);
-        return query.isEmpty
-            ? locations
-            : locations.where(
-                (l) => l.name.toLowerCase().contains(query.toLowerCase()),
-              );
-      },
-      contentBuilder: (_, _, data) => data
-          .take(16)
-          .map((l) => FSelectItem(title: Text(l.name), value: l))
-          .toList(),
-      contentEmptyBuilder: (_, _) => buildEmptyContent(context),
-      contentLoadingBuilder: (_, _) => const FCircularProgress(),
-      suffixBuilder: (_, _, _) => Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        spacing: 4,
-        children: [
-          Icon(FLucideIcons.chevronDown, color: colors.primary),
-          FTooltip(
-            tipBuilder: (_, _) => Text(l10n.useSystemTimezone),
-            child: SettingsSemantics.iconAction(
-              label: SettingsSemantics.useSystemTimezoneAction(l10n),
-              enabled: enabled,
-              child: FButton.icon(
-                variant: .ghost,
-                onPress: enabled
-                    ? () => unawaited(_setTimezone(context, ref))
-                    : null,
-                child: const Icon(FLucideIcons.locate),
-              ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackSuffix = !isContainerAtLeast(
+          context,
+          constraints,
+          FBreakpoint.sm,
+        );
+
+        final select = FSelect<tz.Location>.searchBuilder(
+          enabled: enabled,
+          contentConstraints: selectPopoverPortalConstraints(context),
+          control: .lifted(
+            value: location,
+            onChange: (v) {
+              if (v != null) unawaited(_setTimezone(context, ref, v));
+            },
+          ),
+          label: Text(l10n.timezone),
+          format: (loc) => loc.name,
+          searchFieldProperties: FSelectSearchFieldProperties(
+            hint: l10n.searchForMore,
+          ),
+          prefixBuilder: (_, _, _) => Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Icon(
+              FLucideIcons.clock,
+              color: colors.secondaryForeground,
             ),
           ),
-        ],
-      ),
+          filter: (query) async {
+            final locations = ref.read(loadTimezonesProvider);
+            return query.isEmpty
+                ? locations
+                : locations.where(
+                    (l) => l.name.toLowerCase().contains(query.toLowerCase()),
+                  );
+          },
+          contentBuilder: (_, _, data) => data
+              .take(16)
+              .map((l) => FSelectItem(title: Text(l.name), value: l))
+              .toList(),
+          contentEmptyBuilder: (_, _) => buildSelectEmptyContent(context),
+          contentLoadingBuilder: (_, _) => const FCircularProgress(),
+          suffixBuilder: (_, _, _) => stackSuffix
+              ? Icon(FLucideIcons.chevronDown, color: colors.primary)
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 4,
+                  children: [
+                    Icon(FLucideIcons.chevronDown, color: colors.primary),
+                    locateButton,
+                  ],
+                ),
+        );
+
+        if (!stackSuffix) return select;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: AppSpacing.sm,
+          children: [
+            select,
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: locateButton,
+            ),
+          ],
+        );
+      },
     );
   }
 }

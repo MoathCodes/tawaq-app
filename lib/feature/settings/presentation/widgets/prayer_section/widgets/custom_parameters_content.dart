@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/settings/presentation/provider/custom_parameters_draft_provider.dart';
@@ -119,6 +120,7 @@ class CustomParametersContent extends ConsumerWidget {
               children: [
                 FSelect<Madhab>(
                   enabled: enabled,
+                  contentConstraints: selectPopoverPortalConstraints(context),
                   control: .managed(controller: draft.madhab),
                   items: {
                     l10n.madhab_shafi: Madhab.shafi,
@@ -128,6 +130,7 @@ class CustomParametersContent extends ConsumerWidget {
                 ),
                 FSelect<HighLatitudeRule>(
                   enabled: enabled,
+                  contentConstraints: selectPopoverPortalConstraints(context),
                   control: .managed(controller: draft.highLatRule),
                   items: {
                     l10n.highLatitudeRule_middleOfTheNight:

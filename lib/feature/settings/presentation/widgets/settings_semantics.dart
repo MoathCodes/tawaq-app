@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart' show FButton;
-import 'package:forui/widgets/button.dart' show FButton;
-import 'package:tawaq/core/widgets/merged_action_semantics.dart';
+import 'package:tawaq/core/a11y/a11y.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 /// Accessibility helpers for the settings feature.
@@ -13,27 +11,20 @@ abstract final class SettingsSemantics {
   static Widget sectionHeader({
     required String label,
     required Widget child,
-  }) {
-    return Semantics(
-      header: true,
-      label: label,
-      child: child,
-    );
-  }
+  }) =>
+      SemanticsWrappers.sectionHeader(label: label, child: child);
 
   /// Read-only name + value announcement with decorative children hidden.
   static Widget readOnlyValue({
     required String name,
     required String value,
     required Widget child,
-  }) {
-    return Semantics(
-      label: name,
-      value: value,
-      readOnly: true,
-      child: ExcludeSemantics(child: child),
-    );
-  }
+  }) =>
+      SemanticsWrappers.labeledControl(
+        label: name,
+        readOnlyValue: value,
+        child: child,
+      );
 
   /// Interactive control with an explicit name; optional [value] for state.
   ///
@@ -48,34 +39,34 @@ abstract final class SettingsSemantics {
     bool selected = false,
     bool excludeChild = false,
     VoidCallback? onTap,
-  }) {
-    return Semantics(
-      label: name,
-      value: value,
-      enabled: enabled,
-      button: button,
-      selected: selected,
-      onTap: button && enabled ? onTap : null,
-      child: excludeChild ? ExcludeSemantics(child: child) : child,
-    );
-  }
+  }) =>
+      SemanticsWrappers.labeledControl(
+        label: name,
+        value: value,
+        enabled: enabled,
+        button: button,
+        selected: selected,
+        excludeChild: excludeChild,
+        onTap: onTap,
+        child: child,
+      );
 
-  /// Icon-only control: one merged node (no duplicate [FButton] labels).
+  /// Icon-only control: one merged node (no duplicate button labels).
   static Widget iconAction({
     required String label,
     required Widget child,
     String? hint,
     bool enabled = true,
     bool selected = false,
-  }) {
-    return MergedActionSemantics(
-      label: label,
-      hint: hint,
-      enabled: enabled,
-      selected: selected,
-      child: child,
-    );
-  }
+  }) =>
+      SemanticsWrappers.labeledControl(
+        label: label,
+        hint: hint,
+        enabled: enabled,
+        selected: selected,
+        iconAction: child,
+        child: child,
+      );
 
   /// Announced label for the map "use my location" control.
   static String useMyLocationAction(AppLocalizations l10n) =>
@@ -104,5 +95,6 @@ abstract final class SettingsSemantics {
       l10n.a11ySettingsResetIqamah(prayerName);
 
   /// Hides [child] from the semantics tree (decorative only).
-  static Widget decorative(Widget child) => ExcludeSemantics(child: child);
+  static Widget decorative(Widget child) =>
+      SemanticsWrappers.decorative(child: child);
 }

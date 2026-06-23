@@ -91,31 +91,45 @@ class CoordinateField extends HookConsumerWidget {
       return;
     });
 
+    useEffect(
+      () {
+        void onFocusChanged() {
+          if (focusNode.hasFocus) return;
+          final parsed = double.tryParse(controller.text);
+          if (parsed == null) {
+            controller.text = value;
+            return;
+          }
+          final coords = ref.read(
+            prayerSettingsProvider.select((s) => s.value?.coordinates),
+          );
+          if (coords == null) return;
+
+          final newCoords = isLatitude
+              ? Coordinates(parsed, coords.longitude)
+              : Coordinates(coords.latitude, parsed);
+          if (newCoords.latitude == coords.latitude &&
+              newCoords.longitude == coords.longitude) {
+            return;
+          }
+          unawaited(
+            ref.read(prayerSettingsProvider.notifier).updateLocation(
+              coordinates: newCoords,
+            ),
+          );
+        }
+
+        focusNode.addListener(onFocusChanged);
+        return () => focusNode.removeListener(onFocusChanged);
+      },
+      [focusNode, controller, value, isLatitude],
+    );
+
     return FTextField(
       enabled: enabled,
       focusNode: focusNode,
       control: .managed(
         controller: controller,
-        onChange: (v) async {
-          if (!focusNode.hasFocus || v.text == value) return;
-
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            final parsed = double.tryParse(v.text);
-            if (parsed == null) return;
-
-            final coords = ref.read(
-              prayerSettingsProvider.select((s) => s.value?.coordinates),
-            );
-            if (coords == null) return;
-
-            final newCoords = isLatitude
-                ? Coordinates(parsed, coords.longitude)
-                : Coordinates(coords.latitude, parsed);
-            final notifier = ref.read(prayerSettingsProvider.notifier)
-              ..setCoordinates(newCoords);
-            unawaited(notifier.updateLocationData(coordinates: newCoords));
-          });
-        },
       ),
       label: Text(label),
       keyboardType: const TextInputType.numberWithOptions(

@@ -1,64 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/widgets/scale_step_picker.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/core/widgets/semantics_scale_step_picker.dart';
 import 'package:tawaq/feature/settings/data/models/app_text_scale.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
-
-/// [ScaleStepPicker] with per-step button semantics for settings screens.
-class SettingsScaleStepPicker extends StatelessWidget {
-  /// Creates a [SettingsScaleStepPicker].
-  const SettingsScaleStepPicker({
-    required this.groupLabel,
-    required this.labels,
-    required this.selectedIndex,
-    required this.onChanged,
-    this.enabled = true,
-    super.key,
-  });
-
-  /// Setting name announced with each option (e.g. "App text size").
-  final String groupLabel;
-
-  /// Labels for each step.
-  final List<String> labels;
-
-  /// Currently selected step index.
-  final int selectedIndex;
-
-  /// Called when the user selects a different step.
-  final ValueChanged<int> onChanged;
-
-  /// Whether steps can be selected.
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    return ScaleStepPicker(
-      labels: labels,
-      selectedIndex: selectedIndex,
-      onChanged: onChanged,
-      enabled: enabled,
-      wrapStep: (index, step) => SettingsSemantics.labeledControl(
-        name: groupLabel,
-        value: labels[index],
-        button: true,
-        selected: selectedIndex == index,
-        enabled: enabled,
-        excludeChild: true,
-        onTap: enabled ? () => onChanged(index) : null,
-        child: step,
-      ),
-    );
-  }
-}
+import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/typography/quran_text_scale_control.dart';
 
 /// App UI text scale picker that reads and writes [themeProvider].
 class AppTextScaleStepPicker extends ConsumerWidget {
   /// Creates an [AppTextScaleStepPicker].
-  const AppTextScaleStepPicker({super.key});
+  const AppTextScaleStepPicker({this.showLabel = true, super.key});
+
+  /// When true, shows a visible section title above the picker.
+  final bool showLabel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -68,9 +23,10 @@ class AppTextScaleStepPicker extends ConsumerWidget {
     );
     final themeReady = ref.watch(themeProvider.select((t) => t.hasValue));
 
-    return SettingsScaleStepPicker(
+    final picker = SemanticsScaleStepPicker(
       groupLabel: l10n.appTextSize,
       enabled: themeReady,
+      previewSizes: AppTextScale.values.map((s) => 14 * s.scalar).toList(),
       labels: [
         l10n.appTextSizeCompact,
         l10n.appTextSizeNormal,
@@ -82,6 +38,14 @@ class AppTextScaleStepPicker extends ConsumerWidget {
           .read(themeProvider.notifier)
           .setAppTextScale(AppTextScale.values[i]),
     );
+
+    if (!showLabel) return picker;
+
+    return SettingsGroup(
+      title: l10n.appTextSize,
+      subtitle: l10n.appTextSizeSubtitle,
+      child: picker,
+    );
   }
 }
 
@@ -92,29 +56,6 @@ class QuranTextScaleStepPicker extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final quranTextScale = ref.watch(
-      quranScreenSettingsProvider.select(
-        (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
-      ),
-    );
-    final stateReady = ref.watch(
-      quranScreenSettingsProvider.select((s) => s.hasValue),
-    );
-
-    return SettingsScaleStepPicker(
-      groupLabel: l10n.quranTextSize,
-      enabled: stateReady,
-      labels: [
-        l10n.quranTextSizeSmall,
-        l10n.quranTextSizeMedium,
-        l10n.quranTextSizeLarge,
-        l10n.quranTextSizeShortExtraLarge,
-      ],
-      selectedIndex: quranTextScale.index,
-      onChanged: (i) => ref
-          .read(quranScreenSettingsProvider.notifier)
-          .setTextScale(QuranTextScale.values[i]),
-    );
+    return const QuranTextScaleControl();
   }
 }

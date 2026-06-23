@@ -55,7 +55,7 @@ class SettingsSection extends StatelessWidget {
               label: title,
               child: Text(
                 title,
-                style: theme.typography.md.copyWith(
+                style: theme.typography.body.md.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -68,7 +68,7 @@ class SettingsSection extends StatelessWidget {
         label: subtitle,
         child: Text(
           subtitle,
-          style: theme.typography.sm.copyWith(
+          style: theme.typography.body.sm.copyWith(
             color: theme.colors.mutedForeground,
           ),
         ),
@@ -124,7 +124,7 @@ class SettingsGroup extends StatelessWidget {
                   label: title!,
                   child: Text(
                     title!,
-                    style: theme.typography.md.copyWith(
+                    style: theme.typography.body.md.copyWith(
                       fontWeight: FontWeight.w500,
                       color: colors.mutedForeground,
                     ),
@@ -137,7 +137,7 @@ class SettingsGroup extends StatelessWidget {
         if (subtitle != null)
           Text(
             subtitle!,
-            style: theme.typography.sm.copyWith(
+            style: theme.typography.body.sm.copyWith(
               color: colors.mutedForeground,
             ),
           ),
