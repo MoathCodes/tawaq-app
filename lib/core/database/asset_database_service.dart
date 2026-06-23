@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
@@ -7,6 +8,12 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 part 'asset_database_service.g.dart';
+
+void _copyDatabaseBytes((String path, Uint8List bytes) args) {
+  final file = File(args.$1);
+  Directory(p.dirname(args.$1)).createSync(recursive: true);
+  file.writeAsBytesSync(args.$2, flush: true);
+}
 
 /// Provides a singleton instance of [AssetDatabaseService].
 @Riverpod(keepAlive: true)
@@ -39,12 +46,10 @@ class AssetDatabaseService {
   /// final result = db.select('SELECT * FROM tafseer WHERE sura_no = ?', [1]);
   /// ```
   Future<Database> openDatabase(String assetPath) async {
-    // Return cached database if already open
     if (_openDatabases.containsKey(assetPath)) {
       return _openDatabases[assetPath]!;
     }
 
-    // Get the documents directory for the app
     final documentsDir = await getApplicationDocumentsDirectory();
     final dbFileName = p.basename(assetPath);
     final dbPath = p.join(
@@ -54,19 +59,16 @@ class AssetDatabaseService {
       dbFileName,
     );
 
-    // Copy from assets if the file doesn't exist
     final dbFile = File(dbPath);
     if (!dbFile.existsSync()) {
-      // Ensure the databases directory exists
-      await Directory(p.dirname(dbPath)).create(recursive: true);
-
-      // Copy the asset to the file system
       final data = await rootBundle.load(assetPath);
-      final bytes = data.buffer.asUint8List();
-      await dbFile.writeAsBytes(bytes, flush: true);
+      final bytes = data.buffer.asUint8List(
+        data.offsetInBytes,
+        data.lengthInBytes,
+      );
+      await Isolate.run(() => _copyDatabaseBytes((dbPath, bytes)));
     }
 
-    // Open the database with sqlite3
     final database = sqlite3.open(dbPath);
     _openDatabases[assetPath] = database;
 
