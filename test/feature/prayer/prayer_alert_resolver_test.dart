@@ -1,9 +1,9 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_resolver.dart';
 import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
@@ -61,11 +61,13 @@ PrayerDaySnapshot _buildSnapshot({
   return PrayerDaySnapshot(
     now: now,
     location: location,
-    today: today,
-    yesterday: yesterday,
-    todaySunnah: todaySunnah,
-    yesterdaySunnah: yesterdaySunnah,
-    timeline: timeline,
+    bundle: PrayerDayBundle(
+      today: today,
+      yesterday: yesterday,
+      todaySunnah: todaySunnah,
+      yesterdaySunnah: yesterdaySunnah,
+      timeline: timeline,
+    ),
   );
 }
 
@@ -225,56 +227,6 @@ void main() {
       expect(
         targets.where((t) => t.kind == PrayerAlertKind.iqamah),
         isEmpty,
-      );
-    });
-  });
-
-  group('resolveSunnahAlertTime', () {
-    test('before fajr uses last third for ishaBefore', () {
-      final location = getLocation('Asia/Riyadh');
-      final snapshot = _buildSnapshot(
-        now: TZDateTime(location, 2026, 6, 9, 3),
-        location: location,
-      );
-
-      expect(
-        resolveSunnahAlertTime(
-          prayer: Prayer.ishaBefore,
-          snapshot: snapshot,
-        ),
-        snapshot.timeline.lastThirdToday,
-      );
-    });
-
-    test('before fajr uses middle of night for fajrAfter', () {
-      final location = getLocation('Asia/Riyadh');
-      final snapshot = _buildSnapshot(
-        now: TZDateTime(location, 2026, 6, 9, 3),
-        location: location,
-      );
-
-      expect(
-        resolveSunnahAlertTime(
-          prayer: Prayer.fajrAfter,
-          snapshot: snapshot,
-        ),
-        snapshot.timeline.middleOfNightToday,
-      );
-    });
-
-    test('after fajr uses today prayer times', () {
-      final location = getLocation('Asia/Riyadh');
-      final snapshot = _buildSnapshot(
-        now: TZDateTime(location, 2026, 6, 9, 12),
-        location: location,
-      );
-
-      expect(
-        resolveSunnahAlertTime(
-          prayer: Prayer.ishaBefore,
-          snapshot: snapshot,
-        ),
-        snapshot.today.getTimesForPrayer(Prayer.ishaBefore, location),
       );
     });
   });

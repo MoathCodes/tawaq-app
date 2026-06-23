@@ -4,10 +4,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -22,20 +20,13 @@ class MuslimFortressWelcomePane extends ConsumerWidget {
     final chaptersAsync = ref.watch(muslimFortressChaptersProvider);
     final allCategories = chaptersAsync.asData?.value ??
         const <FortressCategory>[];
-    final day = ref.watch(prayerDayProvider).value;
+    final recommendedCategories = ref.watch(
+      fortressRecommendedCategoriesProvider,
+    );
     final favoriteChapterIds = ref.watch(
       fortressUiStateProvider.select((state) => state.favoriteChapterIds),
     );
     final controller = ref.read(fortressScreenControllerProvider.notifier);
-
-    final recommendedCategories = day == null
-        ? <FortressCategory>[]
-        : recommendFortressCategories(
-            allCategories: allCategories,
-            now: day.now,
-            prayerTimes: day.today,
-            location: day.location,
-          );
 
     final categoriesByChapterId = {
       for (final category in allCategories) category.chapterId: category,

@@ -15,6 +15,8 @@ import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/settings/data/migration/state_settings_legacy_migration.dart';
 import 'package:tawaq/feature/settings/data/models/state_settings.dart';
 import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
+import 'package:tawaq/feature/settings/domain/models/settings_screen_state.dart';
+import 'package:tawaq/feature/settings/presentation/models/settings_destination.dart';
 
 part 'ui_state_settings_providers.g.dart';
 
@@ -242,4 +244,39 @@ class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier {
   /// Sets the fortress browse sidebar width.
   void setSidePanelWidth(double width) =>
       _update((s) => s.copyWith(sidePanelWidth: width), 'Fortress side panel width');
+}
+
+/// Persisted settings screen tab selection.
+@riverpod
+@JsonPersist()
+class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
+  @override
+  Future<SettingsScreenState> build() async {
+    await ref.watch(stateSettingsLegacyMigrationProvider.future);
+    await persist(
+      ref.read(settingsStorageProvider),
+      options: const StorageOptions(
+        cacheTime: StorageCacheTime.unsafe_forever,
+      ),
+    ).future;
+    return state.value ?? SettingsScreenState.initial();
+  }
+
+  void _update(
+    SettingsScreenState Function(SettingsScreenState) fn,
+    String field,
+  ) {
+    if (!state.hasValue) return;
+    final current = state.value!;
+    final next = fn(current);
+    if (current == next) return;
+    state = AsyncData(next);
+    _logUiStateUpdate(ref, 'SettingsScreenSettingsNotifier', field);
+  }
+
+  /// Sets the active settings tab.
+  void setActiveDestination(SettingsDestination destination) => _update(
+    (s) => s.copyWith(activeTabKey: destination.labelKey),
+    'Settings tab',
+  );
 }

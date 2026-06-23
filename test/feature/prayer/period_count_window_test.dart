@@ -8,7 +8,6 @@ import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_service.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart';
@@ -31,16 +30,14 @@ void main() {
       tz.initializeTimeZones();
       location = UTC;
 
-      final boxName = 'period_count_test_${DateTime.now().millisecondsSinceEpoch}';
+      final boxName =
+          'period_count_test_${DateTime.now().millisecondsSinceEpoch}';
       box = Box<int, PrayerCompletion>(boxName);
       await box.clear();
 
       final db = PrayerDatabase(box);
       final repo = PrayerRepo(prayerDatabase: db, log: Logger());
-      final settings = PrayerSettings.defaultSettings().copyWith(
-        location: location,
-      );
-      service = PrayerService(repo, settings, Logger());
+      service = PrayerService(repo, Logger());
     });
 
     tearDown(() async {
@@ -59,6 +56,7 @@ void main() {
           completionTime: date,
           status: status,
         ),
+        location,
       );
     }
 
@@ -75,6 +73,7 @@ void main() {
 
       final counts = await service.countAllStatusesOnPeriod(
         PrayerAnalyticsPeriod.weekly,
+        location,
         anchor,
       );
 
@@ -92,6 +91,7 @@ void main() {
 
       final counts = await service.countAllStatusesOnPeriod(
         PrayerAnalyticsPeriod.weekly,
+        location,
         anchor,
       );
 

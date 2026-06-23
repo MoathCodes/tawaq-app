@@ -5,7 +5,7 @@ import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_service_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:timezone/timezone.dart';
 
@@ -16,6 +16,8 @@ part 'prayer_completion_provider.g.dart';
 Future<List<PrayerCompletion>> prayerCompletion(Ref ref) {
   ref.watch(prayerCalendarDayKeyProvider);
   final now = ref.read(currentLocationTimeProvider);
+  if (now == null) return Future.value(const []);
+
   final today = normalizeCompletionDay(now);
   return ref.watch(prayerCompletionsForDateProvider(today).future);
 }
@@ -26,9 +28,7 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
   @override
   void build() {}
 
-  Location get _location =>
-      ref.read(prayerSettingsProvider).value?.location ??
-      PrayerSettings.defaultSettings().location;
+  Location? get _location => ref.read(effectivePrayerSettingsProvider)?.location;
 
   /// Sets or clears the completion status for [prayer] on [completionDay].
   Future<void> setPrayerStatus({
@@ -37,11 +37,18 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
     required CompletionStatus status,
   }) async {
     if (!ref.mounted) return;
+    final location = _location;
+    if (location == null) return;
+
     final service = ref.read(prayerServiceProvider);
     final normalizedDay = normalizeCompletionDay(completionDay);
 
     if (status == CompletionStatus.none) {
-      await service.deleteCompletionForPrayerOnDate(prayer, normalizedDay);
+      await service.deleteCompletionForPrayerOnDate(
+        prayer,
+        normalizedDay,
+        location,
+      );
     } else {
       final existing = await _loadCanonical(prayer, normalizedDay);
       final completion = PrayerCompletion(
@@ -53,7 +60,7 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
       ref
           .read(firstPrayerRecordedDateProvider.notifier)
           .setIfNull(completion.completionTime);
-      await service.addOrUpdateCompletion(completion);
+      await service.addOrUpdateCompletion(completion, location);
     }
 
     if (!ref.mounted) return;
@@ -80,6 +87,8 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
     if (!ref.mounted) return;
 
     final now = ref.read(currentLocationTimeProvider);
+    if (now == null) return;
+
     final completionDay = normalizeCompletionDay(now);
     final nextStatus = currentStatus.trackerCycleNext;
 
@@ -103,13 +112,16 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
     Prayer prayer,
     DateTime day,
   ) async {
+    final location = _location;
+    if (location == null) return null;
+
     final completions = await ref.read(
       prayerCompletionsForDateProvider(day).future,
     );
     return pickCanonical(
       completions,
       prayer: prayer,
-      location: _location,
+      location: location,
       day: day,
     );
   }

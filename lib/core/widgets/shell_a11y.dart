@@ -39,4 +39,8 @@ abstract final class ShellA11y {
   /// Label for the debug-only setup wizard shortcut.
   static String openSetupWizard(AppLocalizations l10n) =>
       l10n.a11yOpenSetupWizard;
+
+  /// Label for the shell location chip that opens location settings.
+  static String openLocationSettings(AppLocalizations l10n) =>
+      l10n.a11yOpenLocationSettings;
 }

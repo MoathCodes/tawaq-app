@@ -5,11 +5,16 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 
 /// Plays the bundled adhan/iqamah recording with a gentle fade in and out.
+///
+/// The `onBeforePlay`/`onAfterStop` hooks let an external player (e.g. Quran
+/// recitation) yield the shared audio engine to the alert and resume afterward.
 class SoundAlertChannel implements PrayerAlertChannel {
   /// Creates a [SoundAlertChannel] over [_audio].
-  SoundAlertChannel(this._audio);
+  SoundAlertChannel(this._audio, {this._onBeforePlay, this._onAfterStop});
 
   final AudioPlayerController _audio;
+  final Future<void> Function()? _onBeforePlay;
+  final Future<void> Function()? _onAfterStop;
 
   @override
   String get debugName => 'sound';
@@ -18,6 +23,9 @@ class SoundAlertChannel implements PrayerAlertChannel {
   Future<void> deliver(PrayerAlertEvent event) async {
     final assetPath = event.soundAssetPath;
     if (!event.playSound || assetPath == null) return;
+
+    // Pause any active recitation before claiming the shared player.
+    await _onBeforePlay?.call();
 
     await _audio.setVolume(event.volume);
     // playTrack already fades in by kAudioDefaultFadeIn.
@@ -32,5 +40,9 @@ class SoundAlertChannel implements PrayerAlertChannel {
   }
 
   @override
-  Future<void> cancel() => _audio.stop(fadeOut: kAudioDefaultFadeOut);
+  Future<void> cancel() async {
+    await _audio.stop(fadeOut: kAudioDefaultFadeOut);
+    // Resume recitation once the alert ends or is dismissed.
+    await _onAfterStop?.call();
+  }
 }

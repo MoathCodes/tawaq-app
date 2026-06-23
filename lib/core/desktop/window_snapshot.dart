@@ -3,6 +3,12 @@ import 'dart:ui';
 import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
 import 'package:window_manager/window_manager.dart';
 
+/// Minimum window size enforced on desktop bootstrap.
+///
+/// [WindowSnapshot] restores this after adhan compact morph because
+/// `window_manager` does not expose a `getMinimumSize` API.
+const Size kDesktopMinimumWindowSize = Size(800, 600);
+
 /// Saved native window geometry and flags for restore after adhan alert morph.
 class WindowSnapshot {
   /// Creates a [WindowSnapshot].
@@ -37,7 +43,7 @@ class WindowSnapshot {
       isAlwaysOnTop: await windowManager.isAlwaysOnTop(),
       isVisible: await windowManager.isVisible(),
       skipTaskbar: await windowManager.isSkipTaskbar(),
-      minimumSize: Size.zero,
+      minimumSize: kDesktopMinimumWindowSize,
     );
   }
 

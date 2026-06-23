@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:local_notifier/local_notifier.dart';
 import 'package:tawaq/core/desktop/desktop_tray_sync_provider.dart';
 import 'package:tawaq/core/desktop/desktop_window_controller.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
@@ -93,10 +92,3 @@ class _DesktopShellState extends ConsumerState<DesktopShell>
   }
 }
 
-/// Initializes [localNotifier] during desktop startup.
-Future<void> initDesktopNotifications() async {
-  if (!isDesktopPlatform) return;
-  await localNotifier.setup(
-    appName: 'Tawaq',
-  );
-}

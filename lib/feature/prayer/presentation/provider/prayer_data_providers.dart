@@ -1,56 +1,22 @@
 import 'dart:async';
 
 import 'package:adhan_dart/adhan_dart.dart';
+import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/utils/date_formatter.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
-import 'package:tawaq/feature/prayer/domain/services/prayer_service.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_day_computer.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_time_resolver.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_data_providers.g.dart';
 
-/// Provider for the [PrayerService].
-@riverpod
-PrayerService prayerService(Ref ref) {
-  final repo = ref.watch(prayerRepoProvider);
-  final log = ref.read(loggerProvider);
-  final settings = ref.watch(prayerSettingsProvider);
-
-  // While loading or after an error, build from the last good settings rather
-  // than (0,0) defaults — a (0,0) service computes null-island times that get
-  // baked into [PrayerDay]'s cache and fire alerts hours off.
-  return settings.when(
-    data: (d) => PrayerService(repo, d, log),
-    loading: () => PrayerService(repo, lastGoodPrayerSettings(), log),
-    error: (e, st) {
-      log.e('Error loading settings', error: e, stackTrace: st);
-      return PrayerService(repo, lastGoodPrayerSettings(), log);
-    },
-  );
-}
-
 const _tickInterval = Duration(seconds: 1);
-
-class _PrayerDayCache {
-  _PrayerDayCache({
-    required this.anchorDate,
-    required this.today,
-    required this.yesterday,
-    required this.todaySunnah,
-    required this.yesterdaySunnah,
-    required this.timeline,
-  });
-
-  final TZDateTime anchorDate;
-  final PrayerTimes today;
-  final PrayerTimes yesterday;
-  final SunnahTimes todaySunnah;
-  final SunnahTimes yesterdaySunnah;
-  final PrayerDayTimeline timeline;
-}
 
 /// Single live source for “now”, timezone, and today/yesterday prayer times.
 ///
@@ -59,40 +25,31 @@ class _PrayerDayCache {
 /// their own timers.
 @Riverpod(keepAlive: true)
 class PrayerDay extends _$PrayerDay {
-  _PrayerDayCache? _cache;
+  PrayerDayBundle? _cache;
   PrayerSettings? _cachedSettings;
+  TZDateTime? _cachedAnchorDate;
 
   @override
   Stream<PrayerDaySnapshot> build() async* {
-    ref.watch(prayerSettingsProvider);
-    final service = ref.watch(prayerServiceProvider);
+    ref.watch(effectivePrayerSettingsProvider);
+    final repo = ref.watch(prayerRepoProvider);
     final log = ref.read(loggerProvider);
 
-    PrayerDaySnapshot snapshot() {
-      final settings =
-          ref.read(prayerSettingsProvider).value ?? lastGoodPrayerSettings();
-      final now = TZDateTime.now(settings.location);
-      _ensureCache(settings, now, service);
+    PrayerDaySnapshot? snapshot() {
+      final settings = ref.read(effectivePrayerSettingsProvider);
+      if (settings == null) return null;
 
-      final cache = _cache!;
+      final now = TZDateTime.now(settings.location);
+      final bundle = _ensureCache(settings, now, repo, log);
+      if (bundle == null) return null;
 
       return PrayerDaySnapshot(
         now: now,
         location: settings.location,
-        today: cache.today,
-        yesterday: cache.yesterday,
-        todaySunnah: cache.todaySunnah,
-        yesterdaySunnah: cache.yesterdaySunnah,
-        timeline: cache.timeline,
+        bundle: bundle,
       );
     }
 
-    // A transient failure in [snapshot] — most likely the day-boundary
-    // recompute in [_ensureCache], or a hiccup right after the machine wakes
-    // from sleep — must never terminate the clock. If the generator stops, the
-    // stream completes and every dependant (the prayer card, the alert
-    // scheduler) freezes on a stale `now` until the app restarts. So a bad tick
-    // is logged and skipped, and the loop keeps ticking.
     PrayerDaySnapshot? safeSnapshot() {
       try {
         return snapshot();
@@ -112,18 +69,13 @@ class PrayerDay extends _$PrayerDay {
     }
   }
 
-  void _ensureCache(
+  PrayerDayBundle? _ensureCache(
     PrayerSettings settings,
     TZDateTime now,
-    PrayerService service,
+    PrayerRepo repo,
+    Logger log,
   ) {
-    // (0,0) is the "no location set" sentinel. Computing from it yields
-    // null-island times (~2-3h off) which, once cached, persist for the day and
-    // fire alerts at the wrong time. Refuse to compute/cache from it: keep any
-    // previously cached good times and wait for real coordinates to arrive (the
-    // settings change then triggers a refresh below).
-    final coords = settings.coordinates;
-    if (coords.latitude == 0 && coords.longitude == 0) return;
+    if (!settings.isLocationReady) return _cache;
 
     final anchorDate = TZDateTime(
       settings.location,
@@ -135,73 +87,50 @@ class PrayerDay extends _$PrayerDay {
     final needsRefresh =
         _cache == null ||
         _cachedSettings != settings ||
-        _cache!.anchorDate != anchorDate;
+        _cachedAnchorDate != anchorDate;
 
-    if (!needsRefresh) return;
+    if (!needsRefresh) return _cache;
 
-    final localNow = TZDateTime.from(now, settings.location);
-    final today = service.getTodaysPrayerTimes(
-      localNow,
-      roundToMinutes: false,
+    final bundle = computePrayerDayBundle(
+      settings: settings,
+      anchorNow: now,
+      repo: repo,
+      log: log,
     );
-    final yesterday = service.getTodaysPrayerTimes(
-      localNow.subtract(const Duration(days: 1)),
-      roundToMinutes: false,
-    );
-    final todaySunnah = service.getSunnahTime(today);
-    final yesterdaySunnah = service.getSunnahTime(yesterday);
+    if (bundle == null) return _cache;
 
-    final timeline = PrayerDayTimeline(
-      fajrToday: TZDateTime.from(today.fajr, settings.location),
-      sunriseToday: TZDateTime.from(today.sunrise, settings.location),
-      dhuhrToday: TZDateTime.from(today.dhuhr, settings.location),
-      asrToday: TZDateTime.from(today.asr, settings.location),
-      maghribToday: TZDateTime.from(today.maghrib, settings.location),
-      ishaToday: TZDateTime.from(today.isha, settings.location),
-      ishaYesterday: TZDateTime.from(yesterday.isha, settings.location),
-      middleOfNightToday: TZDateTime.from(
-        todaySunnah.middleOfTheNight,
-        settings.location,
-      ),
-      middleOfNightYesterday: TZDateTime.from(
-        yesterdaySunnah.middleOfTheNight,
-        settings.location,
-      ),
-      lastThirdToday: TZDateTime.from(
-        todaySunnah.lastThirdOfTheNight,
-        settings.location,
-      ),
-      lastThirdYesterday: TZDateTime.from(
-        yesterdaySunnah.lastThirdOfTheNight,
-        settings.location,
-      ),
-    );
-
-    _cache = _PrayerDayCache(
-      anchorDate: anchorDate,
-      today: today,
-      yesterday: yesterday,
-      todaySunnah: todaySunnah,
-      yesterdaySunnah: yesterdaySunnah,
-      timeline: timeline,
-    );
+    _cache = bundle;
     _cachedSettings = settings;
+    _cachedAnchorDate = anchorDate;
+    return _cache;
   }
 }
 
-/// Prayer times for a specific calendar date (no live tick).
+/// Prayer bundle for a calendar date via the shared computation engine.
 @riverpod
-PrayerTimes prayerTimesForDate(Ref ref, DateTime date) {
-  final service = ref.watch(prayerServiceProvider);
-  final settings =
-      ref.read(prayerSettingsProvider).value ?? lastGoodPrayerSettings();
+PrayerDayBundle? prayerDayBundleForDate(Ref ref, DateTime date) {
+  final settings = ref.watch(effectivePrayerSettingsProvider);
+  if (settings == null) return null;
+
+  final repo = ref.watch(prayerRepoProvider);
   final anchor = TZDateTime(
     settings.location,
     date.year,
     date.month,
     date.day,
+    12,
   );
-  return service.getTodaysPrayerTimes(anchor);
+  return computePrayerDayBundle(
+    settings: settings,
+    anchorNow: anchor,
+    repo: repo,
+  );
+}
+
+/// Prayer times for a specific calendar date (no live tick).
+@riverpod
+PrayerTimes? prayerTimesForDate(Ref ref, DateTime date) {
+  return ref.watch(prayerDayBundleForDateProvider(date))?.today;
 }
 
 /// Calendar day key from [prayerDayProvider]; stable within a day so dependents
@@ -211,34 +140,41 @@ int prayerCalendarDayKey(Ref ref) {
   return ref.watch(prayerDayProvider).value?.calendarDayKey ?? 0;
 }
 
-/// Today's prayer times derived from [prayerDayProvider].
-///
-/// Pass [forDate] to resolve times for another calendar day without the live
-/// tick stream.
-@riverpod
-PrayerTimes currentPrayerTimes(Ref ref, {DateTime? forDate}) {
-  if (forDate != null) {
-    return ref.watch(
-      prayerTimesForDateProvider(
-        DateTime(forDate.year, forDate.month, forDate.day),
-      ),
-    );
-  }
-
-  final snapshot = ref.watch(prayerDayProvider).value;
-  if (snapshot != null) return snapshot.today;
-
-  final service = ref.watch(prayerServiceProvider);
-  return service.getTodaysPrayerTimes(null);
-}
-
 /// Current instant in the user's prayer timezone from [prayerDayProvider].
 @riverpod
-TZDateTime currentLocationTime(Ref ref) {
-  final snapshot = ref.watch(prayerDayProvider).value;
-  if (snapshot != null) return snapshot.now;
+TZDateTime? currentLocationTime(Ref ref) {
+  return ref.watch(prayerDayProvider).value?.now;
+}
 
-  final settings =
-      ref.read(prayerSettingsProvider).value ?? lastGoodPrayerSettings();
-  return TZDateTime.now(settings.location);
+/// Current time bucketed to whole minutes (epoch minutes) from
+/// [prayerDayProvider].
+///
+/// Lets minute-resolution consumers (current-prayer slot, time-of-day
+/// recommendations) recompute at most once per minute instead of on every 1 Hz
+/// tick. Prayer boundaries have minute resolution, so this is exact for them.
+@riverpod
+int currentMinuteBucket(Ref ref) {
+  final now = ref.watch(prayerDayProvider).value?.now;
+  return (now?.millisecondsSinceEpoch ?? 0) ~/ 60000;
+}
+
+/// Formatted sunnah time labels (sunrise / fajrAfter / ishaBefore).
+///
+/// Recomputed on each 1 Hz tick but returned as a value-equal record, so
+/// dependents rebuild only when a displayed label actually changes (≈ at the
+/// fajr crossing or midnight) rather than every second.
+@riverpod
+({String sunrise, String fajrAfter, String ishaBefore})? sunnahTimeLabels(
+  Ref ref,
+) {
+  final day = ref.watch(prayerDayProvider).value;
+  if (day == null) return null;
+  final formatter = ref.watch(timeFormatterProvider);
+  String label(Prayer prayer) =>
+      formatter.format(resolveSunnahTime(prayer: prayer, snapshot: day));
+  return (
+    sunrise: label(Prayer.sunrise),
+    fajrAfter: label(Prayer.fajrAfter),
+    ishaBefore: label(Prayer.ishaBefore),
+  );
 }

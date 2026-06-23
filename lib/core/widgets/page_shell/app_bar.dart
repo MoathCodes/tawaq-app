@@ -11,6 +11,7 @@ import 'package:tawaq/core/widgets/page_shell/hijri_date_chip.dart';
 import 'package:tawaq/core/widgets/shell_a11y.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_hint.dart';
 import 'package:tawaq/core/widgets/theme_mode_button.dart';
+import 'package:tawaq/feature/settings/presentation/models/settings_destination.dart';
 import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_display.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -28,9 +29,11 @@ class ShellAppBar extends ConsumerWidget {
 
     final Widget? locationChip =
         (locationName != null && locationName.isNotEmpty)
-        ? Container(
-            padding: context.theme.buttonStyles.outline.sm.contentStyle.padding,
-            decoration: context.theme.buttonStyles.outline.sm.decoration.base,
+        ? FButton(
+            variant: .outline,
+            onPress: () => const SettingsRoute(
+              $extra: SettingsLocationDestination(),
+            ).go(context),
             child: Row(
               spacing: AppSpacing.xs,
               children: [

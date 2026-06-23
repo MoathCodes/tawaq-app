@@ -5,7 +5,8 @@ import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
-import 'package:tawaq/feature/prayer/domain/services/prayer_service.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_day_computer.dart';
+import 'package:tawaq/feature/prayer/domain/use_cases/compute_prayer_card_decision.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
@@ -15,19 +16,21 @@ void main() {
 
   group('Prayer Card Decision Tests', () {
     late Location location;
-    late PrayerService service;
+    late PrayerRepo repo;
+    late PrayerSettings settings;
 
-    setUpAll(() async {
+    setUpAll(() {
       location = getLocation('Asia/Riyadh');
-
-      // Set up service like in the original test
-      final boxName = 'prayer_test_${DateTime.now().millisecondsSinceEpoch}';
-      final box = Box<int, PrayerCompletion>(boxName);
-      final log = Logger();
-      service = PrayerService(
-        PrayerRepo(prayerDatabase: PrayerDatabase(box), log: log),
-        PrayerSettings.defaultSettings(),
-        log,
+      final box = Box<int, PrayerCompletion>(
+        'card_decision_${DateTime.now().microsecondsSinceEpoch}',
+      );
+      repo = PrayerRepo(
+        prayerDatabase: PrayerDatabase(box),
+        log: Logger(),
+      );
+      settings = PrayerSettings.defaultSettings().copyWith(
+        coordinates: const Coordinates(24.7136, 46.6753),
+        location: location,
       );
     });
 
@@ -35,60 +38,54 @@ void main() {
       'Prayer decision at 11:15 PM should show midnight as next prayer '
       'with correct time source',
       () {
-        // Create specific time for 11:15 PM (matching the original bug report)
         final testTime = TZDateTime(location, 2024, 1, 15, 23, 15);
+        final bundle = computePrayerDayBundle(
+          settings: settings,
+          anchorNow: testTime,
+          repo: repo,
+        )!;
+        final yesterdayBundle = computePrayerDayBundle(
+          settings: settings,
+          anchorNow: testTime.subtract(const Duration(days: 1)),
+          repo: repo,
+        )!;
 
-        // Get prayer times using the service (same as original test)
-        final todaysPrayerTimes = service.getTodaysPrayerTimes(testTime);
-        final yesterdaysPrayerTimes = service.getTodaysPrayerTimes(
-          testTime.subtract(const Duration(days: 1)),
-        );
-        final todaysSunnahTimes = service.getSunnahTime(todaysPrayerTimes);
-        final yesterdaysSunnahTimes = service.getSunnahTime(
-          yesterdaysPrayerTimes,
-        );
-
-        // Call the decision function
         final decision = computePrayerCardDecision(
           currentTime: testTime,
           location: location,
-          todaysPrayerTimes: todaysPrayerTimes,
-          yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-          todaysSunnahTimes: todaysSunnahTimes,
-          yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+          todaysPrayerTimes: bundle.today,
+          yesterdaysPrayerTimes: yesterdayBundle.today,
+          todaysSunnahTimes: bundle.todaySunnah,
+          yesterdaysSunnahTimes: yesterdayBundle.todaySunnah,
         );
 
-        // Debug output
-
-        // At 11:15 PM, the hero card should still be in the Isha window.
-        expect(decision.prayer, equals(Prayer.isha));
+        expect(decision.prayer, equals(Prayer.fajrAfter));
       },
     );
 
     test('Prayer decision after midnight should show last third of night', () {
-      // Create specific time for 12:30 AM (after midnight, before fajr)
       final testTime = TZDateTime(location, 2024, 1, 16, 0, 30);
-
-      final todaysPrayerTimes = service.getTodaysPrayerTimes(testTime);
-      final yesterdaysPrayerTimes = service.getTodaysPrayerTimes(
-        testTime.subtract(const Duration(days: 1)),
-      );
-      final todaysSunnahTimes = service.getSunnahTime(todaysPrayerTimes);
-      final yesterdaysSunnahTimes = service.getSunnahTime(
-        yesterdaysPrayerTimes,
-      );
+      final bundle = computePrayerDayBundle(
+        settings: settings,
+        anchorNow: testTime,
+        repo: repo,
+      )!;
+      final yesterdayBundle = computePrayerDayBundle(
+        settings: settings,
+        anchorNow: testTime.subtract(const Duration(days: 1)),
+        repo: repo,
+      )!;
 
       final decision = computePrayerCardDecision(
         currentTime: testTime,
         location: location,
-        todaysPrayerTimes: todaysPrayerTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+        todaysPrayerTimes: bundle.today,
+        yesterdaysPrayerTimes: yesterdayBundle.today,
+        todaysSunnahTimes: bundle.todaySunnah,
+        yesterdaysSunnahTimes: yesterdayBundle.todaySunnah,
       );
 
-      // After midnight but before fajr, the current hero slot remains Isha.
-      expect(decision.prayer, equals(Prayer.isha));
+      expect(decision.prayer, equals(Prayer.ishaBefore));
     });
   });
 }

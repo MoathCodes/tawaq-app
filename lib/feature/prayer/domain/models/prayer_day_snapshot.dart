@@ -1,5 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/foundation.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:timezone/timezone.dart';
 
 /// Localized prayer boundaries for the cached today / yesterday pair.
@@ -40,20 +41,18 @@ class PrayerDaySnapshot {
   const PrayerDaySnapshot({
     required this.now,
     required this.location,
-    required this.today,
-    required this.yesterday,
-    required this.todaySunnah,
-    required this.yesterdaySunnah,
-    required this.timeline,
+    required this.bundle,
   });
 
   final TZDateTime now;
   final Location location;
-  final PrayerTimes today;
-  final PrayerTimes yesterday;
-  final SunnahTimes todaySunnah;
-  final SunnahTimes yesterdaySunnah;
-  final PrayerDayTimeline timeline;
+  final PrayerDayBundle bundle;
+
+  PrayerTimes get today => bundle.today;
+  PrayerTimes get yesterday => bundle.yesterday;
+  SunnahTimes get todaySunnah => bundle.todaySunnah;
+  SunnahTimes get yesterdaySunnah => bundle.yesterdaySunnah;
+  PrayerDayTimeline get timeline => bundle.timeline;
 
   /// Stable key for providers that only care about the calendar day.
   int get calendarDayKey => now.year * 10000 + now.month * 100 + now.day;

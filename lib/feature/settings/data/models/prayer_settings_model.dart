@@ -126,3 +126,10 @@ abstract class PrayerSettings with _$PrayerSettings {
   factory PrayerSettings.fromJson(Map<String, dynamic> json) =>
       _$PrayerSettingsFromJson(json);
 }
+
+/// Location and prayer-time helpers for [PrayerSettings].
+extension PrayerSettingsLocation on PrayerSettings {
+  /// Whether [coordinates] are set to a real location (not the 0,0 sentinel).
+  bool get isLocationReady =>
+      !(coordinates.latitude == 0 && coordinates.longitude == 0);
+}

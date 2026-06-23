@@ -6,6 +6,8 @@ import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_flow_state.
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_service.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 part 'muslim_fortress_provider.g.dart';
@@ -105,6 +107,42 @@ class FortressScreenController extends _$FortressScreenController {
     final index = duas.indexWhere((dua) => dua.contentId == hit.item.contentId);
     startFocusReading(initialIndex: index >= 0 ? index : 0);
   }
+}
+
+/// Active time-of-day recommendation window as a value-equal key.
+///
+/// Recomputed at most once per minute (via [currentMinuteBucketProvider]) but
+/// its String value only changes when the prayer window crosses (~5–6x/day),
+/// so [fortressRecommendedCategories] re-runs only then rather than every tick.
+@riverpod
+String fortressRecommendationWindow(Ref ref) {
+  ref.watch(currentMinuteBucketProvider);
+  final day = ref.read(prayerDayProvider).value;
+  if (day == null) return '';
+  // Newline-joined: fragments are single-line phrases that may contain spaces.
+  return recommendTitleFragments(
+    now: day.now,
+    prayerTimes: day.today,
+    location: day.location,
+  ).join('\n');
+}
+
+/// Time-based recommended fortress categories for the welcome pane.
+///
+/// Keyed on the value-equal [fortressRecommendationWindowProvider], so the
+/// welcome pane rebuilds only at window crossings rather than on every 1 Hz
+/// clock tick (mirrors the [sunnahTimeLabels] dedup pattern).
+@riverpod
+List<FortressCategory> fortressRecommendedCategories(Ref ref) {
+  final window = ref.watch(fortressRecommendationWindowProvider);
+  final categories =
+      ref.watch(muslimFortressChaptersProvider).asData?.value ??
+      const <FortressCategory>[];
+  if (window.isEmpty || categories.isEmpty) return const <FortressCategory>[];
+  return fortressCategoriesForFragments(
+    allCategories: categories,
+    fragments: window.split('\n'),
+  );
 }
 
 /// All Hisn al-Muslim titles for the fortress UI.

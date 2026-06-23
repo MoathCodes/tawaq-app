@@ -43,11 +43,12 @@ class SchedulePrayerRow extends ConsumerWidget {
     final theme = context.theme;
     final colors = theme.colors;
     final selectedDate = ref.watch(scheduleSelectedDateProvider);
-    final now = ref.watch(currentLocationTimeProvider);
-    final isToday =
-        selectedDate.year == now.year &&
-        selectedDate.month == now.month &&
-        selectedDate.day == now.day;
+    final todayKey = ref.watch(prayerCalendarDayKeyProvider);
+    final selectedKey =
+        selectedDate.year * 10000 +
+        selectedDate.month * 100 +
+        selectedDate.day;
+    final isToday = todayKey != 0 && selectedKey == todayKey;
     final currentPrayer = isToday
         ? ref.watch(scheduleCurrentPrayerProvider)
         : null;
@@ -202,13 +203,21 @@ class _RelativeTimeSubtitle extends ConsumerWidget {
     final l10n = context.l10n;
 
     final selectedDate = ref.watch(scheduleSelectedDateProvider);
-    final clockNow = ref.watch(currentLocationTimeProvider);
-    final isToday =
-        selectedDate.year == clockNow.year &&
-        selectedDate.month == clockNow.month &&
-        selectedDate.day == clockNow.day;
+    // Relative-time text is minute-resolution, so tick once per minute rather
+    // than every second; read the precise instant non-reactively.
+    ref.watch(currentMinuteBucketProvider);
+    final clockNow = ref.read(currentLocationTimeProvider);
+    final todayKey = ref.watch(prayerCalendarDayKeyProvider);
+    final selectedKey =
+        selectedDate.year * 10000 +
+        selectedDate.month * 100 +
+        selectedDate.day;
+    final isToday = todayKey != 0 && selectedKey == todayKey;
+    if (isToday && clockNow == null) {
+      return const SizedBox.shrink();
+    }
     final now = isToday
-        ? clockNow
+        ? clockNow!
         : DateTime(prayerTime.year, prayerTime.month, prayerTime.day);
 
     final subtitle = computePrayerRelativeTime(
@@ -273,10 +282,19 @@ class _StatusButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final colors = theme.colors;
-    final now = ref.watch(currentLocationTimeProvider);
-    final enable = row.prayerTime.isBefore(now);
-    final completionDay =
-        row.completionDate ?? DateTime(now.year, now.month, now.day);
+    // Only `enable` (flips once/day when the prayer time passes) is rendered
+    // from the clock — select it so the button stops rebuilding every second.
+    final enable = ref.watch(
+      currentLocationTimeProvider.select(
+        (now) => now != null && row.prayerTime.isBefore(now),
+      ),
+    );
+    final completionDay = row.completionDate ??
+        DateTime(
+          row.prayerTime.year,
+          row.prayerTime.month,
+          row.prayerTime.day,
+        );
     final accent = status.getBadgeColor(colors);
     final icon = status.getIcon();
     final l10n = context.l10n;

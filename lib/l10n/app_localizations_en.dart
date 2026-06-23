@@ -1369,6 +1369,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get a11yOpenSetupWizard => 'Open setup wizard';
 
   @override
+  String get a11yOpenLocationSettings => 'Open location settings';
+
+  @override
   String a11ySettingsDecreaseIqamah(String prayer) {
     return 'Decrease $prayer iqamah minutes';
   }

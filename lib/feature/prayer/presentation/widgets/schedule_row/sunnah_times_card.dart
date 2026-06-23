@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/utils/date_formatter.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
@@ -20,49 +19,22 @@ class SunnahTimesCard extends ConsumerWidget {
   /// Creates a [SunnahTimesCard].
   const SunnahTimesCard({super.key});
 
-  static const List<Prayer> _sunnahPrayers = [
-    Prayer.sunrise,
-    Prayer.fajrAfter,
-    Prayer.ishaBefore,
-  ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watch the value-equal labels record (not the 1 Hz snapshot) so the card
+    // rebuilds only when a displayed time actually changes.
+    final labels = ref.watch(sunnahTimeLabelsProvider);
+    if (labels == null) return const SizedBox.shrink();
+
     final theme = FTheme.of(context);
     final colors = theme.colors;
     final l10n = context.l10n;
-    final prayerTimes = ref.watch(currentPrayerTimesProvider());
-    final day = ref.watch(prayerDayProvider).value;
-    final now = day?.now ?? ref.watch(currentLocationTimeProvider);
-    final formatter = ref.watch(timeFormatterProvider);
 
-    final entries = _sunnahPrayers
-        .map((prayer) {
-          final time = prayerTimes.timeForPrayer(prayer);
-          final timeline = day?.timeline;
-          final fajrToday = timeline?.fajrToday;
-          final displayTime = switch (prayer) {
-            Prayer.ishaBefore
-                when timeline != null &&
-                    fajrToday != null &&
-                    now != null &&
-                    now.isBefore(fajrToday) =>
-              timeline.lastThirdToday,
-            Prayer.fajrAfter
-                when timeline != null &&
-                    fajrToday != null &&
-                    now != null &&
-                    now.isBefore(fajrToday) =>
-              timeline.middleOfNightToday,
-            _ => time,
-          };
-
-          return (
-            prayer: prayer,
-            timeLabel: formatter.format(displayTime),
-          );
-        })
-        .toList(growable: false);
+    final entries = <({Prayer prayer, String timeLabel})>[
+      (prayer: Prayer.sunrise, timeLabel: labels.sunrise),
+      (prayer: Prayer.fajrAfter, timeLabel: labels.fajrAfter),
+      (prayer: Prayer.ishaBefore, timeLabel: labels.ishaBefore),
+    ];
 
     final gradientColors = entries
         .map((entry) => _sunnahAccent(colors, entry.prayer))
@@ -135,11 +107,6 @@ class SunnahTimesCard extends ConsumerWidget {
                         constraints.maxWidth >= context.theme.breakpoints.sm;
 
                     if (useColumns) {
-                      // Cells share an identical single-line layout, so their
-                      // heights match without an IntrinsicHeight pass. The
-                      // separators use a text-scaled fixed height instead of
-                      // stretching to the row, which avoids the extra layout
-                      // pass IntrinsicHeight forces over the whole subtree.
                       final separatorHeight = MediaQuery.textScalerOf(
                         context,
                       ).scale(36);

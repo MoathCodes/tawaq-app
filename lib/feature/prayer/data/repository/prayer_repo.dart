@@ -142,8 +142,6 @@ class PrayerRepo {
 
   /// Returns the sunnah times for a given prayer times.
   SunnahTimes getSunnahTime(PrayerTimes prayerTimes) {
-    final sunnahTimes = SunnahTimes(prayerTimes);
-    // print("in repo getSunnahTime: ${sunnahTimes.middleOfTheNight}");
-    return sunnahTimes;
+    return SunnahTimes(prayerTimes);
   }
 }

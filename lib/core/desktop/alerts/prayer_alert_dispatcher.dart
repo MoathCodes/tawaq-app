@@ -7,6 +7,7 @@ import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_coordinator.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 
 part 'prayer_alert_dispatcher.g.dart';
 
@@ -22,8 +23,11 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
   @override
   void build() {
     final inApp = ref.watch(adhanAlertControllerProvider.notifier);
+    final recitation = ref.read(recitationControllerProvider.notifier);
     final sound = SoundAlertChannel(
       ref.watch(audioPlayerControllerProvider.notifier),
+      onBeforePlay: recitation.suspendForAlert,
+      onAfterStop: recitation.resumeAfterAlert,
     );
     final os = OsNotificationChannel(onClick: inApp.focusAlert);
     final log = ref.read(loggerProvider);

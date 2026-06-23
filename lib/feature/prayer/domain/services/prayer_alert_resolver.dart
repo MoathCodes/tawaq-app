@@ -2,8 +2,8 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_time_resolver.dart';
 import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 
@@ -109,7 +109,7 @@ List<PrayerAlertTarget> scheduledPrayerAlertTargets({
       PrayerAlertTarget(
         kind: PrayerAlertKind.sunnah,
         prayer: prayer,
-        scheduledTime: resolveSunnahAlertTime(
+        scheduledTime: resolveSunnahTime(
           prayer: prayer,
           snapshot: snapshot,
         ),
@@ -118,24 +118,6 @@ List<PrayerAlertTarget> scheduledPrayerAlertTargets({
   }
 
   return targets;
-}
-
-/// Resolves the sunnah time to watch for [prayer] at [snapshot.now].
-DateTime resolveSunnahAlertTime({
-  required Prayer prayer,
-  required PrayerDaySnapshot snapshot,
-}) {
-  final timeline = snapshot.timeline;
-  final now = snapshot.now;
-  final location = snapshot.location;
-
-  return switch (prayer) {
-    Prayer.ishaBefore when now.isBefore(timeline.fajrToday) =>
-      timeline.lastThirdToday,
-    Prayer.fajrAfter when now.isBefore(timeline.fajrToday) =>
-      timeline.middleOfNightToday,
-    _ => snapshot.today.getTimesForPrayer(prayer, location),
-  };
 }
 
 /// Resolves which delivery channels to use for [mode] and [kind].

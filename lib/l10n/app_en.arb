@@ -673,6 +673,7 @@
   "a11yWindowRestore": "Restore window",
   "a11yWindowClose": "Close window",
   "a11yOpenSetupWizard": "Open setup wizard",
+  "a11yOpenLocationSettings": "Open location settings",
   "a11ySettingsDecreaseIqamah": "Decrease {prayer} iqamah minutes",
   "@a11ySettingsDecreaseIqamah": {
     "placeholders": {

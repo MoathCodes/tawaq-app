@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/hijri_format.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/schedule_selected_date_provider.dart';
@@ -21,17 +22,23 @@ class PrayerScheduleList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
     final l10n = context.l10n;
-    final now = ref.watch(currentLocationTimeProvider);
     final selectedDate = ref.watch(scheduleSelectedDateProvider);
+    final todayKey = ref.watch(prayerCalendarDayKeyProvider);
+    final todayDate = todayKey != 0
+        ? dateFromCalendarDayKey(todayKey)
+        : (ref.watch(currentLocationTimeProvider) ??
+              DateTime(
+                selectedDate.year,
+                selectedDate.month,
+                selectedDate.day,
+              ));
+    final selectedKey = calendarDayKeyFromDate(selectedDate);
 
     final scheduleRows = ref.watch(
       prayerScheduleProvider(l10n, selectedDate),
     );
 
-    final isToday =
-        selectedDate.year == now.year &&
-        selectedDate.month == now.month &&
-        selectedDate.day == now.day;
+    final isToday = todayKey != 0 && selectedKey == todayKey;
 
     // Built in the build phase (not inside LayoutBuilder.builder) so this work
     // does not run during the layout pass on every relayout.
@@ -75,8 +82,8 @@ class PrayerScheduleList extends ConsumerWidget {
         },
       ),
       scrollControl: FLineCalendarScrollControl.managed(
-        start: now.subtract(const Duration(days: 6)),
-        end: now,
+        start: todayDate.subtract(const Duration(days: 6)),
+        end: todayDate,
       ),
       builder: (context, data, _) => _HijriLineCalendarItem(
         data: data,

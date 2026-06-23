@@ -1415,6 +1415,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get a11yOpenSetupWizard => 'فتح معالج الإعداد';
 
   @override
+  String get a11yOpenLocationSettings => 'فتح إعدادات الموقع';
+
+  @override
   String a11ySettingsDecreaseIqamah(String prayer) {
     return 'تقليل دقائق إقامة $prayer';
   }

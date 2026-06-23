@@ -5,7 +5,6 @@ import 'package:tawaq/core/audio/audio_service.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
 import 'package:tawaq/core/audio/playback_queue.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
-import 'package:tawaq/core/logging/logger_provider.dart';
 
 part 'audio_player_provider.g.dart';
 
@@ -49,13 +48,6 @@ class AudioPlayerController extends _$AudioPlayerController {
     final track = queue.currentTrack;
     if (track == null) return;
     await _service.play(track);
-  }
-
-  /// Stub until recitation sources are bundled.
-  Future<void> playAyah({required int surah, required int ayah}) async {
-    ref.read(loggerProvider).i(
-      'Quran recitation not yet available (surah $surah, ayah $ayah)',
-    );
   }
 
   /// Pauses the active track.

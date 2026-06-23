@@ -12,6 +12,7 @@ import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator
 import 'package:tawaq/feature/prayer/domain/services/prayer_service.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_service_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:timezone/timezone.dart';
 
@@ -100,22 +101,23 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     final log = ref.read(loggerProvider);
     try {
       final service = ref.read(prayerServiceProvider);
-      final settings = ref.read(prayerSettingsProvider);
+      final settings = ref.read(effectivePrayerSettingsProvider);
+      if (settings == null) {
+        return PrayerAnalysisSectionData.empty(period);
+      }
 
-      final location = settings.when(
-        data: (data) => data.location,
-        loading: () => local,
-        error: (_, _) => local,
-      );
-
-      final now = TZDateTime.now(location);
+      final location = settings.location;
+      final now = ref.read(currentLocationTimeProvider) ?? TZDateTime.now(location);
       final todayStart = DateTime(now.year, now.month, now.day);
       final todayEnd = todayStart
           .add(const Duration(days: 1))
           .subtract(const Duration(milliseconds: 1));
 
       // Always load real today — not the schedule's browsed day.
-      final todayCompletions = await service.getPrayerCompletionForDate(now);
+      final todayCompletions = await service.getPrayerCompletionForDate(
+        now,
+        location,
+      );
       final todayCounts = countDedupedStatuses(todayCompletions, location);
       final todayPrayerStatuses = mapPrayerStatuses(
         todayCompletions,
@@ -125,7 +127,11 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       final performanceScore = _calculatePerformanceScore(todayCounts);
 
       final streaks = await service.computeStreaks(location);
-      final periodCounts = await service.countAllStatusesOnPeriod(period, now);
+      final periodCounts = await service.countAllStatusesOnPeriod(
+        period,
+        location,
+        now,
+      );
       final firstRecordedDate = await _resolveFirstRecordedDate(service);
       final expectedPrayers =
           PrayerAnalyticsCalculator.calculateExpectedPrayers(

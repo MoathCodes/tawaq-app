@@ -5,6 +5,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
@@ -21,11 +22,14 @@ class StatusSelectorButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final card = ref.watch(prayerCardProvider);
-    final prayer = card.prayer;
-    final canSetStatus = card.canSetStatus;
-    final now = ref.watch(currentLocationTimeProvider);
-    final completionDay = DateTime(now.year, now.month, now.day);
+    final (prayer, canSetStatus) = ref.watch(
+      prayerCardProvider.select((c) => (c.prayer, c.canSetStatus)),
+    );
+    final dayKey = ref.watch(prayerCalendarDayKeyProvider);
+    if (!canSetStatus || dayKey == 0) {
+      return const SizedBox.shrink();
+    }
+    final completionDay = dateFromCalendarDayKey(dayKey);
     final status =
         ref.watch(prayerTodayStatusProvider(prayer)).value ??
         CompletionStatus.none;
@@ -35,8 +39,7 @@ class StatusSelectorButton extends ConsumerWidget {
       status: status,
     );
 
-    return canSetStatus
-        ? FPopoverMenu(
+    return FPopoverMenu(
             menu: [
               FItemGroup(
                 children: CompletionStatus.values
@@ -127,7 +130,6 @@ class StatusSelectorButton extends ConsumerWidget {
                 ),
               );
             },
-          )
-        : const SizedBox.shrink();
+          );
   }
 }

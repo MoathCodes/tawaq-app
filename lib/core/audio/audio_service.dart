@@ -130,6 +130,57 @@ class TawaqAudioService implements AudioEngine {
     }
   }
 
+  /// Waits until the current media is demuxed and seekable, bounded by
+  /// [timeout]. Returns whether the player became seekable.
+  ///
+  /// mpv rejects a seek issued before the timeline exists (command error -12),
+  /// which happens when seeking right after [play] — the demuxer hasn't yet
+  /// reported a seekable range. Callers that need an initial offset (e.g. ayah
+  /// playback) must await this before seeking.
+  Future<bool> waitUntilSeekable({
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    if (_activeTrack == null) return false;
+    if (_player.state.seekable) {
+      // Let the demuxer settle — seekable can flip true before seeks succeed.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      return _player.state.seekable;
+    }
+    try {
+      final seekable = await _player.stream.seekable
+          .firstWhere((seekable) => seekable)
+          .timeout(timeout);
+      if (!seekable) return false;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      return _player.state.seekable;
+    } on TimeoutException {
+      return false;
+    }
+  }
+
+  /// Seeks when the timeline is ready, retrying mpv command error -12 instead of
+  /// surfacing an unhandled [MpvException] to callers.
+  Future<bool> safeSeek(
+    Duration position, {
+    Duration timeout = const Duration(seconds: 15),
+  }) async {
+    if (_activeTrack == null) return false;
+
+    for (var attempt = 0; attempt < 4; attempt++) {
+      if (!await waitUntilSeekable(timeout: timeout)) {
+        await Future<void>.delayed(Duration(milliseconds: 80 * (attempt + 1)));
+        continue;
+      }
+      try {
+        await _player.seek(position);
+        return true;
+      } on Object {
+        await Future<void>.delayed(Duration(milliseconds: 120 * (attempt + 1)));
+      }
+    }
+    return false;
+  }
+
   @override
   Future<void> pause() async {
     await _player.pause();

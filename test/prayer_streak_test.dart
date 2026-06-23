@@ -43,7 +43,7 @@ void main() {
       db = PrayerDatabase(box);
       repo = PrayerRepo(prayerDatabase: db, log: log);
       final settings = PrayerSettings.defaultSettings().copyWith(location: loc);
-      service = PrayerService(repo, settings, log);
+      service = PrayerService(repo, log);
     });
 
     tearDown(() async {

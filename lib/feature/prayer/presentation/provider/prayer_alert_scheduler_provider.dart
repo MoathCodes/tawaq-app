@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show Locale;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
@@ -71,21 +72,30 @@ void prayerAlertScheduler(Ref ref) {
       return;
     }
 
-    final prayerSettings = ref.read(prayerSettingsProvider).value;
+    final prayerSettings = ref.read(effectivePrayerSettingsProvider);
     final adhanSettings = ref.read(adhanSettingsProvider).value;
     if (prayerSettings == null || adhanSettings == null) return;
     if (adhanSettings.muteAll) return;
 
-    // (0,0) is the "no location set" sentinel: its prayer times are computed
-    // for null island and would fire hours off. Never alert from it.
-    final coords = prayerSettings.coordinates;
-    if (coords.latitude == 0 && coords.longitude == 0) {
-      log.w(
-        'prayerAlertScheduler: skipping — coordinates are (0,0); '
-        'location not set, prayer times would be wrong',
-      );
-      return;
-    }
+    assert(() {
+      if (snapshot.location != prayerSettings.location) {
+        throw FlutterError(
+          'prayerAlertScheduler: snapshot location ${snapshot.location.name} '
+          '!= effective settings ${prayerSettings.location.name}',
+        );
+      }
+      final coords = prayerSettings.coordinates;
+      final snapCoords = snapshot.today.coordinates;
+      if (coords.latitude != snapCoords.latitude ||
+          coords.longitude != snapCoords.longitude) {
+        throw FlutterError(
+          'prayerAlertScheduler: snapshot coords '
+          '(${snapCoords.latitude},${snapCoords.longitude}) != '
+          'effective (${coords.latitude},${coords.longitude})',
+        );
+      }
+      return true;
+    }());
 
     if (cachedDayKey != dayKey || cachedSettings != prayerSettings) {
       cachedDayKey = dayKey;
@@ -101,6 +111,7 @@ void prayerAlertScheduler(Ref ref) {
                 '${t.windowEnd != null ? '(cutoff ${t.windowEnd})' : ''}',
           )
           .join(', ');
+      final coords = prayerSettings.coordinates;
       log.i(
         'prayerAlertScheduler: targets day=$dayKey now=$now '
         'coords=(${coords.latitude},${coords.longitude}) :: $summary',

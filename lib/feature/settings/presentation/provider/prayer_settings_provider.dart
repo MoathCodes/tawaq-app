@@ -28,15 +28,24 @@ const String _prayerLogPrefix = '[PrayerSettingsNotifier]';
 /// so it is never null.
 PrayerSettings _lastGoodPrayerSettings = PrayerSettings.defaultSettings();
 
-/// The most recently resolved prayer settings, or the first-run defaults if
-/// none has loaded yet.
+/// Synchronous prayer settings safe for time math and completions.
 ///
-/// Consumers that need a non-null [PrayerSettings] when the provider is still
-/// loading or has errored must use this instead of
-/// [PrayerSettings.defaultSettings], otherwise a transient read reverts the
-/// prayer-time pipeline to the (0,0) "null island" defaults and fires alerts
-/// hours off. See the [_lastGoodPrayerSettings] doc for the full rationale.
-PrayerSettings lastGoodPrayerSettings() => _lastGoodPrayerSettings;
+/// Returns the hydrated settings when location is ready, otherwise the last
+/// good stored settings. Null when no valid coordinates exist yet.
+@Riverpod(keepAlive: true)
+PrayerSettings? effectivePrayerSettings(Ref ref) {
+  ref.watch(prayerSettingsProvider);
+  final current = ref.read(prayerSettingsProvider).value;
+  if (current != null && current.isLocationReady) return current;
+  if (_lastGoodPrayerSettings.isLocationReady) return _lastGoodPrayerSettings;
+  return null;
+}
+
+/// Whether prayer times can be computed from stored coordinates.
+@Riverpod(keepAlive: true)
+bool prayerLocationReady(Ref ref) {
+  return ref.watch(effectivePrayerSettingsProvider) != null;
+}
 
 /// Notifier for prayer settings.
 ///

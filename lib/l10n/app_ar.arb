@@ -3,6 +3,7 @@
   "a11yExpandSidebar": "توسيع الشريط الجانبي",
   "a11yNavigationUnavailable": "غير متاح",
   "a11yOpenSetupWizard": "فتح معالج الإعداد",
+  "a11yOpenLocationSettings": "فتح إعدادات الموقع",
   "a11ySettingsDecreaseIqamah": "تقليل دقائق إقامة {prayer}",
   "@a11ySettingsDecreaseIqamah": {
     "placeholders": {

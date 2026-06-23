@@ -8,6 +8,7 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
 import 'package:tawaq/feature/prayer/domain/use_cases/compute_prayer_card_decision.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
@@ -31,7 +32,11 @@ const List<Prayer> _obligatoryPrayers = [
 /// prayer changes, not on every 1 Hz clock tick.
 @riverpod
 Prayer? scheduleCurrentPrayer(Ref ref) {
-  final day = ref.watch(prayerDayProvider).value;
+  // Recompute at most once per minute (prayer boundaries are minute-resolution)
+  // instead of on every 1 Hz snapshot emission; the snapshot is read
+  // non-reactively since the bundle is stable within the day.
+  ref.watch(currentMinuteBucketProvider);
+  final day = ref.read(prayerDayProvider).value;
   if (day == null) return null;
   return getCurrentPrayer(
     currentTime: day.now,
@@ -57,15 +62,20 @@ List<PrayerScheduleRow> prayerSchedule(
   if (settings == null) return [];
 
   final formatter = ref.watch(timeFormatterProvider);
-  final DateTime completionDay;
-  if (forDate != null) {
-    completionDay = normalizeCompletionDay(forDate);
-  } else {
-    ref.watch(prayerCalendarDayKeyProvider);
-    completionDay = normalizeCompletionDay(
-      ref.read(currentLocationTimeProvider),
-    );
-  }
+
+  // Depend on the day key (changes only at midnight), not the 1 Hz clock
+  // snapshot — otherwise this provider re-runs every second and emits a fresh
+  // (non-equal) list, rebuilding the whole schedule. Live relative-time labels
+  // are handled by leaf widgets watching currentLocationTimeProvider.
+  final todayKey = ref.watch(prayerCalendarDayKeyProvider);
+  final DateTime? targetDate = forDate != null
+      ? DateTime(forDate.year, forDate.month, forDate.day)
+      : todayKey != 0
+      ? dateFromCalendarDayKey(todayKey)
+      : null;
+  if (targetDate == null) return [];
+
+  final completionDay = normalizeCompletionDay(forDate ?? targetDate);
   final completions =
       ref.watch(prayerCompletionsForDateProvider(completionDay)).value ?? [];
   final completionStatuses = mapPrayerStatuses(
@@ -74,36 +84,13 @@ List<PrayerScheduleRow> prayerSchedule(
     completionDay,
   );
 
-  final targetDate = forDate != null
-      ? DateTime(forDate.year, forDate.month, forDate.day)
-      : null;
-
-  final todayKey = ref.watch(prayerCalendarDayKeyProvider);
-
-  if (targetDate != null) {
-    final targetKey =
-        targetDate.year * 10000 + targetDate.month * 100 + targetDate.day;
-    if (targetKey != todayKey) {
-      final times = ref.watch(prayerTimesForDateProvider(targetDate));
-      return _buildRows(
-        formatter: formatter,
-        times: times,
-        targetDate: targetDate,
-        settings: settings,
-        completionStatuses: completionStatuses,
-      );
-    }
-  }
-
-  // Stable deps only — live relative labels are in row widgets.
-  ref.watch(prayerCalendarDayKeyProvider);
-  final times = ref.watch(currentPrayerTimesProvider());
-  final anchor = DateTime(times.fajr.year, times.fajr.month, times.fajr.day);
+  final times = ref.watch(prayerTimesForDateProvider(targetDate));
+  if (times == null) return [];
 
   return _buildRows(
     formatter: formatter,
     times: times,
-    targetDate: anchor,
+    targetDate: targetDate,
     settings: settings,
     completionStatuses: completionStatuses,
   );

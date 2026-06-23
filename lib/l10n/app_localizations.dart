@@ -2478,6 +2478,12 @@ abstract class AppLocalizations {
   /// **'Open setup wizard'**
   String get a11yOpenSetupWizard;
 
+  /// No description provided for @a11yOpenLocationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open location settings'**
+  String get a11yOpenLocationSettings;
+
   /// No description provided for @a11ySettingsDecreaseIqamah.
   ///
   /// In en, this message translates to:

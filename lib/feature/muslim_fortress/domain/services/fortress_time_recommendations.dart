@@ -43,6 +43,21 @@ List<FortressCategory> recommendFortressCategories({
     prayerTimes: prayerTimes,
     location: location,
   );
+  return fortressCategoriesForFragments(
+    allCategories: allCategories,
+    fragments: fragments,
+  );
+}
+
+/// Maps already-resolved title [fragments] to categories (deduped, max 4).
+///
+/// Split out from [recommendFortressCategories] so callers can cache the
+/// low-frequency [fragments] (which only change at prayer-window crossings) and
+/// avoid rescanning categories on every clock tick.
+List<FortressCategory> fortressCategoriesForFragments({
+  required List<FortressCategory> allCategories,
+  required List<String> fragments,
+}) {
   final result = <FortressCategory>[];
   final seenIds = <int>{};
 

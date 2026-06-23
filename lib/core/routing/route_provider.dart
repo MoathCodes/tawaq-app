@@ -17,6 +17,7 @@ import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
 import 'package:tawaq/feature/prayer/presentation/screens/prayer_screen.dart';
 import 'package:tawaq/feature/quran/presentation/screens/quran_screen.dart';
+import 'package:tawaq/feature/settings/presentation/models/settings_destination.dart';
 import 'package:tawaq/feature/settings/presentation/screens/settings_screen.dart';
 import 'package:tawaq/feature/settings/presentation/screens/start_wizard.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -198,7 +199,10 @@ class MuslimFortressRoute extends AppNavigationRoute with $MuslimFortressRoute {
 @immutable
 class SettingsRoute extends AppNavigationRoute with $SettingsRoute {
   /// Creates the settings route.
-  const SettingsRoute();
+  const SettingsRoute({this.$extra});
+
+  /// Optional settings tab to open; null restores the persisted tab.
+  final SettingsDestination? $extra;
 
   @override
   /// The settings route icon.
@@ -212,7 +216,7 @@ class SettingsRoute extends AppNavigationRoute with $SettingsRoute {
   @override
   /// Builds the settings screen.
   Widget build(BuildContext context, GoRouterState state) {
-    return const SettingsScreen();
+    return SettingsScreen(section: $extra);
   }
 }
 

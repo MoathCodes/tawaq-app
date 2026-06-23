@@ -269,7 +269,9 @@ Powered by `hisn_elmoslem` package. Chapters, duas, search, commentary, focus re
 
 ### Prayer
 
-`PrayerDay` (`@Riverpod(keepAlive: true)`) emits snapshot every 1s — **all live time UI** should watch this, not local timers. Derived providers (`scheduleCurrentPrayerProvider`, `prayerCardProvider`) minimize rebuilds.
+**Single source of truth for prayer times:** `prayerDayProvider` (live 1 Hz `PrayerDaySnapshot`) for today; `prayerDayBundleForDateProvider` / `prayerTimesForDateProvider` for historical schedule days. All computation goes through `PrayerDayComputer` + `effectivePrayerSettingsProvider`. Never compute times via `PrayerService` (completions/analytics only). Sunnah display and alerts share `resolveSunnahTime`.
+
+`PrayerDay` (`@Riverpod(keepAlive: true)`) emits snapshot every 1s — **all live time UI** should watch this, not local timers. Derived providers (`scheduleCurrentPrayerProvider`, `prayerCardProvider`, `prayerCalendarDayKeyProvider`) minimize rebuilds.
 
 ### Quran
 
