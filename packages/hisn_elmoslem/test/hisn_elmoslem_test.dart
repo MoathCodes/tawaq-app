@@ -115,6 +115,19 @@ void main() {
       expect(firstRange.startAyah, greaterThan(0));
     });
 
+    test('batch flags lookup matches single-id lookup', () {
+      final single = client.commentary.flagsForContentId(15);
+      final batch = client.commentary.flagsForContentIds({15, 16, 17});
+
+      expect(single, isNotNull);
+      final batchFlags = batch[15];
+      expect(batchFlags, isNotNull);
+      expect(batchFlags!.hasSharh, single!.hasSharh);
+      expect(batchFlags.hasHadith, single.hasHadith);
+      expect(batchFlags.hasBenefit, single.hasBenefit);
+      expect(batch.length, lessThanOrEqualTo(3));
+    });
+
     test('loads commentary for known content', () {
       final commentary = client.commentary.byContentId(15);
       expect(commentary, isNotNull);
