@@ -47,8 +47,8 @@ dependencies:
   flutter_riverpod: ^3.0.3
   flutter_staggered_grid_view: ^0.7.0
   flutter_timezone: ^5.0.0
-  forui: ^0.22.3
-  forui_hooks: ^0.22.1
+  forui: ^0.23.0
+  forui_hooks: ^0.23.0
   free_map: ^2.3.0
   freezed_annotation: ^3.0.0
   geolocator: ^14.0.2
@@ -74,13 +74,14 @@ dependencies:
   # checkbox updates propagate). Re-apply the patch on any upstream bump.
   desktop_tray:
     path: packages/desktop_tray
-  mpv_audio_kit: ^0.3.4
+  mpv_audio_kit: ^0.4.2
   local_notifier: ^0.1.6
   launch_at_startup: ^0.5.1
   package_info_plus: ^8.3.1
   fl_chart: ^1.1.1
   path: ^1.9.1
   pasteboard: ^0.5.0
+  http: ^1.6.0
 
 
 dev_dependencies:

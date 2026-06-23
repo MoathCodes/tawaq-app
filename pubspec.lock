@@ -517,26 +517,26 @@ packages:
     dependency: "direct main"
     description:
       name: forui
-      sha256: "1a0709bd92195c43d412f09164cd1c16a83720215b001056397d48ea63d2d243"
+      sha256: "68c656bc1aa70040647124b2028116fd099a3d345f84e28daeff2b2c63982ced"
       url: "https://pub.dev"
     source: hosted
-    version: "0.22.3"
+    version: "0.23.0"
   forui_assets:
     dependency: transitive
     description:
       name: forui_assets
-      sha256: "24878cea09f73d9fc286e37948f4c75db4a78048959acc2fb9e19280d7355abe"
+      sha256: bc7201e28a4dc4a9e0e65c849b9d9e10b5fcfd48a75b3ba7d912d5543044db6b
       url: "https://pub.dev"
     source: hosted
-    version: "0.22.1"
+    version: "0.23.0"
   forui_hooks:
     dependency: "direct main"
     description:
       name: forui_hooks
-      sha256: d79442f90441d054589a4265c5d9ab49b9b3f33c8a8bab58244b36a139a3b6e1
+      sha256: ccbe05cf5532ec7c11ac920a6fcd42953f0b144d415e110cf14e64d4cbb3cbe6
       url: "https://pub.dev"
     source: hosted
-    version: "0.22.1"
+    version: "0.23.0"
   free_map:
     dependency: "direct main"
     description:
@@ -761,7 +761,7 @@ packages:
     source: hosted
     version: "0.15.6"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412"
@@ -1004,10 +1004,10 @@ packages:
     dependency: "direct main"
     description:
       name: mpv_audio_kit
-      sha256: "1d066c163e91694e3ecd71064add30db5001ddbc2331ab1aa500016157fc1840"
+      sha256: "4cca4e285abd0e4b2284f7edd70ced5894c99757a5999a33b3c41b7f458fa488"
       url: "https://pub.dev"
     source: hosted
-    version: "0.3.6"
+    version: "0.4.2"
   mushaf_reader:
     dependency: "direct main"
     description:
@@ -1091,10 +1091,10 @@ packages:
     dependency: "direct main"
     description:
       name: path_provider
-      sha256: "50c5dd5b6e1aaf6fb3a78b33f6aa3afca52bf903a8a5298f53101fdaee55bbcd"
+      sha256: a7f4874f987173da295a61c181b8ee71dab59b332a486b391babf26a1b884825
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.5"
+    version: "2.1.6"
   path_provider_android:
     dependency: transitive
     description:
@@ -1123,10 +1123,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_platform_interface
-      sha256: "88f5779f72ba699763fa3a3b06aa4bf6de76c8e5de842cf6f29e2e06476c2334"
+      sha256: "484838772624c3a4b94f1e44a3e19897fee738f2d5c4ce448443b0417f7c9dda"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.2"
+    version: "2.1.3"
   path_provider_windows:
     dependency: transitive
     description:
@@ -1592,10 +1592,10 @@ packages:
     dependency: "direct dev"
     description:
       name: vector_graphics_compiler
-      sha256: "7ee12e6dffe0fc8e755179d6d91b3b34f5924223fc104d85572ef9180d73d172"
+      sha256: "142a9146f447d15b10bdc00e21d5f4d83e5b32bb5f8f8f5a04c75311344923a3"
       url: "https://pub.dev"
     source: hosted
-    version: "1.2.5"
+    version: "1.2.6"
   vector_math:
     dependency: transitive
     description:
@@ -1608,10 +1608,10 @@ packages:
     dependency: "direct dev"
     description:
       name: very_good_analysis
-      sha256: d1cb1d66a5aae2c702d68caca6c8347306d35e728fd94555fa21fa0448a972e0
+      sha256: "481af67ab5877af20325251dc215a4ebac7666a1c8cf09198ffd457bc612b33d"
       url: "https://pub.dev"
     source: hosted
-    version: "10.2.0"
+    version: "10.3.0"
   vm_service:
     dependency: transitive
     description:
