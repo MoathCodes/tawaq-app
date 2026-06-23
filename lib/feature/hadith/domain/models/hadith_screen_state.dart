@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 
 part 'hadith_screen_state.freezed.dart';
@@ -20,13 +21,21 @@ abstract class HadithScreenState with _$HadithScreenState {
   const factory HadithScreenState({
     @Default(HadithPanelTab.details) HadithPanelTab activeTab,
     @Default(HadithFilters()) HadithFilters filters,
-    @Default(420) double sidePanelWidth,
+    @Default(SidePanelDefaults.hadithRatio) double sidePanelRatio,
+    @Default(SidePanelDefaults.collapsed) bool sidePanelCollapsed,
   }) = _HadithScreenState;
 
   /// Deserializes the hadith screen state from JSON.
   factory HadithScreenState.fromJson(Map<String, dynamic> json) =>
-      _$HadithScreenStateFromJson(json);
+      _$HadithScreenStateFromJson(
+        _migrateHadithScreenJson(Map<String, dynamic>.from(json)),
+      );
 
   /// Returns the default initial screen state.
   factory HadithScreenState.initial() => const HadithScreenState();
+}
+
+Map<String, dynamic> _migrateHadithScreenJson(Map<String, dynamic> json) {
+  migrateSidePanelJson(json);
+  return json;
 }

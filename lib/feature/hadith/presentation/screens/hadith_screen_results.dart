@@ -5,9 +5,22 @@ class _ResultsList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final enableDetailsPopover = !isAtLeast(context, FBreakpoint.lg);
+    final enableDetailsPopover = !_HadithLayoutScope.useSplitOf(context);
     final mode = ref.watch(hadithViewModeProvider);
-    final visibleResults = ref.watch(hadithVisibleResultsProvider);
+    final visibleResults = switch (mode) {
+      HadithViewMode.search => AsyncData(
+        ref.watch(
+          hadithSearchControllerProvider.select(
+            (value) =>
+                value.asData?.value.results ?? const <DetailedHadith>[],
+          ),
+        ),
+      ),
+      HadithViewMode.bookmarks => ref.watch(hadithBookmarkedHadithsProvider),
+      HadithViewMode.specificList => AsyncData(
+        ref.watch(hadithScreenControllerProvider).specificHadiths,
+      ),
+    };
     final state = ref.watch(
       hadithSearchControllerProvider.select(
         (value) => value.value ?? const HadithSearchState(),
@@ -54,11 +67,32 @@ class _ResultsList extends ConsumerWidget {
       child: KeyedSubtree(
         key: ValueKey(
           'results:$mode:${state.query.isEmpty}:'
-          '${state.error != null}:$visibleCount:${state.isLoading}',
+          '${state.error != null}:$visibleCount',
         ),
-        child: FSkeletonizer.shimmer(
-          enabled: mode == HadithViewMode.search && state.isLoading,
-          child: semanticsContent,
+        child: Stack(
+          children: [
+            FSkeletonizer.shimmer(
+              enabled:
+                  mode == HadithViewMode.search &&
+                  state.isLoading &&
+                  state.results.isEmpty,
+              child: semanticsContent,
+            ),
+            if (mode == HadithViewMode.search &&
+                state.isLoading &&
+                state.results.isNotEmpty)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Semantics(
+                  label: hadithSearchLoadingSemanticsLabel(l10n),
+                  child: const ExcludeSemantics(
+                    child: LinearProgressIndicator(minHeight: 2),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -88,7 +122,7 @@ class _ResultsList extends ConsumerWidget {
             child: Text(
               '$error',
               textAlign: TextAlign.center,
-              style: theme.typography.md.copyWith(
+              style: theme.typography.body.md.copyWith(
                 color: theme.colors.destructive,
               ),
             ),
@@ -100,11 +134,11 @@ class _ResultsList extends ConsumerWidget {
                 ? l10n.hadithNoBookmarks
                 : l10n.hadithNoMatchingResults;
             return Center(
-              child: Text(
-                emptyMessage,
-                style: theme.typography.md.copyWith(
-                  color: theme.colors.mutedForeground,
-                ),
+              child: EmptyStatePanel(
+                icon: mode == HadithViewMode.bookmarks
+                    ? FLucideIcons.bookmark
+                    : FLucideIcons.searchX,
+                title: emptyMessage,
               ),
             );
           }
@@ -123,23 +157,18 @@ class _ResultsList extends ConsumerWidget {
 
     if (state.query.isEmpty) {
       return Center(
-        child: Text(
-          l10n.hadithStartSearchPrompt,
-          style: theme.typography.lg.copyWith(
-            color: theme.colors.mutedForeground,
-          ),
+        child: EmptyStatePanel(
+          icon: FLucideIcons.search,
+          title: l10n.hadithStartSearchPrompt,
         ),
       );
     }
 
     if (state.error != null && state.results.isEmpty) {
       return Center(
-        child: Text(
-          state.error!,
-          textAlign: TextAlign.center,
-          style: theme.typography.md.copyWith(
-            color: theme.colors.destructive,
-          ),
+        child: EmptyStatePanel(
+          icon: FLucideIcons.circleAlert,
+          title: state.error!,
         ),
       );
     }
@@ -148,11 +177,9 @@ class _ResultsList extends ConsumerWidget {
       if (state.isLoading) return const _ResultsSkeletonList();
 
       return Center(
-        child: Text(
-          l10n.hadithNoMatchingResults,
-          style: theme.typography.md.copyWith(
-            color: theme.colors.mutedForeground,
-          ),
+        child: EmptyStatePanel(
+          icon: FLucideIcons.searchX,
+          title: l10n.hadithNoMatchingResults,
         ),
       );
     }
@@ -218,7 +245,11 @@ class _ResultsList extends ConsumerWidget {
 
         return FPopover(
           popoverBuilder: (_, _) => ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620, maxHeight: 620),
+            constraints: dialogConstraints(
+              context,
+              preferredWidth: 620,
+              preferredHeight: 620,
+            ),
             child: HadithSelectedDetailsPane(hadith: hadith),
           ),
           builder: (_, controller, child) => MouseClick(

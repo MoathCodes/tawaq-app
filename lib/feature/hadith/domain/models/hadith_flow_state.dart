@@ -33,6 +33,7 @@ class HadithFlowState {
     this.specificHadiths = const <DetailedHadith>[],
     this.searchSnapshot,
     this.query = '',
+    this.draftFilters = const HadithFilters(),
   });
 
   /// The current screen mode.
@@ -44,8 +45,11 @@ class HadithFlowState {
   /// The search state saved before entering a specific mode.
   final HadithSearchSnapshot? searchSnapshot;
 
-  /// The current session search query (not persisted).
+  /// The committed session search query (not persisted).
   final String query;
+
+  /// In-session filter draft; persisted only when a search commits.
+  final HadithFilters draftFilters;
 
   /// Whether the screen is currently in search mode.
   bool get isSearchMode => mode == HadithViewMode.search;
@@ -56,6 +60,7 @@ class HadithFlowState {
     List<DetailedHadith>? specificHadiths,
     HadithSearchSnapshot? searchSnapshot,
     String? query,
+    HadithFilters? draftFilters,
     bool clearSnapshot = false,
   }) {
     return HadithFlowState(
@@ -65,6 +70,7 @@ class HadithFlowState {
           ? null
           : searchSnapshot ?? this.searchSnapshot,
       query: query ?? this.query,
+      draftFilters: draftFilters ?? this.draftFilters,
     );
   }
 }

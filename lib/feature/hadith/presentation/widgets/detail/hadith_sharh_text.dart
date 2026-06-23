@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:tawaq/core/commentary/commentary_text_styles.dart';
+import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_parser.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_commentary_body.dart';
@@ -30,21 +30,11 @@ class HadithSharhText extends HookWidget {
     final theme = context.theme;
     final colors = theme.colors;
     final isDark = theme.isDark;
-    final baseStyle = theme.typography.sm.copyWith(height: 1.8);
-    final styles = useMemoized(
-      () => CommentaryTextStyles.from(
-        baseStyle: baseStyle,
-        colors: colors,
-        isDark: isDark,
-        includeSelectionStrut: true,
-      ),
-      [
-        baseStyle,
-        isDark,
-        colors.primary,
-        colors.foreground,
-        colors.mutedForeground,
-      ],
+    final baseStyle = theme.typography.body.sm.copyWith(height: 1.8);
+    final styles = useCommentaryTextStyles(
+      baseStyle: baseStyle,
+      colors: colors,
+      isDark: isDark,
     );
 
     final zones = parsed.zones;

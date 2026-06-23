@@ -15,7 +15,6 @@ abstract class HadithSearchState with _$HadithSearchState {
     String? error,
     SearchMetadata? metadata,
     @Default(<DetailedHadith>[]) List<DetailedHadith> results,
-    @Default(<String>[]) List<String> favoriteKeys,
   }) = _HadithSearchState;
 
   const HadithSearchState._();

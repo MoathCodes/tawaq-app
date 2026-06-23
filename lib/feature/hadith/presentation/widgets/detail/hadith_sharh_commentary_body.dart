@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:tawaq/core/commentary/commentary_inline_run_builder.dart';
 import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
 import 'package:tawaq/core/commentary/commentary_text_styles.dart';
-import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_segment.dart';
-import 'package:tawaq/theme/theme.dart';
 
 /// Renders tokenized sharh segments as inline rich-text runs.
 ///
@@ -36,19 +35,17 @@ class HadithSharhCommentaryBody extends HookWidget {
   Widget build(BuildContext context) {
     if (segments.isEmpty) return const SizedBox.shrink();
 
-    final fragmentRuns = useMemoized(
-      () => _buildFragmentRuns(segments),
-      [segments],
-    );
-
-    final children = useMemoized(
-      () => _widgetsFromFragmentRuns(
-        fragmentRuns,
-        styles: styles,
-        textAlign: textAlign,
+    final runs = useMemoized(
+      () => CommentaryInlineRunBuilder.collectSpanRuns(
+        segments: segments,
+        startsNewParagraph: _startsNewParagraph,
+        buildSpans: (segments, start, end) => _fragmentsToSpans(
+          _buildFragments(segments: segments, start: start, end: end),
+          styles,
+        ),
       ),
       [
-        fragmentRuns,
+        segments,
         styles.prose,
         styles.quote,
         styles.gloss,
@@ -59,73 +56,19 @@ class HadithSharhCommentaryBody extends HookWidget {
         styles.ayah,
         styles.verseRef,
         styles.qawlLead,
-        textAlign,
       ],
     );
 
-    if (children.isEmpty) return const SizedBox.shrink();
-    if (children.length == 1) return children.first;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: children,
+    final body = useMemoized(
+      () => CommentaryInlineRunBuilder.columnFromSpanRuns(
+        runs: runs,
+        styles: styles,
+        textAlign: textAlign,
+      ),
+      [runs, textAlign, styles.selectionStrut],
     );
-  }
 
-  static List<List<_CommentaryFragment>> _buildFragmentRuns(
-    List<HadithSharhSegment> segments,
-  ) {
-    final runs = <List<_CommentaryFragment>>[];
-    var inlineStart = 0;
-
-    void flushInlineRun(int end) {
-      if (inlineStart >= end) return;
-
-      final fragments = _buildFragments(
-        segments: segments,
-        start: inlineStart,
-        end: end,
-      );
-      if (fragments.isEmpty) return;
-      runs.add(fragments);
-    }
-
-    for (var i = 0; i < segments.length; i++) {
-      if (!_startsNewParagraph(segments[i], i)) continue;
-
-      flushInlineRun(i);
-      inlineStart = i;
-    }
-
-    flushInlineRun(segments.length);
-    return runs;
-  }
-
-  static List<Widget> _widgetsFromFragmentRuns(
-    List<List<_CommentaryFragment>> runs, {
-    required CommentaryTextStyles styles,
-    required TextAlign textAlign,
-  }) {
-    final children = <Widget>[];
-
-    for (final fragments in runs) {
-      if (children.isNotEmpty) {
-        children.add(const SizedBox(height: AppSpacing.sm));
-      }
-
-      children.add(
-        ScopedSelectableRichText(
-          TextSpan(
-            style: styles.prose,
-            children: _fragmentsToSpans(fragments, styles),
-          ),
-          textAlign: textAlign,
-          strutStyle: styles.selectionStrut,
-        ),
-      );
-    }
-
-    return children;
+    return body ?? const SizedBox.shrink();
   }
 
   static bool _startsNewParagraph(HadithSharhSegment segment, int index) {

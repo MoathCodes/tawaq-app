@@ -39,18 +39,7 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
             FLucideIcons.bookOpenText,
             l10n.hadithSharh,
           ),
-          child: HadithAsyncDetailsSection<Sharh>(
-            value: ref.watch(
-              hadithSharhProvider(hadith.sharhMetadata!.id),
-            ),
-            dataBuilder: (sharh) {
-              final text = sharh.sharhText;
-              if (text == null || text.trim().isEmpty) {
-                return const HadithSectionPlaceholder();
-              }
-              return HadithSharhText(text: text);
-            },
-          ),
+          child: _HadithSharhSection(sharhId: hadith.sharhMetadata!.id),
         ),
       if (hadith.hasUsulHadith && hadithId != null)
         FAccordionItem(
@@ -59,21 +48,7 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
             FLucideIcons.sparkles,
             l10n.hadithUsulHadith,
           ),
-          child: HadithAsyncDetailsSection<UsulHadith>(
-            value: ref.watch(hadithUsulProvider(hadithId)),
-            dataBuilder: (usul) {
-              if (usul.sources.isEmpty) {
-                return const HadithSectionPlaceholder();
-              }
-
-              return Column(
-                spacing: AppSpacing.sm,
-                children: usul.sources
-                    .map((source) => HadithUsulSourceCard(source: source))
-                    .toList(growable: false),
-              );
-            },
-          ),
+          child: _HadithUsulSection(hadithId: hadithId),
         ),
       if (hadith.hasSimilarHadith && hadithId != null)
         FAccordionItem(
@@ -82,37 +57,7 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
             FLucideIcons.eye,
             l10n.hadithSimilarHadith,
           ),
-          child: HadithAsyncDetailsSection<List<DetailedHadith>>(
-            value: ref.watch(hadithSimilarProvider(hadithId)),
-            dataBuilder: (items) {
-              if (items.isEmpty) {
-                return const HadithSectionPlaceholder();
-              }
-
-              return Column(
-                spacing: AppSpacing.sm,
-                children: items
-                    .map(
-                      (item) => HadithResultCard.embedded(
-                        hadith: item,
-                        onSelect: () {
-                          unawaited(
-                            ref
-                                .read(
-                                  hadithScreenControllerProvider.notifier,
-                                )
-                                .openSpecificList(
-                                  items,
-                                  selected: item,
-                                ),
-                          );
-                        },
-                      ),
-                    )
-                    .toList(growable: false),
-              );
-            },
-          ),
+          child: _HadithSimilarSection(hadithId: hadithId),
         ),
       if (hadith.hasAlternateHadithSahih && hadithId != null)
         FAccordionItem(
@@ -121,25 +66,7 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
             FLucideIcons.arrowRightFromLine,
             l10n.hadithAlternateHadithSahih,
           ),
-          child: HadithAsyncDetailsSection<DetailedHadith?>(
-            value: ref.watch(hadithAlternateProvider(hadithId)),
-            dataBuilder: (alternate) {
-              if (alternate == null) {
-                return const HadithSectionPlaceholder();
-              }
-
-              return HadithResultCard.embedded(
-                hadith: alternate,
-                onSelect: () {
-                  unawaited(
-                    ref
-                        .read(hadithScreenControllerProvider.notifier)
-                        .selectHadith(alternate),
-                  );
-                },
-              );
-            },
-          ),
+          child: _HadithAlternateSection(hadithId: hadithId),
         ),
     ];
 
@@ -155,7 +82,7 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
               return Text(
                 hadith.hadith,
                 textAlign: narrow ? TextAlign.start : TextAlign.justify,
-                style: theme.typography.lg.copyWith(height: 1.8),
+                style: theme.typography.body.lg.copyWith(height: 1.8),
               );
             },
           ),
@@ -193,6 +120,118 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
   }
 }
 
+class _HadithSharhSection extends ConsumerWidget {
+  const _HadithSharhSection({required this.sharhId});
+
+  final String sharhId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return HadithAsyncDetailsSection<Sharh>(
+      value: ref.watch(hadithSharhProvider(sharhId)),
+      dataBuilder: (sharh) {
+        final text = sharh.sharhText;
+        if (text == null || text.trim().isEmpty) {
+          return const HadithSectionPlaceholder();
+        }
+        return HadithSharhText(text: text);
+      },
+    );
+  }
+}
+
+class _HadithUsulSection extends ConsumerWidget {
+  const _HadithUsulSection({required this.hadithId});
+
+  final String hadithId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return HadithAsyncDetailsSection<UsulHadith>(
+      value: ref.watch(hadithUsulProvider(hadithId)),
+      dataBuilder: (usul) {
+        if (usul.sources.isEmpty) {
+          return const HadithSectionPlaceholder();
+        }
+
+        return Column(
+          spacing: AppSpacing.sm,
+          children: usul.sources
+              .map((source) => HadithUsulSourceCard(source: source))
+              .toList(growable: false),
+        );
+      },
+    );
+  }
+}
+
+class _HadithSimilarSection extends ConsumerWidget {
+  const _HadithSimilarSection({required this.hadithId});
+
+  final String hadithId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return HadithAsyncDetailsSection<List<DetailedHadith>>(
+      value: ref.watch(hadithSimilarProvider(hadithId)),
+      dataBuilder: (items) {
+        if (items.isEmpty) {
+          return const HadithSectionPlaceholder();
+        }
+
+        return ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+          itemBuilder: (context, index) {
+            final item = items[index];
+            return HadithResultCard.embedded(
+              hadith: item,
+              onSelect: () {
+                unawaited(
+                  ref
+                      .read(hadithScreenControllerProvider.notifier)
+                      .openSpecificList(items, selected: item),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _HadithAlternateSection extends ConsumerWidget {
+  const _HadithAlternateSection({required this.hadithId});
+
+  final String hadithId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return HadithAsyncDetailsSection<DetailedHadith?>(
+      value: ref.watch(hadithAlternateProvider(hadithId)),
+      dataBuilder: (alternate) {
+        if (alternate == null) {
+          return const HadithSectionPlaceholder();
+        }
+
+        return HadithResultCard.embedded(
+          hadith: alternate,
+          onSelect: () {
+            unawaited(
+              ref
+                  .read(hadithScreenControllerProvider.notifier)
+                  .selectHadith(alternate),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
 class HadithAsyncDetailsSection<T> extends StatelessWidget {
   const HadithAsyncDetailsSection({
     required this.value,
@@ -216,7 +255,7 @@ class HadithAsyncDetailsSection<T> extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Text(
           '$error',
-          style: theme.typography.sm.copyWith(color: theme.colors.destructive),
+          style: theme.typography.body.sm.copyWith(color: theme.colors.destructive),
         ),
       ),
       AsyncData(:final value) => dataBuilder(value),
@@ -241,18 +280,18 @@ class HadithUsulSourceCard extends StatelessWidget {
         children: [
           Text(
             source.source,
-            style: theme.typography.sm.copyWith(
+            style: theme.typography.body.sm.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),
           Text(
             source.chain,
-            style: theme.typography.sm,
+            style: theme.typography.body.sm,
             textAlign: TextAlign.justify,
           ),
           Text(
             source.hadithText,
-            style: theme.typography.md,
+            style: theme.typography.body.md,
             textAlign: TextAlign.justify,
           ),
         ],
@@ -268,7 +307,7 @@ class HadithSectionPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       context.l10n.noDataAvailable,
-      style: context.theme.typography.md.copyWith(
+      style: context.theme.typography.body.md.copyWith(
         color: context.theme.colors.mutedForeground,
       ),
     );
@@ -293,13 +332,13 @@ class HadithMetaItem extends StatelessWidget {
         children: [
           Text(
             title,
-            style: theme.typography.sm.copyWith(
+            style: theme.typography.body.sm.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),
           Text(
             value,
-            style: theme.typography.md,
+            style: theme.typography.body.md,
           ),
         ],
       ),

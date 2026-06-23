@@ -2,14 +2,17 @@ import 'dart:async';
 
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/context_menu_action.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 class HadithResultCard extends ConsumerWidget {
@@ -73,13 +76,12 @@ class HadithResultCard extends ConsumerWidget {
 
     final isFavoriteValue =
         isFavorite ??
-        ref.watch(
-          hadithSearchControllerProvider.select(
-            (value) => (value.asData?.value.favoriteKeys ?? const <String>[])
-                .contains(hadithKey),
-          ),
-        ) ??
-        false;
+        (ref
+                .watch(hadithFavoriteKeysProvider)
+                .asData
+                ?.value
+                .contains(hadithKey) ??
+            false);
     final isSelectedValue =
         isSelected ??
         ref.watch(
@@ -167,7 +169,7 @@ class HadithResultCard extends ConsumerWidget {
                   maxLines: effectiveMaxLines,
                   overflow: TextOverflow.ellipsis,
                   textAlign: textAlign,
-                  style: theme.typography.lg.copyWith(height: 1.9),
+                  style: theme.typography.body.lg.copyWith(height: 1.9),
                 ),
               ),
             ),
@@ -228,21 +230,72 @@ class HadithResultCard extends ConsumerWidget {
       );
     }
 
+    Widget withContextMenu(Widget child) {
+      return FContextMenu(
+        menuBuilder: (context, controller, _) => [
+          FItemGroup(
+            children: [
+              contextMenuAction(
+                controller: controller,
+                icon: FLucideIcons.bookOpenText,
+                label: l10n.menuOpen,
+                onPressed: onSelectAction,
+              ),
+              contextMenuAction(
+                controller: controller,
+                icon: FLucideIcons.copy,
+                label: l10n.menuCopyText,
+                onPressed: () => _copyHadith(context, l10n),
+              ),
+              if (showFavoriteAction && onToggleFavoriteAction != null)
+                contextMenuAction(
+                  controller: controller,
+                  icon: isFavoriteValue
+                      ? FLucideIcons.bookmarkX
+                      : FLucideIcons.bookmark,
+                  label: isFavoriteValue
+                      ? l10n.menuRemoveBookmark
+                      : l10n.menuAddBookmark,
+                  onPressed: onToggleFavoriteAction,
+                ),
+            ],
+          ),
+        ],
+        child: child,
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final card = buildRow(buildCard(constraints.maxWidth));
         final favorite = favoriteButton;
-        if (favorite == null) return card;
+        if (favorite == null) return withContextMenu(card);
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: card),
-            favorite,
-          ],
+        return withContextMenu(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: card),
+              favorite,
+            ],
+          ),
         );
       },
     );
+  }
+
+  void _copyHadith(BuildContext context, AppLocalizations l10n) {
+    final buffer = StringBuffer()
+      ..writeln(hadith.hadith.trim())
+      ..writeln()
+      ..writeln('${l10n.hadithNarrator}: ${hadith.rawi}')
+      ..writeln('${l10n.hadithMuhaddith}: ${hadith.mohdith}')
+      ..write(
+        '${l10n.hadithSource}: '
+        '${l10n.hadithSourceCitation(hadith.book, hadith.numberOrPage)}',
+      );
+    unawaited(Clipboard.setData(ClipboardData(text: buffer.toString())));
+    showFToast(context: context, title: Text(l10n.hadithCopied));
   }
 }
 
@@ -258,14 +311,16 @@ class HadithMetaLine extends StatelessWidget {
     final l10n = context.l10n;
 
     return RichText(
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       text: TextSpan(
-        style: theme.typography.sm.copyWith(
+        style: theme.typography.body.sm.copyWith(
           color: theme.colors.secondaryForeground,
         ),
         children: [
           TextSpan(
             text: l10n.hadithFieldLabel(label),
-            style: theme.typography.sm.copyWith(
+            style: theme.typography.body.sm.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),
@@ -344,7 +399,7 @@ class HadithInfoMiniChip extends StatelessWidget {
             Icon(icon, size: 12, color: theme.colors.mutedForeground),
             Text(
               text,
-              style: theme.typography.xs.copyWith(
+              style: theme.typography.body.xs.copyWith(
                 color: theme.colors.mutedForeground,
               ),
             ),
@@ -379,23 +434,27 @@ class HadithHukmBadge extends StatelessWidget {
       _ => Color.lerp(colors.primary, colors.mutedForeground, 0.75)!,
     };
 
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 500),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 6,
-      ),
-      decoration: BoxDecoration(
-        color: color.withAlpha(28),
-        borderRadius: theme.radii.md,
-        border: Border.all(color: color.withAlpha(80)),
-      ),
-      child: Text(
-        hukm,
-        style: theme.typography.sm.copyWith(color: color),
-        overflow: TextOverflow.ellipsis,
-        maxLines: 2,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          constraints: BoxConstraints(maxWidth: constraints.maxWidth),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: 6,
+          ),
+          decoration: BoxDecoration(
+            color: color.withAlpha(28),
+            borderRadius: theme.radii.md,
+            border: Border.all(color: color.withAlpha(80)),
+          ),
+          child: Text(
+            hukm,
+            style: theme.typography.body.sm.copyWith(color: color),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
+          ),
+        );
+      },
     );
   }
 }

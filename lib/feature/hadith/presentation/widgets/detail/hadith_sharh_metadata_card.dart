@@ -35,14 +35,14 @@ class HadithSharhMetadataCard extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    final labelStyle = theme.typography.sm.copyWith(
+    final labelStyle = theme.typography.body.sm.copyWith(
       color: colors.mutedForeground,
     );
-    final valueStyle = theme.typography.md.copyWith(
+    final valueStyle = theme.typography.body.md.copyWith(
       fontFamily: baseStyle.fontFamily,
       height: 1.55,
     );
-    final citationStyle = theme.typography.sm.copyWith(
+    final citationStyle = theme.typography.body.sm.copyWith(
       fontFamily: baseStyle.fontFamily,
       color: colors.mutedForeground,
       height: 1.55,

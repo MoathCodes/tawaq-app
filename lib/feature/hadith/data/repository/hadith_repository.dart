@@ -10,7 +10,7 @@ part 'hadith_repository.g.dart';
 
 /// Provides the shared Dorar client.
 ///
-/// Dorar is initialized via `DorarHadithFlutter.ensureInitialized()` in `main.dart`.
+/// Dorar is initialized lazily on first Hadith route use.
 @Riverpod(keepAlive: true)
 DorarClient dorarClient(Ref ref) {
   final client = DorarClient();
