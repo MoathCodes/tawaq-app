@@ -24,7 +24,7 @@ void main() {
       });
 
       await MushafReaderLibrary.ensureInitialized();
-      repo = HiveQuranRepository();
+      repo = HiveQuranRepository.acquire();
       await repo!.ensureReady();
     });
 
@@ -120,6 +120,15 @@ void main() {
       expect(hizb.startSurahNumber, 1);
       expect(hizb.startAyahInSurah, 1);
       expect(hizb.startHizbQuarter, 1);
+      expect(hizb.startAyahUthmaniText, isNotNull);
+      expect(hizb.startAyahUthmaniText, isNotEmpty);
+    });
+
+    test('first ayah has uthmaniText', () async {
+      final repository = repo!;
+      final ayah = await repository.getAyah(1);
+      expect(ayah.uthmaniText, isNotNull);
+      expect(ayah.uthmaniText, isNotEmpty);
     });
   });
 }

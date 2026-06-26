@@ -234,6 +234,7 @@ Future<void> _generateAyahsBox(
 
       // Extract new fields
       final textPlain = a['aya_text_emlaey'] as String?;
+      final uthmaniText = a['text'] as String?;
       final manzil = a['manzil'] as int?;
       final ruku = a['ruku'] as int?;
       final hizbQuarter = a['hizbQuarter'] as int?;
@@ -250,6 +251,7 @@ Future<void> _generateAyahsBox(
         numberInSurah: a['numberInSurah'] as int,
         text: glyph,
         textPlain: textPlain,
+        uthmaniText: uthmaniText,
         manzil: manzil,
         ruku: ruku,
         hizbQuarter: hizbQuarter,
@@ -307,13 +309,20 @@ Future<void> _generateJuzsBox(
   final juzFirstAyah = <int, Map<String, int>>{};
   final juzLastAyahId = <int, int>{};
   for (final s in surahsData) {
+    final surahNumber = s['number'] as int;
     final ayahs = s['ayahs'] as List<dynamic>;
     for (final a in ayahs) {
       final juzNum = a['juz'] as int;
       final ayahId = a['number'] as int;
       final page = a['page'] as int;
+      final ayahInSurah = a['numberInSurah'] as int;
       if (!juzFirstAyah.containsKey(juzNum)) {
-        juzFirstAyah[juzNum] = {'ayahId': ayahId, 'page': page};
+        juzFirstAyah[juzNum] = {
+          'ayahId': ayahId,
+          'page': page,
+          'surahNumber': surahNumber,
+          'ayahInSurah': ayahInSurah,
+        };
       }
       juzLastAyahId[juzNum] = ayahId;
     }
@@ -331,6 +340,8 @@ Future<void> _generateJuzsBox(
       startPage: firstAyah?['page'],
       startAyahId: firstAyah?['ayahId'],
       endAyahId: juzLastAyahId[number],
+      startSurahNumber: firstAyah?['surahNumber'],
+      startAyahInSurah: firstAyah?['ayahInSurah'],
     );
     await box.put(number, juz);
   }
@@ -343,7 +354,7 @@ Future<void> _generateJuzsBox(
 Future<void> _generateHizbsBox(List<dynamic> surahsData) async {
   final box = await Hive.openBox<Hizb>('hizbs');
 
-  final hizbFirst = <int, Map<String, int>>{};
+  final hizbFirst = <int, Map<String, dynamic>>{};
   final hizbLastAyahId = <int, int>{};
 
   for (final s in surahsData) {
@@ -366,6 +377,7 @@ Future<void> _generateHizbsBox(List<dynamic> surahsData) async {
           'surahNumber': surahNumber,
           'ayahInSurah': ayahInSurah,
           'hizbQuarter': hizbQuarter,
+          'uthmaniText': a['text'] as String?,
         };
       }
       hizbLastAyahId[hizbNum] = ayahId;
@@ -376,13 +388,14 @@ Future<void> _generateHizbsBox(List<dynamic> surahsData) async {
     final first = hizbFirst[hizbNum];
     final hizb = Hizb(
       number: hizbNum,
-      startAyahId: first?['ayahId'],
+      startAyahId: first?['ayahId'] as int?,
       endAyahId: hizbLastAyahId[hizbNum],
-      startPage: first?['page'],
-      startSurahNumber: first?['surahNumber'],
-      startAyahInSurah: first?['ayahInSurah'],
+      startPage: first?['page'] as int?,
+      startSurahNumber: first?['surahNumber'] as int?,
+      startAyahInSurah: first?['ayahInSurah'] as int?,
       startHizbQuarter:
-          first?['hizbQuarter'] ?? startHizbQuarterForHizb(hizbNum),
+          (first?['hizbQuarter'] as int?) ?? startHizbQuarterForHizb(hizbNum),
+      startAyahUthmaniText: first?['uthmaniText'] as String?,
     );
     await box.put(hizbNum, hizb);
   }

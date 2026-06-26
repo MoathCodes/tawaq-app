@@ -57,6 +57,7 @@ class CenteredViewportShell extends StatelessWidget {
 Widget centeredViewportScrollTab({
   required double maxContentWidth,
   required Widget child,
+  AlignmentGeometry alignment = Alignment.topCenter,
   ScrollController? controller,
 }) {
   return LayoutBuilder(
@@ -68,7 +69,7 @@ Widget centeredViewportScrollTab({
         child: ConstrainedBox(
           constraints: BoxConstraints(minHeight: constraints.maxHeight),
           child: Align(
-            alignment: Alignment.topCenter,
+            alignment: alignment,
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: contentWidth),
               child: child,

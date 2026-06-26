@@ -48,7 +48,9 @@ class ColorThemeSelector extends ConsumerWidget {
               index: selectedMode == ThemeMode.light ? 0 : 1,
               onChange: (value) {
                 if (!themeReady) return;
-                ref.read(themeProvider.notifier).setThemeMode(
+                ref
+                    .read(themeProvider.notifier)
+                    .setThemeMode(
                       value == 0 ? ThemeMode.light : ThemeMode.dark,
                     );
               },
@@ -88,7 +90,7 @@ class ColorThemeSelector extends ConsumerWidget {
                 context,
                 constraints.maxWidth,
                 maxColumns: 5,
-                minColumns: 2,
+                minColumns: 5,
               );
 
               return GridView.builder(

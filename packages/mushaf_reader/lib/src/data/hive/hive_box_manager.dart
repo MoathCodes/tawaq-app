@@ -27,7 +27,7 @@ import 'package:path_provider/path_provider.dart';
 /// pass a [subDirectory]. Direct use:
 ///
 /// ```dart
-/// final manager = HiveBoxManager();
+/// final manager = HiveBoxManager.acquire();
 /// await manager.init();
 ///
 /// final surahs = manager.surahsBox;
@@ -80,11 +80,28 @@ class HiveBoxManager {
   /// [subDirectory] from the first successful [init], if any.
   String? get configuredSubDirectory => _configuredSubDirectory;
 
-  /// Factory constructor that returns the singleton instance.
-  factory HiveBoxManager() {
-    _refCount++;
+  /// Current reference count (for tests).
+  @visibleForTesting
+  static int get refCount => _refCount;
+
+  /// The shared singleton (does not change [refCount]).
+  static HiveBoxManager get instance {
     return _instance ??= HiveBoxManager._internal();
   }
+
+  /// Returns [instance] and increments [refCount] for ownership.
+  ///
+  /// Pair each [acquire] with [dispose] on the returned instance.
+  static HiveBoxManager acquire() {
+    _refCount++;
+    return instance;
+  }
+
+  /// Returns the singleton without changing [refCount].
+  ///
+  /// Prefer [acquire] when this manager is owned for its lifetime.
+  factory HiveBoxManager() => instance;
+
   HiveBoxManager._internal();
 
   /// The ayahs lazy box (6236 ayahs keyed by ID).
@@ -162,6 +179,8 @@ class HiveBoxManager {
   ///
   /// Uses reference counting - only closes when all references are released.
   void dispose() {
+    if (_refCount <= 0) return;
+
     _refCount--;
 
     if (_refCount <= 0) {

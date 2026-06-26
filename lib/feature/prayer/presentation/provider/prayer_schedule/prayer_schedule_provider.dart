@@ -12,9 +12,7 @@ import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:tawaq/l10n/app_localizations.dart';
 
 part 'prayer_schedule_provider.g.dart';
 
@@ -55,8 +53,7 @@ Prayer? scheduleCurrentPrayer(Ref ref) {
 /// Pass [forDate] for another day (up to one week back in the schedule UI).
 @riverpod
 List<PrayerScheduleRow> prayerSchedule(
-  Ref ref,
-  AppLocalizations l10n, [
+  Ref ref, [
   DateTime? forDate,
 ]) {
   final settings = ref.watch(prayerSettingsProvider).value;

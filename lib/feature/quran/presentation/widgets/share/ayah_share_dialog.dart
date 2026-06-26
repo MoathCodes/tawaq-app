@@ -74,7 +74,11 @@ Future<void> showAyahShareDialog(
 }) {
   return showFDialog<void>(
     context: context,
-    builder: (context, style, animation) => AyahShareDialog(ayah: ayah),
+    builder: (context, style, animation) => AyahShareDialog(
+      ayah: ayah,
+      style: style,
+      animation: animation,
+    ),
   );
 }
 
@@ -83,10 +87,18 @@ class AyahShareDialog extends HookConsumerWidget {
   /// Creates the share dialog.
   const AyahShareDialog({
     required this.ayah,
+    required this.style,
+    this.animation,
     super.key,
   });
 
   final Ayah ayah;
+
+  /// Resolved dialog style from [showFDialog].
+  final FDialogStyle style;
+
+  /// Route entrance/exit animation from [showFDialog].
+  final Animation<double>? animation;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -441,6 +453,8 @@ class AyahShareDialog extends HookConsumerWidget {
     }
 
     return FDialog(
+      style: style,
+      animation: animation,
       direction: .horizontal,
       title: Row(
         mainAxisAlignment: .spaceBetween,

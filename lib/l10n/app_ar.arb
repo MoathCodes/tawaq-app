@@ -644,6 +644,7 @@
   "quranRecitationModeStopAtEnd": "التوقف عند النهاية",
   "quranRecitationModeRepeat": "تكرار المحدد",
   "quranRecitationModeContinue": "المتابعة للسورة التالية",
+  "quranRangeModeLabel": "نهاية التشغيل",
   "quranSurahLabel": "سورة {surah}",
   "@quranSurahLabel": {
     "placeholders": {
@@ -929,6 +930,10 @@
   "quranRecitationOpenPlayer": "فتح المشغّل",
   "quranRecitationClosePlayer": "إغلاق المشغّل",
   "quranRecitationSwitchReciter": "تبديل القارئ",
+
+  "quranRecitationCancel": "إلغاء",
+
+  "quranRecitationApply": "تطبيق",
   "quranRecitationRangeRepeat": "المدى والتكرار",
   "quranRecitationQueue": "قائمة التشغيل",
   "quranRecitationQueueSubtitle": "آيات هذا المقطع",
@@ -947,8 +952,10 @@
       }
     }
   },
-  "quranRecitationAutoScroll": "تمرير تلقائي",
+  "quranRecitationAutoScroll": "متابعة التلاوة",
+  "quranRecitationAutoScrollDesc": "يُحرّك صفحة المصحف تلقائيًا لتتبّع موضع التلاوة.",
   "quranRecitationHighlight": "تظليل الآية",
+  "quranRecitationHighlightDesc": "يُظلّل الآية الجاري تشغيلها في المصحف.",
   "quranRecitationOfflineFiles": "الملفات دون اتصال",
   "quranRecitationOfflineSubtitle": "التلاوات المحفوظة",
   "quranRecitationOfflineAutoSave": "تُحفظ التلاوات تلقائيًا أثناء الاستماع.",
@@ -979,6 +986,16 @@
   "quranReciterFilterDownloaded": "المحفوظة",
   "quranReciterStyleMurattal": "مرتل",
   "quranReciterStyleMujawwad": "مجوّد",
+  "quranReciterRiwayahUpgraded": "هذه الرواية لا تدعم تتبع الآيات. تم التبديل إلى {riwayah}.",
+  "@quranReciterRiwayahUpgraded": {
+    "description": "يتم عرضه عندما لا تدعم الرواية المختارة بيانات التوقيت وتم ترقيتها تلقائياً",
+    "placeholders": {
+      "riwayah": {
+        "type": "String",
+        "example": "حفص"
+      }
+    }
+  },
   "quranNoMatchingReciters": "لا يوجد قراء مطابقون",
   "quranRangeTitle": "المدى والتكرار للحفظ",
   "quranRangeScope": "المدى",
@@ -986,6 +1003,7 @@
   "quranRangePresetSurah": "هذه السورة",
   "quranRangePresetJuz": "هذا الجزء",
   "quranRangePresetHizb": "هذا الحزب",
+  "quranRangePresetContinueFromHere": "استمر من هنا",
   "quranRangePresetCustom": "مخصص",
   "quranRangeFromSurah": "من — السورة",
   "quranRangeFromAyah": "من — الآية",
@@ -1019,5 +1037,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "quranRangeSave": "حفظ المدى"
 }

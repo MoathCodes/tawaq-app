@@ -35,6 +35,7 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
     required this.expandSemanticLabel,
     required this.collapseSemanticLabel,
     this.style,
+    this.floatingButtonOffset = const (top: 0, left: 0, right: 0),
     super.key,
   });
 
@@ -75,6 +76,10 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
   /// See [PersistedHorizontalSplitPane.style].
   final FResizableDividerStyleDelta? style;
 
+  /// Offsets to edit the position of the floating button when the panel isn't
+  /// collapsed.
+  final ({double top, double left, double right}) floatingButtonOffset;
+
   /// Whether the side pane sits on the physical left edge.
   bool get _sideOnLeft => sideRegionIndex == 0;
 
@@ -108,14 +113,19 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
       children: [
         Positioned.fill(child: side),
         Positioned(
-          top: _kCollapseButtonInset,
-          left: _sideOnLeft ? null : _kCollapseButtonInset,
-          right: _sideOnLeft ? _kCollapseButtonInset : null,
+          top: _kCollapseButtonInset + floatingButtonOffset.top,
+          left: _sideOnLeft
+              ? null
+              : _kCollapseButtonInset + floatingButtonOffset.left,
+          right: _sideOnLeft
+              ? _kCollapseButtonInset + floatingButtonOffset.right
+              : null,
           child: _CollapseHandle(
             icon: _sideOnLeft
                 ? FLucideIcons.panelLeftClose
                 : FLucideIcons.panelRightClose,
             semanticLabel: collapseSemanticLabel,
+            sideOnLeft: _sideOnLeft,
             onPress: () => onCollapsedChanged(true),
           ),
         ),
@@ -186,27 +196,34 @@ class _CollapseHandle extends StatelessWidget {
   const _CollapseHandle({
     required this.icon,
     required this.semanticLabel,
+    required this.sideOnLeft,
     required this.onPress,
   });
 
   final IconData icon;
   final String semanticLabel;
+  final bool sideOnLeft;
   final VoidCallback onPress;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: colors.secondary.withValues(alpha: 0.9),
-        shape: BoxShape.circle,
-      ),
-      child: FButton.icon(
-        variant: .ghost,
-        size: .sm,
-        semanticsLabel: semanticLabel,
-        onPress: onPress,
-        child: Icon(icon, size: 18),
+    return FTooltip(
+      tipBuilder: (_, _) => Text(semanticLabel),
+      childAnchor: sideOnLeft ? Alignment.centerRight : Alignment.centerLeft,
+      tipAnchor: sideOnLeft ? Alignment.centerLeft : Alignment.centerRight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.secondary.withValues(alpha: 0.9),
+          shape: BoxShape.circle,
+        ),
+        child: FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          semanticsLabel: semanticLabel,
+          onPress: onPress,
+          child: Icon(icon, size: 18),
+        ),
       ),
     );
   }
@@ -241,36 +258,43 @@ class _PeekTab extends StatelessWidget {
     return SizedBox(
       width: _kPeekTabWidth,
       child: Align(
-        child: FTappable(
-          semanticsLabel: semanticLabel,
-          onPress: onPress,
-          builder: (context, variants, _) {
-            final active =
-                variants.contains(FTappableVariant.hovered) ||
-                variants.contains(FTappableVariant.pressed);
-            return Container(
-              width: _kPeekTabWidth,
-              height: _kPeekTabHeight,
-              decoration: BoxDecoration(
-                color: active ? colors.secondary : colors.muted,
-                border: Border.all(color: colors.border),
-                borderRadius: borderRadius,
-                boxShadow: [
-                  BoxShadow(
-                    color: colors.barrier.withValues(alpha: 0.06),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: Icon(
-                icon,
-                size: 16,
-                color: active ? colors.foreground : colors.mutedForeground,
-              ),
-            );
-          },
+        child: FTooltip(
+          tipBuilder: (_, _) => Text(semanticLabel),
+          childAnchor: innerOnLeft
+              ? Alignment.centerLeft
+              : Alignment.centerRight,
+          tipAnchor: innerOnLeft ? Alignment.centerRight : Alignment.centerLeft,
+          child: FTappable(
+            semanticsLabel: semanticLabel,
+            onPress: onPress,
+            builder: (context, variants, _) {
+              final active =
+                  variants.contains(FTappableVariant.hovered) ||
+                  variants.contains(FTappableVariant.pressed);
+              return Container(
+                width: _kPeekTabWidth,
+                height: _kPeekTabHeight,
+                decoration: BoxDecoration(
+                  color: active ? colors.secondary : colors.muted,
+                  border: Border.all(color: colors.border),
+                  borderRadius: borderRadius,
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.barrier.withValues(alpha: 0.06),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  icon,
+                  size: 16,
+                  color: active ? colors.foreground : colors.mutedForeground,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

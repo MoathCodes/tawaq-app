@@ -10,6 +10,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_inline_select_prefix.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -79,32 +80,40 @@ Iterable<Surah> searchSurahs(List<Surah> surahs, String query) {
   return results.map((e) => e.$1);
 }
 
-/// Searchable surah picker shared by the Quran header and range dialog.
-class SurahSearchSelect extends HookConsumerWidget {
-  /// Creates a [SurahSearchSelect].
-  const SurahSearchSelect({
-    required this.value,
-    required this.onChanged,
-    required this.label,
-    this.enabled = true,
-    this.showLabel = true,
-    super.key,
-  });
+  /// Searchable surah picker shared by the Quran header and range dialog.
+  class SurahSearchSelect extends HookConsumerWidget {
+    /// Creates a [SurahSearchSelect].
+    const SurahSearchSelect({
+      required this.value,
+      required this.onChanged,
+      required this.label,
+      this.enabled = true,
+      this.showLabel = true,
+      this.inlineLabel = false,
+      this.size = FTextFieldSizeVariant.md,
+      super.key,
+    });
 
-  /// Selected surah number (1–114), or null when unset.
-  final int? value;
+    /// Selected surah number (1–114), or null when unset.
+    final int? value;
 
-  /// Called when the user picks a surah.
-  final ValueChanged<int> onChanged;
+    /// Called when the user picks a surah.
+    final ValueChanged<int> onChanged;
 
-  /// Field label shown above the control.
-  final String label;
+    /// Field label shown above the control.
+    final String label;
 
-  /// Whether the control accepts input.
-  final bool enabled;
+    /// Whether the control accepts input.
+    final bool enabled;
 
-  /// Whether the field label is shown above the select.
-  final bool showLabel;
+    /// Whether the field label is shown above the select.
+    final bool showLabel;
+
+    /// Shows a muted in-field label prefix (for the Quran header rail).
+    final bool inlineLabel;
+
+    /// Text field size variant. Defaults to [FTextFieldSizeVariant.md].
+    final FTextFieldSizeVariant size;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -128,7 +137,13 @@ class SurahSearchSelect extends HookConsumerWidget {
       enabled: allSurahs.connectionState == ConnectionState.waiting,
       child: FSelect<Surah>.searchBuilder(
         enabled: ready && enabled,
-        label: showLabel ? Text(label) : const SizedBox.shrink(),
+        label: showLabel && !inlineLabel
+            ? Text(label)
+            : const SizedBox.shrink(),
+        prefixBuilder: inlineLabel
+            ? quranInlineSelectPrefixBuilder(label)
+            : null,
+        size: size,
         contentConstraints: selectPopoverPortalConstraints(context),
         style: selectStyle(
           colors: theme.colors,
@@ -175,10 +190,13 @@ class SurahSearchSelect extends HookConsumerWidget {
 /// A dropdown selector for choosing a Surah in the Quran reader.
 class SurahSelector extends HookConsumerWidget {
   /// Creates a [SurahSelector] instance.
-  const SurahSelector({this.showLabel = true, super.key});
+  const SurahSelector({this.showLabel = true, this.inlineLabel = false, super.key});
 
   /// Whether the field label is shown above the select.
   final bool showLabel;
+
+  /// Shows a muted in-field label prefix (for the Quran header rail).
+  final bool inlineLabel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -227,6 +245,7 @@ class SurahSelector extends HookConsumerWidget {
             value: currentSurahNumber,
             label: surahFieldName,
             showLabel: showLabel,
+            inlineLabel: inlineLabel,
             enabled: selectorReady,
             onChanged: (number) => unawaited(controller.jumpToSurah(number)),
           ),

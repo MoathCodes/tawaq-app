@@ -3,6 +3,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:tawaq/core/commentary/commentary_inline_run_builder.dart';
 import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
 import 'package:tawaq/core/commentary/commentary_text_styles.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart' show ScopedSelectableRichText;
+import 'package:tawaq/core/widgets/widgets.dart' show ScopedSelectableRichText;
 import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_segment.dart';
 
 /// Renders tokenized sharh segments as inline rich-text runs.

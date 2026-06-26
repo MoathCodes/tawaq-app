@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_mode.dart';
 
 part 'recitation_settings.freezed.dart';
@@ -29,6 +30,30 @@ abstract class RecitationSettings with _$RecitationSettings {
 
     /// How many times the whole selection repeats (1 = play once).
     @Default(1) int repeatCount,
+
+    /// Last played surah (1-114), restored on the next launch.
+    int? lastSurah,
+
+    /// When non-null, the selection range start ayah within [lastSurah].
+    int? lastRangeStart,
+
+    /// When non-null, the selection range end ayah within [lastSurah].
+    int? lastRangeEnd,
+
+    /// Cross-surah range start surah (null when the range is single-surah).
+    int? lastRangeFromSurah,
+
+    /// Cross-surah range start ayah (null when the range is single-surah).
+    int? lastRangeFromAyah,
+
+    /// Cross-surah range end surah (null when the range is single-surah).
+    int? lastRangeToSurah,
+
+    /// Cross-surah range end ayah (null when the range is single-surah).
+    int? lastRangeToAyah,
+
+    /// Last range scope preset selected in the range dialog.
+    RangeScopePreset? lastRangePreset,
   }) = _RecitationSettings;
 
   /// Creates [RecitationSettings] from JSON.

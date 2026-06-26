@@ -65,6 +65,8 @@ Future<void> showFortressStudySheet(
       );
 
       return FDialog(
+      style: style,
+      animation: animation,
       title: Text(_fortressStudyDialogTitle(dua, l10n)),
       body: ConstrainedBox(
         constraints: constraints,

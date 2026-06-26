@@ -86,6 +86,25 @@ void main() {
       client.close();
     });
 
+    test('use() opens and closes client automatically', () async {
+      final count = await HisnClient.use((c) async => c.titles.all().length);
+      expect(count, greaterThan(0));
+    });
+
+    test('use() closes client when callback throws', () async {
+      HisnClient? captured;
+
+      await expectLater(
+        HisnClient.use((c) async {
+          captured = c;
+          throw StateError('boom');
+        }),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(() => captured!.titles.all(), throwsA(anything));
+    });
+
     test('loads expected row counts from lock expectations', () {
       final titles = client.titles.all();
       final contents = client.contents.all();

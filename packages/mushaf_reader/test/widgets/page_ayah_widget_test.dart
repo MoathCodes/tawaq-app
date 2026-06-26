@@ -247,5 +247,56 @@ void main() {
       expect(textSpan.children?.single, isA<TextSpan>());
       expect((textSpan.children!.single as TextSpan).text, 'line1line2');
     });
+
+    testWidgets('should prune stale gesture recognizers when ayahs shrink', (
+      tester,
+    ) async {
+      const testText = 'abcdefghijklmnopqrstuvwxyz';
+      final threeAyahs = [
+        AyahFragment(ayahId: 1, start: 0, end: 8),
+        AyahFragment(ayahId: 2, start: 8, end: 16),
+        AyahFragment(ayahId: 3, start: 16, end: 24),
+      ];
+      final oneAyah = [
+        AyahFragment(ayahId: 1, start: 0, end: 8),
+      ];
+
+      const style = TextStyle(fontSize: 16);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PageAyahWidget(
+              fullText: testText,
+              ayahs: threeAyahs,
+              style: style,
+              activeStyle: style,
+              onAyahSelection: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      final state = tester.state<State<PageAyahWidget>>(
+        find.byType(PageAyahWidget),
+      );
+      expect(state.testTapRecognizerCount, 3);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PageAyahWidget(
+              fullText: testText,
+              ayahs: oneAyah,
+              style: style,
+              activeStyle: style,
+              onAyahSelection: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      expect(state.testTapRecognizerCount, 1);
+    });
   });
 }

@@ -107,6 +107,7 @@ class PageShell extends ConsumerWidget {
                 // a trailing hairline, completing the two sleek dividers.
                 scaffoldStyle: FScaffoldStyleDelta.delta(
                   sidebarBackgroundColor: colors.card,
+                  childPadding: const .value(.zero),
                 ),
                 sidebar: isAtLeast(context, FBreakpoint.sm)
                     ? const NonSelectable(child: ShellSidebar())

@@ -3492,6 +3492,12 @@ abstract class AppLocalizations {
   /// **'Continue to next surah'**
   String get quranRecitationModeContinue;
 
+  /// No description provided for @quranRangeModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'End behavior'**
+  String get quranRangeModeLabel;
+
   /// No description provided for @quranSurahLabel.
   ///
   /// In en, this message translates to:
@@ -3515,6 +3521,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Switch reciter'**
   String get quranRecitationSwitchReciter;
+
+  /// No description provided for @quranRecitationCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get quranRecitationCancel;
+
+  /// No description provided for @quranRecitationApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get quranRecitationApply;
 
   /// No description provided for @quranRecitationRangeRepeat.
   ///
@@ -3588,11 +3606,23 @@ abstract class AppLocalizations {
   /// **'Auto-scroll'**
   String get quranRecitationAutoScroll;
 
+  /// No description provided for @quranRecitationAutoScrollDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically scroll the mushaf page to follow the recitation position.'**
+  String get quranRecitationAutoScrollDesc;
+
   /// No description provided for @quranRecitationHighlight.
   ///
   /// In en, this message translates to:
   /// **'Highlight ayah'**
   String get quranRecitationHighlight;
+
+  /// No description provided for @quranRecitationHighlightDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight the currently playing ayah in the mushaf.'**
+  String get quranRecitationHighlightDesc;
 
   /// No description provided for @quranRecitationOfflineFiles.
   ///
@@ -3690,6 +3720,12 @@ abstract class AppLocalizations {
   /// **'Mujawwad'**
   String get quranReciterStyleMujawwad;
 
+  /// Shown when the selected riwayah lacks timing and is auto-upgraded
+  ///
+  /// In en, this message translates to:
+  /// **'This riwayah doesn\'t support ayah sync. Switched to {riwayah}.'**
+  String quranReciterRiwayahUpgraded(String riwayah);
+
   /// No description provided for @quranNoMatchingReciters.
   ///
   /// In en, this message translates to:
@@ -3731,6 +3767,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This hizb'**
   String get quranRangePresetHizb;
+
+  /// No description provided for @quranRangePresetContinueFromHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue from here'**
+  String get quranRangePresetContinueFromHere;
 
   /// No description provided for @quranRangePresetCustom.
   ///
@@ -3851,6 +3893,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'×{count}'**
   String quranRangeRepeatChip(int count);
+
+  /// No description provided for @quranRangeSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save range'**
+  String get quranRangeSave;
 }
 
 class _AppLocalizationsDelegate

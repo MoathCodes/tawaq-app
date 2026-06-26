@@ -40,14 +40,16 @@ class MuslimFortressScreen extends HookConsumerWidget {
     useEffect(() {
       if (!chaptersAsync.hasValue) return null;
 
+      var cancelled = false;
       unawaited(() async {
         final service = await ref.read(fortressServiceProvider.future);
+        if (cancelled) return;
         ref
             .read(fortressScreenSettingsProvider.notifier)
             .ensureDefaultBookmarks(service.defaultBookmarkChapterIds());
       }());
 
-      return null;
+      return () => cancelled = true;
     }, [chaptersAsync.hasValue]);
 
     final allCategories = chaptersAsync.when(
@@ -66,9 +68,8 @@ class MuslimFortressScreen extends HookConsumerWidget {
     if (chaptersAsync.hasError) {
       return Directionality(
         textDirection: TextDirection.rtl,
-        child: Scaffold(
-          backgroundColor: theme.colors.background,
-          body: Padding(
+        child: FScaffold(
+          child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -124,23 +125,35 @@ class MuslimFortressScreen extends HookConsumerWidget {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, viewport) {
-        final contentHeight = viewport.maxHeight.isFinite
-            ? viewport.maxHeight - AppSpacing.md * 2
-            : MediaQuery.sizeOf(context).height - AppSpacing.md * 2;
-        final useSplit = canUseHorizontalSplit(
-          containerWidth: viewport.maxWidth,
-          sideMin: kStudyPanelMinExtent,
-          mainMin: kMainPaneMinExtent,
-        );
+    final collapsed = ref.watch(
+      fortressScreenSettingsProvider.select(
+        (v) =>
+            v.asData?.value.sidePanelCollapsed ?? SidePanelDefaults.collapsed,
+      ),
+    );
 
-        return FSkeletonizer(
-          enabled: chaptersAsync.isLoading,
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.sm,
+        collapsed ? 0 : AppSpacing.lg,
+        AppSpacing.sm,
+      ),
+      child: LayoutBuilder(
+        builder: (context, viewport) {
+          final contentHeight = viewport.maxHeight.isFinite
+              ? viewport.maxHeight - AppSpacing.md * 2
+              : MediaQuery.sizeOf(context).height - AppSpacing.md * 2;
+          final useSplit = canUseHorizontalSplit(
+            containerWidth: viewport.maxWidth,
+            sideMin: kStudyPanelMinExtent,
+            mainMin: kMainPaneMinExtent,
+          );
+
+          return FSkeletonizer(
+            enabled: chaptersAsync.isLoading,
+            child: Directionality(
+              textDirection: TextDirection.rtl,
               child: SizedBox(
                 height: contentHeight,
                 child: useSplit
@@ -164,9 +177,9 @@ class MuslimFortressScreen extends HookConsumerWidget {
                       ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
@@ -198,6 +211,11 @@ class _FortressDesktopSplitLayout extends ConsumerWidget {
 
     return CollapsibleHorizontalSplitPane(
       sidePanelRatio: sidePanelRatio,
+      floatingButtonOffset: (
+        top: -12,
+        left: 0,
+        right: 0,
+      ),
       sideRegionIndex: 1,
       collapsed: collapsed,
       onCollapsedChanged: (value) => ref

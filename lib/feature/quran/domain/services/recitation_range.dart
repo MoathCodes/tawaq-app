@@ -1,59 +1,60 @@
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/ayah_reference.dart';
 
-/// How the user scoped a memorization range in the range dialog.
-enum RangeScopePreset {
-  /// A single ayah (from = to).
-  thisAyah,
-
-  /// Ayah 1 through the last ayah of a surah.
-  thisSurah,
-
-  /// The juz containing the seed ayah.
-  thisJuz,
-
-  /// The hizb containing the seed ayah.
-  thisHizb,
-
-  /// Manually chosen endpoints.
-  custom,
-}
-
 /// Maps global endpoints to the first surah-local segment to load.
+///
+/// When [to] is null the range is open-ended and continues to the end of the
+/// Quran.
 ({int surah, int startAyah, int endAyah}) firstSegmentForRange({
   required AyahReference from,
-  required AyahReference to,
+  required AyahReference? to,
   required MushafReaderController mushaf,
 }) {
   final surah = from.surah;
   final ayahCount = mushaf.getSurahSync(surah)?.ayahCount ?? from.ayah;
-  final endAyah = from.surah == to.surah ? to.ayah : ayahCount;
+  final endAyah = to != null && from.surah == to.surah ? to.ayah : ayahCount;
   return (surah: surah, startAyah: from.ayah, endAyah: endAyah);
 }
 
 /// Returns the next segment after finishing [currentSurah] in a global range.
+///
+/// When [to] is null the range is open-ended and continues to the end of the
+/// Quran.
 ({int surah, int startAyah, int endAyah})? nextSegmentForRange({
   required AyahReference from,
-  required AyahReference to,
+  required AyahReference? to,
   required int currentSurah,
   required MushafReaderController mushaf,
 }) {
   final nextSurah = currentSurah + 1;
-  if (nextSurah > to.surah) return null;
-  if (nextSurah < from.surah) return null;
+  if (to != null) {
+    if (nextSurah > to.surah) return null;
+    if (nextSurah < from.surah) return null;
+  } else if (nextSurah > 114) {
+    return null;
+  }
 
   final startAyah = nextSurah == from.surah ? from.ayah : 1;
   final ayahCount = mushaf.getSurahSync(nextSurah)?.ayahCount ?? 1;
-  final endAyah = nextSurah == to.surah ? to.ayah : ayahCount;
+  final endAyah = to != null && nextSurah == to.surah ? to.ayah : ayahCount;
   return (surah: nextSurah, startAyah: startAyah, endAyah: endAyah);
 }
 
 /// Whether the global [to] endpoint has been reached in [surah]/[endAyah].
+///
+/// A null [to] means the range continues to the end of the Quran.
 bool isGlobalRangeComplete({
-  required AyahReference to,
+  required AyahReference? to,
   required int surah,
   required int endAyah,
-}) => surah > to.surah || (surah == to.surah && endAyah >= to.ayah);
+  required MushafReaderController mushaf,
+}) {
+  if (to == null) {
+    final ayahCount = mushaf.getSurahSync(surah)?.ayahCount ?? endAyah;
+    return surah == 114 && endAyah >= ayahCount;
+  }
+  return surah > to.surah || (surah == to.surah && endAyah >= to.ayah);
+}
 
 /// Juz number for a surah-local ayah reference.
 Future<int?> juzNumberForAyah(

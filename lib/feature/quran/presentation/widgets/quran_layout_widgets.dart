@@ -11,7 +11,6 @@ import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 import 'package:tawaq/core/layout/split_extent_resolver.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
@@ -87,7 +86,9 @@ class QuranMushafPane extends HookConsumerWidget {
       builder: (context, constraints) {
         final canFitDoubleSpread =
             constraints.maxWidth >= 2 * kMushafPaneMinExtent;
-        final pagesPerViewport = wantsDoubleSpread && canFitDoubleSpread ? 2 : 1;
+        final pagesPerViewport = wantsDoubleSpread && canFitDoubleSpread
+            ? 2
+            : 1;
 
         final reader = MushafReader(
           controller: controller,
@@ -155,7 +156,7 @@ class DoublePageLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StaticCard(child: mushaf);
+    return mushaf;
   }
 }
 
@@ -182,9 +183,7 @@ class StudyModeLayout extends ConsumerWidget {
       ),
     );
 
-    final content = StaticCard(
-      child: Center(child: mushaf),
-    );
+    final content = Center(child: mushaf);
 
     final sidePanelRatio = ref.watch(
       quranScreenSettingsProvider.select(
@@ -198,84 +197,93 @@ class StudyModeLayout extends ConsumerWidget {
     );
     final l10n = context.l10n;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final totalWidth = constraints.maxWidth;
-        final totalHeight = constraints.maxHeight.isFinite
-            ? constraints.maxHeight
-            : MediaQuery.sizeOf(context).height;
-        final useSplit = canUseHorizontalSplit(
-          containerWidth: totalWidth,
-          sideMin: kStudyPanelMinExtent,
-          mainMin: kMushafPaneMinExtent,
-          spacer: _kResizableSpacer,
-        );
+    return Padding(
+      padding: EdgeInsetsDirectional.fromSTEB(
+        collapsed ? 0 : AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        0,
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final totalWidth = constraints.maxWidth;
+          final totalHeight = constraints.maxHeight.isFinite
+              ? constraints.maxHeight
+              : MediaQuery.sizeOf(context).height;
+          final useSplit = canUseHorizontalSplit(
+            containerWidth: totalWidth,
+            sideMin: kStudyPanelMinExtent,
+            mainMin: kMushafPaneMinExtent,
+            spacer: _kResizableSpacer,
+          );
 
-        if (!useSplit) {
-          final studyHeight = _kStackedStudyPanelMaxHeight
-              .clamp(0.0, totalHeight * 0.45)
-              .toDouble();
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(
-                    bottom: AppSpacing.sm,
+          if (!useSplit) {
+            final studyHeight = _kStackedStudyPanelMaxHeight.clamp(
+              0.0,
+              totalHeight * 0.45,
+            );
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      bottom: AppSpacing.sm,
+                    ),
+                    child: content,
                   ),
-                  child: content,
                 ),
-              ),
-              SizedBox(
-                height: studyHeight,
+                SizedBox(
+                  height: studyHeight,
+                  child: panel,
+                ),
+              ],
+            );
+          }
+
+          return _StudySplitAutoCollapse(
+            containerWidth: totalWidth,
+            collapsed: collapsed,
+            child: CollapsibleHorizontalSplitPane(
+              sidePanelRatio: sidePanelRatio,
+              sideRegionIndex: isRtl ? 1 : 0,
+              collapsed: collapsed,
+              onCollapsedChanged: (value) => ref
+                  .read(quranScreenSettingsProvider.notifier)
+                  .setSidePanelCollapsed(collapsed: value),
+              expandSemanticLabel: l10n.expandPanel,
+              collapseSemanticLabel: l10n.collapsePanel,
+              resolve: ({required totalWidth, required sideWidth}) =>
+                  resolveFeatureSplitExtents(
+                    totalWidth: totalWidth,
+                    sideWidth: sideWidth,
+                    sideMin: kStudyPanelMinExtent,
+                    mainMin: kMushafPaneMinExtent,
+                    sideMaxFraction: 0.45,
+                    sideMaxPixels: _kStudyPanelMaxExtent,
+                    spacer: _kResizableSpacer,
+                  ),
+              onSidePanelRatioChanged: (ratio) => ref
+                  .read(quranScreenSettingsProvider.notifier)
+                  .setSidePanelRatio(ratio),
+              sidePane: Padding(
+                padding: EdgeInsetsDirectional.only(
+                  end: isRtl ? 0 : AppSpacing.sm,
+                  start: isRtl ? AppSpacing.sm : 0,
+                ),
                 child: panel,
               ),
-            ],
-          );
-        }
-
-        return _StudySplitAutoCollapse(
-          containerWidth: totalWidth,
-          collapsed: collapsed,
-          child: CollapsibleHorizontalSplitPane(
-            sidePanelRatio: sidePanelRatio,
-            sideRegionIndex: isRtl ? 1 : 0,
-            collapsed: collapsed,
-            onCollapsedChanged: (value) => ref
-                .read(quranScreenSettingsProvider.notifier)
-                .setSidePanelCollapsed(collapsed: value),
-            expandSemanticLabel: l10n.expandPanel,
-            collapseSemanticLabel: l10n.collapsePanel,
-            resolve: ({required totalWidth, required sideWidth}) =>
-                resolveFeatureSplitExtents(
-                  totalWidth: totalWidth,
-                  sideWidth: sideWidth,
-                  sideMin: kStudyPanelMinExtent,
-                  mainMin: kMushafPaneMinExtent,
-                  sideMaxFraction: 0.45,
-                  sideMaxPixels: _kStudyPanelMaxExtent,
-                  spacer: _kResizableSpacer,
+              mainPane: Padding(
+                padding: EdgeInsetsDirectional.only(
+                  end: isRtl ? AppSpacing.sm : 0,
+                  start: isRtl ? 0 : AppSpacing.sm,
                 ),
-            onSidePanelRatioChanged: (ratio) => ref
-                .read(quranScreenSettingsProvider.notifier)
-                .setSidePanelRatio(ratio),
-            sidePane: Padding(
-              padding: EdgeInsetsDirectional.only(
-                end: isRtl ? 0 : AppSpacing.sm,
-                start: isRtl ? AppSpacing.sm : 0,
+                child: content,
               ),
-              child: panel,
             ),
-            mainPane: Padding(
-              padding: EdgeInsetsDirectional.only(
-                end: isRtl ? AppSpacing.sm : 0,
-                start: isRtl ? 0 : AppSpacing.sm,
-              ),
-              child: content,
-            ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

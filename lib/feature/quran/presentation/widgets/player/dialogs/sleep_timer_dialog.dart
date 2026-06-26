@@ -4,15 +4,16 @@ import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_sleep.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
-import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Opens the sleep-timer dialog.
 Future<void> showSleepTimerDialog(BuildContext context) => showFDialog<void>(
   context: context,
-  builder: (context, _, _) => const _SleepTimerDialog(),
+  useRootNavigator: true,
+  builder: (context, style, animation) => const _SleepTimerDialog(),
 );
 
 class _SleepTimerDialog extends ConsumerWidget {
@@ -62,7 +63,7 @@ class _SleepTimerDialog extends ConsumerWidget {
     return PlayerDialogShell(
       title: l10n.quranRecitationSleepTimer,
       icon: FLucideIcons.moon,
-      width: 380,
+      width: 440,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
         child: Column(

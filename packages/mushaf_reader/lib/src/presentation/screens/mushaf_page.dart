@@ -139,6 +139,12 @@ class MushafPage extends StatefulWidget {
   /// Defaults to `true`.
   final bool enableAyahHighlight;
 
+  /// Whether this page state should stay alive inside a [PageView].
+  ///
+  /// [MushafReader] sets this for a sliding window (current ±1) to limit RAM.
+  /// Defaults to `false` for standalone [MushafPage] embeds.
+  final bool keepAlive;
+
   /// Creates a MushafPage widget.
   ///
   /// [page] is required and must be in the range 1-604.
@@ -158,6 +164,7 @@ class MushafPage extends StatefulWidget {
     this.onLongPressJuz,
     this.hideHeader,
     this.enableAyahHighlight = true,
+    this.keepAlive = false,
   });
 
   @override
@@ -168,6 +175,7 @@ class _MushafPageState extends State<MushafPage>
     with AutomaticKeepAliveClientMixin {
   late IQuranRepository _repository;
   MushafReaderController? _controller;
+  bool _ownsRepository = false;
 
   /// Tracks which ayah is currently selected for highlighting
   int? _selectedAyahId;
@@ -177,7 +185,7 @@ class _MushafPageState extends State<MushafPage>
   final PageScaleCache _pageScaleCache = PageScaleCache();
 
   @override
-  bool get wantKeepAlive => true; // Keep page alive in PageView
+  bool get wantKeepAlive => widget.keepAlive;
 
   @override
   Widget build(BuildContext context) {
@@ -194,14 +202,25 @@ class _MushafPageState extends State<MushafPage>
   void didUpdateWidget(MushafPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
+      if (_ownsRepository) {
+        _repository.dispose();
+        _ownsRepository = false;
+      }
       _controller = widget.controller;
       if (_controller != null) {
         _repository = _controller!.repository;
+      } else {
+        _repository = HiveQuranRepository.acquire();
+        _ownsRepository = true;
       }
     }
 
     if (widget.page != oldWidget.page || widget.style != oldWidget.style) {
       _pageScaleCache.clear();
+    }
+
+    if (widget.keepAlive != oldWidget.keepAlive) {
+      updateKeepAlive();
     }
 
     if (widget.page != oldWidget.page) {
@@ -214,6 +233,9 @@ class _MushafPageState extends State<MushafPage>
 
   @override
   void dispose() {
+    if (_ownsRepository) {
+      _repository.dispose();
+    }
     super.dispose();
   }
 
@@ -221,7 +243,12 @@ class _MushafPageState extends State<MushafPage>
   void initState() {
     super.initState();
     _controller = widget.controller;
-    _repository = _controller?.repository ?? HiveQuranRepository();
+    if (_controller != null) {
+      _repository = _controller!.repository;
+    } else {
+      _repository = HiveQuranRepository.acquire();
+      _ownsRepository = true;
+    }
     _pageData = _repository.peekCachedPage(widget.page);
     if (_pageData == null) {
       _loadPageData();
@@ -256,6 +283,8 @@ class _MushafPageState extends State<MushafPage>
             styleModifier: style.juzStyleModifier,
             onTap: widget.onTapJuz,
             onLongPress: widget.onLongPressJuz,
+            repository: _repository,
+            juzData: _controller?.getJuzSync(data.juzNumber),
           ),
         ],
       ),
@@ -302,6 +331,9 @@ class _MushafPageState extends State<MushafPage>
           scaleConfig.getPageNumberFontSize(scale),
         );
 
+        final repository = _repository;
+        final basmalahGlyph = _controller?.basmalah;
+
         final defaultAyahStyle = MushafTextStyleMerger.mergeAyahStyle(
           userStyle: style.ayahStyle,
           modifier: style.ayahStyleModifier,
@@ -347,6 +379,8 @@ class _MushafPageState extends State<MushafPage>
                             style,
                             basmalahFontSize,
                             addTrailingSpacer: false,
+                            repository: repository,
+                            basmalahGlyph: basmalahGlyph,
                           ),
                         ],
                       );
@@ -361,6 +395,8 @@ class _MushafPageState extends State<MushafPage>
                     activeStyle,
                     style,
                     basmalahFontSize,
+                    repository: repository,
+                    basmalahGlyph: basmalahGlyph,
                   ),
                 if (widget.enableAyahHighlight && _controller != null)
                   const Spacer(),
@@ -397,6 +433,8 @@ class _MushafPageState extends State<MushafPage>
     MushafStyle mushafStyle,
     double basmalahFontSize, {
     bool addTrailingSpacer = true,
+    IQuranRepository? repository,
+    String? basmalahGlyph,
   }) {
     return MushafPageSurahBlocks.build(
       data: data,
@@ -409,6 +447,8 @@ class _MushafPageState extends State<MushafPage>
       basmalahFontSize: basmalahFontSize,
       enableAyahHighlight: widget.enableAyahHighlight,
       addTrailingSpacer: addTrailingSpacer,
+      repository: repository,
+      basmalahGlyph: basmalahGlyph,
       selectedAyahId: widget.enableAyahHighlight
           ? (_controller?.selectedAyahId ?? _selectedAyahId)
           : null,

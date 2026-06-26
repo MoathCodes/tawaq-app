@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:free_map/free_map.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
@@ -146,76 +145,50 @@ class TimezoneSelect extends ConsumerWidget {
       ),
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final stackSuffix = !isContainerAtLeast(
-          context,
-          constraints,
-          FBreakpoint.sm,
-        );
-
-        final select = FSelect<tz.Location>.searchBuilder(
-          enabled: enabled,
-          contentConstraints: selectPopoverPortalConstraints(context),
-          control: .lifted(
-            value: location,
-            onChange: (v) {
-              if (v != null) unawaited(_setTimezone(context, ref, v));
-            },
-          ),
-          label: Text(l10n.timezone),
-          format: (loc) => loc.name,
-          searchFieldProperties: FSelectSearchFieldProperties(
-            hint: l10n.searchForMore,
-          ),
-          prefixBuilder: (_, _, _) => Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Icon(
-              FLucideIcons.clock,
-              color: colors.secondaryForeground,
-            ),
-          ),
-          filter: (query) async {
-            final locations = ref.read(loadTimezonesProvider);
-            return query.isEmpty
-                ? locations
-                : locations.where(
-                    (l) => l.name.toLowerCase().contains(query.toLowerCase()),
-                  );
-          },
-          contentBuilder: (_, _, data) => data
-              .take(16)
-              .map((l) => FSelectItem(title: Text(l.name), value: l))
-              .toList(),
-          contentEmptyBuilder: (_, _) => buildSelectEmptyContent(context),
-          contentLoadingBuilder: (_, _) => const FCircularProgress(),
-          suffixBuilder: (_, _, _) => stackSuffix
-              ? Icon(FLucideIcons.chevronDown, color: colors.primary)
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 4,
-                  children: [
-                    Icon(FLucideIcons.chevronDown, color: colors.primary),
-                    locateButton,
-                  ],
-                ),
-        );
-
-        if (!stackSuffix) return select;
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: AppSpacing.sm,
-          children: [
-            select,
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: locateButton,
-            ),
-          ],
-        );
+    return FSelect<tz.Location>.searchBuilder(
+      enabled: enabled,
+      contentConstraints: selectPopoverPortalConstraints(context),
+      control: .lifted(
+        value: location,
+        onChange: (v) {
+          if (v != null) unawaited(_setTimezone(context, ref, v));
+        },
+      ),
+      label: Text(l10n.timezone),
+      format: (loc) => loc.name,
+      searchFieldProperties: FSelectSearchFieldProperties(
+        hint: l10n.searchForMore,
+      ),
+      prefixBuilder: (_, _, _) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        child: Icon(
+          FLucideIcons.clock,
+          color: colors.secondaryForeground,
+        ),
+      ),
+      filter: (query) async {
+        final locations = ref.read(loadTimezonesProvider);
+        return query.isEmpty
+            ? locations
+            : locations.where(
+                (l) => l.name.toLowerCase().contains(query.toLowerCase()),
+              );
       },
+      contentBuilder: (_, _, data) => data
+          .take(16)
+          .map((l) => FSelectItem(title: Text(l.name), value: l))
+          .toList(),
+      contentEmptyBuilder: (_, _) => buildSelectEmptyContent(context),
+      contentLoadingBuilder: (_, _) => const FCircularProgress(),
+      suffixBuilder: (_, _, _) => Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.min,
+        spacing: 4,
+        children: [
+          Icon(FLucideIcons.chevronDown, color: colors.primary),
+          locateButton,
+        ],
+      ),
     );
   }
 }

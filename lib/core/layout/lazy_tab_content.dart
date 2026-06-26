@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart' show FTabs;
+import 'package:forui/widgets/tabs.dart' show FTabs;
 
 /// Defers building a tab's body until the tab is first selected.
 ///

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_indicator.dart';
 
 /// Wraps [child] with a Forui tooltip that shows the shortcut key combo on hover.

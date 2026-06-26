@@ -5,15 +5,16 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_equalizer.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Opens the playback queue dialog (the timed ayahs of the current selection).
 Future<void> showQueueDialog(BuildContext context) => showFDialog<void>(
   context: context,
-  builder: (context, _, _) => const _QueueDialog(),
+  useRootNavigator: true,
+  builder: (context, style, animation) => const _QueueDialog(),
 );
 
 class _QueueDialog extends ConsumerWidget {
@@ -61,11 +62,10 @@ class _QueueDialog extends ConsumerWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(AppSpacing.sm),
-                  child: ListView.builder(
-                    shrinkWrap: true,
+                  child: FTileGroup.builder(
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: ayat.length,
-                    itemBuilder: (context, index) {
+                    count: ayat.length,
+                    tileBuilder: (context, index) {
                       final a = ayat[index];
                       return FTile(
                         prefix: a.ayah == playback.currentAyah

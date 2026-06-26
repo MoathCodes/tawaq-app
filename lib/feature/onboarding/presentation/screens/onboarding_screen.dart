@@ -113,7 +113,8 @@ class OnboardingScreen extends ConsumerWidget {
         child: Center(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final wide = isContainerAtLeast(
+              final wide =
+                  isContainerAtLeast(
                     context,
                     constraints,
                     FBreakpoint.lg,
@@ -127,63 +128,59 @@ class OnboardingScreen extends ConsumerWidget {
                   maxWidth: maxWidth,
                   maxHeight: panelHeight,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: wide
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          spacing: AppSpacing.xxl,
-                          children: [
-                            SizedBox(
-                              width: _desktopRailWidth,
-                              child: SingleChildScrollView(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    header,
-                                    const SizedBox(height: AppSpacing.xxxl),
-                                    navigation,
-                                  ],
-                                ),
+                child: wide
+                    ? Row(
+                        spacing: AppSpacing.xxl,
+                        children: [
+                          SizedBox(
+                            width: _desktopRailWidth,
+                            child: SingleChildScrollView(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  header,
+                                  const SizedBox(height: AppSpacing.xxxl),
+                                  navigation,
+                                ],
                               ),
                             ),
-                            Expanded(
-                              child: ScrollOverflowHintViewport(
-                                resetTrigger: step,
-                                builder: (controller) =>
-                                    centeredViewportScrollTab(
-                                  maxContentWidth: maxWidth,
-                                  controller: controller,
-                                  child: content,
-                                ),
-                              ),
+                          ),
+                          Expanded(
+                            child: ScrollOverflowHintViewport(
+                              resetTrigger: step,
+                              builder: (controller) =>
+                                  centeredViewportScrollTab(
+                                    maxContentWidth: maxWidth,
+                                    controller: controller,
+                                    child: content,
+                                    alignment: Alignment.center,
+                                  ),
                             ),
-                          ],
-                        )
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            header,
-                            const SizedBox(height: AppSpacing.lg),
-                            Flexible(
-                              child: ScrollOverflowHintViewport(
-                                resetTrigger: step,
-                                builder: (controller) =>
-                                    centeredViewportScrollTab(
-                                  maxContentWidth: maxWidth,
-                                  controller: controller,
-                                  child: content,
-                                ),
-                              ),
+                          ),
+                        ],
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          header,
+                          const SizedBox(height: AppSpacing.lg),
+                          Flexible(
+                            child: ScrollOverflowHintViewport(
+                              resetTrigger: step,
+                              builder: (controller) =>
+                                  centeredViewportScrollTab(
+                                    maxContentWidth: maxWidth,
+                                    controller: controller,
+                                    child: content,
+                                  ),
                             ),
-                            const SizedBox(height: AppSpacing.lg),
-                            navigation,
-                          ],
-                        ),
-                ),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          navigation,
+                        ],
+                      ),
               );
             },
           ),

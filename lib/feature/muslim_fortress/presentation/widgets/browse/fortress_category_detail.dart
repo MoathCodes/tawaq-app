@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/centered_viewport_shell.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/context_menu_action.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
@@ -16,6 +17,7 @@ import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.da
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_thikr_body.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
@@ -82,31 +84,32 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
         .read(fortressScreenSettingsProvider.notifier)
         .toggleFavorite(category.chapterId);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        StaticCard(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          borderRadius: theme.radii.lg,
-          backgroundColor: theme.colors.secondary.withAlpha(80),
-          borderColor: theme.colors.border.withAlpha(100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      category.title,
-                      style: theme.typography.body.xl2.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+    return CenteredViewportShell(
+      maxContentWidth: kFortressReadingMaxWidth,
+      header: StaticCard(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        borderRadius: theme.radii.lg,
+        backgroundColor: theme.colors.secondary.withAlpha(80),
+        borderColor: theme.colors.border.withAlpha(100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    category.title,
+                    style: theme.typography.body.xl2.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  MouseClick(
-                    onClick: toggleFavorite,
-                    semanticsLabel: l10n.fortressFavorites,
+                ),
+                MouseClick(
+                  onClick: toggleFavorite,
+                  semanticsLabel: l10n.fortressFavorites,
+                  child: FTooltip(
+                    tipBuilder: (_, _) => Text(l10n.fortressFavorites),
                     child: FortressExcludeDecorative(
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.xs),
@@ -123,51 +126,63 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
                       ),
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                fortressRecurrenceLabel(category.recurrence, l10n),
-                style: theme.typography.body.md.copyWith(
-                  color: theme.colors.mutedForeground,
                 ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              fortressRecurrenceLabel(category.recurrence, l10n),
+              style: theme.typography.body.md.copyWith(
+                color: theme.colors.mutedForeground,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              FBadge(
-                child: Text(l10n.fortressSupplicationsInSection(duas.length)),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
-                children: [
-                  FButton(
-                    onPress: controller.startFocusReading,
-                    prefix: const Icon(FLucideIcons.bookOpen),
-                    child: Text(l10n.fortressStartReading),
-                  ),
-                ],
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            FBadge(
+              child: Text(l10n.fortressSupplicationsInSection(duas.length)),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              children: [
+                FButton(
+                  onPress: controller.startFocusReading,
+                  prefix: const Icon(FLucideIcons.bookOpen),
+                  child: Text(l10n.fortressStartReading),
+                ),
+              ],
+            ),
+          ],
         ),
-        const SizedBox(height: AppSpacing.lg),
-        Expanded(
+      ),
+      body: centeredViewportScrollTab(
+        maxContentWidth: kFortressReadingMaxWidth,
+        child: Padding(
+          padding: const EdgeInsets.only(
+            top: AppSpacing.lg,
+            bottom: AppSpacing.xxl,
+          ),
           child: FSkeletonizer(
             enabled: isLoading,
             child: duas.isEmpty && !isLoading
                 ? Center(
-                    child: Text(
-                      context.l10n.noResultsFound,
-                      style: theme.typography.body.md.copyWith(
-                        color: theme.colors.mutedForeground,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.xxl,
+                      ),
+                      child: Text(
+                        context.l10n.noResultsFound,
+                        style: theme.typography.body.md.copyWith(
+                          color: theme.colors.mutedForeground,
+                        ),
                       ),
                     ),
                   )
-                : ListView.separated(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
-                    itemCount: isLoading ? 4 : duas.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: AppSpacing.md),
-                    itemBuilder: (context, index) {
+                : FTileGroup.builder(
+                    divider: FItemDivider.full,
+                    count: isLoading ? 4 : duas.length,
+                    tileBuilder: (context, index) {
+                      if (index >= (isLoading ? 4 : duas.length)) {
+                        return null;
+                      }
                       if (isLoading) {
                         return FortressDuaPreviewPlaceholder(index: index);
                       }
@@ -226,7 +241,7 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
                   ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -249,104 +264,126 @@ class FortressDuaPreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = context.l10n;
+    final colors = theme.colors;
+    final hasInsights = dua.hasVirtue || dua.hasStudyContent;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        borderRadius: theme.radii.md,
-        border: Border.all(
-          color: isExpanded
-              ? theme.colors.primary.withAlpha(80)
-              : theme.colors.border,
-        ),
-        color: isExpanded
-            ? theme.colors.primary.withAlpha(10)
-            : Colors.transparent,
+    return Semantics(
+      label: FortressA11y.previewRowLabel(
+        l10n,
+        oneBasedIndex: index + 1,
+        isExpanded: isExpanded,
+        targetCount: dua.targetCount,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          MouseClick(
-            onClick: onToggleExpanded,
-            semanticsLabel: FortressA11y.previewRowLabel(
-              l10n,
-              oneBasedIndex: index + 1,
-              isExpanded: isExpanded,
-              targetCount: dua.targetCount,
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${index + 1}.',
-                  style: theme.typography.body.sm.copyWith(
-                    color: theme.colors.mutedForeground,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: FortressExcludeDecorative(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        FortressThikrPreview(
-                          dua: dua,
-                          isExpanded: isExpanded,
-                        ),
-                        if (!isExpanded && dua.hasSharh) ...[
-                          const SizedBox(height: AppSpacing.sm),
-                          FBadge(
-                            variant: .secondary,
-                            child: Text(l10n.fortressSharh),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                FortressExcludeDecorative(
-                  child: Column(
-                    children: [
-                      Text(
-                        '×${dua.targetCount}',
-                        style: theme.typography.body.xs.copyWith(
-                          color: theme.colors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Icon(
-                        isExpanded
-                            ? FLucideIcons.chevronUp
-                            : FLucideIcons.chevronDown,
-                        size: 16,
-                        color: theme.colors.mutedForeground,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+      button: !isExpanded,
+      child: FTile(
+        prefix: Text(
+          '${index + 1}.',
+          style: theme.typography.body.sm.copyWith(
+            color: colors.mutedForeground,
+            fontWeight: FontWeight.w600,
           ),
-          if (isExpanded) ...[
-            const SizedBox(height: AppSpacing.lg),
-            if (dua.hasVirtue) ...[
-              FortressDuaVirtueLine(virtue: dua.virtue!),
-              const SizedBox(height: AppSpacing.md),
+        ),
+        title: FortressExcludeDecorative(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FortressThikrPreview(dua: dua, isExpanded: isExpanded),
+              if (isExpanded && dua.hasVirtue) ...[
+                const SizedBox(height: AppSpacing.md),
+                FortressDuaVirtueLine(virtue: dua.virtue!),
+              ],
+              if (isExpanded && dua.hasStudyContent) ...[
+                const SizedBox(height: AppSpacing.lg),
+                FortressDuaStudyContent(dua: dua, compact: true),
+              ],
             ],
-            LayoutBuilder(
-              builder: (context, constraints) => FortressDuaStudyAccess(
-                dua: dua,
-                useSheet: constraints.maxWidth < 480,
-              ),
-            ),
-          ],
-        ],
+          ),
+        ),
+        subtitle: !isExpanded && hasInsights
+            ? FortressExcludeDecorative(
+                child: Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    if (dua.hasSharh)
+                      FBadge(
+                        variant: .secondary,
+                        child: Text(l10n.fortressSharh),
+                      ),
+                    if (dua.hasVirtue)
+                      FBadge(
+                        variant: .secondary,
+                        child: Text(l10n.fortressVirtue),
+                      ),
+                  ],
+                ),
+              )
+            : null,
+        suffix: FortressExcludeDecorative(
+          child: isExpanded
+              ? MouseClick(
+                  onClick: onToggleExpanded,
+                  semanticsLabel: FortressA11y.previewRowLabel(
+                    l10n,
+                    oneBasedIndex: index + 1,
+                    isExpanded: isExpanded,
+                    targetCount: dua.targetCount,
+                  ),
+                  child: _FortressDuaPreviewSuffix(
+                    targetCount: dua.targetCount,
+                    isExpanded: isExpanded,
+                    colors: colors,
+                    typography: theme.typography,
+                  ),
+                )
+              : _FortressDuaPreviewSuffix(
+                  targetCount: dua.targetCount,
+                  isExpanded: isExpanded,
+                  colors: colors,
+                  typography: theme.typography,
+                ),
+        ),
+        selected: isExpanded,
+        // Nested controls (e.g. FTabs) are not FTappableGroup entries; disable
+        // tile press while expanded so tab taps do not collapse the row.
+        onPress: isExpanded ? null : onToggleExpanded,
       ),
+    );
+  }
+}
+
+class _FortressDuaPreviewSuffix extends StatelessWidget {
+  const _FortressDuaPreviewSuffix({
+    required this.targetCount,
+    required this.isExpanded,
+    required this.colors,
+    required this.typography,
+  });
+
+  final int targetCount;
+  final bool isExpanded;
+  final FColors colors;
+  final FTypography typography;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '×$targetCount',
+          style: typography.body.xs.copyWith(
+            color: colors.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Icon(
+          isExpanded ? FLucideIcons.chevronUp : FLucideIcons.chevronDown,
+          size: 16,
+          color: colors.mutedForeground,
+        ),
+      ],
     );
   }
 }
@@ -360,42 +397,28 @@ class FortressDuaPreviewPlaceholder extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        borderRadius: theme.radii.md,
-        border: Border.all(color: theme.colors.border),
+    return FTile(
+      prefix: Text(
+        '${index + 1}.',
+        style: theme.typography.body.sm.copyWith(
+          color: theme.colors.mutedForeground,
+          fontWeight: FontWeight.w600,
+        ),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${index + 1}.',
-            style: theme.typography.body.sm.copyWith(
-              color: theme.colors.mutedForeground,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Container(
-              height: 14,
-              decoration: BoxDecoration(
-                color: theme.colors.muted,
-                borderRadius: theme.radii.sm,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Container(
-            width: 28,
-            height: 14,
-            decoration: BoxDecoration(
-              color: theme.colors.muted,
-              borderRadius: theme.radii.sm,
-            ),
-          ),
-        ],
+      title: Container(
+        height: 14,
+        decoration: BoxDecoration(
+          color: theme.colors.muted,
+          borderRadius: theme.radii.sm,
+        ),
+      ),
+      suffix: Container(
+        width: 28,
+        height: 14,
+        decoration: BoxDecoration(
+          color: theme.colors.muted,
+          borderRadius: theme.radii.sm,
+        ),
       ),
     );
   }

@@ -1991,6 +1991,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranRecitationModeContinue => 'المتابعة للسورة التالية';
 
   @override
+  String get quranRangeModeLabel => 'نهاية التشغيل';
+
+  @override
   String quranSurahLabel(String surah) {
     return 'سورة $surah';
   }
@@ -2003,6 +2006,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quranRecitationSwitchReciter => 'تبديل القارئ';
+
+  @override
+  String get quranRecitationCancel => 'إلغاء';
+
+  @override
+  String get quranRecitationApply => 'تطبيق';
 
   @override
   String get quranRecitationRangeRepeat => 'المدى والتكرار';
@@ -2040,10 +2049,18 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get quranRecitationAutoScroll => 'تمرير تلقائي';
+  String get quranRecitationAutoScroll => 'متابعة التلاوة';
+
+  @override
+  String get quranRecitationAutoScrollDesc =>
+      'يُحرّك صفحة المصحف تلقائيًا لتتبّع موضع التلاوة.';
 
   @override
   String get quranRecitationHighlight => 'تظليل الآية';
+
+  @override
+  String get quranRecitationHighlightDesc =>
+      'يُظلّل الآية الجاري تشغيلها في المصحف.';
 
   @override
   String get quranRecitationOfflineFiles => 'الملفات دون اتصال';
@@ -2099,6 +2116,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranReciterStyleMujawwad => 'مجوّد';
 
   @override
+  String quranReciterRiwayahUpgraded(String riwayah) {
+    return 'هذه الرواية لا تدعم تتبع الآيات. تم التبديل إلى $riwayah.';
+  }
+
+  @override
   String get quranNoMatchingReciters => 'لا يوجد قراء مطابقون';
 
   @override
@@ -2118,6 +2140,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quranRangePresetHizb => 'هذا الحزب';
+
+  @override
+  String get quranRangePresetContinueFromHere => 'استمر من هنا';
 
   @override
   String get quranRangePresetCustom => 'مخصص';
@@ -2182,4 +2207,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String quranRangeRepeatChip(int count) {
     return '×$count';
   }
+
+  @override
+  String get quranRangeSave => 'حفظ المدى';
 }

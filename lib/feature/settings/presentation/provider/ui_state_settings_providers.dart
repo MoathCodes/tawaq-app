@@ -11,6 +11,7 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_mode.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
@@ -58,7 +59,8 @@ class SidebarSettingsNotifier extends _$SidebarSettingsNotifier {
 /// Persisted prayer analytics period selection.
 @riverpod
 @JsonPersist()
-class PrayerAnalyticsSettingsNotifier extends _$PrayerAnalyticsSettingsNotifier {
+class PrayerAnalyticsSettingsNotifier
+    extends _$PrayerAnalyticsSettingsNotifier {
   @override
   Future<PrayerAnalyticsPrefs> build() async {
     await ref.watch(stateSettingsLegacyMigrationProvider.future);
@@ -233,6 +235,32 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
     (s) => s.copyWith(repeatCount: count.clamp(1, 99)),
     'Repeat count',
   );
+
+  /// Persists the current playback state (surah/range) for session restore.
+  void setPlaybackState({
+    int? surah,
+    int? rangeStart,
+    int? rangeEnd,
+    int? rangeFromSurah,
+    int? rangeFromAyah,
+    int? rangeToSurah,
+    int? rangeToAyah,
+  }) => _update(
+    (s) => s.copyWith(
+      lastSurah: surah,
+      lastRangeStart: rangeStart,
+      lastRangeEnd: rangeEnd,
+      lastRangeFromSurah: rangeFromSurah,
+      lastRangeFromAyah: rangeFromAyah,
+      lastRangeToSurah: rangeToSurah,
+      lastRangeToAyah: rangeToAyah,
+    ),
+    'Playback state',
+  );
+
+  /// Persists the last range scope preset selected in the dialog.
+  void setLastRangePreset(RangeScopePreset? preset) =>
+      _update((s) => s.copyWith(lastRangePreset: preset), 'Range preset');
 }
 
 /// Persisted Hadith screen UI state.

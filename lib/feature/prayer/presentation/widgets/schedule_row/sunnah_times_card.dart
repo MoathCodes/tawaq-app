@@ -107,7 +107,7 @@ class SunnahTimesCard extends ConsumerWidget {
                     final useColumns = isContainerAtLeast(
                       context,
                       constraints,
-                      FBreakpoint.lg,
+                      FBreakpoint.sm,
                     );
 
                     if (useColumns) {

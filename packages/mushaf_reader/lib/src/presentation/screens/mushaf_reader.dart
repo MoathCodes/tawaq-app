@@ -131,6 +131,22 @@ class _MushafReaderState extends State<MushafReader> {
 
   bool get _isTwoPage => widget.pagesPerViewport == 2;
 
+  /// Keeps only the visible page(s) and immediate neighbors alive in the
+  /// [PageView] (current ±1) so scroll-back stays smooth without retaining
+  /// every visited page for the session.
+  bool _isPageInKeepAliveWindow(int page) {
+    final anchor = _controller.currentPage;
+    if (_isTwoPage) {
+      final maxVisible = (anchor + 1).clamp(1, MushafConstants.pageCount);
+      return page >= anchor - 1 && page <= maxVisible + 1;
+    }
+    return (page - anchor).abs() <= 1;
+  }
+
+  void _onControllerPageChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
@@ -172,6 +188,7 @@ class _MushafReaderState extends State<MushafReader> {
 
   @override
   void dispose() {
+    _controller.page.removeListener(_onControllerPageChanged);
     if (_ownsController) {
       _controller.dispose();
     }
@@ -192,6 +209,7 @@ class _MushafReaderState extends State<MushafReader> {
       );
       _ownsController = true;
     }
+    _controller.page.addListener(_onControllerPageChanged);
     _initController();
   }
 
@@ -201,6 +219,7 @@ class _MushafReaderState extends State<MushafReader> {
         key: ValueKey(page),
         page: page,
         controller: _controller,
+        keepAlive: _isPageInKeepAliveWindow(page),
         style: widget.style,
         loadingWidget: widget.pageLoadingWidget,
         hideHeader: widget.hideHeader,
@@ -233,27 +252,29 @@ class _MushafReaderState extends State<MushafReader> {
   Future<void> _handleAyahLongPress(int ayahId) async {
     if (widget.onAyahLongPress == null) return;
     final ayah = await _controller.getAyah(ayahId);
+    if (!mounted) return;
     widget.onAyahLongPress!(ayah);
   }
 
   Future<void> _handleAyahTap(int ayahId) async {
     if (widget.onAyahTap == null) return;
     final ayah = await _controller.getAyah(ayahId);
+    if (!mounted) return;
     widget.onAyahTap!(ayah);
   }
 
   Future<void> _initController() async {
     await _controller.ensureReady();
-    if (mounted) {
-      setState(() {
-        _isInitialized = true;
-      });
-      await _controller.loadCurrentPageInfo();
-    }
+    if (!mounted) return;
+    setState(() {
+      _isInitialized = true;
+    });
+    await _controller.loadCurrentPageInfo();
   }
 
   void _onPageChanged(int index) {
     _controller.onPageChanged(index);
+    if (mounted) setState(() {});
 
     if (_isTwoPage) {
       final pages = _controller.currentPages;
@@ -261,6 +282,7 @@ class _MushafReaderState extends State<MushafReader> {
 
       if (widget.onSpreadChanged != null) {
         _controller.getTwoPagesInfo(pages.$1).then((info) {
+          if (!mounted) return;
           widget.onSpreadChanged?.call(info);
         });
       }
@@ -270,6 +292,7 @@ class _MushafReaderState extends State<MushafReader> {
 
       if (widget.onPageChanged != null) {
         _controller.getPageInfo(page).then((info) {
+          if (!mounted) return;
           widget.onPageChanged?.call(info);
         });
       }

@@ -36,7 +36,7 @@ class PrayerScheduleList extends ConsumerWidget {
     final selectedKey = calendarDayKeyFromDate(selectedDate);
 
     final scheduleRows = ref.watch(
-      prayerScheduleProvider(l10n, selectedDate),
+      prayerScheduleProvider(selectedDate),
     );
 
     final isToday = todayKey != 0 && selectedKey == todayKey;

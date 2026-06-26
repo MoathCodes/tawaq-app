@@ -218,6 +218,7 @@ Sealed catalog: `AppShortcut.all` → `ShellShortcutScope` (global `invokeGlobal
 - `**MergedActionSemantics**` — single semantics node for icon-only shell controls (chrome only, not page body)
 - `**ShellA11y**` — localized labels for shell nav, window controls, theme toggle
 - Feature mirrors (6 modules): `shell_a11y.dart`, `prayer_semantics.dart`, `quran_semantics.dart`, `hadith_accessibility.dart` (not `hadith_semantics.dart`), `fortress_a11y.dart`, `settings_semantics.dart`
+- **Tooltip rule:** any size-constrained widget (no room for a label, or the label alone can't fully explain the widget — e.g. an icon-only button) **must** be wrapped in `FTooltip` with a descriptive tooltip string. This applies even when a short label is present if that label alone is ambiguous without context.
 
 ## Core infrastructure
 

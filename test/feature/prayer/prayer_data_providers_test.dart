@@ -10,8 +10,8 @@ import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
+import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 

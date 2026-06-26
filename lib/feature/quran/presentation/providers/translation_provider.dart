@@ -12,6 +12,8 @@ import 'package:tawaq/feature/settings/presentation/provider/settings_provider.d
 part 'translation_provider.g.dart';
 
 /// Provides the [TranslationRepository] instance.
+///
+/// Intentionally keepAlive: SQLite-backed infrastructure singleton.
 @Riverpod(keepAlive: true)
 TranslationRepository translationRepository(Ref ref) {
   final dbService = ref.read(assetDatabaseServiceProvider);
@@ -19,6 +21,9 @@ TranslationRepository translationRepository(Ref ref) {
 }
 
 /// Provides the [TranslationService] instance.
+///
+/// Intentionally keepAlive: thin service wrapper over
+/// [translationRepositoryProvider].
 @Riverpod(keepAlive: true)
 TranslationService translationService(Ref ref) {
   final repository = ref.read(translationRepositoryProvider);
@@ -26,12 +31,17 @@ TranslationService translationService(Ref ref) {
 }
 
 /// In-memory LRU for recently fetched translation database rows.
+///
+/// Intentionally keepAlive: bounded session cache. Auto-dispose
+/// [ayahTranslationRowProvider] families consult this layer.
 @Riverpod(keepAlive: true)
 LruAyahCache<Translation> ayahTranslationRowLru(Ref ref) =>
     LruAyahCache<Translation>();
 
 /// Raw translation row for a specific ayah and source, with LRU row caching.
-@Riverpod(keepAlive: true)
+///
+/// Auto-dispose family: disposes when no widget listens to this ayah/source.
+@riverpod
 Future<Translation?> ayahTranslationRow(
   Ref ref,
   TranslationId source,

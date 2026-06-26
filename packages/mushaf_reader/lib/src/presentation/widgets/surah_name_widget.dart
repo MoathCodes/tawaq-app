@@ -133,7 +133,7 @@ class _SurahNameWidgetState extends State<SurahNameWidget> {
   }
 
   void _loadFuture() {
-    _future = (widget.repository ?? HiveQuranRepository()).getSurah(
+    _future = (widget.repository ?? HiveQuranRepository.instance).getSurah(
       widget._surahNumber!,
     );
   }

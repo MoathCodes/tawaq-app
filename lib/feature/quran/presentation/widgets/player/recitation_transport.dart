@@ -1,9 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/audio/audio_player_provider.dart';
-import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_equalizer.dart';
@@ -35,37 +36,38 @@ class _TransportPill extends ConsumerWidget {
     final colors = theme.colors;
     final l10n = context.l10n;
 
-    final playbackState = ref.watch(audioPlayerControllerProvider);
+    final playback = ref.watch(recitationControllerProvider);
     final drawerOpen = ref.watch(recitationDrawerProvider);
-
-    final isPlaying = playbackState is PlaybackPlaying;
-    final isLoading = playbackState is PlaybackLoading;
-
-    final surah = ref.watch(
-      recitationControllerProvider.select((playback) => playback.surah),
-    );
-    final currentAyah = ref.watch(
-      recitationControllerProvider.select((playback) => playback.currentAyah),
-    );
-    final playbackReciter = ref.watch(
-      recitationControllerProvider.select((playback) => playback.reciter),
-    );
     final controller = ref.read(recitationControllerProvider.notifier);
     final mushaf = ref.read(quranMushafControllerProvider);
+
+    final isPlaying = playback.isPlaying;
+    final isLoading = playback.isLoading || playback.downloading;
+    final hasPending = playback.hasPendingReciter;
+    final showMetadata = playback.active;
+
+    final surah = playback.surah;
     final surahName = surah == null
         ? ''
         : mushaf.getSurahSync(surah)?.displayName ??
               l10n.quranSurahLabel('$surah');
     final selectedReciter = ref.watch(selectedReciterProvider).value;
+    final currentReciterName =
+        playback.reciter?.name ?? selectedReciter?.name ?? '';
+    final reciterName = hasPending
+        ? '${currentReciterName.isNotEmpty ? '$currentReciterName → ' : ''}'
+              '${playback.pendingReciter!.name}'
+        : currentReciterName;
+
     final titleStyle = theme.typography.body.sm.copyWith(
       color: colors.foreground,
       fontWeight: FontWeight.w600,
       height: 1.2,
     );
-    final titleWidget = currentAyah != null
+    final titleWidget = playback.currentAyah != null
         ? SurahNameWithSuffix(
             surahName: surahName,
-            suffix: ' · $currentAyah',
+            suffix: ' · ${playback.currentAyah}',
             style: titleStyle,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -76,9 +78,6 @@ class _TransportPill extends ConsumerWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           );
-    final reciterName =
-        playbackReciter?.name ?? selectedReciter?.name ?? '';
-    final isIdle = surah == null && playbackState is PlaybackIdle;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -88,99 +87,41 @@ class _TransportPill extends ConsumerWidget {
         final showSubtitle =
             reciterName.isNotEmpty &&
             maxWidth >= _kTransportSubtitleMinWidth &&
-            !isIdle;
+            (showMetadata || hasPending);
 
         return ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth),
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            padding: const EdgeInsets.fromLTRB(6, 5, 8, 5),
-            decoration: BoxDecoration(
-              color: colors.secondary,
-              border: Border.all(color: colors.border),
-              borderRadius: context.theme.radii.lg,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _RoundPlayButton(
-                  isPlaying: isPlaying,
-                  isLoading: isLoading,
-                  onPressed: controller.togglePlayPause,
-                ),
-                if (!isIdle) ...[
-                  const SizedBox(width: AppSpacing.md),
-                  Flexible(
-                    child: FTappable(
-                      semanticsLabel: drawerOpen
-                          ? l10n.quranRecitationClosePlayer
-                          : l10n.quranRecitationOpenPlayer,
-                      onPress:
-                          ref.read(recitationDrawerProvider.notifier).toggle,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                titleWidget,
-                                if (showSubtitle)
-                                  Text(
-                                    reciterName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.typography.body.xs.copyWith(
-                                      color: colors.mutedForeground,
-                                      height: 1.2,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          if (isPlaying) ...[
-                            const SizedBox(width: AppSpacing.md),
-                            RecitationEqualizer(
-                              color: colors.primary,
-                              animating: !drawerOpen,
-                            ),
-                          ],
-                          const SizedBox(width: AppSpacing.sm),
-                          Container(
-                            width: 1,
-                            height: 24,
-                            color: colors.border,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Icon(
-                            drawerOpen
-                                ? FLucideIcons.chevronUp
-                                : FLucideIcons.chevronDown,
-                            size: 17,
-                            color: colors.mutedForeground,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ] else ...[
-                  const SizedBox(width: AppSpacing.sm),
-                  FTappable(
-                    semanticsLabel: drawerOpen
-                        ? l10n.quranRecitationClosePlayer
-                        : l10n.quranRecitationOpenPlayer,
-                    onPress: ref.read(recitationDrawerProvider.notifier).toggle,
-                    child: Icon(
-                      drawerOpen
-                          ? FLucideIcons.chevronUp
-                          : FLucideIcons.chevronDown,
-                      size: 17,
-                      color: colors.mutedForeground,
-                    ),
-                  ),
-                ],
-              ],
+          child: IntrinsicWidth(
+            child: FTile(
+              style: _compactTileStyle(theme),
+              semanticsLabel: drawerOpen
+                  ? l10n.quranRecitationClosePlayer
+                  : l10n.quranRecitationOpenPlayer,
+              prefix: _TransportControls(
+                isPlaying: isPlaying,
+                isLoading: isLoading,
+                isPending: hasPending,
+                canSkip: showMetadata,
+                onPlayPause: controller.togglePlayPause,
+                onSkipPrevious: controller.skipPrevious,
+                onSkipNext: controller.skipNext,
+                onCancelPending: controller.cancelPendingReciter,
+              ),
+              title: showMetadata || surahName.isNotEmpty
+                  ? titleWidget
+                  : const SizedBox.shrink(),
+              subtitle: showSubtitle
+                  ? Text(
+                      reciterName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : null,
+              suffix: _TransportSuffix(
+                isPlaying: isPlaying,
+                drawerOpen: drawerOpen,
+              ),
+              onPress: ref.read(recitationDrawerProvider.notifier).toggle,
             ),
           ),
         );
@@ -189,15 +130,114 @@ class _TransportPill extends ConsumerWidget {
   }
 }
 
+/// Play, skip and cancel controls shown at the start of the transport pill.
+class _TransportControls extends StatelessWidget {
+  const _TransportControls({
+    required this.isPlaying,
+    required this.isLoading,
+    required this.isPending,
+    required this.canSkip,
+    required this.onPlayPause,
+    required this.onSkipPrevious,
+    required this.onSkipNext,
+    required this.onCancelPending,
+  });
+
+  final bool isPlaying;
+  final bool isLoading;
+  final bool isPending;
+  final bool canSkip;
+  final Future<void> Function() onPlayPause;
+  final Future<void> Function() onSkipPrevious;
+  final Future<void> Function() onSkipNext;
+  final VoidCallback onCancelPending;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (canSkip) ...[
+          _TransportIcon(
+            icon: FLucideIcons.skipBack,
+            tooltip: l10n.quranRecitationPrevious,
+            onPress: onSkipPrevious,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+        ],
+        _RoundPlayButton(
+          isPlaying: isPlaying,
+          isLoading: isLoading,
+          isPending: isPending,
+          onPressed: onPlayPause,
+        ),
+        if (isPending) ...[
+          const SizedBox(width: AppSpacing.xs),
+          _TransportIcon(
+            icon: FLucideIcons.x,
+            tooltip: l10n.quranRecitationCancel,
+            onPress: onCancelPending,
+          ),
+        ],
+        if (canSkip) ...[
+          const SizedBox(width: AppSpacing.xs),
+          _TransportIcon(
+            icon: FLucideIcons.skipForward,
+            tooltip: l10n.quranRecitationNext,
+            onPress: onSkipNext,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Chevron and equalizer shown at the end of the transport pill.
+class _TransportSuffix extends StatelessWidget {
+  const _TransportSuffix({
+    required this.isPlaying,
+    required this.drawerOpen,
+  });
+
+  final bool isPlaying;
+  final bool drawerOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (isPlaying) ...[
+          RecitationEqualizer(
+            color: colors.primary,
+            animating: !drawerOpen,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+        ],
+        Icon(
+          drawerOpen ? FLucideIcons.chevronUp : FLucideIcons.chevronDown,
+          size: 17,
+          color: colors.mutedForeground,
+        ),
+      ],
+    );
+  }
+}
+
 class _RoundPlayButton extends StatelessWidget {
   const _RoundPlayButton({
     required this.isPlaying,
     required this.isLoading,
+    required this.isPending,
     required this.onPressed,
   });
 
   final bool isPlaying;
   final bool isLoading;
+  final bool isPending;
   final Future<void> Function() onPressed;
 
   @override
@@ -212,7 +252,7 @@ class _RoundPlayButton extends StatelessWidget {
         ),
       );
     }
-    return FTappable(
+    final button = FTappable(
       onPress: onPressed,
       child: Container(
         width: 36,
@@ -223,11 +263,63 @@ class _RoundPlayButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: Icon(
-          isPlaying ? FLucideIcons.pause : FLucideIcons.play,
+          isPending
+              ? FLucideIcons.check
+              : isPlaying
+              ? FLucideIcons.pause
+              : FLucideIcons.play,
           size: 18,
           color: colors.primaryForeground,
         ),
       ),
     );
+    if (isPending) {
+      return FTooltip(
+        tipBuilder: (_, _) => Text(context.l10n.quranRecitationApply),
+        child: button,
+      );
+    }
+    return button;
   }
+}
+
+class _TransportIcon extends StatelessWidget {
+  const _TransportIcon({
+    required this.icon,
+    required this.onPress,
+    required this.tooltip,
+  });
+
+  final IconData icon;
+  final VoidCallback onPress;
+  final String tooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    return FTooltip(
+      tipBuilder: (_, _) => Text(tooltip),
+      child: MouseClick(
+        onClick: onPress,
+        child: Icon(icon, size: 18, color: colors.secondaryForeground),
+      ),
+    );
+  }
+}
+
+/// A compact [FTileStyle] suitable for the constrained title bar pill.
+FTileStyle _compactTileStyle(FThemeData theme) {
+  final base = theme.tileStyles.primary;
+  return base.copyWith(
+    contentStyle: (base.contentStyle as FTileContentStyle).copyWith(
+      suffixedPadding: const EdgeInsetsGeometryDelta.value(
+        EdgeInsets.fromLTRB(6, 4, 8, 4),
+      ),
+      unsuffixedPadding: const EdgeInsetsGeometryDelta.value(
+        EdgeInsets.fromLTRB(6, 4, 8, 4),
+      ),
+      prefixIconSpacing: 6,
+      suffixIconSpacing: 4,
+    ),
+  );
 }

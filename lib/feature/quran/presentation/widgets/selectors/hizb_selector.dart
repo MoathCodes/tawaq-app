@@ -6,66 +6,28 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
-import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_search.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_ordinals.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_select_item.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_inline_select_prefix.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/theme/theme_model.dart';
 
-String _hizbStartAyahSubtitle({
-  required Hizb hizb,
-  required MushafReaderController controller,
-  required bool isArabic,
-  required AppLocalizations l10n,
-  required String fallbackSurahName,
-}) {
-  final surahNumber = hizb.startSurahNumber;
-  final ayahInSurah = hizb.startAyahInSurah;
-  if (surahNumber == null || ayahInSurah == null) return '';
-
-  final surah = controller.getSurahSync(surahNumber);
-  final surahName = AyahReferenceLogic.surahName(
-    surah,
-    surahNumber,
-    preferArabic: isArabic,
-    fallbackName: fallbackSurahName,
-  );
-  return l10n.surahAyahInfo(surahName, ayahInSurah);
-}
-
-Widget _hizbStartAyahSubtitleWidget({
-  required Hizb hizb,
-  required MushafReaderController controller,
-  required bool isArabic,
-  required AppLocalizations l10n,
-  required String fallbackSurahName,
-  required TextStyle style,
-}) {
-  final reference = _hizbStartAyahSubtitle(
-    hizb: hizb,
-    controller: controller,
-    isArabic: isArabic,
-    l10n: l10n,
-    fallbackSurahName: fallbackSurahName,
-  );
-  if (reference.isEmpty) return const SizedBox.shrink();
-
-  if (isArabic) {
-    return AyahReferenceText(reference, style: style);
-  }
-  return Text(reference, style: style);
-}
-
-/// Hizb selector with rich tiles (hizb label + starting ayah reference).
+/// Hizb selector with rich tiles (hizb label + starting ayah Uthmani preview).
 class HizbSelector extends HookConsumerWidget {
   /// Creates a [HizbSelector] instance.
-  const HizbSelector({this.showLabel = true, super.key});
+  const HizbSelector({this.showLabel = true, this.inlineLabel = false, super.key});
 
   /// Whether the field label is shown above the select.
   final bool showLabel;
+
+  /// Shows a muted in-field label prefix (for the Quran header rail).
+  final bool inlineLabel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -107,13 +69,18 @@ class HizbSelector extends HookConsumerWidget {
           child: QuranSemantics.labeledControl(
             name: hizbFieldName,
             value: selectedHizb != null
-                ? l10n.hizbLabel(selectedHizb.number)
+                ? localizedHizbTitle(selectedHizb.number, isArabic: isArabic)
                 : null,
             enabled: selectorReady,
             excludeChild: true,
             child: FSelect<Hizb>.searchBuilder(
               enabled: selectorReady,
-              label: showLabel ? Text(hizbFieldName) : const SizedBox.shrink(),
+              label: showLabel && !inlineLabel
+                  ? Text(hizbFieldName)
+                  : const SizedBox.shrink(),
+              prefixBuilder: inlineLabel
+                  ? quranInlineSelectPrefixBuilder(hizbFieldName)
+                  : null,
               contentConstraints: selectPopoverPortalConstraints(context),
               style: selectStyle(
                 colors: theme.colors,
@@ -129,7 +96,7 @@ class HizbSelector extends HookConsumerWidget {
                   }
                 },
               ),
-              format: (v) => l10n.hizbLabel(v.number),
+              format: (v) => localizedHizbTitle(v.number, isArabic: isArabic),
               filter: (q) => searchHizbs(
                 hizbs: allHizbs.data ?? const [],
                 controller: controller,
@@ -140,18 +107,18 @@ class HizbSelector extends HookConsumerWidget {
                   .map(
                     (v) => FSelectItem<Hizb>(
                       value: v,
-                      title: Text(l10n.hizbLabel(v.number)),
-                      subtitle: _hizbStartAyahSubtitleWidget(
-                        hizb: v,
+                      title: QuranDivisionSelectItem.title(
+                        context: context,
+                        kind: QuranDivisionKind.hizb,
+                        number: v.number,
+                      ),
+                      subtitle: QuranDivisionSelectItem.subtitle(
+                        context: context,
+                        kind: QuranDivisionKind.hizb,
                         controller: controller,
-                        isArabic: isArabic,
-                        l10n: l10n,
-                        fallbackSurahName: l10n.surahNameDefault(
-                          v.startSurahNumber ?? 1,
-                        ),
-                        style: theme.typography.body.sm.copyWith(
-                          color: theme.colors.mutedForeground,
-                        ),
+                        startSurahNumber: v.startSurahNumber,
+                        startAyahInSurah: v.startAyahInSurah,
+                        startAyahUthmaniText: v.startAyahUthmaniText,
                       ),
                     ),
                   )
@@ -164,18 +131,37 @@ class HizbSelector extends HookConsumerWidget {
   }
 }
 
-/// Visible for testing: builds the hizb tile subtitle from denormalized fields.
-String hizbSelectorStartAyahSubtitleForTest({
+/// Visible for testing: builds the hizb tile subtitle widget.
+Widget hizbSelectorStartAyahSubtitleForTest({
   required Hizb hizb,
   required MushafReaderController controller,
   required bool isArabic,
   required AppLocalizations l10n,
   required String fallbackSurahName,
-}) =>
-    _hizbStartAyahSubtitle(
-      hizb: hizb,
-      controller: controller,
-      isArabic: isArabic,
-      l10n: l10n,
-      fallbackSurahName: fallbackSurahName,
-    );
+}) {
+  final appTheme = buildAppTheme(
+    palette: AppPalette.zinc,
+    themeMode: ThemeMode.light,
+    touch: false,
+    textScale: 1,
+  );
+
+  return FTheme(
+    data: appTheme,
+    child: MaterialApp(
+      locale: Locale(isArabic ? 'ar' : 'en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Builder(
+        builder: (context) => QuranDivisionSelectItem.subtitle(
+          context: context,
+          kind: QuranDivisionKind.hizb,
+          controller: controller,
+          startSurahNumber: hizb.startSurahNumber,
+          startAyahInSurah: hizb.startAyahInSurah,
+          startAyahUthmaniText: hizb.startAyahUthmaniText,
+        ),
+      ),
+    ),
+  );
+}

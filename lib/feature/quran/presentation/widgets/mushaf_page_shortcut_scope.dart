@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_scope.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 
 /// Page prev/next keyboard shortcuts shared by single- and double-page layouts.

@@ -28,6 +28,8 @@ abstract final class MushafPageSurahBlocks {
     SurahTapCallback? onTapSurahHeader,
     SurahTapCallback? onLongPressSurahHeader,
     bool addTrailingSpacer = true,
+    IQuranRepository? repository,
+    String? basmalahGlyph,
   }) {
     final isRangeMode = selectedAyahIds != null;
     final selectedIds = selectedAyahIds ?? const <int>{};
@@ -79,6 +81,8 @@ abstract final class MushafPageSurahBlocks {
             fontSize: basmalahFontSize,
             textStyle: mushafStyle.basmalahStyle,
             styleModifier: mushafStyle.basmalahStyleModifier,
+            glyph: basmalahGlyph,
+            repository: repository,
           ),
         );
       }

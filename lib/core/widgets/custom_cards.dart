@@ -139,9 +139,7 @@ class StaticCard extends StatelessWidget {
         color: backgroundColor ?? colors.secondary,
         borderRadius: borderRadius ?? theme.radii.xl,
         border: Border.all(
-          color:
-              borderColor ??
-              colors.secondaryForeground.withAlpha(_kBorderOpacity),
+          color: borderColor ?? colors.border,
         ),
       ),
       child: child,

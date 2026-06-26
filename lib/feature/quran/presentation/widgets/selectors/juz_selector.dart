@@ -8,22 +8,33 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_ordinals.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_select_item.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_inline_select_prefix.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Juz selector that only rebuilds when juz number changes.
 class JuzSelector extends HookConsumerWidget {
   /// Creates a [JuzSelector] instance.
-  const JuzSelector({this.showLabel = true, super.key});
+  const JuzSelector({
+    this.showLabel = true,
+    this.inlineLabel = false,
+    super.key,
+  });
 
   /// Whether the field label is shown above the select.
   final bool showLabel;
+
+  /// Shows a muted in-field label prefix (for the Quran header rail).
+  final bool inlineLabel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(quranMushafControllerProvider);
     final theme = context.theme;
     final l10n = context.l10n;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final allJuzs = useFuture(
       useMemoized(controller.getJuzs),
     );
@@ -54,17 +65,29 @@ class JuzSelector extends HookConsumerWidget {
           enabled: allJuzs.connectionState == ConnectionState.waiting,
           child: QuranSemantics.labeledControl(
             name: juzFieldName,
-            value: selectedJuz != null ? l10n.juzLabel(selectedJuz.number) : null,
+            value: selectedJuz != null
+                ? juzClosedLabel(
+                    number: selectedJuz.number,
+                    glyph: selectedJuz.glyph,
+                    isArabic: isArabic,
+                  )
+                : null,
             enabled: selectorReady,
             excludeChild: true,
             child: FSelect<Juz>.searchBuilder(
               enabled: selectorReady,
-              label: showLabel ? Text(juzFieldName) : const SizedBox.shrink(),
+              label: showLabel && !inlineLabel
+                  ? Text(juzFieldName)
+                  : const SizedBox.shrink(),
+              prefixBuilder: inlineLabel
+                  ? quranInlineSelectPrefixBuilder(juzFieldName)
+                  : null,
               contentConstraints: selectPopoverPortalConstraints(context),
               style: selectStyle(
                 colors: theme.colors,
                 style: theme.style,
                 typography: theme.typography,
+                useQuranFont: isArabic,
               ),
               control: FSelectControl.lifted(
                 value: selectedJuz,
@@ -74,10 +97,15 @@ class JuzSelector extends HookConsumerWidget {
                   }
                 },
               ),
-              format: (v) => l10n.juzLabel(v.number),
+              format: (v) => localizedJuzNumericLabel(
+                v.number,
+                isArabic: isArabic,
+              ),
               filter: (q) {
                 return allJuzs.hasData
-                    ? allJuzs.data!.where((e) => e.number.toString().contains(q))
+                    ? allJuzs.data!.where(
+                        (e) => e.number.toString().contains(q),
+                      )
                     : [];
               },
               contentBuilder: (_, _, vals) => vals
@@ -85,26 +113,19 @@ class JuzSelector extends HookConsumerWidget {
                     (v) => FSelectItem<Juz>(
                       value: v,
                       title: QuranSemantics.mergedChip(
-                        child: Row(
-                          children: [
-                            QuranSemantics.decorative(
-                              FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: AlignmentDirectional.centerStart,
-                                child: Text(
-                                  v.glyph,
-                                  style: const TextStyle(
-                                    fontFamily: 'QCF4_BSML',
-                                    package: 'mushaf_reader',
-                                    fontSize: 36,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Text(l10n.juzLabel(v.number)),
-                          ],
+                        child: QuranDivisionSelectItem.title(
+                          context: context,
+                          kind: QuranDivisionKind.juz,
+                          number: v.number,
+                          juzGlyph: v.glyph,
                         ),
+                      ),
+                      subtitle: QuranDivisionSelectItem.subtitle(
+                        context: context,
+                        kind: QuranDivisionKind.juz,
+                        controller: controller,
+                        startSurahNumber: v.startSurahNumber,
+                        startAyahInSurah: v.startAyahInSurah,
                       ),
                     ),
                   )

@@ -92,17 +92,30 @@ class BasmalahWidget extends StatefulWidget {
 
 class _BasmalahWidgetState extends State<BasmalahWidget> {
   Future<String?>? _future;
+  late IQuranRepository _repository;
 
   @override
   void initState() {
     super.initState();
+    _repository = widget.repository ?? HiveQuranRepository.instance;
     if (widget.glyph == null) {
       _loadFuture();
     }
   }
 
+  @override
+  void didUpdateWidget(BasmalahWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.repository != oldWidget.repository) {
+      _repository = widget.repository ?? HiveQuranRepository.instance;
+      if (widget.glyph == null) {
+        _loadFuture();
+      }
+    }
+  }
+
   void _loadFuture() {
-    _future = (widget.repository ?? HiveQuranRepository()).getBasmalah().then(
+    _future = _repository.getBasmalah().then(
       (value) => value,
     ); // getBasmalah returns String, we want String? for FutureBuilder logic consistency
   }
@@ -115,8 +128,7 @@ class _BasmalahWidgetState extends State<BasmalahWidget> {
     }
 
     // Try to get from repository cache
-    final repo = widget.repository ?? HiveQuranRepository();
-    final cachedGlyph = repo.getBasmalahSync();
+    final cachedGlyph = _repository.getBasmalahSync();
     if (cachedGlyph != null && cachedGlyph.isNotEmpty) {
       return _buildText(cachedGlyph);
     }

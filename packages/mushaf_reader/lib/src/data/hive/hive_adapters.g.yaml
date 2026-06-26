@@ -5,7 +5,7 @@ nextTypeId: 385
 types:
   Ayah:
     typeId: 379
-    nextIndex: 12
+    nextIndex: 13
     fields:
       ayahId:
         index: 0
@@ -31,6 +31,8 @@ types:
         index: 10
       pageInSurah:
         index: 11
+      uthmaniText:
+        index: 12
   PageLayouts:
     typeId: 380
     nextIndex: 4
@@ -45,7 +47,7 @@ types:
         index: 3
   Juz:
     typeId: 381
-    nextIndex: 5
+    nextIndex: 7
     fields:
       number:
         index: 0
@@ -57,6 +59,10 @@ types:
         index: 3
       endAyahId:
         index: 4
+      startSurahNumber:
+        index: 5
+      startAyahInSurah:
+        index: 6
   Surah:
     typeId: 382
     nextIndex: 9
@@ -89,7 +95,7 @@ types:
         index: 1
   Hizb:
     typeId: 384
-    nextIndex: 7
+    nextIndex: 8
     fields:
       number:
         index: 0
@@ -105,3 +111,5 @@ types:
         index: 5
       startHizbQuarter:
         index: 6
+      startAyahUthmaniText:
+        index: 7

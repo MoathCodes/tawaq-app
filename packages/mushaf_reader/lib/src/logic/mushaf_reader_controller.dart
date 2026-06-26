@@ -90,7 +90,7 @@ class MushafReaderController implements Listenable {
     IQuranRepository? repository,
   }) : _pageController = pageController,
        _ownsPageController = pageController == null,
-       _repo = repository ?? HiveQuranRepository(),
+       _repo = repository ?? HiveQuranRepository.acquire(),
        _checkLibraryInit = repository == null {
     page.setCurrentPage(
       ((initialPage - 1) ~/ pagesPerViewport) * pagesPerViewport + 1,

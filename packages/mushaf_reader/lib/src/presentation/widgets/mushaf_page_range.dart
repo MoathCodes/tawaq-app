@@ -205,7 +205,7 @@ class _MushafPageRangeState extends State<MushafPageRange> {
   IQuranRepository _resolveRepository() {
     return widget.controller?.repository ??
         widget.repository ??
-        HiveQuranRepository();
+        HiveQuranRepository.instance;
   }
 
   bool _selectionChanged(MushafPageRange oldWidget) {

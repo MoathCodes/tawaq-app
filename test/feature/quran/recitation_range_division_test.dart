@@ -271,6 +271,64 @@ void main() {
       );
       expect(next, (surah: 9, startAyah: 1, endAyah: 92));
     });
+
+    test('open-ended range first segment runs to end of starting surah', () {
+      const from = AyahReference(surah: 8, ayah: 41);
+
+      final first = firstSegmentForRange(
+        from: from,
+        to: null,
+        mushaf: controller,
+      );
+      expect(first, (surah: 8, startAyah: 41, endAyah: 75));
+    });
+
+    test('open-ended range next segment runs to end of next surah', () {
+      const from = AyahReference(surah: 8, ayah: 41);
+
+      final next = nextSegmentForRange(
+        from: from,
+        to: null,
+        currentSurah: 8,
+        mushaf: controller,
+      );
+      expect(next, (surah: 9, startAyah: 1, endAyah: 129));
+    });
+
+    test('open-ended range stops after surah 114', () {
+      const from = AyahReference(surah: 114, ayah: 1);
+
+      final next = nextSegmentForRange(
+        from: from,
+        to: null,
+        currentSurah: 114,
+        mushaf: controller,
+      );
+      expect(next, isNull);
+    });
+
+    test('isGlobalRangeComplete is false until end of Quran for open-ended', () {
+      const from = AyahReference(surah: 8, ayah: 41);
+
+      expect(
+        isGlobalRangeComplete(
+          to: null,
+          surah: 8,
+          endAyah: 75,
+          mushaf: controller,
+        ),
+        isFalse,
+      );
+      expect(
+        isGlobalRangeComplete(
+          to: null,
+          surah: 9,
+          endAyah: 129,
+          mushaf: controller,
+        ),
+        isFalse,
+      );
+    });
   });
 }
 

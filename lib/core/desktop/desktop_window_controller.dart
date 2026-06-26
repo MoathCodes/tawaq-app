@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/desktop/desktop_shutdown.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -87,6 +88,6 @@ class DesktopWindowController {
 
   /// Fully exits the application.
   Future<void> quit() async {
-    await windowManager.destroy();
+    await shutdownDesktop(_ref);
   }
 }

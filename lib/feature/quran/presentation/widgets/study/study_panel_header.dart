@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/quran/domain/use_cases/navigate_study_ayah.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
+import 'package:tawaq/feature/quran/domain/use_cases/navigate_study_ayah.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
@@ -97,7 +97,7 @@ class StudyPanelHeader extends ConsumerWidget {
 
     return Padding(
       padding: EdgeInsetsDirectional.only(
-        start: AppSpacing.lg + (isRtl ? collapseHandleInset : 0),
+        start: AppSpacing.lg + (!isRtl ? collapseHandleInset : 0),
         end: AppSpacing.lg + (isRtl ? 0 : collapseHandleInset),
         top: AppSpacing.lg,
         bottom: AppSpacing.lg,

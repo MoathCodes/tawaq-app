@@ -5,18 +5,19 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/reveal_folder.dart';
+import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
-import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Opens the offline files manager dialog.
 Future<void> showOfflineFilesDialog(BuildContext context) => showFDialog<void>(
   context: context,
-  builder: (context, _, _) => const _OfflineFilesDialog(),
+  useRootNavigator: true,
+  builder: (context, style, animation) => const _OfflineFilesDialog(),
 );
 
 class _OfflineFilesDialog extends ConsumerWidget {

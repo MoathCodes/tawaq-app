@@ -5,15 +5,17 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/core/widgets/numeric_step_button.dart';
 import 'package:tawaq/feature/quran/domain/models/ayah_reference.dart';
+import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_mode.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_pick_intent.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/lifted_surah_ayah_selectors.dart';
-import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_pick_resolver.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -48,7 +50,8 @@ Future<void> showRangeRepeatDialog(
   RangeRepeatInit? initial,
 }) => showFDialog<void>(
   context: context,
-  builder: (context, _, _) => _RangeRepeatDialog(initial: initial),
+  useRootNavigator: true,
+  builder: (context, style, animation) => _RangeRepeatDialog(initial: initial),
 );
 
 class _RangeRepeatDialog extends HookConsumerWidget {
@@ -81,33 +84,45 @@ class _RangeRepeatDialog extends HookConsumerWidget {
         resolvedMoshaf?.hasTiming ?? catalog.any((r) => r.hasTiming);
     final hasSeedContext = initial != null || playback.active;
 
+    final savedPreset = settings?.lastRangePreset;
     final preset = useState(
-      hasSeedContext ? RangeScopePreset.thisAyah : RangeScopePreset.custom,
+      savedPreset ??
+          (hasSeedContext
+              ? RangeScopePreset.thisAyah
+              : RangeScopePreset.custom),
     );
     final fromSurah = useState(
-      playback.rangeFrom?.surah ??
+      settings?.lastRangeFromSurah ??
+          playback.rangeFrom?.surah ??
           initial?.surah ??
           playback.surah ??
           seedSurah,
     );
     final fromAyah = useState(
-      playback.rangeFrom?.ayah ??
+      settings?.lastRangeFromAyah ??
+          playback.rangeFrom?.ayah ??
           initial?.startAyah ??
           playback.rangeStart ??
           playback.currentAyah ??
           seedAyah,
     );
     final toSurah = useState(
-      playback.rangeTo?.surah ?? initial?.surah ?? playback.surah ?? seedSurah,
+      settings?.lastRangeToSurah ??
+          playback.rangeTo?.surah ??
+          initial?.surah ??
+          playback.surah ??
+          seedSurah,
     );
     final toAyah = useState(
-      playback.rangeTo?.ayah ??
+      settings?.lastRangeToAyah ??
+          playback.rangeTo?.ayah ??
           initial?.startAyah ??
           playback.rangeEnd ??
           playback.currentAyah ??
           seedAyah,
     );
     final repeat = useState(settings?.repeatCount ?? 1);
+    final mode = useState(settings?.mode ?? RecitationMode.stopAtEnd);
     final isResolving = useState(false);
     final presetGeneration = useRef(0);
 
@@ -117,11 +132,15 @@ class _RangeRepeatDialog extends HookConsumerWidget {
       _ => hasTiming,
     };
 
+    final isOpenEnded = preset.value == RangeScopePreset.continueFromHere;
+
     String presetLabel(RangeScopePreset p) => switch (p) {
       RangeScopePreset.thisAyah => l10n.quranRangePresetAyah,
       RangeScopePreset.thisSurah => l10n.quranRangePresetSurah,
       RangeScopePreset.thisJuz => l10n.quranRangePresetJuz,
       RangeScopePreset.thisHizb => l10n.quranRangePresetHizb,
+      RangeScopePreset.continueFromHere =>
+        l10n.quranRangePresetContinueFromHere,
       RangeScopePreset.custom => l10n.quranRangePresetCustom,
     };
 
@@ -240,6 +259,11 @@ class _RangeRepeatDialog extends HookConsumerWidget {
           final generation = ++presetGeneration.value;
           isResolving.value = true;
           unawaited(resolveHizbPreset(generation, previousPreset));
+        case RangeScopePreset.continueFromHere:
+          presetGeneration.value++;
+          isResolving.value = false;
+          fromSurah.value = seedSurah;
+          fromAyah.value = seedAyah;
         case RangeScopePreset.custom:
           presetGeneration.value++;
           isResolving.value = false;
@@ -247,16 +271,20 @@ class _RangeRepeatDialog extends HookConsumerWidget {
     }
 
     void syncFromAyah(int ayah) {
+      preset.value = RangeScopePreset.custom;
       fromAyah.value = ayah;
       final from = AyahReference(surah: fromSurah.value, ayah: ayah);
-      final to = AyahReference(surah: toSurah.value, ayah: toAyah.value);
-      if (to.isBefore(from)) {
-        toSurah.value = fromSurah.value;
-        toAyah.value = ayah;
+      if (!isOpenEnded) {
+        final to = AyahReference(surah: toSurah.value, ayah: toAyah.value);
+        if (to.isBefore(from)) {
+          toSurah.value = fromSurah.value;
+          toAyah.value = ayah;
+        }
       }
     }
 
     void syncToAyah(int ayah) {
+      preset.value = RangeScopePreset.custom;
       toAyah.value = ayah;
       final from = AyahReference(surah: fromSurah.value, ayah: fromAyah.value);
       final to = AyahReference(surah: toSurah.value, ayah: ayah);
@@ -267,40 +295,45 @@ class _RangeRepeatDialog extends HookConsumerWidget {
     }
 
     final fromRef = AyahReference(surah: fromSurah.value, ayah: fromAyah.value);
-    final toRef = AyahReference(surah: toSurah.value, ayah: toAyah.value);
+    final toRef = isOpenEnded
+        ? null
+        : AyahReference(surah: toSurah.value, ayah: toAyah.value);
     final rangeSummary = formatAyahRangeLabel(
       mushaf: mushaf,
       l10n: l10n,
       from: fromRef,
       to: toRef,
     );
-    final customEnabled =
-        hasTiming &&
-        preset.value == RangeScopePreset.custom &&
-        !isResolving.value;
     final presetIndex = RangeScopePreset.values.indexOf(preset.value);
 
     return PlayerDialogShell(
       title: l10n.quranRangeTitle,
       subtitle: rangeSummary,
       maxHeight: 720,
+      width: context.theme.breakpoints.sm,
       scrollableBody: true,
       footer: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: FButton(
           onPress: isResolving.value
               ? null
-              : () => _apply(
+              : () => _save(
                   context,
                   ref,
                   from: fromRef,
                   to: toRef,
+                  preset: preset.value,
                   repeat: repeat.value,
+                  mode: mode.value,
                   reciter: reciter,
                   moshaf: resolvedMoshaf,
                 ),
-          prefix: const Icon(FLucideIcons.circlePlay),
-          child: Text(l10n.quranRangePlay),
+          prefix: isResolving.value ? const Icon(FLucideIcons.save) : null,
+          child: isResolving.value
+              ? const FCircularProgress(
+                  size: FCircularProgressSizeVariant.sm,
+                )
+              : Text(l10n.quranRangeSave),
         ),
       ),
       child: Padding(
@@ -339,117 +372,110 @@ class _RangeRepeatDialog extends HookConsumerWidget {
                     onPresetSelected: applyPreset,
                   )
                 else
-                  Row(
+                  FTabs(
+                    control: FTabControl.lifted(
+                      index: presetIndex,
+                      onChange: (index) {
+                        if (isResolving.value) return;
+                        final p = RangeScopePreset.values[index];
+                        if (!presetEnabled(p)) return;
+                        applyPreset(p);
+                      },
+                    ),
+                    style: const .delta(
+                      padding: .value(EdgeInsets.all(2)),
+                      indicatorSize: FTabBarIndicatorSize.tab,
+                    ),
                     children: [
-                      Expanded(
-                        child: FTabs(
-                          control: FTabControl.lifted(
-                            index: presetIndex,
-                            onChange: (index) {
-                              if (isResolving.value) return;
-                              final p = RangeScopePreset.values[index];
-                              if (!presetEnabled(p)) return;
-                              applyPreset(p);
-                            },
+                      for (final p in RangeScopePreset.values)
+                        FTabEntry(
+                          label: Opacity(
+                            opacity: presetEnabled(p) ? 1 : 0.45,
+                            child: Text(presetLabel(p)),
                           ),
-                          style: const .delta(
-                            padding: .value(EdgeInsets.all(2)),
-                            indicatorSize: FTabBarIndicatorSize.tab,
-                          ),
-                          children: [
-                            for (final p in RangeScopePreset.values)
-                              FTabEntry(
-                                label: Opacity(
-                                  opacity: presetEnabled(p) ? 1 : 0.45,
-                                  child: Text(presetLabel(p)),
-                                ),
-                                child: const SizedBox.shrink(),
-                              ),
-                          ],
+                          child: const SizedBox.shrink(),
                         ),
+                    ],
+                  ),
+                const SizedBox(height: AppSpacing.lg),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: colors.secondary,
+                    border: Border.all(
+                      color: preset.value == RangeScopePreset.custom
+                          ? colors.primary.withValues(alpha: 0.5)
+                          : colors.border,
+                    ),
+                    borderRadius: context.theme.radii.lg,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      RangeEndpointRow(
+                        prefix: l10n.quranRangeFromShort,
+                        surah: fromSurah.value,
+                        ayah: fromAyah.value,
+                        surahLabel: l10n.quranRangeFromSurah,
+                        ayahLabel: l10n.quranRangeFromAyah,
+                        onSurahChanged: (s) {
+                          presetGeneration.value++;
+                          isResolving.value = false;
+                          fromSurah.value = s;
+                          final max = mushaf.getSurahSync(s)?.ayahCount ?? 1;
+                          if (fromAyah.value > max) fromAyah.value = max;
+                          syncFromAyah(fromAyah.value);
+                        },
+                        onAyahChanged: syncFromAyah,
                       ),
-                      if (isResolving.value) ...[
-                        const SizedBox(width: AppSpacing.sm),
-                        const FCircularProgress(
-                          size: FCircularProgressSizeVariant.sm,
+                      if (!isOpenEnded) ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.md,
+                          ),
+                          child: Container(
+                            height: 1,
+                            color: colors.border.withValues(alpha: 0.6),
+                          ),
+                        ),
+                        RangeEndpointRow(
+                          prefix: l10n.quranRangeToShort,
+                          surah: toSurah.value,
+                          ayah: toAyah.value,
+                          surahLabel: l10n.quranRangeToSurah,
+                          ayahLabel: l10n.quranRangeToAyah,
+                          onSurahChanged: (s) {
+                            presetGeneration.value++;
+                            isResolving.value = false;
+                            toSurah.value = s;
+                            final max = mushaf.getSurahSync(s)?.ayahCount ?? 1;
+                            if (toAyah.value > max) toAyah.value = max;
+                            syncToAyah(toAyah.value);
+                          },
+                          onAyahChanged: syncToAyah,
                         ),
                       ],
                     ],
                   ),
-                const SizedBox(height: AppSpacing.lg),
-                Opacity(
-                  opacity: customEnabled ? 1 : 0.45,
-                  child: AbsorbPointer(
-                    absorbing: !customEnabled,
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      decoration: BoxDecoration(
-                        color: colors.secondary,
-                        border: Border.all(
-                          color: preset.value == RangeScopePreset.custom
-                              ? colors.primary.withValues(alpha: 0.5)
-                              : colors.border,
-                        ),
-                        borderRadius: context.theme.radii.lg,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          RangeEndpointRow(
-                            prefix: l10n.quranRangeFromShort,
-                            surah: fromSurah.value,
-                            ayah: fromAyah.value,
-                            surahLabel: l10n.quranRangeFromSurah,
-                            ayahLabel: l10n.quranRangeFromAyah,
-                            enabled: customEnabled,
-                            onSurahChanged: (s) {
-                              presetGeneration.value++;
-                              isResolving.value = false;
-                              fromSurah.value = s;
-                              final max =
-                                  mushaf.getSurahSync(s)?.ayahCount ?? 1;
-                              if (fromAyah.value > max) fromAyah.value = max;
-                              syncFromAyah(fromAyah.value);
-                            },
-                            onAyahChanged: syncFromAyah,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: AppSpacing.md,
-                            ),
-                            child: Container(
-                              height: 1,
-                              color: colors.border.withValues(alpha: 0.6),
-                            ),
-                          ),
-                          RangeEndpointRow(
-                            prefix: l10n.quranRangeToShort,
-                            surah: toSurah.value,
-                            ayah: toAyah.value,
-                            surahLabel: l10n.quranRangeToSurah,
-                            ayahLabel: l10n.quranRangeToAyah,
-                            enabled: customEnabled,
-                            onSurahChanged: (s) {
-                              presetGeneration.value++;
-                              isResolving.value = false;
-                              toSurah.value = s;
-                              final max =
-                                  mushaf.getSurahSync(s)?.ayahCount ?? 1;
-                              if (toAyah.value > max) toAyah.value = max;
-                              syncToAyah(toAyah.value);
-                            },
-                            onAyahChanged: syncToAyah,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                _ModeSection(
+                  mode: mode.value,
+                  narrow: narrow,
+                  onChanged: (value) => mode.value = value,
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 _RepeatSection(
                   count: repeat.value,
                   narrow: narrow,
-                  onChanged: (value) => repeat.value = value.clamp(1, 99),
+                  enabled: mode.value == RecitationMode.repeatSelection,
+                  onChanged: (value) {
+                    repeat.value = value.clamp(1, 99);
+                    if (value > 1 &&
+                        mode.value != RecitationMode.repeatSelection) {
+                      mode.value = RecitationMode.repeatSelection;
+                    }
+                  },
                 ),
               ],
             );
@@ -459,16 +485,19 @@ class _RangeRepeatDialog extends HookConsumerWidget {
     );
   }
 
-  Future<void> _apply(
+  Future<void> _save(
     BuildContext context,
     WidgetRef ref, {
     required AyahReference from,
-    required AyahReference to,
+    required AyahReference? to,
+    required RangeScopePreset preset,
     required int repeat,
+    required RecitationMode mode,
     required Reciter? reciter,
     required Moshaf? moshaf,
   }) async {
     ref.read(recitationSettingsProvider.notifier).setRepeatCount(repeat);
+    ref.read(recitationSettingsProvider.notifier).setMode(mode);
     final controller = ref.read(recitationControllerProvider.notifier);
 
     var r = reciter;
@@ -480,20 +509,8 @@ class _RangeRepeatDialog extends HookConsumerWidget {
       m = pick.moshaf;
     }
 
-    if (m.hasTiming) {
-      await controller.playAyahRange(
-        reciter: r,
-        moshaf: m,
-        from: from,
-        to: to,
-      );
-    } else {
-      await controller.playSurah(
-        reciter: r,
-        moshaf: m,
-        surah: from.surah,
-      );
-    }
+    // Save the range and stop current playback — user presses play to start.
+    await controller.saveRange(from: from, to: to, preset: preset);
     if (context.mounted) unawaited(Navigator.of(context).maybePop());
   }
 }
@@ -528,11 +545,13 @@ class _RepeatSection extends StatelessWidget {
     required this.count,
     required this.onChanged,
     this.narrow = false,
+    this.enabled = true,
   });
 
   final int count;
   final ValueChanged<int> onChanged;
   final bool narrow;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -546,10 +565,166 @@ class _RepeatSection extends StatelessWidget {
         variant: active ? FButtonVariant.primary : FButtonVariant.outline,
         size: FButtonSizeVariant.sm,
         mainAxisSize: MainAxisSize.min,
-        onPress: () => onChanged(value),
+        onPress: enabled ? () => onChanged(value) : null,
         child: Text(l10n.quranRangeRepeatChip(value)),
       );
     }
+
+    return Opacity(
+      opacity: enabled ? 1 : 0.4,
+      child: IgnorePointer(
+        ignoring: !enabled,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (narrow)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _SectionLabel(
+                    icon: FLucideIcons.repeat,
+                    label: l10n.quranRangeRepeatWhole,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: [chip(1), chip(3), chip(5)],
+                  ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: _SectionLabel(
+                      icon: FLucideIcons.repeat,
+                      label: l10n.quranRangeRepeatWhole,
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      chip(1),
+                      const SizedBox(width: AppSpacing.xs),
+                      chip(3),
+                      const SizedBox(width: AppSpacing.xs),
+                      chip(5),
+                    ],
+                  ),
+                ],
+              ),
+            const SizedBox(height: AppSpacing.md),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.sm,
+              ),
+              decoration: BoxDecoration(
+                color: colors.secondary,
+                border: Border.all(color: colors.border),
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: Row(
+                children: [
+                  NumericStepButton(
+                    icon: FLucideIcons.minus,
+                    size: NumericStepButtonSize.large,
+                    enabled: enabled && count > 1,
+                    onPress: () => onChanged(count - 1),
+                  ),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              '×',
+                              style: typography.body.lg.copyWith(
+                                color: colors.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              '$count',
+                              style: typography.body.lg.copyWith(
+                                color: colors.foreground,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 28,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          repeatCountLabel(l10n, count),
+                          style: typography.body.sm.copyWith(
+                            color: colors.mutedForeground,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  NumericStepButton(
+                    icon: FLucideIcons.plus,
+                    size: NumericStepButtonSize.large,
+                    enabled: enabled && count < 99,
+                    onPress: () => onChanged(count + 1),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModeSection extends StatelessWidget {
+  const _ModeSection({
+    required this.mode,
+    required this.onChanged,
+    this.narrow = false,
+  });
+
+  final RecitationMode mode;
+  final ValueChanged<RecitationMode> onChanged;
+  final bool narrow;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    Widget chip(RecitationMode value, String label) {
+      final active = mode == value;
+      return FButton(
+        variant: active ? FButtonVariant.primary : FButtonVariant.outline,
+        size: FButtonSizeVariant.sm,
+        mainAxisSize: MainAxisSize.min,
+        onPress: () => onChanged(value),
+        child: Text(label),
+      );
+    }
+
+    final stopLabel = l10n.quranRecitationModeStopAtEnd;
+    final repeatLabel = l10n.quranRecitationModeRepeat;
+    final continueLabel = l10n.quranRecitationModeContinue;
+
+    final chips = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        chip(RecitationMode.stopAtEnd, stopLabel),
+        const SizedBox(width: AppSpacing.xs),
+        chip(RecitationMode.repeatSelection, repeatLabel),
+        const SizedBox(width: AppSpacing.xs),
+        chip(RecitationMode.continueToNextSurah, continueLabel),
+      ],
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -559,14 +734,18 @@ class _RepeatSection extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _SectionLabel(
-                icon: FLucideIcons.repeat,
-                label: l10n.quranRangeRepeatWhole,
+                icon: FLucideIcons.arrowRightToLine,
+                label: l10n.quranRangeModeLabel,
               ),
               const SizedBox(height: AppSpacing.sm),
               Wrap(
                 spacing: AppSpacing.xs,
                 runSpacing: AppSpacing.xs,
-                children: [chip(1), chip(3), chip(5)],
+                children: [
+                  chip(RecitationMode.stopAtEnd, stopLabel),
+                  chip(RecitationMode.repeatSelection, repeatLabel),
+                  chip(RecitationMode.continueToNextSurah, continueLabel),
+                ],
               ),
             ],
           )
@@ -575,86 +754,13 @@ class _RepeatSection extends StatelessWidget {
             children: [
               Expanded(
                 child: _SectionLabel(
-                  icon: FLucideIcons.repeat,
-                  label: l10n.quranRangeRepeatWhole,
+                  icon: FLucideIcons.arrowRightToLine,
+                  label: l10n.quranRangeModeLabel,
                 ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  chip(1),
-                  const SizedBox(width: AppSpacing.xs),
-                  chip(3),
-                  const SizedBox(width: AppSpacing.xs),
-                  chip(5),
-                ],
-              ),
+              chips,
             ],
           ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.sm,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: colors.secondary,
-            border: Border.all(color: colors.border),
-            borderRadius: BorderRadius.circular(13),
-          ),
-          child: Row(
-            children: [
-              NumericStepButton(
-                icon: FLucideIcons.minus,
-                size: NumericStepButtonSize.large,
-                enabled: count > 1,
-                onPress: () => onChanged(count - 1),
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          '×',
-                          style: typography.body.lg.copyWith(
-                            color: colors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Text(
-                          '$count',
-                          style: typography.body.lg.copyWith(
-                            color: colors.foreground,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 28,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      repeatCountLabel(l10n, count),
-                      style: typography.body.sm.copyWith(
-                        color: colors.mutedForeground,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              NumericStepButton(
-                icon: FLucideIcons.plus,
-                size: NumericStepButtonSize.large,
-                enabled: count < 99,
-                onPress: () => onChanged(count + 1),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }

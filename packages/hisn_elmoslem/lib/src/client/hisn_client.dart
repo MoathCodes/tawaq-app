@@ -84,6 +84,23 @@ final class HisnClient {
 
   /// Closes all database handles.
   void close() => _database.close();
+
+  /// Opens a client, runs [fn], and always closes it in a `finally` block.
+  ///
+  /// Example:
+  /// ```dart
+  /// final titles = await HisnClient.use((client) async {
+  ///   return client.titles.all();
+  /// });
+  /// ```
+  static Future<T> use<T>(Future<T> Function(HisnClient client) fn) async {
+    final client = await HisnClient.open();
+    try {
+      return await fn(client);
+    } finally {
+      client.close();
+    }
+  }
 }
 
 /// Well-known title name fragments for featured sections.

@@ -8,7 +8,6 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_scope.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/directional_content_switcher.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
@@ -196,8 +195,20 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
       }
     }
 
-    final counterScale = Tween<double>(begin: 1, end: 0.88).animate(
-      CurvedAnimation(parent: pulseController, curve: Curves.easeOutCubic),
+    final counterScaleCurve = useMemoized(
+      () => CurvedAnimation(
+        parent: pulseController,
+        curve: Curves.easeOutCubic,
+      ),
+      [pulseController],
+    );
+    final counterScale = useMemoized(
+      () => Tween<double>(begin: 1, end: 0.88).animate(counterScaleCurve),
+      [counterScaleCurve],
+    );
+    useEffect(
+      () => counterScaleCurve.dispose,
+      [counterScaleCurve],
     );
 
     return LayoutBuilder(
@@ -685,9 +696,24 @@ class FortressTapRippleFeedback extends HookWidget {
       return null;
     }, const []);
 
-    final animation = CurvedAnimation(
-      parent: controller,
-      curve: Curves.easeOutCubic,
+    final animation = useMemoized(
+      () => CurvedAnimation(
+        parent: controller,
+        curve: Curves.easeOutCubic,
+      ),
+      [controller],
+    );
+    useEffect(
+      () => animation.dispose,
+      [animation],
+    );
+    final opacityAnimation = useMemoized(
+      () => Tween<double>(begin: 0.45, end: 0).animate(animation),
+      [animation],
+    );
+    final scaleAnimation = useMemoized(
+      () => Tween<double>(begin: 0.35, end: 1.6).animate(animation),
+      [animation],
     );
 
     return Positioned(
@@ -696,9 +722,9 @@ class FortressTapRippleFeedback extends HookWidget {
       child: FortressExcludeDecorative(
         child: IgnorePointer(
           child: FadeTransition(
-            opacity: Tween<double>(begin: 0.45, end: 0).animate(animation),
+            opacity: opacityAnimation,
             child: ScaleTransition(
-              scale: Tween<double>(begin: 0.35, end: 1.6).animate(animation),
+              scale: scaleAnimation,
               child: Container(
                 width: 56,
                 height: 56,

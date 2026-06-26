@@ -14,10 +14,10 @@ import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_resolver.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 part 'prayer_alert_scheduler_provider.g.dart';

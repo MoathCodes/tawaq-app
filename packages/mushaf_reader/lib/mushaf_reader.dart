@@ -132,7 +132,7 @@ abstract final class MushafReaderLibrary {
   static Future<void> ensureInitialized({String? subDirectory}) async {
     if (_initialized) return;
 
-    final boxManager = HiveBoxManager();
+    final boxManager = HiveBoxManager.acquire();
     await boxManager.init(subDirectory: subDirectory);
 
     _initialized = true;

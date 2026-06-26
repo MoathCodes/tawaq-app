@@ -33,6 +33,7 @@ class HadithLocalDatabase {
     required this._recentsBox,
   });
   static const _maxHiveIntKey = 0xFFFFFFFF;
+  static const _maxRecentSearches = 12;
 
   final Box<String, dynamic> _favoritesBox;
   final Box<int, HadithRecentSearch> _recentsBox;
@@ -70,6 +71,8 @@ class HadithLocalDatabase {
       id,
       HadithRecentSearch(id: id, query: trimmed, searchedAt: now),
     );
+
+    await _pruneRecentSearches();
   }
 
   /// Deletes a favorite by key.
@@ -131,11 +134,25 @@ class HadithLocalDatabase {
 
   /// Returns recent searches ordered from newest to oldest.
   Future<List<HadithRecentSearch>> getRecentSearches({int limit = 12}) async {
+    await _pruneRecentSearches(max: limit);
+
+    // Box is capped on write; this read is bounded to [limit] entries.
     final values = await _recentsBox.getAllValues();
     final list = values.toList()
       ..sort((a, b) => b.searchedAt.compareTo(a.searchedAt));
     if (list.length <= limit) return list;
     return list.take(limit).toList(growable: false);
+  }
+
+  Future<void> _pruneRecentSearches({int max = _maxRecentSearches}) async {
+    final values = await _recentsBox.getAllValues();
+    final list = values.toList()
+      ..sort((a, b) => b.searchedAt.compareTo(a.searchedAt));
+    if (list.length <= max) return;
+
+    for (final entry in list.skip(max)) {
+      await _recentsBox.delete(entry.id);
+    }
   }
 
   /// Checks whether a favorite exists for the given key.

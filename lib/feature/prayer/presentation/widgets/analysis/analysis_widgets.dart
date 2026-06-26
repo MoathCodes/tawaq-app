@@ -10,11 +10,14 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Whether every obligatory prayer was logged with a positive status.
@@ -110,11 +113,12 @@ class _StreakHighlight extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     final colors = theme.colors;
-    final valueStyle = (emphasized ? theme.typography.body.xl : theme.typography.body.lg)
-        .copyWith(
-          fontWeight: FontWeight.w800,
-          color: emphasized ? colors.primary : colors.foreground,
-        );
+    final valueStyle =
+        (emphasized ? theme.typography.body.xl : theme.typography.body.lg)
+            .copyWith(
+              fontWeight: FontWeight.w800,
+              color: emphasized ? colors.primary : colors.foreground,
+            );
 
     return Row(
       children: [
@@ -201,10 +205,25 @@ class _PrayerTrackerRow extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = FTheme.of(context);
     final colors = theme.colors;
+    final l10n = context.l10n;
     final status = ref.watch(
       prayerAnalysisSectionProvider.select(
         (state) =>
             state.value?.todayPrayerStatuses[prayer] ?? CompletionStatus.none,
+      ),
+    );
+    final prayerTime = ref.watch(
+      prayerScheduleProvider().select(
+        (rows) => rows
+            .where((row) => row.prayer == prayer)
+            .firstOrNull
+            ?.prayerTime,
+      ),
+    );
+    // Match schedule rows: only enable once adhan time has passed.
+    final enable = ref.watch(
+      currentLocationTimeProvider.select(
+        (now) => now != null && prayerTime != null && prayerTime.isBefore(now),
       ),
     );
     final isLogged = status != CompletionStatus.none;
@@ -215,43 +234,60 @@ class _PrayerTrackerRow extends HookConsumerWidget {
     final (:isHovered, :setHovered) = useHoverState();
 
     final background = isLogged
-        ? (isHovered
+        ? (isHovered && enable
               ? colors.hover(statusColor.withValues(alpha: 0.18))
               : statusColor.withValues(alpha: 0.18))
-        : (isHovered
+        : (isHovered && enable
               ? colors.secondary
               : colors.background.withValues(alpha: 0.35));
 
     final borderColor = isLogged
         ? statusColor.withValues(alpha: 0.55)
-        : (isHovered ? colors.border : colors.border.withValues(alpha: 0.35));
+        : (isHovered && enable
+              ? colors.border
+              : colors.border.withValues(alpha: 0.35));
 
     return Row(
       children: [
         MouseClick(
-          onHoverChange: (hovering) => setHovered(value: hovering),
-          onClick: () => unawaited(
-            ref
-                .read(prayerCompletionActionsProvider.notifier)
-                .cycleTodayPrayerStatus(
-                  prayer: prayer,
-                  currentStatus: status,
+          disabled: !enable,
+          onHoverChange: enable
+              ? (hovering) => setHovered(value: hovering)
+              : null,
+          onClick: enable
+              ? () => unawaited(
+                  ref
+                      .read(prayerCompletionActionsProvider.notifier)
+                      .cycleTodayPrayerStatus(
+                        prayer: prayer,
+                        currentStatus: status,
+                      ),
+                )
+              : null,
+          semanticsLabel: enable
+              ? (isLogged
+                    ? status.getLocaleName(l10n)
+                    : l10n.logPrayerStatus)
+              : '${l10n.logPrayerStatus}, ${l10n.prepareForPrayer}',
+          child: ExcludeSemantics(
+            child: Opacity(
+              opacity: enable ? 1 : 0.45,
+              child: AnimatedContainer(
+                duration: theme.durations.fast,
+                curve: Curves.easeOutCubic,
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: background,
+                  borderRadius: theme.radii.sm,
+                  border: Border.all(color: borderColor),
                 ),
-          ),
-          child: AnimatedContainer(
-            duration: theme.durations.fast,
-            curve: Curves.easeOutCubic,
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: background,
-              borderRadius: theme.radii.sm,
-              border: Border.all(color: borderColor),
+                alignment: Alignment.center,
+                child: icon == null
+                    ? const SizedBox.shrink()
+                    : Icon(icon, size: 14, color: statusColor),
+              ),
             ),
-            alignment: Alignment.center,
-            child: icon == null
-                ? const SizedBox.shrink()
-                : Icon(icon, size: 14, color: statusColor),
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -360,12 +396,13 @@ class TodayStatusGrid extends ConsumerWidget {
         return Wrap(
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.sm,
+          alignment: .center,
           children: [
             for (final status in _statuses)
               SizedBox(
                 width: columns == 4
-                    ? (constraints.maxWidth - AppSpacing.sm * 3) / 4
-                    : (constraints.maxWidth - AppSpacing.sm) / 2,
+                    ? (constraints.maxWidth - AppSpacing.sm * 3) / 6
+                    : (constraints.maxWidth - AppSpacing.sm) / 4.3,
                 child: _StatusChip(
                   status: status,
                   value: counts[status] ?? 0,

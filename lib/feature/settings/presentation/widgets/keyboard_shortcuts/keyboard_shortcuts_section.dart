@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_l10n.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_list_row.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/theme/theme.dart';

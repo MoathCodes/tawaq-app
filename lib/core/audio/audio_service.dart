@@ -251,6 +251,24 @@ class TawaqAudioService implements AudioEngine {
     _fadeTimer = null;
   }
 
+  // ---- A-B loop & native loop -----------------------------------------------
+
+  /// Sets the A marker for an A-B loop. Pass `null` to clear.
+  Future<void> setAbLoopA(Duration? a) => _player.setAbLoopA(a);
+
+  /// Sets the B marker for an A-B loop. Pass `null` to clear.
+  Future<void> setAbLoopB(Duration? b) => _player.setAbLoopB(b);
+
+  /// Sets the number of A-B loop repetitions. Pass `null` for infinite.
+  Future<void> setAbLoopCount(int? count) =>
+      _player.setAbLoopCount(count);
+
+  /// Remaining A-B loop iterations (null when no loop or infinite).
+  Stream<int?> get remainingAbLoopsStream => _player.stream.remainingAbLoops;
+
+  /// Sets the native repeat mode ([Loop.off], [Loop.file], [Loop.playlist]).
+  Future<void> setLoop(Loop loop) => _player.setLoop(loop);
+
   /// Releases native handles. Called on app shutdown.
   Future<void> dispose() async {
     _cancelFade();

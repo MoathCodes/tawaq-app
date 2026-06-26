@@ -183,6 +183,20 @@ class _PageAyahWidgetState extends State<PageAyahWidget> {
   /// Uses TapGestureRecognizer for tap detection and
   /// LongPressGestureRecognizer for long press detection.
   void _buildSpans() {
+    final currentAyahIds = widget.ayahs.map((f) => f.ayahId).toSet();
+
+    for (final id in _tapRecognizers.keys.toList()) {
+      if (!currentAyahIds.contains(id)) {
+        _tapRecognizers.remove(id)?.dispose();
+      }
+    }
+    for (final id in _longPressRecognizers.keys.toList()) {
+      if (!currentAyahIds.contains(id)) {
+        _longPressRecognizers.remove(id)?.dispose();
+        _longPressTriggered.remove(id);
+      }
+    }
+
     final spans = <InlineSpan>[];
 
     for (final frag in widget.ayahs) {
@@ -251,4 +265,14 @@ class _PageAyahWidgetState extends State<PageAyahWidget> {
     _cachedActiveStyle = widget.activeStyle;
     _cachedRemoveNewLines = widget.removeNewLines;
   }
+}
+
+/// Test-only accessors for [PageAyahWidget] gesture recognizer pools.
+@visibleForTesting
+extension PageAyahWidgetTestState on State<PageAyahWidget> {
+  int get testTapRecognizerCount =>
+      (this as _PageAyahWidgetState)._tapRecognizers.length;
+
+  int get testLongPressRecognizerCount =>
+      (this as _PageAyahWidgetState)._longPressRecognizers.length;
 }

@@ -27,11 +27,11 @@ class PrayerSettingsLocationSection extends ConsumerWidget {
       children: [
         const UseLocationTile(),
         const FDivider(),
+        const LocationControlsRow(),
+        const FDivider(),
         LocationMapSection(compact: embedded),
         const FDivider(),
         const CoordinatesRow(),
-        const FDivider(),
-        const LocationControlsRow(),
       ],
     );
 

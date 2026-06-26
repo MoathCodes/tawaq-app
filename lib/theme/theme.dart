@@ -6,6 +6,7 @@
 /// ```
 library;
 
+export 'autocomplete_style.dart';
 export 'button_styles.dart';
 export 'durations.dart';
 export 'radii.dart';

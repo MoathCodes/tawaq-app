@@ -60,7 +60,7 @@ class ShellAppBar extends ConsumerWidget {
       child: showLanguageLabel
           ? FButton(
               variant: .ghost,
-              size: FButtonSizeVariant.sm,
+              size: FButtonSizeVariant.xs,
               onPress: () => ref.read(localeProvider.notifier).toggleLocale(),
               prefix: const Icon(FLucideIcons.languages, size: 14),
               child: Text(
@@ -69,7 +69,7 @@ class ShellAppBar extends ConsumerWidget {
             )
           : FButton.icon(
               variant: .ghost,
-              size: FButtonSizeVariant.sm,
+              size: FButtonSizeVariant.xs,
               onPress: () => ref.read(localeProvider.notifier).toggleLocale(),
               child: const Icon(FLucideIcons.languages, size: 14),
             ),
@@ -80,25 +80,32 @@ class ShellAppBar extends ConsumerWidget {
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Row(
-        spacing: AppSpacing.sm,
+        mainAxisAlignment: .spaceBetween,
         children: [
-          ?locationChip,
-          if (locationChip != null) const SizedBox(width: AppSpacing.xs),
-          Consumer(
-            builder: (context, ref, child) {
-              final hijriDate = ref.watch(hijriClockProvider);
-              return Flexible(
-                child: Text(
-                  hijriDate,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              );
-            },
+          Row(
+            spacing: AppSpacing.lg,
+            children: [
+              ?locationChip,
+              Consumer(
+                builder: (context, ref, child) {
+                  final hijriDate = ref.watch(hijriClockProvider);
+                  return Text(
+                    hijriDate,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
+              ),
+            ],
           ),
           Expanded(child: dragArea),
-          languageButton,
-          const ThemeModeButton(),
+          Row(
+            spacing: AppSpacing.sm,
+            children: [
+              languageButton,
+              const ThemeModeButton(),
+            ],
+          ),
         ],
       ),
     );

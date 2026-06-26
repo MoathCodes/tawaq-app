@@ -1,3 +1,21 @@
+## 0.3.2
+
+* Added `Ayah.uthmaniText` (Uthmanic Hafs from `quran.json` `text` key).
+* Added `Hizb.startAyahUthmaniText` for fast hizb selector subtitles.
+* Added `Juz.startSurahNumber` and `Juz.startAyahInSurah` for English juz
+  subtitles. Regenerate `ayahs.hive`, `hizbs.hive`, and `juzs.hive` after
+  upgrading (manifest hash bump triggers asset refresh in host apps).
+
+## 0.3.1
+
+* Fixed `HiveBoxManager` reference counting: `instance` / factory no longer
+  inflate the count; use `acquire()` for owned lifetimes. `getBasmalahSync()`
+  peeks via `instance` instead of leaking a ref.
+* `HiveBoxManager.dispose()` and `HiveQuranRepository.dispose()` no-op when
+  ref count is already zero (prevents stray teardown).
+* `PageAyahWidget` disposes tap/long-press recognizers for ayah ids no longer
+  in the fragment list.
+
 ## 0.3.0
 
 * Added `Juz.endAyahId` for authoritative juz boundary lookups; regenerate
@@ -9,6 +27,18 @@
   `hizbAyahBounds`. When `endAyahId` is missing on a stored juz or hizb,
   bounds APIs derive the end from the next division's `startAyahId - 1` (or
   ayah 6236 for the last division).
+* Split controller notifications into `MushafSelectionListenable` and
+  `MushafPageListenable` (`controller.selection` / `controller.page`) for
+  narrower rebuilds; `MushafPage` listens to selection directly.
+* Exported `SurahTiming` and `AyahTiming` JSON models for host-app recitation
+  timing (no bundled audio or player).
+* Fixed `HiveQuranRepository` reference counting: `instance` / factory no
+  longer inflate the count; use `acquire()` for owned lifetimes (controllers).
+  `BasmalahWidget` and `JuzWidget` no longer call the factory from `build()`.
+* `MushafReader` keeps only the visible page window alive in `PageView`
+  (current ±1) instead of every visited page; pass `keepAlive` on standalone
+  `MushafPage` when embedding in your own pager.
+* `MushafReader` async page callbacks guard with `mounted` after awaits.
 
 ## 0.2.0
 

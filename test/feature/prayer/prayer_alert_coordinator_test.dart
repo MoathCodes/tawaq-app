@@ -22,6 +22,8 @@ class _FakeChannel implements PrayerAlertChannel {
   int delivered = 0;
   int cancelled = 0;
 
+  bool get isActive => _active;
+
   @override
   Future<void> deliver(PrayerAlertEvent event) async {
     delivered++;
@@ -35,6 +37,37 @@ class _FakeChannel implements PrayerAlertChannel {
     _active = false;
     cancelled++;
     log.add('cancel:$debugName');
+  }
+}
+
+/// Blocks [deliver] until [release] is called — for queue/dispose races.
+class _BlockingChannel implements PrayerAlertChannel {
+  _BlockingChannel(this.debugName, this.log);
+
+  @override
+  final String debugName;
+  final List<String> log;
+
+  final _deliverGate = Completer<void>();
+  int delivered = 0;
+  int cancelled = 0;
+
+  void release() {
+    if (!_deliverGate.isCompleted) _deliverGate.complete();
+  }
+
+  @override
+  Future<void> deliver(PrayerAlertEvent event) async {
+    delivered++;
+    log.add('deliver:$debugName');
+    await _deliverGate.future;
+  }
+
+  @override
+  Future<void> cancel() async {
+    cancelled++;
+    log.add('cancel:$debugName');
+    release();
   }
 }
 
@@ -151,6 +184,70 @@ void main() {
       await coordinator.dismiss();
       await pumpEventQueue();
 
+      expect(channel.cancelled, 1);
+    });
+
+    test('dispose mid-alert tears down active channels', () async {
+      await coordinator.dispatch(_event(playSound: true));
+      expect(channel.delivered, 1);
+      expect(channel.isActive, isTrue);
+      expect(channel.cancelled, 0);
+
+      await coordinator.dispose();
+
+      expect(channel.cancelled, 1);
+      expect(channel.isActive, isFalse);
+    });
+
+    test('dispose during queued dispatch does not deliver queued work', () async {
+      final blocking = _BlockingChannel('block', log);
+      final localCoordinator = PrayerAlertCoordinator(
+        channels: [blocking],
+        playbackStream: playback.stream,
+        notifyOnlyTimeout: const Duration(milliseconds: 20),
+      );
+
+      unawaited(localCoordinator.dispatch(_event(playSound: false)));
+      await pumpEventQueue();
+      expect(blocking.delivered, 1);
+
+      unawaited(localCoordinator.dispatch(_event(playSound: false)));
+      await localCoordinator.dispose();
+
+      blocking.release();
+      await pumpEventQueue();
+
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      await pumpEventQueue();
+
+      expect(blocking.delivered, 1);
+      expect(blocking.cancelled, greaterThanOrEqualTo(1));
+    });
+
+    test('dispose does not re-arm finish timers', () async {
+      await coordinator.dispatch(_event(playSound: false));
+      expect(channel.delivered, 1);
+
+      await coordinator.dispose();
+      expect(channel.cancelled, 1);
+
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      await pumpEventQueue();
+
+      expect(channel.cancelled, 1);
+    });
+
+    test('enqueue after dispose is a no-op', () async {
+      await coordinator.dispatch(_event(playSound: true));
+      expect(channel.delivered, 1);
+
+      await coordinator.dispose();
+
+      await coordinator.dispatch(_event(playSound: true));
+      await coordinator.dismiss();
+      await pumpEventQueue();
+
+      expect(channel.delivered, 1);
       expect(channel.cancelled, 1);
     });
   });

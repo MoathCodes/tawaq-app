@@ -297,18 +297,21 @@ class FortressCategoryListTile extends ConsumerWidget {
                   .read(fortressScreenSettingsProvider.notifier)
                   .toggleFavorite(chapterId),
               semanticsLabel: l10n.fortressFavorites,
-              child: FortressExcludeDecorative(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xs),
-                  child: Icon(
-                    isFavorite
-                        ? FLucideIcons.bookmarkCheck
-                        : FLucideIcons.bookmark,
-                    size: 18,
-                    color: isFavorite
-                        ? theme.colors.primary
-                        : theme.colors.mutedForeground,
-                    fill: isFavorite ? 1.0 : 0.0,
+              child: FTooltip(
+                tipBuilder: (_, _) => Text(l10n.fortressFavorites),
+                child: FortressExcludeDecorative(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    child: Icon(
+                      isFavorite
+                          ? FLucideIcons.bookmarkCheck
+                          : FLucideIcons.bookmark,
+                      size: 18,
+                      color: isFavorite
+                          ? theme.colors.primary
+                          : theme.colors.mutedForeground,
+                      fill: isFavorite ? 1.0 : 0.0,
+                    ),
                   ),
                 ),
               ),

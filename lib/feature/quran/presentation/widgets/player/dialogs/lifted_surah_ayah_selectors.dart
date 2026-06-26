@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/numeric_step_button.dart';
 import 'package:tawaq/feature/quran/domain/models/ayah_reference.dart';
-import 'package:tawaq/feature/quran/domain/services/ayah_number_search.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/surah_selector.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -24,9 +23,47 @@ String repeatCountLabel(AppLocalizations l10n, int count) {
   };
 }
 
-/// Searchable ayah picker within a surah for range endpoint editing.
-class AyahInSurahSelect extends ConsumerWidget {
-  /// Creates an [AyahInSurahSelect].
+/// Converts Hindu-Arabic numerals (٠-٩) to standard and strips non-digits.
+String normalizeAyahInput(String input) {
+  return input
+      .replaceAll('٠', '0')
+      .replaceAll('١', '1')
+      .replaceAll('٢', '2')
+      .replaceAll('٣', '3')
+      .replaceAll('٤', '4')
+      .replaceAll('٥', '5')
+      .replaceAll('٦', '6')
+      .replaceAll('٧', '7')
+      .replaceAll('٨', '8')
+      .replaceAll('٩', '9')
+      .replaceAll(RegExp('[^0-9]'), '');
+}
+
+/// [TextInputFormatter] for ayah input that converts Hindu-Arabic numerals and
+/// filters non-digit characters.
+class AyahInputFormatter extends TextInputFormatter {
+  const AyahInputFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) return newValue;
+
+    final normalized = normalizeAyahInput(newValue.text);
+    if (normalized != newValue.text) {
+      return TextEditingValue(
+        text: normalized,
+        selection: TextSelection.collapsed(offset: normalized.length),
+      );
+    }
+    return newValue;
+  }
+}
+
+/// Inline ayah input within a surah for range endpoint editing.
+class AyahInSurahSelect extends HookConsumerWidget {
   const AyahInSurahSelect({
     required this.surah,
     required this.ayah,
@@ -37,22 +74,11 @@ class AyahInSurahSelect extends ConsumerWidget {
     super.key,
   });
 
-  /// Selected surah number (1–114).
   final int surah;
-
-  /// Selected ayah number within [surah].
   final int ayah;
-
-  /// Called when the user picks a different ayah.
   final ValueChanged<int> onChanged;
-
-  /// Field label shown above the control (full layout only).
   final String label;
-
-  /// Whether the control accepts input.
   final bool enabled;
-
-  /// When true, renders a horizontal inline stepper without an outer card.
   final bool compact;
 
   String _surahName(
@@ -76,76 +102,47 @@ class AyahInSurahSelect extends ConsumerWidget {
   ) =>
       l10n.surahAyahInfo(surahName, ayahNumber);
 
-  Widget _ayahSelect(
-    BuildContext context,
-    WidgetRef ref, {
-    required MushafReaderController mushaf,
-    required AppLocalizations l10n,
-    required bool isArabic,
-    required int ayahCount,
-    required String surahName,
-    required TextStyle itemStyle,
-  }) {
-    final theme = context.theme;
-
-    void setAyah(int v) => onChanged(v.clamp(1, ayahCount));
-
-    return FSelect<int>.searchBuilder(
-      enabled: enabled,
-      label: compact ? const SizedBox.shrink() : Text(label),
-      contentConstraints: selectPopoverPortalConstraints(context),
-      style: selectStyle(
-        colors: theme.colors,
-        style: theme.style,
-        typography: theme.typography,
-        useQuranFont: isArabic,
-      ),
-      control: FSelectControl.lifted(
-        value: ayah,
-        onChange: (v) {
-          if (v != null) setAyah(v);
-        },
-      ),
-      format: (v) => compact ? '$v' : _ayahReference(l10n, surahName, v),
-      filter: (q) => searchAyahNumbers(ayahCount: ayahCount, query: q),
-      contentBuilder: (_, _, vals) => vals
-          .map(
-            (v) {
-              final reference = _ayahReference(l10n, surahName, v);
-              return FSelectItem<int>(
-                value: v,
-                title: isArabic
-                    ? AyahReferenceText(reference, style: itemStyle)
-                    : Text(reference, style: itemStyle),
-              );
-            },
-          )
-          .toList(),
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mushaf = ref.watch(quranMushafControllerProvider);
-    final theme = context.theme;
     final l10n = context.l10n;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final ayahCount = mushaf.getSurahSync(surah)?.ayahCount ?? ayah;
     final surahName = _surahName(mushaf, l10n, isArabic);
-    final itemStyle = theme.typography.body.sm;
 
-    void setAyah(int v) => onChanged(v.clamp(1, ayahCount));
+    final controller = useTextEditingController(text: '$ayah');
+    final focusNode = useFocusNode();
 
-    final select = _ayahSelect(
-      context,
-      ref,
-      mushaf: mushaf,
-      l10n: l10n,
-      isArabic: isArabic,
-      ayahCount: ayahCount,
-      surahName: surahName,
-      itemStyle: itemStyle,
-    );
+    void setAyah(int v) {
+      final clamped = v.clamp(1, ayahCount);
+      controller
+        ..text = '$clamped'
+        ..selection = TextSelection.collapsed(
+          offset: controller.text.length,
+        );
+      onChanged(clamped);
+    }
+
+    void handleSubmitted(String value) {
+      final normalized = normalizeAyahInput(value);
+      final parsed = int.tryParse(normalized);
+      if (parsed != null) {
+        setAyah(parsed);
+      } else {
+        controller
+          ..text = '$ayah'
+          ..selection = TextSelection.collapsed(
+            offset: controller.text.length,
+          );
+      }
+    }
+
+    useEffect(() {
+      if (!focusNode.hasFocus && controller.text != '$ayah') {
+        controller.text = '$ayah';
+      }
+      return null;
+    }, [ayah, surah]);
 
     if (compact) {
       return QuranSemantics.labeledControl(
@@ -153,35 +150,42 @@ class AyahInSurahSelect extends ConsumerWidget {
         value: _ayahReference(l10n, surahName, ayah),
         enabled: enabled,
         excludeChild: true,
-        child: Container(
-          decoration: BoxDecoration(
-            color: theme.colors.background,
-            border: Border.all(color: theme.colors.border),
-            borderRadius: theme.radii.lg,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              NumericStepButton(
-                icon: FLucideIcons.minus,
-                enabled: enabled && ayah > 1,
-                onPress: () => setAyah(ayah - 1),
-                semanticsLabel: l10n.back,
-                tooltip: l10n.back,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            NumericStepButton(
+              icon: FLucideIcons.minus,
+              enabled: enabled && ayah > 1,
+              onPress: () => setAyah(ayah - 1),
+              semanticsLabel: l10n.back,
+              tooltip: l10n.back,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            SizedBox(
+              width: 68,
+              child: FTextField(
+                control: FTextFieldControl.managed(
+                  controller: controller,
+                ),
+                focusNode: focusNode,
+                size: FTextFieldSizeVariant.sm,
+                textAlign: TextAlign.center,
+                inputFormatters: const [AyahInputFormatter()],
+                onSubmit: handleSubmitted,
+                onTapOutside: (_) => handleSubmitted(controller.text),
+                enabled: enabled,
               ),
-              SizedBox(
-                width: 52,
-                child: select,
-              ),
-              NumericStepButton(
-                icon: FLucideIcons.plus,
-                enabled: enabled && ayah < ayahCount,
-                onPress: () => setAyah(ayah + 1),
-                semanticsLabel: l10n.next,
-                tooltip: l10n.next,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            NumericStepButton(
+              icon: FLucideIcons.plus,
+              enabled: enabled && ayah < ayahCount,
+              onPress: () => setAyah(ayah + 1),
+              semanticsLabel: l10n.next,
+              tooltip: l10n.next,
+            ),
+          ],
         ),
       );
     }
@@ -191,42 +195,44 @@ class AyahInSurahSelect extends ConsumerWidget {
       value: _ayahReference(l10n, surahName, ayah),
       enabled: enabled,
       excludeChild: true,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: theme.colors.secondary,
-          border: Border.all(color: theme.colors.border),
-          borderRadius: theme.radii.lg,
-        ),
-        child: Row(
-          children: [
-            Expanded(child: select),
-            const SizedBox(width: AppSpacing.sm),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                NumericStepButton(
-                  icon: FLucideIcons.plus,
-                  enabled: enabled && ayah < ayahCount,
-                  onPress: () => setAyah(ayah + 1),
-                  semanticsLabel: l10n.next,
-                  tooltip: l10n.next,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                NumericStepButton(
-                  icon: FLucideIcons.minus,
-                  enabled: enabled && ayah > 1,
-                  onPress: () => setAyah(ayah - 1),
-                  semanticsLabel: l10n.back,
-                  tooltip: l10n.back,
-                ),
-              ],
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: FTextField(
+              control: FTextFieldControl.managed(
+                controller: controller,
+              ),
+              focusNode: focusNode,
+              label: Text(label),
+              inputFormatters: const [AyahInputFormatter()],
+              onSubmit: handleSubmitted,
+              onTapOutside: (_) => handleSubmitted(controller.text),
+              enabled: enabled,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              NumericStepButton(
+                icon: FLucideIcons.plus,
+                enabled: enabled && ayah < ayahCount,
+                onPress: () => setAyah(ayah + 1),
+                semanticsLabel: l10n.next,
+                tooltip: l10n.next,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              NumericStepButton(
+                icon: FLucideIcons.minus,
+                enabled: enabled && ayah > 1,
+                onPress: () => setAyah(ayah - 1),
+                semanticsLabel: l10n.back,
+                tooltip: l10n.back,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -284,6 +290,7 @@ class RangeEndpointRow extends ConsumerWidget {
         value: surah,
         label: surahLabel,
         showLabel: false,
+        size: FTextFieldSizeVariant.sm,
         enabled: enabled,
         onChanged: onSurahChanged,
       );
@@ -309,7 +316,7 @@ class RangeEndpointRow extends ConsumerWidget {
       }
 
       return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(child: surahSelect),
           const SizedBox(width: AppSpacing.sm),
@@ -350,17 +357,24 @@ class RangeEndpointRow extends ConsumerWidget {
 }
 
 /// Formats a global range for display in the player chrome.
+///
+/// A null [to] means the range is open-ended and continues to the end of the
+/// Quran.
 String formatAyahRangeLabel({
   required MushafReaderController mushaf,
   required AppLocalizations l10n,
   required AyahReference from,
-  required AyahReference to,
+  required AyahReference? to,
 }) {
   String refLabel(AyahReference r) {
     final name =
         mushaf.getSurahSync(r.surah)?.displayName ??
         l10n.quranSurahLabel('${r.surah}');
     return '$name · ${r.ayah}';
+  }
+
+  if (to == null) {
+    return '${refLabel(from)} → ${l10n.quranRangePresetContinueFromHere}';
   }
 
   if (from.surah == to.surah && from.ayah == to.ayah) {

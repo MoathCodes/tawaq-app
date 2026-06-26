@@ -53,9 +53,13 @@ bool hadithSidePanelCollapsed(Ref ref) {
 }
 
 /// Cached bookmark list shared by keys and bookmarks mode.
+///
+/// Intentionally keepAlive: one session-wide favorites fetch shared by
+/// auto-dispose dependents ([hadithBookmarkedHadiths], [hadithFavoriteKeys]).
 @Riverpod(keepAlive: true)
-Future<List<DetailedHadith>> hadithFavoritesCache(Ref ref) {
-  return ref.read(hadithServiceProvider).getFavorites();
+Future<List<DetailedHadith>> hadithFavoritesCache(Ref ref) async {
+  final service = await ref.read(hadithServiceProvider.future);
+  return service.getFavorites();
 }
 
 /// Stable favorite keys derived from [hadithFavoritesCacheProvider].
@@ -396,8 +400,14 @@ class HadithScreenController extends _$HadithScreenController {
 }
 
 /// Owns the detailed hadith search state and remote search operations.
+///
+/// Pagination appends every fetched page to the in-memory result list for the
+/// current session; there is no soft cap — long scroll sessions grow RAM until
+/// the provider is disposed or a new search resets the list.
 @riverpod
 class HadithSearchController extends _$HadithSearchController {
+  int _searchGeneration = 0;
+
   @override
   FutureOr<HadithSearchState> build() async {
     return const HadithSearchState();
@@ -406,13 +416,15 @@ class HadithSearchController extends _$HadithSearchController {
   /// Clears the saved recent-search history.
   Future<void> clearRecentSearches() async {
     ref.read(hadithRecentSearchesProvider.notifier).clearAll();
-    await ref.read(hadithServiceProvider).clearRecentSearches();
+    await (await ref.read(hadithServiceProvider.future)).clearRecentSearches();
   }
 
   /// Removes one query from the saved recent-search history.
   Future<void> removeRecentSearch(String query) async {
     ref.read(hadithRecentSearchesProvider.notifier).removeQuery(query);
-    await ref.read(hadithServiceProvider).removeRecentSearch(query);
+    await (await ref.read(hadithServiceProvider.future)).removeRecentSearch(
+      query,
+    );
   }
 
   /// Fetches the next page of search results and appends them.
@@ -423,15 +435,17 @@ class HadithSearchController extends _$HadithSearchController {
       return;
     }
 
+    final generation = _searchGeneration;
     final filters = ref.read(hadithFiltersProvider);
 
     final nextPage = current.page + 1;
     state = AsyncData(current.copyWith(isLoadingMore: true, error: null));
 
     try {
-      final response = await ref
-          .read(hadithServiceProvider)
+      final response = await (await ref.read(hadithServiceProvider.future))
           .searchDetailed(_toSearchParams(current, filters, page: nextPage));
+
+      if (generation != _searchGeneration) return;
 
       state = AsyncData(
         current.copyWith(
@@ -443,12 +457,14 @@ class HadithSearchController extends _$HadithSearchController {
         ),
       );
     } catch (e) {
+      if (generation != _searchGeneration) return;
       state = AsyncData(current.copyWith(isLoadingMore: false, error: '$e'));
     }
   }
 
   /// Runs a hadith search for the current session query and filters.
   Future<void> search({bool reset = true}) async {
+    final generation = ++_searchGeneration;
     final filters = ref.read(hadithFiltersProvider);
     ref.read(hadithScreenSettingsProvider.notifier).setFilters(filters);
     final value = ref.read(hadithQueryProvider).trim();
@@ -481,11 +497,12 @@ class HadithSearchController extends _$HadithSearchController {
     );
 
     try {
-      final response = await ref
-          .read(hadithServiceProvider)
+      final response = await (await ref.read(hadithServiceProvider.future))
           .searchDetailed(
             _toSearchParams(current.copyWith(query: value), filters, page: 1),
           );
+
+      if (generation != _searchGeneration) return;
 
       state = AsyncData(
         current.copyWith(
@@ -500,8 +517,11 @@ class HadithSearchController extends _$HadithSearchController {
       );
 
       ref.read(hadithRecentSearchesProvider.notifier).prepend(value);
-      unawaited(ref.read(hadithServiceProvider).addRecentSearch(value));
+      unawaited(
+        (await ref.read(hadithServiceProvider.future)).addRecentSearch(value),
+      );
     } catch (e) {
+      if (generation != _searchGeneration) return;
       state = AsyncData(
         current.copyWith(
           query: value,
@@ -515,7 +535,7 @@ class HadithSearchController extends _$HadithSearchController {
 
   /// Toggles a hadith between favorite and non-favorite state.
   Future<void> toggleFavorite(HadithBase hadith) async {
-    await ref.read(hadithServiceProvider).toggleFavorite(hadith);
+    await (await ref.read(hadithServiceProvider.future)).toggleFavorite(hadith);
     ref.invalidate(hadithFavoritesCacheProvider);
   }
 
@@ -556,7 +576,8 @@ Future<List<HadithLookupRef>> hadithBooksLookup(Ref ref, String query) async {
   final q = query.trim();
   if (q.length < 2) return const [];
 
-  final response = await ref.read(hadithServiceProvider).searchBooks(q);
+  final response = await (await ref.read(hadithServiceProvider.future))
+      .searchBooks(q);
   return response.data
       .map((item) => HadithLookupRef(id: item.id, name: item.name))
       .toList(growable: false);
@@ -571,7 +592,8 @@ Future<List<HadithLookupRef>> hadithScholarsLookup(
   final q = query.trim();
   if (q.length < 2) return const [];
 
-  final response = await ref.read(hadithServiceProvider).searchScholars(q);
+  final response = await (await ref.read(hadithServiceProvider.future))
+      .searchScholars(q);
   return response
       .map((item) => HadithLookupRef(id: item.id, name: item.name))
       .toList(growable: false);
@@ -583,7 +605,8 @@ Future<List<HadithLookupRef>> hadithRawiLookup(Ref ref, String query) async {
   final q = query.trim();
   if (q.length < 2) return const [];
 
-  final response = await ref.read(hadithServiceProvider).searchRawi(q);
+  final response = await (await ref.read(hadithServiceProvider.future))
+      .searchRawi(q);
   return response
       .map((item) => HadithLookupRef(id: item.id, name: item.name))
       .toList(growable: false);
@@ -596,7 +619,8 @@ class HadithRecentSearches extends _$HadithRecentSearches {
 
   @override
   Future<List<String>> build() async {
-    final entries = await ref.read(hadithServiceProvider).getRecentSearches();
+    final entries = await (await ref.read(hadithServiceProvider.future))
+        .getRecentSearches();
     return entries.map((entry) => entry.query).toList(growable: false);
   }
 
@@ -630,27 +654,33 @@ class HadithRecentSearches extends _$HadithRecentSearches {
 }
 
 /// Loads the sharh metadata for the given sharh identifier.
-@Riverpod(keepAlive: true)
-Future<Sharh> hadithSharh(Ref ref, String sharhId) {
-  return ref.read(hadithServiceProvider).getSharh(sharhId);
+///
+/// Auto-dispose family: disposes when the detail pane stops watching this id.
+@riverpod
+Future<Sharh> hadithSharh(Ref ref, String sharhId) async {
+  return (await ref.read(hadithServiceProvider.future)).getSharh(sharhId);
 }
 
 /// Loads hadiths that are similar to the given hadith identifier.
-@Riverpod(keepAlive: true)
-Future<List<DetailedHadith>> hadithSimilar(Ref ref, String hadithId) {
-  return ref.read(hadithServiceProvider).getSimilarHadith(hadithId);
+@riverpod
+Future<List<DetailedHadith>> hadithSimilar(Ref ref, String hadithId) async {
+  return (await ref.read(hadithServiceProvider.future)).getSimilarHadith(
+    hadithId,
+  );
 }
 
 /// Loads the alternate narration for the given hadith identifier.
-@Riverpod(keepAlive: true)
-Future<DetailedHadith?> hadithAlternate(Ref ref, String hadithId) {
-  return ref.read(hadithServiceProvider).getAlternateHadith(hadithId);
+@riverpod
+Future<DetailedHadith?> hadithAlternate(Ref ref, String hadithId) async {
+  return (await ref.read(hadithServiceProvider.future)).getAlternateHadith(
+    hadithId,
+  );
 }
 
 /// Loads the usul record for the given hadith identifier.
-@Riverpod(keepAlive: true)
-Future<UsulHadith> hadithUsul(Ref ref, String hadithId) {
-  return ref.read(hadithServiceProvider).getUsulHadith(hadithId);
+@riverpod
+Future<UsulHadith> hadithUsul(Ref ref, String hadithId) async {
+  return (await ref.read(hadithServiceProvider.future)).getUsulHadith(hadithId);
 }
 
 /// Stores the currently selected hadith for the detail pane.

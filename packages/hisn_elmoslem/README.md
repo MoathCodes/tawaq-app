@@ -71,38 +71,38 @@ Because Flutter assets are not direct filesystem paths, copy the databases to a 
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 
 Future<void> main() async {
-  final client = await HisnClient.open();
+  await HisnClient.use((client) async {
+    // List all titles (chapters)
+    final titles = client.titles.all();
+    print('${titles.length} titles');
 
-  // List all titles (chapters)
-  final titles = client.titles.all();
-  print('${titles.length} titles');
+    // Morning adhkar
+    final morning = client.titles
+        .byNameFragments([HisnFeaturedTitles.morning])
+        .firstOrNull;
 
-  // Morning adhkar
-  final morning = client.titles
-      .byNameFragments([HisnFeaturedTitles.morning])
-      .firstOrNull;
+    if (morning != null) {
+      final items = client.contents.byTitleId(morning.id);
+      for (final item in items) {
+        print('Repeat: ${item.repeatCount}×');
+        if (item.hasSource) print('Source: ${item.source}');
+        if (item.hasVirtue) print('Virtue: ${item.virtue}');
 
-  if (morning != null) {
-    final items = client.contents.byTitleId(morning.id);
-    for (final item in items) {
-      print('Repeat: ${item.repeatCount}×');
-      if (item.hasSource) print('Source: ${item.source}');
-      if (item.hasVirtue) print('Virtue: ${item.virtue}');
-
-      for (final line in item.lines) {
-        switch (line) {
-          case HisnPlainLine(:final text):
-            print(text);
-          case HisnQuranLine(:final presentation):
-            print('Quran presentation: $presentation');
+        for (final line in item.lines) {
+          switch (line) {
+            case HisnPlainLine(:final text):
+              print(text);
+            case HisnQuranLine(:final presentation):
+              print('Quran presentation: $presentation');
+          }
         }
       }
     }
-  }
-
-  client.close();
+  });
 }
 ```
+
+`HisnClient.use()` opens the client, runs your callback, and always calls `close()` in a `finally` block — even when the callback throws. For long-lived access (for example, in a Flutter provider), use `HisnClient.open()` and call `close()` when done.
 
 ## Architecture
 

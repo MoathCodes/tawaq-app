@@ -43,6 +43,7 @@ class PrayerAlertCoordinator {
 
   Future<void> _queue = Future<void>.value();
   int _generation = 0;
+  bool _disposed = false;
   Timer? _finishTimer;
   StreamSubscription<PlaybackState>? _playbackSub;
 
@@ -56,27 +57,38 @@ class PrayerAlertCoordinator {
   /// Dismisses the currently active alert.
   Future<void> dismiss() => _enqueue(() => _finish(_generation));
 
-  /// Cancels timers and the playback subscription. Call on shutdown.
+  /// Cancels timers, playback, and every channel. Call on shutdown.
   Future<void> dispose() async {
+    if (_disposed) return;
+    _disposed = true;
+    ++_generation;
     _finishTimer?.cancel();
     _finishTimer = null;
     await _playbackSub?.cancel();
     _playbackSub = null;
+    await _teardown();
+    _queue = Future<void>.value();
   }
 
   Future<void> _enqueue(Future<void> Function() action) {
-    return _queue = _queue.then((_) => action()).catchError(
+    if (_disposed) return Future<void>.value();
+    return _queue = _queue.then((_) {
+      if (_disposed) return Future<void>.value();
+      return action();
+    }).catchError(
       (Object error, StackTrace stack) =>
           _onError?.call('Prayer alert pipeline error', error, stack),
     );
   }
 
   Future<void> _deliver(PrayerAlertEvent event) async {
+    if (_disposed) return;
     final generation = ++_generation;
     await _teardown();
+    if (_disposed || generation != _generation) return;
 
     for (final channel in _channels) {
-      if (generation != _generation) {
+      if (_disposed || generation != _generation) {
         await _teardown();
         return;
       }
@@ -89,9 +101,13 @@ class PrayerAlertCoordinator {
           stack,
         );
       }
+      if (_disposed || generation != _generation) {
+        await _teardown();
+        return;
+      }
     }
 
-    if (generation != _generation) {
+    if (_disposed || generation != _generation) {
       await _teardown();
       return;
     }
@@ -108,9 +124,10 @@ class PrayerAlertCoordinator {
 
   /// Auto-finishes when playback ends, errors, or exceeds the safety cap.
   void _watchPlaybackCompletion(int generation) {
+    if (_disposed || generation != _generation) return;
     var started = false;
     _playbackSub = _playbackStream.listen((playback) {
-      if (generation != _generation) return;
+      if (_disposed || generation != _generation) return;
       if (playback is PlaybackPlaying) started = true;
       if (playback is PlaybackError || (playback is PlaybackIdle && started)) {
         _scheduleFinish(generation);
@@ -120,12 +137,14 @@ class PrayerAlertCoordinator {
   }
 
   void _scheduleFinish(int generation) {
+    if (_disposed || generation != _generation) return;
     unawaited(_enqueue(() => _finish(generation)));
   }
 
   Future<void> _finish(int generation) async {
-    if (generation != _generation) return;
+    if (_disposed || generation != _generation) return;
     await _teardown();
+    if (_disposed || generation != _generation) return;
   }
 
   /// Cancels the active timers, the playback listener, and every channel.

@@ -12,6 +12,9 @@ import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
 part 'tafsir_provider.g.dart';
 
 /// Provides the [TafsirRepository] instance.
+///
+/// Intentionally keepAlive: SQLite-backed infrastructure singleton shared by
+/// all tafsir fetches for the app lifetime.
 @Riverpod(keepAlive: true)
 TafsirRepository tafsirRepository(Ref ref) {
   final dbService = ref.read(assetDatabaseServiceProvider);
@@ -19,6 +22,9 @@ TafsirRepository tafsirRepository(Ref ref) {
 }
 
 /// Provides the [TafsirService] instance.
+///
+/// Intentionally keepAlive: thin service wrapper over
+/// [tafsirRepositoryProvider].
 @Riverpod(keepAlive: true)
 TafsirService tafsirService(Ref ref) {
   final repository = ref.read(tafsirRepositoryProvider);
@@ -26,11 +32,17 @@ TafsirService tafsirService(Ref ref) {
 }
 
 /// In-memory LRU for recently fetched tafsir database rows.
+///
+/// Intentionally keepAlive: bounded session cache (see [LruAyahCache]).
+/// Auto-dispose [ayahTafsirRowProvider] families consult this layer so per-ayah
+/// provider state can drop without unbounded family growth.
 @Riverpod(keepAlive: true)
 LruAyahCache<Tafsir> ayahTafsirRowLru(Ref ref) => LruAyahCache<Tafsir>();
 
 /// Raw tafsir row for a specific ayah and source, with LRU row caching.
-@Riverpod(keepAlive: true)
+///
+/// Auto-dispose family: disposes when no widget listens to this ayah/source.
+@riverpod
 Future<Tafsir?> ayahTafsirRow(
   Ref ref,
   TafsirId source,
@@ -49,6 +61,9 @@ Future<Tafsir?> ayahTafsirRow(
 }
 
 /// In-memory LRU for parsed tafsir commentary.
+///
+/// Intentionally keepAlive: bounded parse-result cache. Auto-dispose
+/// [parsedTafsirProvider] families read and write through this layer.
 @Riverpod(keepAlive: true)
 ParsedTafsirLru parsedTafsirLru(Ref ref) => ParsedTafsirLru();
 
@@ -93,7 +108,10 @@ class ParsedTafsirLru {
 }
 
 /// Parsed tafsir segments for a specific ayah and source.
-@Riverpod(keepAlive: true)
+///
+/// Auto-dispose family. Watches [ayahTafsirRowProvider] synchronously before
+/// awaiting its future (Riverpod 3 async-gap safe).
+@riverpod
 Future<TafsirParseResult?> parsedTafsir(
   Ref ref,
   TafsirId source,

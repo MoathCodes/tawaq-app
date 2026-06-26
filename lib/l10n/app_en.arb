@@ -961,6 +961,7 @@
   "quranRecitationModeStopAtEnd": "Stop at end",
   "quranRecitationModeRepeat": "Repeat selection",
   "quranRecitationModeContinue": "Continue to next surah",
+  "quranRangeModeLabel": "End behavior",
   "quranSurahLabel": "Surah {surah}",
   "@quranSurahLabel": {
     "placeholders": {
@@ -972,6 +973,10 @@
   "quranRecitationOpenPlayer": "Open player",
   "quranRecitationClosePlayer": "Close player",
   "quranRecitationSwitchReciter": "Switch reciter",
+
+  "quranRecitationCancel": "Cancel",
+
+  "quranRecitationApply": "Apply",
   "quranRecitationRangeRepeat": "Range & repeat",
   "quranRecitationQueue": "Queue",
   "quranRecitationQueueSubtitle": "Ayahs in this selection",
@@ -991,7 +996,9 @@
     }
   },
   "quranRecitationAutoScroll": "Auto-scroll",
+  "quranRecitationAutoScrollDesc": "Automatically scroll the mushaf page to follow the recitation position.",
   "quranRecitationHighlight": "Highlight ayah",
+  "quranRecitationHighlightDesc": "Highlight the currently playing ayah in the mushaf.",
   "quranRecitationOfflineFiles": "Offline files",
   "quranRecitationOfflineSubtitle": "Saved recitations",
   "quranRecitationOfflineAutoSave": "Recitations are saved automatically while you listen.",
@@ -1022,6 +1029,16 @@
   "quranReciterFilterDownloaded": "Downloaded",
   "quranReciterStyleMurattal": "Murattal",
   "quranReciterStyleMujawwad": "Mujawwad",
+  "quranReciterRiwayahUpgraded": "This riwayah doesn't support ayah sync. Switched to {riwayah}.",
+  "@quranReciterRiwayahUpgraded": {
+    "description": "Shown when the selected riwayah lacks timing and is auto-upgraded",
+    "placeholders": {
+      "riwayah": {
+        "type": "String",
+        "example": "Hafs"
+      }
+    }
+  },
   "quranNoMatchingReciters": "No matching reciters",
   "quranRangeTitle": "Range & repeat for memorization",
   "quranRangeScope": "Range",
@@ -1029,6 +1046,7 @@
   "quranRangePresetSurah": "This surah",
   "quranRangePresetJuz": "This juz",
   "quranRangePresetHizb": "This hizb",
+  "quranRangePresetContinueFromHere": "Continue from here",
   "quranRangePresetCustom": "Custom",
   "quranRangeFromSurah": "From — surah",
   "quranRangeFromAyah": "From — ayah",
@@ -1062,5 +1080,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "quranRangeSave": "Save range"
 }

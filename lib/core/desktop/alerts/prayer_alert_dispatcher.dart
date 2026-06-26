@@ -52,4 +52,9 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
 
   /// Dismisses the currently active alert (user action or external request).
   Future<void> dismiss() => _coordinator.dismiss();
+
+  /// Hard shutdown: tears down the coordinator and drains the delivery queue.
+  ///
+  /// Prefer this over [dismiss] on app quit so no queued work re-arms timers.
+  Future<void> forceShutdown() => _coordinator.dispose();
 }

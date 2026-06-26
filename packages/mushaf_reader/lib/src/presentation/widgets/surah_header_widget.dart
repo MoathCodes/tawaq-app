@@ -118,7 +118,7 @@ class SurahHeaderWidget extends StatefulWidget {
     this.textStyle,
     this.styleModifier,
     this.isDark,
-    this.width = 500,
+    this.width = 300,
     this.onTap,
     this.onLongPress,
     this.customHeaderImageLight,
@@ -169,14 +169,13 @@ class _SurahHeaderWidgetState extends State<SurahHeaderWidget> {
   }
 
   void _loadFuture() {
-    _future = (widget.repository ?? HiveQuranRepository()).getSurah(
+    _future = (widget.repository ?? HiveQuranRepository.instance).getSurah(
       widget._surahNumber!,
     );
   }
 
   bool _resolveIsDark(BuildContext context) {
-    return widget.isDark ??
-        Theme.of(context).brightness == Brightness.dark;
+    return widget.isDark ?? Theme.of(context).brightness == Brightness.dark;
   }
 
   String? _resolveLightOverride() {

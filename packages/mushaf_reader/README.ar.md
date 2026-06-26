@@ -34,9 +34,13 @@
 | عرض الصفحات     | `MushafPage`، `MushafPageRange`، `MushafReader` (`pagesPerViewport: 1` أو `2`) |
 | النقر والتمييز  | تحديد آية بأنماط قابلة للتخصيص                                                 |
 | عناصر الصفحة    | ترويسة السورة، البسملة، علامة الجزء، رقم الصفحة                                |
-| نماذج البيانات  | `Ayah`، `Surah`، `Juz`، `QuranPage`، `MushafPageInfo`                          |
-| واجهة التنقّل   | `jumpToPage`، `jumpToSurah`، `jumpToJuz`، `jumpToAyah`، `searchAyahs`          |
-| ثوابت ومساعدات  | `MushafConstants`، `Ayah.globalIdFor()`، `AyahIdResolver`                      |
+| نماذج البيانات  | `Ayah`، `Surah`، `Juz`، `Hizb`، `QuranPage`، `MushafPageInfo`                  |
+| واجهة التنقّل   | `jumpToPage`، `jumpToSurah`، `jumpToJuz`، `jumpToHizb`، `jumpToAyah`، `searchAyahs` |
+| حدود الأقسام    | `juzAyahBounds`، `hizbAyahBounds` — نطاق معرّفات الآيات لكل جزء/حزب              |
+| ثوابت ومساعدات  | `MushafConstants`، `Ayah.globalIdFor()`، `Ayah.hizb`، `AyahIdResolver`           |
+| إعادة البناء    | `MushafSelectionListenable`، `MushafPageListenable` — استمع لجزء من المتحكّم فقط |
+| نماذج التلاوة   | `SurahTiming`، `AyahTiming` — إزاحات ms لكل آية (لتطبيقات الصوت الخاصة بك)      |
+| دورة حياة المستودع | `HiveQuranRepository.acquire()` / `dispose()` — للملكية؛ `instance` للوصول للقراءة فقط |
 | أنواع الاستدعاء | `AyahTapCallback`، `AyahIdTapCallback`، `SurahTapCallback`، …                  |
 | الخطوط والتحجيم | `MushafFonts`، `MushafScale`، `MushafTextStyleMerger`                          |
 
@@ -191,10 +195,34 @@ final id = Ayah.globalIdFor(surah: 2, ayahInSurah: 255); // 262
 | --------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `MushafReader`                                | قارئ قابل للسحب؛ `pagesPerViewport: 1` (افتراضي) أو `2` للعرض المزدوج                         |
 | `MushafPage`                                  | صفحة مصحف واحدة — للتخطيطات المخصّصة                                                          |
-| `MushafReaderController`                      | تنقّل، تحديد، وجلب بيانات غير متزامن؛ يعرض `repository` للوصول المباشر إلى `IQuranRepository` |
+| `MushafReaderController`                      | تنقّل (`jumpToJuz`، `jumpToHizb`، …)، تحديد، وجلب بيانات (`getAyah`، `getHizb`، `getPageInfo`، `searchAyahs`، …)؛ `juzAyahBounds` / `hizbAyahBounds`؛ يعرض `repository` للوصول المباشر إلى `IQuranRepository` |
 | `AyahWidget`                                  | آية منفردة بالمعرّف العام أو سورة:آية                                                         |
 | `BasmalahWidget`، `SurahHeaderWidget`، وغيرها | قطع منخفضة المستوى لواجهات مخصّصة                                                             |
 
+### استماع جزئي (narrow listenables)
+
+`MushafReaderController` ما زال يطبّق `Listenable` لتوافق `addListener`، لكن يُفضّل `controller.selection` أو `controller.page` مع `ListenableBuilder` حتى يُعاد بناء الواجهة فقط عند تغيّر التحديد أو بيانات الصفحة:
+
+```dart
+ListenableBuilder(
+  listenable: controller.page,
+  builder: (context, _) => Text('Page ${controller.currentPage}'),
+);
+```
+
+`MushafPage` يستمع داخلياً إلى `controller.selection` لتمييز الآيات.
+
+### نماذج توقيت التلاوة
+
+`SurahTiming` و`AyahTiming` نماذج JSON لمساعدة تطبيقاتك عند جلب توقيت آيات ملف MP3 لكل سورة. **لا** يوجد مشغّل صوت مضمّن — استخدم `ayahAt(positionMs)` لتمييز الآية أثناء التشغيل.
+
+### عدّ مراجع المستودع
+
+`HiveQuranRepository` نسخة واحدة على مستوى العملية. استدعاء `HiveQuranRepository()` أو `instance` يعيد النسخة المشتركة **دون** زيادة العداد — مناسب للويدجت التي تقرأ بيانات مخزّنة مؤقتاً فقط.
+
+الملكية (مثل `MushafReaderController`) تستدعي `acquire()` مرة واحدة ثم `dispose()` عند الإغلاق. لا تستدعِ المصنع من داخل `build()`؛ مرّر `controller.repository` أو `IQuranRepository` مُحقوناً.
+
+`MushafReader` يبقي نافذة صفحات حية فقط (الصفحة الحالية ±1) داخل `PageView`. `MushafPage` المنفردة تستخدم `keepAlive: false` افتراضياً.
 
 ## خطافات التخصيص
 
@@ -262,7 +290,7 @@ cd example && flutter pub get && flutter run
 | الأصل               | الغرض                                           |
 | ------------------- | ----------------------------------------------- |
 | `assets/otf_fonts/` | 604 خط صفحة QCF4 وخط مشترك للعناوين             |
-| `assets/hive/`      | نص القرآن وبيانات السور والأجزاء وتخطيط الصفحات |
+| `assets/hive/`      | نص القرآن وبيانات السور والأجزاء والأحزاب وتخطيط الصفحات |
 | `assets/images/`    | SVG لترويسات السور والزخارف                     |
 
 

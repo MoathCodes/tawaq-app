@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:desktop_tray/desktop_tray.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/desktop/desktop_shutdown.dart';
 import 'package:tawaq/core/desktop/desktop_window_controller.dart';
 import 'package:tawaq/core/desktop/tray_menu.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
@@ -68,9 +69,7 @@ class DesktopTrayService with DesktopTrayListener {
 
   /// Tears down the tray and quits the app from a native menu callback.
   Future<void> quitFromTray() async {
-    await dispose();
-    if (!_ref.mounted) return;
-    await _ref.read(desktopWindowControllerProvider).quit();
+    await shutdownDesktop(_ref);
   }
 
   @override

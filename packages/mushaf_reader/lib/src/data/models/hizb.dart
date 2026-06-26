@@ -30,6 +30,9 @@ abstract class Hizb with _$Hizb {
 
     /// The first [Ayah.hizbQuarter] value in this Hizb (= `(number - 1) * 4 + 1`).
     int? startHizbQuarter,
+
+    /// Uthmanic Hafs text of the first ayah in this Hizb (from `quran.json`).
+    String? startAyahUthmaniText,
   }) = _Hizb;
 
   const Hizb._();

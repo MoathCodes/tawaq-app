@@ -532,3 +532,98 @@ FButtonStyle _windowButton({
     tappableStyle: style.tappableStyle,
   );
 }
+
+/// Segmented layout toggle chip used in the Quran header.
+FButtonStyle layoutSegmentButtonStyle({
+  required FColors colors,
+  required FTypography typography,
+  required FStyle style,
+  required BorderRadiusGeometry borderRadius,
+  bool compact = false,
+}) {
+  final selectedBorder = RoundedSuperellipseBorder(
+    side: BorderSide(color: colors.primary.withValues(alpha: 0.35)),
+    borderRadius: borderRadius,
+  );
+  final baseShape = RoundedSuperellipseBorder(borderRadius: borderRadius);
+  final selectedShadow = [
+    BoxShadow(
+      color: colors.barrier.withValues(alpha: 0.05),
+      blurRadius: 6,
+      offset: const Offset(0, 1),
+    ),
+  ];
+
+  final decoration =
+      FVariants<
+        FTappableVariantConstraint,
+        FTappableVariant,
+        Decoration,
+        DecorationDelta
+      >.from(
+        ShapeDecoration(shape: baseShape, color: Colors.transparent),
+        variants: {
+          [FTappableVariant.hovered, FTappableVariant.pressed]:
+              DecorationDelta.shapeDelta(color: colors.card),
+          [FTappableVariant.selected]: DecorationDelta.shapeDelta(
+            color: colors.card,
+            shape: selectedBorder,
+            shadows: selectedShadow,
+          ),
+        },
+      );
+
+  final textStyle = typography.body.xs.copyWith(
+    color: colors.mutedForeground,
+    fontWeight: FontWeight.w500,
+    height: 1,
+  );
+
+  return FButtonStyle(
+    decoration: decoration,
+    focusedOutlineStyle: style.focusedOutlineStyle,
+    contentStyle: FButtonContentStyle(
+      textStyle: FVariants.from(
+        textStyle,
+        variants: {
+          [.selected]: TextStyleDelta.delta(
+            color: colors.foreground,
+            fontWeight: FontWeight.w600,
+          ),
+        },
+      ),
+      iconStyle: FVariants.from(
+        IconThemeData(color: colors.mutedForeground, size: 16),
+        variants: {
+          [.selected]: IconThemeDataDelta.delta(color: colors.primary),
+        },
+      ),
+      circularProgressStyle: FVariants.from(
+        FCircularProgressStyle(
+          iconStyle: IconThemeData(color: colors.mutedForeground, size: 16),
+        ),
+        variants: {
+          [.selected]: FCircularProgressStyleDelta.delta(
+            iconStyle: IconThemeDataDelta.delta(color: colors.primary),
+          ),
+        },
+      ),
+      padding: EdgeInsets.symmetric(
+        horizontal: compact ? 8 : 12,
+        vertical: 8,
+      ),
+      spacing: 4,
+    ),
+    iconContentStyle: FButtonIconContentStyle(
+      iconStyle: FVariants.from(
+        IconThemeData(color: colors.mutedForeground, size: 16),
+        variants: {
+          [.selected]: IconThemeDataDelta.delta(color: colors.primary),
+        },
+      ),
+      padding: const EdgeInsets.all(8),
+    ),
+    tappableStyle: style.tappableStyle,
+  );
+}
+

@@ -281,7 +281,9 @@ GoRouter appRouter(Ref ref) {
       ),
     ),
   );
-  ref.onDispose(appRouter.dispose);
+  ref
+    ..onDispose(appRouter.dispose)
+    ..onDispose(refresh.dispose);
   return appRouter;
 }
 

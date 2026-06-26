@@ -36,6 +36,9 @@ If you need a full app experience, use this package as the rendering layer and b
 | Navigation API       | `jumpToPage`, `jumpToSurah`, `jumpToJuz`, `jumpToHizb`, `jumpToAyah`, `searchAyahs` |
 | Division bounds      | `juzAyahBounds`, `hizbAyahBounds` — global ayah id ranges per juz/hizb         |
 | Constants & helpers  | `MushafConstants`, `Ayah.globalIdFor()`, `Ayah.hizb`, `AyahIdResolver`       |
+| Granular rebuilds    | `MushafSelectionListenable`, `MushafPageListenable` — listen to part of the controller |
+| Recitation helpers   | `SurahTiming`, `AyahTiming` — per-ayah ms offsets for your own audio layer     |
+| Repository lifecycle | `HiveQuranRepository.acquire()` / `dispose()` — pair for owned instances; `instance` for read-only access |
 | Callback typedefs    | `AyahTapCallback`, `AyahIdTapCallback`, `SurahTapCallback`, …                  |
 | Fonts & scaling      | `MushafFonts`, `MushafScale`, `MushafTextStyleMerger`                          |
 
@@ -227,6 +230,31 @@ final results = await controller.searchAyahs('الله');
 ```
 
 Same method exists on `IQuranRepository` if you use the repository directly.
+
+### Narrow listenables
+
+`MushafReaderController` still implements `Listenable` for legacy `addListener` use, but prefer `controller.selection` or `controller.page` with `ListenableBuilder` so chrome rebuilds only when selection or page metadata changes:
+
+```dart
+ListenableBuilder(
+  listenable: controller.page,
+  builder: (context, _) => Text('Page ${controller.currentPage}'),
+);
+```
+
+`MushafPage` already listens to `controller.selection` internally for ayah highlights.
+
+### Recitation timing models
+
+`SurahTiming` and `AyahTiming` are JSON-serializable helpers for host apps that fetch per-surah MP3 timing data themselves. They are **not** wired to a player — use `ayahAt(positionMs)` to drive ayah highlighting during playback.
+
+### Repository reference counting
+
+`HiveQuranRepository` is a process-wide singleton. Calling `HiveQuranRepository()` or `HiveQuranRepository.instance` returns the shared instance **without** changing the internal reference count — safe for widgets that only read cached metadata.
+
+Owned lifetimes (e.g. `MushafReaderController`) call `HiveQuranRepository.acquire()` once and `dispose()` on teardown. Do **not** call `HiveQuranRepository()` from `build()`; pass `controller.repository` or an injected `IQuranRepository` instead.
+
+`MushafReader` enables a sliding keep-alive window (current page ±1) inside its `PageView`. Standalone `MushafPage` widgets default to `keepAlive: false`.
 
 ## Customization hooks
 

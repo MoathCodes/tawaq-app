@@ -19,7 +19,8 @@ part 'ayah.freezed.dart';
 /// - [surahNumber]: The Surah (chapter) number (1-114)
 /// - [numberInSurah]: The Ayah number within its Surah
 /// - [text]: The QCF4-encoded glyph text for rendering
-/// - [textPlain]: Plain Arabic text without tajweed marks
+/// - [textPlain]: Plain Arabic text without tajweed marks (Imlaei script)
+/// - [uthmaniText]: Uthmanic Hafs text with tashkeel from `quran.json` `text`
 /// - [manzil]: The Manzil number (1-7, dividing Quran for weekly reading)
 /// - [ruku]: The Ruku (section) number for prayer divisions
 /// - [hizbQuarter]: The Hizb quarter number (1-240)
@@ -86,6 +87,11 @@ abstract class Ayah with _$Ayah {
     ///
     /// Useful for text-to-speech, search, and accessibility features.
     String? textPlain,
+
+    /// Uthmanic Hafs text with tashkeel from `quran.json` `text` key.
+    ///
+    /// Distinct from [text] (QCF4 glyph encoding) and [textPlain] (Imlaei).
+    String? uthmaniText,
 
     /// The Manzil number this Ayah belongs to (1-7).
     ///

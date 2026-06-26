@@ -2,9 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_bindings.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_invocation.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 
 /// Global keyboard shortcuts for the application shell.
 ///

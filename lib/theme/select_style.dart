@@ -11,10 +11,26 @@ bool _useTouchVariant() =>
 
 FTextFieldSizeStyles _customFieldStyles(
   FTextFieldSizeStyles fieldStyles, {
-  required bool useQuranFont,
+  bool useQuranFont = false,
+  bool useGlyphFont = false,
   double? customFontSize,
 }) {
-  if (!useQuranFont && customFontSize == null) return fieldStyles;
+  if (!useQuranFont && !useGlyphFont && customFontSize == null) {
+    return fieldStyles;
+  }
+
+  final String? fontFamily;
+  final String? package;
+  if (useGlyphFont) {
+    fontFamily = 'QCF4_BSML';
+    package = 'mushaf_reader';
+  } else if (useQuranFont) {
+    fontFamily = FontFamily.uthmanicHafs;
+    package = null;
+  } else {
+    fontFamily = null;
+    package = null;
+  }
 
   return FTextFieldSizeStyles(
     fieldStyles.apply([
@@ -39,7 +55,8 @@ FTextFieldSizeStyles _customFieldStyles(
                   TextStyleDelta
                 >.all(
                   TextStyleDelta.delta(
-                    fontFamily: useQuranFont ? FontFamily.uthmanicHafs : null,
+                    fontFamily: fontFamily,
+                    package: package,
                     fontSize: customFontSize,
                   ),
                 ),
@@ -56,7 +73,9 @@ FTextFieldSizeStyles _customFieldStyles(
 /// across Forui style schema updates.
 ///
 /// When [useQuranFont] is true the closed-field value uses Uthmanic Hafs
-/// (surah names in the surah selector). [customFontSize] overrides the
+/// (surah names in the surah selector). When [useGlyphFont] is true the
+/// closed-field value uses QCF4_BSML from `mushaf_reader` (juz glyphs).
+/// If both are true, [useGlyphFont] wins. [customFontSize] overrides the
 /// inherited body size when set.
 FSelectStyle selectStyle({
   required FColors colors,
@@ -64,6 +83,7 @@ FSelectStyle selectStyle({
   required FStyle style,
   bool? touch,
   bool useQuranFont = false,
+  bool useGlyphFont = false,
   double? customFontSize,
 }) {
   final resolvedTouch = touch ?? _useTouchVariant();
@@ -75,7 +95,7 @@ FSelectStyle selectStyle({
     touch: resolvedTouch,
   );
 
-  if (!useQuranFont && customFontSize == null) {
+  if (!useQuranFont && !useGlyphFont && customFontSize == null) {
     return inherited;
   }
 
@@ -83,6 +103,7 @@ FSelectStyle selectStyle({
     fieldStyles: _customFieldStyles(
       inherited.fieldStyles,
       useQuranFont: useQuranFont,
+      useGlyphFont: useGlyphFont,
       customFontSize: customFontSize,
     ),
     searchStyle: inherited.searchStyle,

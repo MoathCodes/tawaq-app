@@ -37,7 +37,7 @@ class _DesktopSplitLayout extends ConsumerWidget {
         ),
       ),
       sidePane: Padding(
-        padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
+        padding: EdgeInsetsDirectional.only(end: collapsed ? 0 : AppSpacing.sm),
         child: Directionality(
           textDirection: textDirection,
           child: _SidePanel(

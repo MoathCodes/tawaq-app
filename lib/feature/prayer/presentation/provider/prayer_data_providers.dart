@@ -118,25 +118,13 @@ class PrayerDay extends _$PrayerDay {
 /// Recomputes when the calendar day or [prayerTimeInputsProvider] changes, or
 /// when [PrayerDay] emits a new bundle reference (midnight / location change).
 @Riverpod(keepAlive: true)
-class TodayPrayerDayBundle extends _$TodayPrayerDayBundle {
-  @override
-  PrayerDayBundle? build() {
-    ref
-      ..watch(prayerCalendarDayKeyProvider)
-      ..watch(prayerTimeInputsProvider)
-      ..listen(
-        prayerDayProvider,
-        (_, next) {
-          final nextBundle = next.value?.bundle;
-          if (nextBundle != state) {
-            state = nextBundle;
-          }
-        },
-        fireImmediately: true,
-      );
-
-    return ref.read(prayerDayProvider).value?.bundle;
-  }
+PrayerDayBundle? todayPrayerDayBundle(Ref ref) {
+  ref
+    ..watch(prayerCalendarDayKeyProvider)
+    ..watch(prayerTimeInputsProvider);
+  // Read (don't watch) so dependents are not rebuilt on every 1 Hz tick;
+  // calendar day key and inputs changes cover midnight and location updates.
+  return ref.read(prayerDayProvider).value?.bundle;
 }
 
 /// Prayer bundle for a calendar date via the shared computation engine.

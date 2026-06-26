@@ -228,7 +228,7 @@ class _AyahWidgetState extends State<AyahWidget> {
 
   /// Initiates the async fetch of Ayah data.
   void _loadAyah() {
-    final repo = widget.repository ?? HiveQuranRepository();
+    final repo = widget.repository ?? HiveQuranRepository.instance;
     _future = widget._ayahId != null
         ? repo.getAyah(widget._ayahId!, widget.removeNewLines)
         : repo.getAyahBySurah(

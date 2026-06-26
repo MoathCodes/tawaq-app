@@ -816,6 +816,11 @@ class _LookupSection extends HookConsumerWidget {
     final selectedSet = selected.toSet();
     final lookupRequestId = useRef(0);
 
+    useEffect(
+      () => () => lookupRequestId.value++,
+      const [],
+    );
+
     void updateFilters(HadithFilters next) {
       if (!interactionsEnabled) return;
       unawaited(

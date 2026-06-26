@@ -111,10 +111,12 @@ class JuzWidget extends StatefulWidget {
 
 class _JuzWidgetState extends State<JuzWidget> {
   Future<Juz?>? _future;
+  late IQuranRepository _repository;
 
   @override
   void initState() {
     super.initState();
+    _repository = widget.repository ?? HiveQuranRepository.instance;
     if (widget.juzData == null) {
       _loadFuture();
     }
@@ -123,15 +125,17 @@ class _JuzWidgetState extends State<JuzWidget> {
   @override
   void didUpdateWidget(JuzWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.number != oldWidget.number) {
+    if (widget.repository != oldWidget.repository) {
+      _repository = widget.repository ?? HiveQuranRepository.instance;
+    }
+    if (widget.number != oldWidget.number ||
+        widget.repository != oldWidget.repository) {
       _loadFuture();
     }
   }
 
   void _loadFuture() {
-    _future = (widget.repository ?? HiveQuranRepository()).getJuz(
-      widget.number,
-    );
+    _future = _repository.getJuz(widget.number);
   }
 
   @override
@@ -142,9 +146,7 @@ class _JuzWidgetState extends State<JuzWidget> {
     }
 
     // Try to get from repository cache
-    // Note: getJuzSync is on the Interface, so we can use widget.repository if present
-    final repo = widget.repository ?? HiveQuranRepository();
-    final cachedJuz = repo.getJuzSync(widget.number);
+    final cachedJuz = _repository.getJuzSync(widget.number);
     if (cachedJuz != null) {
       return _buildContent(cachedJuz);
     }

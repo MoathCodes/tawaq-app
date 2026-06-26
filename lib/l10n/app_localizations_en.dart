@@ -1951,6 +1951,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranRecitationModeContinue => 'Continue to next surah';
 
   @override
+  String get quranRangeModeLabel => 'End behavior';
+
+  @override
   String quranSurahLabel(String surah) {
     return 'Surah $surah';
   }
@@ -1963,6 +1966,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quranRecitationSwitchReciter => 'Switch reciter';
+
+  @override
+  String get quranRecitationCancel => 'Cancel';
+
+  @override
+  String get quranRecitationApply => 'Apply';
 
   @override
   String get quranRecitationRangeRepeat => 'Range & repeat';
@@ -2004,7 +2013,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranRecitationAutoScroll => 'Auto-scroll';
 
   @override
+  String get quranRecitationAutoScrollDesc =>
+      'Automatically scroll the mushaf page to follow the recitation position.';
+
+  @override
   String get quranRecitationHighlight => 'Highlight ayah';
+
+  @override
+  String get quranRecitationHighlightDesc =>
+      'Highlight the currently playing ayah in the mushaf.';
 
   @override
   String get quranRecitationOfflineFiles => 'Offline files';
@@ -2060,6 +2077,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranReciterStyleMujawwad => 'Mujawwad';
 
   @override
+  String quranReciterRiwayahUpgraded(String riwayah) {
+    return 'This riwayah doesn\'t support ayah sync. Switched to $riwayah.';
+  }
+
+  @override
   String get quranNoMatchingReciters => 'No matching reciters';
 
   @override
@@ -2079,6 +2101,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quranRangePresetHizb => 'This hizb';
+
+  @override
+  String get quranRangePresetContinueFromHere => 'Continue from here';
 
   @override
   String get quranRangePresetCustom => 'Custom';
@@ -2143,4 +2168,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String quranRangeRepeatChip(int count) {
     return '×$count';
   }
+
+  @override
+  String get quranRangeSave => 'Save range';
 }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_l10n.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_indicator.dart';
 import 'package:tawaq/theme/theme.dart';
 

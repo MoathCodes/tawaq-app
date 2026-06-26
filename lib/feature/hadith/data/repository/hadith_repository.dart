@@ -1,6 +1,7 @@
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/feature/hadith/data/database/hadith_local_database.dart';
 import 'package:tawaq/feature/hadith/data/models/hadith_recent_search.dart';
@@ -10,9 +11,11 @@ part 'hadith_repository.g.dart';
 
 /// Provides the shared Dorar client.
 ///
-/// Dorar is initialized lazily on first Hadith route use.
+/// Dorar is initialized lazily on first Hadith route use. Construction waits
+/// for [dorarInitProvider] so the cache path is configured first.
 @Riverpod(keepAlive: true)
-DorarClient dorarClient(Ref ref) {
+Future<DorarClient> dorarClient(Ref ref) async {
+  await ref.watch(dorarInitProvider.future);
   final client = DorarClient();
   ref.onDispose(() async {
     await client.dispose();
@@ -22,9 +25,9 @@ DorarClient dorarClient(Ref ref) {
 
 /// Provides the repository used by the hadith feature.
 @riverpod
-HadithRepository hadithRepository(Ref ref) {
+Future<HadithRepository> hadithRepository(Ref ref) async {
   final log = ref.read(loggerProvider);
-  final client = ref.read(dorarClientProvider);
+  final client = await ref.watch(dorarClientProvider.future);
   final local = ref.read(hadithLocalDatabaseProvider);
   return HadithRepository(client: client, local: local, log: log);
 }

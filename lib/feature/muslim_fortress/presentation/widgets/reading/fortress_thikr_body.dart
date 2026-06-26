@@ -118,8 +118,7 @@ class FortressThikrBody extends ConsumerWidget {
 
 /// Compact thikr preview for category list tiles.
 ///
-/// Quranic items use [dua.text] from the bundled Uthmani database with
-/// [FontFamily.uthmanicHafs] (plain text, not mushaf page layout).
+/// Collapsed: two-line excerpt. Expanded: full text (Uthmani for Quranic items).
 class FortressThikrPreview extends StatelessWidget {
   /// Creates a list-tile thikr preview.
   const FortressThikrPreview({
@@ -137,9 +136,10 @@ class FortressThikrPreview extends StatelessWidget {
     final isQuran = dua.isQuranicPassage;
 
     var style = theme.typography.body.sm.copyWith(
-      color: theme.colors.mutedForeground,
+      color: isExpanded ? theme.colors.foreground : theme.colors.mutedForeground,
       height: isQuran ? 2 : 1.6,
       fontSize: isQuran ? (isExpanded ? 22 : 20) : null,
+      fontWeight: isExpanded && isQuran ? FontWeight.w600 : FontWeight.w500,
     );
     if (isQuran) {
       style = style.copyWith(fontFamily: FontFamily.uthmanicHafs);

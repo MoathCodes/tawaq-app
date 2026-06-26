@@ -52,6 +52,12 @@ abstract class Juz with _$Juz {
     ///
     /// This is the ID of the last Ayah in the Juz.
     int? endAyahId,
+
+    /// Surah number of the first ayah in this Juz (1–114).
+    int? startSurahNumber,
+
+    /// Ayah number within [startSurahNumber] for the first ayah in this Juz.
+    int? startAyahInSurah,
   }) = _Juz;
 
   const Juz._();

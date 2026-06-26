@@ -76,7 +76,7 @@ void main() {
     required Widget child,
   }) async {
     await tester.binding.setSurfaceSize(const Size(1024, 768));
-    addTearDown(tester.binding.setSurfaceSize);
+    addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       wrap(
         containerWidth: containerWidth,

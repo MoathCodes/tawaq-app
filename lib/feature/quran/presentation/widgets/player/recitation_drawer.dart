@@ -1,12 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/core/audio/audio_player_provider.dart';
-import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_playback.dart';
@@ -33,6 +30,7 @@ class RecitationDrawerOverlay extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final open = ref.watch(recitationDrawerProvider);
+    final colors = context.theme.colors;
 
     return IgnorePointer(
       ignoring: !open,
@@ -41,9 +39,24 @@ class RecitationDrawerOverlay extends ConsumerWidget {
         duration: context.theme.durations.fast,
         curve: Curves.easeOut,
         child: open
-            ? const Align(
-                alignment: Alignment.topCenter,
-                child: _DrawerPanel(),
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned.fill(
+                    child: MouseClick(
+                      onClick: ref
+                          .read(recitationDrawerProvider.notifier)
+                          .close,
+                      child: ColoredBox(
+                        color: colors.barrier.withValues(alpha: 0.45),
+                      ),
+                    ),
+                  ),
+                  const Align(
+                    alignment: Alignment.topCenter,
+                    child: _DrawerPanel(),
+                  ),
+                ],
               )
             : const SizedBox.shrink(),
       ),
@@ -51,7 +64,7 @@ class RecitationDrawerOverlay extends ConsumerWidget {
   }
 }
 
-class _DrawerPanel extends HookConsumerWidget {
+class _DrawerPanel extends ConsumerWidget {
   const _DrawerPanel();
 
   @override
@@ -59,16 +72,17 @@ class _DrawerPanel extends HookConsumerWidget {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
+    final isRtl = context.l10n.localeName.contains('ar');
 
     final playback = ref.watch(recitationControllerProvider);
     final controller = ref.read(recitationControllerProvider.notifier);
     final settings = ref.watch(recitationSettingsProvider).value;
     final settingsNotifier = ref.read(recitationSettingsProvider.notifier);
-    final playbackState = ref.watch(audioPlayerControllerProvider);
     final mushaf = ref.read(quranMushafControllerProvider);
 
-    final isPlaying = playbackState is PlaybackPlaying;
-    final isLoading = playbackState is PlaybackLoading;
+    final isPlaying = playback.isPlaying;
+    final isLoading = playback.isLoading;
+    final hasPending = playback.hasPendingReciter;
 
     final surah = playback.surah;
     final surahName = surah == null
@@ -76,16 +90,15 @@ class _DrawerPanel extends HookConsumerWidget {
         : mushaf.getSurahSync(surah)?.displayName ??
               l10n.quranSurahLabel('$surah');
     final reciterName = playback.reciter?.name ?? '';
+    final pendingReciterName = playback.pendingReciter?.name ?? '';
     final riwayah = playback.moshaf?.name ?? '';
-    final rangeLabel =
-        playback.isCrossSurahRange &&
-            playback.rangeFrom != null &&
-            playback.rangeTo != null
+    final pendingRiwayah = playback.pendingMoshaf?.name ?? '';
+    final rangeLabel = playback.rangeFrom != null
         ? formatAyahRangeLabel(
             mushaf: mushaf,
             l10n: l10n,
             from: playback.rangeFrom!,
-            to: playback.rangeTo!,
+            to: playback.rangeTo,
           )
         : playback.isRange
         ? '$surahName · ${playback.rangeStart}–${playback.rangeEnd}'
@@ -127,7 +140,7 @@ class _DrawerPanel extends HookConsumerWidget {
             : 620.0;
         final isNarrow = width < 480;
         final transportGap = isNarrow ? AppSpacing.md : AppSpacing.lg;
-        final transportOuterGap = isNarrow ? AppSpacing.md : AppSpacing.xl;
+
         return Container(
           width: width,
           margin: const EdgeInsets.only(bottom: AppSpacing.xl),
@@ -152,44 +165,116 @@ class _DrawerPanel extends HookConsumerWidget {
             children: [
               // Now playing + switch reciter.
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          reciterName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.typography.body.md.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: colors.foreground,
-                          ),
-                        ),
-                        if (showSubtitle)
-                          Row(
+                    child: hasPending
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (riwayah.isNotEmpty) ...[
-                                Flexible(
-                                  child: Text(
-                                    riwayah,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: subtitleStyle,
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      reciterName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.typography.body.md.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: colors.mutedForeground,
+                                        decoration: TextDecoration.lineThrough,
+                                      ),
+                                    ),
                                   ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.xs,
+                                    ),
+                                    child: Icon(
+                                      FLucideIcons.arrowRight,
+                                      size: 16,
+                                      color: colors.mutedForeground,
+                                    ),
+                                  ),
+                                  Flexible(
+                                    child: Text(
+                                      pendingReciterName,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.typography.body.md.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: colors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (showSubtitle)
+                                Row(
+                                  children: [
+                                    if (pendingRiwayah.isNotEmpty) ...[
+                                      Flexible(
+                                        child: Text(
+                                          pendingRiwayah,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: subtitleStyle,
+                                        ),
+                                      ),
+                                      if (rangeWidget != null)
+                                        Text(' · ', style: subtitleStyle),
+                                    ],
+                                    if (rangeWidget != null)
+                                      Flexible(child: rangeWidget),
+                                  ],
                                 ),
-                                if (rangeWidget != null)
-                                  Text(' · ', style: subtitleStyle),
-                              ],
-                              if (rangeWidget != null)
-                                Flexible(child: rangeWidget),
+                            ],
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                reciterName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.typography.body.md.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: colors.foreground,
+                                ),
+                              ),
+                              if (showSubtitle)
+                                Row(
+                                  children: [
+                                    if (riwayah.isNotEmpty) ...[
+                                      Flexible(
+                                        child: Text(
+                                          riwayah,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: subtitleStyle,
+                                        ),
+                                      ),
+                                      if (rangeWidget != null)
+                                        Text(' · ', style: subtitleStyle),
+                                    ],
+                                    if (rangeWidget != null)
+                                      Flexible(child: rangeWidget),
+                                  ],
+                                ),
                             ],
                           ),
-                      ],
-                    ),
                   ),
                   const SizedBox(width: AppSpacing.md),
+                  if (hasPending) ...[
+                    _ChipButton(
+                      icon: FLucideIcons.x,
+                      label: l10n.quranRecitationCancel,
+                      onPress: controller.cancelPendingReciter,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                  ],
                   _ChipButton(
                     icon: FLucideIcons.mic,
                     label: l10n.quranRecitationSwitchReciter,
@@ -208,31 +293,35 @@ class _DrawerPanel extends HookConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _RepeatPill(
-                    count: repeat,
-                    onPress: () => showRangeRepeatDialog(context),
-                  ),
-                  SizedBox(width: transportOuterGap),
                   _TransportIcon(
-                    icon: FLucideIcons.skipForward,
-                    onPress: controller.skipNext,
+                    icon: !isRtl
+                        ? FLucideIcons.skipBack
+                        : FLucideIcons.skipForward,
+                    onPress: !isRtl
+                        ? controller.skipNext
+                        : controller.skipPrevious,
+                    tooltip: !isRtl
+                        ? l10n.quranRecitationNext
+                        : l10n.quranRecitationPrevious,
                   ),
                   SizedBox(width: transportGap),
                   _BigPlayButton(
                     isPlaying: isPlaying,
                     isLoading: isLoading,
+                    isPending: hasPending,
                     onPress: controller.togglePlayPause,
                   ),
                   SizedBox(width: transportGap),
                   _TransportIcon(
-                    icon: FLucideIcons.skipBack,
-                    onPress: controller.skipPrevious,
-                  ),
-                  SizedBox(width: transportOuterGap),
-                  _TransportIcon(
-                    icon: FLucideIcons.x,
-                    size: 18,
-                    onPress: () async => controller.stop(),
+                    icon: !isRtl
+                        ? FLucideIcons.skipForward
+                        : FLucideIcons.skipBack,
+                    onPress: !isRtl
+                        ? controller.skipPrevious
+                        : controller.skipNext,
+                    tooltip: !isRtl
+                        ? l10n.quranRecitationPrevious
+                        : l10n.quranRecitationNext,
                   ),
                 ],
               ),
@@ -323,19 +412,27 @@ class _DrawerPanel extends HookConsumerWidget {
                   spacing: AppSpacing.md,
                   runSpacing: AppSpacing.sm,
                   children: [
-                    _ToggleChip(
-                      label: l10n.quranRecitationAutoScroll,
-                      value: settings?.autoScroll ?? true,
-                      onChange: (v) => ref
-                          .read(recitationSettingsProvider.notifier)
-                          .setAutoScroll(value: v),
+                    FTooltip(
+                      tipBuilder: (_, _) =>
+                          Text(l10n.quranRecitationAutoScrollDesc),
+                      child: _ToggleChip(
+                        label: l10n.quranRecitationAutoScroll,
+                        value: settings?.autoScroll ?? true,
+                        onChange: (v) => ref
+                            .read(recitationSettingsProvider.notifier)
+                            .setAutoScroll(value: v),
+                      ),
                     ),
-                    _ToggleChip(
-                      label: l10n.quranRecitationHighlight,
-                      value: settings?.highlightAyah ?? true,
-                      onChange: (v) => ref
-                          .read(recitationSettingsProvider.notifier)
-                          .setHighlightAyah(value: v),
+                    FTooltip(
+                      tipBuilder: (_, _) =>
+                          Text(l10n.quranRecitationHighlightDesc),
+                      child: _ToggleChip(
+                        label: l10n.quranRecitationHighlight,
+                        value: settings?.highlightAyah ?? true,
+                        onChange: (v) => ref
+                            .read(recitationSettingsProvider.notifier)
+                            .setHighlightAyah(value: v),
+                      ),
                     ),
                   ],
                 ),
@@ -364,20 +461,28 @@ class _DrawerPanel extends HookConsumerWidget {
                       ),
                     ),
                     const Spacer(),
-                    _ToggleChip(
-                      label: l10n.quranRecitationAutoScroll,
-                      value: settings?.autoScroll ?? true,
-                      onChange: (v) => ref
-                          .read(recitationSettingsProvider.notifier)
-                          .setAutoScroll(value: v),
+                    FTooltip(
+                      tipBuilder: (_, _) =>
+                          Text(l10n.quranRecitationAutoScrollDesc),
+                      child: _ToggleChip(
+                        label: l10n.quranRecitationAutoScroll,
+                        value: settings?.autoScroll ?? true,
+                        onChange: (v) => ref
+                            .read(recitationSettingsProvider.notifier)
+                            .setAutoScroll(value: v),
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.md),
-                    _ToggleChip(
-                      label: l10n.quranRecitationHighlight,
-                      value: settings?.highlightAyah ?? true,
-                      onChange: (v) => ref
-                          .read(recitationSettingsProvider.notifier)
-                          .setHighlightAyah(value: v),
+                    FTooltip(
+                      tipBuilder: (_, _) =>
+                          Text(l10n.quranRecitationHighlightDesc),
+                      child: _ToggleChip(
+                        label: l10n.quranRecitationHighlight,
+                        value: settings?.highlightAyah ?? true,
+                        onChange: (v) => ref
+                            .read(recitationSettingsProvider.notifier)
+                            .setHighlightAyah(value: v),
+                      ),
                     ),
                   ],
                 ),
@@ -395,7 +500,7 @@ class _DrawerPanel extends HookConsumerWidget {
   }
 }
 
-class _ScrubberSection extends HookConsumerWidget {
+class _ScrubberSection extends StatelessWidget {
   const _ScrubberSection({
     required this.playback,
     required this.timing,
@@ -407,26 +512,10 @@ class _ScrubberSection extends HookConsumerWidget {
   final Future<void> Function(Duration position) onSeek;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final service = ref.watch(tawaqAudioServiceProvider);
-    final reportedDuration = playback.duration;
-    final liveDuration =
-        useStream(
-          useMemoized(() => service.durationStream, [service]),
-          initialData: service.player.state.duration,
-        ).data ??
-        Duration.zero;
-    final duration = reportedDuration.inMilliseconds > 0
-        ? reportedDuration
-        : liveDuration;
-
-    final position =
-        useStream(
-          useMemoized(() => service.positionStream, [service]),
-          initialData: service.player.state.position,
-        ).data ??
-        Duration.zero;
+    final duration = playback.duration;
+    final position = playback.position;
 
     final progress = duration.inMilliseconds > 0
         ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0)
@@ -512,64 +601,28 @@ class _ChipButton extends StatelessWidget {
   }
 }
 
-class _RepeatPill extends StatelessWidget {
-  const _RepeatPill({required this.count, required this.onPress});
-
-  final int count;
-  final VoidCallback onPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final typography = context.theme.typography;
-    return MouseClick(
-      onClick: onPress,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: 7,
-        ),
-        decoration: BoxDecoration(
-          color: colors.primary.withValues(alpha: 0.12),
-          border: Border.all(color: colors.primary.withValues(alpha: 0.32)),
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(FLucideIcons.repeat, size: 15, color: colors.primary),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              '$count×',
-              style: typography.body.xs.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colors.primary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _TransportIcon extends StatelessWidget {
   const _TransportIcon({
     required this.icon,
     required this.onPress,
+    required this.tooltip,
     this.size = 24,
   });
 
   final IconData icon;
   final Future<void> Function() onPress;
+  final String tooltip;
   final double size;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
-    return MouseClick(
-      onClick: () => unawaited(onPress()),
-      child: Icon(icon, size: size, color: colors.secondaryForeground),
+    return FTooltip(
+      tipBuilder: (_, _) => Text(tooltip),
+      child: MouseClick(
+        onClick: () => unawaited(onPress()),
+        child: Icon(icon, size: size, color: colors.secondaryForeground),
+      ),
     );
   }
 }
@@ -578,11 +631,13 @@ class _BigPlayButton extends StatelessWidget {
   const _BigPlayButton({
     required this.isPlaying,
     required this.isLoading,
+    required this.isPending,
     required this.onPress,
   });
 
   final bool isPlaying;
   final bool isLoading;
+  final bool isPending;
   final Future<void> Function() onPress;
 
   @override
@@ -606,7 +661,11 @@ class _BigPlayButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: Icon(
-          isPlaying ? FLucideIcons.pause : FLucideIcons.play,
+          isPending
+              ? FLucideIcons.check
+              : isPlaying
+              ? FLucideIcons.pause
+              : FLucideIcons.play,
           size: 26,
           color: colors.primaryForeground,
         ),

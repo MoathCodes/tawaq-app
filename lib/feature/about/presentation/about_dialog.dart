@@ -18,17 +18,32 @@ Future<void> showAboutAppDialog(
 }) {
   return showFDialog<void>(
     context: context,
-    builder: (context, style, animation) => AboutDialog(content: content),
+    builder: (context, style, animation) => AboutDialog(
+      content: content,
+      style: style,
+      animation: animation,
+    ),
   );
 }
 
 /// A modal dialog presenting information about the app.
 class AboutDialog extends StatelessWidget {
   /// Creates an [AboutDialog].
-  const AboutDialog({required this.content, super.key});
+  const AboutDialog({
+    required this.content,
+    required this.style,
+    this.animation,
+    super.key,
+  });
 
   /// The content to render.
   final AboutContent content;
+
+  /// Resolved dialog style from [showFDialog].
+  final FDialogStyle style;
+
+  /// Route entrance/exit animation from [showFDialog].
+  final Animation<double>? animation;
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +55,8 @@ class AboutDialog extends StatelessWidget {
     );
 
     return FDialog(
+      style: style,
+      animation: animation,
       constraints: constraints,
       title: Text(AboutStrings.title.resolve(context)),
       body: SingleChildScrollView(

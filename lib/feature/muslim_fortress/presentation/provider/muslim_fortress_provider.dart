@@ -160,8 +160,9 @@ Future<List<FortressDuaItem>> muslimFortressDuas(
   Ref ref,
   int chapterId,
 ) async {
+  final chaptersFuture = ref.watch(muslimFortressChaptersProvider.future);
   final service = await ref.watch(fortressServiceProvider.future);
-  final chapters = await ref.watch(muslimFortressChaptersProvider.future);
+  final chapters = await chaptersFuture;
   return service.loadDuasForChapter(chapterId, chapters: chapters);
 }
 

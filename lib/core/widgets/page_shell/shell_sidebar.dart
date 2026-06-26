@@ -70,7 +70,10 @@ class ShellSidebar extends HookConsumerWidget {
       duration: duration,
       initialValue: isCollapsed ? 0.0 : 1.0,
     );
-    final animation = CurveTween(curve: Curves.easeInOut).animate(controller);
+    final animation = useMemoized(
+      () => CurveTween(curve: Curves.easeInOut).animate(controller),
+      [controller],
+    );
 
     useEffect(() {
       isCollapsed

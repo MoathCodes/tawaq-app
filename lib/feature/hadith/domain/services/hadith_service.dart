@@ -9,8 +9,8 @@ part 'hadith_service.g.dart';
 
 /// Provides the hadith service used by the UI and controllers.
 @riverpod
-HadithService hadithService(Ref ref) {
-  final repository = ref.read(hadithRepositoryProvider);
+Future<HadithService> hadithService(Ref ref) async {
+  final repository = await ref.watch(hadithRepositoryProvider.future);
   final log = ref.read(loggerProvider);
   return HadithService(repository: repository, log: log);
 }

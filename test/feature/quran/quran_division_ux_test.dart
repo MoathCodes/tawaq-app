@@ -118,27 +118,61 @@ void main() {
   });
 
   group('hizbSelectorStartAyahSubtitleForTest', () {
-    test('builds subtitle from denormalized hizb start fields', () async {
+    testWidgets('shows Uthmani ayah preview from denormalized fields', (
+      tester,
+    ) async {
       final controller = MushafReaderController.withRepository(
         repository: _SubtitleTestRepo(),
       );
       await controller.ensureReady();
-      final l10n = AppLocalizationsEn();
+      const uthmani = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
 
-      final subtitle = hizbSelectorStartAyahSubtitleForTest(
-        hizb: Hizb(
-          number: 15,
-          startSurahNumber: 16,
-          startAyahInSurah: 1,
+      await tester.pumpWidget(
+        hizbSelectorStartAyahSubtitleForTest(
+          hizb: Hizb(
+            number: 15,
+            startSurahNumber: 16,
+            startAyahInSurah: 1,
+            startAyahUthmaniText: uthmani,
+          ),
+          controller: controller,
+          isArabic: true,
+          l10n: AppLocalizationsEn(),
+          fallbackSurahName: 'Surah 16',
         ),
-        controller: controller,
-        isArabic: false,
-        l10n: l10n,
-        fallbackSurahName: 'Surah 16',
       );
+      await tester.pumpAndSettle();
 
-      expect(subtitle, contains('An-Nahl'));
-      expect(subtitle, contains('1'));
+      expect(find.text(uthmani), findsOneWidget);
+    });
+
+    testWidgets('English subtitle includes surah reference and Uthmani text', (
+      tester,
+    ) async {
+      final controller = MushafReaderController.withRepository(
+        repository: _SubtitleTestRepo(),
+      );
+      await controller.ensureReady();
+      const uthmani = 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ';
+
+      await tester.pumpWidget(
+        hizbSelectorStartAyahSubtitleForTest(
+          hizb: Hizb(
+            number: 15,
+            startSurahNumber: 16,
+            startAyahInSurah: 1,
+            startAyahUthmaniText: uthmani,
+          ),
+          controller: controller,
+          isArabic: false,
+          l10n: AppLocalizationsEn(),
+          fallbackSurahName: 'Surah 16',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('An-Nahl'), findsOneWidget);
+      expect(find.text(uthmani), findsOneWidget);
     });
   });
 
