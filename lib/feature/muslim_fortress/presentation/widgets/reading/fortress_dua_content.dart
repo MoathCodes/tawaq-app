@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_thikr_body.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_thikr_preview.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
+import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// How [FortressDuaContent] composes thikr, virtue, and study sections.
@@ -43,14 +44,14 @@ class FortressDuaContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return switch (mode) {
-      FortressDuaContentMode.previewCollapsed => FortressThikrPreviewText(
+      FortressDuaContentMode.previewCollapsed => _ThikrPreviewText(
         dua: dua,
         isExpanded: false,
       ),
       FortressDuaContentMode.previewExpanded => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          FortressThikrPreviewText(dua: dua, isExpanded: true),
+          _ThikrPreviewText(dua: dua, isExpanded: true),
           if (dua.hasVirtue) ...[
             const SizedBox(height: AppSpacing.md),
             FortressDuaVirtueLine(virtue: dua.virtue!),
@@ -69,6 +70,40 @@ class FortressDuaContent extends ConsumerWidget {
       ),
       FortressDuaContentMode.study => FortressDuaStudyContent(dua: dua),
     };
+  }
+}
+
+class _ThikrPreviewText extends StatelessWidget {
+  const _ThikrPreviewText({
+    required this.dua,
+    required this.isExpanded,
+  });
+
+  final FortressDuaItem dua;
+  final bool isExpanded;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final isQuran = dua.isQuranicPassage;
+
+    var style = theme.typography.body.sm.copyWith(
+      color: isExpanded ? theme.colors.foreground : theme.colors.mutedForeground,
+      height: isQuran ? 2 : 1.6,
+      fontSize: isQuran ? (isExpanded ? 22 : 20) : null,
+      fontWeight: isExpanded && isQuran ? FontWeight.w600 : FontWeight.w500,
+    );
+    if (isQuran) {
+      style = style.copyWith(fontFamily: FontFamily.uthmanicHafs);
+    }
+
+    return Text(
+      dua.text,
+      style: style,
+      textAlign: TextAlign.start,
+      maxLines: isExpanded ? null : 2,
+      overflow: isExpanded ? null : TextOverflow.ellipsis,
+    );
   }
 }
 

@@ -9,8 +9,18 @@ import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart'
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_category_row.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
+
+String _fortressCategoryMetaLine(
+  FortressCategory category,
+  AppLocalizations l10n,
+) {
+  return [
+    fortressRecurrenceLabel(category.recurrence, l10n),
+    l10n.fortressSupplicationCount(category.supplicationCount),
+  ].join(' · ');
+}
 
 /// Home pane when no chapter is selected (time-based picks + bookmarks).
 class MuslimFortressWelcomePane extends ConsumerWidget {
@@ -188,7 +198,7 @@ List<FTileMixin> _fortressCategoryTiles(
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          fortressCategoryMetaLine(categories[i], l10n),
+          _fortressCategoryMetaLine(categories[i], l10n),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -209,4 +219,3 @@ List<FTileMixin> _fortressCategoryTiles(
       ),
   ];
 }
-

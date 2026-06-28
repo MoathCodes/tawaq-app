@@ -6,17 +6,6 @@ import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Shared category metadata line (recurrence · supplication count).
-String fortressCategoryMetaLine(
-  FortressCategory category,
-  AppLocalizations l10n,
-) {
-  return [
-    fortressRecurrenceLabel(category.recurrence, l10n),
-    l10n.fortressSupplicationCount(category.supplicationCount),
-  ].join(' · ');
-}
-
 /// Shared category row content: icon, title, meta, optional trailing widget.
 class FortressCategoryRow extends StatelessWidget {
   /// Creates a category row.
