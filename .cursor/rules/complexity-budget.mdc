@@ -1,0 +1,33 @@
+---
+description: Complexity budget — keep Tawaq code editable by hand (avoid over-fragmentation and deep indirection)
+globs: lib/**/*.dart
+alwaysApply: true
+---
+
+# Complexity budget
+
+The codebase previously drifted into over-fragmentation: many single-use files and
+deep indirection chains that make hand-editing slow. Enforce these rules for all new
+and changed code.
+
+1. **One screen, few files.** A widget used by exactly one parent belongs as a
+   `private _Widget` in that parent's file. Extract to its own file only when it is
+   reused in 2+ places OR the host file exceeds ~400-500 lines. Never add an
+   `InheritedWidget`/scope just to pass one value down a single subtree.
+2. **No pass-through layers.** A Repository/Service/Provider must add real behavior
+   (mapping, caching, error handling, orchestration). If a method only forwards to a
+   dependency, delete it and call the dependency directly.
+3. **One provider per concept, not per field.** Do not create a derived provider that
+   only re-exposes a field of another provider. Use
+   `ref.watch(other.select((s) => s.field))` at the call site.
+4. **Co-locate small models.** Group small enums/DTOs of one domain into a single
+   `<domain>_models.dart`. No file-per-2-field-type or one-line-enum file.
+5. **Abstraction must earn its keep.** Prefer flat data + plain functions over sealed
+   catalogs and event/effect state machines unless the variety/scale demands it.
+6. **Ownership boundaries.** A feature's screen/session/settings state lives in that
+   feature's folder, never in a shared cross-feature file.
+7. **Delete dead code on sight.** Remove unused barrels, deprecated forwards, and
+   unreferenced helpers.
+
+Rule of thumb: changing "how X looks/behaves" should require opening 1-2 files, not
+8-20. If you are about to add an under-50-line file with a single caller, inline it.

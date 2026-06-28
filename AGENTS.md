@@ -352,3 +352,17 @@ sudo dnf install libayatana-appindicator-gtk3-devel libnotify-devel
 - Unit tests live in `test/`. Run with `flutter test`.
 - For Hive-dependent tests, a test database is set up in `test/hive_test_db/`.
 - Layout tests: `test/core/layout/` (responsive, split_pane_constraints, viewport_dialog_constraints, responsive_field_row).
+
+## Complexity budget (keep code editable by hand)
+
+These rules exist because the codebase drifted into over-fragmentation (many single-use files + deep indirection). Follow them for all new and changed code:
+
+1. **One screen, few files.** A widget used by exactly one parent belongs as a `private _Widget` in that parent's file. Extract to its own file only when (a) it is reused in 2+ places, or (b) the host file exceeds ~400-500 lines. Do not create an `InheritedWidget`/scope just to pass one value down a single subtree.
+2. **No pass-through layers.** A Repository/Service/Provider must add behavior (mapping, caching, error handling, orchestration). If a method only forwards a call to a dependency, delete it and call the dependency directly.
+3. **One provider per concept, not per field.** Never create a derived provider whose only job is to re-expose a field of another provider. Use `ref.watch(other.select((s) => s.field))` at the call site instead.
+4. **Co-locate small models.** Group small enums/DTOs of one domain into a single `<domain>_models.dart`. Do not create a separate file for each 2-field type or one-line enum.
+5. **Abstraction must earn its keep.** Prefer flat data + plain functions over sealed catalogs and event/effect state machines unless the variety/scale genuinely demands it.
+6. **Ownership boundaries.** A feature's screen/session/settings state lives in that feature's folder, never in a shared cross-feature file.
+7. **Delete dead code on sight.** Unused barrels, deprecated forwards, and unreferenced helpers should be removed, not left behind.
+
+Rule of thumb: a change to "how X looks/behaves" should require opening 1-2 files, not 8-20. If you find yourself adding an under-50-line file that has a single caller, inline it instead.
