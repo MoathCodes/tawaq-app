@@ -7,7 +7,7 @@ import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_day_computer.dart';
-import 'package:tawaq/feature/prayer/domain/use_cases/compute_prayer_card_decision.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';

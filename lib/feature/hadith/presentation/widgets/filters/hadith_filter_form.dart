@@ -178,15 +178,28 @@ class HadithFilterForm extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         HadithLookupSection(
-          config: HadithLookupSectionConfig.scholars(l10n),
+          title: l10n.hadithScholars,
+          hint: l10n.hadithTypeToSearch,
+          kind: HadithLookupKind.scholars,
+          selected: (filters) => filters.scholars,
+          withSelected: (filters, selected) =>
+              filters.copyWith(scholars: selected),
         ),
         const SizedBox(height: AppSpacing.md),
         HadithLookupSection(
-          config: HadithLookupSectionConfig.books(l10n),
+          title: l10n.hadithBooks,
+          hint: l10n.hadithTypeToSearch,
+          kind: HadithLookupKind.books,
+          selected: (filters) => filters.books,
+          withSelected: (filters, selected) => filters.copyWith(books: selected),
         ),
         const SizedBox(height: AppSpacing.md),
         HadithLookupSection(
-          config: HadithLookupSectionConfig.rawi(l10n),
+          title: l10n.hadithNarrators,
+          hint: l10n.hadithTypeToSearch,
+          kind: HadithLookupKind.rawi,
+          selected: (filters) => filters.rawi,
+          withSelected: (filters, selected) => filters.copyWith(rawi: selected),
         ),
       ],
     );

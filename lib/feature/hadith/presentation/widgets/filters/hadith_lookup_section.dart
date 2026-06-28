@@ -82,7 +82,7 @@ class HadithLookupSection extends HookConsumerWidget {
         const SizedBox(height: AppSpacing.sm),
         FMultiSelect<HadithLookupRef>.searchBuilder(
           enabled: interactionsEnabled,
-          hint: Text(config.hint),
+          hint: Text(hint),
           format: (item) => Text(item.name),
           control: FMultiValueControl<HadithLookupRef>.lifted(
             value: selectedSet,
@@ -95,7 +95,7 @@ class HadithLookupSection extends HookConsumerWidget {
                   return;
                 }
                 updateFilters(
-                  config.withSelected(filters, [...selected, item]),
+                  withSelected(filters, [...selected, item]),
                 );
               });
 
@@ -103,7 +103,7 @@ class HadithLookupSection extends HookConsumerWidget {
                 item,
               ) {
                 updateFilters(
-                  config.withSelected(
+                  withSelected(
                     filters,
                     selected
                         .where((entry) => entry.id != item.id)
