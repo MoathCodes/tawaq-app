@@ -68,9 +68,9 @@ class HadithResultCard extends ConsumerWidget {
     final isSelectedValue =
         isSelected ??
         ref.watch(
-          hadithScreenUiProvider.select(
-            (ui) {
-              final selected = ui.selectedHadith;
+          hadithSessionControllerProvider.select(
+            (session) {
+              final selected = session.selectedHadith;
               return selected != null &&
                   hadithStableKey(selected) == hadithKey;
             },

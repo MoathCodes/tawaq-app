@@ -23,8 +23,8 @@ class HadithFilterPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ui = ref.watch(hadithScreenUiProvider);
-    final panelEnabled = !ui.searchBusy;
+    final session = ref.watch(hadithSessionControllerProvider);
+    final panelEnabled = !session.searchBusy;
     final l10n = context.l10n;
     final theme = context.theme;
 

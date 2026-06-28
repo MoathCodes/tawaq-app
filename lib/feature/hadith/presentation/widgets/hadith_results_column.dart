@@ -4,35 +4,39 @@ import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_screen_ui.dart';
+import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_detail_pane.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_tile.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_results_skeleton.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// List of hadith search results with loading, empty, and pagination states.
-class HadithResultsList extends ConsumerWidget {
-  /// Creates the results list.
-  const HadithResultsList({super.key});
+class HadithResultsColumn extends ConsumerWidget {
+  const HadithResultsColumn({required this.useSplitLayout, super.key});
+
+  final bool useSplitLayout;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ui = ref.watch(hadithScreenUiProvider);
+    final session = ref.watch(hadithSessionControllerProvider);
     final theme = context.theme;
-    final visibleCount = switch (ui.visibleResults) {
+    final visibleResults = ref.hadithVisibleResults(session);
+    final visibleCount = switch (visibleResults) {
       AsyncData(:final value) => value.length,
       _ => 0,
     };
     final l10n = context.l10n;
 
-    final content = _buildContent(context, ref, ui, theme);
+    final content = _buildContent(context, ref, session, visibleResults, theme);
     final showSearchLoadingSemantics =
-        ui.viewMode == HadithViewMode.search && ui.searchLoading;
+        session.mode == HadithViewMode.search && session.isLoading;
     final semanticsContent = showSearchLoadingSemantics
         ? Semantics(
             label: hadithSearchLoadingSemanticsLabel(l10n),
@@ -55,21 +59,21 @@ class HadithResultsList extends ConsumerWidget {
       },
       child: KeyedSubtree(
         key: ValueKey(
-          'results:${ui.viewMode}:${ui.query.isEmpty}:'
-          '${ui.searchError != null}:$visibleCount',
+          'results:${session.mode}:${session.query.isEmpty}:'
+          '${session.error != null}:$visibleCount',
         ),
         child: Stack(
           children: [
             FSkeletonizer.shimmer(
               enabled:
-                  ui.viewMode == HadithViewMode.search &&
-                  ui.searchLoading &&
-                  ui.searchResults.isEmpty,
+                  session.mode == HadithViewMode.search &&
+                  session.isLoading &&
+                  session.results.isEmpty,
               child: semanticsContent,
             ),
-            if (ui.viewMode == HadithViewMode.search &&
-                ui.searchLoading &&
-                ui.searchResults.isNotEmpty)
+            if (session.mode == HadithViewMode.search &&
+                session.isLoading &&
+                session.results.isNotEmpty)
               Positioned(
                 top: 0,
                 left: 0,
@@ -90,13 +94,14 @@ class HadithResultsList extends ConsumerWidget {
   Widget _buildContent(
     BuildContext context,
     WidgetRef ref,
-    HadithScreenUi ui,
+    HadithSessionState session,
+    AsyncValue<List<DetailedHadith>> visibleResults,
     FThemeData theme,
   ) {
     final l10n = context.l10n;
 
-    if (ui.viewMode != HadithViewMode.search) {
-      return ui.visibleResults.when(
+    if (session.mode != HadithViewMode.search) {
+      return visibleResults.when(
         loading: () => Semantics(
           label: hadithSearchLoadingSemanticsLabel(l10n),
           child: const ExcludeSemantics(
@@ -116,12 +121,12 @@ class HadithResultsList extends ConsumerWidget {
         },
         data: (hadithList) {
           if (hadithList.isEmpty) {
-            final emptyMessage = ui.viewMode == HadithViewMode.bookmarks
+            final emptyMessage = session.mode == HadithViewMode.bookmarks
                 ? l10n.hadithNoBookmarks
                 : l10n.hadithNoMatchingResults;
             return Center(
               child: EmptyStatePanel(
-                icon: ui.viewMode == HadithViewMode.bookmarks
+                icon: session.mode == HadithViewMode.bookmarks
                     ? FLucideIcons.bookmark
                     : FLucideIcons.searchX,
                 title: emptyMessage,
@@ -129,18 +134,17 @@ class HadithResultsList extends ConsumerWidget {
             );
           }
 
-          return _buildResultListView(
-            context,
-            ref,
-            ui,
-            hadithList,
+          return _ResultListView(
+            session: session,
+            hadithList: hadithList,
+            useSplitLayout: useSplitLayout,
             enablePagination: false,
           );
         },
       );
     }
 
-    if (ui.query.isEmpty) {
+    if (session.query.isEmpty) {
       return Center(
         child: EmptyStatePanel(
           icon: FLucideIcons.search,
@@ -149,17 +153,17 @@ class HadithResultsList extends ConsumerWidget {
       );
     }
 
-    if (ui.searchError != null && ui.searchResults.isEmpty) {
+    if (session.error != null && session.results.isEmpty) {
       return Center(
         child: EmptyStatePanel(
           icon: FLucideIcons.circleAlert,
-          title: ui.searchError!,
+          title: session.error!,
         ),
       );
     }
 
-    if (ui.searchResults.isEmpty) {
-      if (ui.searchLoading) return const HadithResultsSkeletonList();
+    if (session.results.isEmpty) {
+      if (session.isLoading) return const _ResultsSkeletonList();
 
       return Center(
         child: EmptyStatePanel(
@@ -169,22 +173,30 @@ class HadithResultsList extends ConsumerWidget {
       );
     }
 
-    return _buildResultListView(
-      context,
-      ref,
-      ui,
-      ui.searchResults,
+    return _ResultListView(
+      session: session,
+      hadithList: session.results,
+      useSplitLayout: useSplitLayout,
       enablePagination: true,
     );
   }
+}
 
-  Widget _buildResultListView(
-    BuildContext context,
-    WidgetRef ref,
-    HadithScreenUi ui,
-    List<DetailedHadith> hadithList, {
-    required bool enablePagination,
-  }) {
+class _ResultListView extends ConsumerWidget {
+  const _ResultListView({
+    required this.session,
+    required this.hadithList,
+    required this.useSplitLayout,
+    required this.enablePagination,
+  });
+
+  final HadithSessionState session;
+  final List<DetailedHadith> hadithList;
+  final bool useSplitLayout;
+  final bool enablePagination;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final itemCount = hadithList.length + (enablePagination ? 1 : 0);
 
     return ListView.separated(
@@ -192,7 +204,7 @@ class HadithResultsList extends ConsumerWidget {
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
         if (enablePagination && index == hadithList.length) {
-          if (!ui.searchHasNextPage) {
+          if (!session.hasNextPage) {
             return const SizedBox(height: AppSpacing.lg);
           }
 
@@ -200,7 +212,7 @@ class HadithResultsList extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               child: FButton(
-                onPress: ui.searchLoadingMore
+                onPress: session.isLoadingMore
                     ? null
                     : () {
                         unawaited(
@@ -209,7 +221,7 @@ class HadithResultsList extends ConsumerWidget {
                               .loadMore(),
                         );
                       },
-                child: ui.searchLoadingMore
+                child: session.isLoadingMore
                     ? const SizedBox(
                         width: 16,
                         height: 16,
@@ -221,8 +233,88 @@ class HadithResultsList extends ConsumerWidget {
           );
         }
 
-        return HadithResultTile(hadith: hadithList[index]);
+        return _ResultTile(
+          hadith: hadithList[index],
+          useSplitLayout: useSplitLayout,
+        );
       },
+    );
+  }
+}
+
+class _ResultTile extends ConsumerWidget {
+  const _ResultTile({
+    required this.hadith,
+    required this.useSplitLayout,
+  });
+
+  final DetailedHadith hadith;
+  final bool useSplitLayout;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final card = HadithResultCard(hadith: hadith);
+
+    if (useSplitLayout) return card;
+
+    return FPopover(
+      popoverBuilder: (_, _) => ConstrainedBox(
+        constraints: dialogConstraints(
+          context,
+          preferredWidth: 620,
+          preferredHeight: 620,
+        ),
+        child: HadithSelectedDetailsPane(hadith: hadith),
+      ),
+      builder: (_, controller, child) => MouseClick(
+        onClick: () {
+          unawaited(
+            ref
+                .read(hadithSessionControllerProvider.notifier)
+                .selectHadith(hadith),
+          );
+          unawaited(controller.toggle());
+        },
+        child: child!,
+      ),
+      child: card,
+    );
+  }
+}
+
+class _ResultsSkeletonList extends StatelessWidget {
+  const _ResultsSkeletonList();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: hadithSearchLoadingSemanticsLabel(context.l10n),
+      child: ExcludeSemantics(
+        child: ListView.separated(
+          itemCount: 4,
+          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+          itemBuilder: (_, _) {
+            return const StaticCard(
+              padding: EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: AppSpacing.sm,
+                children: [
+                  SizedBox(height: 20, width: double.infinity),
+                  SizedBox(height: 20, width: double.infinity),
+                  SizedBox(height: 20, width: 220),
+                  SizedBox(height: AppSpacing.md),
+                  SizedBox(height: 14, width: 180),
+                  SizedBox(height: AppSpacing.xs),
+                  SizedBox(height: 14, width: 220),
+                  SizedBox(height: AppSpacing.md),
+                  SizedBox(height: 30, width: 120),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }

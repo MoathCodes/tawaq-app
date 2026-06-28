@@ -88,6 +88,10 @@ class HadithSessionState {
   /// Whether another page of results is available.
   bool get hasNextPage => metadata?.hasNextPage ?? false;
 
+  /// Whether filter chips and panel controls accept input.
+  bool get filterInteractionsEnabled =>
+      !searchBusy && isSearchMode && query.trim().isNotEmpty;
+
   /// Returns a copy with updated session values.
   HadithSessionState copyWith({
     HadithViewMode? mode,
