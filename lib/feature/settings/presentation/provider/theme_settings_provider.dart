@@ -77,17 +77,3 @@ double appTextScaleFactor(Ref ref) {
   final prefs = ref.watch(themeProvider).value ?? ThemePrefs.defaults();
   return prefs.appTextScale.scalar;
 }
-
-/// The full [ThemeSettings] derived from the persisted [ThemePrefs].
-@riverpod
-ThemeSettings themeSettingsFromPrefs(Ref ref) {
-  final prefs = ref.watch(themeProvider).value ?? ThemePrefs.defaults();
-  return ThemeSettings(
-    appPalette: prefs.appPalette,
-    themeMode: prefs.themeMode,
-    colorScheme: resolveColorScheme(
-      prefs.appPalette,
-      prefs.themeMode,
-    ),
-  );
-}

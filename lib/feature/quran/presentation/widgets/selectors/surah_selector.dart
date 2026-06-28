@@ -5,120 +5,55 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_inline_select_prefix.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_search_select.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_select_search.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:tawaq/theme/theme.dart';
 
-/// Further normalizes Arabic text for fuzzy search, beyond
-/// [Surah.nameArabicSimplified], by folding letters that are commonly
-/// typed interchangeably (e.g. on keyboards without a dedicated key):
-/// alef maksura/ya (ى/ي) and teh marbuta/ha (ة/ه).
-///
-/// Must be applied to both the search query and the candidate field so
-/// the two sides stay comparable.
-String normalizeArabicForSurahSearch(String s) {
-  return s.replaceAll('ى', 'ي').replaceAll('ة', 'ه');
-}
+export 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_select_search.dart'
+    show normalizeArabicForSurahSearch, searchSurahs;
 
-/// Ranks [surahs] by relevance to [query] using the shared Quran surah search.
-Iterable<Surah> searchSurahs(List<Surah> surahs, String query) {
-  if (query.isEmpty) return surahs;
-
-  final normalized = query.toLowerCase().trim();
-  final arabicQuery = normalizeArabicForSurahSearch(normalized);
-  final queryNum = int.tryParse(normalized);
-
-  final results = <(Surah, int)>[];
-  for (final surah in surahs) {
-    var score = 0;
-
-    if (queryNum != null && surah.number == queryNum) {
-      score = 100;
-    } else if (surah.number.toString().startsWith(normalized)) {
-      score = 80;
-    } else if (surah.nameEnglish?.toLowerCase().startsWith(normalized) ?? false) {
-      score = 70;
-    } else if (surah.nameArabicSimplified != null &&
-        normalizeArabicForSurahSearch(
-          surah.nameArabicSimplified!,
-        ).startsWith(arabicQuery)) {
-      score = 70;
-    } else if (surah.englishNameTranslation?.toLowerCase().startsWith(
-          normalized,
-        ) ??
-        false) {
-      score = 65;
-    } else if (surah.nameEnglish?.toLowerCase().contains(normalized) ?? false) {
-      score = 50;
-    } else if (surah.englishNameTranslation?.toLowerCase().contains(
-          normalized,
-        ) ??
-        false) {
-      score = 45;
-    } else if (surah.nameArabicSimplified != null &&
-        normalizeArabicForSurahSearch(
-          surah.nameArabicSimplified!,
-        ).contains(arabicQuery)) {
-      score = 50;
-    }
-
-    if (score > 0) results.add((surah, score));
-  }
-
-  results.sort((a, b) {
-    final scoreCompare = b.$2.compareTo(a.$2);
-    if (scoreCompare != 0) return scoreCompare;
-    return a.$1.number.compareTo(b.$1.number);
+/// Searchable surah picker shared by the Quran header and range dialog.
+class SurahSearchSelect extends HookConsumerWidget {
+  /// Creates a [SurahSearchSelect].
+  const SurahSearchSelect({
+    required this.value,
+    required this.onChanged,
+    required this.label,
+    this.enabled = true,
+    this.showLabel = true,
+    this.inlineLabel = false,
+    this.size = FTextFieldSizeVariant.md,
+    super.key,
   });
 
-  return results.map((e) => e.$1);
-}
+  /// Selected surah number (1–114), or null when unset.
+  final int? value;
 
-  /// Searchable surah picker shared by the Quran header and range dialog.
-  class SurahSearchSelect extends HookConsumerWidget {
-    /// Creates a [SurahSearchSelect].
-    const SurahSearchSelect({
-      required this.value,
-      required this.onChanged,
-      required this.label,
-      this.enabled = true,
-      this.showLabel = true,
-      this.inlineLabel = false,
-      this.size = FTextFieldSizeVariant.md,
-      super.key,
-    });
+  /// Called when the user picks a surah.
+  final ValueChanged<int> onChanged;
 
-    /// Selected surah number (1–114), or null when unset.
-    final int? value;
+  /// Field label shown above the control.
+  final String label;
 
-    /// Called when the user picks a surah.
-    final ValueChanged<int> onChanged;
+  /// Whether the control accepts input.
+  final bool enabled;
 
-    /// Field label shown above the control.
-    final String label;
+  /// Whether the field label is shown above the select.
+  final bool showLabel;
 
-    /// Whether the control accepts input.
-    final bool enabled;
+  /// Shows a muted in-field label prefix (for the Quran header rail).
+  final bool inlineLabel;
 
-    /// Whether the field label is shown above the select.
-    final bool showLabel;
-
-    /// Shows a muted in-field label prefix (for the Quran header rail).
-    final bool inlineLabel;
-
-    /// Text field size variant. Defaults to [FTextFieldSizeVariant.md].
-    final FTextFieldSizeVariant size;
+  /// Text field size variant. Defaults to [FTextFieldSizeVariant.md].
+  final FTextFieldSizeVariant size;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(quranMushafControllerProvider);
-    final theme = context.theme;
     final l10n = context.l10n;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final allSurahs = useFuture(useMemoized(controller.getAllSurahs));
@@ -133,56 +68,49 @@ Iterable<Surah> searchSurahs(List<Surah> surahs, String query) {
     final ready =
         allSurahs.connectionState == ConnectionState.done && allSurahs.hasData;
 
-    return FSkeletonizer(
-      enabled: allSurahs.connectionState == ConnectionState.waiting,
-      child: FSelect<Surah>.searchBuilder(
-        enabled: ready && enabled,
-        label: showLabel && !inlineLabel
-            ? Text(label)
-            : const SizedBox.shrink(),
-        prefixBuilder: inlineLabel
-            ? quranInlineSelectPrefixBuilder(label)
-            : null,
-        size: size,
-        contentConstraints: selectPopoverPortalConstraints(context),
-        style: selectStyle(
-          colors: theme.colors,
-          style: theme.style,
-          typography: theme.typography,
-          useQuranFont: isArabic,
-        ),
-        control: FSelectControl.lifted(
-          value: selectedSurah,
-          onChange: (v) {
-            if (v != null) onChanged(v.number);
-          },
-        ),
-        format: (v) =>
-            (isArabic ? v.nameArabic : v.nameEnglish) ??
-            l10n.surahNameDefault(v.number),
-        filter: (q) => searchSurahs(allSurahs.data ?? const [], q),
-        contentBuilder: (_, _, vals) => vals
-            .map(
-              (v) => FSelectItem<Surah>(
-                value: v,
-                title: isArabic
-                    ? SurahNameText(
-                        v.nameArabic ?? l10n.surahNameDefault(v.number),
-                      )
-                    : Text(
-                        v.nameEnglish ??
-                            v.nameArabic ??
-                            l10n.surahNameDefault(v.number),
-                      ),
-                subtitle: isArabic
-                    ? Text(v.nameEnglish ?? v.englishNameTranslation ?? '')
-                    : (v.nameArabic != null
-                          ? SurahNameText(v.nameArabic!)
-                          : Text(v.englishNameTranslation ?? '')),
-              ),
-            )
-            .toList(),
-      ),
+    return QuranDivisionSearchSelect<Surah>(
+      fieldName: label,
+      closedValue: selectedSurah != null
+          ? ((isArabic ? selectedSurah.nameArabic : selectedSurah.nameEnglish) ??
+                l10n.surahNameDefault(selectedSurah.number))
+          : null,
+      ready: ready,
+      loading: allSurahs.connectionState == ConnectionState.waiting,
+      enabled: enabled,
+      value: selectedSurah,
+      showLabel: showLabel,
+      inlineLabel: inlineLabel,
+      useQuranFont: isArabic,
+      size: size,
+      includeSemantics: false,
+      format: (v) =>
+          (isArabic ? v.nameArabic : v.nameEnglish) ??
+          l10n.surahNameDefault(v.number),
+      filter: (q) => searchSurahs(allSurahs.data ?? const [], q),
+      onChanged: (v) {
+        if (v != null) onChanged(v.number);
+      },
+      contentBuilder: (context, vals) => vals
+          .map(
+            (v) => FSelectItem<Surah>(
+              value: v,
+              title: isArabic
+                  ? SurahNameText(
+                      v.nameArabic ?? l10n.surahNameDefault(v.number),
+                    )
+                  : Text(
+                      v.nameEnglish ??
+                          v.nameArabic ??
+                          l10n.surahNameDefault(v.number),
+                    ),
+              subtitle: isArabic
+                  ? Text(v.nameEnglish ?? v.englishNameTranslation ?? '')
+                  : (v.nameArabic != null
+                        ? SurahNameText(v.nameArabic!)
+                        : Text(v.englishNameTranslation ?? '')),
+            ),
+          )
+          .toList(),
     );
   }
 }

@@ -6,12 +6,11 @@ import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_category_row.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -81,27 +80,6 @@ class _FortressSearchResultsBody extends StatelessWidget {
   }
 }
 
-enum _SearchListEntryKind { titleHeader, title, contentHeader, content }
-
-class _SearchListEntry {
-  const _SearchListEntry._(this.kind, {this.category, this.hit});
-
-  const _SearchListEntry.titleHeader() : this._(_SearchListEntryKind.titleHeader);
-
-  const _SearchListEntry.title(FortressCategory category)
-    : this._(_SearchListEntryKind.title, category: category);
-
-  const _SearchListEntry.contentHeader()
-    : this._(_SearchListEntryKind.contentHeader);
-
-  const _SearchListEntry.content(FortressSearchContentHit hit)
-    : this._(_SearchListEntryKind.content, hit: hit);
-
-  final _SearchListEntryKind kind;
-  final FortressCategory? category;
-  final FortressSearchContentHit? hit;
-}
-
 class _FortressSearchResultsList extends StatelessWidget {
   const _FortressSearchResultsList({
     required this.results,
@@ -111,72 +89,45 @@ class _FortressSearchResultsList extends StatelessWidget {
   final FortressSearchResults results;
   final AppLocalizations l10n;
 
-  List<_SearchListEntry> _buildEntries() {
-    final entries = <_SearchListEntry>[];
-
-    if (results.titles.isNotEmpty) {
-      entries.add(const _SearchListEntry.titleHeader());
-      for (final category in results.titles) {
-        entries.add(_SearchListEntry.title(category));
-      }
-    }
-
-    if (results.contents.isNotEmpty) {
-      entries.add(const _SearchListEntry.contentHeader());
-      for (final hit in results.contents) {
-        entries.add(_SearchListEntry.content(hit));
-      }
-    }
-
-    return entries;
-  }
-
   @override
   Widget build(BuildContext context) {
-    final entries = _buildEntries();
-
-    return ListView.builder(
+    return ListView(
       padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
-      itemCount: entries.length,
-      itemBuilder: (context, index) {
-        final entry = entries[index];
-        final isLast = index == entries.length - 1;
-        final nextKind = isLast ? null : entries[index + 1].kind;
-
-        final child = switch (entry.kind) {
-          _SearchListEntryKind.titleHeader => _SectionHeader(
+      children: [
+        if (results.titles.isNotEmpty) ...[
+          _SectionHeader(
             icon: FLucideIcons.folderOpen,
             title: l10n.fortressSearchTitles,
             count: results.totalTitles,
           ),
-          _SearchListEntryKind.title => _TitleResultTile(
-            category: entry.category!,
-          ),
-          _SearchListEntryKind.contentHeader => _SectionHeader(
+          const SizedBox(height: AppSpacing.md),
+          for (var i = 0; i < results.titles.length; i++) ...[
+            _TitleResultTile(category: results.titles[i]),
+            SizedBox(
+              height: i == results.titles.length - 1
+                  ? AppSpacing.xl
+                  : AppSpacing.sm,
+            ),
+          ],
+        ],
+        if (results.contents.isNotEmpty) ...[
+          _SectionHeader(
             icon: FLucideIcons.textSearch,
             title: l10n.fortressSearchContents,
             count: results.totalContents,
           ),
-          _SearchListEntryKind.content => _ContentResultTile(hit: entry.hit!),
-        };
-
-        final trailingGap = switch (entry.kind) {
-          _SearchListEntryKind.titleHeader ||
-          _SearchListEntryKind.contentHeader =>
-            AppSpacing.md,
-          _SearchListEntryKind.title || _SearchListEntryKind.content =>
-            nextKind == _SearchListEntryKind.contentHeader ||
-                    nextKind == _SearchListEntryKind.titleHeader ||
-                    nextKind == null
-                ? AppSpacing.xl
-                : AppSpacing.sm,
-        };
-
-        return Padding(
-          padding: EdgeInsets.only(bottom: trailingGap),
-          child: child,
-        );
-      },
+          const SizedBox(height: AppSpacing.md),
+          for (var i = 0; i < results.contents.length; i++)
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: i == results.contents.length - 1
+                    ? 0
+                    : AppSpacing.sm,
+              ),
+              child: _ContentResultTile(hit: results.contents[i]),
+            ),
+        ],
+      ],
     );
   }
 }
@@ -236,41 +187,19 @@ class _TitleResultTile extends ConsumerWidget {
           .selectSearchTitle(category),
       semanticsLabel: category.title,
       child: FortressExcludeDecorative(
-        child: StaticCard(
+          child: StaticCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
           borderRadius: theme.radii.md,
           backgroundColor: theme.colors.secondary.withAlpha(80),
           borderColor: theme.colors.border,
-          child: Row(
-            children: [
-              Icon(category.icon, color: theme.colors.primary),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      category.title,
-                      style: theme.typography.body.md.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${fortressRecurrenceLabel(category.recurrence, l10n)} · ${l10n.fortressSupplicationCount(category.supplicationCount)}',
-                      style: theme.typography.body.xs.copyWith(
-                        color: theme.colors.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                FLucideIcons.chevronLeft,
-                size: 16,
-                color: theme.colors.mutedForeground,
-              ),
-            ],
+          child: FortressCategoryRow(
+            category: category,
+            l10n: l10n,
+            trailing: Icon(
+              FLucideIcons.chevronLeft,
+              size: 16,
+              color: theme.colors.mutedForeground,
+            ),
           ),
         ),
       ),

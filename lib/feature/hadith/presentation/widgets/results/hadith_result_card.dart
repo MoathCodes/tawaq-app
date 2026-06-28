@@ -8,10 +8,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/context_menu_action.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
-import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/hadith_meta_field.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -29,20 +29,20 @@ class HadithResultCard extends ConsumerWidget {
   });
 
   /// Compact card for nested detail panes (similar/alternate hadith).
-  const HadithResultCard.embedded({
+  factory HadithResultCard.embedded({
     required DetailedHadith hadith,
     required VoidCallback onSelect,
     Key? key,
-  }) : this(
-         hadith: hadith,
-         onSelect: onSelect,
-         isFavorite: false,
-         isSelected: false,
-         showMetadataAvailability: false,
-         showFavoriteAction: false,
-         hadithMaxLines: 6,
-         key: key,
-       );
+  }) {
+    return HadithResultCard(
+      key: key,
+      hadith: hadith,
+      onSelect: onSelect,
+      showMetadataAvailability: false,
+      showFavoriteAction: false,
+      hadithMaxLines: 6,
+    );
+  }
 
   final DetailedHadith hadith;
   final bool? isFavorite;
@@ -53,42 +53,26 @@ class HadithResultCard extends ConsumerWidget {
   final bool showFavoriteAction;
   final int hadithMaxLines;
 
-  int _effectiveHadithMaxLines(double maxWidth, FBreakpoints breakpoints) {
-    if (maxWidth < breakpoints.sm) {
-      return hadithMaxLines.clamp(2, 3);
-    }
-    if (maxWidth < breakpoints.md) {
-      return hadithMaxLines.clamp(3, 4);
-    }
-    return hadithMaxLines;
-  }
-
-  TextAlign _hadithTextAlign(double maxWidth, FBreakpoints breakpoints) {
-    return maxWidth < breakpoints.sm ? TextAlign.start : TextAlign.justify;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = context.theme;
-    final colors = theme.colors;
+    final colors = context.theme.colors;
     final l10n = context.l10n;
     final hadithKey = hadithStableKey(hadith);
 
     final isFavoriteValue =
         isFavorite ??
-        (ref
-                .watch(hadithFavoriteKeysProvider)
-                .asData
-                ?.value
-                .contains(hadithKey) ??
+        (ref.watch(hadithFavoritesProvider).asData?.value.any(
+              (entry) => hadithStableKey(entry) == hadithKey,
+            ) ??
             false);
     final isSelectedValue =
         isSelected ??
         ref.watch(
-          hadithSelectorProvider.select(
-            (value) {
-              final selected = value.asData?.value;
-              return selected != null && hadithStableKey(selected) == hadithKey;
+          hadithScreenUiProvider.select(
+            (ui) {
+              final selected = ui.selectedHadith;
+              return selected != null &&
+                  hadithStableKey(selected) == hadithKey;
             },
           ),
         ) ??
@@ -99,7 +83,7 @@ class HadithResultCard extends ConsumerWidget {
         () {
           unawaited(
             ref
-                .read(hadithScreenControllerProvider.notifier)
+                .read(hadithSessionControllerProvider.notifier)
                 .selectHadith(hadith),
           );
         };
@@ -110,7 +94,7 @@ class HadithResultCard extends ConsumerWidget {
             ? () {
                 unawaited(
                   ref
-                      .read(hadithSearchControllerProvider.notifier)
+                      .read(hadithSessionControllerProvider.notifier)
                       .toggleFavorite(hadith),
                 );
               }
@@ -137,84 +121,6 @@ class HadithResultCard extends ConsumerWidget {
           )
         : null;
 
-    Widget buildCard(double maxWidth) {
-      final breakpoints = context.theme.breakpoints;
-      final effectiveMaxLines = _effectiveHadithMaxLines(maxWidth, breakpoints);
-      final textAlign = _hadithTextAlign(maxWidth, breakpoints);
-
-      return HoverCard(
-        backgroundColor: colors.background,
-        borderColor: isSelectedValue
-            ? colors.primary
-            : colors.border.withValues(alpha: 0.6),
-        activeBorderColor: colors.primary,
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: AppSpacing.sm,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: colors.secondary.withValues(alpha: 0.6),
-                borderRadius: theme.radii.md,
-                border: Border.all(
-                  color: colors.border.withValues(alpha: 0.5),
-                ),
-              ),
-              child: ExcludeSemantics(
-                child: Text(
-                  hadith.hadith,
-                  maxLines: effectiveMaxLines,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: textAlign,
-                  style: theme.typography.body.lg.copyWith(height: 1.9),
-                ),
-              ),
-            ),
-            ExcludeSemantics(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 4,
-                children: [
-                  HadithMetaLine(
-                    label: l10n.hadithNarrator,
-                    value: hadith.rawi,
-                  ),
-                  HadithMetaLine(
-                    label: l10n.hadithMuhaddith,
-                    value: hadith.mohdith,
-                  ),
-                  HadithMetaLine(
-                    label: l10n.hadithSource,
-                    value: l10n.hadithSourceCitation(
-                      hadith.book,
-                      hadith.numberOrPage,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.xs,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                HadithDecorExcludeSemantics(
-                  child: HadithHukmBadge(hukm: hadith.hukm),
-                ),
-                if (showMetadataAvailability)
-                  HadithDecorExcludeSemantics(
-                    child: HadithDetailsAvailabilityRow(hadith: hadith),
-                  ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-
     final rowLabel = hadithResultRowSemanticsLabel(
       hadith,
       l10n,
@@ -222,63 +128,59 @@ class HadithResultCard extends ConsumerWidget {
       isSelected: isSelectedValue,
     );
 
-    Widget buildRow(Widget card) {
-      return MouseClick(
-        onClick: onSelectAction,
-        semanticsLabel: rowLabel,
-        child: card,
-      );
-    }
-
-    Widget withContextMenu(Widget child) {
-      return FContextMenu(
-        menuBuilder: (context, controller, _) => [
-          FItemGroup(
-            children: [
-              contextMenuAction(
-                controller: controller,
-                icon: FLucideIcons.bookOpenText,
-                label: l10n.menuOpen,
-                onPressed: onSelectAction,
-              ),
-              contextMenuAction(
-                controller: controller,
-                icon: FLucideIcons.copy,
-                label: l10n.menuCopyText,
-                onPressed: () => _copyHadith(context, l10n),
-              ),
-              if (showFavoriteAction && onToggleFavoriteAction != null)
-                contextMenuAction(
-                  controller: controller,
-                  icon: isFavoriteValue
-                      ? FLucideIcons.bookmarkX
-                      : FLucideIcons.bookmark,
-                  label: isFavoriteValue
-                      ? l10n.menuRemoveBookmark
-                      : l10n.menuAddBookmark,
-                  onPressed: onToggleFavoriteAction,
-                ),
-            ],
-          ),
-        ],
-        child: child,
-      );
-    }
-
     return LayoutBuilder(
       builder: (context, constraints) {
-        final card = buildRow(buildCard(constraints.maxWidth));
-        final favorite = favoriteButton;
-        if (favorite == null) return withContextMenu(card);
+        final card = _HadithResultCardBody(
+          hadith: hadith,
+          maxWidth: constraints.maxWidth,
+          isSelected: isSelectedValue,
+          showMetadataAvailability: showMetadataAvailability,
+          hadithMaxLines: hadithMaxLines,
+          onPress: onSelectAction,
+          semanticsLabel: rowLabel,
+        );
 
-        return withContextMenu(
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: card),
-              favorite,
-            ],
-          ),
+        final wrapped = FContextMenu(
+          menuBuilder: (context, controller, _) => [
+            FItemGroup(
+              children: [
+                contextMenuAction(
+                  controller: controller,
+                  icon: FLucideIcons.bookOpenText,
+                  label: l10n.menuOpen,
+                  onPressed: onSelectAction,
+                ),
+                contextMenuAction(
+                  controller: controller,
+                  icon: FLucideIcons.copy,
+                  label: l10n.menuCopyText,
+                  onPressed: () => _copyHadith(context, l10n),
+                ),
+                if (showFavoriteAction && onToggleFavoriteAction != null)
+                  contextMenuAction(
+                    controller: controller,
+                    icon: isFavoriteValue
+                        ? FLucideIcons.bookmarkX
+                        : FLucideIcons.bookmark,
+                    label: isFavoriteValue
+                        ? l10n.menuRemoveBookmark
+                        : l10n.menuAddBookmark,
+                    onPressed: onToggleFavoriteAction,
+                  ),
+              ],
+            ),
+          ],
+          child: card,
+        );
+
+        if (favoriteButton == null) return wrapped;
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: wrapped),
+            favoriteButton,
+          ],
         );
       },
     );
@@ -299,32 +201,121 @@ class HadithResultCard extends ConsumerWidget {
   }
 }
 
-class HadithMetaLine extends StatelessWidget {
-  const HadithMetaLine({required this.label, required this.value, super.key});
+class _HadithResultCardBody extends StatelessWidget {
+  const _HadithResultCardBody({
+    required this.hadith,
+    required this.maxWidth,
+    required this.isSelected,
+    required this.showMetadataAvailability,
+    required this.hadithMaxLines,
+    required this.onPress,
+    required this.semanticsLabel,
+  });
 
-  final String label;
-  final String value;
+  final DetailedHadith hadith;
+  final double maxWidth;
+  final bool isSelected;
+  final bool showMetadataAvailability;
+  final int hadithMaxLines;
+  final VoidCallback onPress;
+  final String semanticsLabel;
+
+  int _effectiveHadithMaxLines(FBreakpoints breakpoints) {
+    if (maxWidth < breakpoints.sm) {
+      return hadithMaxLines.clamp(2, 3);
+    }
+    if (maxWidth < breakpoints.md) {
+      return hadithMaxLines.clamp(3, 4);
+    }
+    return hadithMaxLines;
+  }
+
+  TextAlign _hadithTextAlign(FBreakpoints breakpoints) {
+    return maxWidth < breakpoints.sm ? TextAlign.start : TextAlign.justify;
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final colors = theme.colors;
     final l10n = context.l10n;
+    final breakpoints = theme.breakpoints;
+    final effectiveMaxLines = _effectiveHadithMaxLines(breakpoints);
+    final textAlign = _hadithTextAlign(breakpoints);
 
-    return RichText(
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      text: TextSpan(
-        style: theme.typography.body.sm.copyWith(
-          color: theme.colors.secondaryForeground,
-        ),
+    return HoverCard(
+      onPress: onPress,
+      semanticsLabel: semanticsLabel,
+      backgroundColor: colors.background,
+      borderColor: isSelected
+          ? colors.primary
+          : colors.border.withValues(alpha: 0.6),
+      activeBorderColor: colors.primary,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: AppSpacing.sm,
         children: [
-          TextSpan(
-            text: l10n.hadithFieldLabel(label),
-            style: theme.typography.body.sm.copyWith(
-              color: theme.colors.mutedForeground,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: colors.secondary.withValues(alpha: 0.6),
+              borderRadius: theme.radii.md,
+              border: Border.all(
+                color: colors.border.withValues(alpha: 0.5),
+              ),
+            ),
+            child: ExcludeSemantics(
+              child: Text(
+                hadith.hadith,
+                maxLines: effectiveMaxLines,
+                overflow: TextOverflow.ellipsis,
+                textAlign: textAlign,
+                style: theme.typography.body.lg.copyWith(height: 1.9),
+              ),
             ),
           ),
-          TextSpan(text: value),
+          ExcludeSemantics(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 4,
+              children: [
+                HadithMetaField(
+                  label: l10n.hadithNarrator,
+                  value: hadith.rawi,
+                  layout: HadithMetaFieldLayout.inline,
+                ),
+                HadithMetaField(
+                  label: l10n.hadithMuhaddith,
+                  value: hadith.mohdith,
+                  layout: HadithMetaFieldLayout.inline,
+                ),
+                HadithMetaField(
+                  label: l10n.hadithSource,
+                  value: l10n.hadithSourceCitation(
+                    hadith.book,
+                    hadith.numberOrPage,
+                  ),
+                  layout: HadithMetaFieldLayout.inline,
+                ),
+              ],
+            ),
+          ),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              HadithDecorExcludeSemantics(
+                child: HadithHukmBadge(hukm: hadith.hukm),
+              ),
+              if (showMetadataAvailability)
+                HadithDecorExcludeSemantics(
+                  child: HadithDetailsAvailabilityRow(hadith: hadith),
+                ),
+            ],
+          ),
         ],
       ),
     );

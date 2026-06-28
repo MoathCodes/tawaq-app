@@ -1,0 +1,224 @@
+import 'dart:async';
+
+import 'package:flutter/widgets.dart';
+import 'package:forui/forui.dart';
+import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/theme/theme.dart';
+
+/// Visual density for shared recitation transport controls.
+enum RecitationTransportDensity {
+  /// Compact title-bar pill controls.
+  compact,
+
+  /// Expanded drawer controls.
+  expanded,
+}
+
+/// Skip icon button shared by the compact transport and expanded drawer.
+class RecitationTransportIcon extends StatelessWidget {
+  const RecitationTransportIcon({
+    required this.icon,
+    required this.onPress,
+    required this.tooltip,
+    this.density = RecitationTransportDensity.compact,
+    super.key,
+  });
+
+  final IconData icon;
+  final Future<void> Function() onPress;
+  final String tooltip;
+  final RecitationTransportDensity density;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    final iconSize = switch (density) {
+      RecitationTransportDensity.compact => 18.0,
+      RecitationTransportDensity.expanded => 24.0,
+    };
+
+    return FTooltip(
+      tipBuilder: (_, _) => Text(tooltip),
+      child: MouseClick(
+        onClick: () => unawaited(onPress()),
+        child: Icon(icon, size: iconSize, color: colors.secondaryForeground),
+      ),
+    );
+  }
+}
+
+/// Circular play/pause button shared by the compact transport and drawer.
+class RecitationPlayButton extends StatelessWidget {
+  const RecitationPlayButton({
+    required this.isPlaying,
+    required this.isLoading,
+    required this.onPress,
+    this.density = RecitationTransportDensity.compact,
+    super.key,
+  });
+
+  final bool isPlaying;
+  final bool isLoading;
+  final Future<void> Function() onPress;
+  final RecitationTransportDensity density;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    final (size, iconSize, progressSize) = switch (density) {
+      RecitationTransportDensity.compact => (
+        36.0,
+        18.0,
+        FCircularProgressSizeVariant.sm,
+      ),
+      RecitationTransportDensity.expanded => (
+        58.0,
+        26.0,
+        FCircularProgressSizeVariant.md,
+      ),
+    };
+
+    if (isLoading) {
+      return SizedBox(
+        width: size,
+        height: size,
+        child: Center(
+          child: FCircularProgress(size: progressSize),
+        ),
+      );
+    }
+
+    return MouseClick(
+      onClick: () => unawaited(onPress()),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: colors.primary,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          isPlaying ? FLucideIcons.pause : FLucideIcons.play,
+          size: iconSize,
+          color: colors.primaryForeground,
+        ),
+      ),
+    );
+  }
+}
+
+/// A recitation skip action (plays the previous or next ayah/surah).
+typedef SkipAction = Future<void> Function();
+
+/// The icon, accessibility label, and action for one skip-control slot.
+typedef SkipControl = ({
+  IconData icon,
+  String label,
+  SkipAction onPress,
+});
+
+/// Returns the left skip-control slot for the current text direction.
+SkipControl leftSkipControl({
+  required bool isRtl,
+  required SkipAction skipPrevious,
+  required SkipAction skipNext,
+  required String previousLabel,
+  required String nextLabel,
+}) {
+  if (isRtl) {
+    return (
+      icon: FLucideIcons.skipForward,
+      label: nextLabel,
+      onPress: skipNext,
+    );
+  }
+  return (
+    icon: FLucideIcons.skipBack,
+    label: previousLabel,
+    onPress: skipPrevious,
+  );
+}
+
+/// Returns the right skip-control slot for the current text direction.
+SkipControl rightSkipControl({
+  required bool isRtl,
+  required SkipAction skipPrevious,
+  required SkipAction skipNext,
+  required String previousLabel,
+  required String nextLabel,
+}) {
+  if (isRtl) {
+    return (
+      icon: FLucideIcons.skipBack,
+      label: previousLabel,
+      onPress: skipPrevious,
+    );
+  }
+  return (
+    icon: FLucideIcons.skipForward,
+    label: nextLabel,
+    onPress: skipNext,
+  );
+}
+
+/// Centered play/pause with optional skip controls for both transport surfaces.
+class RecitationTransportControls extends StatelessWidget {
+  const RecitationTransportControls({
+    required this.isPlaying,
+    required this.isLoading,
+    required this.onPlayPause,
+    required this.leftSlot,
+    required this.rightSlot,
+    this.density = RecitationTransportDensity.compact,
+    this.showSkip = true,
+    super.key,
+  });
+
+  final bool isPlaying;
+  final bool isLoading;
+  final Future<void> Function() onPlayPause;
+  final SkipControl leftSlot;
+  final SkipControl rightSlot;
+  final RecitationTransportDensity density;
+  final bool showSkip;
+
+  @override
+  Widget build(BuildContext context) {
+    final gap = switch (density) {
+      RecitationTransportDensity.compact => AppSpacing.xs,
+      RecitationTransportDensity.expanded => AppSpacing.lg,
+    };
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (showSkip) ...[
+          RecitationTransportIcon(
+            icon: leftSlot.icon,
+            tooltip: leftSlot.label,
+            onPress: leftSlot.onPress,
+            density: density,
+          ),
+          SizedBox(width: gap),
+        ],
+        RecitationPlayButton(
+          isPlaying: isPlaying,
+          isLoading: isLoading,
+          onPress: onPlayPause,
+          density: density,
+        ),
+        if (showSkip) ...[
+          SizedBox(width: gap),
+          RecitationTransportIcon(
+            icon: rightSlot.icon,
+            tooltip: rightSlot.label,
+            onPress: rightSlot.onPress,
+            density: density,
+          ),
+        ],
+      ],
+    );
+  }
+}

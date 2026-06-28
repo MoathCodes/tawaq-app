@@ -1,13 +1,5 @@
 {
   "@@locale": "ar",
-  "menuOpen": "فتح",
-  "menuCopyText": "نسخ النص",
-  "menuAddBookmark": "إضافة إشارة مرجعية",
-  "menuRemoveBookmark": "إزالة الإشارة المرجعية",
-  "menuAddFavorite": "إضافة إلى المفضلة",
-  "menuRemoveFavorite": "إزالة من المفضلة",
-  "hadithCopied": "تم نسخ الحديث",
-  "fortressDhikrCopied": "تم نسخ الذكر",
   "a11yExpandSidebar": "توسيع الشريط الجانبي",
   "a11yNavigationUnavailable": "غير متاح",
   "a11yOpenLocationSettings": "فتح إعدادات الموقع",
@@ -103,7 +95,7 @@
   "adhanShowAlertLabel": "إظهار تنبيه الأذان",
   "adhanShowOsNotificationLabel": "إشعار النظام عند الإخفاء في الشريط",
   "adhanSoundLabel": "صوت الأذان",
-  "adhanStop": "إيقاف الأذان",
+  "adhanStop": "إيقاف",
   "adhanVolumeLabel": "مستوى صوت الأذان",
   "advancedSettingsTitle": "إعدادات متقدمة",
   "appearance": "المظهر",
@@ -111,13 +103,12 @@
   "appName": "توّاق",
   "@appName": {},
   "appTextSize": "حجم نص التطبيق",
-  "appTextSizeSubtitle": "يتحكم في القوائم والعناوين ونص الواجهة.",
-  "scrollMoreHint": "المزيد بالأسفل",
   "appTextSizeCompact": "مضغوط",
   "appTextSizeExtraLarge": "كبير جداً",
   "appTextSizeLarge": "كبير",
   "appTextSizeNormal": "افتراضي",
   "appTextSizeShortExtraLarge": "أكبر",
+  "appTextSizeSubtitle": "يتحكم في القوائم والعناوين ونص الواجهة.",
   "arabic": "العربية",
   "asr": "العصر",
   "autoLocationDisabled": "انقر لتفعيل الموقع التلقائي",
@@ -148,7 +139,6 @@
   "chooseLocation": "اختر الموقع",
   "collapse": "طي",
   "collapsePanel": "طي اللوحة",
-  "expandPanel": "توسيع اللوحة",
   "colorTheme": "نمط الألوان",
   "colorThemeSubtitle": "تغيير نمط الألوان في التطبيق.",
   "completed": "مكتملة •",
@@ -197,6 +187,7 @@
   },
   "errorUpdatingLocationDescription": "حُدثت الإحداثيات بنجاح، ولكن لم نتمكن من جلب اسم موقعك. لن يؤثر ذلك على عمل التطبيق.",
   "errorUpdatingLocationTitle": "حدث خطأ أثناء تحديث الموقع",
+  "expandPanel": "توسيع اللوحة",
   "fajr": "الفجر",
   "fajrAngleLabel": "زاوية الفجر (°)",
   "footnote": "الحاشية",
@@ -204,6 +195,7 @@
   "fortressBenefit": "الفائدة",
   "fortressBrowseWeakHadith": "الأحاديث الضعيفة والموضوعة",
   "fortressCompleted": "انتهى",
+  "fortressDhikrCopied": "تم نسخ الذكر",
   "fortressEmptyFavoritesHint": "اضغط على أيقونة الإشارة المرجعية بجانب أي قسم لإضافته هنا",
   "fortressEmptyFavoritesTitle": "لا توجد أقسام مفضلة بعد",
   "fortressEmptySearchHint": "جرّب كلمات بحث مختلفة",
@@ -284,6 +276,7 @@
   "hadithBooks": "الكتب",
   "hadithClearAllFilters": "مسح جميع المرشّحات",
   "hadithClearAllRecents": "مسح الكل",
+  "hadithCopied": "تم نسخ الحديث",
   "hadithDegreeAll": "جميع الدرجات",
   "hadithDegreeAuthenticChain": "أحاديث حكم المحدثون على أسانيدها بالصحة، ونحو ذلك",
   "hadithDegreeAuthenticHadith": "أحاديث حكم المحدثون عليها بالصحة، ونحو ذلك",
@@ -376,6 +369,14 @@
   "highLatitudeRule_seventhOfTheNight": "سبع الليل",
   "highLatitudeRule_twilightAngle": "زاوية الشفق",
   "highLatitudeRuleLabel": "قاعدة خطوط العرض العالية",
+  "hizbLabel": "الحزب {number}",
+  "@hizbLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "integerPlaceholder": "٠",
   "invalidCoordinatesDescription": "يرجى إدخال قيم صحيحة لخط العرض وخط الطول.",
   "invalidCoordinatesTitle": "إحداثيات غير صالحة",
@@ -434,14 +435,6 @@
       }
     }
   },
-  "hizbLabel": "الحزب {number}",
-  "@hizbLabel": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "karachi": "جامعة العلوم الإسلامية، كراتشي",
   "keyboardShortcutsCategorySubtitle": "متاحة عند استخدام التطبيق على سطح المكتب.",
   "keyboardShortcutsSectionSubtitle": "قائمة مرجعية للاختصارات المتاحة على سطح المكتب. تعمل الاختصارات في كل الشاشات بما فيها هذه. لا يمكن تخصيصها.",
@@ -458,9 +451,6 @@
   "loadingAnalytics": "جارٍ تحميل التحليلات",
   "loadingLocationSettings": "جارٍ تحميل إعدادات الموقع",
   "loadingSchedule": "جارٍ تحميل الجدول",
-  "prayerLocationRequiredTitle": "حدّد موقعك",
-  "prayerLocationRequiredSubtitle": "تحتاج أوقات الصلاة إلى إحداثيات موقعك. افتح إعدادات الموقع لاختيار مدينة على الخريطة أو إدخال الإحداثيات يدويًا.",
-  "prayerLocationRequiredAction": "فتح إعدادات الموقع",
   "locationCoordinatesLookupFailed": "تعذّر تحديد المنطقة الزمنية من الإحداثيات.",
   "locationNoPlaceFound": "لم يُعثر على مكان عند {coordinates}.",
   "@locationNoPlaceFound": {
@@ -483,6 +473,12 @@
   "madhabLabel": "المذهب",
   "maghrib": "المغرب",
   "maghribAngleLabel": "زاوية المغرب (°)",
+  "menuAddBookmark": "إضافة إشارة مرجعية",
+  "menuAddFavorite": "إضافة إلى المفضلة",
+  "menuCopyText": "نسخ النص",
+  "menuOpen": "فتح",
+  "menuRemoveBookmark": "إزالة الإشارة المرجعية",
+  "menuRemoveFavorite": "إزالة من المفضلة",
   "midnight": "منتصف الليل",
   "minute": "دقيقة",
   "missed": "فائتة",
@@ -503,12 +499,6 @@
   "noTafsirAvailable": "لا يوجد تفسير متاح لهذه الآية",
   "noTranslationAvailable": "لا توجد ترجمة متاحة لهذه الآية",
   "nowActive": "نشط الآن",
-  "onTime": "في وقتها",
-  "onTimePrayersLast30Days": "الصلاة المنتظمة (لآخر 30 يومًا)",
-  "onTimePrayersLast365Days": "الصلاة المنتظمة (لآخر 365 يومًا)",
-  "onTimePrayersLast7Days": "الصلاة المنتظمة (لآخر 7 أيام)",
-  "onTimePrayersToday": "الصلاة المنتظمة (اليوم)",
-  "onTimeRate": "نسبة الانتظام",
   "onboardingFinishAction": "ابدأ",
   "onboardingFinishPreviewUnavailable": "حدّد موقعك لمعاينة مواقيت اليوم.",
   "onboardingFinishSubtitle": "مواقيت صلاتك جاهزة. يمكنك تعديل أي إعداد لاحقًا من الإعدادات.",
@@ -565,6 +555,14 @@
       }
     }
   },
+  "onTime": "في وقتها",
+  "onTimePrayersLast30Days": "الصلاة المنتظمة (لآخر 30 يومًا)",
+  "onTimePrayersLast365Days": "الصلاة المنتظمة (لآخر 365 يومًا)",
+  "onTimePrayersLast7Days": "الصلاة المنتظمة (لآخر 7 أيام)",
+  "onTimePrayersToday": "الصلاة المنتظمة (اليوم)",
+  "onTimeRate": "نسبة الانتظام",
+  "openFolder": "فتح المجلد",
+  "openFolderFailed": "تعذر فتح المجلد",
   "optionalHint": "اختياري",
   "orange": "برتقالي",
   "other": "أخرى",
@@ -597,6 +595,9 @@
   "pleaseSelectMethod": "يرجى اختيار طريقة الحساب.",
   "prayer": "الصلاة",
   "prayerAlertDismiss": "إغلاق",
+  "prayerLocationRequiredAction": "فتح إعدادات الموقع",
+  "prayerLocationRequiredSubtitle": "تحتاج أوقات الصلاة إلى إحداثيات موقعك. افتح إعدادات الموقع لاختيار مدينة على الخريطة أو إدخال الإحداثيات يدويًا.",
+  "prayerLocationRequiredTitle": "حدّد موقعك",
   "prayerSettingsSubtitle": "إعدادات الصلاة ومواقيتها ومتابعتها.",
   "prayerSettingsTitle": "إعدادات الصلاة",
   "prayerTimeAdjustmentsTitle": "تعديلات مواقيت الصلاة (بالدقائق)",
@@ -615,24 +616,87 @@
       }
     }
   },
+  "quranDoublePageWidthFallback": "العرض غير كافٍ لصفحتين — يُعرض صفحة واحدة.",
   "quranLayoutDoublePage": "صفحتان",
   "quranLayoutStudyMode": "وضع الدراسة",
-  "quranDoublePageWidthFallback": "العرض غير كافٍ لصفحتين — يُعرض صفحة واحدة.",
+  "quranNoMatchingReciters": "لا يوجد قراء مطابقون",
   "quranPlayAyah": "تشغيل هذه الآية",
-  "quranPlaySurah": "تشغيل هذه السورة",
   "quranPlayRange": "تشغيل مقطع…",
   "quranPlaySelection": "تشغيل المحدد",
-  "quranSelectReciter": "اختر القارئ",
-  "quranReciterTimed": "متزامن",
-  "quranRecitationStop": "إيقاف",
-  "quranRecitationPlay": "تشغيل",
-  "quranRecitationPause": "إيقاف مؤقت",
-  "quranRecitationNext": "التالي",
-  "quranRecitationPrevious": "السابق",
+  "quranPlaySurah": "تشغيل هذه السورة",
+  "quranRangeFrom": "من — السورة والآية",
+  "quranRangeFromAyah": "من — الآية",
+  "quranRangeFromShort": "من",
+  "quranRangeFromSurah": "من — السورة",
+  "quranRangeHizbBoundsNotFound": "تعذّر تحميل حدود الحزب",
+  "quranRangeHizbNotFound": "تعذّر تحديد الحزب لهذه الآية",
+  "quranRangeJuzBoundsNotFound": "تعذّر تحميل حدود الجزء",
+  "quranRangeJuzNotFound": "تعذّر تحديد الجزء لهذه الآية",
+  "quranRangeModeLabel": "نهاية التشغيل",
+  "quranRangePlay": "تشغيل المقطع",
+  "quranRangePresetAyah": "هذه الآية",
+  "quranRangePresetContinueFromHere": "استمر من هنا",
+  "quranRangePresetCustom": "مخصص",
+  "quranRangePresetFailed": "تعذّر تطبيق هذا الاختيار للمدى",
+  "quranRangePresetHizb": "هذا الحزب",
+  "quranRangePresetJuz": "هذا الجزء",
+  "quranRangePresetSurah": "هذه السورة",
+  "quranRangeRepeatChip": "×{count}",
+  "@quranRangeRepeatChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranRangeRepeatEachAyah": "كرّر كل آية",
+  "quranRangeRepeatOnce": "مرة واحدة",
+  "quranRangeRepeatSelection": "كرّر المدى",
+  "quranRangeRepeatTimes": "{count} مرات",
+  "@quranRangeRepeatTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranRangeRepeatTwice": "مرتان",
+  "quranRangeSave": "حفظ المدى",
+  "quranRangeScope": "المدى",
+  "quranRangeTitle": "المدى والتكرار للحفظ",
+  "quranRangeTo": "إلى — السورة والآية",
+  "quranRangeToAyah": "إلى — الآية",
+  "quranRangeToShort": "إلى",
+  "quranRangeToSurah": "إلى — السورة",
+  "quranRecitationApply": "تطبيق",
+  "quranRecitationAutoScroll": "متابعة التلاوة",
+  "quranRecitationAutoScrollDesc": "يُحرّك صفحة المصحف تلقائيًا لتتبّع موضع التلاوة.",
+  "quranRecitationCancel": "إلغاء",
+  "quranRecitationClosePlayer": "إغلاق المشغّل",
+  "quranRecitationComingSoon": "تشغيل التلاوة قريباً",
   "quranRecitationDownloading": "جارٍ التخزين…",
-  "quranRecitationVolume": "مستوى الصوت",
+  "quranRecitationHighlight": "تظليل الآية",
+  "quranRecitationHighlightDesc": "يُظلّل الآية الجاري تشغيلها في المصحف.",
+  "quranRecitationNext": "التالي",
   "quranRecitationNoTiming": "تشغيل الآيات منفردة غير متاح لهذا القارئ",
-  "quranRecitationUnavailable": "لا يوجد قارئ متاح للتشغيل",
+  "quranRecitationOfflineAutoSave": "تُحفظ التلاوات تلقائيًا أثناء الاستماع.",
+  "quranRecitationOfflineEmpty": "لا توجد تلاوات محفوظة بعد.",
+  "quranRecitationOfflineFileCount": "{count} ملفات",
+  "@quranRecitationOfflineFileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranRecitationOfflineFiles": "الملفات دون اتصال",
+  "quranRecitationOfflineInFolder": "في هذا المجلد",
+  "quranRecitationOfflineOpenFolder": "فتح المجلد",
+  "quranRecitationOfflineStorageUsed": "التخزين المستخدم",
+  "quranRecitationOfflineSubtitle": "التلاوات المحفوظة",
+  "quranRecitationOpenPlayer": "فتح المشغّل",
+  "quranRecitationPause": "إيقاف مؤقت",
+  "quranRecitationPlay": "تشغيل",
   "quranRecitationPlaybackFailed": "فشل التشغيل: {error}",
   "@quranRecitationPlaybackFailed": {
     "placeholders": {
@@ -641,10 +705,54 @@
       }
     }
   },
-  "quranRecitationModeStopAtEnd": "التوقف عند النهاية",
-  "quranRecitationModeRepeat": "تكرار المحدد",
-  "quranRecitationModeContinue": "المتابعة للسورة التالية",
-  "quranRangeModeLabel": "نهاية التشغيل",
+  "quranRecitationPrevious": "السابق",
+  "quranRecitationRangeRepeat": "المدى والتكرار",
+  "quranRecitationRepeatScopeEachAyah": "تكرار كل آية",
+  "quranRecitationRepeatScopeSelection": "تكرار المقطع",
+  "quranRecitationSleepAfter": "بعد {minutes} دقيقة",
+  "@quranRecitationSleepAfter": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "quranRecitationSleepEndOfAyah": "نهاية الآية الحالية",
+  "quranRecitationSleepEndOfRange": "نهاية المدى",
+  "quranRecitationSleepEndOfSurah": "نهاية السورة",
+  "quranRecitationSleepOff": "إيقاف",
+  "quranRecitationSleepTimer": "مؤقّت النوم",
+  "quranRecitationStop": "إيقاف",
+  "quranRecitationSwitchReciter": "تبديل القارئ",
+  "quranRecitationUnavailable": "لا يوجد قارئ متاح للتشغيل",
+  "quranRecitationVolume": "مستوى الصوت",
+  "quranReciterFilterDownloaded": "المحفوظة",
+  "quranReciterFilters": "تصفية",
+  "quranReciterRiwayahCount": "{count} روايات",
+  "@quranReciterRiwayahCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranReciterRiwayahTitle": "القارئ والرواية",
+  "quranReciterRiwayahUpgraded": "هذه الرواية لا تدعم تتبع الآيات. تم التبديل إلى {riwayah}.",
+  "@quranReciterRiwayahUpgraded": {
+    "description": "يتم عرضه عندما لا تدعم الرواية المختارة بيانات التوقيت وتم ترقيتها تلقائياً",
+    "placeholders": {
+      "riwayah": {
+        "type": "String",
+        "example": "حفص"
+      }
+    }
+  },
+  "quranReciterSearchHint": "ابحث عن قارئ…",
+  "quranReciterStyleMujawwad": "مجوّد",
+  "quranReciterStyleMurattal": "مرتل",
+  "quranReciterSurahOnly": "تشغيل السورة فقط",
+  "quranReciterTimed": "متزامن",
+  "quranSelectReciter": "اختر القارئ",
   "quranSurahLabel": "سورة {surah}",
   "@quranSurahLabel": {
     "placeholders": {
@@ -653,7 +761,6 @@
       }
     }
   },
-  "quranRecitationComingSoon": "تشغيل التلاوة قريباً",
   "quranTextSize": "حجم نص القرآن",
   "quranTextSizeExtraLarge": "كبير جداً",
   "quranTextSizeIndependentNote": "حجم قراءة القرآن مستقل عن تحجيم التطبيق والنظام.",
@@ -721,6 +828,7 @@
   },
   "scheduleAlertSound": "أذان",
   "scheduleAlertSoundHint": "تشغيل الأذان عند حلول الوقت",
+  "scrollMoreHint": "المزيد بالأسفل",
   "searchForMore": "ابحث للمزيد من الخيارات",
   "searchPlaceLabel": "البحث عن موقع",
   "searchQuran": "ابحث في القرآن...",
@@ -770,8 +878,6 @@
     }
   },
   "shareImageSavedTitle": "تم حفظ الصورة",
-  "openFolder": "فتح المجلد",
-  "openFolderFailed": "تعذر فتح المجلد",
   "shareIncludeInImage": "تضمين في الصورة",
   "sharePreserveLineBreaks": "فواصل أسطر المصحف",
   "sharePreview": "معاينة",
@@ -820,8 +926,8 @@
   },
   "shareVerses": "مشاركة الآيات",
   "shortcutCategoryFortress": "حصن المسلم",
-  "shortcutCategoryHadith": "الأحاديث",
   "shortcutCategoryGlobal": "عام",
+  "shortcutCategoryHadith": "الأحاديث",
   "shortcutCategoryQuran": "القرآن",
   "shortcutFocusSearchDescription": "فتح أو التركيز على حقل البحث في القرآن والحديث وحصن المسلم.",
   "shortcutFocusSearchLabel": "التركيز على البحث",
@@ -831,11 +937,11 @@
   "shortcutFortressThikrNextDescription": "الانتقال إلى الذكر التالي أثناء القراءة المركّزة.",
   "shortcutFortressThikrNextLabel": "الذكر التالي",
   "shortcutFortressThikrPrevDescription": "العودة إلى الذكر السابق أثناء القراءة المركّزة.",
-  "shortcutHadithResultNextLabel": "الحديث التالي",
-  "shortcutHadithResultNextDescription": "اختيار الحديث التالي في قائمة النتائج.",
-  "shortcutHadithResultPrevLabel": "الحديث السابق",
-  "shortcutHadithResultPrevDescription": "اختيار الحديث السابق في قائمة النتائج.",
   "shortcutFortressThikrPrevLabel": "الذكر السابق",
+  "shortcutHadithResultNextDescription": "اختيار الحديث التالي في قائمة النتائج.",
+  "shortcutHadithResultNextLabel": "الحديث التالي",
+  "shortcutHadithResultPrevDescription": "اختيار الحديث السابق في قائمة النتائج.",
+  "shortcutHadithResultPrevLabel": "الحديث السابق",
   "shortcutOpenSettingsDescription": "الانتقال إلى شاشة الإعدادات.",
   "shortcutOpenSettingsLabel": "فتح الإعدادات",
   "shortcutQuranAyahNextDescription": "اختيار الآية التالية في وضع الدراسة.",
@@ -904,11 +1010,11 @@
   "toggleArabic": "بدّل اللغة",
   "total": "الإجمالي",
   "translation": "الترجمة",
+  "trayHideApp": "إخفاء تواق",
   "trayMuteAdhan": "كتم الأذان",
   "trayNextPrayer": "التالي: {prayer}",
   "trayQuit": "إنهاء",
   "trayShowApp": "إظهار تواق",
-  "trayHideApp": "إخفاء تواق",
   "tryDifferentSearchTerm": "جرب مصطلح بحث مختلف",
   "turkiye": "تركيا (ديانت)",
   "typographySectionSubtitle": "اضبط حجم نص الواجهة وحجم قراءة القرآن بشكل منفصل.",
@@ -926,117 +1032,5 @@
   "welcomeToApp": "مرحبًا بك في التطبيق!",
   "yearly": "سنوي",
   "yellow": "أصفر",
-  "zinc": "الخارصين",
-  "quranRecitationOpenPlayer": "فتح المشغّل",
-  "quranRecitationClosePlayer": "إغلاق المشغّل",
-  "quranRecitationSwitchReciter": "تبديل القارئ",
-
-  "quranRecitationCancel": "إلغاء",
-
-  "quranRecitationApply": "تطبيق",
-  "quranRecitationRangeRepeat": "المدى والتكرار",
-  "quranRecitationQueue": "قائمة التشغيل",
-  "quranRecitationQueueSubtitle": "آيات هذا المقطع",
-  "quranRecitationQueueEmpty": "لا توجد آيات مؤقّتة لهذا القارئ.",
-  "quranRecitationQueueClear": "إيقاف وإفراغ",
-  "quranRecitationSleepTimer": "مؤقّت النوم",
-  "quranRecitationSleepOff": "إيقاف",
-  "quranRecitationSleepEndOfAyah": "نهاية الآية الحالية",
-  "quranRecitationSleepEndOfRange": "نهاية المدى",
-  "quranRecitationSleepEndOfSurah": "نهاية السورة",
-  "quranRecitationSleepAfter": "بعد {minutes} دقيقة",
-  "@quranRecitationSleepAfter": {
-    "placeholders": {
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
-  "quranRecitationAutoScroll": "متابعة التلاوة",
-  "quranRecitationAutoScrollDesc": "يُحرّك صفحة المصحف تلقائيًا لتتبّع موضع التلاوة.",
-  "quranRecitationHighlight": "تظليل الآية",
-  "quranRecitationHighlightDesc": "يُظلّل الآية الجاري تشغيلها في المصحف.",
-  "quranRecitationOfflineFiles": "الملفات دون اتصال",
-  "quranRecitationOfflineSubtitle": "التلاوات المحفوظة",
-  "quranRecitationOfflineAutoSave": "تُحفظ التلاوات تلقائيًا أثناء الاستماع.",
-  "quranRecitationOfflineOpenFolder": "فتح المجلد",
-  "quranRecitationOfflineInFolder": "في هذا المجلد",
-  "quranRecitationOfflineEmpty": "لا توجد تلاوات محفوظة بعد.",
-  "quranRecitationOfflineStorageUsed": "التخزين المستخدم",
-  "quranRecitationOfflineFileCount": "{count} ملفات",
-  "@quranRecitationOfflineFileCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "quranReciterRiwayahTitle": "القارئ والرواية",
-  "quranReciterSearchHint": "ابحث عن قارئ…",
-  "quranReciterRiwayahCount": "{count} روايات",
-  "@quranReciterRiwayahCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "quranReciterFilters": "تصفية",
-  "quranReciterSurahOnly": "تشغيل السورة فقط",
-  "quranReciterFilterDownloaded": "المحفوظة",
-  "quranReciterStyleMurattal": "مرتل",
-  "quranReciterStyleMujawwad": "مجوّد",
-  "quranReciterRiwayahUpgraded": "هذه الرواية لا تدعم تتبع الآيات. تم التبديل إلى {riwayah}.",
-  "@quranReciterRiwayahUpgraded": {
-    "description": "يتم عرضه عندما لا تدعم الرواية المختارة بيانات التوقيت وتم ترقيتها تلقائياً",
-    "placeholders": {
-      "riwayah": {
-        "type": "String",
-        "example": "حفص"
-      }
-    }
-  },
-  "quranNoMatchingReciters": "لا يوجد قراء مطابقون",
-  "quranRangeTitle": "المدى والتكرار للحفظ",
-  "quranRangeScope": "المدى",
-  "quranRangePresetAyah": "هذه الآية",
-  "quranRangePresetSurah": "هذه السورة",
-  "quranRangePresetJuz": "هذا الجزء",
-  "quranRangePresetHizb": "هذا الحزب",
-  "quranRangePresetContinueFromHere": "استمر من هنا",
-  "quranRangePresetCustom": "مخصص",
-  "quranRangeFromSurah": "من — السورة",
-  "quranRangeFromAyah": "من — الآية",
-  "quranRangeToSurah": "إلى — السورة",
-  "quranRangeToAyah": "إلى — الآية",
-  "quranRangeFrom": "من — السورة والآية",
-  "quranRangeTo": "إلى — السورة والآية",
-  "quranRangeRepeatWhole": "كرّر المدى كاملاً",
-  "quranRangePlay": "تشغيل المقطع",
-  "quranRangeJuzNotFound": "تعذّر تحديد الجزء لهذه الآية",
-  "quranRangeHizbNotFound": "تعذّر تحديد الحزب لهذه الآية",
-  "quranRangeJuzBoundsNotFound": "تعذّر تحميل حدود الجزء",
-  "quranRangeHizbBoundsNotFound": "تعذّر تحميل حدود الحزب",
-  "quranRangePresetFailed": "تعذّر تطبيق هذا الاختيار للمدى",
-  "quranRangeFromShort": "من",
-  "quranRangeToShort": "إلى",
-  "quranRangeRepeatOnce": "مرة واحدة",
-  "quranRangeRepeatTwice": "مرتان",
-  "quranRangeRepeatTimes": "{count} مرات",
-  "@quranRangeRepeatTimes": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "quranRangeRepeatChip": "×{count}",
-  "@quranRangeRepeatChip": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "quranRangeSave": "حفظ المدى"
+  "zinc": "الخارصين"
 }

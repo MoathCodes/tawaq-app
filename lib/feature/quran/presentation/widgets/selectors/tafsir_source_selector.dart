@@ -5,7 +5,6 @@ import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/select_empty_content.dart';
-import 'package:tawaq/feature/quran/data/sources/quran_content_registry.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
@@ -29,12 +28,12 @@ class TafsirSourceSelector extends ConsumerWidget {
     final typography = theme.typography;
     final l10n = context.l10n;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final sources = QuranContentRegistry.tafsirs;
+    final sources = TafsirId.values;
     final selected = ref.watch(
       quranScreenSettingsProvider.select(
         (settings) =>
             settings.value?.selectedTafsir ??
-            QuranContentRegistry.defaultTafsir,
+            kDefaultTafsirId,
       ),
     );
     final fieldLabel = l10n.tafsir;

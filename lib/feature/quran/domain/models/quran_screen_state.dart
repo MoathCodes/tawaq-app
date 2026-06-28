@@ -60,7 +60,7 @@ abstract class QuranScreenState with _$QuranScreenState {
 
   /// Creates a [QuranScreenState] instance from a JSON map.
   factory QuranScreenState.fromJson(Map<String, dynamic> json) =>
-      _$QuranScreenStateFromJson(_migrateQuranScreenJson(json));
+      _$QuranScreenStateFromJson(json);
 
   /// Creates a default initial state.
   factory QuranScreenState.initial() => QuranScreenState(
@@ -74,14 +74,4 @@ abstract class QuranScreenState with _$QuranScreenState {
       ayahIds: const [1, 2, 3, 4, 5, 6, 7],
     ),
   );
-}
-
-Map<String, dynamic> _migrateQuranScreenJson(Map<String, dynamic> json) {
-  final migrated = Map<String, dynamic>.from(json);
-  if (!migrated.containsKey('quranTextScale') &&
-      migrated.containsKey('fontSize')) {
-    migrated['quranTextScale'] = migrated.remove('fontSize');
-  }
-  migrateSidePanelJson(migrated);
-  return migrated;
 }

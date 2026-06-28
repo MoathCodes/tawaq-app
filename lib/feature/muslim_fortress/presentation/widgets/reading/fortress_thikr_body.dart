@@ -8,12 +8,11 @@ import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortres
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_quran_passage.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/theme/theme.dart';
 
 const _kFortressAyahBaseFontSize = 32.0;
 
-/// Renders thikr content with mushaf-backed Quranic passages.
+/// Mushaf-backed thikr body for focus reading (Quranic passages + prose).
 class FortressThikrBody extends ConsumerWidget {
   /// Creates a thikr body.
   const FortressThikrBody({
@@ -112,45 +111,6 @@ class FortressThikrBody extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
         ],
       ],
-    );
-  }
-}
-
-/// Compact thikr preview for category list tiles.
-///
-/// Collapsed: two-line excerpt. Expanded: full text (Uthmani for Quranic items).
-class FortressThikrPreview extends StatelessWidget {
-  /// Creates a list-tile thikr preview.
-  const FortressThikrPreview({
-    required this.dua,
-    required this.isExpanded,
-    super.key,
-  });
-
-  final FortressDuaItem dua;
-  final bool isExpanded;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final isQuran = dua.isQuranicPassage;
-
-    var style = theme.typography.body.sm.copyWith(
-      color: isExpanded ? theme.colors.foreground : theme.colors.mutedForeground,
-      height: isQuran ? 2 : 1.6,
-      fontSize: isQuran ? (isExpanded ? 22 : 20) : null,
-      fontWeight: isExpanded && isQuran ? FontWeight.w600 : FontWeight.w500,
-    );
-    if (isQuran) {
-      style = style.copyWith(fontFamily: FontFamily.uthmanicHafs);
-    }
-
-    return Text(
-      dua.text,
-      style: style,
-      textAlign: TextAlign.start,
-      maxLines: isExpanded ? null : 2,
-      overflow: isExpanded ? null : TextOverflow.ellipsis,
     );
   }
 }

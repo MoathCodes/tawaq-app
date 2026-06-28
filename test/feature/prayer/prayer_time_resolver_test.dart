@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
-import 'package:tawaq/feature/prayer/domain/services/prayer_time_resolver.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_timeline.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 

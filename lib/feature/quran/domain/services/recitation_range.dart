@@ -1,5 +1,7 @@
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/ayah_reference.dart';
+import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
+import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 
 /// Maps global endpoints to the first surah-local segment to load.
 ///
@@ -114,74 +116,153 @@ Future<({AyahReference from, AyahReference to})?> resolveHizbAyahRange({
   return _boundsToAyahRange(mushaf: mushaf, bounds: bounds);
 }
 
-/// Outcome of resolving a juz/hizb preset from a seed ayah.
-sealed class DivisionRangeResolveResult {
-  const DivisionRangeResolveResult();
+/// Outcome when a juz/hizb preset cannot be resolved.
+enum DivisionResolveError {
+  /// The seed ayah has no juz/hizb division metadata.
+  numberNotFound,
+
+  /// Division metadata exists but bounds could not be loaded.
+  boundsNotFound,
+
+  /// Unexpected failure while resolving a division preset.
+  failed,
 }
 
-/// Juz/hizb range resolved to global ayah endpoints.
-final class DivisionRangeResolved extends DivisionRangeResolveResult {
-  /// Creates a [DivisionRangeResolved].
-  const DivisionRangeResolved({required this.from, required this.to});
+/// Resolved global ayah range for a juz or hizb preset.
+typedef DivisionRange = ({AyahReference from, AyahReference to});
 
-  /// Range start.
-  final AyahReference from;
-
-  /// Range end.
-  final AyahReference to;
-}
-
-/// The seed ayah has no juz/hizb division metadata.
-final class DivisionNumberNotFound extends DivisionRangeResolveResult {
-  /// Creates a [DivisionNumberNotFound].
-  const DivisionNumberNotFound();
-}
-
-/// Division metadata exists but bounds could not be loaded.
-final class DivisionBoundsNotFound extends DivisionRangeResolveResult {
-  /// Creates a [DivisionBoundsNotFound].
-  const DivisionBoundsNotFound();
-}
-
-/// Unexpected failure while resolving a division preset.
-final class DivisionResolveFailed extends DivisionRangeResolveResult {
-  /// Creates a [DivisionResolveFailed].
-  const DivisionResolveFailed();
-}
-
-/// Resolves the juz containing [surah]/[ayah] to global ayah endpoints.
-Future<DivisionRangeResolveResult> resolveJuzRangeForAyah(
+/// Resolves the juz containing [surah]/[ayah].
+Future<({DivisionRange? range, DivisionResolveError? error})>
+resolveJuzRangeForAyah(
   MushafReaderController mushaf,
   int surah,
   int ayah,
 ) async {
   try {
     final juzNum = await juzNumberForAyah(mushaf, surah, ayah);
-    if (juzNum == null) return const DivisionNumberNotFound();
-    final range = await resolveJuzAyahRange(mushaf: mushaf, juzNumber: juzNum);
-    if (range == null) return const DivisionBoundsNotFound();
-    return DivisionRangeResolved(from: range.from, to: range.to);
+    if (juzNum == null) {
+      return (range: null, error: DivisionResolveError.numberNotFound);
+    }
+    final resolved = await resolveJuzAyahRange(
+      mushaf: mushaf,
+      juzNumber: juzNum,
+    );
+    if (resolved == null) {
+      return (range: null, error: DivisionResolveError.boundsNotFound);
+    }
+    return (range: resolved, error: null);
   } on Object {
-    return const DivisionResolveFailed();
+    return (range: null, error: DivisionResolveError.failed);
   }
 }
 
-/// Resolves the hizb containing [surah]/[ayah] to global ayah endpoints.
-Future<DivisionRangeResolveResult> resolveHizbRangeForAyah(
+/// Resolves the hizb containing [surah]/[ayah].
+Future<({DivisionRange? range, DivisionResolveError? error})>
+resolveHizbRangeForAyah(
   MushafReaderController mushaf,
   int surah,
   int ayah,
 ) async {
   try {
     final hizbNum = await hizbNumberForAyah(mushaf, surah, ayah);
-    if (hizbNum == null) return const DivisionNumberNotFound();
-    final range = await resolveHizbAyahRange(
+    if (hizbNum == null) {
+      return (range: null, error: DivisionResolveError.numberNotFound);
+    }
+    final resolved = await resolveHizbAyahRange(
       mushaf: mushaf,
       hizbNumber: hizbNum,
     );
-    if (range == null) return const DivisionBoundsNotFound();
-    return DivisionRangeResolved(from: range.from, to: range.to);
+    if (resolved == null) {
+      return (range: null, error: DivisionResolveError.boundsNotFound);
+    }
+    return (range: resolved, error: null);
   } on Object {
-    return const DivisionResolveFailed();
+    return (range: null, error: DivisionResolveError.failed);
+  }
+}
+
+/// Intent produced from a range preset and resolved endpoints.
+sealed class RecitationPlaybackIntent {
+  const RecitationPlaybackIntent();
+}
+
+/// Play a whole surah from the beginning or [resumeFrom].
+final class PlayWholeSurahIntent extends RecitationPlaybackIntent {
+  /// Creates [PlayWholeSurahIntent].
+  const PlayWholeSurahIntent({
+    required this.reciter,
+    required this.moshaf,
+    required this.surah,
+    this.resumeFrom,
+  });
+
+  final Reciter reciter;
+  final Moshaf moshaf;
+  final int surah;
+  final Duration? resumeFrom;
+}
+
+/// Play a global ayah range starting at the first surah-local segment.
+final class PlayAyahRangeIntent extends RecitationPlaybackIntent {
+  /// Creates [PlayAyahRangeIntent].
+  const PlayAyahRangeIntent({
+    required this.reciter,
+    required this.moshaf,
+    required this.from,
+    this.to,
+    this.resumeFrom,
+  });
+
+  final Reciter reciter;
+  final Moshaf moshaf;
+  final AyahReference from;
+  final AyahReference? to;
+  final Duration? resumeFrom;
+}
+
+/// Maps a [RangeScopePreset] and resolved range endpoints to playback intent.
+///
+/// - [RangeScopePreset.thisSurah] -> whole surah (untimed-compatible).
+/// - [RangeScopePreset.continueFromHere] with `from.ayah == 1` -> whole surah.
+/// - [RangeScopePreset.continueFromHere] with `from.ayah > 1` -> open range.
+/// - All other presets -> bounded range (requires timing).
+RecitationPlaybackIntent playbackIntentForPreset({
+  required RangeScopePreset preset,
+  required Reciter reciter,
+  required Moshaf moshaf,
+  required AyahReference from,
+  AyahReference? to,
+}) {
+  switch (preset) {
+    case RangeScopePreset.thisSurah:
+      return PlayWholeSurahIntent(
+        reciter: reciter,
+        moshaf: moshaf,
+        surah: from.surah,
+      );
+    case RangeScopePreset.continueFromHere:
+      if (from.ayah == 1) {
+        return PlayWholeSurahIntent(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: from.surah,
+        );
+      }
+      return PlayAyahRangeIntent(
+        reciter: reciter,
+        moshaf: moshaf,
+        from: from,
+        to: to,
+      );
+    case RangeScopePreset.thisAyah:
+    case RangeScopePreset.thisJuz:
+    case RangeScopePreset.thisHizb:
+    case RangeScopePreset.custom:
+      return PlayAyahRangeIntent(
+        reciter: reciter,
+        moshaf: moshaf,
+        from: from,
+        to: to,
+      );
   }
 }

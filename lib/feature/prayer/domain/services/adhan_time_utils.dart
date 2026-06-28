@@ -63,7 +63,3 @@ bool didCrossPrayerTime({
   if (cutoff != null && !now.isBefore(cutoff)) return false;
   return true;
 }
-
-/// Calendar day key `yyyyMMdd` for dedupe storage.
-int adhanDayKey(DateTime date) =>
-    date.year * 10000 + date.month * 100 + date.day;

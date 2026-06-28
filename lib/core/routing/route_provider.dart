@@ -20,8 +20,8 @@ import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state
 import 'package:tawaq/feature/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:tawaq/feature/prayer/presentation/screens/prayer_screen.dart';
 import 'package:tawaq/feature/quran/presentation/screens/quran_screen.dart';
-import 'package:tawaq/feature/settings/presentation/models/settings_destination.dart';
 import 'package:tawaq/feature/settings/presentation/screens/settings_screen.dart';
+import 'package:tawaq/feature/shell/shell_feature_layer.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 part 'route_provider.g.dart';
@@ -58,17 +58,19 @@ class AppShellRoute extends ShellRouteData {
   @override
   /// Builds the shell around the nested navigator.
   Widget builder(BuildContext context, GoRouterState state, Widget navigator) {
-    return PageShell(child: navigator);
+    return PageShell(
+      titleBarCenter: const ShellTitleBarCenter(),
+      contentWrapper: (child) => ShellContentWrapper(child: child),
+      contentOverlay: const ShellContentOverlay(),
+      child: navigator,
+    );
   }
 }
 
 /// Shared route base for app navigation metadata and page transitions.
 abstract class AppNavigationRoute extends GoRouteData {
-  /// Creates a navigation route with optional nested sub-routes.
-  const AppNavigationRoute({this.subRoutes = const []});
-
-  /// Nested routes that are considered part of this navigation branch.
-  final List<AppNavigationRoute> subRoutes;
+  /// Creates a navigation route.
+  const AppNavigationRoute();
 
   /// The icon shown in navigation chrome for this route.
   IconData get icon;
@@ -90,12 +92,9 @@ abstract class AppNavigationRoute extends GoRouteData {
   /// e.g. showing a dialog — instead of changing the current route.
   void activate(BuildContext context) => go(context);
 
-  /// Whether this route (or one of its nested sub-routes) matches [location].
-  bool containsLocation(String? location) {
-    if (location == null) return false;
-    if (path == location) return true;
-    return subRoutes.any((route) => route.containsLocation(location));
-  }
+  /// Whether this route matches [location].
+  bool containsLocation(String? location) =>
+      location != null && path == location;
 
   @override
   Page<void> buildPage(BuildContext context, GoRouterState state) {
@@ -202,8 +201,8 @@ class SettingsRoute extends AppNavigationRoute with $SettingsRoute {
   /// Creates the settings route.
   const SettingsRoute({this.$extra});
 
-  /// Optional settings tab to open; null restores the persisted tab.
-  final SettingsDestination? $extra;
+  /// Optional settings tab key to open; null restores the persisted tab.
+  final String? $extra;
 
   @override
   /// The settings route icon.
@@ -217,7 +216,7 @@ class SettingsRoute extends AppNavigationRoute with $SettingsRoute {
   @override
   /// Builds the settings screen.
   Widget build(BuildContext context, GoRouterState state) {
-    return SettingsScreen(section: $extra);
+    return SettingsScreen(tabKey: $extra);
   }
 }
 
@@ -287,25 +286,19 @@ GoRouter appRouter(Ref ref) {
   return appRouter;
 }
 
-/// Returns the main navigation destinations shown in the primary shell.
-@riverpod
-List<AppNavigationRoute> mainRoutes(Ref ref) {
-  return const [
-    PrayerRoute(),
-    QuranRoute(),
-    HadithRoute(),
-    MuslimFortressRoute(),
-  ];
-}
+/// Main shell navigation destinations.
+const kMainRoutes = <AppNavigationRoute>[
+  PrayerRoute(),
+  QuranRoute(),
+  HadithRoute(),
+  MuslimFortressRoute(),
+];
 
-/// Returns secondary destinations rendered in the application shell.
-@riverpod
-List<AppNavigationRoute> secondaryRoutes(Ref ref) {
-  return const [
-    SettingsRoute(),
-    AboutRoute(),
-  ];
-}
+/// Secondary shell destinations (settings, about).
+const kSecondaryRoutes = <AppNavigationRoute>[
+  SettingsRoute(),
+  AboutRoute(),
+];
 
 /// Returns the localized label if available,
 ///  otherwise returns the initial label.

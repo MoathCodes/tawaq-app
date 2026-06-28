@@ -11,20 +11,33 @@ class ShortcutIndicator extends StatelessWidget {
     required this.shortcut,
     super.key,
     this.showAliases = false,
-  }) : activators = null;
+  })  : activators = null,
+        tokens = null;
 
   /// Creates a shortcut indicator from raw activators.
   const ShortcutIndicator.activators({
     required this.activators,
     super.key,
     this.showAliases = false,
-  }) : shortcut = null;
+  })  : shortcut = null,
+        tokens = null;
+
+  /// Creates a shortcut indicator from preformatted key-cap [tokens].
+  const ShortcutIndicator.tokens({
+    required this.tokens,
+    super.key,
+    this.showAliases = false,
+  })  : shortcut = null,
+        activators = null;
 
   /// Catalog shortcut to display.
   final AppShortcut? shortcut;
 
   /// Raw activators when not using a catalog [shortcut].
   final List<SingleActivator>? activators;
+
+  /// Preformatted key-cap labels when not using activators or a catalog entry.
+  final List<String>? tokens;
 
   /// When true, shows alternate activators separated by "or".
   final bool showAliases;
@@ -36,6 +49,10 @@ class ShortcutIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (tokens != null && tokens!.isNotEmpty) {
+      return _ShortcutCombo(tokens: tokens!);
+    }
+
     final resolved = _resolvedActivators;
     if (resolved.isEmpty) {
       return const SizedBox.shrink();

@@ -9,9 +9,9 @@ import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/utils/hijri_provider.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_hint.dart';
 import 'package:tawaq/core/widgets/theme_mode_button.dart';
-import 'package:tawaq/feature/settings/presentation/models/settings_destination.dart';
+import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
 import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/location_display.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Compact shell actions (location, date, language, theme) laid out for the
@@ -41,7 +41,7 @@ class ShellAppBar extends ConsumerWidget {
             variant: .ghost,
             size: FButtonSizeVariant.xs,
             onPress: () => const SettingsRoute(
-              $extra: SettingsLocationDestination(),
+              $extra: kSettingsLocationTabKey,
             ).go(context),
             prefix: Icon(
               FLucideIcons.mapPin,

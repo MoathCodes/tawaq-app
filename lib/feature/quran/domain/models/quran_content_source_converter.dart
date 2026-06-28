@@ -1,5 +1,4 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:tawaq/feature/quran/data/sources/quran_content_registry.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 
@@ -42,10 +41,9 @@ class TranslationIdConverter implements JsonConverter<TranslationId, Object?> {
   @override
   TranslationId fromJson(Object? json) {
     if (json is String) {
-      return _translationIdFromPersistedString(json) ??
-          QuranContentRegistry.defaultTranslation;
+      return _translationIdFromPersistedString(json) ?? kDefaultTranslationId;
     }
-    return QuranContentRegistry.defaultTranslation;
+    return kDefaultTranslationId;
   }
 
   @override
@@ -60,10 +58,9 @@ class TafsirIdConverter implements JsonConverter<TafsirId, Object?> {
   @override
   TafsirId fromJson(Object? json) {
     if (json is String) {
-      return _tafsirIdFromPersistedString(json) ??
-          QuranContentRegistry.defaultTafsir;
+      return _tafsirIdFromPersistedString(json) ?? kDefaultTafsirId;
     }
-    return QuranContentRegistry.defaultTafsir;
+    return kDefaultTafsirId;
   }
 
   @override

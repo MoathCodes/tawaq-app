@@ -3,9 +3,23 @@ import 'dart:async';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/feature/quran/domain/use_cases/navigate_study_ayah.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+
+/// Last global ayah id in the standard Mushaf (Al-Fatiha:1 … An-Nas:6).
+const kMaxQuranAyahId = 6236;
+
+/// Computes the next study-mode ayah id after applying [delta], or null if unchanged.
+int? nextStudyAyahId({
+  required int? currentAyahId,
+  required int delta,
+}) {
+  if (currentAyahId == null) return null;
+
+  final newAyahId = (currentAyahId + delta).clamp(1, kMaxQuranAyahId);
+  if (newAyahId == currentAyahId) return null;
+  return newAyahId;
+}
 
 /// Keeps [MushafReaderController] highlight aligned with persisted selection.
 void useQuranAyahSelectionSync(WidgetRef ref) {
@@ -84,4 +98,30 @@ Future<void> navigateStudyAyah({
 
   final ayah = await controller.getAyah(newAyahId);
   await jumpToQuranAyah(ref, ayah);
+}
+
+/// Study-panel ayah navigation state shared by the panel body and header.
+({
+  int? currentAyahId,
+  bool canGoNext,
+  bool canGoPrevious,
+  Future<void> Function(int delta) navigateAyah,
+})
+useStudyAyahNavigation(WidgetRef ref) {
+  final currentAyahId = ref.watch(
+    quranScreenSettingsProvider.select(
+      (v) => v.value?.selectedAyah?.ayahId,
+    ),
+  );
+
+  return (
+    currentAyahId: currentAyahId,
+    canGoNext: currentAyahId == null || currentAyahId < kMaxQuranAyahId,
+    canGoPrevious: currentAyahId == null || currentAyahId > 1,
+    navigateAyah: (delta) => navigateStudyAyah(
+      ref: ref,
+      currentAyahId: currentAyahId,
+      delta: delta,
+    ),
+  );
 }

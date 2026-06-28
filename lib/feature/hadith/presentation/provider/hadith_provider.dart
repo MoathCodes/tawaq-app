@@ -2,158 +2,80 @@ import 'dart:async';
 
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/feature/hadith/data/repository/hadith_repository.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_flow_state.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_screen_state.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_search_state.dart';
-import 'package:tawaq/feature/hadith/domain/services/hadith_service.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_screen_ui.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 part 'hadith_provider.g.dart';
 
-/// Returns the persisted hadith screen state from shared application settings.
+/// Aggregated read-only Hadith screen UI state for presentation widgets.
 @riverpod
-HadithScreenState hadithUiState(Ref ref) {
-  final settings = ref.watch(hadithScreenSettingsProvider);
-  return settings.asData?.value ?? HadithScreenState.initial();
-}
+HadithScreenUi hadithScreenUi(Ref ref) {
+  final session = ref.watch(hadithSessionControllerProvider);
+  final settings =
+      ref.watch(hadithScreenSettingsProvider).asData?.value ??
+      HadithPersistedSettings.initial();
 
-/// Returns the in-session filter draft from the screen controller.
-@riverpod
-HadithFilters hadithFilters(Ref ref) {
-  return ref.watch(hadithScreenControllerProvider).draftFilters;
-}
+  final filterInteractionsEnabled =
+      !session.searchBusy &&
+      session.isSearchMode &&
+      session.query.trim().isNotEmpty;
 
-/// Returns the current session search query (in-memory only).
-@riverpod
-String hadithQuery(Ref ref) {
-  return ref.watch(hadithScreenControllerProvider).query;
-}
-
-/// Returns the currently selected hadith panel tab.
-@riverpod
-HadithPanelTab hadithActiveTab(Ref ref) {
-  final uiState = ref.watch(hadithUiStateProvider);
-  return uiState.activeTab;
-}
-
-/// Returns the persisted hadith side-panel width ratio (0..1).
-@riverpod
-double hadithSidePanelRatio(Ref ref) {
-  final uiState = ref.watch(hadithUiStateProvider);
-  return uiState.sidePanelRatio;
-}
-
-/// Returns whether the hadith side panel is collapsed.
-@riverpod
-bool hadithSidePanelCollapsed(Ref ref) {
-  final uiState = ref.watch(hadithUiStateProvider);
-  return uiState.sidePanelCollapsed;
-}
-
-/// Cached bookmark list shared by keys and bookmarks mode.
-///
-/// Intentionally keepAlive: one session-wide favorites fetch shared by
-/// auto-dispose dependents ([hadithBookmarkedHadiths], [hadithFavoriteKeys]).
-@Riverpod(keepAlive: true)
-Future<List<DetailedHadith>> hadithFavoritesCache(Ref ref) async {
-  final service = await ref.read(hadithServiceProvider.future);
-  return service.getFavorites();
-}
-
-/// Stable favorite keys derived from [hadithFavoritesCacheProvider].
-@Riverpod(keepAlive: true)
-Future<Set<String>> hadithFavoriteKeys(Ref ref) async {
-  final favorites = await ref.watch(hadithFavoritesCacheProvider.future);
-  return favorites.map(hadithStableKey).toSet();
-}
-
-/// Loads the user's bookmarked hadiths.
-@riverpod
-Future<List<DetailedHadith>> hadithBookmarkedHadiths(Ref ref) {
-  return ref.watch(hadithFavoritesCacheProvider.future);
-}
-
-/// Returns the current hadith view mode.
-@riverpod
-HadithViewMode hadithViewMode(Ref ref) {
-  final flowState = ref.watch(hadithScreenControllerProvider);
-  return flowState.mode;
-}
-
-/// Returns whether the hadith UI is currently showing the search view.
-@riverpod
-bool hadithIsSearchMode(Ref ref) {
-  return ref.watch(hadithViewModeProvider) == HadithViewMode.search;
-}
-
-/// Returns recent searches only when the search view should display them.
-@riverpod
-AsyncValue<List<String>> hadithVisibleRecentSearches(Ref ref) {
-  final isSearchMode = ref.watch(hadithIsSearchModeProvider);
-  if (!isSearchMode) {
-    return const AsyncData<List<String>>(<String>[]);
-  }
-
-  return ref.watch(hadithRecentSearchesProvider);
-}
-
-/// True while a hadith search request or pagination fetch is in flight.
-@riverpod
-bool hadithSearchBusy(Ref ref) {
-  final state =
-      ref.watch(hadithSearchControllerProvider).asData?.value ??
-      const HadithSearchState();
-  return state.isLoading || state.isLoadingMore;
-}
-
-/// Whether filter and filter-chip actions should accept input.
-///
-/// Disabled while search is busy. Filter chips also require a non-empty query
-/// because removing a filter triggers a new search.
-@riverpod
-bool hadithFilterInteractionsEnabled(Ref ref) {
-  if (ref.watch(hadithSearchBusyProvider)) {
-    return false;
-  }
-  if (!ref.watch(hadithIsSearchModeProvider)) {
-    return false;
-  }
-  return ref.watch(hadithQueryProvider).trim().isNotEmpty;
-}
-
-/// Returns the hadith results visible for the active view mode.
-@riverpod
-AsyncValue<List<DetailedHadith>> hadithVisibleResults(Ref ref) {
-  final mode = ref.watch(hadithViewModeProvider);
-  return switch (mode) {
-    HadithViewMode.search => AsyncData(
-      ref.watch(hadithSearchControllerProvider).asData?.value.results ??
-          const <DetailedHadith>[],
-    ),
-    HadithViewMode.bookmarks => ref.watch(hadithBookmarkedHadithsProvider),
-    HadithViewMode.specificList => AsyncData(
-      ref.watch(hadithScreenControllerProvider).specificHadiths,
-    ),
+  final visibleResults = switch (session.mode) {
+    HadithViewMode.search => AsyncData(session.results),
+    HadithViewMode.bookmarks => ref.watch(hadithFavoritesProvider),
+    HadithViewMode.specificList => AsyncData(session.specificHadiths),
   };
+
+  final recentSearches = session.isSearchMode
+      ? ref.watch(hadithRecentSearchesProvider)
+      : const AsyncData<List<String>>(<String>[]);
+
+  return HadithScreenUi(
+    filters: session.filters,
+    query: session.query,
+    viewMode: session.mode,
+    isSearchMode: session.isSearchMode,
+    searchBusy: session.searchBusy,
+    activeTab: settings.activeTab,
+    visibleResults: visibleResults,
+    filterInteractionsEnabled: filterInteractionsEnabled,
+    sidePanelCollapsed: settings.sidePanelCollapsed,
+    sidePanelRatio: settings.sidePanelRatio,
+    recentSearches: recentSearches,
+    selectedHadith: session.selectedHadith,
+    searchResults: session.results,
+    searchError: session.error,
+    searchLoading: session.isLoading,
+    searchLoadingMore: session.isLoadingMore,
+    searchHasNextPage: session.hasNextPage,
+  );
 }
 
-/// Coordinates hadith screen state, mode transitions, and search actions.
+/// Bookmarked hadiths loaded from local storage.
+@Riverpod(keepAlive: true)
+Future<List<DetailedHadith>> hadithFavorites(Ref ref) async {
+  final repository = await ref.read(hadithRepositoryProvider.future);
+  return repository.getFavorites();
+}
+
+/// Coordinates hadith session state, search, mode transitions, and selection.
 @riverpod
-class HadithScreenController extends _$HadithScreenController {
+class HadithSessionController extends _$HadithSessionController {
   static const _filtersDebounceDuration = Duration(milliseconds: 250);
 
   Timer? _filtersDebounce;
   String? _lastBootstrapSignature;
+  int _searchGeneration = 0;
 
   @override
-  HadithFlowState build() {
+  HadithSessionState build() {
     ref.onDispose(_cancelDebounces);
-    final persisted =
-        ref.read(hadithScreenSettingsProvider).asData?.value.filters ??
-        const HadithFilters();
-    return HadithFlowState(draftFilters: persisted);
+    return const HadithSessionState();
   }
 
   /// Bootstraps the controller into search or specific-list mode.
@@ -180,16 +102,12 @@ class HadithScreenController extends _$HadithScreenController {
 
   /// Clears the persisted recent-search history.
   Future<void> clearRecentSearches() {
-    return ref
-        .read(hadithSearchControllerProvider.notifier)
-        .clearRecentSearches();
+    return ref.read(hadithRecentSearchesProvider.notifier).clearAll();
   }
 
   /// Removes one query from the persisted recent-search history.
   Future<void> removeRecentSearch(String query) {
-    return ref
-        .read(hadithSearchControllerProvider.notifier)
-        .removeRecentSearch(query);
+    return ref.read(hadithRecentSearchesProvider.notifier).removeQuery(query);
   }
 
   /// Persists the active hadith panel tab.
@@ -214,32 +132,32 @@ class HadithScreenController extends _$HadithScreenController {
     await search();
   }
 
-  /// Updates the draft filters and optionally debounces a refresh.
+  /// Updates the session filters and optionally debounces a refresh.
   Future<void> setFilters(
     HadithFilters filters, {
     bool debounced = true,
   }) async {
-    if (filters == state.draftFilters) {
+    if (filters == state.filters) {
       if (!debounced && state.isSearchMode) {
-        await _commitFiltersAndSearch();
+        await search();
       }
       return;
     }
 
-    state = state.copyWith(draftFilters: filters);
+    state = state.copyWith(filters: filters);
 
     if (!state.isSearchMode) {
       return;
     }
 
     if (!debounced) {
-      await _commitFiltersAndSearch();
+      await search();
       return;
     }
 
     _filtersDebounce?.cancel();
     _filtersDebounce = Timer(_filtersDebounceDuration, () {
-      unawaited(_commitFiltersAndSearch());
+      unawaited(search());
     });
   }
 
@@ -249,13 +167,101 @@ class HadithScreenController extends _$HadithScreenController {
   }
 
   /// Triggers a search using the current query and filters.
-  Future<void> search() {
-    return ref.read(hadithSearchControllerProvider.notifier).search();
+  Future<void> search({bool reset = true}) async {
+    final generation = ++_searchGeneration;
+    final value = state.query.trim();
+
+    if (value.isEmpty) {
+      state = state.copyWith(
+        query: '',
+        page: 1,
+        results: const <DetailedHadith>[],
+        clearMetadata: true,
+        clearError: true,
+        isLoading: false,
+        isLoadingMore: false,
+      );
+      return;
+    }
+
+    final targetPage = reset ? 1 : state.page;
+    state = state.copyWith(
+      query: value,
+      page: targetPage,
+      isLoading: true,
+      isLoadingMore: false,
+      clearError: true,
+    );
+
+    try {
+      final repository = await ref.read(hadithRepositoryProvider.future);
+      final response = await repository.searchDetailed(
+        _toSearchParams(query: value, page: 1),
+      );
+
+      if (generation != _searchGeneration) return;
+
+      state = state.copyWith(
+        query: value,
+        page: 1,
+        results: response.data,
+        metadata: response.metadata,
+        isLoading: false,
+        isLoadingMore: false,
+        clearError: true,
+      );
+
+      ref.read(hadithRecentSearchesProvider.notifier).prepend(value);
+      unawaited(
+        ref.read(hadithRecentSearchesProvider.notifier).persistQuery(value),
+      );
+    } catch (e) {
+      if (generation != _searchGeneration) return;
+      state = state.copyWith(
+        query: value,
+        isLoading: false,
+        isLoadingMore: false,
+        error: '$e',
+      );
+    }
   }
 
-  /// Requests the next page of search results.
-  Future<void> loadMore() {
-    return ref.read(hadithSearchControllerProvider.notifier).loadMore();
+  /// Fetches the next page of search results and appends them.
+  Future<void> loadMore() async {
+    if (state.isLoading || state.isLoadingMore || !state.hasNextPage) {
+      return;
+    }
+
+    final generation = _searchGeneration;
+    final nextPage = state.page + 1;
+    state = state.copyWith(isLoadingMore: true, clearError: true);
+
+    try {
+      final repository = await ref.read(hadithRepositoryProvider.future);
+      final response = await repository.searchDetailed(
+        _toSearchParams(query: state.query, page: nextPage),
+      );
+
+      if (generation != _searchGeneration) return;
+
+      state = state.copyWith(
+        page: nextPage,
+        results: [...state.results, ...response.data],
+        metadata: response.metadata,
+        isLoadingMore: false,
+        clearError: true,
+      );
+    } catch (e) {
+      if (generation != _searchGeneration) return;
+      state = state.copyWith(isLoadingMore: false, error: '$e');
+    }
+  }
+
+  /// Toggles a hadith between favorite and non-favorite state.
+  Future<void> toggleFavorite(HadithBase hadith) async {
+    final repository = await ref.read(hadithRepositoryProvider.future);
+    await repository.toggleFavorite(hadith);
+    ref.invalidate(hadithFavoritesProvider);
   }
 
   /// Selects a hadith and optionally opens the details tab.
@@ -263,20 +269,25 @@ class HadithScreenController extends _$HadithScreenController {
     DetailedHadith hadith, {
     bool openDetailsTab = true,
   }) async {
-    ref.read(hadithSelectorProvider.notifier).selectHadith(hadith);
+    state = state.copyWith(selectedHadith: hadith);
     if (openDetailsTab) {
       setActiveTab(HadithPanelTab.details);
     }
+  }
+
+  /// Clears the current hadith selection.
+  void clearSelection() {
+    state = state.copyWith(clearSelectedHadith: true);
   }
 
   /// Moves the current selection by [delta] within the visible results list.
   Future<void> selectAdjacentResult(int delta) async {
     if (delta == 0) return;
 
-    final results = ref.read(hadithVisibleResultsProvider).value;
+    final results = ref.read(hadithScreenUiProvider).visibleResults.value;
     if (results == null || results.isEmpty) return;
 
-    final current = ref.read(hadithSelectorProvider).value;
+    final current = state.selectedHadith;
     var index = current == null
         ? (delta > 0 ? 0 : results.length - 1)
         : results.indexWhere(
@@ -301,12 +312,12 @@ class HadithScreenController extends _$HadithScreenController {
   /// Switches to bookmarks mode and selects the first favorite when possible.
   Future<void> openBookmarks() async {
     await _enterSpecificMode(mode: HadithViewMode.bookmarks);
-    final favorites = await ref.read(hadithBookmarkedHadithsProvider.future);
+    final favorites = await ref.read(hadithFavoritesProvider.future);
 
     if (state.mode != HadithViewMode.bookmarks) return;
 
     if (favorites.isEmpty) {
-      ref.read(hadithSelectorProvider.notifier).clearSelection();
+      clearSelection();
       return;
     }
 
@@ -332,17 +343,15 @@ class HadithScreenController extends _$HadithScreenController {
     _cancelDebounces();
 
     final snapshot = restoreSearchSnapshot ? state.searchSnapshot : null;
-    final restoredFilters = snapshot?.filters ?? const HadithFilters();
-    state = HadithFlowState(
+    state = HadithSessionState(
       query: snapshot?.query ?? '',
-      draftFilters: restoredFilters,
+      filters: snapshot?.filters ?? const HadithFilters(),
     );
 
-    ref.read(hadithScreenSettingsProvider.notifier).setFilters(restoredFilters);
-    await ref.read(hadithSearchControllerProvider.notifier).search();
+    await search();
 
     if ((snapshot?.query ?? '').trim().isEmpty) {
-      ref.read(hadithSelectorProvider.notifier).clearSelection();
+      clearSelection();
     }
   }
 
@@ -360,19 +369,15 @@ class HadithScreenController extends _$HadithScreenController {
       specificHadiths: hadiths,
       searchSnapshot: snapshot,
       query: '',
-      draftFilters: const HadithFilters(),
+      filters: const HadithFilters(),
     );
 
-    ref
-        .read(hadithScreenSettingsProvider.notifier)
-        .setFilters(const HadithFilters());
-
-    await ref.read(hadithSearchControllerProvider.notifier).search();
+    await search();
     setActiveTab(HadithPanelTab.details);
 
     final target = selected ?? (hadiths.isEmpty ? null : hadiths.first);
     if (target == null) {
-      ref.read(hadithSelectorProvider.notifier).clearSelection();
+      clearSelection();
       return;
     }
 
@@ -382,171 +387,18 @@ class HadithScreenController extends _$HadithScreenController {
   HadithSearchSnapshot _captureSearchSnapshot() {
     return HadithSearchSnapshot(
       query: state.query,
-      filters: state.draftFilters,
+      filters: state.filters,
     );
   }
 
-  Future<void> _commitFiltersAndSearch() async {
-    ref
-        .read(hadithScreenSettingsProvider.notifier)
-        .setFilters(state.draftFilters);
-    await search();
-  }
-
-  void _cancelDebounces() {
-    _filtersDebounce?.cancel();
-    _filtersDebounce = null;
-  }
-}
-
-/// Owns the detailed hadith search state and remote search operations.
-///
-/// Pagination appends every fetched page to the in-memory result list for the
-/// current session; there is no soft cap — long scroll sessions grow RAM until
-/// the provider is disposed or a new search resets the list.
-@riverpod
-class HadithSearchController extends _$HadithSearchController {
-  int _searchGeneration = 0;
-
-  @override
-  FutureOr<HadithSearchState> build() async {
-    return const HadithSearchState();
-  }
-
-  /// Clears the saved recent-search history.
-  Future<void> clearRecentSearches() async {
-    ref.read(hadithRecentSearchesProvider.notifier).clearAll();
-    await (await ref.read(hadithServiceProvider.future)).clearRecentSearches();
-  }
-
-  /// Removes one query from the saved recent-search history.
-  Future<void> removeRecentSearch(String query) async {
-    ref.read(hadithRecentSearchesProvider.notifier).removeQuery(query);
-    await (await ref.read(hadithServiceProvider.future)).removeRecentSearch(
-      query,
-    );
-  }
-
-  /// Fetches the next page of search results and appends them.
-  Future<void> loadMore() async {
-    final current = state.asData?.value;
-    if (current == null) return;
-    if (current.isLoading || current.isLoadingMore || !current.hasNextPage) {
-      return;
-    }
-
-    final generation = _searchGeneration;
-    final filters = ref.read(hadithFiltersProvider);
-
-    final nextPage = current.page + 1;
-    state = AsyncData(current.copyWith(isLoadingMore: true, error: null));
-
-    try {
-      final response = await (await ref.read(hadithServiceProvider.future))
-          .searchDetailed(_toSearchParams(current, filters, page: nextPage));
-
-      if (generation != _searchGeneration) return;
-
-      state = AsyncData(
-        current.copyWith(
-          page: nextPage,
-          results: [...current.results, ...response.data],
-          metadata: response.metadata,
-          isLoadingMore: false,
-          error: null,
-        ),
-      );
-    } catch (e) {
-      if (generation != _searchGeneration) return;
-      state = AsyncData(current.copyWith(isLoadingMore: false, error: '$e'));
-    }
-  }
-
-  /// Runs a hadith search for the current session query and filters.
-  Future<void> search({bool reset = true}) async {
-    final generation = ++_searchGeneration;
-    final filters = ref.read(hadithFiltersProvider);
-    ref.read(hadithScreenSettingsProvider.notifier).setFilters(filters);
-    final value = ref.read(hadithQueryProvider).trim();
-    final current = state.asData?.value ?? const HadithSearchState();
-
-    if (value.isEmpty) {
-      state = AsyncData(
-        current.copyWith(
-          query: '',
-          page: 1,
-          results: const <DetailedHadith>[],
-          metadata: null,
-          error: null,
-          isLoading: false,
-          isLoadingMore: false,
-        ),
-      );
-      return;
-    }
-
-    final targetPage = reset ? 1 : current.page;
-    state = AsyncData(
-      current.copyWith(
-        query: value,
-        page: targetPage,
-        isLoading: true,
-        isLoadingMore: false,
-        error: null,
-      ),
-    );
-
-    try {
-      final response = await (await ref.read(hadithServiceProvider.future))
-          .searchDetailed(
-            _toSearchParams(current.copyWith(query: value), filters, page: 1),
-          );
-
-      if (generation != _searchGeneration) return;
-
-      state = AsyncData(
-        current.copyWith(
-          query: value,
-          page: 1,
-          results: response.data,
-          metadata: response.metadata,
-          isLoading: false,
-          isLoadingMore: false,
-          error: null,
-        ),
-      );
-
-      ref.read(hadithRecentSearchesProvider.notifier).prepend(value);
-      unawaited(
-        (await ref.read(hadithServiceProvider.future)).addRecentSearch(value),
-      );
-    } catch (e) {
-      if (generation != _searchGeneration) return;
-      state = AsyncData(
-        current.copyWith(
-          query: value,
-          isLoading: false,
-          isLoadingMore: false,
-          error: '$e',
-        ),
-      );
-    }
-  }
-
-  /// Toggles a hadith between favorite and non-favorite state.
-  Future<void> toggleFavorite(HadithBase hadith) async {
-    await (await ref.read(hadithServiceProvider.future)).toggleFavorite(hadith);
-    ref.invalidate(hadithFavoritesCacheProvider);
-  }
-
-  HadithSearchParams _toSearchParams(
-    HadithSearchState state,
-    HadithFilters filters, {
-    int? page,
+  HadithSearchParams _toSearchParams({
+    required String query,
+    required int page,
   }) {
+    final filters = state.filters;
     return HadithSearchParams(
-      value: state.query,
-      page: page ?? state.page,
+      value: query,
+      page: page,
       specialist: filters.specialist,
       searchMethod: filters.searchMethod,
       zone: filters.zone,
@@ -568,48 +420,11 @@ class HadithSearchController extends _$HadithSearchController {
                 .toList(growable: false),
     );
   }
-}
 
-/// Searches books that can be used to narrow hadith lookups.
-@riverpod
-Future<List<HadithLookupRef>> hadithBooksLookup(Ref ref, String query) async {
-  final q = query.trim();
-  if (q.length < 2) return const [];
-
-  final response = await (await ref.read(hadithServiceProvider.future))
-      .searchBooks(q);
-  return response.data
-      .map((item) => HadithLookupRef(id: item.id, name: item.name))
-      .toList(growable: false);
-}
-
-/// Searches scholars that can be used to narrow hadith lookups.
-@riverpod
-Future<List<HadithLookupRef>> hadithScholarsLookup(
-  Ref ref,
-  String query,
-) async {
-  final q = query.trim();
-  if (q.length < 2) return const [];
-
-  final response = await (await ref.read(hadithServiceProvider.future))
-      .searchScholars(q);
-  return response
-      .map((item) => HadithLookupRef(id: item.id, name: item.name))
-      .toList(growable: false);
-}
-
-/// Searches rawi entries that can be used to narrow hadith lookups.
-@riverpod
-Future<List<HadithLookupRef>> hadithRawiLookup(Ref ref, String query) async {
-  final q = query.trim();
-  if (q.length < 2) return const [];
-
-  final response = await (await ref.read(hadithServiceProvider.future))
-      .searchRawi(q);
-  return response
-      .map((item) => HadithLookupRef(id: item.id, name: item.name))
-      .toList(growable: false);
+  void _cancelDebounces() {
+    _filtersDebounce?.cancel();
+    _filtersDebounce = null;
+  }
 }
 
 /// Returns the user's persisted recent-search queries.
@@ -619,8 +434,8 @@ class HadithRecentSearches extends _$HadithRecentSearches {
 
   @override
   Future<List<String>> build() async {
-    final entries = await (await ref.read(hadithServiceProvider.future))
-        .getRecentSearches();
+    final repository = await ref.read(hadithRepositoryProvider.future);
+    final entries = await repository.getRecentSearches();
     return entries.map((entry) => entry.query).toList(growable: false);
   }
 
@@ -637,20 +452,72 @@ class HadithRecentSearches extends _$HadithRecentSearches {
     state = AsyncData(next);
   }
 
-  /// Optimistically removes one query from the visible recents list.
-  void removeQuery(String query) {
+  /// Persists a query through the repository.
+  Future<void> persistQuery(String query) async {
+    final repository = await ref.read(hadithRepositoryProvider.future);
+    await repository.addRecentSearch(query);
+  }
+
+  /// Optimistically removes one query and persists the change.
+  Future<void> removeQuery(String query) async {
     final current = state.asData?.value;
     if (current == null) return;
 
     state = AsyncData(
       current.where((entry) => entry != query).toList(growable: false),
     );
+    final repository = await ref.read(hadithRepositoryProvider.future);
+    await repository.removeRecentSearch(query);
   }
 
-  /// Optimistically clears the visible recents list.
-  void clearAll() {
+  /// Optimistically clears recents and persists the change.
+  Future<void> clearAll() async {
     state = const AsyncData(<String>[]);
+    final repository = await ref.read(hadithRepositoryProvider.future);
+    await repository.clearRecentSearches();
   }
+}
+
+/// Searches books that can be used to narrow hadith lookups.
+@riverpod
+Future<List<HadithLookupRef>> hadithBooksLookup(Ref ref, String query) async {
+  final q = query.trim();
+  if (q.length < 2) return const [];
+
+  final repository = await ref.read(hadithRepositoryProvider.future);
+  final response = await repository.searchBooks(q);
+  return response.data
+      .map((item) => HadithLookupRef(id: item.id, name: item.name))
+      .toList(growable: false);
+}
+
+/// Searches scholars that can be used to narrow hadith lookups.
+@riverpod
+Future<List<HadithLookupRef>> hadithScholarsLookup(
+  Ref ref,
+  String query,
+) async {
+  final q = query.trim();
+  if (q.length < 2) return const [];
+
+  final repository = await ref.read(hadithRepositoryProvider.future);
+  final response = await repository.searchScholars(q);
+  return response
+      .map((item) => HadithLookupRef(id: item.id, name: item.name))
+      .toList(growable: false);
+}
+
+/// Searches rawi entries that can be used to narrow hadith lookups.
+@riverpod
+Future<List<HadithLookupRef>> hadithRawiLookup(Ref ref, String query) async {
+  final q = query.trim();
+  if (q.length < 2) return const [];
+
+  final repository = await ref.read(hadithRepositoryProvider.future);
+  final response = await repository.searchRawi(q);
+  return response
+      .map((item) => HadithLookupRef(id: item.id, name: item.name))
+      .toList(growable: false);
 }
 
 /// Loads the sharh metadata for the given sharh identifier.
@@ -658,46 +525,27 @@ class HadithRecentSearches extends _$HadithRecentSearches {
 /// Auto-dispose family: disposes when the detail pane stops watching this id.
 @riverpod
 Future<Sharh> hadithSharh(Ref ref, String sharhId) async {
-  return (await ref.read(hadithServiceProvider.future)).getSharh(sharhId);
+  final repository = await ref.read(hadithRepositoryProvider.future);
+  return repository.getSharh(sharhId);
 }
 
 /// Loads hadiths that are similar to the given hadith identifier.
 @riverpod
 Future<List<DetailedHadith>> hadithSimilar(Ref ref, String hadithId) async {
-  return (await ref.read(hadithServiceProvider.future)).getSimilarHadith(
-    hadithId,
-  );
+  final repository = await ref.read(hadithRepositoryProvider.future);
+  return repository.getSimilarHadith(hadithId);
 }
 
 /// Loads the alternate narration for the given hadith identifier.
 @riverpod
 Future<DetailedHadith?> hadithAlternate(Ref ref, String hadithId) async {
-  return (await ref.read(hadithServiceProvider.future)).getAlternateHadith(
-    hadithId,
-  );
+  final repository = await ref.read(hadithRepositoryProvider.future);
+  return repository.getAlternateHadith(hadithId);
 }
 
 /// Loads the usul record for the given hadith identifier.
 @riverpod
 Future<UsulHadith> hadithUsul(Ref ref, String hadithId) async {
-  return (await ref.read(hadithServiceProvider.future)).getUsulHadith(hadithId);
-}
-
-/// Stores the currently selected hadith for the detail pane.
-@riverpod
-class HadithSelector extends _$HadithSelector {
-  @override
-  FutureOr<DetailedHadith?> build() {
-    return null;
-  }
-
-  /// Marks the supplied hadith as the current selection.
-  void selectHadith(DetailedHadith hadith) {
-    state = AsyncData(hadith);
-  }
-
-  /// Clears the current hadith selection.
-  void clearSelection() {
-    state = const AsyncData(null);
-  }
+  final repository = await ref.read(hadithRepositoryProvider.future);
+  return repository.getUsulHadith(hadithId);
 }

@@ -1,5 +1,3 @@
-import 'package:tawaq/core/layout/split_pane_constraints.dart';
-
 /// Default persisted side-panel fields shared by feature screen settings.
 abstract final class SidePanelDefaults {
   /// Default side-panel width ratio for the Hadith screen.
@@ -13,21 +11,4 @@ abstract final class SidePanelDefaults {
 
   /// Default collapsed state for all feature side panels.
   static const bool collapsed = false;
-}
-
-/// Shared JSON migration for persisted side-panel width fields.
-void migrateSidePanelJson(Map<String, dynamic> json) {
-  migrateSidePanelWidthToRatio(json);
-}
-
-/// Copies side-panel fields on feature screen settings state objects.
-S copySidePanelFields<S>(
-  S state, {
-  double? sidePanelRatio,
-  bool? sidePanelCollapsed,
-}) {
-  return (state as dynamic).copyWith(
-    sidePanelRatio: sidePanelRatio,
-    sidePanelCollapsed: sidePanelCollapsed,
-  ) as S;
 }

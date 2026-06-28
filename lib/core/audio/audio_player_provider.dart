@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/audio/audio_lease.dart';
 import 'package:tawaq/core/audio/audio_service.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
-import 'package:tawaq/core/audio/playback_queue.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
 
 part 'audio_player_provider.g.dart';
@@ -16,10 +16,10 @@ TawaqAudioService tawaqAudioService(Ref ref) {
   return service;
 }
 
-/// High-level playback controller for adhan and future Quran recitation.
+/// High-level playback controller for adhan transport and UI state mirroring.
 @Riverpod(keepAlive: true)
 class AudioPlayerController extends _$AudioPlayerController {
-  PlaybackQueue? _queue;
+  AudioLease? _lease;
 
   @override
   PlaybackState build() {
@@ -38,16 +38,12 @@ class AudioPlayerController extends _$AudioPlayerController {
     AudioTrack track, {
     Duration fadeIn = kAudioDefaultFadeIn,
   }) async {
-    _queue = null;
-    await _service.play(track, fadeIn: fadeIn);
-  }
-
-  /// Plays [queue] from its current index.
-  Future<void> playQueue(PlaybackQueue queue) async {
-    _queue = queue;
-    final track = queue.currentTrack;
-    if (track == null) return;
-    await _service.play(track);
+    _lease = await _service.acquire(owner: kAdhanLeaseOwner);
+    await _service.play(
+      track,
+      fadeIn: fadeIn,
+      owner: kAdhanLeaseOwner,
+    );
   }
 
   /// Pauses the active track.
@@ -58,24 +54,10 @@ class AudioPlayerController extends _$AudioPlayerController {
 
   /// Stops playback, optionally ramping the volume down over [fadeOut].
   Future<void> stop({Duration fadeOut = Duration.zero}) async {
-    _queue = null;
-    await _service.stop(fadeOut: fadeOut);
+    await _service.stop(fadeOut: fadeOut, owner: kAdhanLeaseOwner);
+    _lease = null;
   }
 
   /// Sets output volume from 0 to 100.
   Future<void> setVolume(double volume) => _service.setVolume(volume);
-
-  /// Skips to the next queue item when available.
-  Future<void> skipToNext() async {
-    final queue = _queue;
-    if (queue == null) return;
-    final next = queue.next();
-    if (next == null) {
-      await stop();
-      return;
-    }
-    _queue = next;
-    final track = next.currentTrack;
-    if (track != null) await _service.play(track);
-  }
 }

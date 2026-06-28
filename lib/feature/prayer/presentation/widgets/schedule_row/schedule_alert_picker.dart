@@ -79,6 +79,63 @@ class ScheduleAlertPicker extends StatelessWidget {
   /// Called when an interactive mode is chosen.
   final ValueChanged<ScheduleAlertMode>? onChanged;
 
+  /// Obligatory prayer alert picker (adhan / iqamah).
+  factory ScheduleAlertPicker.obligatory({
+    required ScheduleAlertMode mode,
+    required String eventLabel,
+    required PrayerAlertKind alertKind,
+    required bool hasSettings,
+    ValueChanged<ScheduleAlertMode>? onChanged,
+    Key? key,
+  }) {
+    const modes = [
+      ScheduleAlertMode.off,
+      ScheduleAlertMode.sound,
+      ScheduleAlertMode.notifyOnly,
+    ];
+    const interactiveModes = {
+      ScheduleAlertMode.off,
+      ScheduleAlertMode.sound,
+      ScheduleAlertMode.notifyOnly,
+    };
+    return ScheduleAlertPicker(
+      key: key,
+      mode: mode,
+      modes: modes,
+      interactiveModes: hasSettings ? interactiveModes : const {},
+      eventLabel: eventLabel,
+      alertKind: alertKind,
+      onChanged: onChanged,
+    );
+  }
+
+  /// Sunnah time alert picker (notify-only).
+  factory ScheduleAlertPicker.sunnah({
+    required ScheduleAlertMode mode,
+    required String eventLabel,
+    required bool hasSettings,
+    ValueChanged<ScheduleAlertMode>? onChanged,
+    Key? key,
+  }) {
+    const modes = [
+      ScheduleAlertMode.off,
+      ScheduleAlertMode.notifyOnly,
+    ];
+    const interactiveModes = {
+      ScheduleAlertMode.off,
+      ScheduleAlertMode.notifyOnly,
+    };
+    return ScheduleAlertPicker(
+      key: key,
+      mode: mode,
+      modes: modes,
+      interactiveModes: hasSettings ? interactiveModes : const {},
+      eventLabel: eventLabel,
+      alertKind: PrayerAlertKind.sunnah,
+      onChanged: onChanged,
+    );
+  }
+
   static const _triggerSize = 30.0;
 
   static const _compactTileStyle = FItemStyleDelta.delta(

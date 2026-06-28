@@ -1,20 +1,36 @@
-import 'package:tawaq/core/audio/audio_player_provider.dart';
-import 'package:tawaq/core/audio/audio_service.dart' show kAudioDefaultFadeOut;
+import 'package:tawaq/core/audio/audio_lease.dart';
+import 'package:tawaq/core/audio/audio_service.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 
 /// Plays the bundled adhan/iqamah recording with a gentle fade in and out.
 ///
-/// The `onBeforePlay`/`onAfterStop` hooks let an external player (e.g. Quran
-/// recitation) yield the shared audio engine to the alert and resume afterward.
+/// The channel coordinates with the shared audio engine by acquiring an
+/// adhan lease around playback, suspending any active recitation before
+/// the alert, and restoring volume + resuming once the alert ends.
 class SoundAlertChannel implements PrayerAlertChannel {
-  /// Creates a [SoundAlertChannel] over [_audio].
-  SoundAlertChannel(this._audio, {this._onBeforePlay, this._onAfterStop});
+  /// Creates a [SoundAlertChannel] over [_service].
+  SoundAlertChannel({
+    required TawaqAudioService service,
+    required Future<double> Function() onCaptureRecitationVolume,
+    required Future<void> Function() onSuspend,
+    required Future<void> Function(double volume) onRestoreRecitationVolume,
+    required Future<void> Function() onResume,
+  })  : _service = service,
+        _onCaptureRecitationVolume = onCaptureRecitationVolume,
+        _onSuspend = onSuspend,
+        _onRestoreRecitationVolume = onRestoreRecitationVolume,
+        _onResume = onResume;
 
-  final AudioPlayerController _audio;
-  final Future<void> Function()? _onBeforePlay;
-  final Future<void> Function()? _onAfterStop;
+  final TawaqAudioService _service;
+  final Future<double> Function() _onCaptureRecitationVolume;
+  final Future<void> Function() _onSuspend;
+  final Future<void> Function(double volume) _onRestoreRecitationVolume;
+  final Future<void> Function() _onResume;
+
+  AudioLease? _adhanLease;
+  double? _capturedVolume;
 
   @override
   String get debugName => 'sound';
@@ -24,25 +40,31 @@ class SoundAlertChannel implements PrayerAlertChannel {
     final assetPath = event.soundAssetPath;
     if (!event.playSound || assetPath == null) return;
 
-    // Pause any active recitation before claiming the shared player.
-    await _onBeforePlay?.call();
+    _capturedVolume = await _onCaptureRecitationVolume();
+    await _onSuspend();
 
-    await _audio.setVolume(event.volume);
-    // playTrack already fades in by kAudioDefaultFadeIn.
-    await _audio.playTrack(
+    _adhanLease = await _service.acquire(owner: kAdhanLeaseOwner);
+    await _service.setVolume(event.volume);
+    await _service.play(
       AudioTrack.asset(
         id: event.slug,
         title: event.soundTitle ?? event.soundSubtitle ?? 'Tawaq',
         assetPath: assetPath,
         subtitle: event.soundSubtitle,
       ),
+      owner: kAdhanLeaseOwner,
     );
   }
 
   @override
   Future<void> cancel() async {
-    await _audio.stop(fadeOut: kAudioDefaultFadeOut);
-    // Resume recitation once the alert ends or is dismissed.
-    await _onAfterStop?.call();
+    await _service.stop(fadeOut: kAudioDefaultFadeOut, owner: kAdhanLeaseOwner);
+    _adhanLease = null;
+
+    final capturedVolume = _capturedVolume;
+    if (capturedVolume != null) {
+      await _onRestoreRecitationVolume(capturedVolume);
+    }
+    await _onResume();
   }
 }

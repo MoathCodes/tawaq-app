@@ -5,7 +5,6 @@ import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
-import 'package:tawaq/feature/prayer/domain/services/prayer_service.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -25,7 +24,6 @@ void main() {
     late Box<int, PrayerCompletion> box;
     late PrayerDatabase db;
     late PrayerRepo repo;
-    late PrayerService service;
     final log = Logger();
     late Location loc;
 
@@ -42,8 +40,6 @@ void main() {
 
       db = PrayerDatabase(box);
       repo = PrayerRepo(prayerDatabase: db, log: log);
-      final settings = PrayerSettings.defaultSettings().copyWith(location: loc);
-      service = PrayerService(repo, log);
     });
 
     tearDown(() async {
@@ -79,13 +75,13 @@ void main() {
             prayer: prayer,
             status: CompletionStatus.jamaah,
           );
-          await db.insertOrUpdateCompletion(completion, loc);
+          await repo.addOrUpdateCompletion(completion, loc);
         }
       }
     }
 
     test('returns (0, 0) when no prayers completed', () async {
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(streaks.current, 0);
       expect(streaks.best, 0);
@@ -94,7 +90,7 @@ void main() {
     test('returns (1, 1) when only today is completed', () async {
       await seedConsecutiveDays(1);
 
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(streaks.current, 1);
       expect(streaks.best, 1);
@@ -103,7 +99,7 @@ void main() {
     test('computes current streak of 5 days ending today', () async {
       await seedConsecutiveDays(5);
 
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(streaks.current, 5);
       expect(streaks.best, 5);
@@ -112,7 +108,7 @@ void main() {
     test('current streak is active when yesterday was completed', () async {
       await seedConsecutiveDays(3, daysAgo: 1);
 
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(streaks.current, 3);
       expect(streaks.best, 3);
@@ -123,7 +119,7 @@ void main() {
       () async {
         await seedConsecutiveDays(5, daysAgo: 2);
 
-        final streaks = await service.computeStreaks(loc);
+        final streaks = await repo.computeStreaks(loc);
 
         expect(
           streaks.current,
@@ -141,7 +137,7 @@ void main() {
       // Seed an older streak of 8 days that ended 10 days ago
       await seedConsecutiveDays(8, daysAgo: 10);
 
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(streaks.current, 5, reason: 'Current streak includes today');
       expect(streaks.best, 8, reason: 'Best streak is the longer past streak');
@@ -161,7 +157,7 @@ void main() {
       // Streak 3: 2 days ending yesterday (Nov 16-17, current but short)
       await seedConsecutiveDays(2, daysAgo: 1);
 
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(streaks.current, 2, reason: 'Current streak is the recent 2 days');
       expect(streaks.best, 10, reason: 'Best streak is 10 days in the middle');
@@ -176,7 +172,7 @@ void main() {
       // Day 5-6 completed (today and yesterday)
       await seedConsecutiveDays(2);
 
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(streaks.current, 2, reason: 'Current streak is recent 2 days');
       expect(streaks.best, 3, reason: 'Best streak is the older 3 days');
@@ -186,14 +182,14 @@ void main() {
       // Complete yesterday
       await seedConsecutiveDays(1, daysAgo: 1);
 
-      var streaks = await service.computeStreaks(loc);
+      var streaks = await repo.computeStreaks(loc);
       expect(streaks.current, 1);
       expect(streaks.best, 1);
 
       // Now complete today - streak should extend
       await seedConsecutiveDays(1);
 
-      streaks = await service.computeStreaks(loc);
+      streaks = await repo.computeStreaks(loc);
       expect(streaks.current, 2);
       expect(streaks.best, 2);
     });
@@ -204,7 +200,7 @@ void main() {
 
       // Only complete 3 prayers today (not all 5)
       for (final prayer in const [Prayer.fajr, Prayer.dhuhr, Prayer.asr]) {
-        await db.insertOrUpdateCompletion(
+        await repo.addOrUpdateCompletion(
           PrayerCompletion(
             id: null,
             completionTime: today,
@@ -215,7 +211,7 @@ void main() {
         );
       }
 
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(streaks.current, 0, reason: 'Incomplete day should not count');
       expect(streaks.best, 0);
@@ -226,7 +222,7 @@ void main() {
       final today = TZDateTime(loc, now.year, now.month, now.day);
 
       // Complete some prayers but mark some as missed
-      await db.insertOrUpdateCompletion(
+      await repo.addOrUpdateCompletion(
         PrayerCompletion(
           id: null,
           completionTime: today,
@@ -235,7 +231,7 @@ void main() {
         ),
           loc,
         );
-      await db.insertOrUpdateCompletion(
+      await repo.addOrUpdateCompletion(
         PrayerCompletion(
           id: null,
           completionTime: today,
@@ -244,7 +240,7 @@ void main() {
         ),
           loc,
         );
-      await db.insertOrUpdateCompletion(
+      await repo.addOrUpdateCompletion(
         PrayerCompletion(
           id: null,
           completionTime: today,
@@ -253,7 +249,7 @@ void main() {
         ),
           loc,
         );
-      await db.insertOrUpdateCompletion(
+      await repo.addOrUpdateCompletion(
         PrayerCompletion(
           id: null,
           completionTime: today,
@@ -262,7 +258,7 @@ void main() {
         ),
           loc,
         );
-      await db.insertOrUpdateCompletion(
+      await repo.addOrUpdateCompletion(
         PrayerCompletion(
           id: null,
           completionTime: today,
@@ -272,7 +268,7 @@ void main() {
           loc,
         );
 
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(
         streaks.current,
@@ -285,7 +281,7 @@ void main() {
     test('long streak of 30 days is computed correctly', () async {
       await seedConsecutiveDays(30);
 
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(streaks.current, 30);
       expect(streaks.best, 30);
@@ -310,7 +306,7 @@ void main() {
           Prayer.maghrib,
           Prayer.isha,
         ]) {
-          await db.insertOrUpdateCompletion(
+          await repo.addOrUpdateCompletion(
             PrayerCompletion(
               id: null,
               completionTime: dayDate,
@@ -322,7 +318,7 @@ void main() {
         }
       }
 
-      final streaks = await service.computeStreaks(loc);
+      final streaks = await repo.computeStreaks(loc);
 
       expect(streaks.current, 1, reason: 'Only today counts as current');
       expect(streaks.best, 1, reason: 'No consecutive days, so best is 1');

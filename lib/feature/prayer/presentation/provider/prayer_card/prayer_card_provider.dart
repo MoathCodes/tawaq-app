@@ -74,14 +74,7 @@ PrayerCardStaticInfo _buildPrayerCardStatic({
   required Map<Prayer, int> iqamahSettings,
   required DateFormat formatter,
 }) {
-  final decision = computePrayerCardDecision(
-    currentTime: day.now,
-    location: day.location,
-    todaysPrayerTimes: day.today,
-    yesterdaysPrayerTimes: day.yesterday,
-    todaysSunnahTimes: day.todaySunnah,
-    yesterdaysSunnahTimes: day.yesterdaySunnah,
-  );
+  final decision = computePrayerCardDecision(snapshot: day);
 
   final iqamahMinutes = iqamahSettings[decision.prayer] ?? 0;
   final adhanTime = formatter.format(decision.referenceTime);

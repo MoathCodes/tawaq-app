@@ -6,7 +6,6 @@ import 'package:tawaq/feature/quran/data/models/tafsir.dart';
 import 'package:tawaq/feature/quran/data/repository/tafsir_repository.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_parse_result.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
-import 'package:tawaq/feature/quran/domain/services/tafsir_service.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
 
 part 'tafsir_provider.g.dart';
@@ -19,16 +18,6 @@ part 'tafsir_provider.g.dart';
 TafsirRepository tafsirRepository(Ref ref) {
   final dbService = ref.read(assetDatabaseServiceProvider);
   return TafsirRepository(dbService);
-}
-
-/// Provides the [TafsirService] instance.
-///
-/// Intentionally keepAlive: thin service wrapper over
-/// [tafsirRepositoryProvider].
-@Riverpod(keepAlive: true)
-TafsirService tafsirService(Ref ref) {
-  final repository = ref.read(tafsirRepositoryProvider);
-  return TafsirService(repository);
 }
 
 /// In-memory LRU for recently fetched tafsir database rows.
@@ -54,7 +43,7 @@ Future<Tafsir?> ayahTafsirRow(
   if (cached.hit) return cached.value;
 
   final result = await ref
-      .read(tafsirServiceProvider)
+      .read(tafsirRepositoryProvider)
       .getTafsir(source, sura, aya);
   lru.store(source.name, sura, aya, result);
   return result;

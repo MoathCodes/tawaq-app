@@ -1,6 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 
 /// The five obligatory prayers shown in analytics trackers.
 const List<Prayer> kObligatoryPrayers = [
@@ -32,6 +33,15 @@ class PrayerTrendBucket {
 
   /// The prayer associated with the bucket, when it represents one prayer.
   final Prayer? prayer;
+}
+
+/// Whether every obligatory prayer was logged with a positive status.
+bool isFullyCompletedBucket(PrayerTrendBucket bucket) {
+  final positive =
+      (bucket.statusCounts[CompletionStatus.jamaah] ?? 0) +
+      (bucket.statusCounts[CompletionStatus.onTime] ?? 0) +
+      (bucket.statusCounts[CompletionStatus.late] ?? 0);
+  return positive >= PrayerAnalyticsCalculator.prayersPerDay;
 }
 
 /// View data for the analysis section.

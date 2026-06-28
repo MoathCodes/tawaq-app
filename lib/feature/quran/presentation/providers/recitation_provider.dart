@@ -3,94 +3,72 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:http/http.dart' as http;
+import 'package:mpv_audio_kit/mpv_audio_kit.dart' show Gapless;
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:mpv_audio_kit/mpv_audio_kit.dart' show Loop;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/audio/audio_lease.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/audio_service.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/utils/cancellation_token.dart';
 import 'package:tawaq/feature/quran/data/repository/recitation_repository.dart';
-import 'package:tawaq/feature/quran/data/sources/mp3quran_api.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/ayah_reference.dart';
 import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_mode.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_playback.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_sleep.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
+import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_route_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_data_providers.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_state_machine.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+
+export 'recitation_data_providers.dart';
 
 part 'recitation_provider.g.dart';
 
-/// Shared HTTP client for recitation API + downloads.
-@Riverpod(keepAlive: true)
-http.Client recitationHttpClient(Ref ref) {
-  final client = http.Client();
-  ref.onDispose(client.close);
-  return client;
+/// Live download progress for the in-flight recitation surah download, or
+/// null when no download is active (cached, finished, cancelled, or idle).
+///
+/// Driven by RecitationController via resolveSurahUri's `onProgress`
+/// callback; the drawer renders a Cancel button while the controller is
+/// loading and this value is non-null.
+@riverpod
+class RecitationDownloadProgress extends _$RecitationDownloadProgress {
+  @override
+  DownloadProgress? build() => null;
+
+  /// Updates the latest progress snapshot.
+  DownloadProgress? get progress => state;
+  set progress(DownloadProgress value) => state = value;
+
+  /// Clears the progress (download finished/cancelled/failed).
+  void clear() => state = null;
 }
 
-/// mp3quran.net API client.
-@Riverpod(keepAlive: true)
-Mp3QuranApi mp3QuranApi(Ref ref) => Mp3QuranApi(
-  client: ref.watch(recitationHttpClientProvider),
-  logger: ref.watch(loggerProvider),
-);
-
-/// On-disk recitation cache.
-@Riverpod(keepAlive: true)
-RecitationCache recitationCache(Ref ref) => RecitationCache(
-  client: ref.watch(recitationHttpClientProvider),
-  logger: ref.watch(loggerProvider),
-);
-
-/// Recitation repository (API + cache).
-@Riverpod(keepAlive: true)
-RecitationRepository recitationRepository(Ref ref) => RecitationRepository(
-  api: ref.watch(mp3QuranApiProvider),
-  cache: ref.watch(recitationCacheProvider),
-  logger: ref.watch(loggerProvider),
-);
-
-/// The reciter catalog (timing links merged), cached on disk.
-@Riverpod(keepAlive: true)
-Future<List<Reciter>> reciters(Ref ref) =>
-    ref.watch(recitationRepositoryProvider).reciters();
-
-/// The recitation audio files currently cached on disk.
-@Riverpod(keepAlive: true)
-Future<List<CachedRecitation>> cachedRecitations(Ref ref) =>
-    ref.watch(recitationRepositoryProvider).listCached();
-
-/// Whether the recitation drawer (full transport) is open under the title bar.
+/// Whether the recitation panel is expanded.
 @riverpod
 class RecitationDrawer extends _$RecitationDrawer {
   @override
   bool build() => false;
 
-  /// Toggles the drawer open/closed.
+  /// Toggles the recitation panel open/closed.
   void toggle() => state = !state;
 
-  /// Opens the drawer (e.g. when a recitation starts, for discoverability).
+  /// Opens the recitation panel.
   void open() => state = true;
 
-  /// Closes the drawer.
+  /// Closes the recitation panel.
   void close() => state = false;
 }
 
 /// The currently selected reciter, falling back to the first timed reciter.
-///
-/// Kept alive so that reading `selectedReciterProvider.future` from a one-shot
-/// callback (no widget watching it) doesn't auto-dispose mid-build across the
-/// `await` gaps, which would throw an `UnmountedRefException`. It still
-/// rebuilds when the reciter catalog or recitation settings change.
 @Riverpod(keepAlive: true)
 Future<Reciter?> selectedReciter(Ref ref) async {
   final reciters = await ref.watch(recitersProvider.future);
@@ -109,8 +87,7 @@ Future<Reciter?> selectedReciter(Ref ref) async {
   return reciters.first;
 }
 
-/// The persisted moshaf for [selectedReciterProvider], falling back to
-/// [Reciter.primaryMoshaf] when the saved moshaf id is unset.
+/// The persisted moshaf for [selectedReciterProvider].
 @Riverpod(keepAlive: true)
 Future<Moshaf?> selectedMoshaf(Ref ref) async {
   final reciter = await ref.watch(selectedReciterProvider.future);
@@ -121,7 +98,7 @@ Future<Moshaf?> selectedMoshaf(Ref ref) async {
   return reciter.resolveMoshaf(moshafId);
 }
 
-/// Shows a toast when [RecitationPlayback.playbackError] is set.
+/// Shows a toast when [RecitationState.error] is set.
 class RecitationErrorToastListener extends ConsumerWidget {
   /// Creates [RecitationErrorToastListener].
   const RecitationErrorToastListener({required this.child, super.key});
@@ -132,7 +109,7 @@ class RecitationErrorToastListener extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen(
-      recitationControllerProvider.select((p) => p.playbackError),
+      recitationControllerProvider.select((p) => p.error),
       (previous, next) {
         if (next == null || next == previous) return;
         showFToast(
@@ -141,91 +118,99 @@ class RecitationErrorToastListener extends ConsumerWidget {
           icon: const Icon(FLucideIcons.triangleAlert),
           title: Text(context.l10n.quranRecitationPlaybackFailed(next)),
         );
-        ref.read(recitationControllerProvider.notifier).clearPlaybackError();
+        ref.read(recitationControllerProvider.notifier).clearError();
       },
     );
     return child;
   }
 }
 
-/// Drives Quran recitation through the shared audio service: surah/ayah/range
-/// playback, position→ayah highlight sync, end-of-selection modes, and
-/// pause/resume around adhan alerts.
+/// Drives Quran recitation through the shared audio service.
+///
+/// The controller is now a thin layer over [transition]: all state lives in the
+/// immutable [RecitationState] and every user/audio event is reduced through
+/// the pure state machine. Side effects returned by the machine are executed
+/// here (load audio, pause, resume, seek, highlight, persist).
 @Riverpod(keepAlive: true)
 class RecitationController extends _$RecitationController {
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration>? _durationSub;
   StreamSubscription<PlaybackState>? _stateSub;
   StreamSubscription<int?>? _abLoopSub;
+  StreamSubscription<int?>? _trackIndexSub;
 
-  SurahTiming? _timing;
-  final Map<int, Ayah> _ayahCache = {};
-  int? _rangeStartMs;
-  int? _rangeEndMs;
-  int _playsRemaining = 1;
-  bool _abLoopActive = false;
-  bool _abLoopExhausted = false;
+  RecitationTimeline _timeline = const RecitationTimeline();
   Timer? _sleepTimer;
-  int? _sleepDeadlineMs;
-  bool _sleepStopAtSurahEnd = false;
-  bool _userStopped = false;
-  bool _highlightBusy = false;
-  bool _suspendedForAlert = false;
-  bool _resumeGuard = false;
-  _SuspendedRecitation? _suspended;
-  bool _userSeeking = false;
-  int _loadGeneration = 0;
-  bool _isLoading = false;
   bool _sessionBootstrapped = false;
-
-  /// When non-null, the user has picked a new reciter/moshaf in the dialog but
-  /// hasn't committed it via the play button. Stored so [togglePlayPause] can
-  /// detect "commit, not toggle" and switch to the new reciter.
-  ({Reciter reciter, Moshaf moshaf})? _pendingReciter;
+  String? _lastResolvedUri;
+  CancellationToken? _downloadToken;
+  int? _lastAbLoopRemaining;
+  int? _lastTrackIndex;
 
   @override
-  RecitationPlayback build() {
+  RecitationState build() {
     final service = ref.watch(tawaqAudioServiceProvider);
     unawaited(_positionSub?.cancel());
     unawaited(_durationSub?.cancel());
     unawaited(_stateSub?.cancel());
     unawaited(_abLoopSub?.cancel());
+    unawaited(_trackIndexSub?.cancel());
     _positionSub = service.positionStream.listen(_onPosition);
     _durationSub = service.durationStream.listen(_onDuration);
     _stateSub = service.stateStream.listen(_onServiceState);
     _abLoopSub = service.remainingAbLoopsStream.listen(_onAbLoopRemaining);
-    ref.onDispose(() {
-      unawaited(_positionSub?.cancel());
-      unawaited(_durationSub?.cancel());
-      unawaited(_stateSub?.cancel());
-      unawaited(_abLoopSub?.cancel());
-      _sleepTimer?.cancel();
-    });
-    ref.listen(
-      recitationSettingsProvider.select((s) => s.value?.repeatCount),
-      (previous, next) {
-        if (next == null || next == previous) return;
-        updateRepeatCount(next);
-      },
-    );
+    _trackIndexSub = service.currentIndexStream.listen(_onTrackIndexChanged);
+    ref
+      ..onDispose(() {
+        unawaited(_positionSub?.cancel());
+        unawaited(_durationSub?.cancel());
+        unawaited(_stateSub?.cancel());
+        unawaited(_abLoopSub?.cancel());
+        unawaited(_trackIndexSub?.cancel());
+        _sleepTimer?.cancel();
+      })
+      ..listen(
+        recitationSettingsProvider.select(
+          (s) => (
+            s.value?.ayahRepeatCount,
+            s.value?.rangeRepeatCount,
+          ),
+        ),
+        (previous, next) {
+          if (next.$1 == null && next.$2 == null) return;
+          if (next == previous) return;
+          _dispatch(
+            SetRepeatCounts(
+              ayahRepeatCount: next.$1,
+              rangeRepeatCount: next.$2,
+            ),
+          );
+        },
+      );
+
     if (!_sessionBootstrapped) {
       _sessionBootstrapped = true;
-      // Run after [build] returns — reading [state] synchronously inside
-      // [_bootstrapSession] would hit an uninitialized notifier.
-      Future.microtask(() => unawaited(_bootstrapSession()));
+      unawaited(Future.microtask(_bootstrapSession));
     }
-    // Default surah so the transport pill has something to show immediately
-    // before _bootstrapSession resolves the saved settings.
-    return RecitationPlayback(active: true, surah: 1);
+
+    return const RecitationState(active: true);
   }
 
   RecitationRepository get _repo => ref.read(recitationRepositoryProvider);
   TawaqAudioService get _service => ref.read(tawaqAudioServiceProvider);
   MushafReaderController get _mushaf => ref.read(quranMushafControllerProvider);
 
-  /// The timing map for the loaded surah, or null when unavailable. Used by
-  /// the drawer scrubber to draw per-ayah tick marks.
-  SurahTiming? get currentTiming => _timing;
+  /// The timing map for the loaded surah, or null when unavailable.
+  SurahTiming? get currentTiming => _timeline.timing;
+
+  /// Cancels the in-flight surah download, if one is active.
+  ///
+  /// The download stream observes its cancellation token and deletes the
+  /// partial `.part` file; resolveSurahUri then falls back to the network
+  /// URL (or a usable `.part`) and playback proceeds.
+  Future<void> cancelDownload() async {
+    _downloadToken?.cancel();
+  }
 
   // ---- Public controls ---------------------------------------------------
 
@@ -234,9 +219,8 @@ class RecitationController extends _$RecitationController {
     required Reciter reciter,
     required Moshaf moshaf,
     required int surah,
-  }) {
-    _resetRepeatBudget();
-    return _load(reciter: reciter, moshaf: moshaf, surah: surah);
+  }) async {
+    _dispatch(PlaySurah(reciter: reciter, moshaf: moshaf, surah: surah));
   }
 
   /// Plays ayat [startAyah]..[endAyah] of [surah]. Requires timing data.
@@ -249,270 +233,176 @@ class RecitationController extends _$RecitationController {
     required int surah,
     required int startAyah,
     required int endAyah,
-  }) {
-    if (!moshaf.hasTiming) return Future.value(false);
-    _resetRepeatBudget();
-    final from = AyahReference(surah: surah, ayah: startAyah);
-    final to = AyahReference(surah: surah, ayah: endAyah);
-    return playAyahRange(
-      reciter: reciter,
-      moshaf: moshaf,
-      from: from,
-      to: to,
+  }) async {
+    if (!moshaf.hasTiming) return false;
+    _dispatch(
+      PlayRange(
+        reciter: reciter,
+        moshaf: moshaf,
+        from: AyahReference(surah: surah, ayah: startAyah),
+        to: AyahReference(surah: surah, ayah: endAyah),
+      ),
     );
+    return true;
   }
 
-  /// Plays a global ayah range, chaining surah loads when [from] and [to]
-  /// span multiple surahs.
+  /// Plays a global ayah range, starting with the first surah-local segment.
   ///
-  /// A null [to] means the range is open-ended and continues to the end of the
-  /// Quran.
+  /// A null [to] means the range is open-ended.
   Future<bool> playAyahRange({
     required Reciter reciter,
     required Moshaf moshaf,
     required AyahReference from,
     AyahReference? to,
-  }) {
-    if (!moshaf.hasTiming) return Future.value(false);
-    if (to != null && !from.isBeforeOrEqual(to)) return Future.value(false);
-    _resetRepeatBudget();
-    final segment = firstSegmentForRange(
-      from: from,
-      to: to,
-      mushaf: _mushaf,
+  }) async {
+    if (!moshaf.hasTiming) return false;
+    final segment = firstSegmentForRange(from: from, to: to, mushaf: _mushaf);
+    _dispatch(
+      PlayRange(
+        reciter: reciter,
+        moshaf: moshaf,
+        from: AyahReference(
+          surah: segment.surah,
+          ayah: segment.startAyah,
+        ),
+        to: AyahReference(surah: segment.surah, ayah: segment.endAyah),
+        globalFrom: from,
+        globalTo: to,
+      ),
     );
-    return _load(
+    return true;
+  }
+
+  /// Applies a saved range preset and dispatches the matching play event.
+  Future<void> playFromRangePreset({
+    required RangeScopePreset preset,
+    required Reciter reciter,
+    required Moshaf moshaf,
+    required AyahReference from,
+    AyahReference? to,
+  }) async {
+    final intent = playbackIntentForPreset(
+      preset: preset,
       reciter: reciter,
       moshaf: moshaf,
-      surah: segment.surah,
-      startAyah: segment.startAyah,
-      endAyah: segment.endAyah,
-      rangeFrom: from,
-      rangeTo: to,
+      from: from,
+      to: to,
     );
-  }
-
-  /// Clears [RecitationPlayback.playbackError] after it has been shown.
-  void clearPlaybackError() {
-    if (state.playbackError != null) {
-      state = state.copyWith(
-        playbackError: null,
-        status: RecitationStatus.idle,
-      );
+    switch (intent) {
+      case PlayWholeSurahIntent(:final resumeFrom):
+        _dispatch(
+          PlaySurah(
+            reciter: reciter,
+            moshaf: moshaf,
+            surah: intent.surah,
+            resumeFrom: resumeFrom,
+          ),
+        );
+      case PlayAyahRangeIntent(:final resumeFrom):
+        if (!moshaf.hasTiming) return;
+        final segment = firstSegmentForRange(
+          from: intent.from,
+          to: intent.to,
+          mushaf: _mushaf,
+        );
+        _dispatch(
+          PlayRange(
+            reciter: reciter,
+            moshaf: moshaf,
+            from: AyahReference(
+              surah: segment.surah,
+              ayah: segment.startAyah,
+            ),
+            to: AyahReference(surah: segment.surah, ayah: segment.endAyah),
+            globalFrom: intent.from,
+            globalTo: intent.to,
+            resumeFrom: resumeFrom,
+          ),
+        );
     }
   }
 
-  /// Resets the repeat counter from the persisted preference. Called on
-  /// user-initiated plays so internal replays/alert-resumes keep their budget.
-  void _resetRepeatBudget() {
-    final count = ref.read(recitationSettingsProvider).value?.repeatCount ?? 1;
-    _playsRemaining = count.clamp(1, 99);
-  }
-
-  /// Live-updates the repeat budget while playback is active, syncing the
-  /// mpv A-B loop count so the change takes effect immediately.
-  void updateRepeatCount(int count) {
-    _playsRemaining = count.clamp(1, 99);
-    // Sync the A-B loop state when a range is loaded.
-    if (_rangeStartMs != null && _rangeEndMs != null) {
-      if (_playsRemaining > 1 && !_abLoopActive) {
-        // Budget increased from 1 → set up A-B loop now.
-        unawaited(_service.setAbLoopA(Duration(milliseconds: _rangeStartMs!)));
-        unawaited(_service.setAbLoopB(Duration(milliseconds: _rangeEndMs!)));
-        unawaited(_service.setAbLoopCount(_playsRemaining));
-        _abLoopActive = true;
-      } else if (_playsRemaining > 1 && _abLoopActive) {
-        // Budget already active — just update the count.
-        unawaited(_service.setAbLoopCount(_playsRemaining));
-      } else if (_playsRemaining <= 1 && _abLoopActive) {
-        // Budget reduced to 1 — clear A-B loop, fall back to Dart polling.
-        unawaited(_service.setAbLoopA(null));
-        unawaited(_service.setAbLoopB(null));
-        _abLoopActive = false;
-      }
-    }
-  }
-
-  /// Universal play/pause button — always produces valid playback.
-  ///
-  /// This is the "confirmation" action: whatever weird state the player is in,
-  /// pressing play makes it right. It handles pending reciter switches,
-  /// idle/error recovery, and normal toggle in one place.
-  Future<void> togglePlayPause() async {
-    if (state.status == RecitationStatus.loading) return;
-
-    // Pending reciter switch — ignore current playback state and commit.
-    if (_pendingReciter != null) {
-      final (reciter: r, moshaf: m) = _pendingReciter!;
-      _pendingReciter = null;
-      state = state.copyWith(pendingReciter: null, pendingMoshaf: null);
-      final s = state;
-      await _load(
-        reciter: r,
-        moshaf: m,
-        surah: s.surah ?? 1,
-        startAyah: s.rangeStart,
-        endAyah: s.rangeEnd,
-        rangeFrom: s.rangeFrom,
-        rangeTo: s.rangeTo,
-      );
-      return;
-    }
-
-    final playback = _service.state;
-    if (playback is PlaybackPlaying) {
-      await _service.pause();
-      return;
-    }
-    if (playback is PlaybackPaused) {
-      if (playback.position.inMilliseconds >=
-          (playback.duration.inMilliseconds) - 500) {
-        await _service.safeSeek(Duration.zero);
-      }
-      await _service.resume();
-      return;
-    }
-
-    // Idle/error — reload from current metadata.
+  /// Switches to [reciter]/[moshaf] and continues the current surah/range.
+  Future<void> switchReciter(Reciter reciter, Moshaf moshaf) async {
     final s = state;
-    var r = s.reciter;
-    var m = s.moshaf;
-    final surah = s.surah ?? 1;
-    if (r == null || m == null) {
-      // No reciter loaded — bootstrap from settings/defaults.
-      r = await ref.read(selectedReciterProvider.future);
-      m = await ref.read(selectedMoshafProvider.future);
-      if (r == null || m == null) return;
+    final surah = s.surah;
+    if (surah == null) {
+      ref.read(recitationSettingsProvider.notifier).setReciter(
+        reciterId: reciter.id,
+        moshafId: moshaf.id,
+      );
+      return;
     }
-    await _load(
-      reciter: r,
-      moshaf: m,
-      surah: surah,
-      startAyah: s.rangeStart,
-      endAyah: s.rangeEnd,
-      rangeFrom: s.rangeFrom,
-      rangeTo: s.rangeTo,
-    );
-  }
 
-  /// Selects a reciter/moshaf without starting playback.
-  ///
-  /// The old audio keeps playing (if any). The new reciter is stored as
-  /// [pendingReciter] so the next explicit [togglePlayPause] commits it.
-  /// The UI shows the diff and an "Apply" play button.
-  void setReciter(Reciter reciter, Moshaf moshaf) {
-    _pendingReciter = (reciter: reciter, moshaf: moshaf);
+    // Persist the new selection immediately.
     ref.read(recitationSettingsProvider.notifier).setReciter(
       reciterId: reciter.id,
       moshafId: moshaf.id,
     );
-    state = state.copyWith(
-      pendingReciter: reciter,
-      pendingMoshaf: moshaf,
-    );
-  }
 
-  /// Cancels a pending reciter switch and reverts to the current recitation.
-  void cancelPendingReciter() {
-    _pendingReciter = null;
-    ref.read(recitationSettingsProvider.notifier).setReciter(
-      reciterId: state.reciter!.id,
-      moshafId: state.moshaf!.id,
-    );
-    state = state.copyWith(pendingReciter: null, pendingMoshaf: null);
-  }
-
-  /// Saves a range selection (from the range dialog) without starting playback.
-  ///
-  /// Stops any current playback since the old range is no longer relevant.
-  /// User presses [togglePlayPause] to commit.
-  ///
-  /// A null [to] means the selection is open-ended and continues to the end of
-  /// the Quran.
-  Future<void> saveRange({
-    required AyahReference from,
-    AyahReference? to,
-    RangeScopePreset? preset,
-  }) async {
-    _userStopped = true;
-    await _service.stop();
-    _resetTiming();
-    final segment = firstSegmentForRange(from: from, to: to, mushaf: _mushaf);
-    state = state.copyWith(
-      surah: segment.surah,
-      rangeStart: segment.startAyah,
-      rangeEnd: segment.endAyah,
-      rangeFrom: from,
-      rangeTo: to,
-      status: RecitationStatus.idle,
-      active: true,
-      currentAyah: null,
-      playbackHighlightAyah: null,
-      position: Duration.zero,
-      duration: Duration.zero,
-    );
-
-    ref.read(recitationSettingsProvider.notifier).setPlaybackState(
-      surah: segment.surah,
-      rangeStart: segment.startAyah,
-      rangeEnd: segment.endAyah,
-      rangeFromSurah: from.surah,
-      rangeFromAyah: from.ayah,
-      rangeToSurah: to?.surah,
-      rangeToAyah: to?.ayah,
-    );
-    ref.read(recitationSettingsProvider.notifier).setLastRangePreset(preset);
-  }
-
-  /// Stops audio but keeps the player session visible in the shell.
-  Future<void> stop() async {
-    _userStopped = true;
-    _pendingReciter = null;
-    _sleepTimer?.cancel();
-    _sleepTimer = null;
-    _sleepDeadlineMs = null;
-    _sleepStopAtSurahEnd = false;
-    await _service.stop(fadeOut: kAudioDefaultFadeOut);
-    _resetTiming();
-    state = state.copyWith(
-      status: RecitationStatus.idle,
-      active: true,
-      currentAyah: null,
-      playbackHighlightAyah: null,
-      position: Duration.zero,
-      sleep: RecitationSleep.off,
-    );
-  }
-
-  /// Seeks within the current surah audio.
-  Future<void> seekTo(Duration position) async {
-    if (state.surah == null) return;
-    var posMs = position.inMilliseconds.clamp(0, 1 << 30);
-    if (state.isRange) {
-      final start = _rangeStartMs ?? 0;
-      final end = _rangeEndMs ?? _timing?.totalMs ?? posMs;
-      posMs = posMs.clamp(start, end);
+    // Try to resume at the same ayah position when both moshafs have timing.
+    Duration? resumeFrom;
+    final currentAyah = s.currentAyah;
+    if (moshaf.hasTiming && currentAyah != null) {
+      final timing = await _repo.timing(surah, moshaf.timingReadId!);
+      if (timing != null) {
+        final segment = timing.forAyah(currentAyah);
+        if (segment != null) {
+          resumeFrom = Duration(milliseconds: segment.startMs);
+        }
+      }
     }
-    _userSeeking = true;
-    try {
-      await _safeSeek(posMs);
-    } finally {
-      unawaited(
-        Future<void>.delayed(const Duration(milliseconds: 250), () {
-          _userSeeking = false;
-        }),
+
+    if (s.isRange && s.currentSegmentRefs != null) {
+      final seg = s.currentSegmentRefs!;
+      _dispatch(
+        PlayRange(
+          reciter: reciter,
+          moshaf: moshaf,
+          from: seg.from,
+          to: seg.to,
+          globalFrom: s.rangeFrom,
+          globalTo: s.rangeTo,
+          resumeFrom: resumeFrom,
+        ),
+      );
+    } else {
+      _dispatch(
+        PlaySurah(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: surah,
+          resumeFrom: resumeFrom,
+        ),
       );
     }
   }
 
-  /// Sets the end-of-selection mode and re-evaluates the range boundary.
-  void setMode(RecitationMode mode) {
-    ref.read(recitationSettingsProvider.notifier).setMode(mode);
-    state = state.copyWith(mode: mode);
-    _rangeEndMs = (state.isRange && state.rangeEnd != null)
-        ? _timing?.forAyah(state.rangeEnd!)?.endMs
-        : null;
+  /// Universal play/pause button.
+  Future<void> togglePlayPause() async {
+    _dispatch(const TogglePlayPause());
   }
+
+  /// Clears the surfaced error.
+  void clearError() {
+    if (state.error != null) {
+      state = state.copyWith(error: null);
+    }
+  }
+
+  /// Stops audio but keeps the player session visible.
+  Future<void> stop() async {
+    _dispatch(const Stop());
+  }
+
+  /// Seeks within the current surah audio, snapping to the nearest ayah when
+  /// timing is available.
+  Future<void> seekTo(Duration position) async {
+    final snapped = _timeline.snapToNearestAyah(position);
+    _dispatch(Seek(snapped));
+  }
+
+
 
   /// Sets output volume preview (0-100) without persisting.
   Future<void> setVolumePreview(double volume) async {
@@ -526,521 +416,393 @@ class RecitationController extends _$RecitationController {
     await _service.setVolume(volume);
   }
 
-  /// Arms or clears the sleep timer. Countdown options stop after a wall-clock
-  /// delay; boundary options stop at the end of the ayah/range/surah.
-  void setSleep(RecitationSleep mode) {
+  /// Arms or clears the sleep timer.
+  void setSleep(RecitationSleep sleep) {
     _sleepTimer?.cancel();
     _sleepTimer = null;
-    _sleepDeadlineMs = null;
-    _sleepStopAtSurahEnd = false;
 
-    switch (mode) {
-      case RecitationSleep.off:
-        break;
-      case RecitationSleep.after10:
-      case RecitationSleep.after20:
-      case RecitationSleep.after30:
-        _sleepTimer = Timer(
-          mode.countdown!,
-          () => unawaited(stop()),
-        );
-      case RecitationSleep.endOfAyah:
-        final ayah = state.currentAyah;
-        _sleepDeadlineMs = ayah == null ? null : _timing?.forAyah(ayah)?.endMs;
-      case RecitationSleep.endOfRange:
-        _sleepDeadlineMs = _rangeEndMs;
-      case RecitationSleep.endOfSurah:
-        _sleepStopAtSurahEnd = true;
+    if (sleep.isCountdown) {
+      _sleepTimer = Timer(sleep.countdown!, () => unawaited(stop()));
     }
-    state = state.copyWith(sleep: mode);
+
+    _dispatch(SetSleep(sleep));
   }
 
-  /// Advances to the next ayah when timed, otherwise the next surah.
-  ///
-  /// For open-ended ranges, keeps the open-ended metadata so the player chrome
-  /// still shows "continue from here".
+  /// Advances to the next ayah or surah.
   Future<void> skipNext() async {
-    final s = state;
-    if (s.reciter == null || s.moshaf == null || s.surah == null) return;
-
-    // Open-ended range: jump to the next ayah while keeping the range open.
-    if (s.rangeTo == null) {
-      if (_timing != null) {
-        final anchor = s.currentAyah ?? s.rangeStart ?? 1;
-        final nextAyah = anchor + 1;
-        if (_timing!.forAyah(nextAyah) != null) {
-          await _load(
-            reciter: s.reciter!,
-            moshaf: s.moshaf!,
-            surah: s.surah!,
-            startAyah: nextAyah,
-            endAyah: null,
-            rangeFrom: s.rangeFrom,
-            rangeTo: null,
-          );
-          return;
-        }
-      }
-      final nextSurah = s.surah! + 1;
-      if (nextSurah <= 114 && s.moshaf!.hasSurah(nextSurah)) {
-        await _load(
-          reciter: s.reciter!,
-          moshaf: s.moshaf!,
-          surah: nextSurah,
-          startAyah: 1,
-          endAyah: null,
-          rangeFrom: s.rangeFrom,
-          rangeTo: null,
-        );
-      }
-      return;
-    }
-
-    if (_timing != null) {
-      final anchor = s.currentAyah ?? s.rangeEnd ?? s.rangeStart ?? 1;
-      final nextAyah = anchor + 1;
-      if (_timing!.forAyah(nextAyah) != null) {
-        await playRange(
-          reciter: s.reciter!,
-          moshaf: s.moshaf!,
-          surah: s.surah!,
-          startAyah: nextAyah,
-          endAyah: nextAyah,
-        );
-        return;
-      }
-      if (s.isCrossSurahRange) {
-        final next = nextSegmentForRange(
-          from: s.rangeFrom!,
-          to: s.rangeTo,
-          currentSurah: s.surah!,
-          mushaf: _mushaf,
-        );
-        if (next != null) {
-          await _load(
-            reciter: s.reciter!,
-            moshaf: s.moshaf!,
-            surah: next.surah,
-            startAyah: next.startAyah,
-            endAyah: next.endAyah,
-            rangeFrom: s.rangeFrom,
-            rangeTo: s.rangeTo,
-          );
-          return;
-        }
-      }
-    }
-
-    await _playSurahDelta(1);
+    _dispatch(const SkipNext());
   }
 
-  /// Goes to the previous ayah when timed, otherwise the previous surah.
-  ///
-  /// For open-ended ranges, keeps the open-ended metadata.
+  /// Goes to the previous ayah or surah.
   Future<void> skipPrevious() async {
-    final s = state;
-    if (s.reciter == null || s.moshaf == null || s.surah == null) return;
-
-    // Open-ended range: jump to the previous ayah while keeping the range open.
-    if (s.rangeTo == null && s.rangeFrom != null) {
-      if (_timing != null) {
-        final anchor = s.currentAyah ?? s.rangeStart ?? 1;
-        if (anchor > 1 && _timing!.forAyah(anchor - 1) != null) {
-          await _load(
-            reciter: s.reciter!,
-            moshaf: s.moshaf!,
-            surah: s.surah!,
-            startAyah: anchor - 1,
-            endAyah: null,
-            rangeFrom: s.rangeFrom,
-            rangeTo: null,
-          );
-          return;
-        }
-      }
-      final prevSurah = s.surah! - 1;
-      if (prevSurah >= 1 &&
-          prevSurah >= s.rangeFrom!.surah &&
-          s.moshaf!.hasSurah(prevSurah)) {
-        final ayahCount = _mushaf.getSurahSync(prevSurah)?.ayahCount ?? 1;
-        await _load(
-          reciter: s.reciter!,
-          moshaf: s.moshaf!,
-          surah: prevSurah,
-          startAyah: ayahCount,
-          endAyah: null,
-          rangeFrom: s.rangeFrom,
-          rangeTo: null,
-        );
-      }
-      return;
-    }
-
-    if (_timing != null) {
-      final anchor = s.currentAyah ?? s.rangeStart ?? 1;
-      if (anchor > 1 && _timing!.forAyah(anchor - 1) != null) {
-        final prev = anchor - 1;
-        await playRange(
-          reciter: s.reciter!,
-          moshaf: s.moshaf!,
-          surah: s.surah!,
-          startAyah: prev,
-          endAyah: prev,
-        );
-        return;
-      }
-      if (s.isCrossSurahRange &&
-          s.rangeFrom != null &&
-          s.surah! > s.rangeFrom!.surah) {
-        final prevSurah = s.surah! - 1;
-        final ayahCount = _mushaf.getSurahSync(prevSurah)?.ayahCount ?? 1;
-        final endAyah = prevSurah == s.rangeFrom!.surah
-            ? s.rangeFrom!.ayah
-            : ayahCount;
-        await _load(
-          reciter: s.reciter!,
-          moshaf: s.moshaf!,
-          surah: prevSurah,
-          startAyah: endAyah,
-          endAyah: endAyah,
-          rangeFrom: s.rangeFrom,
-          rangeTo: s.rangeTo,
-        );
-        return;
-      }
-    }
-
-    await _playSurahDelta(-1);
+    _dispatch(const SkipPrevious());
   }
 
   // ---- Alert coordination ------------------------------------------------
 
-  /// Captures recitation state and releases the player so an adhan/iqamah alert
-  /// can play. Paired with [resumeAfterAlert].
+  /// Captures recitation state and releases the player for an alert.
   Future<void> suspendForAlert() async {
-    if (state.surah == null || state.reciter == null || _suspendedForAlert) {
+    if (state.surah == null ||
+        state.reciter == null ||
+        state.suspendedSnapshot != null) {
       return;
     }
-    final playback = _service.state;
-    final wasPlaying =
-        playback is PlaybackPlaying || playback is PlaybackLoading;
-    _suspended = _SuspendedRecitation(
-      reciter: state.reciter!,
-      moshaf: state.moshaf!,
-      surah: state.surah!,
-      rangeStart: state.rangeStart,
-      rangeEnd: state.rangeEnd,
-      rangeFrom: state.rangeFrom,
-      rangeTo: state.rangeTo,
-      positionMs: _service.player.state.position.inMilliseconds,
-      wasPlaying: wasPlaying,
+    if (!state.isPlaying && !state.isPaused) {
+      return;
+    }
+    final settings = ref.read(recitationSettingsProvider).value;
+    final ayahRepeatCount = (settings?.ayahRepeatCount ?? 1).clamp(1, 99);
+    final rangeRepeatCount = (settings?.rangeRepeatCount ?? 1).clamp(1, 99);
+    final result = transition(
+      state,
+      const AlertSuspend(),
+      timeline: _timeline,
+      defaultAyahRepeatCount: ayahRepeatCount,
+      defaultRangeRepeatCount: rangeRepeatCount,
     );
-    _suspendedForAlert = true;
-    _resumeGuard = false;
-    // Let the alert channel own the player; pause our recitation first.
-    await _service.pause();
+    state = result.state;
+    await _applyEffects(result.effects);
   }
 
-  /// Resumes recitation from the saved position once the alert ends or is
-  /// dismissed. Idempotent — safe to call from multiple teardown paths.
+  /// Resumes recitation from the saved position once the alert ends.
   Future<void> resumeAfterAlert() async {
-    if (!_suspendedForAlert || _resumeGuard) return;
-    _resumeGuard = true;
-    _suspendedForAlert = false;
-    final saved = _suspended;
-    _suspended = null;
-    if (saved == null || !saved.wasPlaying) return;
-    await _load(
-      reciter: saved.reciter,
-      moshaf: saved.moshaf,
-      surah: saved.surah,
-      startAyah: saved.rangeStart,
-      endAyah: saved.rangeEnd,
-      resumeFromMs: saved.positionMs,
-    );
+    _dispatch(const AlertResume());
   }
 
   // ---- Internals ---------------------------------------------------------
 
-  Future<bool> _load({
+  void _dispatch(RecitationEvent event) {
+    final settings = ref.read(recitationSettingsProvider).value;
+    final ayahRepeatCount = (settings?.ayahRepeatCount ?? 1).clamp(1, 99);
+    final rangeRepeatCount = (settings?.rangeRepeatCount ?? 1).clamp(1, 99);
+    final result = transition(
+      state,
+      event,
+      timeline: _timeline,
+      defaultAyahRepeatCount: ayahRepeatCount,
+      defaultRangeRepeatCount: rangeRepeatCount,
+    );
+    state = result.state;
+    unawaited(_applyEffects(result.effects));
+  }
+
+  Future<void> _applyEffects(List<RecitationEffect> effects) async {
+    for (final effect in effects) {
+      switch (effect) {
+        case LoadSurah():
+          await _load(
+            reciter: effect.reciter,
+            moshaf: effect.moshaf,
+            surah: effect.surah,
+            resumeFrom: effect.seekTo,
+          );
+        case LoadRange():
+          await _load(
+            reciter: effect.reciter,
+            moshaf: effect.moshaf,
+            surah: effect.from.surah,
+            startAyah: effect.from.ayah,
+            endAyah: effect.to?.ayah,
+            resumeFrom: effect.seekTo,
+          );
+        case PauseAudio():
+          await _service.pause();
+        case ReleaseAudioLease():
+          await _service.release(owner: kRecitationLeaseOwner);
+        case ResumeAudio():
+          await _service.resume();
+        case StopAudio():
+          await _service.stop(fadeOut: kAudioDefaultFadeOut);
+        case SeekAudio():
+          if (state.isLoading) break;
+          await _service.seek(effect.position, owner: kRecitationLeaseOwner);
+        case HighlightAyah():
+          await _applyHighlight(effect.surah, effect.ayah);
+        case CancelSleepTimer():
+          _sleepTimer?.cancel();
+          _sleepTimer = null;
+        case LoadAyahLoop():
+          await _setAyahLoop(effect.ayah, state.ayahRepeatCount);
+        case LoadGaplessContinuation():
+          await _openGaplessContinuation(
+            reciter: effect.reciter,
+            moshaf: effect.moshaf,
+            fromSurah: effect.fromSurah,
+            toSurah: effect.toSurah,
+          );
+        case PersistPlaybackState():
+          ref.read(recitationSettingsProvider.notifier).setPlaybackState(
+            surah: effect.surah,
+            rangeStart: effect.rangeStart,
+            rangeEnd: effect.rangeEnd,
+            rangeFromSurah: effect.rangeFromSurah,
+            rangeFromAyah: effect.rangeFromAyah,
+            rangeToSurah: effect.rangeToSurah,
+            rangeToAyah: effect.rangeToAyah,
+          );
+      }
+    }
+  }
+
+  Future<void> _load({
     required Reciter reciter,
     required Moshaf moshaf,
     required int surah,
     int? startAyah,
     int? endAyah,
-    AyahReference? rangeFrom,
-    AyahReference? rangeTo,
-    int? resumeFromMs,
+    Duration? resumeFrom,
   }) async {
-    // Skip reload if the exact same selection is already loaded — just resume
-    // if paused. Only meaningful when the service actually has audio loaded
-    // (not idle/error) — after hot restart or saveRange the state metadata may
-    // match but the service has nothing loaded yet.
-    if (reciter.id == state.reciter?.id &&
-        moshaf.id == state.moshaf?.id &&
-        surah == state.surah &&
-        startAyah == state.rangeStart &&
-        endAyah == state.rangeEnd) {
-      final s = _service.state;
-      if (s is PlaybackPaused) {
-        await _service.resume();
-        return true;
-      }
-      if (s is PlaybackPlaying) return true;
-      // Service is idle/error — fall through to actual load.
-    }
+    final newGen = state.loadGeneration + 1;
+    state = state.copyWith(
+      loadGeneration: newGen,
+      userStopped: false,
+      timelinePending: moshaf.hasTiming,
+    );
 
-    // Any full load commits a pending reciter switch.
-    _pendingReciter = null;
-    state = state.copyWith(pendingReciter: null, pendingMoshaf: null);
-
-    final generation = ++_loadGeneration;
-    _isLoading = true;
-    _abLoopExhausted = false;
-    _userStopped = true;
-    _pendingReciter = null;
     try {
       await _service.stop();
-    } finally {
-      if (generation == _loadGeneration) _isLoading = true;
+    } on Object catch (error, stack) {
+      ref.read(loggerProvider).d(
+        'Audio stop during load failed (continuing): $error',
+        stackTrace: stack,
+      );
     }
     _resetTiming();
 
     final isRange = startAyah != null && endAyah != null;
     if (isRange && !moshaf.hasTiming) {
-      _isLoading = false;
-      return false;
+      _dispatch(const AudioError('No timing data for range playback'));
+      return;
     }
 
     final settings = ref.read(recitationSettingsProvider).value;
-    final mode = settings?.mode ?? RecitationMode.stopAtEnd;
     final volume = settings?.volume ?? 100;
+    final ayahRepeatCount = (settings?.ayahRepeatCount ?? 1).clamp(1, 99);
 
-    // Emit loading state immediately so the UI shows a spinner.
-    state = state.copyWith(
-      status: RecitationStatus.loading,
-      active: true,
-      surah: surah,
-    );
-
-    final uri = await _repo.resolveSurahUri(
+    final token = _startDownload();
+    final resolved = await _repo.resolveSurahUri(
       reciter: reciter,
       moshaf: moshaf,
       surah: surah,
       surahName: _surahTitle(surah),
+      cancellationToken: token,
+      onProgress: (p) =>
+          ref.read(recitationDownloadProgressProvider.notifier).progress = p,
     );
-    if (generation != _loadGeneration) {
-      _isLoading = false;
-      return false;
-    }
-
-    final isCached = uri.startsWith('file');
+    _finishDownload(token);
+    if (newGen != state.loadGeneration) return;
+    _lastResolvedUri = resolved.uri;
 
     if (moshaf.hasTiming) {
-      _timing = await _repo.timing(surah, moshaf.timingReadId!);
-    }
-    if (generation != _loadGeneration) {
-      _isLoading = false;
-      return false;
-    }
-
-    if (isRange) {
-      final from = startAyah;
-      final to = endAyah;
-      if (_timing == null ||
-          _timing!.forAyah(from) == null ||
-          _timing!.forAyah(to) == null) {
-        state = state.copyWith(
-          status: RecitationStatus.idle,
-          active: true,
-          downloading: false,
-        );
-        _isLoading = false;
-        return false;
+      final timing = await _repo.timing(surah, moshaf.timingReadId!);
+      if (newGen != state.loadGeneration) return;
+      _timeline = timelineFor(state, timing);
+      // Timeline resolved: clear the load-pending flag so a subsequent
+      // PlaybackIdle (natural eof) can dispatch AudioCompleted.
+      if (newGen == state.loadGeneration && state.timelinePending) {
+        state = state.copyWith(timelinePending: false);
+      }
+      // Proactively report the timeline's total duration so the seek bar
+      // enables immediately, without waiting for mpv's stream.duration (which
+      // some timed reciters report late or not at all). The machine's
+      // _onAudioDuration keeps the larger value, so a later mpv report that
+      // exceeds this will still win.
+      final total = _timeline.totalDuration;
+      if (newGen == state.loadGeneration && total > state.duration) {
+        state = state.copyWith(duration: total);
       }
     }
 
-    // Resolve range markers from timing data. Always set the end marker when
-    // an explicit end exists; the end-of-selection mode decides what to do
-    // when it is reached.
-    final timingTotal = _timing?.totalMs ?? 0;
-    _rangeStartMs = (startAyah != null)
-        ? _timing?.forAyah(startAyah)?.startMs
-        : null;
-    _rangeEndMs = endAyah != null ? _timing?.forAyah(endAyah)?.endMs : null;
-
-    if (generation != _loadGeneration) {
-      _isLoading = false;
-      return false;
+    final localStartAyah = startAyah;
+    final localEndAyah = endAyah;
+    if (isRange) {
+      if (localStartAyah == null ||
+          localEndAyah == null ||
+          _timeline.timing == null ||
+          _timeline.startOfAyah(localStartAyah) == null ||
+          _timeline.endOfAyah(localEndAyah) == null) {
+        _dispatch(const AudioError('Ayah timing unavailable'));
+        return;
+      }
     }
 
-    // Emit the full metadata atomically — one shot, no incremental updates.
-    state = RecitationPlayback(
-      reciter: reciter,
-      moshaf: moshaf,
-      surah: surah,
-      rangeStart: startAyah,
-      rangeEnd: endAyah,
-      rangeFrom:
-          rangeFrom ??
-          (startAyah != null
-              ? AyahReference(surah: surah, ayah: startAyah)
-              : null),
-      rangeTo:
-          rangeTo ??
-          (endAyah != null
-              ? AyahReference(surah: surah, ayah: endAyah)
-              : null),
-      mode: mode,
-      downloading: !isCached,
-      active: true,
-      sleep: state.sleep,
-      duration: timingTotal > 0
-          ? Duration(milliseconds: timingTotal)
-          : Duration.zero,
-      status: RecitationStatus.loading,
-    );
+    final seekTo = resumeFrom ??
+        (isRange && localStartAyah != null
+            ? _timeline.startOfAyah(localStartAyah)
+            : null) ??
+        Duration.zero;
 
     await _service.setVolume(volume);
-    await _service.play(
+    await _service.openAndSeekTo(
       AudioTrack.network(
         id: 'recitation-${reciter.id}-$surah',
         title: _surahTitle(surah),
-        url: uri,
+        url: resolved.uri,
         subtitle: reciter.name,
       ),
+      start: seekTo,
+      owner: kRecitationLeaseOwner,
     );
-    if (generation != _loadGeneration) {
-      await _service.stop();
-      _isLoading = false;
-      return false;
-    }
+    if (newGen != state.loadGeneration) return;
 
-    final seekMs = resumeFromMs ?? _rangeStartMs;
-    if (seekMs != null && seekMs > 0) {
-      if (generation != _loadGeneration) {
-        _isLoading = false;
-        return false;
-      }
-      await _safeSeek(seekMs, generation: generation);
+    if (moshaf.hasTiming && ayahRepeatCount > 1) {
+      _lastAbLoopRemaining = null;
+      final firstAyah = isRange ? localStartAyah! : 1;
+      await _setAyahLoop(firstAyah, ayahRepeatCount);
     }
-    if (generation != _loadGeneration) {
-      _isLoading = false;
-      return false;
-    }
-
-    // Set up mpv native A-B loop for single-surah ranges.
-    if (isRange &&
-        _rangeStartMs != null &&
-        _rangeEndMs != null &&
-        _playsRemaining > 1) {
-      await _service.setAbLoopA(Duration(milliseconds: _rangeStartMs!));
-      await _service.setAbLoopB(Duration(milliseconds: _rangeEndMs!));
-      await _service.setAbLoopCount(_playsRemaining);
-      _abLoopActive = true;
-    } else {
-      await _service.setAbLoopA(null);
-      await _service.setAbLoopB(null);
-      _abLoopActive = false;
-    }
-
-    await _service.setLoop(Loop.off);
-
-    // Persist the current playback state for session restore.
-    final s = state;
-    ref.read(recitationSettingsProvider.notifier).setPlaybackState(
-      surah: s.surah,
-      rangeStart: s.rangeStart,
-      rangeEnd: s.rangeEnd,
-      rangeFromSurah: s.rangeFrom?.surah,
-      rangeFromAyah: s.rangeFrom?.ayah,
-      rangeToSurah: s.rangeTo?.surah,
-      rangeToAyah: s.rangeTo?.ayah,
-    );
-
-    if (!isCached) {
-      state = state.copyWith(downloading: false);
-    }
-    _isLoading = false;
-    return true;
   }
 
-  Future<void> _playSurahDelta(int delta) async {
-    final s = state;
-    final reciter = s.reciter;
-    final moshaf = s.moshaf;
-    final surah = s.surah;
-    if (reciter == null || moshaf == null || surah == null) return;
-    final next = surah + delta;
-    if (next < 1 || next > 114 || !moshaf.hasSurah(next)) {
-      if (delta < 0) {
-        await seekTo(Duration.zero);
-      }
+  Future<void> _setAyahLoop(int ayah, int ayahRepeatCount) async {
+    final start = _timeline.startOfAyah(ayah);
+    final end = _timeline.endOfAyah(ayah);
+    if (start == null || end == null) return;
+    _lastAbLoopRemaining = null;
+    await _service.setAbLoopA(start);
+    await _service.setAbLoopB(end);
+    await _service.setAbLoopCount(ayahRepeatCount - 1);
+  }
+
+  Future<void> _openGaplessContinuation({
+    required Reciter reciter,
+    required Moshaf moshaf,
+    required int fromSurah,
+    required int toSurah,
+  }) async {
+    final nextCached = await _repo.isSurahCached(
+      reciter: reciter,
+      moshaf: moshaf,
+      surah: toSurah,
+      surahName: _surahTitle(toSurah),
+    );
+    if (!nextCached) {
+      // Fall back to the normal reload path when the next surah is not yet
+      // downloaded.
+      await _load(
+        reciter: reciter,
+        moshaf: moshaf,
+        surah: toSurah,
+      );
       return;
     }
-    await playSurah(reciter: reciter, moshaf: moshaf, surah: next);
+
+    final newGen = state.loadGeneration + 1;
+    state = state.copyWith(loadGeneration: newGen, userStopped: false);
+
+    final token = _startDownload();
+    final currentUri = (await _repo.resolveSurahUri(
+      reciter: reciter,
+      moshaf: moshaf,
+      surah: fromSurah,
+      surahName: _surahTitle(fromSurah),
+      cancellationToken: token,
+      onProgress: (p) =>
+          ref.read(recitationDownloadProgressProvider.notifier).progress = p,
+    )).uri;
+    if (newGen != state.loadGeneration) {
+      _finishDownload(token);
+      return;
+    }
+
+    final nextUri = (await _repo.resolveSurahUri(
+      reciter: reciter,
+      moshaf: moshaf,
+      surah: toSurah,
+      surahName: _surahTitle(toSurah),
+      cancellationToken: token,
+      onProgress: (p) =>
+          ref.read(recitationDownloadProgressProvider.notifier).progress = p,
+    )).uri;
+    _finishDownload(token);
+    if (newGen != state.loadGeneration) return;
+
+    final currentTrack = AudioTrack.network(
+      id: 'recitation-${reciter.id}-$fromSurah',
+      title: _surahTitle(fromSurah),
+      url: currentUri,
+      subtitle: reciter.name,
+    );
+    final nextTrack = AudioTrack.network(
+      id: 'recitation-${reciter.id}-$toSurah',
+      title: _surahTitle(toSurah),
+      url: nextUri,
+      subtitle: reciter.name,
+    );
+
+    await _service.openAll(
+      [currentTrack, nextTrack],
+      index: 1,
+      owner: kRecitationLeaseOwner,
+    );
+    if (newGen != state.loadGeneration) return;
+    _lastTrackIndex = 1;
+    await _service.setPrefetchPlaylist(true);
+    await _service.setGapless(Gapless.yes);
   }
 
-  /// Records the player's reported total duration. The controller is subscribed
-  /// from app start (it outlives the drawer), so it never misses media_kit's
-  /// one-time duration emit the way a late widget subscription does.
-  void _onDuration(Duration d) {
-    if (_suspendedForAlert || state.surah == null) return;
-    if (d.inMilliseconds <= 0) return;
-
-    // mpv can briefly report a segment-local duration after a range seek;
-    // never shrink below the timing-derived surah length so the scrubber
-    // keeps the full timeline.
-    final timingMs = _timing?.totalMs ?? 0;
-    final candidateMs = timingMs > 0 && d.inMilliseconds < timingMs
-        ? timingMs
-        : d.inMilliseconds;
-
-    final resolved = Duration(milliseconds: candidateMs);
-    if (resolved != state.duration) {
-      state = state.copyWith(duration: resolved);
+  void _onAbLoopRemaining(int? remaining) {
+    if (state.suspendedSnapshot != null) {
+      _lastAbLoopRemaining = remaining;
+      return;
     }
+    final previous = _lastAbLoopRemaining;
+    _lastAbLoopRemaining = remaining;
+    if (remaining == 0 && previous != null && previous > 0) {
+      _dispatch(const AyahLoopExhausted());
+    }
+  }
+
+  void _onTrackIndexChanged(int? index) {
+    if (state.suspendedSnapshot != null) return;
+    final previous = _lastTrackIndex;
+    _lastTrackIndex = index;
+    if (index == null || index < 1) return;
+    if (previous != null && previous >= 1) return;
+    final surah = state.surah;
+    if (surah == null || state.rangeFrom != null) return;
+    // Native playlist advanced to the next track. Continue from the first
+    // ayah of the current surah (the machine already advanced surah before
+    // opening the gapless playlist).
+    _dispatch(GaplessTrackAdvanced(surah: surah, ayah: 1));
   }
 
   void _onPosition(Duration position) {
-    if (_suspendedForAlert || state.surah == null) return;
-    final posMs = position.inMilliseconds;
-
-    // Keep position in sync on every tick so the scrubber has a consistent
-    // view alongside status, duration, and currentAyah from one provider.
-    state = state.copyWith(position: position);
-
-    // Sleep timer: stop at the ayah/range content boundary.
-    final sleepMs = _sleepDeadlineMs;
-    if (sleepMs != null && posMs >= sleepMs) {
-      unawaited(_pauseAtEndOfSession());
-      return;
-    }
-
-    // Stop / loop at the end of a bounded range (skip while the user scrubs).
-    final endMs = _rangeEndMs;
-    if (!_userSeeking && endMs != null && posMs >= endMs) {
-      unawaited(_onSelectionEnd());
-      return;
-    }
-
-    _syncHighlight(posMs);
+    if (state.suspendedSnapshot != null) return;
+    _dispatch(AudioPosition(position));
   }
 
-  void _syncHighlight(int posMs) {
-    final timing = _timing;
-    final surah = state.surah;
-    if (timing == null || surah == null || _highlightBusy) return;
-    final ayahNumber = timing.ayahAt(posMs);
-    if (ayahNumber == null || ayahNumber == state.currentAyah) return;
-    state = state.copyWith(currentAyah: ayahNumber);
-    _refreshSleepEndOfAyah(ayahNumber);
-    _highlightBusy = true;
-    unawaited(
-      _applyHighlight(surah, ayahNumber).whenComplete(() {
-        _highlightBusy = false;
-      }),
-    );
+  void _onDuration(Duration duration) {
+    if (state.suspendedSnapshot != null) return;
+    _dispatch(AudioDuration(duration));
+  }
+
+  void _onServiceState(PlaybackState playback) {
+    if (state.suspendedSnapshot != null) return;
+    switch (playback) {
+      case PlaybackLoading():
+        _dispatch(const AudioLoading());
+      case PlaybackPlaying(:final duration):
+        _dispatch(const AudioStarted());
+        if (duration > Duration.zero) {
+          _dispatch(AudioDuration(duration));
+        }
+      case PlaybackPaused(:final duration):
+        _dispatch(const AudioPaused());
+        if (duration > Duration.zero) {
+          _dispatch(AudioDuration(duration));
+        }
+      case PlaybackError(:final message):
+        _dispatch(AudioError(message));
+      case PlaybackIdle():
+        if (state.active &&
+            !state.userStopped &&
+            !state.timelinePending &&
+            !state.isLoading &&
+            (state.isPlaying || state.isBuffering)) {
+          _dispatch(const AudioCompleted());
+        }
+      case PlaybackBuffering():
+        _dispatch(const AudioBuffering());
+    }
   }
 
   Future<void> _applyHighlight(int surah, int ayahNumber) async {
@@ -1049,10 +811,8 @@ class RecitationController extends _$RecitationController {
     final autoScroll = settings?.autoScroll ?? true;
     if (!highlight) return;
     try {
-      var ayah = _ayahCache[ayahNumber];
-      ayah ??= await _mushaf.getAyahBySurah(surah, ayahNumber);
-      _ayahCache[ayahNumber] = ayah;
-      state = state.copyWith(playbackHighlightAyah: ayah);
+      final ayah = await _mushaf.getAyahBySurah(surah, ayahNumber);
+      ref.read(quranScreenSettingsProvider.notifier).selectAyah(ayah);
       final (p1, p2) = _mushaf.currentPages;
       if (ayah.page == p1 || ayah.page == p2) {
         _mushaf.selectAyah(ayah.ayahId);
@@ -1068,175 +828,6 @@ class RecitationController extends _$RecitationController {
     }
   }
 
-  void _onServiceState(PlaybackState playback) {
-    if (_suspendedForAlert) return;
-    switch (playback) {
-      case PlaybackLoading():
-        state = state.copyWith(status: RecitationStatus.loading);
-      case PlaybackPlaying(:final position):
-        state = state.copyWith(
-          status: RecitationStatus.playing,
-          position: position,
-        );
-      case PlaybackPaused(:final position):
-        state = state.copyWith(
-          status: RecitationStatus.paused,
-          position: position,
-        );
-      case PlaybackError(:final message):
-        _resetTiming();
-        state = state.copyWith(
-          status: RecitationStatus.error,
-          active: true,
-          currentAyah: null,
-          playbackHighlightAyah: null,
-          downloading: false,
-          playbackError: message,
-        );
-      case PlaybackIdle():
-        if (state.active && !_userStopped && !_isLoading) {
-          unawaited(_handleEndOfSurah());
-        }
-    }
-  }
-
-  /// Called when the mpv A-B loop counter decrements. When a finite loop
-  /// exhausts all repetitions the player stops looping; we then apply the
-  /// end-of-selection mode (with sleep timer awareness).
-  void _onAbLoopRemaining(int? remaining) {
-    if (_suspendedForAlert || state.surah == null || _isLoading) return;
-    if (remaining != null && remaining <= 0) {
-      _abLoopExhausted = true;
-      unawaited(_onSelectionEnd());
-    }
-  }
-
-  /// Handles reaching the end of a bounded range: replays while the repeat
-  /// budget remains, otherwise applies the end-of-selection [RecitationMode].
-  Future<void> _onSelectionEnd() async {
-    if (_abLoopExhausted) {
-      _abLoopExhausted = false;
-      // A-B loop already consumed the budget; skip _replayForRepeat().
-    } else if (_replayForRepeat()) {
-      await _safeSeek(_rangeStartMs ?? 0);
-      return;
-    }
-
-    final s = state;
-
-    // Open-ended range: continue to the next surah, preserving the start point.
-    if (s.rangeFrom != null &&
-        s.rangeTo == null &&
-        s.surah != null &&
-        s.reciter != null &&
-        s.moshaf != null &&
-        s.mode == RecitationMode.continueToNextSurah) {
-      final nextSurah = s.surah! + 1;
-      if (nextSurah <= 114 && s.moshaf!.hasSurah(nextSurah)) {
-        await _load(
-          reciter: s.reciter!,
-          moshaf: s.moshaf!,
-          surah: nextSurah,
-          startAyah: 1,
-          endAyah: null,
-          rangeFrom: s.rangeFrom,
-          rangeTo: null,
-        );
-        return;
-      }
-    }
-
-    if (s.isCrossSurahRange &&
-        s.rangeFrom != null &&
-        s.rangeTo != null &&
-        s.surah != null &&
-        s.rangeEnd != null &&
-        !isGlobalRangeComplete(
-          to: s.rangeTo,
-          surah: s.surah!,
-          endAyah: s.rangeEnd!,
-          mushaf: _mushaf,
-        )) {
-      final next = nextSegmentForRange(
-        from: s.rangeFrom!,
-        to: s.rangeTo,
-        currentSurah: s.surah!,
-        mushaf: _mushaf,
-      );
-      if (next != null && s.reciter != null && s.moshaf != null) {
-        await _load(
-          reciter: s.reciter!,
-          moshaf: s.moshaf!,
-          surah: next.surah,
-          startAyah: next.startAyah,
-          endAyah: next.endAyah,
-          rangeFrom: s.rangeFrom,
-          rangeTo: s.rangeTo,
-        );
-        return;
-      }
-    }
-
-    switch (state.mode) {
-      case RecitationMode.repeatSelection:
-        await _pauseAtEndOfSession();
-      case RecitationMode.stopAtEnd:
-        await _pauseAtEndOfSession();
-      case RecitationMode.continueToNextSurah:
-        await skipNext();
-    }
-  }
-
-  Future<void> _handleEndOfSurah() async {
-    final s = state;
-    // Sleep timer set to end-of-surah: stop instead of repeating/continuing.
-    if (_sleepStopAtSurahEnd) {
-      await _pauseAtEndOfSession();
-      return;
-    }
-    // Budget-based repeat: _replayForRepeat() decrements _playsRemaining and
-    // returns true when replays remain. When it returns false the budget is
-    // exhausted — fall through to mode switch.
-    if (_replayForRepeat() &&
-        s.reciter != null &&
-        s.moshaf != null &&
-        s.surah != null) {
-      await _load(
-        reciter: s.reciter!,
-        moshaf: s.moshaf!,
-        surah: s.surah!,
-        startAyah: s.rangeStart,
-        endAyah: s.rangeEnd,
-        rangeFrom: s.rangeFrom,
-        rangeTo: s.rangeTo,
-      );
-      return;
-    }
-    switch (state.mode) {
-      case RecitationMode.repeatSelection:
-        // Budget exhausted — fall through to stop (repeat count is 1-based:
-        // count=N means play N times, not N+1).
-        await _pauseAtEndOfSession();
-      case RecitationMode.stopAtEnd:
-        await _pauseAtEndOfSession();
-      case RecitationMode.continueToNextSurah:
-        await _playSurahDelta(1);
-    }
-  }
-
-  /// Pauses playback at the end of a selection/surah while keeping the player
-  /// chrome visible.
-  Future<void> _pauseAtEndOfSession() async {
-    _userStopped = true;
-    await _service.pause();
-    state = state.copyWith(
-      status: RecitationStatus.paused,
-      active: true,
-      currentAyah: null,
-      playbackHighlightAyah: null,
-    );
-  }
-
   Future<void> _bootstrapSession() async {
     if (state.reciter != null) return;
     try {
@@ -1244,100 +835,56 @@ class RecitationController extends _$RecitationController {
       final moshaf = await ref.read(selectedMoshafProvider.future);
       if (reciter == null || moshaf == null) return;
       final settings = ref.read(recitationSettingsProvider).value;
-      state = state.copyWith(
-        active: true,
-        reciter: reciter,
-        moshaf: moshaf,
-        surah: settings?.lastSurah,
-        rangeStart: settings?.lastRangeStart,
-        rangeEnd: settings?.lastRangeEnd,
-        rangeFrom: settings?.lastRangeFromSurah != null &&
-                settings?.lastRangeFromAyah != null
-            ? AyahReference(
-                surah: settings!.lastRangeFromSurah!,
-                ayah: settings.lastRangeFromAyah!,
-              )
-            : null,
-        rangeTo: settings?.lastRangeToSurah != null &&
-                settings?.lastRangeToAyah != null
-            ? AyahReference(
-                surah: settings!.lastRangeToSurah!,
-                ayah: settings.lastRangeToAyah!,
-              )
-            : null,
+      _dispatch(
+        RecitationSettingsLoaded(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: settings?.lastSurah,
+          rangeFrom: _reference(
+            settings?.lastRangeFromSurah,
+            settings?.lastRangeFromAyah,
+          ),
+          rangeTo: _reference(
+            settings?.lastRangeToSurah,
+            settings?.lastRangeToAyah,
+          ),
+        ),
       );
     } on Object catch (error, stack) {
-      ref
-          .read(loggerProvider)
-          .w(
-            'Recitation session bootstrap failed',
-            error: error,
-            stackTrace: stack,
-          );
+      ref.read(loggerProvider).w(
+        'Recitation session bootstrap failed',
+        error: error,
+        stackTrace: stack,
+      );
     }
   }
 
-  Future<bool> _safeSeek(int posMs, {int? generation}) async {
-    if (generation != null && generation != _loadGeneration) return false;
-    if (_service.state is PlaybackIdle && state.surah == null) return false;
-    final ok = await _service.safeSeek(Duration(milliseconds: posMs));
-    if (!ok) {
-      ref.read(loggerProvider).w('Recitation seek failed at ${posMs}ms');
-    }
-    return ok;
-  }
-
-  /// Consumes one repeat from the budget. Returns true if the selection should
-  /// replay (budget had more than one play left).
-  bool _replayForRepeat() {
-    if (_playsRemaining > 1) {
-      _playsRemaining -= 1;
-      return true;
-    }
-    return false;
+  AyahReference? _reference(int? surah, int? ayah) {
+    if (surah == null || ayah == null) return null;
+    return AyahReference(surah: surah, ayah: ayah);
   }
 
   void _resetTiming() {
-    _timing = null;
-    _rangeStartMs = null;
-    _rangeEndMs = null;
-    _abLoopActive = false;
-    _abLoopExhausted = false;
-    _ayahCache.clear();
-    unawaited(_service.setAbLoopA(null));
-    unawaited(_service.setAbLoopB(null));
-    unawaited(_service.setLoop(Loop.off));
+    _timeline = const RecitationTimeline();
   }
 
-  void _refreshSleepEndOfAyah(int ayahNumber) {
-    if (state.sleep != RecitationSleep.endOfAyah) return;
-    _sleepDeadlineMs = _timing?.forAyah(ayahNumber)?.endMs;
+  CancellationToken _startDownload() {
+    // Cancel any in-flight download from a prior load before starting fresh.
+    _downloadToken?.cancel();
+    final token = CancellationToken();
+    _downloadToken = token;
+    ref.read(recitationDownloadProgressProvider.notifier).clear();
+    return token;
+  }
+
+  void _finishDownload(CancellationToken token) {
+    // A newer load may have already swapped in its own token; don't clobber it
+    // (the newer load owns the progress UI now).
+    if (!identical(_downloadToken, token)) return;
+    _downloadToken = null;
+    ref.read(recitationDownloadProgressProvider.notifier).clear();
   }
 
   String _surahTitle(int surah) =>
       _mushaf.getSurahSync(surah)?.displayName ?? 'Surah $surah';
-}
-
-class _SuspendedRecitation {
-  const _SuspendedRecitation({
-    required this.reciter,
-    required this.moshaf,
-    required this.surah,
-    required this.rangeStart,
-    required this.rangeEnd,
-    required this.rangeFrom,
-    required this.rangeTo,
-    required this.positionMs,
-    required this.wasPlaying,
-  });
-
-  final Reciter reciter;
-  final Moshaf moshaf;
-  final int surah;
-  final int? rangeStart;
-  final int? rangeEnd;
-  final AyahReference? rangeFrom;
-  final AyahReference? rangeTo;
-  final int positionMs;
-  final bool wasPlaying;
 }

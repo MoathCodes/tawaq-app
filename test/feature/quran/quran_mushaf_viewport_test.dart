@@ -7,8 +7,7 @@ import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/quran_layout_widgets.dart';
-import 'package:tawaq/feature/settings/data/migration/state_settings_legacy_migration.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/quran_mushaf_pane.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/l10n/app_localizations_en.dart';
@@ -156,7 +155,6 @@ void main() {
     return ProviderScope(
       overrides: [
         mushafLibraryInitProvider.overrideWith((ref) async {}),
-        stateSettingsLegacyMigrationProvider.overrideWith((ref) async {}),
         quranScreenSettingsProvider.overrideWith(_TestQuranScreenSettings.new),
         quranMushafControllerProvider.overrideWithValue(controller),
         appThemeDataProvider.overrideWithValue(theme),

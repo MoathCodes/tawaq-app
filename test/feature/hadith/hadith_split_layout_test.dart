@@ -4,9 +4,8 @@ import 'package:forui/forui.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_screen_state.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
 import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
-import 'package:tawaq/feature/settings/data/migration/state_settings_legacy_migration.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -15,7 +14,8 @@ import 'package:tawaq/theme/theme_model.dart';
 
 class _TestHadithScreenSettings extends HadithScreenSettingsNotifier {
   @override
-  Future<HadithScreenState> build() async => const HadithScreenState();
+  Future<HadithPersistedSettings> build() async =>
+      const HadithPersistedSettings();
 }
 
 void main() {
@@ -42,7 +42,6 @@ void main() {
       overrides: [
         dorarInitProvider.overrideWith((ref) async {}),
         hiveCoreInitProvider.overrideWith((ref) async {}),
-        stateSettingsLegacyMigrationProvider.overrideWith((ref) async {}),
         hadithScreenSettingsProvider.overrideWith(
           _TestHadithScreenSettings.new,
         ),

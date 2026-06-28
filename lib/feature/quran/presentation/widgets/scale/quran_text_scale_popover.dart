@@ -3,10 +3,10 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/semantics_scale_step_picker.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/typography/quran_text_scale_control.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -24,6 +24,9 @@ class QuranTextScalePopover extends ConsumerWidget {
       quranScreenSettingsProvider.select(
         (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
       ),
+    );
+    final quranStateReady = ref.watch(
+      quranScreenSettingsProvider.select((s) => s.hasValue),
     );
 
     return FPopover(
@@ -49,7 +52,22 @@ class QuranTextScalePopover extends ConsumerWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const QuranTextScaleControl(),
+                SemanticsScaleStepPicker(
+                  groupLabel: l10n.quranTextSize,
+                  enabled: quranStateReady,
+                  previewSizes:
+                      QuranTextScale.values.map((s) => 14 * s.boost).toList(),
+                  labels: [
+                    l10n.quranTextSizeSmall,
+                    l10n.quranTextSizeMedium,
+                    l10n.quranTextSizeLarge,
+                    l10n.quranTextSizeShortExtraLarge,
+                  ],
+                  selectedIndex: quranTextScale.index,
+                  onChanged: (i) => ref
+                      .read(quranScreenSettingsProvider.notifier)
+                      .setTextScale(QuranTextScale.values[i]),
+                ),
                 Text(
                   l10n.quranTextSizePreviewLabel,
                   style: theme.typography.body.xs.copyWith(

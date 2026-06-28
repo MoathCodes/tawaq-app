@@ -8,6 +8,7 @@ import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_coordinator.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
 
 part 'prayer_alert_dispatcher.g.dart';
 
@@ -24,21 +25,29 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
   void build() {
     final inApp = ref.watch(adhanAlertControllerProvider.notifier);
     final recitation = ref.read(recitationControllerProvider.notifier);
+    final service = ref.read(tawaqAudioServiceProvider);
     final sound = SoundAlertChannel(
-      ref.watch(audioPlayerControllerProvider.notifier),
-      onBeforePlay: recitation.suspendForAlert,
-      onAfterStop: recitation.resumeAfterAlert,
+      service: service,
+      onCaptureRecitationVolume: () async => service.volume,
+      onSuspend: recitation.suspendForAlert,
+      onRestoreRecitationVolume: service.setVolume,
+      onResume: recitation.resumeAfterAlert,
     );
     final os = OsNotificationChannel(onClick: inApp.focusAlert);
     final log = ref.read(loggerProvider);
+
+    final soundSafetyCap =
+        ref.watch(adhanSettingsProvider).asData?.value.soundSafetyCap;
 
     _coordinator = PrayerAlertCoordinator(
       // Delivery order: notification (cheap) → window/overlay → sound.
       // Teardown runs in reverse, so audio fades before the window restores.
       channels: [os, inApp, sound],
       playbackStream: ref.read(tawaqAudioServiceProvider).stateStream,
+      currentPlayback: () => service.state,
       onError: (message, error, stack) =>
           log.e(message, error: error, stackTrace: stack),
+      soundSafetyCap: soundSafetyCap ?? const Duration(minutes: 8),
     );
 
     ref.onDispose(_coordinator.dispose);

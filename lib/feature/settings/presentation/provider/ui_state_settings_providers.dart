@@ -3,24 +3,19 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/core/settings/side_panel_settings_mixin.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_screen_state.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_mode.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
-import 'package:tawaq/feature/settings/data/migration/state_settings_legacy_migration.dart';
-import 'package:tawaq/feature/settings/data/models/state_settings.dart';
+import 'package:tawaq/feature/settings/data/models/prayer_analytics_prefs.dart';
 import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
 import 'package:tawaq/feature/settings/domain/models/settings_screen_state.dart';
-import 'package:tawaq/feature/settings/presentation/models/settings_destination.dart';
 
 part 'ui_state_settings_providers.g.dart';
 
@@ -38,7 +33,6 @@ void _logUiStateUpdate(
 class SidebarSettingsNotifier extends _$SidebarSettingsNotifier {
   @override
   Future<bool> build() async {
-    await ref.watch(stateSettingsLegacyMigrationProvider.future);
     await persist(
       ref.read(settingsStorageProvider),
       options: const StorageOptions(
@@ -63,7 +57,6 @@ class PrayerAnalyticsSettingsNotifier
     extends _$PrayerAnalyticsSettingsNotifier {
   @override
   Future<PrayerAnalyticsPrefs> build() async {
-    await ref.watch(stateSettingsLegacyMigrationProvider.future);
     await persist(
       ref.read(settingsStorageProvider),
       options: const StorageOptions(
@@ -85,11 +78,9 @@ class PrayerAnalyticsSettingsNotifier
 /// Persisted Quran screen UI state.
 @riverpod
 @JsonPersist()
-class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier
-    with SidePanelSettingsMixin<QuranScreenState> {
+class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
   @override
   Future<QuranScreenState> build() async {
-    await ref.watch(stateSettingsLegacyMigrationProvider.future);
     await persist(
       ref.read(settingsStorageProvider),
       options: const StorageOptions(
@@ -135,11 +126,15 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier
   void selectAyah(Ayah? ayah) =>
       _update((s) => s.copyWith(selectedAyah: ayah), 'Selected ayah');
 
-  @override
-  void updateSidePanelSetting(
-    QuranScreenState Function(QuranScreenState) transform,
-    String logField,
-  ) => _update(transform, logField);
+  /// Sets the side panel width ratio (0..1).
+  void setSidePanelRatio(double ratio) =>
+      _update((s) => s.copyWith(sidePanelRatio: ratio), 'Side panel ratio');
+
+  /// Sets whether the side panel is collapsed.
+  void setSidePanelCollapsed({required bool collapsed}) => _update(
+    (s) => s.copyWith(sidePanelCollapsed: collapsed),
+    'Side panel collapsed',
+  );
 
   /// Sets the tafsir accordion expanded state.
   void setTafsirEnabled({required bool enabled}) =>
@@ -175,7 +170,6 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
 
   @override
   Future<RecitationSettings> build() async {
-    await ref.watch(stateSettingsLegacyMigrationProvider.future);
     await persist(
       ref.read(settingsStorageProvider),
       options: const StorageOptions(
@@ -203,10 +197,6 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
     'Reciter',
   );
 
-  /// Persists the end-of-selection mode.
-  void setMode(RecitationMode mode) =>
-      _update((s) => s.copyWith(mode: mode), 'Mode');
-
   /// Persists the output volume (0-100).
   void setVolume(double volume) {
     _volumePreview = null;
@@ -230,10 +220,16 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
   void setAutoScroll({required bool value}) =>
       _update((s) => s.copyWith(autoScroll: value), 'Auto scroll');
 
-  /// Persists how many times the selection repeats (clamped 1-99).
-  void setRepeatCount(int count) => _update(
-    (s) => s.copyWith(repeatCount: count.clamp(1, 99)),
-    'Repeat count',
+  /// Persists how many times each ayah repeats (clamped 1-99).
+  void setAyahRepeatCount(int count) => _update(
+    (s) => s.copyWith(ayahRepeatCount: count.clamp(1, 99)),
+    'Ayah repeat count',
+  );
+
+  /// Persists how many times the whole selection repeats (clamped 1-99).
+  void setRangeRepeatCount(int count) => _update(
+    (s) => s.copyWith(rangeRepeatCount: count.clamp(1, 99)),
+    'Range repeat count',
   );
 
   /// Persists the current playback state (surah/range) for session restore.
@@ -266,22 +262,20 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
 /// Persisted Hadith screen UI state.
 @riverpod
 @JsonPersist()
-class HadithScreenSettingsNotifier extends _$HadithScreenSettingsNotifier
-    with SidePanelSettingsMixin<HadithScreenState> {
+class HadithScreenSettingsNotifier extends _$HadithScreenSettingsNotifier {
   @override
-  Future<HadithScreenState> build() async {
-    await ref.watch(stateSettingsLegacyMigrationProvider.future);
+  Future<HadithPersistedSettings> build() async {
     await persist(
       ref.read(settingsStorageProvider),
       options: const StorageOptions(
         cacheTime: StorageCacheTime.unsafe_forever,
       ),
     ).future;
-    return state.value ?? HadithScreenState.initial();
+    return state.value ?? HadithPersistedSettings.initial();
   }
 
   void _update(
-    HadithScreenState Function(HadithScreenState) fn,
+    HadithPersistedSettings Function(HadithPersistedSettings) fn,
     String field,
   ) {
     if (!state.hasValue) return;
@@ -296,25 +290,23 @@ class HadithScreenSettingsNotifier extends _$HadithScreenSettingsNotifier
   void setActiveTab(HadithPanelTab tab) =>
       _update((s) => s.copyWith(activeTab: tab), 'Hadith tab');
 
-  /// Sets the hadith filters.
-  void setFilters(HadithFilters filters) =>
-      _update((s) => s.copyWith(filters: filters), 'Hadith filters');
+  /// Sets the side panel width ratio (0..1).
+  void setSidePanelRatio(double ratio) =>
+      _update((s) => s.copyWith(sidePanelRatio: ratio), 'Side panel ratio');
 
-  @override
-  void updateSidePanelSetting(
-    HadithScreenState Function(HadithScreenState) transform,
-    String logField,
-  ) => _update(transform, logField);
+  /// Sets whether the side panel is collapsed.
+  void setSidePanelCollapsed({required bool collapsed}) => _update(
+    (s) => s.copyWith(sidePanelCollapsed: collapsed),
+    'Side panel collapsed',
+  );
 }
 
 /// Persisted Muslim Fortress screen UI state.
 @riverpod
 @JsonPersist()
-class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier
-    with SidePanelSettingsMixin<FortressScreenState> {
+class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier {
   @override
   Future<FortressScreenState> build() async {
-    await ref.watch(stateSettingsLegacyMigrationProvider.future);
     await persist(
       ref.read(settingsStorageProvider),
       options: const StorageOptions(
@@ -360,11 +352,15 @@ class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier
     );
   }, 'Fortress default bookmarks');
 
-  @override
-  void updateSidePanelSetting(
-    FortressScreenState Function(FortressScreenState) transform,
-    String logField,
-  ) => _update(transform, logField);
+  /// Sets the side panel width ratio (0..1).
+  void setSidePanelRatio(double ratio) =>
+      _update((s) => s.copyWith(sidePanelRatio: ratio), 'Side panel ratio');
+
+  /// Sets whether the side panel is collapsed.
+  void setSidePanelCollapsed({required bool collapsed}) => _update(
+    (s) => s.copyWith(sidePanelCollapsed: collapsed),
+    'Side panel collapsed',
+  );
 }
 
 /// Persisted settings screen tab selection.
@@ -373,7 +369,6 @@ class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier
 class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
   @override
   Future<SettingsScreenState> build() async {
-    await ref.watch(stateSettingsLegacyMigrationProvider.future);
     await persist(
       ref.read(settingsStorageProvider),
       options: const StorageOptions(
@@ -396,8 +391,8 @@ class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
   }
 
   /// Sets the active settings tab.
-  void setActiveDestination(SettingsDestination destination) => _update(
-    (s) => s.copyWith(activeTabKey: destination.labelKey),
+  void setActiveTabKey(String tabKey) => _update(
+    (s) => s.copyWith(activeTabKey: tabKey),
     'Settings tab',
   );
 }

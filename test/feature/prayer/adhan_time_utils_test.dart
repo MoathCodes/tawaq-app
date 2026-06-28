@@ -1,5 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
 
 void main() {
@@ -117,8 +118,8 @@ void main() {
       );
     });
 
-    test('adhanDayKey is stable per calendar day', () {
-      expect(adhanDayKey(DateTime(2026, 6, 9)), 20260609);
+    test('calendarDayKeyFromDate is stable per calendar day', () {
+      expect(calendarDayKeyFromDate(DateTime(2026, 6, 9)), 20260609);
     });
   });
 }

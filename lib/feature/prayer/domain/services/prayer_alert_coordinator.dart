@@ -2,11 +2,15 @@ import 'dart:async';
 
 import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 
 /// Reports a non-fatal error from the alert pipeline.
 typedef AlertErrorSink =
     void Function(String message, Object error, StackTrace stack);
+
+/// In-flight alert identity used to prevent iqamah from overlapping adhan.
+typedef _AlertFlight = ({PrayerAlertKind kind, String prayer});
 
 /// Coordinates prayer alert delivery across a set of [PrayerAlertChannel]s.
 ///
@@ -26,20 +30,29 @@ class PrayerAlertCoordinator {
   PrayerAlertCoordinator({
     required this._channels,
     required this._playbackStream,
+    required this._soundSafetyCap,
+    PlaybackState Function()? currentPlayback,
     this._onError,
+    this.onFinished,
     this.notifyOnlyTimeout = const Duration(seconds: 30),
-    this.soundSafetyCap = const Duration(minutes: 6),
-  });
+  }) : _currentPlayback = currentPlayback;
 
   final List<PrayerAlertChannel> _channels;
   final Stream<PlaybackState> _playbackStream;
+  final PlaybackState Function()? _currentPlayback;
   final AlertErrorSink? _onError;
+
+  /// Called once when an alert finishes, errors, or is force-stopped.
+  final void Function()? onFinished;
 
   /// Auto-dismiss delay for notify-only (silent) alerts.
   final Duration notifyOnlyTimeout;
 
   /// Hard ceiling guarding against a stuck/never-completing sound.
-  final Duration soundSafetyCap;
+  final Duration _soundSafetyCap;
+
+  /// Currently in-flight alert, if any.
+  final Set<_AlertFlight> _inFlight = {};
 
   Future<void> _queue = Future<void>.value();
   int _generation = 0;
@@ -83,9 +96,22 @@ class PrayerAlertCoordinator {
 
   Future<void> _deliver(PrayerAlertEvent event) async {
     if (_disposed) return;
+
+    final prayerKey = event.prayer.name;
+    if (event.kind == PrayerAlertKind.iqamah &&
+        _inFlight.any(
+          (flight) => flight.kind == PrayerAlertKind.adhan &&
+              flight.prayer == prayerKey,
+        )) {
+      return;
+    }
+
     final generation = ++_generation;
     await _teardown();
+    _inFlight.clear();
     if (_disposed || generation != _generation) return;
+
+    _inFlight.add((kind: event.kind, prayer: prayerKey));
 
     for (final channel in _channels) {
       if (_disposed || generation != _generation) {
@@ -123,17 +149,36 @@ class PrayerAlertCoordinator {
   }
 
   /// Auto-finishes when playback ends, errors, or exceeds the safety cap.
+  ///
+  /// Waits through [PlaybackLoading] and [PlaybackBuffering]. Treats
+  /// [PlaybackError] as completion, and treats [PlaybackIdle] as completion
+  /// only after at least one [PlaybackPlaying] has been seen, so the initial
+  /// idle state before playback starts does not prematurely finish the alert.
   void _watchPlaybackCompletion(int generation) {
     if (_disposed || generation != _generation) return;
-    var started = false;
+    var sawPlaying = _currentPlayback?.call() is PlaybackPlaying;
     _playbackSub = _playbackStream.listen((playback) {
       if (_disposed || generation != _generation) return;
-      if (playback is PlaybackPlaying) started = true;
-      if (playback is PlaybackError || (playback is PlaybackIdle && started)) {
+
+      if (playback is PlaybackPlaying) {
+        sawPlaying = true;
+        return;
+      }
+      if (playback is PlaybackLoading || playback is PlaybackBuffering) {
+        return;
+      }
+      if (playback is PlaybackError) {
+        _scheduleFinish(generation);
+        return;
+      }
+      if (playback is PlaybackIdle && sawPlaying) {
         _scheduleFinish(generation);
       }
     });
-    _finishTimer = Timer(soundSafetyCap, () => _scheduleFinish(generation));
+    _finishTimer = Timer(
+      _soundSafetyCap,
+      () => _scheduleFinish(generation),
+    );
   }
 
   void _scheduleFinish(int generation) {
@@ -144,7 +189,9 @@ class PrayerAlertCoordinator {
   Future<void> _finish(int generation) async {
     if (_disposed || generation != _generation) return;
     await _teardown();
+    _inFlight.clear();
     if (_disposed || generation != _generation) return;
+    onFinished?.call();
   }
 
   /// Cancels the active timers, the playback listener, and every channel.

@@ -101,20 +101,6 @@ class HadithRepository {
     );
   }
 
-  /// Runs the fast hadith search endpoint.
-  Future<ApiResponse<List<Hadith>>> searchFast(
-    HadithSearchParams params,
-  ) async {
-    const logPrefix = '[HadithRepository.searchFast] ';
-    try {
-      _log.d('$logPrefix query="${params.value}" page=${params.page}');
-      return await _client.searchHadith(params);
-    } catch (e, stackTrace) {
-      _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
-      rethrow;
-    }
-  }
-
   /// Runs the detailed hadith search endpoint.
   Future<ApiResponse<List<DetailedHadith>>> searchDetailed(
     HadithSearchParams params,
@@ -158,5 +144,61 @@ class HadithRepository {
   /// Searches rawi entries in the remote hadith API.
   Future<List<RawiItem>> searchRawi(String query) async {
     return _client.searchRawi(query);
+  }
+
+  /// Resolves a hadith into its detailed record.
+  Future<DetailedHadith?> resolveDetails(Hadith hadith) async {
+    final params = HadithSearchParams(
+      value: hadith.hadith,
+      searchMethod: SearchMethod.exactMatch,
+    );
+
+    final response = await searchDetailed(params);
+    if (response.data.isEmpty) return null;
+
+    final normalizedText = hadith.hadith.trim();
+    for (final candidate in response.data) {
+      if (candidate.hadith.trim() == normalizedText &&
+          candidate.rawi == hadith.rawi &&
+          candidate.mohdith == hadith.mohdith) {
+        return candidate;
+      }
+    }
+
+    return response.data.first;
+  }
+
+  /// Toggles the bookmarked state of a hadith.
+  Future<void> toggleFavorite(HadithBase hadith) async {
+    const logPrefix = '[HadithRepository.toggleFavorite] ';
+    try {
+      final key = favoriteKeyFromHadith(hadith);
+      final isFavorite = await isFavoriteByKey(key);
+      if (isFavorite) {
+        await deleteFavorite(key);
+        return;
+      }
+
+      if (hadith is DetailedHadith) {
+        await createFavorite(hadith);
+        return;
+      }
+
+      if (hadith is Hadith) {
+        final resolved = await resolveDetails(hadith);
+        if (resolved == null) {
+          throw StateError('Unable to resolve hadith details for bookmarking');
+        }
+        await createFavorite(resolved);
+        return;
+      }
+
+      throw StateError(
+        'Unsupported hadith type for bookmarking: ${hadith.runtimeType}',
+      );
+    } catch (e, stackTrace) {
+      _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
+      rethrow;
+    }
   }
 }

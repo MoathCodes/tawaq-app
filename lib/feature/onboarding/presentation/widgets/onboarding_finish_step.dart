@@ -5,7 +5,6 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/date_formatter.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
-import 'package:tawaq/feature/onboarding/presentation/widgets/onboarding_step_shell.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -22,70 +21,44 @@ class OnboardingFinishStep extends ConsumerWidget {
     final dayAsync = ref.watch(prayerDayProvider);
     final formatter = ref.watch(timeFormatterProvider);
 
-    return OnboardingStepShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppSpacing.lg,
-        children: [
-          Column(
+    return dayAsync.when(
+      loading: () => const Center(child: FCircularProgress.loader()),
+      error: (_, _) => FAlert(
+        icon: const Icon(FLucideIcons.triangleAlert),
+        title: Text(l10n.onboardingFinishPreviewUnavailable),
+      ),
+      data: (snapshot) {
+        final prayers = <Prayer>[
+          Prayer.fajr,
+          Prayer.dhuhr,
+          Prayer.asr,
+          Prayer.maghrib,
+          Prayer.isha,
+        ];
+
+        return StaticCard(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: AppSpacing.sm,
             children: [
               Text(
-                l10n.onboardingFinishTitle,
-                style: theme.typography.body.lg.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                l10n.onboardingFinishSubtitle,
+                l10n.todaysSchedule,
                 style: theme.typography.body.sm.copyWith(
+                  fontWeight: FontWeight.w600,
                   color: theme.colors.mutedForeground,
                 ),
               ),
+              for (final prayer in prayers)
+                _PrayerPreviewRow(
+                  label: prayer.getLocaleName(l10n),
+                  time: formatter.format(
+                    snapshot.today.timeForPrayer(prayer),
+                  ),
+                ),
             ],
           ),
-          dayAsync.when(
-            loading: () => const Center(child: FCircularProgress.loader()),
-            error: (_, _) => FAlert(
-              icon: const Icon(FLucideIcons.triangleAlert),
-              title: Text(l10n.onboardingFinishPreviewUnavailable),
-            ),
-            data: (snapshot) {
-              final prayers = <Prayer>[
-                Prayer.fajr,
-                Prayer.dhuhr,
-                Prayer.asr,
-                Prayer.maghrib,
-                Prayer.isha,
-              ];
-
-              return StaticCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: AppSpacing.sm,
-                  children: [
-                    Text(
-                      l10n.todaysSchedule,
-                      style: theme.typography.body.sm.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colors.mutedForeground,
-                      ),
-                    ),
-                    for (final prayer in prayers)
-                      _PrayerPreviewRow(
-                        label: prayer.getLocaleName(l10n),
-                        time: formatter.format(
-                          snapshot.today.timeForPrayer(prayer),
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

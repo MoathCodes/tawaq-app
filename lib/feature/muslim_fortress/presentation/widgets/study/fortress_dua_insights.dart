@@ -10,36 +10,25 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_nav_controls.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_commentary_text.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_study_section_header.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 String _fortressStudyLabel(
   FortressDuaItem dua,
-  AppLocalizations l10n,
-) {
+  AppLocalizations l10n, {
+  bool forDialog = false,
+}) {
   if (dua.studySectionLabels(l10n).length > 1) {
     return l10n.fortressShowDetails;
   }
   return switch (dua) {
-    _ when dua.hasSharh => l10n.fortressShowSharh,
-    _ when dua.hasSource => l10n.fortressShowSource,
-    _ when dua.hasHadith => l10n.fortressRelatedHadith,
-    _ when dua.hasBenefit => l10n.fortressBenefit,
-    _ => l10n.fortressShowDetails,
-  };
-}
-
-String _fortressStudyDialogTitle(
-  FortressDuaItem dua,
-  AppLocalizations l10n,
-) {
-  final sections = dua.studySectionLabels(l10n);
-  if (sections.length > 1) return l10n.fortressShowDetails;
-  return switch (dua) {
-    _ when dua.hasSharh => l10n.fortressSharh,
-    _ when dua.hasSource => l10n.fortressSourceReference,
+    _ when dua.hasSharh =>
+      forDialog ? l10n.fortressSharh : l10n.fortressShowSharh,
+    _ when dua.hasSource =>
+      forDialog ? l10n.fortressSourceReference : l10n.fortressShowSource,
     _ when dua.hasHadith => l10n.fortressRelatedHadith,
     _ when dua.hasBenefit => l10n.fortressBenefit,
     _ => l10n.fortressShowDetails,
@@ -67,7 +56,7 @@ Future<void> showFortressStudySheet(
       return FDialog(
       style: style,
       animation: animation,
-      title: Text(_fortressStudyDialogTitle(dua, l10n)),
+      title: Text(_fortressStudyLabel(dua, l10n, forDialog: true)),
       body: ConstrainedBox(
         constraints: constraints,
         child: DesktopSelectionArea(
@@ -182,35 +171,6 @@ class FortressDuaStudyNavAction extends StatelessWidget {
   }
 }
 
-/// Outline study button for inline list expansion (category cards).
-class FortressDuaStudyButton extends StatelessWidget {
-  /// Creates a study button.
-  const FortressDuaStudyButton({required this.dua, super.key});
-
-  final FortressDuaItem dua;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!dua.hasStudyContent) {
-      return const SizedBox.shrink();
-    }
-
-    final l10n = context.l10n;
-    return Center(
-      child: IntrinsicWidth(
-        child: NonSelectable(
-          child: FButton(
-            variant: .outline,
-            onPress: () => unawaited(showFortressStudySheet(context, dua)),
-            prefix: const Icon(FLucideIcons.bookOpenText, size: 18),
-            child: Text(_fortressStudyLabel(dua, l10n)),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// Always-visible الفضل line (focus reading footer).
 class FortressDuaVirtueLine extends StatelessWidget {
   /// Creates a virtue line.
@@ -264,79 +224,6 @@ class FortressDuaSourceLine extends StatelessWidget {
   }
 }
 
-/// Opens sharh / virtue / supplements on demand ([useSheet]) or inline expand.
-class FortressDuaStudyAccess extends HookWidget {
-  /// Creates study access controls.
-  const FortressDuaStudyAccess({
-    required this.dua,
-    this.useSheet = false,
-    super.key,
-  });
-
-  /// The dhikr item.
-  final FortressDuaItem dua;
-
-  /// When true, content opens in a dialog (focus mode). Otherwise expands inline.
-  final bool useSheet;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final expanded = useState(false);
-
-    if (!dua.hasStudyContent) {
-      return const SizedBox.shrink();
-    }
-
-    final isOpen = !useSheet && expanded.value;
-    final label = isOpen
-        ? l10n.fortressHideDetails
-        : _fortressStudyLabel(dua, l10n);
-    final actionIcon = isOpen
-        ? FLucideIcons.chevronUp
-        : FLucideIcons.bookOpenText;
-
-    void openStudy() {
-      if (useSheet) {
-        unawaited(showFortressStudySheet(context, dua));
-        return;
-      }
-      expanded.value = !expanded.value;
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Center(
-          child: IntrinsicWidth(
-            child: NonSelectable(
-              child: FButton(
-                variant: .outline,
-                onPress: openStudy,
-                prefix: Icon(actionIcon, size: 18),
-                child: Text(label),
-              ),
-            ),
-          ),
-        ),
-        if (!useSheet)
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 220),
-            crossFadeState: expanded.value
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.lg),
-              child: FortressDuaStudyContent(dua: dua, compact: true),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
 /// Sharh-first study body (used in sheet or inline expansion).
 class FortressDuaStudyContent extends HookConsumerWidget {
   /// Creates study content.
@@ -354,35 +241,6 @@ class FortressDuaStudyContent extends HookConsumerWidget {
     return scale.copyWith(
       color: colors.foreground,
       height: 1.75,
-    );
-  }
-
-  Widget _sectionLabel(
-    FColors colors,
-    FTypography typography,
-    IconData icon,
-    String title, {
-    bool prominent = false,
-  }) {
-    return Semantics(
-      header: true,
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: prominent ? 20 : 16,
-            color: prominent ? colors.primary : colors.mutedForeground,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            title,
-            style: (prominent ? typography.body.md : typography.body.sm).copyWith(
-              fontWeight: FontWeight.w700,
-              color: prominent ? colors.primary : colors.foreground,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -431,11 +289,9 @@ class FortressDuaStudyContent extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (hasSharh) ...[
-          _sectionLabel(
-            colors,
-            typography,
-            FLucideIcons.bookOpenText,
-            l10n.fortressSharh,
+          FortressStudySectionHeader(
+            icon: FLucideIcons.bookOpenText,
+            title: l10n.fortressSharh,
             prominent: true,
           ),
           SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
@@ -452,11 +308,9 @@ class FortressDuaStudyContent extends HookConsumerWidget {
         ),
         if (dua.hasSource) ...[
           SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
-          _sectionLabel(
-            colors,
-            typography,
-            FLucideIcons.bookMarked,
-            l10n.fortressSourceReference,
+          FortressStudySectionHeader(
+            icon: FLucideIcons.bookMarked,
+            title: l10n.fortressSourceReference,
           ),
           const SizedBox(height: AppSpacing.sm),
           FortressDuaSourceLine(reference: source!),
@@ -464,22 +318,6 @@ class FortressDuaStudyContent extends HookConsumerWidget {
       ],
     );
   }
-}
-
-/// Legacy wrapper — prefer [FortressDuaVirtueLine] + [FortressDuaStudyAccess].
-@Deprecated('Use FortressDuaVirtueLine and FortressDuaStudyAccess')
-class FortressDuaInsights extends StatelessWidget {
-  const FortressDuaInsights({
-    required this.dua,
-    this.compact = false,
-    super.key,
-  });
-
-  final FortressDuaItem dua;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) => FortressDuaStudyAccess(dua: dua);
 }
 
 /// Hadith and benefit supplements — tabbed only when both are present.
@@ -494,35 +332,10 @@ class _FortressSecondaryInsights extends HookWidget {
   final String? benefit;
   final TextStyle proseStyle;
 
-  Widget _sectionLabel(
-    FColors colors,
-    FTypography typography,
-    IconData icon,
-    String title,
-  ) {
-    return Semantics(
-      header: true,
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: colors.mutedForeground),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            title,
-            style: typography.body.sm.copyWith(
-              fontWeight: FontWeight.w600,
-              color: colors.foreground,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final colors = theme.colors;
-    final typography = theme.typography;
     final l10n = context.l10n;
     final tabIndex = useState(0);
 
@@ -603,7 +416,10 @@ class _FortressSecondaryInsights extends HookWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _sectionLabel(colors, typography, singleIcon, singleTitle),
+          FortressStudySectionHeader(
+            icon: singleIcon,
+            title: singleTitle,
+          ),
           const SizedBox(height: AppSpacing.md),
           body(singleText),
         ],

@@ -15,11 +15,11 @@ import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_thikr_body.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_favorite_toggle.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_dua_content.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -28,7 +28,9 @@ class FortressCategoryDetailView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final category = ref.watch(fortressSelectedCategoryProvider);
+    final category = ref.watch(
+      fortressScreenControllerProvider.select((s) => s.selectedCategory),
+    );
     if (category == null) return const SizedBox.shrink();
 
     final l10n = context.l10n;
@@ -72,7 +74,9 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final favoriteChapterIds = ref.watch(
-      fortressUiStateProvider.select((state) => state.favoriteChapterIds),
+      fortressScreenSettingsProvider.select(
+        (v) => v.asData?.value.favoriteChapterIds ?? const [],
+      ),
     );
     final isFavorite = favoriteChapterIds.contains(category.chapterId);
     final controller = ref.read(fortressScreenControllerProvider.notifier);
@@ -105,27 +109,9 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
                     ),
                   ),
                 ),
-                MouseClick(
-                  onClick: toggleFavorite,
-                  semanticsLabel: l10n.fortressFavorites,
-                  child: FTooltip(
-                    tipBuilder: (_, _) => Text(l10n.fortressFavorites),
-                    child: FortressExcludeDecorative(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.xs),
-                        child: Icon(
-                          isFavorite
-                              ? FLucideIcons.bookmarkCheck
-                              : FLucideIcons.bookmark,
-                          size: 22,
-                          color: isFavorite
-                              ? theme.colors.primary
-                              : theme.colors.mutedForeground,
-                          fill: isFavorite ? 1.0 : 0.0,
-                        ),
-                      ),
-                    ),
-                  ),
+                FortressFavoriteToggle(
+                  chapterId: category.chapterId,
+                  iconSize: 22,
                 ),
               ],
             ),
@@ -287,15 +273,12 @@ class FortressDuaPreviewCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              FortressThikrPreview(dua: dua, isExpanded: isExpanded),
-              if (isExpanded && dua.hasVirtue) ...[
-                const SizedBox(height: AppSpacing.md),
-                FortressDuaVirtueLine(virtue: dua.virtue!),
-              ],
-              if (isExpanded && dua.hasStudyContent) ...[
-                const SizedBox(height: AppSpacing.lg),
-                FortressDuaStudyContent(dua: dua, compact: true),
-              ],
+              FortressDuaContent(
+                dua: dua,
+                mode: isExpanded
+                    ? FortressDuaContentMode.previewExpanded
+                    : FortressDuaContentMode.previewCollapsed,
+              ),
             ],
           ),
         ),

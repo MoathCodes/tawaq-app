@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
@@ -11,25 +10,36 @@ import 'package:tawaq/core/widgets/page_shell/shell_shortcut_scope.dart';
 import 'package:tawaq/core/widgets/page_shell/shell_sidebar.dart';
 import 'package:tawaq/core/widgets/page_shell/title_bar_drag_area.dart';
 import 'package:tawaq/core/widgets/window_controls.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/adhan/adhan_alert_toast_listener.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_drawer.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport.dart';
 
 /// The main shell of the application.
 ///
-/// This widget is responsible for displaying the
-///  main layout of the application,
-/// including the app bar, sidebar, and bottom navigation bar.
-class PageShell extends ConsumerWidget {
+/// Layout-only chrome: sidebar, title bar, bottom nav, and content area.
+/// Feature-specific widgets (recitation transport, toasts, overlays) are injected
+/// via [titleBarCenter], [contentWrapper], and [contentOverlay].
+class PageShell extends StatelessWidget {
   /// Creates a new instance of [PageShell].
-  const PageShell({required this.child, super.key});
+  const PageShell({
+    required this.child,
+    this.titleBarCenter = const SizedBox.shrink(),
+    this.contentWrapper,
+    this.contentOverlay = const SizedBox.shrink(),
+    super.key,
+  });
 
   /// The child to display in the shell.
   final Widget child;
 
+  /// Optional widget centered in the title bar (e.g. recitation transport).
+  final Widget titleBarCenter;
+
+  /// Optional wrapper around route content (e.g. toast listeners).
+  final Widget Function(Widget child)? contentWrapper;
+
+  /// Optional overlay stacked above the content area (e.g. recitation drawer).
+  final Widget contentOverlay;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final isMobile = isLessThan(context, FBreakpoint.sm);
     final colors = context.theme.colors;
     final borderWidth = context.theme.style.borderWidth;
@@ -47,6 +57,8 @@ class PageShell extends ConsumerWidget {
     // Reserve space on each side so the centered transport never overlaps the
     // window controls or shell action clusters.
     const titleBarSideReserve = 200.0;
+
+    final wrappedChild = contentWrapper?.call(child) ?? child;
 
     return Column(
       crossAxisAlignment: .stretch,
@@ -87,7 +99,7 @@ class PageShell extends ConsumerWidget {
                         constraints: BoxConstraints(
                           maxWidth: maxTransportWidth,
                         ),
-                        child: const RecitationTransport(),
+                        child: titleBarCenter,
                       ),
                     ],
                   ),
@@ -97,14 +109,9 @@ class PageShell extends ConsumerWidget {
           ),
         ),
         Expanded(
-          // The recitation drawer overlays the content (below the title bar)
-          // so the full player drops down from the transport on any screen.
           child: Stack(
             children: [
               FScaffold(
-                // The sidebar adopts the same chrome surface as the title bar;
-                // the content keeps `background`. Forui's sidebar already draws
-                // a trailing hairline, completing the two sleek dividers.
                 scaffoldStyle: FScaffoldStyleDelta.delta(
                   sidebarBackgroundColor: colors.card,
                   childPadding: const .value(.zero),
@@ -115,17 +122,11 @@ class PageShell extends ConsumerWidget {
                 footer: isMobile
                     ? const NonSelectable(child: ShellBottomNavigationBar())
                     : null,
-                // RepaintBoundary prevents child from rebuilding when the
-                // sidebar changes.
                 child: RepaintBoundary(
-                  child: RecitationErrorToastListener(
-                    child: AdhanAlertToastListener(
-                      child: ShellShortcutScope(child: child),
-                    ),
-                  ),
+                  child: ShellShortcutScope(child: wrappedChild),
                 ),
               ),
-              const Positioned.fill(child: RecitationDrawerOverlay()),
+              Positioned.fill(child: contentOverlay),
             ],
           ),
         ),

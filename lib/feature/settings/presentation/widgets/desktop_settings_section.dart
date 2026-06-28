@@ -43,52 +43,50 @@ class DesktopSettingsSection extends ConsumerWidget {
     return SettingsSection(
       title: l10n.desktopSectionTitle,
       subtitle: l10n.desktopSectionSubtitle,
-      child: FCard(
-        child: Column(
-          spacing: AppSpacing.md,
-          children: [
-            NonSelectable(
-              child: FSwitch(
-                enabled: ready,
-                value: settings?.launchAtLogin ?? false,
-                onChange: (value) => unawaited(
-                  _handleLaunchAtLoginChange(context, ref, value),
-                ),
-                label: Text(l10n.desktopLaunchAtLogin),
+      child: Column(
+        spacing: AppSpacing.md,
+        children: [
+          NonSelectable(
+            child: FSwitch(
+              enabled: ready,
+              value: settings?.launchAtLogin ?? false,
+              onChange: (value) => unawaited(
+                _handleLaunchAtLoginChange(context, ref, value),
               ),
+              label: Text(l10n.desktopLaunchAtLogin),
             ),
-            NonSelectable(
-              child: FSwitch(
-                enabled: ready,
-                value: settings?.minimizeToTrayOnClose ?? true,
-                onChange: (value) => ref
-                    .read(desktopSettingsProvider.notifier)
-                    .setMinimizeToTrayOnClose(value: value),
-                label: Text(l10n.desktopMinimizeToTrayOnClose),
-              ),
+          ),
+          NonSelectable(
+            child: FSwitch(
+              enabled: ready,
+              value: settings?.minimizeToTrayOnClose ?? true,
+              onChange: (value) => ref
+                  .read(desktopSettingsProvider.notifier)
+                  .setMinimizeToTrayOnClose(value: value),
+              label: Text(l10n.desktopMinimizeToTrayOnClose),
             ),
-            NonSelectable(
-              child: FSwitch(
-                enabled: ready,
-                value: settings?.minimizeToTray ?? false,
-                onChange: (value) => ref
-                    .read(desktopSettingsProvider.notifier)
-                    .setMinimizeToTray(value: value),
-                label: Text(l10n.desktopMinimizeToTray),
-              ),
+          ),
+          NonSelectable(
+            child: FSwitch(
+              enabled: ready,
+              value: settings?.minimizeToTray ?? false,
+              onChange: (value) => ref
+                  .read(desktopSettingsProvider.notifier)
+                  .setMinimizeToTray(value: value),
+              label: Text(l10n.desktopMinimizeToTray),
             ),
-            NonSelectable(
-              child: FSwitch(
-                enabled: ready,
-                value: settings?.launchToTray ?? false,
-                onChange: (value) => ref
-                    .read(desktopSettingsProvider.notifier)
-                    .setLaunchToTray(value: value),
-                label: Text(l10n.desktopLaunchToTray),
-              ),
+          ),
+          NonSelectable(
+            child: FSwitch(
+              enabled: ready,
+              value: settings?.launchToTray ?? false,
+              onChange: (value) => ref
+                  .read(desktopSettingsProvider.notifier)
+                  .setLaunchToTray(value: value),
+              label: Text(l10n.desktopLaunchToTray),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

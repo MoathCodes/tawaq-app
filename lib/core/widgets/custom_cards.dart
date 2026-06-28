@@ -16,6 +16,7 @@ class HoverCard extends HookWidget {
     super.key,
     this.padding,
     this.enableHoverEffect = true,
+    this.onPress,
     this.borderRadius,
     this.borderColor,
     this.activeBorderColor,
@@ -28,6 +29,9 @@ class HoverCard extends HookWidget {
 
   /// Whether the hover transition should be enabled.
   final bool enableHoverEffect;
+
+  /// Optional press handler; when set the card becomes interactive.
+  final VoidCallback? onPress;
 
   /// Optional inner padding.
   final EdgeInsets? padding;
@@ -57,10 +61,15 @@ class HoverCard extends HookWidget {
         ? BorderRadius.circular(borderRadius!)
         : theme.radii.xl;
 
+    final interactive = onPress != null;
+
     return MouseClick(
-      disabled: !enableHoverEffect,
+      disabled: !enableHoverEffect && !interactive,
+      onClick: onPress,
       semanticsLabel: semanticsLabel,
-      onHoverChange: (hovering) => setHovered(value: hovering),
+      onHoverChange: enableHoverEffect
+          ? (hovering) => setHovered(value: hovering)
+          : null,
       child: AnimatedContainer(
         duration: _kAnimDuration,
         curve: Curves.easeOutCubic,

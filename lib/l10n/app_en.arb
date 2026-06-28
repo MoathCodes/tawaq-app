@@ -1,17 +1,54 @@
 {
   "@@locale": "en",
-  "menuOpen": "Open",
-  "menuCopyText": "Copy text",
-  "menuAddBookmark": "Add bookmark",
-  "menuRemoveBookmark": "Remove bookmark",
-  "menuAddFavorite": "Add to favorites",
-  "menuRemoveFavorite": "Remove from favorites",
-  "hadithCopied": "Hadith copied",
-  "fortressDhikrCopied": "Dhikr copied",
+  "a11yExpandSidebar": "Expand sidebar",
+  "a11yNavigationUnavailable": "Unavailable",
+  "a11yOpenLocationSettings": "Open location settings",
+  "a11ySettingsDecreaseIqamah": "Decrease {prayer} iqamah minutes",
+  "@a11ySettingsDecreaseIqamah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "a11ySettingsIncreaseIqamah": "Increase {prayer} iqamah minutes",
+  "@a11ySettingsIncreaseIqamah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "a11ySettingsResetIqamah": "Reset {prayer} iqamah to default",
+  "@a11ySettingsResetIqamah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "a11ySwitchToDarkTheme": "Switch to dark theme",
+  "a11ySwitchToLightTheme": "Switch to light theme",
+  "a11yWindowClose": "Close window",
+  "a11yWindowMaximize": "Maximize window",
+  "a11yWindowMinimize": "Minimize window",
+  "a11yWindowRestore": "Restore window",
   "about": "About",
   "addReflection": "Add a reflection...",
   "adhan": "Adhan",
   "adhanAdjustments": "Adhan adjustments (minutes)",
+  "adhanAlertPositionCenter": "Center",
+  "adhanAlertPositionLabel": "Alert position",
+  "adhanAlertPositionTopEnd": "Top right",
+  "adhanAlertPositionTopStart": "Top left",
+  "adhanAlertTitle": "Adhan — {prayer}",
+  "@adhanAlertTitle": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
   "adhanHoursAgo": "{hours} hours ago",
   "@adhanHoursAgo": {
     "placeholders": {
@@ -48,17 +85,53 @@
       }
     }
   },
+  "adhanMuezzinAbedAlbasaei": "Abed Al-Basaei",
+  "adhanMuezzinAhmadNufais": "Ahmad Nufais",
+  "adhanMuezzinGhaziAlSaadoni": "Ghazi Al-Saadoni",
+  "adhanMuezzinHamadDeghreri": "Hamad Deghreri",
+  "adhanMuezzinHamdanAlMalki": "Hamdan Al-Malki",
+  "adhanMuezzinIbrahimAlArkani": "Ibrahim Al-Arkani",
+  "adhanMuezzinMajedAlHamathani": "Majed Al-Hamathani",
+  "adhanMuezzinMakkah": "Makkah",
+  "adhanMuezzinMansoorAlZahrani": "Mansoor Az-Zahrani",
+  "adhanMuezzinMisharyAlafasi": "Mishary Alafasi",
+  "adhanMuezzinMohammadAlMenshawy": "Mohammad Al-Menshawy",
+  "adhanMuezzinMohammadRefat": "Mohammad Refat",
+  "adhanMuezzinNasserAlQatami": "Nasser Al-Qatami",
+  "adhanMuezzinSuhaibKhatba": "Suhaib Khatba",
+  "adhanOsNotificationBody": "Adhan is playing — tap to focus",
+  "adhanPlayingTitle": "Adhan — {prayer}",
+  "@adhanPlayingTitle": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "adhanSectionSubtitle": "Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.",
+  "adhanSectionTitle": "Adhan",
+  "adhanShowAlertLabel": "Show adhan alert",
+  "adhanShowOsNotificationLabel": "OS notification when hidden in tray",
+  "adhanSoundLabel": "Adhan sound",
+  "adhanStop": "Stop",
+  "adhanVolumeLabel": "Adhan volume",
   "advancedSettingsTitle": "Advanced Settings",
   "appearance": "Appearance",
   "appearanceSubtitle": "Customize the app's theme and colors.",
   "appName": "Tawaq",
+  "appTextSize": "App text size",
+  "appTextSizeCompact": "Compact",
+  "appTextSizeExtraLarge": "Extra large",
+  "appTextSizeLarge": "Large",
+  "appTextSizeNormal": "Default",
+  "appTextSizeShortExtraLarge": "XL",
+  "appTextSizeSubtitle": "Controls menus, labels, and other interface text.",
   "arabic": "Arabic",
   "asr": "Asr",
   "autoLocationDisabled": "Tap to enable automatic location",
   "autoLocationEnabled": "Location updates automatically",
   "autoLocationMapOverlay": "Location is updated automatically. Turn off the switch above to pick a location on the map.",
   "autoSelectOrMap": "Auto Select or Map",
-  "ayahLabel": "Ayah",
   "ayahBookmark": "Bookmark",
   "ayahCopied": "Copied {reference}",
   "@ayahCopied": {
@@ -69,6 +142,7 @@
     }
   },
   "ayahCopy": "Copy",
+  "ayahLabel": "Ayah",
   "ayahShare": "Share",
   "back": "Back",
   "basicParametersTitle": "Basic Parameters",
@@ -82,44 +156,8 @@
   "chooseLocation": "Choose Location",
   "collapse": "Collapse",
   "collapsePanel": "Collapse panel",
-  "expandPanel": "Expand panel",
   "colorTheme": "Color Theme",
   "colorThemeSubtitle": "Change the apps color themes.",
-  "typographySectionTitle": "Text & scaling",
-  "typographySectionSubtitle": "Adjust UI text size and Quran reading size separately.",
-  "appTextSize": "App text size",
-  "appTextSizeSubtitle": "Controls menus, labels, and other interface text.",
-  "scrollMoreHint": "More below",
-  "appTextSizeCompact": "Compact",
-  "appTextSizeNormal": "Default",
-  "appTextSizeLarge": "Large",
-  "appTextSizeExtraLarge": "Extra large",
-  "quranTextSize": "Quran text size",
-  "quranTextSizeSmall": "Small",
-  "quranTextSizeMedium": "Medium",
-  "quranTextSizeLarge": "Large",
-  "quranTextSizeExtraLarge": "Extra large",
-  "quranTextSizeShortExtraLarge": "XL",
-  "appTextSizeShortExtraLarge": "XL",
-  "quranTextSizePreviewLabel": "Preview",
-  "quranTextSizeIndependentNote": "Quran reading size is independent of app and system text scaling.",
-  "quranTextSizePreview": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
-  "quranAyahSearchPreviewTruncated": "{preview}...",
-  "@quranAyahSearchPreviewTruncated": {
-    "placeholders": {
-      "preview": {
-        "type": "String"
-      }
-    }
-  },
-  "quranTranslationQuoted": "\"{translation}\"",
-  "@quranTranslationQuoted": {
-    "placeholders": {
-      "translation": {
-        "type": "String"
-      }
-    }
-  },
   "completed": "Completed •",
   "completionStatus": "Completion Status",
   "coordinates": "Coordinates",
@@ -130,8 +168,16 @@
   "customParametersTitle": "Custom Parameters",
   "daily": "Daily",
   "dark": "Dark",
+  "decimalPlaceholder": "0.0",
   "defaultLocation": "Default location",
   "defaultSurahName": "Al-Fatihah",
+  "desktopLaunchAtLogin": "Start at login",
+  "desktopLaunchAtLoginHint": "Start hidden in tray was also enabled so adhan alerts work after login.",
+  "desktopLaunchToTray": "Start hidden in tray",
+  "desktopMinimizeToTray": "Hide to tray when minimizing",
+  "desktopMinimizeToTrayOnClose": "Hide to tray when closing the window",
+  "desktopSectionSubtitle": "System tray, window behaviour, and startup on desktop.",
+  "desktopSectionTitle": "Desktop",
   "detectTimezone": "Detect timezone",
   "detectTimezoneNotImplemented": "Timezone detection is not implemented here.",
   "deviceLocationNotImplemented": "Using device location is not implemented here.",
@@ -145,7 +191,6 @@
   "english": "English",
   "englishLanguage": "English",
   "errorLoadingTafsir": "Error loading tafsir",
-  "tafsirTextMayBeIncomplete": "This commentary may be cut off in the source text.",
   "errorLoadingTranslation": "Error loading translation",
   "errorNotFoundPage": "we couldn't find this page please make sure you entered the correct url.",
   "errorOccurredWhile": "Error Occurred While {whileError}",
@@ -158,20 +203,111 @@
   },
   "errorUpdatingLocationDescription": "Your coordinates were updated successfully, but we couldn't get your location name. This won't affect the app's functionality.",
   "errorUpdatingLocationTitle": "Error occurred while updating location",
+  "expandPanel": "Expand panel",
   "fajr": "Fajir",
   "fajrAngleLabel": "Fajr Angle (°)",
   "footnote": "Footnote",
+  "fortressAllChapters": "All adhkar",
+  "fortressBenefit": "Benefit",
+  "fortressBrowseWeakHadith": "Weak & fabricated hadiths",
+  "fortressCompleted": "Completed",
+  "fortressDhikrCopied": "Dhikr copied",
+  "fortressEmptyFavoritesHint": "Tap the bookmark icon next to any section to add it here",
+  "fortressEmptyFavoritesTitle": "No favorite sections yet",
+  "fortressEmptySearchHint": "Try different search terms",
+  "fortressEmptySearchTitle": "No search results",
+  "fortressFakeHadithGuide": "Weak & fabricated hadith guide",
+  "fortressFakeHadithIntro": "Reference list from Hisn al-Muslim of hadiths scholars warn against.",
+  "fortressFavorites": "Favorites",
+  "fortressFilterAuthenticity": "Filter by grading",
+  "fortressFinish": "Finish",
+  "fortressHideDetails": "Hide details",
+  "fortressLoadError": "Failed to load adhkar",
+  "fortressMoreFavoriteChapters": "{count, plural, =1 {Plus 1 more chapter…} other {Plus {count} more chapters…}}",
+  "@fortressMoreFavoriteChapters": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressNoAdhkarInChapter": "No adhkar in this chapter",
+  "fortressNoFavoriteChapters": "No favorite chapters yet — bookmark one from the sidebar",
+  "fortressNoRecommendations": "No recommendations available right now",
+  "fortressNoSearchResults": "No results found",
+  "fortressPrevious": "Previous",
+  "fortressReadingHint": "Tap the dhikr to count · Swipe horizontally to navigate · Space to count",
+  "fortressReadLong": "Long reading",
+  "fortressReadMedium": "Medium reading",
+  "fortressReadShort": "Short reading",
+  "fortressRecommendedNow": "Recommended now",
+  "fortressRelatedHadith": "Related hadith",
+  "fortressRemainingCount": "{count, plural, =0 {None remaining} =1 {1 remaining} other {{count} remaining}}",
+  "@fortressRemainingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressRetry": "Retry",
+  "fortressSearchContents": "Adhkar",
+  "fortressSearchHint": "Search chapters and adhkar...",
+  "fortressSearchTitles": "Chapters",
+  "fortressSharh": "Explanation",
+  "fortressShowDetails": "Show details",
+  "fortressShowSharh": "Show explanation",
+  "fortressShowSource": "Show source",
+  "fortressSourceReference": "Source",
+  "fortressStartReading": "Start reading",
+  "fortressSupplicationCount": "{count, plural, =1 {1 dhikr} other {{count} adhkar}}",
+  "@fortressSupplicationCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressSupplicationsInSection": "{count, plural, =1 {1 dhikr in this section} other {{count} adhkar in this section}}",
+  "@fortressSupplicationsInSection": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressVirtue": "Virtue",
+  "fortressWeakHadithWarning": "Warning: this dhikr is weak or fabricated",
+  "fortressWelcomeSubtitle": "Browse chapters from the list, or start from recommendations for your time or favorites.",
+  "fortressWelcomeTitle": "Choose a chapter and begin dhikr",
   "gettingLocation": "Getting Location",
+  "goToPrayerPage": "Go to Prayer Page",
   "graphicalAnalysis": "Graphical Analysis",
   "green": "Green",
   "hadith": "Hadith",
   "hadithActiveFilters": "Active Filters",
+  "hadithAlternateHadithSahih": "Alternate Authentic Hadith",
   "hadithAlternativeAuthentic": "Alternative Authentic Narrations",
+  "hadithBackToSearch": "Back to search",
   "hadithBooks": "Books",
   "hadithClearAllFilters": "Clear all filters",
   "hadithClearAllRecents": "Clear all",
+  "hadithCopied": "Hadith copied",
+  "hadithDegreeAll": "All degrees",
+  "hadithDegreeAuthenticChain": "Chains scholars ruled authentic",
+  "hadithDegreeAuthenticHadith": "Hadiths scholars ruled authentic",
   "hadithDegrees": "Degrees",
+  "hadithDegreeWeakChain": "Chains scholars ruled weak",
+  "hadithDegreeWeakHadith": "Hadiths scholars ruled weak",
   "hadithDetailsTab": "Details",
+  "hadithFieldLabel": "{label}:",
+  "@hadithFieldLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "hadithFilterTab": "Filters",
   "hadithFoundations": "Foundations",
   "hadithGradeExplanation": "Grade Explanation",
@@ -188,17 +324,14 @@
   "hadithMuhaddith": "Muhaddith",
   "hadithNarrator": "Narrator",
   "hadithNarrators": "Narrators",
+  "hadithNoBookmarks": "No saved hadiths yet",
   "hadithNoDetailedData": "No detailed data found for this hadith",
   "hadithNoDetailsSelected": "Select a hadith from results to view details",
-  "hadithBackToSearch": "Back to search",
-  "hadithNoBookmarks": "No saved hadiths yet",
   "hadithNoMatchingResults": "No matching results found",
   "hadithNoRecentSearches": "No recent searches yet",
   "hadithOpenFilters": "Filters",
   "hadithRecentSearches": "Recent Searches",
   "hadithRelatedLinks": "Related Links",
-  "hadithSimilarHadith": "Similar Hadith",
-  "hadithAlternateHadithSahih": "Alternate Authentic Hadith",
   "hadithResetFilters": "Reset filters",
   "hadithResultsCount": "{count, plural, =0 {No results} =1 {1 result} other {{count} results}}",
   "@hadithResultsCount": {
@@ -221,19 +354,10 @@
   "hadithSearchZoneQudsi": "Qudsi hadiths",
   "hadithSearchZoneSahabaAthar": "Companion narrations",
   "hadithSearchZoneSharh": "Hadith commentaries",
-  "hadithDegreeAll": "All degrees",
-  "hadithDegreeAuthenticHadith": "Hadiths scholars ruled authentic",
-  "hadithDegreeAuthenticChain": "Chains scholars ruled authentic",
-  "hadithDegreeWeakHadith": "Hadiths scholars ruled weak",
-  "hadithDegreeWeakChain": "Chains scholars ruled weak",
-  "hadithFieldLabel": "{label}:",
-  "@hadithFieldLabel": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
+  "hadithSharh": "Explanation",
+  "hadithSimilar": "Similar Hadiths",
+  "hadithSimilarHadith": "Similar Hadith",
+  "hadithSource": "Source",
   "hadithSourceCitation": "{book} ({reference})",
   "@hadithSourceCitation": {
     "placeholders": {
@@ -245,9 +369,6 @@
       }
     }
   },
-  "hadithSharh": "Explanation",
-  "hadithSimilar": "Similar Hadiths",
-  "hadithSource": "Source",
   "hadithSpecialist": "Takhrij",
   "@hadithSpecialist": {
     "description": "Filter toggle for Dorar's specialist tab: limits results to hadiths that include takhrij in their metadata (Dorar UI label: متخصص)."
@@ -258,12 +379,21 @@
   },
   "hadithStartSearchPrompt": "Start searching to see results",
   "hadithTakhrij": "Takhrij",
-  "hadithUsulHadith": "Usul al-Hadith",
   "hadithTypeToSearch": "Type to search...",
+  "hadithUsulHadith": "Usul al-Hadith",
   "highLatitudeRule_middleOfTheNight": "Middle of the Night",
   "highLatitudeRule_seventhOfTheNight": "Seventh of the Night",
   "highLatitudeRule_twilightAngle": "Twilight Angle",
   "highLatitudeRuleLabel": "High Latitude Rule",
+  "hizbLabel": "Hizb {number}",
+  "@hizbLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "integerPlaceholder": "0",
   "invalidCoordinatesDescription": "Please enter valid latitude and longitude values.",
   "invalidCoordinatesTitle": "Invalid Coordinates",
   "invalidParametersDescription": "Please check your input values.",
@@ -282,6 +412,25 @@
   "iqamah": "Iqamah",
   "iqamahAdjustment": "Iqamah Adjustment",
   "iqamahAfterAdhan": "Iqamah (minutes after adhan)",
+  "iqamahAlertTitle": "Iqamah — {prayer}",
+  "@iqamahAlertTitle": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "iqamahMuezzinMadinah": "Madinah",
+  "iqamahMuezzinYasserAlDossari": "Yasser Al-Dossari",
+  "iqamahOsNotificationBody": "Iqamah time — tap to focus",
+  "iqamahPlayingTitle": "Iqamah — {prayer}",
+  "@iqamahPlayingTitle": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
   "iqamahSavedDescription": "Your iqamah adjustments have been saved successfully.",
   "iqamahSavedForPrayer": "Saved iqamah adjustment for {prayer}.",
   "@iqamahSavedForPrayer": {
@@ -292,6 +441,7 @@
     }
   },
   "iqamahSavedTitle": "Iqamah adjustments saved",
+  "iqamahSoundLabel": "Iqamah call",
   "iqamahSubtitleMessage": "+{iqamahMins} minutes",
   "@iqamahSubtitleMessage": {
     "placeholders": {
@@ -316,15 +466,11 @@
       }
     }
   },
-  "hizbLabel": "Hizb {number}",
-  "@hizbLabel": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "karachi": "University of Islamic Sciences, Karachi",
+  "keyboardShortcutsCategorySubtitle": "Available when using the app on desktop.",
+  "keyboardShortcutsSectionSubtitle": "Reference list of keyboard shortcuts available on desktop. Shortcuts work app-wide from any screen, including this one. They cannot be customized.",
+  "keyboardShortcutsSectionTitle": "Keyboard shortcuts",
+  "keyboardShortcutsTabTitle": "Keyboard shortcuts",
   "kuwait": "Kuwait",
   "languageLabel": "Language",
   "lastThirdOfTheNight": "Last Third Of The Night",
@@ -334,11 +480,8 @@
   "light": "Light",
   "loading": "Loading...",
   "loadingAnalytics": "Loading Analytics",
-  "loadingSchedule": "Loading schedule",
-  "prayerLocationRequiredTitle": "Set your location",
-  "prayerLocationRequiredSubtitle": "Prayer times need your coordinates. Open location settings to pick a city on the map or enter them manually.",
-  "prayerLocationRequiredAction": "Open location settings",
   "loadingLocationSettings": "Loading Location Settings",
+  "loadingSchedule": "Loading schedule",
   "locationCoordinatesLookupFailed": "Could not determine timezone from coordinates.",
   "locationNoPlaceFound": "No place found at {coordinates}.",
   "@locationNoPlaceFound": {
@@ -361,6 +504,12 @@
   "madhabLabel": "Madhab",
   "maghrib": "Maghrib",
   "maghribAngleLabel": "Maghrib Angle (°)",
+  "menuAddBookmark": "Add bookmark",
+  "menuAddFavorite": "Add to favorites",
+  "menuCopyText": "Copy text",
+  "menuOpen": "Open",
+  "menuRemoveBookmark": "Remove bookmark",
+  "menuRemoveFavorite": "Remove from favorites",
   "midnight": "Midnight",
   "minute": "minute",
   "missed": "Missed",
@@ -369,78 +518,6 @@
   "moonsightingCommittee": "Moonsighting Committee",
   "morocco": "Morocco",
   "muslimFortress": "Muslim Fortress",
-  "fortressCompleted": "Completed",
-  "fortressRemainingCount": "{count, plural, =0 {None remaining} =1 {1 remaining} other {{count} remaining}}",
-  "@fortressRemainingCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "fortressSharh": "Explanation",
-  "fortressVirtue": "Virtue",
-  "fortressBenefit": "Benefit",
-  "fortressRelatedHadith": "Related hadith",
-  "fortressSourceReference": "Source",
-  "fortressWeakHadithWarning": "Warning: this dhikr is weak or fabricated",
-  "fortressFakeHadithGuide": "Weak & fabricated hadith guide",
-  "fortressFakeHadithIntro": "Reference list from Hisn al-Muslim of hadiths scholars warn against.",
-  "fortressBrowseWeakHadith": "Weak & fabricated hadiths",
-  "fortressSearchHint": "Search chapters and adhkar...",
-  "fortressSearchTitles": "Chapters",
-  "fortressSearchContents": "Adhkar",
-  "fortressNoSearchResults": "No results found",
-  "fortressFilterAuthenticity": "Filter by grading",
-  "fortressShowDetails": "Show details",
-  "fortressShowSharh": "Show explanation",
-  "fortressShowSource": "Show source",
-  "fortressHideDetails": "Hide details",
-  "fortressLoadError": "Failed to load adhkar",
-  "fortressRetry": "Retry",
-  "fortressAllChapters": "All adhkar",
-  "fortressFavorites": "Favorites",
-  "fortressEmptyFavoritesTitle": "No favorite sections yet",
-  "fortressEmptySearchTitle": "No search results",
-  "fortressEmptyFavoritesHint": "Tap the bookmark icon next to any section to add it here",
-  "fortressEmptySearchHint": "Try different search terms",
-  "fortressSupplicationCount": "{count, plural, =1 {1 dhikr} other {{count} adhkar}}",
-  "@fortressSupplicationCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "fortressSupplicationsInSection": "{count, plural, =1 {1 dhikr in this section} other {{count} adhkar in this section}}",
-  "@fortressSupplicationsInSection": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "fortressStartReading": "Start reading",
-  "fortressNoAdhkarInChapter": "No adhkar in this chapter",
-  "fortressFinish": "Finish",
-  "fortressReadingHint": "Tap the dhikr to count · Swipe horizontally to navigate · Space to count",
-  "fortressPrevious": "Previous",
-  "fortressWelcomeTitle": "Choose a chapter and begin dhikr",
-  "fortressWelcomeSubtitle": "Browse chapters from the list, or start from recommendations for your time or favorites.",
-  "fortressRecommendedNow": "Recommended now",
-  "fortressNoRecommendations": "No recommendations available right now",
-  "fortressNoFavoriteChapters": "No favorite chapters yet — bookmark one from the sidebar",
-  "fortressMoreFavoriteChapters": "{count, plural, =1 {Plus 1 more chapter…} other {Plus {count} more chapters…}}",
-  "@fortressMoreFavoriteChapters": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "fortressReadShort": "Short reading",
-  "fortressReadMedium": "Medium reading",
-  "fortressReadLong": "Long reading",
   "muslimWorldLeague": "Muslim World League",
   "neutral": "Neutral",
   "next": "Next",
@@ -452,12 +529,6 @@
   "noTafsirAvailable": "No tafsir available for this ayah",
   "noTranslationAvailable": "No translation available for this ayah",
   "nowActive": "Now Active",
-  "onTime": "On Time",
-  "onTimePrayersLast30Days": "On time prayers (last 30 days)",
-  "onTimePrayersLast365Days": "On time prayers (last 365 days)",
-  "onTimePrayersLast7Days": "On time prayers (last 7 days)",
-  "onTimePrayersToday": "On time prayers (today)",
-  "onTimeRate": "On Time Rate",
   "onboardingFinishAction": "Get started",
   "onboardingFinishPreviewUnavailable": "Set your location to preview today's prayer times.",
   "onboardingFinishSubtitle": "Your prayer times are ready. You can adjust any setting later from Settings.",
@@ -514,6 +585,14 @@
       }
     }
   },
+  "onTime": "On Time",
+  "onTimePrayersLast30Days": "On time prayers (last 30 days)",
+  "onTimePrayersLast365Days": "On time prayers (last 365 days)",
+  "onTimePrayersLast7Days": "On time prayers (last 7 days)",
+  "onTimePrayersToday": "On time prayers (today)",
+  "onTimeRate": "On Time Rate",
+  "openFolder": "Open folder",
+  "openFolderFailed": "Could not open folder",
   "optionalHint": "Optional",
   "orange": "Orange",
   "other": "Other",
@@ -538,7 +617,6 @@
   },
   "pageNotFound": "Page Not Found",
   "pageNotFoundDescription": "This page doesn't exist. Please go back to the home page.",
-  "selectVerseToAddReflection": "Please select a verse to add a reflection",
   "parametersSavedDescription": "Your custom parameters have been saved successfully.",
   "parametersSavedTitle": "Parameters Saved",
   "performanceIndicator": "Performance Indicator",
@@ -546,6 +624,10 @@
   "playerAnalytics": "Player Analytics",
   "pleaseSelectMethod": "Please select a calculation method.",
   "prayer": "Prayer",
+  "prayerAlertDismiss": "Dismiss",
+  "prayerLocationRequiredAction": "Open location settings",
+  "prayerLocationRequiredSubtitle": "Prayer times need your coordinates. Open location settings to pick a city on the map or enter them manually.",
+  "prayerLocationRequiredTitle": "Set your location",
   "prayerSettingsSubtitle": "Settings for prayer times, tracking, and related configurations.",
   "prayerSettingsTitle": "Prayer Settings",
   "prayerTimeAdjustmentsTitle": "Prayer Time Adjustments (minutes)",
@@ -555,9 +637,176 @@
   "prepareForPrayer": "Prepare yourself for the prayer.",
   "qatar": "Qatar",
   "quran": "Holy Quran",
+  "quranAyahSearchPreviewTruncated": "{preview}...",
+  "@quranAyahSearchPreviewTruncated": {
+    "placeholders": {
+      "preview": {
+        "type": "String"
+      }
+    }
+  },
+  "quranDoublePageWidthFallback": "Not enough width for a two-page spread — showing one page.",
   "quranLayoutDoublePage": "Double Page",
   "quranLayoutStudyMode": "Study Mode",
-  "quranDoublePageWidthFallback": "Not enough width for a two-page spread — showing one page.",
+  "quranNoMatchingReciters": "No matching reciters",
+  "quranPlayAyah": "Play this ayah",
+  "quranPlayRange": "Play a range…",
+  "quranPlaySelection": "Play selection",
+  "quranPlaySurah": "Play this surah",
+  "quranRangeFrom": "From — surah & ayah",
+  "quranRangeFromAyah": "From — ayah",
+  "quranRangeFromShort": "From",
+  "quranRangeFromSurah": "From — surah",
+  "quranRangeHizbBoundsNotFound": "Could not load hizb boundaries",
+  "quranRangeHizbNotFound": "Could not find the hizb for this ayah",
+  "quranRangeJuzBoundsNotFound": "Could not load juz boundaries",
+  "quranRangeJuzNotFound": "Could not find the juz for this ayah",
+  "quranRangeModeLabel": "End behavior",
+  "quranRangePlay": "Play selection",
+  "quranRangePresetAyah": "This ayah",
+  "quranRangePresetContinueFromHere": "Continue from here",
+  "quranRangePresetCustom": "Custom",
+  "quranRangePresetFailed": "Could not apply this range preset",
+  "quranRangePresetHizb": "This hizb",
+  "quranRangePresetJuz": "This juz",
+  "quranRangePresetSurah": "This surah",
+  "quranRangeRepeatChip": "×{count}",
+  "@quranRangeRepeatChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranRangeRepeatEachAyah": "Repeat each ayah",
+  "quranRangeRepeatOnce": "Once",
+  "quranRangeRepeatSelection": "Repeat range",
+  "quranRangeRepeatTimes": "{count} times",
+  "@quranRangeRepeatTimes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranRangeRepeatTwice": "Twice",
+  "quranRangeSave": "Save range",
+  "quranRangeScope": "Range",
+  "quranRangeTitle": "Range & repeat for memorization",
+  "quranRangeTo": "To — surah & ayah",
+  "quranRangeToAyah": "To — ayah",
+  "quranRangeToShort": "To",
+  "quranRangeToSurah": "To — surah",
+  "quranRecitationApply": "Apply",
+  "quranRecitationAutoScroll": "Auto-scroll",
+  "quranRecitationAutoScrollDesc": "Automatically scroll the mushaf page to follow the recitation position.",
+  "quranRecitationCancel": "Cancel",
+  "quranRecitationClosePlayer": "Close player",
+  "quranRecitationComingSoon": "Recitation playback coming soon",
+  "quranRecitationDownloading": "Caching…",
+  "quranRecitationHighlight": "Highlight ayah",
+  "quranRecitationHighlightDesc": "Highlight the currently playing ayah in the mushaf.",
+  "quranRecitationNext": "Next",
+  "quranRecitationNoTiming": "Per-ayah playback isn't available for this reciter",
+  "quranRecitationOfflineAutoSave": "Recitations are saved automatically while you listen.",
+  "quranRecitationOfflineEmpty": "No recitations saved yet.",
+  "quranRecitationOfflineFileCount": "{count} files",
+  "@quranRecitationOfflineFileCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranRecitationOfflineFiles": "Offline files",
+  "quranRecitationOfflineInFolder": "In this folder",
+  "quranRecitationOfflineOpenFolder": "Open folder",
+  "quranRecitationOfflineStorageUsed": "Storage used",
+  "quranRecitationOfflineSubtitle": "Saved recitations",
+  "quranRecitationOpenPlayer": "Open player",
+  "quranRecitationPause": "Pause",
+  "quranRecitationPlay": "Play",
+  "quranRecitationPlaybackFailed": "Playback failed: {error}",
+  "@quranRecitationPlaybackFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "quranRecitationPrevious": "Previous",
+  "quranRecitationRangeRepeat": "Range & repeat",
+  "quranRecitationRepeatScopeEachAyah": "Repeat each ayah",
+  "quranRecitationRepeatScopeSelection": "Repeat selection",
+  "quranRecitationSleepAfter": "After {minutes} minutes",
+  "@quranRecitationSleepAfter": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "quranRecitationSleepEndOfAyah": "End of current ayah",
+  "quranRecitationSleepEndOfRange": "End of range",
+  "quranRecitationSleepEndOfSurah": "End of surah",
+  "quranRecitationSleepOff": "Off",
+  "quranRecitationSleepTimer": "Sleep timer",
+  "quranRecitationStop": "Stop",
+  "quranRecitationSwitchReciter": "Switch reciter",
+  "quranRecitationUnavailable": "No reciter is available for playback",
+  "quranRecitationVolume": "Volume",
+  "quranReciterFilterDownloaded": "Downloaded",
+  "quranReciterFilters": "Filters",
+  "quranReciterRiwayahCount": "{count} riwayat",
+  "@quranReciterRiwayahCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "quranReciterRiwayahTitle": "Reciter & riwayah",
+  "quranReciterRiwayahUpgraded": "This riwayah doesn't support ayah sync. Switched to {riwayah}.",
+  "@quranReciterRiwayahUpgraded": {
+    "description": "Shown when the selected riwayah lacks timing and is auto-upgraded",
+    "placeholders": {
+      "riwayah": {
+        "type": "String",
+        "example": "Hafs"
+      }
+    }
+  },
+  "quranReciterSearchHint": "Search for a reciter…",
+  "quranReciterStyleMujawwad": "Mujawwad",
+  "quranReciterStyleMurattal": "Murattal",
+  "quranReciterSurahOnly": "Surah playback only",
+  "quranReciterTimed": "Synced",
+  "quranSelectReciter": "Select reciter",
+  "quranSurahLabel": "Surah {surah}",
+  "@quranSurahLabel": {
+    "placeholders": {
+      "surah": {
+        "type": "String"
+      }
+    }
+  },
+  "quranTextSize": "Quran text size",
+  "quranTextSizeExtraLarge": "Extra large",
+  "quranTextSizeIndependentNote": "Quran reading size is independent of app and system text scaling.",
+  "quranTextSizeLarge": "Large",
+  "quranTextSizeMedium": "Medium",
+  "quranTextSizePreview": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+  "quranTextSizePreviewLabel": "Preview",
+  "quranTextSizeShortExtraLarge": "XL",
+  "quranTextSizeSmall": "Small",
+  "quranTranslationQuoted": "\"{translation}\"",
+  "@quranTranslationQuoted": {
+    "placeholders": {
+      "translation": {
+        "type": "String"
+      }
+    }
+  },
   "red": "Red",
   "reflectionPlaceholder": "Write your thoughts about this verse...",
   "remembrance": "Remembrance",
@@ -568,23 +817,59 @@
   "save": "Save",
   "saveNote": "Save Note",
   "saveParameters": "Save Parameters",
+  "scheduleAlertEventAdhan": "{prayer} adhan",
+  "@scheduleAlertEventAdhan": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAlertEventIqamah": "{prayer} iqamah",
+  "@scheduleAlertEventIqamah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAlertEventSunnah": "{prayer}",
+  "@scheduleAlertEventSunnah": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAlertIqamahSound": "Sound",
+  "scheduleAlertIqamahSoundHint": "Play alert when the time arrives",
+  "scheduleAlertNotify": "Notify",
+  "scheduleAlertNotifyHint": "Show a notification without sound",
+  "scheduleAlertOff": "Silent",
+  "scheduleAlertOffHint": "No alert for this time",
+  "scheduleAlertPickerTitle": "Alert for {event}",
+  "@scheduleAlertPickerTitle": {
+    "placeholders": {
+      "event": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduleAlertSound": "Adhan",
+  "scheduleAlertSoundHint": "Play adhan when the time arrives",
+  "scrollMoreHint": "More below",
   "searchForMore": "Search for more options",
   "searchPlaceLabel": "Search for a place",
   "searchQuran": "Search Quran...",
   "selectAyahToSeeContent": "Select an ayah to see the content.",
+  "selectVerseToAddReflection": "Please select a verse to add a reflection",
   "settings": "Settings",
   "setupPrayerSettingsSubtitle": "We'll guide you through a few quick steps. You can change these later in Settings.",
   "setupPrayerSettingsTitle": "Let's set up your prayer settings.",
   "setupPreferences": "Let's set up your preferences.",
-  "goToPrayerPage": "Go to Prayer Page",
-  "decimalPlaceholder": "0.0",
-  "integerPlaceholder": "0",
-  "signedExampleHint": "20 or -10",
-  "singapore": "Singapore",
-  "skip": "Skip",
   "shareAppName": "App name",
-  "shareBasmalah": "Basmalah",
   "shareAttributionPrefix": "Using",
+  "shareBasmalah": "Basmalah",
   "shareByApp": "Using {appName}",
   "@shareByApp": {
     "placeholders": {
@@ -622,9 +907,8 @@
     }
   },
   "shareImageSavedTitle": "Image saved",
-  "openFolder": "Open folder",
-  "openFolderFailed": "Could not open folder",
   "shareIncludeInImage": "Include in image",
+  "sharePreserveLineBreaks": "Mushaf line breaks",
   "sharePreview": "Preview",
   "shareRangeDescription": "{startReference} – {endReference} ({verseCount})",
   "@shareRangeDescription": {
@@ -640,6 +924,14 @@
       }
     }
   },
+  "shareRangeOnPage": "Range on page {page}",
+  "@shareRangeOnPage": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      }
+    }
+  },
   "shareRangeSingleDescription": "{reference} ({verseCount})",
   "@shareRangeSingleDescription": {
     "placeholders": {
@@ -651,16 +943,7 @@
       }
     }
   },
-  "shareRangeOnPage": "Range on page {page}",
-  "@shareRangeOnPage": {
-    "placeholders": {
-      "page": {
-        "type": "int"
-      }
-    }
-  },
   "shareSaveImage": "Save image",
-  "sharePreserveLineBreaks": "Mushaf line breaks",
   "shareSurahHeader": "Surah header",
   "shareVerseCount": "{count, plural, =1{1 verse} other{{count} verses}}",
   "@shareVerseCount": {
@@ -671,6 +954,42 @@
     }
   },
   "shareVerses": "Share verses",
+  "shortcutCategoryFortress": "Muslim Fortress",
+  "shortcutCategoryGlobal": "Global",
+  "shortcutCategoryHadith": "Hadith",
+  "shortcutCategoryQuran": "Quran",
+  "shortcutFocusSearchDescription": "Open or focus the search field on Quran, Hadith, and Muslim Fortress.",
+  "shortcutFocusSearchLabel": "Focus search",
+  "shortcutFocusSearchUnavailable": "Search is not available on this screen.",
+  "shortcutFortressCountDescription": "Decrement the repeat counter during focus reading.",
+  "shortcutFortressCountLabel": "Count thikr",
+  "shortcutFortressThikrNextDescription": "Go to the next thikr during focus reading.",
+  "shortcutFortressThikrNextLabel": "Next thikr",
+  "shortcutFortressThikrPrevDescription": "Go to the previous thikr during focus reading.",
+  "shortcutFortressThikrPrevLabel": "Previous thikr",
+  "shortcutHadithResultNextDescription": "Select the next hadith in the results list.",
+  "shortcutHadithResultNextLabel": "Next hadith",
+  "shortcutHadithResultPrevDescription": "Select the previous hadith in the results list.",
+  "shortcutHadithResultPrevLabel": "Previous hadith",
+  "shortcutOpenSettingsDescription": "Go to the settings screen.",
+  "shortcutOpenSettingsLabel": "Open settings",
+  "shortcutQuranAyahNextDescription": "Select the next ayah in study mode.",
+  "shortcutQuranAyahNextLabel": "Next ayah",
+  "shortcutQuranAyahPrevDescription": "Select the previous ayah in study mode.",
+  "shortcutQuranAyahPrevLabel": "Previous ayah",
+  "shortcutQuranPageNextDescription": "Go to the next mushaf page (RTL reading direction).",
+  "shortcutQuranPageNextLabel": "Next page",
+  "shortcutQuranPageNextSpaceDescription": "Advance to the next mushaf page.",
+  "shortcutQuranPageNextSpaceLabel": "Next page (Space)",
+  "shortcutQuranPagePrevDescription": "Go to the previous mushaf page.",
+  "shortcutQuranPagePrevLabel": "Previous page",
+  "shortcutToggleLocaleDescription": "Switch between English and Arabic.",
+  "shortcutToggleLocaleLabel": "Toggle language",
+  "shortcutToggleThemeDescription": "Switch between light and dark mode.",
+  "shortcutToggleThemeLabel": "Toggle theme",
+  "signedExampleHint": "20 or -10",
+  "singapore": "Singapore",
+  "skip": "Skip",
   "slate": "Slate",
   "sourceLabel": "Source:",
   "status": "Status",
@@ -684,6 +1003,15 @@
     }
   },
   "studyMode": "Study Mode",
+  "sunnahAlertTitle": "{prayer}",
+  "@sunnahAlertTitle": {
+    "placeholders": {
+      "prayer": {
+        "type": "String"
+      }
+    }
+  },
+  "sunnahOsNotificationBody": "Sunnah time — tap to focus",
   "sunnahTimes": "Sunnah Times",
   "sunrise": "Sunrise",
   "surahAyahInfo": "{surahName} • Ayah {ayahNumber}",
@@ -707,6 +1035,7 @@
   },
   "tafsir": "Tafsir",
   "tafsirAlMuyassar": "Tafsir Al-Muyassar",
+  "tafsirTextMayBeIncomplete": "This commentary may be cut off in the source text.",
   "tehran": "Tehran",
   "timeFormat": "Time Format",
   "timeSectionSubtitle": "Configure calculation method, time format, and Iqamah settings.",
@@ -717,215 +1046,8 @@
   "toggleArabic": "Toggle Arabic",
   "total": "Total",
   "translation": "Translation",
-  "tryDifferentSearchTerm": "Try a different search term",
-  "turkiye": "Turkey (Diyanet)",
-  "ummAlQura": "Umm Al-Qura University",
-  "unlockToEditCoordinates": "Unlock to edit coordinates",
-  "use24HourFormat": "Use 24-hour format",
-  "useDeviceLocation": "Use device location",
-  "useMyLocation": "Use My Location",
-  "unavailableShort": "—",
-  "unknownLocation": "Unknown location",
-  "useSystemTimezone": "Use System Timezone",
-  "violet": "Violet",
-  "weekly": "Weekly",
-  "welcomeToApp": "Welcome to the app!",
-  "yearly": "Yearly",
-  "yellow": "Yellow",
-  "zinc": "Zinc",
-  "a11ySwitchToLightTheme": "Switch to light theme",
-  "a11ySwitchToDarkTheme": "Switch to dark theme",
-  "a11yNavigationUnavailable": "Unavailable",
-  "a11yExpandSidebar": "Expand sidebar",
-  "a11yWindowMinimize": "Minimize window",
-  "a11yWindowMaximize": "Maximize window",
-  "a11yWindowRestore": "Restore window",
-  "a11yWindowClose": "Close window",
-  "a11yOpenLocationSettings": "Open location settings",
-  "a11ySettingsDecreaseIqamah": "Decrease {prayer} iqamah minutes",
-  "@a11ySettingsDecreaseIqamah": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "a11ySettingsIncreaseIqamah": "Increase {prayer} iqamah minutes",
-  "@a11ySettingsIncreaseIqamah": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "a11ySettingsResetIqamah": "Reset {prayer} iqamah to default",
-  "@a11ySettingsResetIqamah": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "scheduleAlertOff": "Silent",
-  "scheduleAlertSound": "Adhan",
-  "scheduleAlertIqamahSound": "Sound",
-  "scheduleAlertNotify": "Notify",
-  "scheduleAlertOffHint": "No alert for this time",
-  "scheduleAlertSoundHint": "Play adhan when the time arrives",
-  "scheduleAlertIqamahSoundHint": "Play alert when the time arrives",
-  "scheduleAlertNotifyHint": "Show a notification without sound",
-  "scheduleAlertPickerTitle": "Alert for {event}",
-  "@scheduleAlertPickerTitle": {
-    "placeholders": {
-      "event": {
-        "type": "String"
-      }
-    }
-  },
-  "scheduleAlertEventAdhan": "{prayer} adhan",
-  "@scheduleAlertEventAdhan": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "scheduleAlertEventIqamah": "{prayer} iqamah",
-  "@scheduleAlertEventIqamah": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "scheduleAlertEventSunnah": "{prayer}",
-  "@scheduleAlertEventSunnah": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "keyboardShortcutsTabTitle": "Keyboard shortcuts",
-  "keyboardShortcutsSectionTitle": "Keyboard shortcuts",
-  "keyboardShortcutsSectionSubtitle": "Reference list of keyboard shortcuts available on desktop. Shortcuts work app-wide from any screen, including this one. They cannot be customized.",
-  "keyboardShortcutsCategorySubtitle": "Available when using the app on desktop.",
-  "shortcutCategoryGlobal": "Global",
-  "shortcutCategoryQuran": "Quran",
-  "shortcutCategoryFortress": "Muslim Fortress",
-  "shortcutCategoryHadith": "Hadith",
-  "shortcutToggleThemeLabel": "Toggle theme",
-  "shortcutToggleThemeDescription": "Switch between light and dark mode.",
-  "shortcutToggleLocaleLabel": "Toggle language",
-  "shortcutToggleLocaleDescription": "Switch between English and Arabic.",
-  "shortcutOpenSettingsLabel": "Open settings",
-  "shortcutOpenSettingsDescription": "Go to the settings screen.",
-  "shortcutFocusSearchLabel": "Focus search",
-  "shortcutFocusSearchDescription": "Open or focus the search field on Quran, Hadith, and Muslim Fortress.",
-  "shortcutFocusSearchUnavailable": "Search is not available on this screen.",
-  "shortcutQuranPageNextLabel": "Next page",
-  "shortcutQuranPageNextDescription": "Go to the next mushaf page (RTL reading direction).",
-  "shortcutQuranPagePrevLabel": "Previous page",
-  "shortcutQuranPagePrevDescription": "Go to the previous mushaf page.",
-  "shortcutQuranPageNextSpaceLabel": "Next page (Space)",
-  "shortcutQuranPageNextSpaceDescription": "Advance to the next mushaf page.",
-  "shortcutQuranAyahNextLabel": "Next ayah",
-  "shortcutQuranAyahNextDescription": "Select the next ayah in study mode.",
-  "shortcutQuranAyahPrevLabel": "Previous ayah",
-  "shortcutQuranAyahPrevDescription": "Select the previous ayah in study mode.",
-  "shortcutFortressCountLabel": "Count thikr",
-  "shortcutFortressCountDescription": "Decrement the repeat counter during focus reading.",
-  "shortcutFortressThikrNextLabel": "Next thikr",
-  "shortcutFortressThikrNextDescription": "Go to the next thikr during focus reading.",
-  "shortcutFortressThikrPrevLabel": "Previous thikr",
-  "shortcutFortressThikrPrevDescription": "Go to the previous thikr during focus reading.",
-  "shortcutHadithResultNextLabel": "Next hadith",
-  "shortcutHadithResultNextDescription": "Select the next hadith in the results list.",
-  "shortcutHadithResultPrevLabel": "Previous hadith",
-  "shortcutHadithResultPrevDescription": "Select the previous hadith in the results list.",
-  "adhanSectionTitle": "Adhan",
-  "adhanSectionSubtitle": "Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.",
-  "adhanSoundLabel": "Adhan sound",
-  "adhanMuezzinMisharyAlafasi": "Mishary Alafasi",
-  "adhanMuezzinMakkah": "Makkah",
-  "adhanMuezzinAbedAlbasaei": "Abed Al-Basaei",
-  "adhanMuezzinAhmadNufais": "Ahmad Nufais",
-  "adhanMuezzinGhaziAlSaadoni": "Ghazi Al-Saadoni",
-  "adhanMuezzinHamadDeghreri": "Hamad Deghreri",
-  "adhanMuezzinHamdanAlMalki": "Hamdan Al-Malki",
-  "adhanMuezzinIbrahimAlArkani": "Ibrahim Al-Arkani",
-  "adhanMuezzinMajedAlHamathani": "Majed Al-Hamathani",
-  "adhanMuezzinMansoorAlZahrani": "Mansoor Az-Zahrani",
-  "adhanMuezzinMohammadAlMenshawy": "Mohammad Al-Menshawy",
-  "adhanMuezzinMohammadRefat": "Mohammad Refat",
-  "adhanMuezzinNasserAlQatami": "Nasser Al-Qatami",
-  "adhanMuezzinSuhaibKhatba": "Suhaib Khatba",
-  "adhanVolumeLabel": "Adhan volume",
-  "adhanShowAlertLabel": "Show adhan alert",
-  "adhanShowOsNotificationLabel": "OS notification when hidden in tray",
-  "adhanAlertPositionLabel": "Alert position",
-  "adhanAlertPositionTopEnd": "Top right",
-  "adhanAlertPositionTopStart": "Top left",
-  "adhanAlertPositionCenter": "Center",
-  "adhanStop": "Stop adhan",
-  "adhanAlertTitle": "Adhan — {prayer}",
-  "@adhanAlertTitle": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "adhanPlayingTitle": "Adhan — {prayer}",
-  "@adhanPlayingTitle": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "adhanOsNotificationBody": "Adhan is playing — tap to focus",
-  "iqamahAlertTitle": "Iqamah — {prayer}",
-  "@iqamahAlertTitle": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "iqamahPlayingTitle": "Iqamah — {prayer}",
-  "@iqamahPlayingTitle": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "iqamahOsNotificationBody": "Iqamah time — tap to focus",
-  "sunnahAlertTitle": "{prayer}",
-  "@sunnahAlertTitle": {
-    "placeholders": {
-      "prayer": {
-        "type": "String"
-      }
-    }
-  },
-  "sunnahOsNotificationBody": "Sunnah time — tap to focus",
-  "prayerAlertDismiss": "Dismiss",
-  "iqamahSoundLabel": "Iqamah call",
-  "iqamahMuezzinYasserAlDossari": "Yasser Al-Dossari",
-  "iqamahMuezzinMadinah": "Madinah",
-  "desktopSectionTitle": "Desktop",
-  "desktopSectionSubtitle": "System tray, window behaviour, and startup on desktop.",
-  "desktopLaunchAtLogin": "Start at login",
-  "desktopLaunchAtLoginHint": "Start hidden in tray was also enabled so adhan alerts work after login.",
-  "desktopMinimizeToTrayOnClose": "Hide to tray when closing the window",
-  "desktopMinimizeToTray": "Hide to tray when minimizing",
-  "desktopLaunchToTray": "Start hidden in tray",
-  "trayShowApp": "Show Tawaq",
   "trayHideApp": "Hide Tawaq",
   "trayMuteAdhan": "Mute adhan",
-  "trayQuit": "Quit",
   "trayNextPrayer": "Next: {prayer}",
   "@trayNextPrayer": {
     "placeholders": {
@@ -934,152 +1056,24 @@
       }
     }
   },
-  "quranRecitationComingSoon": "Recitation playback coming soon",
-  "quranPlayAyah": "Play this ayah",
-  "quranPlaySurah": "Play this surah",
-  "quranPlayRange": "Play a range…",
-  "quranPlaySelection": "Play selection",
-  "quranSelectReciter": "Select reciter",
-  "quranReciterTimed": "Synced",
-  "quranRecitationStop": "Stop",
-  "quranRecitationPlay": "Play",
-  "quranRecitationPause": "Pause",
-  "quranRecitationNext": "Next",
-  "quranRecitationPrevious": "Previous",
-  "quranRecitationDownloading": "Caching…",
-  "quranRecitationVolume": "Volume",
-  "quranRecitationNoTiming": "Per-ayah playback isn't available for this reciter",
-  "quranRecitationUnavailable": "No reciter is available for playback",
-  "quranRecitationPlaybackFailed": "Playback failed: {error}",
-  "@quranRecitationPlaybackFailed": {
-    "placeholders": {
-      "error": {
-        "type": "String"
-      }
-    }
-  },
-  "quranRecitationModeStopAtEnd": "Stop at end",
-  "quranRecitationModeRepeat": "Repeat selection",
-  "quranRecitationModeContinue": "Continue to next surah",
-  "quranRangeModeLabel": "End behavior",
-  "quranSurahLabel": "Surah {surah}",
-  "@quranSurahLabel": {
-    "placeholders": {
-      "surah": {
-        "type": "String"
-      }
-    }
-  },
-  "quranRecitationOpenPlayer": "Open player",
-  "quranRecitationClosePlayer": "Close player",
-  "quranRecitationSwitchReciter": "Switch reciter",
-
-  "quranRecitationCancel": "Cancel",
-
-  "quranRecitationApply": "Apply",
-  "quranRecitationRangeRepeat": "Range & repeat",
-  "quranRecitationQueue": "Queue",
-  "quranRecitationQueueSubtitle": "Ayahs in this selection",
-  "quranRecitationQueueEmpty": "No timed ayahs to queue for this reciter.",
-  "quranRecitationQueueClear": "Stop & clear",
-  "quranRecitationSleepTimer": "Sleep timer",
-  "quranRecitationSleepOff": "Off",
-  "quranRecitationSleepEndOfAyah": "End of current ayah",
-  "quranRecitationSleepEndOfRange": "End of range",
-  "quranRecitationSleepEndOfSurah": "End of surah",
-  "quranRecitationSleepAfter": "After {minutes} minutes",
-  "@quranRecitationSleepAfter": {
-    "placeholders": {
-      "minutes": {
-        "type": "String"
-      }
-    }
-  },
-  "quranRecitationAutoScroll": "Auto-scroll",
-  "quranRecitationAutoScrollDesc": "Automatically scroll the mushaf page to follow the recitation position.",
-  "quranRecitationHighlight": "Highlight ayah",
-  "quranRecitationHighlightDesc": "Highlight the currently playing ayah in the mushaf.",
-  "quranRecitationOfflineFiles": "Offline files",
-  "quranRecitationOfflineSubtitle": "Saved recitations",
-  "quranRecitationOfflineAutoSave": "Recitations are saved automatically while you listen.",
-  "quranRecitationOfflineOpenFolder": "Open folder",
-  "quranRecitationOfflineInFolder": "In this folder",
-  "quranRecitationOfflineEmpty": "No recitations saved yet.",
-  "quranRecitationOfflineStorageUsed": "Storage used",
-  "quranRecitationOfflineFileCount": "{count} files",
-  "@quranRecitationOfflineFileCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "quranReciterRiwayahTitle": "Reciter & riwayah",
-  "quranReciterSearchHint": "Search for a reciter…",
-  "quranReciterRiwayahCount": "{count} riwayat",
-  "@quranReciterRiwayahCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "quranReciterFilters": "Filters",
-  "quranReciterSurahOnly": "Surah playback only",
-  "quranReciterFilterDownloaded": "Downloaded",
-  "quranReciterStyleMurattal": "Murattal",
-  "quranReciterStyleMujawwad": "Mujawwad",
-  "quranReciterRiwayahUpgraded": "This riwayah doesn't support ayah sync. Switched to {riwayah}.",
-  "@quranReciterRiwayahUpgraded": {
-    "description": "Shown when the selected riwayah lacks timing and is auto-upgraded",
-    "placeholders": {
-      "riwayah": {
-        "type": "String",
-        "example": "Hafs"
-      }
-    }
-  },
-  "quranNoMatchingReciters": "No matching reciters",
-  "quranRangeTitle": "Range & repeat for memorization",
-  "quranRangeScope": "Range",
-  "quranRangePresetAyah": "This ayah",
-  "quranRangePresetSurah": "This surah",
-  "quranRangePresetJuz": "This juz",
-  "quranRangePresetHizb": "This hizb",
-  "quranRangePresetContinueFromHere": "Continue from here",
-  "quranRangePresetCustom": "Custom",
-  "quranRangeFromSurah": "From — surah",
-  "quranRangeFromAyah": "From — ayah",
-  "quranRangeToSurah": "To — surah",
-  "quranRangeToAyah": "To — ayah",
-  "quranRangeFrom": "From — surah & ayah",
-  "quranRangeTo": "To — surah & ayah",
-  "quranRangeRepeatWhole": "Repeat whole range",
-  "quranRangePlay": "Play selection",
-  "quranRangeJuzNotFound": "Could not find the juz for this ayah",
-  "quranRangeHizbNotFound": "Could not find the hizb for this ayah",
-  "quranRangeJuzBoundsNotFound": "Could not load juz boundaries",
-  "quranRangeHizbBoundsNotFound": "Could not load hizb boundaries",
-  "quranRangePresetFailed": "Could not apply this range preset",
-  "quranRangeFromShort": "From",
-  "quranRangeToShort": "To",
-  "quranRangeRepeatOnce": "Once",
-  "quranRangeRepeatTwice": "Twice",
-  "quranRangeRepeatTimes": "{count} times",
-  "@quranRangeRepeatTimes": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "quranRangeRepeatChip": "×{count}",
-  "@quranRangeRepeatChip": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "quranRangeSave": "Save range"
+  "trayQuit": "Quit",
+  "trayShowApp": "Show Tawaq",
+  "tryDifferentSearchTerm": "Try a different search term",
+  "turkiye": "Turkey (Diyanet)",
+  "typographySectionSubtitle": "Adjust UI text size and Quran reading size separately.",
+  "typographySectionTitle": "Text & scaling",
+  "ummAlQura": "Umm Al-Qura University",
+  "unavailableShort": "—",
+  "unknownLocation": "Unknown location",
+  "unlockToEditCoordinates": "Unlock to edit coordinates",
+  "use24HourFormat": "Use 24-hour format",
+  "useDeviceLocation": "Use device location",
+  "useMyLocation": "Use My Location",
+  "useSystemTimezone": "Use System Timezone",
+  "violet": "Violet",
+  "weekly": "Weekly",
+  "welcomeToApp": "Welcome to the app!",
+  "yearly": "Yearly",
+  "yellow": "Yellow",
+  "zinc": "Zinc"
 }

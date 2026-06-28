@@ -3,7 +3,20 @@ import 'package:forui/forui.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// A section widget for displaying a specific setting.
+/// Whether a settings block includes outer [SettingsSection] card chrome.
+enum SettingsChrome {
+  /// Title, subtitle, and card wrapper ([SettingsSection]).
+  section,
+
+  /// Content only — for onboarding and nested blocks.
+  none,
+}
+
+/// Top-level settings tab block with card chrome, title, and subtitle.
+///
+/// Use [SettingsSection] once per major settings area. Nest [SettingsGroup]
+/// inside for labeled sub-blocks — do not wrap [SettingsSection.child] in
+/// another [FCard].
 class SettingsSection extends StatelessWidget {
   /// Creates a new [SettingsSection] instance.
   const SettingsSection({
@@ -83,7 +96,7 @@ class SettingsSection extends StatelessWidget {
   }
 }
 
-/// A labeled block inside a settings section — no card chrome.
+/// Labeled sub-block inside a [SettingsSection] — heading only, no card.
 class SettingsGroup extends StatelessWidget {
   /// Creates a [SettingsGroup].
   const SettingsGroup({

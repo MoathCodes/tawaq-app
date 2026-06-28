@@ -1,26 +1,20 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/utils/clipboard_image.dart';
 import 'package:tawaq/core/utils/platform.dart';
-import 'package:tawaq/core/utils/reveal_folder.dart';
-import 'package:tawaq/core/utils/widget_to_image.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/models/ayah_share_include.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_card.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_include_panel.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_dialog_body.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_export.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_range_slider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -119,11 +113,9 @@ class AyahShareDialog extends HookConsumerWidget {
       useMemoized(() => controller.getPage(ayah.page), [ayah.page]),
     );
 
-    final included = useState<Set<AyahShareInclude>>({
-      AyahShareInclude.surahHeader,
-      AyahShareInclude.basmalah,
-      AyahShareInclude.appName,
-    });
+    final options = useState(
+      AyahShareCardOptions.defaults(basmalahAvailable: false),
+    );
     final isCapturing = useState(false);
 
     final page = pageSnapshot.data;
@@ -161,6 +153,7 @@ class AyahShareDialog extends HookConsumerWidget {
     final selectedIndex = pageAyahIds.indexOf(ayah.ayahId);
 
     final selectedAyahIds = useState<List<int>>([ayah.ayahId]);
+    final defaultsApplied = useRef(false);
 
     final basmalahAvailable =
         page != null &&
@@ -171,7 +164,6 @@ class AyahShareDialog extends HookConsumerWidget {
           page,
           selectedAyahIds.value,
         );
-    final defaultsApplied = useRef(false);
 
     useEffect(() {
       if (page == null) return null;
@@ -187,129 +179,32 @@ class AyahShareDialog extends HookConsumerWidget {
 
       if (!defaultsApplied.value) {
         defaultsApplied.value = true;
-        included.value = defaultAyahShareIncludes(
+        options.value = AyahShareCardOptions.defaults(
           basmalahAvailable: basmalahAvail,
         );
         return null;
       }
 
-      final next = Set.of(included.value);
-      if (basmalahAvail) {
-        next.add(AyahShareInclude.basmalah);
-      } else {
-        next.remove(AyahShareInclude.basmalah);
-      }
-      if (!lineBreaksAvail) {
-        next.remove(AyahShareInclude.preserveLineBreaks);
-      }
-      if (next.length != included.value.length ||
-          !next.containsAll(included.value)) {
-        included.value = next;
-      }
+      options.value = options.value.constrained(
+        basmalahAvailable: basmalahAvail,
+        lineBreaksToggleAvailable: lineBreaksAvail,
+      );
       return null;
     }, [page, selectedAyahIds.value.join(',')]);
-
-    Widget buildShareCard() {
-      final ids = selectedAyahIds.value;
-      final preserveLineBreaks = included.value.contains(
-        AyahShareInclude.preserveLineBreaks,
-      );
-      return AyahShareCard(
-        key: ValueKey('${ids.join(',')}-$preserveLineBreaks'),
-        boundaryKey: boundaryKey,
-        page: page!,
-        ayahIds: ids,
-        style: mushafStyle,
-        showSurahHeader: included.value.contains(AyahShareInclude.surahHeader),
-        showBasmalah: included.value.contains(AyahShareInclude.basmalah),
-        showAppName: included.value.contains(AyahShareInclude.appName),
-        preserveMushafLineBreaks: preserveLineBreaks,
-        isDark: theme.isDark,
-      );
-    }
 
     Future<void> exportImage({required bool copyToClipboard}) async {
       if (isCapturing.value) return;
       isCapturing.value = true;
       try {
-        final ids = selectedAyahIds.value;
-        final loadedAyahs = await Future.wait(ids.map(controller.getAyah));
-        await WidgetsBinding.instance.endOfFrame;
-        final bytes = await captureWidgetToPng(boundaryKey);
-        if (bytes == null) {
-          if (context.mounted) {
-            showFToast(
-              context: context,
-              title: Text(l10n.shareCouldNotCreateImage),
-            );
-          }
-          return;
-        }
-
-        if (copyToClipboard) {
-          final error = await copyPngToClipboard(bytes, l10n: l10n);
-          if (context.mounted) {
-            showFToast(
-              context: context,
-              title: Text(
-                error ?? l10n.shareImageCopied,
-              ),
-            );
-          }
-          return;
-        }
-
-        final downloads = await getDownloadsDirectory();
-        final directory = downloads ?? await getApplicationDocumentsDirectory();
-        final startAyah = loadedAyahs.first;
-        final endAyah = loadedAyahs.length == 1 ? startAyah : loadedAyahs.last;
-        final startRef = filenameAyahReference(
-          ayah: startAyah,
+        await exportAyahShareImage(
+          context: context,
+          boundaryKey: boundaryKey,
           controller: controller,
+          ayahIds: selectedAyahIds.value,
+          l10n: l10n,
+          primaryColor: colors.primary,
+          copyToClipboard: copyToClipboard,
         );
-        final endRef = filenameAyahReference(
-          ayah: endAyah,
-          controller: controller,
-        );
-        final safeReference = startRef == endRef
-            ? startRef
-            : '$startRef-$endRef';
-        final file = File(
-          p.join(directory.path, 'tawaq-$safeReference.png'),
-        );
-        await file.writeAsBytes(bytes);
-        if (context.mounted) {
-          final folderPath = directory.path;
-          final fileName = p.basename(file.path);
-          showFToast(
-            context: context,
-            icon: Icon(FLucideIcons.circleCheck, color: colors.primary),
-            title: Text(l10n.shareImageSavedTitle),
-            description: Text(fileName),
-            suffixBuilder: (toastContext, entry) => FButton(
-              variant: .secondary,
-              onPress: () async {
-                final opened = await revealFolderInFileManager(folderPath);
-                if (!opened && toastContext.mounted) {
-                  showFToast(
-                    context: toastContext,
-                    variant: .destructive,
-                    icon: const Icon(FLucideIcons.triangleAlert),
-                    title: Text(l10n.openFolderFailed),
-                  );
-                }
-              },
-              child: Text(l10n.openFolder),
-            ),
-          );
-        }
-      } on Object catch (error) {
-        if (context.mounted) {
-          showFToast(
-            context: context,
-            title: Text(l10n.shareExportFailed('$error')),
-          );
-        }
       } finally {
         isCapturing.value = false;
       }
@@ -321,84 +216,6 @@ class AyahShareDialog extends HookConsumerWidget {
       preferredHeight: isDesktopPlatform ? 500 : 560,
       minWidth: 320,
     );
-
-    /// Controls column width in the side-by-side desktop layout.
-    const controlsWidth = 280.0;
-
-    Widget buildPreviewPanel() {
-      return DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.secondary.withAlpha(60),
-          borderRadius: theme.radii.md,
-          border: Border.all(color: colors.border),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.sharePreview,
-                style: theme.typography.body.sm.copyWith(
-                  color: colors.mutedForeground,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    return SingleChildScrollView(
-                      child: Center(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.topCenter,
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: constraints.maxWidth,
-                            ),
-                            child: buildShareCard(),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    Widget buildControlsPanel() {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AyahShareRangeSlider(
-            key: ValueKey(
-              'share-range-${ayah.page}-$selectedIndex-'
-              '${pageAyahIds.length}',
-            ),
-            pageNumber: ayah.page,
-            pageAyahIds: pageAyahIds,
-            references: pageReferences,
-            initialIndex: selectedIndex >= 0 ? selectedIndex : 0,
-            onRangeChanged: (start, end) {
-              selectedAyahIds.value = pageAyahIds.sublist(start, end + 1);
-            },
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          AyahShareIncludePanel(
-            selected: included.value,
-            basmalahAvailable: basmalahAvailable,
-            lineBreaksToggleAvailable: lineBreaksToggleAvailable,
-            onChanged: (options) => included.value = Set.of(options),
-          ),
-        ],
-      );
-    }
 
     Widget buildDialogBody() {
       if (pageSnapshot.connectionState == ConnectionState.waiting) {
@@ -412,42 +229,23 @@ class AyahShareDialog extends HookConsumerWidget {
         );
       }
 
-      return Directionality(
-        textDirection: TextDirection.ltr,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            // Dialog width is below viewport `md` (768), so use container width
-            // or desktop — not the page breakpoint — to pick side-by-side layout.
-            final sideBySide =
-                isDesktopPlatform ||
-                constraints.maxWidth >= theme.breakpoints.sm;
-
-            if (!sideBySide) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  buildControlsPanel(),
-                  const SizedBox(height: AppSpacing.lg),
-                  Expanded(child: buildPreviewPanel()),
-                ],
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: buildPreviewPanel()),
-                const SizedBox(width: AppSpacing.xl),
-                SizedBox(
-                  width: controlsWidth,
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: buildControlsPanel(),
-                  ),
-                ),
-              ],
-            );
+      return AyahShareDialogBody(
+        content: AyahShareDialogContent(
+          page: page!,
+          pageAyahIds: pageAyahIds,
+          selectedAyahIds: selectedAyahIds.value,
+          selectedIndex: selectedIndex,
+          pageReferences: pageReferences,
+          options: options.value,
+          basmalahAvailable: basmalahAvailable,
+          lineBreaksToggleAvailable: lineBreaksToggleAvailable,
+          boundaryKey: boundaryKey,
+          mushafStyle: mushafStyle,
+          isDark: theme.isDark,
+          onRangeChanged: (start, end) {
+            selectedAyahIds.value = pageAyahIds.sublist(start, end + 1);
           },
+          onOptionsChanged: (next) => options.value = next,
         ),
       );
     }

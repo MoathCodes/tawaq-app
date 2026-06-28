@@ -2,21 +2,14 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:tawaq/core/utils/date_extensions.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:timezone/timezone.dart';
 
-/// Midnight on [time]'s calendar day in [location] (naive [DateTime]).
-DateTime completionCalendarDay(DateTime time, Location location) {
-  return time.calendarDayIn(location);
-}
+export 'package:tawaq/feature/prayer/domain/prayer_calendar.dart'
+    show completionCalendarDay, completionDayKey;
 
-/// Stable grouping key `yyyyMMdd` in [location].
-int completionDayKey(DateTime time, Location location) {
-  final day = completionCalendarDay(time, location);
-  return day.year * 10000 + day.month * 100 + day.day;
-}
-
-String _groupKey(PrayerCompletion completion, Location location) {
+String completionGroupKey(PrayerCompletion completion, Location location) {
   return '${completionDayKey(completion.completionTime, location)}_'
       '${completion.prayer.name}';
 }
@@ -36,7 +29,7 @@ PrayerCompletion? pickCanonical(
         c.completionTime.isSameCalendarDay(day, location),
   );
   if (matches.isEmpty) return null;
-  return matches.reduce(_preferCanonical);
+  return matches.reduce(preferCanonicalCompletion);
 }
 
 /// Returns one canonical row per `(calendar_day, prayer)` in [location].
@@ -46,10 +39,10 @@ List<PrayerCompletion> dedupeCompletions(
 ) {
   final groups = <String, List<PrayerCompletion>>{};
   for (final row in rows) {
-    groups.putIfAbsent(_groupKey(row, location), () => []).add(row);
+    groups.putIfAbsent(completionGroupKey(row, location), () => []).add(row);
   }
   return [
-    for (final group in groups.values) group.reduce(_preferCanonical),
+    for (final group in groups.values) group.reduce(preferCanonicalCompletion),
   ];
 }
 
@@ -104,7 +97,11 @@ Map<CompletionStatus, int> countDedupedStatusesInRange(
   return countDedupedStatuses(filtered.toList(), location);
 }
 
-PrayerCompletion _preferCanonical(PrayerCompletion a, PrayerCompletion b) {
+/// Highest [PrayerCompletion.id] wins; tie-break by latest [completionTime].
+PrayerCompletion preferCanonicalCompletion(
+  PrayerCompletion a,
+  PrayerCompletion b,
+) {
   final aId = a.id ?? -1;
   final bId = b.id ?? -1;
   if (aId != bId) {

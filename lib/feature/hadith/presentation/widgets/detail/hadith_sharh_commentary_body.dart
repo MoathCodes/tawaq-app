@@ -3,13 +3,11 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:tawaq/core/commentary/commentary_inline_run_builder.dart';
 import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
 import 'package:tawaq/core/commentary/commentary_text_styles.dart';
-import 'package:tawaq/core/widgets/desktop_selection.dart' show ScopedSelectableRichText;
-import 'package:tawaq/core/widgets/widgets.dart' show ScopedSelectableRichText;
 import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_segment.dart';
 
 /// Renders tokenized sharh segments as inline rich-text runs.
 ///
-/// Adjacent segments share one [ScopedSelectableRichText] so gloss markers
+/// Adjacent segments share one selectable rich-text run so gloss markers
 /// (`أي:`), quotes, and prose flow on the same line and selection crosses
 /// style boundaries. [Column] breaks appear only at paragraph boundaries
 /// (section leads and blank-line pivots).
@@ -35,42 +33,42 @@ class HadithSharhCommentaryBody extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (segments.isEmpty) return const SizedBox.shrink();
-
-    final runs = useMemoized(
-      () => CommentaryInlineRunBuilder.collectSpanRuns(
+    return CommentaryStyleScope(
+      styles: styles,
+      child: _HadithSharhCommentaryBodyContent(
         segments: segments,
-        startsNewParagraph: _startsNewParagraph,
-        buildSpans: (segments, start, end) => _fragmentsToSpans(
-          _buildFragments(segments: segments, start: start, end: end),
-          styles,
-        ),
-      ),
-      [
-        segments,
-        styles.prose,
-        styles.quote,
-        styles.gloss,
-        styles.sectionLead,
-        styles.alternateOpinion,
-        styles.scholarLead,
-        styles.editorialBracket,
-        styles.ayah,
-        styles.verseRef,
-        styles.qawlLead,
-      ],
-    );
-
-    final body = useMemoized(
-      () => CommentaryInlineRunBuilder.columnFromSpanRuns(
-        runs: runs,
-        styles: styles,
         textAlign: textAlign,
       ),
-      [runs, textAlign, styles.selectionStrut],
+    );
+  }
+
+  /// Builds the commentary widget tree from [segments].
+  ///
+  /// [context] must be under a [CommentaryStyleScope].
+  static Widget? buildBody(
+    BuildContext context, {
+    required List<HadithSharhSegment> segments,
+    required TextAlign textAlign,
+  }) {
+    if (segments.isEmpty) return null;
+
+    final styles = CommentaryStyleScope.of(context);
+    final runs = CommentaryInlineRunBuilder.collectSpanRuns(
+      segments: segments,
+      startsNewParagraph: _startsNewParagraph,
+      buildSpans: (segments, start, end) => _buildInlineSpans(
+        context: context,
+        segments: segments,
+        start: start,
+        end: end,
+      ),
     );
 
-    return body ?? const SizedBox.shrink();
+    return CommentaryInlineRunBuilder.columnFromSpanRuns(
+      runs: runs,
+      styles: styles,
+      textAlign: textAlign,
+    );
   }
 
   static bool _startsNewParagraph(HadithSharhSegment segment, int index) {
@@ -85,12 +83,14 @@ class HadithSharhCommentaryBody extends HookWidget {
     return false;
   }
 
-  static List<_CommentaryFragment> _buildFragments({
+  static List<InlineSpan> _buildInlineSpans({
+    required BuildContext context,
     required List<HadithSharhSegment> segments,
     required int start,
     required int end,
   }) {
-    final fragments = <_CommentaryFragment>[];
+    final styles = CommentaryStyleScope.of(context);
+    final spans = <InlineSpan>[];
     HadithSharhSegment? previous;
 
     for (var i = start; i < end; i++) {
@@ -99,24 +99,15 @@ class HadithSharhCommentaryBody extends HookWidget {
       if (previous != null) {
         final gap = _gapBeforeSegment(previous, segment);
         if (gap != null) {
-          fragments.add(_CommentaryFragment.gap(gap));
+          spans.add(TextSpan(text: gap, style: styles.prose));
         }
       }
 
-      fragments.addAll(_fragmentsForSegment(segment));
+      spans.addAll(_spansForSegment(segment, styles));
       previous = segment;
     }
 
-    return fragments;
-  }
-
-  static List<InlineSpan> _fragmentsToSpans(
-    List<_CommentaryFragment> fragments,
-    CommentaryTextStyles styles,
-  ) {
-    return fragments
-        .map((fragment) => fragment.toInlineSpan(styles))
-        .toList(growable: false);
+    return spans;
   }
 
   /// Inserts a space between adjacent inline segments when prose trimming
@@ -158,144 +149,44 @@ class HadithSharhCommentaryBody extends HookWidget {
     return text.characters.last;
   }
 
-  static List<_CommentaryFragment> _fragmentsForSegment(
+  static List<InlineSpan> _spansForSegment(
     HadithSharhSegment segment,
+    CommentaryTextStyles styles,
   ) {
     return switch (segment.kind) {
       HadithSharhSegmentKind.prose => CommentaryInlineSpans.tokenizeProse(
           segment.text,
-        ).map(_CommentaryFragment.proseToken).toList(growable: false),
+        ).map(
+          (token) => TextSpan(
+            text: token.text,
+            style: _styleForProseToken(token.kind, styles),
+          ),
+        ).toList(growable: false),
       HadithSharhSegmentKind.glossChain => [
-          _CommentaryFragment.styled(
-            text: segment.quotedPhrase,
-            kind: _StyledFragmentKind.quote,
-          ),
-          _CommentaryFragment.styled(
-            text: '، أي: ',
-            kind: _StyledFragmentKind.gloss,
-          ),
-          _CommentaryFragment.styled(
-            text: segment.glossText,
-            kind: _StyledFragmentKind.prose,
-          ),
+          if (segment.quotedPhrase case final quote? when quote.isNotEmpty)
+            TextSpan(text: quote, style: styles.quote),
+          TextSpan(text: '، أي: ', style: styles.gloss),
+          if (segment.glossText case final gloss? when gloss.isNotEmpty)
+            TextSpan(text: gloss, style: styles.prose),
         ],
       HadithSharhSegmentKind.gloss => [
-          _CommentaryFragment.styled(
-            text: segment.text,
-            kind: _StyledFragmentKind.gloss,
-          ),
+          TextSpan(text: segment.text, style: styles.gloss),
         ],
       HadithSharhSegmentKind.quote => [
-          _CommentaryFragment.styled(
-            text: segment.text,
-            kind: _StyledFragmentKind.quote,
-          ),
+          TextSpan(text: segment.text, style: styles.quote),
         ],
       HadithSharhSegmentKind.sectionLead => [
-          _CommentaryFragment.styled(
-            text: segment.text,
-            kind: _StyledFragmentKind.sectionLead,
-          ),
+          TextSpan(text: segment.text, style: styles.sectionLead),
         ],
       HadithSharhSegmentKind.alternateOpinion => [
-          _CommentaryFragment.styled(
-            text: segment.text,
-            kind: _StyledFragmentKind.alternateOpinion,
-          ),
+          TextSpan(text: segment.text, style: styles.alternateOpinion),
         ],
       HadithSharhSegmentKind.scholarLead => [
-          _CommentaryFragment.styled(
-            text: segment.text,
-            kind: _StyledFragmentKind.scholarLead,
-          ),
+          TextSpan(text: segment.text, style: styles.scholarLead),
         ],
       HadithSharhSegmentKind.editorialBracket => [
-          _CommentaryFragment.styled(
-            text: segment.text,
-            kind: _StyledFragmentKind.editorialBracket,
-          ),
+          TextSpan(text: segment.text, style: styles.editorialBracket),
         ],
-    };
-  }
-}
-
-enum _StyledFragmentKind {
-  prose,
-  quote,
-  gloss,
-  sectionLead,
-  alternateOpinion,
-  scholarLead,
-  editorialBracket,
-  ayah,
-  verseRef,
-  qawlLead,
-}
-
-@immutable
-class _CommentaryFragment {
-  const _CommentaryFragment._({
-    this.text,
-    this.proseToken,
-    this.styledKind,
-  });
-
-  factory _CommentaryFragment.gap(String text) {
-    return _CommentaryFragment._(
-      text: text,
-      styledKind: _StyledFragmentKind.prose,
-    );
-  }
-
-  factory _CommentaryFragment.proseToken(CommentaryProseToken token) {
-    return _CommentaryFragment._(proseToken: token);
-  }
-
-  factory _CommentaryFragment.styled({
-    required String? text,
-    required _StyledFragmentKind kind,
-  }) {
-    return _CommentaryFragment._(text: text, styledKind: kind);
-  }
-
-  final String? text;
-  final CommentaryProseToken? proseToken;
-  final _StyledFragmentKind? styledKind;
-
-  InlineSpan toInlineSpan(CommentaryTextStyles styles) {
-    if (proseToken case final token?) {
-      return TextSpan(
-        text: token.text,
-        style: _styleForProseToken(token.kind, styles),
-      );
-    }
-
-    final resolvedText = text;
-    if (resolvedText == null || resolvedText.isEmpty) {
-      return const TextSpan();
-    }
-
-    return TextSpan(
-      text: resolvedText,
-      style: _styleFor(styledKind!, styles),
-    );
-  }
-
-  static TextStyle _styleFor(
-    _StyledFragmentKind kind,
-    CommentaryTextStyles styles,
-  ) {
-    return switch (kind) {
-      _StyledFragmentKind.prose => styles.prose,
-      _StyledFragmentKind.quote => styles.quote,
-      _StyledFragmentKind.gloss => styles.gloss,
-      _StyledFragmentKind.sectionLead => styles.sectionLead,
-      _StyledFragmentKind.alternateOpinion => styles.alternateOpinion,
-      _StyledFragmentKind.scholarLead => styles.scholarLead,
-      _StyledFragmentKind.editorialBracket => styles.editorialBracket,
-      _StyledFragmentKind.ayah => styles.ayah,
-      _StyledFragmentKind.verseRef => styles.verseRef,
-      _StyledFragmentKind.qawlLead => styles.qawlLead,
     };
   }
 
@@ -311,5 +202,30 @@ class _CommentaryFragment {
       CommentaryProseTokenKind.scholarLead => styles.scholarLead,
       CommentaryProseTokenKind.qawlLead => styles.qawlLead,
     };
+  }
+}
+
+class _HadithSharhCommentaryBodyContent extends HookWidget {
+  const _HadithSharhCommentaryBodyContent({
+    required this.segments,
+    required this.textAlign,
+  });
+
+  final List<HadithSharhSegment> segments;
+  final TextAlign textAlign;
+
+  @override
+  Widget build(BuildContext context) {
+    final styles = CommentaryStyleScope.of(context);
+    final body = useMemoized(
+      () => HadithSharhCommentaryBody.buildBody(
+        context,
+        segments: segments,
+        textAlign: textAlign,
+      ),
+      [segments, styles, textAlign],
+    );
+
+    return body ?? const SizedBox.shrink();
   }
 }

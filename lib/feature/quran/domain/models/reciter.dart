@@ -75,26 +75,27 @@ abstract class Reciter with _$Reciter {
   }
 
   /// Resolves [moshafId] within this reciter, or [primaryMoshaf] when unset.
-  Moshaf? resolveMoshaf(int? moshafId) {
-    if (moshafId != null) {
-      for (final m in moshaf) {
-        if (m.id == moshafId) return m;
-      }
-    }
-    return primaryMoshaf;
-  }
-
-  /// Picks a moshaf based on playback [intent].
-  Moshaf? resolveMoshafForIntent(
-    int? moshafId,
-    RecitationPickIntent intent,
-  ) {
+  ///
+  /// When [intent] is [RecitationPickIntent.ayahLevel], prefers a moshaf with
+  /// ayah timing data (matching riwayah/style when possible).
+  Moshaf? resolveMoshaf(
+    int? moshafId, {
+    RecitationPickIntent intent = RecitationPickIntent.general,
+  }) {
     if (intent == RecitationPickIntent.general) {
-      return resolveMoshaf(moshafId);
+      if (moshafId != null) {
+        for (final m in moshaf) {
+          if (m.id == moshafId) return m;
+        }
+      }
+      return primaryMoshaf;
     }
-    final saved = resolveMoshaf(moshafId);
+
+    final saved = moshafId != null
+        ? moshaf.where((m) => m.id == moshafId).firstOrNull
+        : null;
     if (saved != null && saved.hasTiming) return saved;
-    return _bestTimedMoshaf(preferred: saved) ?? saved;
+    return _bestTimedMoshaf(preferred: saved) ?? saved ?? primaryMoshaf;
   }
 
   Moshaf? _bestTimedMoshaf({Moshaf? preferred}) {

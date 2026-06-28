@@ -12,7 +12,7 @@ class ShellBottomNavigationBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final routes = ref.watch(mainRoutesProvider);
+    final routes = kMainRoutes;
     final currentLocation = GoRouter.of(context).state.fullPath;
     final selectedIndex = routes.indexWhere(
       (route) => route.containsLocation(currentLocation),

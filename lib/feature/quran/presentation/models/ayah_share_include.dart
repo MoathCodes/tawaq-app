@@ -13,6 +13,57 @@ enum AyahShareInclude {
   preserveLineBreaks,
 }
 
+/// Maps selected share includes to [AyahShareCard] display flags.
+class AyahShareCardOptions {
+  /// Creates share card options from [includes].
+  const AyahShareCardOptions(this.includes);
+
+  /// Selected include options.
+  final Set<AyahShareInclude> includes;
+
+  /// Whether to show the decorative surah header.
+  bool get showSurahHeader => includes.contains(AyahShareInclude.surahHeader);
+
+  /// Whether to show the basmalah line.
+  bool get showBasmalah => includes.contains(AyahShareInclude.basmalah);
+
+  /// Whether to show the app name footer.
+  bool get showAppName => includes.contains(AyahShareInclude.appName);
+
+  /// Whether to preserve mushaf line breaks in partial ranges.
+  bool get preserveMushafLineBreaks =>
+      includes.contains(AyahShareInclude.preserveLineBreaks);
+
+  /// Default include options for a share image.
+  factory AyahShareCardOptions.defaults({required bool basmalahAvailable}) {
+    return AyahShareCardOptions({
+      AyahShareInclude.surahHeader,
+      AyahShareInclude.appName,
+      if (basmalahAvailable) AyahShareInclude.basmalah,
+    });
+  }
+
+  /// Applies availability constraints and returns updated options.
+  AyahShareCardOptions constrained({
+    required bool basmalahAvailable,
+    required bool lineBreaksToggleAvailable,
+  }) {
+    var next = Set.of(includes);
+    if (!basmalahAvailable) {
+      next.remove(AyahShareInclude.basmalah);
+    }
+    if (!lineBreaksToggleAvailable) {
+      next.remove(AyahShareInclude.preserveLineBreaks);
+    }
+    return AyahShareCardOptions(next);
+  }
+
+  /// Returns a copy with updated includes.
+  AyahShareCardOptions copyWithIncludes(Set<AyahShareInclude> includes) {
+    return AyahShareCardOptions(includes);
+  }
+}
+
 /// Default include options for a share image.
 ///
 /// Surah header and app name are always on. Basmalah is on whenever the range
@@ -20,9 +71,7 @@ enum AyahShareInclude {
 Set<AyahShareInclude> defaultAyahShareIncludes({
   required bool basmalahAvailable,
 }) {
-  return {
-    AyahShareInclude.surahHeader,
-    AyahShareInclude.appName,
-    if (basmalahAvailable) AyahShareInclude.basmalah,
-  };
+  return AyahShareCardOptions.defaults(
+    basmalahAvailable: basmalahAvailable,
+  ).includes;
 }

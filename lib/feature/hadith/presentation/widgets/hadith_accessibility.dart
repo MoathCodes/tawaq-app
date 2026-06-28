@@ -92,33 +92,3 @@ class HadithDecorExcludeSemantics extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ExcludeSemantics(child: child);
 }
-
-/// One merged semantics node for a hadith result row (metadata only).
-class HadithResultRowSemantics extends StatelessWidget {
-  /// Creates row-level semantics for a result card.
-  const HadithResultRowSemantics({
-    required this.label,
-    required this.child,
-    this.button = false,
-    super.key,
-  });
-
-  /// Screen-reader label for the row.
-  final String label;
-
-  /// Visual row content; inner text should stay under [ExcludeSemantics].
-  final Widget child;
-
-  /// Whether assistive tech should treat the row as a button.
-  final bool button;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: label,
-      button: button,
-      excludeSemantics: true,
-      child: child,
-    );
-  }
-}

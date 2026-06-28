@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/schedule_selected_date_provider.dart';
 
 void main() {
-  group('prayer_calendar_utils', () {
+  group('prayer_calendar', () {
     test('dateFromCalendarDayKey round-trips with calendarDayKeyFromDate', () {
       const key = 20260618;
       final date = dateFromCalendarDayKey(key);

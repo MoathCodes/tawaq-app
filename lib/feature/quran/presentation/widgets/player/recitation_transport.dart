@@ -1,18 +1,16 @@
-import 'dart:async';
-
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_equalizer.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport_controls.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Minimum allocated width before the reciter subtitle is shown.
-const _kTransportSubtitleMinWidth = 300.0;
+export 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport_controls.dart'
+    show leftSkipControl, rightSkipControl, SkipAction, SkipControl;
 
 /// Compact inline transport that lives in the title bar.
 ///
@@ -42,8 +40,7 @@ class _TransportPill extends ConsumerWidget {
     final mushaf = ref.read(quranMushafControllerProvider);
 
     final isPlaying = playback.isPlaying;
-    final isLoading = playback.isLoading || playback.downloading;
-    final hasPending = playback.hasPendingReciter;
+    final isLoading = playback.isLoading;
     final showMetadata = playback.active;
 
     final surah = playback.surah;
@@ -51,13 +48,6 @@ class _TransportPill extends ConsumerWidget {
         ? ''
         : mushaf.getSurahSync(surah)?.displayName ??
               l10n.quranSurahLabel('$surah');
-    final selectedReciter = ref.watch(selectedReciterProvider).value;
-    final currentReciterName =
-        playback.reciter?.name ?? selectedReciter?.name ?? '';
-    final reciterName = hasPending
-        ? '${currentReciterName.isNotEmpty ? '$currentReciterName → ' : ''}'
-              '${playback.pendingReciter!.name}'
-        : currentReciterName;
 
     final titleStyle = theme.typography.body.sm.copyWith(
       color: colors.foreground,
@@ -84,10 +74,8 @@ class _TransportPill extends ConsumerWidget {
         final maxWidth = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : double.infinity;
-        final showSubtitle =
-            reciterName.isNotEmpty &&
-            maxWidth >= _kTransportSubtitleMinWidth &&
-            (showMetadata || hasPending);
+        final showSkip = playback.active && surah != null;
+        final isRtl = Directionality.of(context) == TextDirection.rtl;
 
         return ConstrainedBox(
           constraints: BoxConstraints(maxWidth: maxWidth),
@@ -97,26 +85,29 @@ class _TransportPill extends ConsumerWidget {
               semanticsLabel: drawerOpen
                   ? l10n.quranRecitationClosePlayer
                   : l10n.quranRecitationOpenPlayer,
-              prefix: _TransportControls(
+              prefix: RecitationTransportControls(
                 isPlaying: isPlaying,
                 isLoading: isLoading,
-                isPending: hasPending,
-                canSkip: showMetadata,
                 onPlayPause: controller.togglePlayPause,
-                onSkipPrevious: controller.skipPrevious,
-                onSkipNext: controller.skipNext,
-                onCancelPending: controller.cancelPendingReciter,
+                leftSlot: leftSkipControl(
+                  isRtl: isRtl,
+                  skipPrevious: controller.skipPrevious,
+                  skipNext: controller.skipNext,
+                  previousLabel: l10n.quranRecitationPrevious,
+                  nextLabel: l10n.quranRecitationNext,
+                ),
+                rightSlot: rightSkipControl(
+                  isRtl: isRtl,
+                  skipPrevious: controller.skipPrevious,
+                  skipNext: controller.skipNext,
+                  previousLabel: l10n.quranRecitationPrevious,
+                  nextLabel: l10n.quranRecitationNext,
+                ),
+                showSkip: showSkip,
               ),
               title: showMetadata || surahName.isNotEmpty
                   ? titleWidget
                   : const SizedBox.shrink(),
-              subtitle: showSubtitle
-                  ? Text(
-                      reciterName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    )
-                  : null,
               suffix: _TransportSuffix(
                 isPlaying: isPlaying,
                 drawerOpen: drawerOpen,
@@ -126,70 +117,6 @@ class _TransportPill extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-}
-
-/// Play, skip and cancel controls shown at the start of the transport pill.
-class _TransportControls extends StatelessWidget {
-  const _TransportControls({
-    required this.isPlaying,
-    required this.isLoading,
-    required this.isPending,
-    required this.canSkip,
-    required this.onPlayPause,
-    required this.onSkipPrevious,
-    required this.onSkipNext,
-    required this.onCancelPending,
-  });
-
-  final bool isPlaying;
-  final bool isLoading;
-  final bool isPending;
-  final bool canSkip;
-  final Future<void> Function() onPlayPause;
-  final Future<void> Function() onSkipPrevious;
-  final Future<void> Function() onSkipNext;
-  final VoidCallback onCancelPending;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (canSkip) ...[
-          _TransportIcon(
-            icon: FLucideIcons.skipBack,
-            tooltip: l10n.quranRecitationPrevious,
-            onPress: onSkipPrevious,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-        ],
-        _RoundPlayButton(
-          isPlaying: isPlaying,
-          isLoading: isLoading,
-          isPending: isPending,
-          onPressed: onPlayPause,
-        ),
-        if (isPending) ...[
-          const SizedBox(width: AppSpacing.xs),
-          _TransportIcon(
-            icon: FLucideIcons.x,
-            tooltip: l10n.quranRecitationCancel,
-            onPress: onCancelPending,
-          ),
-        ],
-        if (canSkip) ...[
-          const SizedBox(width: AppSpacing.xs),
-          _TransportIcon(
-            icon: FLucideIcons.skipForward,
-            tooltip: l10n.quranRecitationNext,
-            onPress: onSkipNext,
-          ),
-        ],
-      ],
     );
   }
 }
@@ -223,86 +150,6 @@ class _TransportSuffix extends StatelessWidget {
           color: colors.mutedForeground,
         ),
       ],
-    );
-  }
-}
-
-class _RoundPlayButton extends StatelessWidget {
-  const _RoundPlayButton({
-    required this.isPlaying,
-    required this.isLoading,
-    required this.isPending,
-    required this.onPressed,
-  });
-
-  final bool isPlaying;
-  final bool isLoading;
-  final bool isPending;
-  final Future<void> Function() onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    if (isLoading) {
-      return const SizedBox(
-        width: 36,
-        height: 36,
-        child: Center(
-          child: FCircularProgress(size: FCircularProgressSizeVariant.sm),
-        ),
-      );
-    }
-    final button = FTappable(
-      onPress: onPressed,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: colors.primary,
-          shape: BoxShape.circle,
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          isPending
-              ? FLucideIcons.check
-              : isPlaying
-              ? FLucideIcons.pause
-              : FLucideIcons.play,
-          size: 18,
-          color: colors.primaryForeground,
-        ),
-      ),
-    );
-    if (isPending) {
-      return FTooltip(
-        tipBuilder: (_, _) => Text(context.l10n.quranRecitationApply),
-        child: button,
-      );
-    }
-    return button;
-  }
-}
-
-class _TransportIcon extends StatelessWidget {
-  const _TransportIcon({
-    required this.icon,
-    required this.onPress,
-    required this.tooltip,
-  });
-
-  final IconData icon;
-  final VoidCallback onPress;
-  final String tooltip;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    return FTooltip(
-      tipBuilder: (_, _) => Text(tooltip),
-      child: MouseClick(
-        onClick: onPress,
-        child: Icon(icon, size: 18, color: colors.secondaryForeground),
-      ),
     );
   }
 }

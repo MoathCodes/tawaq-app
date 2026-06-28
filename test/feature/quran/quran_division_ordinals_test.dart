@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/juz_selector.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_ordinals.dart';
 
 void main() {
@@ -32,7 +34,7 @@ void main() {
 
   group('localized wrappers', () {
     test('localizedJuzNumericLabel', () {
-      expect(localizedJuzNumericLabel(2, isArabic: true), 'الثاني');
+      expect(localizedJuzNumericLabel(2, isArabic: true), 'الجزء الثاني');
       expect(localizedJuzNumericLabel(2, isArabic: false), 'Juz 2');
     });
 

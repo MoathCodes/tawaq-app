@@ -43,26 +43,13 @@ bool canUseHorizontalSplit({
 /// initialize (Forui asserts `extent.min < extent.max` per region).
 const kResizableSplitSlack = 1.0;
 
-/// Reference window width used to convert a legacy pixel-based side-panel width
-/// into a ratio when migrating persisted state.
-const kSidePanelRatioMigrationWidth = 1280.0;
-
-/// In-place migration of a legacy `sidePanelWidth` (pixels) entry to a
-/// `sidePanelRatio` (0..1) entry on a decoded JSON [map].
-///
-/// Side panels are now persisted as a fraction of the window width. Older state
-/// stored an absolute pixel width; convert it against a typical window width and
-/// clamp to a sane range. No-op when already migrated or absent.
-void migrateSidePanelWidthToRatio(Map<String, dynamic> map) {
-  if (map.containsKey('sidePanelRatio')) return;
-  final legacy = map.remove('sidePanelWidth');
-  if (legacy is num) {
-    map['sidePanelRatio'] = (legacy / kSidePanelRatioMigrationWidth).clamp(
-      0.15,
-      0.5,
-    );
-  }
-}
+/// Resolved layout extents for horizontal split panes.
+typedef ResolvedHorizontalSplit = ({
+  double sideExtent,
+  double mainExtent,
+  double sideMin,
+  double mainMin,
+});
 
 /// Resolved initial extents for a two-pane horizontal split.
 class SplitExtents {
@@ -124,6 +111,56 @@ SplitExtents resolveSplitExtents({
   return SplitExtents(
     sideExtent: sideExtent,
     mainExtent: mainExtent,
+  );
+}
+
+/// Resolves side/main pane extents for feature split layouts.
+///
+/// Applies optional [spacer] before computing against [totalWidth], then clamps
+/// [sideWidth] using [sideMin], [mainMin], and optional side caps expressed as
+/// [sideMaxFraction] and/or [sideMaxPixels].
+ResolvedHorizontalSplit resolveFeatureSplitExtents({
+  required double totalWidth,
+  required double sideWidth,
+  required double sideMin,
+  required double mainMin,
+  double? sideMaxFraction,
+  double? sideMaxPixels,
+  double spacer = 0,
+}) {
+  final available = (totalWidth - spacer).clamp(0.0, double.infinity);
+  if (available <= 0) {
+    return (sideExtent: 0, mainExtent: 0, sideMin: 0, mainMin: 0);
+  }
+
+  final resolvedSideMin = sideMin.clamp(0.0, available);
+  final resolvedMainMin = mainMin.clamp(0.0, available - resolvedSideMin);
+
+  double? sideMax;
+  if (sideMaxFraction != null || sideMaxPixels != null) {
+    var maxSide = available - resolvedMainMin;
+    if (sideMaxFraction != null) {
+      maxSide = math.min(maxSide, available * sideMaxFraction);
+    }
+    if (sideMaxPixels != null) {
+      maxSide = math.min(maxSide, sideMaxPixels);
+    }
+    sideMax = maxSide.clamp(resolvedSideMin, available - resolvedMainMin);
+  }
+
+  final extents = resolveSplitExtents(
+    totalWidth: available,
+    sideWidth: sideWidth,
+    sideMin: resolvedSideMin,
+    mainMin: resolvedMainMin,
+    sideMax: sideMax,
+  );
+
+  return (
+    sideExtent: extents.sideExtent,
+    mainExtent: extents.mainExtent,
+    sideMin: resolvedSideMin,
+    mainMin: resolvedMainMin,
   );
 }
 

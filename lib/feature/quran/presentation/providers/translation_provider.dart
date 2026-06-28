@@ -4,9 +4,7 @@ import 'package:tawaq/core/database/asset_database_service.dart';
 import 'package:tawaq/core/utils/lru_ayah_cache.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/data/repository/translation_repository.dart';
-import 'package:tawaq/feature/quran/data/sources/quran_content_registry.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
-import 'package:tawaq/feature/quran/domain/services/translation_service.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 part 'translation_provider.g.dart';
@@ -18,16 +16,6 @@ part 'translation_provider.g.dart';
 TranslationRepository translationRepository(Ref ref) {
   final dbService = ref.read(assetDatabaseServiceProvider);
   return TranslationRepository(dbService);
-}
-
-/// Provides the [TranslationService] instance.
-///
-/// Intentionally keepAlive: thin service wrapper over
-/// [translationRepositoryProvider].
-@Riverpod(keepAlive: true)
-TranslationService translationService(Ref ref) {
-  final repository = ref.read(translationRepositoryProvider);
-  return TranslationService(repository);
 }
 
 /// In-memory LRU for recently fetched translation database rows.
@@ -53,7 +41,7 @@ Future<Translation?> ayahTranslationRow(
   if (cached.hit) return cached.value;
 
   final result = await ref
-      .read(translationServiceProvider)
+      .read(translationRepositoryProvider)
       .getTranslation(source, sura, aya);
   lru.store(source.name, sura, aya, result);
   return result;
@@ -64,9 +52,7 @@ Future<Translation?> ayahTranslationRow(
 Future<Translation?> ayahTranslation(Ref ref, int sura, int aya) {
   final source = ref.watch(
     quranScreenSettingsProvider.select(
-      (settings) =>
-          settings.value?.selectedTranslation ??
-          QuranContentRegistry.defaultTranslation,
+      (settings) => settings.value?.selectedTranslation ?? kDefaultTranslationId,
     ),
   );
   return ref.watch(ayahTranslationRowProvider(source, sura, aya).future);

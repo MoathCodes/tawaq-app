@@ -5,7 +5,7 @@ import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_service_provider.dart';
+import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:timezone/timezone.dart';
 
@@ -41,11 +41,11 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
     final location = _location;
     if (location == null) return;
 
-    final service = ref.read(prayerServiceProvider);
+    final repo = ref.read(prayerRepoProvider);
     final normalizedDay = normalizeCompletionDay(completionDay);
 
     if (status == CompletionStatus.none) {
-      await service.deleteCompletionForPrayerOnDate(
+      await repo.deleteCompletionForPrayerOnDate(
         prayer,
         normalizedDay,
         location,
@@ -61,7 +61,7 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
       ref
           .read(firstPrayerRecordedDateProvider.notifier)
           .setIfNull(completion.completionTime);
-      await service.addOrUpdateCompletion(completion, location);
+      await repo.addOrUpdateCompletion(completion, location);
     }
 
     if (!ref.mounted) return;

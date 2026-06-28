@@ -4,8 +4,8 @@ import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_header_widget.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/quran_layout_widgets.dart'
-    as layouts;
+import 'package:tawaq/feature/quran/presentation/widgets/quran_mushaf_pane.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study_mode_layout.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -25,7 +25,7 @@ class QuranScreen extends HookConsumerWidget {
       ),
     );
 
-    const mushafPane = layouts.QuranMushafPane(
+    const mushafPane = QuranMushafPane(
       key: ValueKey('quran-mushaf-pane'),
     );
 
@@ -36,12 +36,10 @@ class QuranScreen extends HookConsumerWidget {
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-            child: layouts.QuranMushafInitGate(
+            child: QuranMushafInitGate(
               child: switch (viewMode) {
-                QuranReadingLayout.doublePage => const layouts.DoublePageLayout(
-                  mushaf: mushafPane,
-                ),
-                QuranReadingLayout.studyMode => const layouts.StudyModeLayout(
+                QuranReadingLayout.doublePage => mushafPane,
+                QuranReadingLayout.studyMode => const StudyModeLayout(
                   mushaf: mushafPane,
                 ),
               },

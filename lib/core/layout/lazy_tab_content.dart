@@ -1,54 +1,76 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart' show FTabs;
-import 'package:forui/widgets/tabs.dart' show FTabs;
+import 'package:forui/forui.dart';
 
-/// Defers building a tab's body until the tab is first selected.
+/// Defers building tab/panel content until it is first selected.
 ///
-/// [TabBarView] mounts every page at once, so heavy tabs (e.g. the timezone
-/// map) would otherwise build and run their providers while off-screen. Once a
-/// tab is activated it stays built, since [TabBarView] keeps pages mounted.
-class LazyTabContent extends StatefulWidget {
-  /// Creates [LazyTabContent].
-  const LazyTabContent({
-    required this.controller,
+/// Use [LazyPanelContent.tab] with a [TabController] (Material [TabBarView]) or
+/// [LazyPanelContent.indexed] with an index-controlled control (e.g. Forui
+/// [FTabs]). Once activated, content stays built.
+class LazyPanelContent extends StatefulWidget {
+  /// Defers building until [controller]'s index matches [index].
+  const LazyPanelContent.tab({
+    required TabController controller,
     required this.index,
     required this.builder,
     super.key,
-  });
+  })  : _controller = controller,
+        _selectedIndex = null;
 
-  /// Tab controller shared with the surrounding [TabBarView].
-  final TabController controller;
+  /// Defers building until [selectedIndex] matches [index].
+  const LazyPanelContent.indexed({
+    required int selectedIndex,
+    required this.index,
+    required this.builder,
+    super.key,
+  })  : _controller = null,
+        _selectedIndex = selectedIndex;
 
-  /// Index of this tab within [TabBarView.children].
+  final TabController? _controller;
+  final int? _selectedIndex;
+
+  /// Index of this panel within the parent tab list.
   final int index;
 
-  /// Builds the tab body when the tab is first activated.
+  /// Builds the panel body when first activated.
   final Widget Function() builder;
 
   @override
-  State<LazyTabContent> createState() => _LazyTabContentState();
+  State<LazyPanelContent> createState() => _LazyPanelContentState();
 }
 
-class _LazyTabContentState extends State<LazyTabContent> {
+class _LazyPanelContentState extends State<LazyPanelContent> {
   bool _activated = false;
 
   @override
   void initState() {
     super.initState();
+    widget._controller?.addListener(_maybeActivate);
     _maybeActivate();
-    widget.controller.addListener(_maybeActivate);
+  }
+
+  @override
+  void didUpdateWidget(LazyPanelContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget._controller != widget._controller) {
+      oldWidget._controller?.removeListener(_maybeActivate);
+      widget._controller?.addListener(_maybeActivate);
+    }
+    _maybeActivate();
   }
 
   void _maybeActivate() {
     if (_activated || !mounted) return;
-    if (widget.controller.index == widget.index) {
+    final active = widget._controller != null
+        ? widget._controller!.index == widget.index
+        : widget._selectedIndex == widget.index;
+    if (active) {
       setState(() => _activated = true);
     }
   }
 
   @override
   void dispose() {
-    widget.controller.removeListener(_maybeActivate);
+    widget._controller?.removeListener(_maybeActivate);
     super.dispose();
   }
 
@@ -58,57 +80,59 @@ class _LazyTabContentState extends State<LazyTabContent> {
   }
 }
 
-/// Defers building indexed panel content until [selectedIndex] first matches
-/// [index].
-///
-/// Use with index-controlled tab widgets (e.g. Forui [FTabs]) that do not use
-/// a [TabController]. Once activated, content stays built.
-class LazyIndexedContent extends StatefulWidget {
-  /// Creates [LazyIndexedContent].
-  const LazyIndexedContent({
-    required this.selectedIndex,
-    required this.index,
-    required this.builder,
+/// Defers building a tab's body until the tab is first selected.
+@Deprecated('Use LazyPanelContent.tab instead.')
+class LazyTabContent extends StatelessWidget {
+  /// Creates [LazyTabContent].
+  @Deprecated('Use LazyPanelContent.tab instead.')
+  const LazyTabContent({
+    required TabController controller,
+    required int index,
+    required Widget Function() builder,
     super.key,
-  });
+  })  : _controller = controller,
+        _index = index,
+        _builder = builder;
 
-  /// Currently selected tab index from the parent control.
-  final int selectedIndex;
-
-  /// Index of this panel within the parent tab list.
-  final int index;
-
-  /// Builds the panel body when first activated.
-  final Widget Function() builder;
-
-  @override
-  State<LazyIndexedContent> createState() => _LazyIndexedContentState();
-}
-
-class _LazyIndexedContentState extends State<LazyIndexedContent> {
-  bool _activated = false;
-
-  @override
-  void didUpdateWidget(LazyIndexedContent oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _maybeActivate();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _maybeActivate();
-  }
-
-  void _maybeActivate() {
-    if (_activated || !mounted) return;
-    if (widget.selectedIndex == widget.index) {
-      setState(() => _activated = true);
-    }
-  }
+  final TabController _controller;
+  final int _index;
+  final Widget Function() _builder;
 
   @override
   Widget build(BuildContext context) {
-    return _activated ? widget.builder() : const SizedBox.shrink();
+    return LazyPanelContent.tab(
+      controller: _controller,
+      index: _index,
+      builder: _builder,
+    );
+  }
+}
+
+/// Defers building indexed panel content until [selectedIndex] first matches
+/// [index].
+@Deprecated('Use LazyPanelContent.indexed instead.')
+class LazyIndexedContent extends StatelessWidget {
+  /// Creates [LazyIndexedContent].
+  @Deprecated('Use LazyPanelContent.indexed instead.')
+  const LazyIndexedContent({
+    required int selectedIndex,
+    required int index,
+    required Widget Function() builder,
+    super.key,
+  })  : _selectedIndex = selectedIndex,
+        _index = index,
+        _builder = builder;
+
+  final int _selectedIndex;
+  final int _index;
+  final Widget Function() _builder;
+
+  @override
+  Widget build(BuildContext context) {
+    return LazyPanelContent.indexed(
+      selectedIndex: _selectedIndex,
+      index: _index,
+      builder: _builder,
+    );
   }
 }

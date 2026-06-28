@@ -1,8 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/ayah_reference.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_pick_intent.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
+
+class _FakeMushafReaderController extends Mock
+    implements MushafReaderController {}
 
 Moshaf _moshaf({
   required int id,
@@ -20,16 +25,16 @@ Moshaf _moshaf({
 Reciter _reciter(List<Moshaf> moshaf) => Reciter(id: 1, name: 'Test', moshaf: moshaf);
 
 void main() {
-  group('resolveMoshafForIntent', () {
+  group('resolveMoshaf', () {
     test('ayah intent upgrades non-timed saved moshaf to timed hafs', () {
       final reciter = _reciter([
         _moshaf(id: 10, name: 'حفص عن عاصم - مجوّد'),
         _moshaf(id: 11, name: 'حفص عن عاصم - مرتل', timingReadId: 42),
       ]);
 
-      final resolved = reciter.resolveMoshafForIntent(
+      final resolved = reciter.resolveMoshaf(
         10,
-        RecitationPickIntent.ayahLevel,
+        intent: RecitationPickIntent.ayahLevel,
       );
 
       expect(resolved?.id, 11);
@@ -47,9 +52,9 @@ void main() {
         timed,
       ]);
 
-      final resolved = reciter.resolveMoshafForIntent(
+      final resolved = reciter.resolveMoshaf(
         11,
-        RecitationPickIntent.ayahLevel,
+        intent: RecitationPickIntent.ayahLevel,
       );
 
       expect(resolved, timed);
@@ -62,9 +67,9 @@ void main() {
         _moshaf(id: 11, name: 'حفص عن عاصم - مرتل', timingReadId: 42),
       ]);
 
-      final resolved = reciter.resolveMoshafForIntent(
+      final resolved = reciter.resolveMoshaf(
         10,
-        RecitationPickIntent.general,
+        intent: RecitationPickIntent.general,
       );
 
       expect(resolved, untimed);
@@ -76,9 +81,9 @@ void main() {
         _moshaf(id: 11, name: 'حفص عن عاصم - مرتل', timingReadId: 42),
       ]);
 
-      final resolved = reciter.resolveMoshafForIntent(
+      final resolved = reciter.resolveMoshaf(
         10,
-        RecitationPickIntent.ayahLevel,
+        intent: RecitationPickIntent.ayahLevel,
       );
 
       expect(resolved?.id, 11);
@@ -97,12 +102,31 @@ void main() {
   group('isGlobalRangeComplete', () {
     test('detects completion at global end', () {
       const to = AyahReference(surah: 3, ayah: 5);
+      final mushaf = _FakeMushafReaderController();
+      when(() => mushaf.getSurahSync(any())).thenReturn(
+        Surah(
+          number: 3,
+          glyph: '',
+          hasBasmalah: true,
+          ayahCount: 5,
+        ),
+      );
       expect(
-        isGlobalRangeComplete(to: to, surah: 3, endAyah: 5),
+        isGlobalRangeComplete(
+          to: to,
+          surah: 3,
+          endAyah: 5,
+          mushaf: mushaf,
+        ),
         isTrue,
       );
       expect(
-        isGlobalRangeComplete(to: to, surah: 2, endAyah: 286),
+        isGlobalRangeComplete(
+          to: to,
+          surah: 2,
+          endAyah: 286,
+          mushaf: mushaf,
+        ),
         isFalse,
       );
     });

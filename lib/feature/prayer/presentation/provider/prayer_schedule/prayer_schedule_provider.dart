@@ -7,8 +7,8 @@ import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
-import 'package:tawaq/feature/prayer/domain/use_cases/compute_prayer_card_decision.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_timeline.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
@@ -40,10 +40,7 @@ Prayer? scheduleCurrentPrayer(Ref ref) {
   return getCurrentPrayer(
     currentTime: day.now,
     location: day.location,
-    todaysPrayerTimes: day.today,
-    todaysSunnahTimes: day.todaySunnah,
-    yesterdaysPrayerTimes: day.yesterday,
-    yesterdaysSunnahTimes: day.yesterdaySunnah,
+    timeline: day.timeline,
   );
 }
 

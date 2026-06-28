@@ -1,26 +1,16 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Shared chrome for modal dialogs: a themed card with a title row (optional
-/// leading icon), a close button, and a body.
-///
-/// Pulls every color from the active [FThemeData] so it adapts to light and
-/// dark themes. [width] is a *preferred* width — the shell clamps to the
-/// viewport via [dialogConstraints].
-class PlayerDialogShell extends StatelessWidget {
-  /// Creates a [PlayerDialogShell].
-  const PlayerDialogShell({
+/// Shared title row for player-style modal dialogs.
+class PlayerDialogHeader extends StatelessWidget {
+  /// Creates a [PlayerDialogHeader].
+  const PlayerDialogHeader({
     required this.title,
-    required this.child,
-    this.icon,
     this.subtitle,
+    this.icon,
     this.headerBottom,
-    this.footer,
-    this.width = 520,
-    this.maxHeight,
-    this.scrollableBody = false,
     super.key,
   });
 
@@ -33,23 +23,8 @@ class PlayerDialogShell extends StatelessWidget {
   /// Optional leading icon next to the title.
   final IconData? icon;
 
-  /// Body content.
-  final Widget child;
-
   /// Optional widget pinned under the title row (e.g. a search field).
   final Widget? headerBottom;
-
-  /// Optional pinned footer below the body (e.g. a primary action).
-  final Widget? footer;
-
-  /// Preferred dialog width; clamped to the viewport.
-  final double width;
-
-  /// Optional max height; the [child] scrolls within it when [scrollableBody].
-  final double? maxHeight;
-
-  /// Whether the body should scroll inside [maxHeight].
-  final bool scrollableBody;
 
   @override
   Widget build(BuildContext context) {
@@ -57,14 +32,7 @@ class PlayerDialogShell extends StatelessWidget {
     final colors = theme.colors;
     final typography = theme.typography;
 
-    final constraints = dialogConstraints(
-      context,
-      preferredWidth: width,
-      preferredHeight: maxHeight,
-      minWidth: 320,
-    );
-
-    final header = Padding(
+    return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
         AppSpacing.lg,
@@ -124,6 +92,75 @@ class PlayerDialogShell extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Shared chrome for modal dialogs: a themed card with a title row (optional
+/// leading icon), a close button, and a body.
+///
+/// Pulls every color from the active [FThemeData] so it adapts to light and
+/// dark themes. [width] is a *preferred* width — the shell clamps to the
+/// viewport via [dialogConstraints].
+class TawaqDialogShell extends StatelessWidget {
+  /// Creates a [TawaqDialogShell].
+  const TawaqDialogShell({
+    required this.title,
+    required this.child,
+    this.icon,
+    this.subtitle,
+    this.headerBottom,
+    this.footer,
+    this.width = 520,
+    this.maxHeight,
+    this.scrollableBody = false,
+    super.key,
+  });
+
+  /// Dialog title.
+  final String title;
+
+  /// Optional muted line under the title.
+  final String? subtitle;
+
+  /// Optional leading icon next to the title.
+  final IconData? icon;
+
+  /// Body content.
+  final Widget child;
+
+  /// Optional widget pinned under the title row (e.g. a search field).
+  final Widget? headerBottom;
+
+  /// Optional pinned footer below the body (e.g. a primary action).
+  final Widget? footer;
+
+  /// Preferred dialog width; clamped to the viewport.
+  final double width;
+
+  /// Optional max height; the [child] scrolls within it when [scrollableBody].
+  final double? maxHeight;
+
+  /// Whether the body should scroll inside [maxHeight].
+  final bool scrollableBody;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final colors = theme.colors;
+
+    final constraints = dialogConstraints(
+      context,
+      preferredWidth: width,
+      preferredHeight: maxHeight,
+      minWidth: 320,
+    );
+
+    final header = PlayerDialogHeader(
+      title: title,
+      subtitle: subtitle,
+      icon: icon,
+      headerBottom: headerBottom,
+    );
 
     final body = scrollableBody
         ? Flexible(child: SingleChildScrollView(child: child))
@@ -157,3 +194,6 @@ class PlayerDialogShell extends StatelessWidget {
     );
   }
 }
+
+/// @deprecated Use [TawaqDialogShell] instead.
+typedef PlayerDialogShell = TawaqDialogShell;

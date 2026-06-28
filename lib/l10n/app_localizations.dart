@@ -98,53 +98,77 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
-  /// No description provided for @menuOpen.
+  /// No description provided for @a11yExpandSidebar.
   ///
   /// In en, this message translates to:
-  /// **'Open'**
-  String get menuOpen;
+  /// **'Expand sidebar'**
+  String get a11yExpandSidebar;
 
-  /// No description provided for @menuCopyText.
+  /// No description provided for @a11yNavigationUnavailable.
   ///
   /// In en, this message translates to:
-  /// **'Copy text'**
-  String get menuCopyText;
+  /// **'Unavailable'**
+  String get a11yNavigationUnavailable;
 
-  /// No description provided for @menuAddBookmark.
+  /// No description provided for @a11yOpenLocationSettings.
   ///
   /// In en, this message translates to:
-  /// **'Add bookmark'**
-  String get menuAddBookmark;
+  /// **'Open location settings'**
+  String get a11yOpenLocationSettings;
 
-  /// No description provided for @menuRemoveBookmark.
+  /// No description provided for @a11ySettingsDecreaseIqamah.
   ///
   /// In en, this message translates to:
-  /// **'Remove bookmark'**
-  String get menuRemoveBookmark;
+  /// **'Decrease {prayer} iqamah minutes'**
+  String a11ySettingsDecreaseIqamah(String prayer);
 
-  /// No description provided for @menuAddFavorite.
+  /// No description provided for @a11ySettingsIncreaseIqamah.
   ///
   /// In en, this message translates to:
-  /// **'Add to favorites'**
-  String get menuAddFavorite;
+  /// **'Increase {prayer} iqamah minutes'**
+  String a11ySettingsIncreaseIqamah(String prayer);
 
-  /// No description provided for @menuRemoveFavorite.
+  /// No description provided for @a11ySettingsResetIqamah.
   ///
   /// In en, this message translates to:
-  /// **'Remove from favorites'**
-  String get menuRemoveFavorite;
+  /// **'Reset {prayer} iqamah to default'**
+  String a11ySettingsResetIqamah(String prayer);
 
-  /// No description provided for @hadithCopied.
+  /// No description provided for @a11ySwitchToDarkTheme.
   ///
   /// In en, this message translates to:
-  /// **'Hadith copied'**
-  String get hadithCopied;
+  /// **'Switch to dark theme'**
+  String get a11ySwitchToDarkTheme;
 
-  /// No description provided for @fortressDhikrCopied.
+  /// No description provided for @a11ySwitchToLightTheme.
   ///
   /// In en, this message translates to:
-  /// **'Dhikr copied'**
-  String get fortressDhikrCopied;
+  /// **'Switch to light theme'**
+  String get a11ySwitchToLightTheme;
+
+  /// No description provided for @a11yWindowClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close window'**
+  String get a11yWindowClose;
+
+  /// No description provided for @a11yWindowMaximize.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximize window'**
+  String get a11yWindowMaximize;
+
+  /// No description provided for @a11yWindowMinimize.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimize window'**
+  String get a11yWindowMinimize;
+
+  /// No description provided for @a11yWindowRestore.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore window'**
+  String get a11yWindowRestore;
 
   /// No description provided for @about.
   ///
@@ -170,6 +194,36 @@ abstract class AppLocalizations {
   /// **'Adhan adjustments (minutes)'**
   String get adhanAdjustments;
 
+  /// No description provided for @adhanAlertPositionCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Center'**
+  String get adhanAlertPositionCenter;
+
+  /// No description provided for @adhanAlertPositionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert position'**
+  String get adhanAlertPositionLabel;
+
+  /// No description provided for @adhanAlertPositionTopEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Top right'**
+  String get adhanAlertPositionTopEnd;
+
+  /// No description provided for @adhanAlertPositionTopStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Top left'**
+  String get adhanAlertPositionTopStart;
+
+  /// No description provided for @adhanAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan — {prayer}'**
+  String adhanAlertTitle(String prayer);
+
   /// No description provided for @adhanHoursAgo.
   ///
   /// In en, this message translates to:
@@ -194,6 +248,144 @@ abstract class AppLocalizations {
   /// **'{mins} minutes left'**
   String adhanMinsLeft(int mins);
 
+  /// No description provided for @adhanMuezzinAbedAlbasaei.
+  ///
+  /// In en, this message translates to:
+  /// **'Abed Al-Basaei'**
+  String get adhanMuezzinAbedAlbasaei;
+
+  /// No description provided for @adhanMuezzinAhmadNufais.
+  ///
+  /// In en, this message translates to:
+  /// **'Ahmad Nufais'**
+  String get adhanMuezzinAhmadNufais;
+
+  /// No description provided for @adhanMuezzinGhaziAlSaadoni.
+  ///
+  /// In en, this message translates to:
+  /// **'Ghazi Al-Saadoni'**
+  String get adhanMuezzinGhaziAlSaadoni;
+
+  /// No description provided for @adhanMuezzinHamadDeghreri.
+  ///
+  /// In en, this message translates to:
+  /// **'Hamad Deghreri'**
+  String get adhanMuezzinHamadDeghreri;
+
+  /// No description provided for @adhanMuezzinHamdanAlMalki.
+  ///
+  /// In en, this message translates to:
+  /// **'Hamdan Al-Malki'**
+  String get adhanMuezzinHamdanAlMalki;
+
+  /// No description provided for @adhanMuezzinIbrahimAlArkani.
+  ///
+  /// In en, this message translates to:
+  /// **'Ibrahim Al-Arkani'**
+  String get adhanMuezzinIbrahimAlArkani;
+
+  /// No description provided for @adhanMuezzinMajedAlHamathani.
+  ///
+  /// In en, this message translates to:
+  /// **'Majed Al-Hamathani'**
+  String get adhanMuezzinMajedAlHamathani;
+
+  /// No description provided for @adhanMuezzinMakkah.
+  ///
+  /// In en, this message translates to:
+  /// **'Makkah'**
+  String get adhanMuezzinMakkah;
+
+  /// No description provided for @adhanMuezzinMansoorAlZahrani.
+  ///
+  /// In en, this message translates to:
+  /// **'Mansoor Az-Zahrani'**
+  String get adhanMuezzinMansoorAlZahrani;
+
+  /// No description provided for @adhanMuezzinMisharyAlafasi.
+  ///
+  /// In en, this message translates to:
+  /// **'Mishary Alafasi'**
+  String get adhanMuezzinMisharyAlafasi;
+
+  /// No description provided for @adhanMuezzinMohammadAlMenshawy.
+  ///
+  /// In en, this message translates to:
+  /// **'Mohammad Al-Menshawy'**
+  String get adhanMuezzinMohammadAlMenshawy;
+
+  /// No description provided for @adhanMuezzinMohammadRefat.
+  ///
+  /// In en, this message translates to:
+  /// **'Mohammad Refat'**
+  String get adhanMuezzinMohammadRefat;
+
+  /// No description provided for @adhanMuezzinNasserAlQatami.
+  ///
+  /// In en, this message translates to:
+  /// **'Nasser Al-Qatami'**
+  String get adhanMuezzinNasserAlQatami;
+
+  /// No description provided for @adhanMuezzinSuhaibKhatba.
+  ///
+  /// In en, this message translates to:
+  /// **'Suhaib Khatba'**
+  String get adhanMuezzinSuhaibKhatba;
+
+  /// No description provided for @adhanOsNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan is playing — tap to focus'**
+  String get adhanOsNotificationBody;
+
+  /// No description provided for @adhanPlayingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan — {prayer}'**
+  String adhanPlayingTitle(String prayer);
+
+  /// No description provided for @adhanSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.'**
+  String get adhanSectionSubtitle;
+
+  /// No description provided for @adhanSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan'**
+  String get adhanSectionTitle;
+
+  /// No description provided for @adhanShowAlertLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Show adhan alert'**
+  String get adhanShowAlertLabel;
+
+  /// No description provided for @adhanShowOsNotificationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'OS notification when hidden in tray'**
+  String get adhanShowOsNotificationLabel;
+
+  /// No description provided for @adhanSoundLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan sound'**
+  String get adhanSoundLabel;
+
+  /// No description provided for @adhanStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get adhanStop;
+
+  /// No description provided for @adhanVolumeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan volume'**
+  String get adhanVolumeLabel;
+
   /// No description provided for @advancedSettingsTitle.
   ///
   /// In en, this message translates to:
@@ -217,6 +409,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tawaq'**
   String get appName;
+
+  /// No description provided for @appTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'App text size'**
+  String get appTextSize;
+
+  /// No description provided for @appTextSizeCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Compact'**
+  String get appTextSizeCompact;
+
+  /// No description provided for @appTextSizeExtraLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra large'**
+  String get appTextSizeExtraLarge;
+
+  /// No description provided for @appTextSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get appTextSizeLarge;
+
+  /// No description provided for @appTextSizeNormal.
+  ///
+  /// In en, this message translates to:
+  /// **'Default'**
+  String get appTextSizeNormal;
+
+  /// No description provided for @appTextSizeShortExtraLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'XL'**
+  String get appTextSizeShortExtraLarge;
+
+  /// No description provided for @appTextSizeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Controls menus, labels, and other interface text.'**
+  String get appTextSizeSubtitle;
 
   /// No description provided for @arabic.
   ///
@@ -254,12 +488,6 @@ abstract class AppLocalizations {
   /// **'Auto Select or Map'**
   String get autoSelectOrMap;
 
-  /// No description provided for @ayahLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Ayah'**
-  String get ayahLabel;
-
   /// No description provided for @ayahBookmark.
   ///
   /// In en, this message translates to:
@@ -277,6 +505,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Copy'**
   String get ayahCopy;
+
+  /// No description provided for @ayahLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Ayah'**
+  String get ayahLabel;
 
   /// No description provided for @ayahShare.
   ///
@@ -356,12 +590,6 @@ abstract class AppLocalizations {
   /// **'Collapse panel'**
   String get collapsePanel;
 
-  /// No description provided for @expandPanel.
-  ///
-  /// In en, this message translates to:
-  /// **'Expand panel'**
-  String get expandPanel;
-
   /// No description provided for @colorTheme.
   ///
   /// In en, this message translates to:
@@ -373,132 +601,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change the apps color themes.'**
   String get colorThemeSubtitle;
-
-  /// No description provided for @typographySectionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Text & scaling'**
-  String get typographySectionTitle;
-
-  /// No description provided for @typographySectionSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Adjust UI text size and Quran reading size separately.'**
-  String get typographySectionSubtitle;
-
-  /// No description provided for @appTextSize.
-  ///
-  /// In en, this message translates to:
-  /// **'App text size'**
-  String get appTextSize;
-
-  /// No description provided for @appTextSizeSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Controls menus, labels, and other interface text.'**
-  String get appTextSizeSubtitle;
-
-  /// No description provided for @scrollMoreHint.
-  ///
-  /// In en, this message translates to:
-  /// **'More below'**
-  String get scrollMoreHint;
-
-  /// No description provided for @appTextSizeCompact.
-  ///
-  /// In en, this message translates to:
-  /// **'Compact'**
-  String get appTextSizeCompact;
-
-  /// No description provided for @appTextSizeNormal.
-  ///
-  /// In en, this message translates to:
-  /// **'Default'**
-  String get appTextSizeNormal;
-
-  /// No description provided for @appTextSizeLarge.
-  ///
-  /// In en, this message translates to:
-  /// **'Large'**
-  String get appTextSizeLarge;
-
-  /// No description provided for @appTextSizeExtraLarge.
-  ///
-  /// In en, this message translates to:
-  /// **'Extra large'**
-  String get appTextSizeExtraLarge;
-
-  /// No description provided for @quranTextSize.
-  ///
-  /// In en, this message translates to:
-  /// **'Quran text size'**
-  String get quranTextSize;
-
-  /// No description provided for @quranTextSizeSmall.
-  ///
-  /// In en, this message translates to:
-  /// **'Small'**
-  String get quranTextSizeSmall;
-
-  /// No description provided for @quranTextSizeMedium.
-  ///
-  /// In en, this message translates to:
-  /// **'Medium'**
-  String get quranTextSizeMedium;
-
-  /// No description provided for @quranTextSizeLarge.
-  ///
-  /// In en, this message translates to:
-  /// **'Large'**
-  String get quranTextSizeLarge;
-
-  /// No description provided for @quranTextSizeExtraLarge.
-  ///
-  /// In en, this message translates to:
-  /// **'Extra large'**
-  String get quranTextSizeExtraLarge;
-
-  /// No description provided for @quranTextSizeShortExtraLarge.
-  ///
-  /// In en, this message translates to:
-  /// **'XL'**
-  String get quranTextSizeShortExtraLarge;
-
-  /// No description provided for @appTextSizeShortExtraLarge.
-  ///
-  /// In en, this message translates to:
-  /// **'XL'**
-  String get appTextSizeShortExtraLarge;
-
-  /// No description provided for @quranTextSizePreviewLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Preview'**
-  String get quranTextSizePreviewLabel;
-
-  /// No description provided for @quranTextSizeIndependentNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Quran reading size is independent of app and system text scaling.'**
-  String get quranTextSizeIndependentNote;
-
-  /// No description provided for @quranTextSizePreview.
-  ///
-  /// In en, this message translates to:
-  /// **'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'**
-  String get quranTextSizePreview;
-
-  /// No description provided for @quranAyahSearchPreviewTruncated.
-  ///
-  /// In en, this message translates to:
-  /// **'{preview}...'**
-  String quranAyahSearchPreviewTruncated(String preview);
-
-  /// No description provided for @quranTranslationQuoted.
-  ///
-  /// In en, this message translates to:
-  /// **'\"{translation}\"'**
-  String quranTranslationQuoted(String translation);
 
   /// No description provided for @completed.
   ///
@@ -560,6 +662,12 @@ abstract class AppLocalizations {
   /// **'Dark'**
   String get dark;
 
+  /// No description provided for @decimalPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'0.0'**
+  String get decimalPlaceholder;
+
   /// No description provided for @defaultLocation.
   ///
   /// In en, this message translates to:
@@ -571,6 +679,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Al-Fatihah'**
   String get defaultSurahName;
+
+  /// No description provided for @desktopLaunchAtLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Start at login'**
+  String get desktopLaunchAtLogin;
+
+  /// No description provided for @desktopLaunchAtLoginHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start hidden in tray was also enabled so adhan alerts work after login.'**
+  String get desktopLaunchAtLoginHint;
+
+  /// No description provided for @desktopLaunchToTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Start hidden in tray'**
+  String get desktopLaunchToTray;
+
+  /// No description provided for @desktopMinimizeToTray.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide to tray when minimizing'**
+  String get desktopMinimizeToTray;
+
+  /// No description provided for @desktopMinimizeToTrayOnClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide to tray when closing the window'**
+  String get desktopMinimizeToTrayOnClose;
+
+  /// No description provided for @desktopSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'System tray, window behaviour, and startup on desktop.'**
+  String get desktopSectionSubtitle;
+
+  /// No description provided for @desktopSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Desktop'**
+  String get desktopSectionTitle;
 
   /// No description provided for @detectTimezone.
   ///
@@ -650,12 +800,6 @@ abstract class AppLocalizations {
   /// **'Error loading tafsir'**
   String get errorLoadingTafsir;
 
-  /// No description provided for @tafsirTextMayBeIncomplete.
-  ///
-  /// In en, this message translates to:
-  /// **'This commentary may be cut off in the source text.'**
-  String get tafsirTextMayBeIncomplete;
-
   /// No description provided for @errorLoadingTranslation.
   ///
   /// In en, this message translates to:
@@ -686,6 +830,12 @@ abstract class AppLocalizations {
   /// **'Error occurred while updating location'**
   String get errorUpdatingLocationTitle;
 
+  /// No description provided for @expandPanel.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand panel'**
+  String get expandPanel;
+
   /// No description provided for @fajr.
   ///
   /// In en, this message translates to:
@@ -704,11 +854,287 @@ abstract class AppLocalizations {
   /// **'Footnote'**
   String get footnote;
 
+  /// No description provided for @fortressAllChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'All adhkar'**
+  String get fortressAllChapters;
+
+  /// No description provided for @fortressBenefit.
+  ///
+  /// In en, this message translates to:
+  /// **'Benefit'**
+  String get fortressBenefit;
+
+  /// No description provided for @fortressBrowseWeakHadith.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak & fabricated hadiths'**
+  String get fortressBrowseWeakHadith;
+
+  /// No description provided for @fortressCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get fortressCompleted;
+
+  /// No description provided for @fortressDhikrCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Dhikr copied'**
+  String get fortressDhikrCopied;
+
+  /// No description provided for @fortressEmptyFavoritesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the bookmark icon next to any section to add it here'**
+  String get fortressEmptyFavoritesHint;
+
+  /// No description provided for @fortressEmptyFavoritesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorite sections yet'**
+  String get fortressEmptyFavoritesTitle;
+
+  /// No description provided for @fortressEmptySearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try different search terms'**
+  String get fortressEmptySearchHint;
+
+  /// No description provided for @fortressEmptySearchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No search results'**
+  String get fortressEmptySearchTitle;
+
+  /// No description provided for @fortressFakeHadithGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak & fabricated hadith guide'**
+  String get fortressFakeHadithGuide;
+
+  /// No description provided for @fortressFakeHadithIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference list from Hisn al-Muslim of hadiths scholars warn against.'**
+  String get fortressFakeHadithIntro;
+
+  /// No description provided for @fortressFavorites.
+  ///
+  /// In en, this message translates to:
+  /// **'Favorites'**
+  String get fortressFavorites;
+
+  /// No description provided for @fortressFilterAuthenticity.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by grading'**
+  String get fortressFilterAuthenticity;
+
+  /// No description provided for @fortressFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish'**
+  String get fortressFinish;
+
+  /// No description provided for @fortressHideDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide details'**
+  String get fortressHideDetails;
+
+  /// No description provided for @fortressLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load adhkar'**
+  String get fortressLoadError;
+
+  /// No description provided for @fortressMoreFavoriteChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {Plus 1 more chapter…} other {Plus {count} more chapters…}}'**
+  String fortressMoreFavoriteChapters(int count);
+
+  /// No description provided for @fortressNoAdhkarInChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'No adhkar in this chapter'**
+  String get fortressNoAdhkarInChapter;
+
+  /// No description provided for @fortressNoFavoriteChapters.
+  ///
+  /// In en, this message translates to:
+  /// **'No favorite chapters yet — bookmark one from the sidebar'**
+  String get fortressNoFavoriteChapters;
+
+  /// No description provided for @fortressNoRecommendations.
+  ///
+  /// In en, this message translates to:
+  /// **'No recommendations available right now'**
+  String get fortressNoRecommendations;
+
+  /// No description provided for @fortressNoSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get fortressNoSearchResults;
+
+  /// No description provided for @fortressPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get fortressPrevious;
+
+  /// No description provided for @fortressReadingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the dhikr to count · Swipe horizontally to navigate · Space to count'**
+  String get fortressReadingHint;
+
+  /// No description provided for @fortressReadLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Long reading'**
+  String get fortressReadLong;
+
+  /// No description provided for @fortressReadMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium reading'**
+  String get fortressReadMedium;
+
+  /// No description provided for @fortressReadShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Short reading'**
+  String get fortressReadShort;
+
+  /// No description provided for @fortressRecommendedNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended now'**
+  String get fortressRecommendedNow;
+
+  /// No description provided for @fortressRelatedHadith.
+  ///
+  /// In en, this message translates to:
+  /// **'Related hadith'**
+  String get fortressRelatedHadith;
+
+  /// No description provided for @fortressRemainingCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0 {None remaining} =1 {1 remaining} other {{count} remaining}}'**
+  String fortressRemainingCount(int count);
+
+  /// No description provided for @fortressRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get fortressRetry;
+
+  /// No description provided for @fortressSearchContents.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhkar'**
+  String get fortressSearchContents;
+
+  /// No description provided for @fortressSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search chapters and adhkar...'**
+  String get fortressSearchHint;
+
+  /// No description provided for @fortressSearchTitles.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapters'**
+  String get fortressSearchTitles;
+
+  /// No description provided for @fortressSharh.
+  ///
+  /// In en, this message translates to:
+  /// **'Explanation'**
+  String get fortressSharh;
+
+  /// No description provided for @fortressShowDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Show details'**
+  String get fortressShowDetails;
+
+  /// No description provided for @fortressShowSharh.
+  ///
+  /// In en, this message translates to:
+  /// **'Show explanation'**
+  String get fortressShowSharh;
+
+  /// No description provided for @fortressShowSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Show source'**
+  String get fortressShowSource;
+
+  /// No description provided for @fortressSourceReference.
+  ///
+  /// In en, this message translates to:
+  /// **'Source'**
+  String get fortressSourceReference;
+
+  /// No description provided for @fortressStartReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Start reading'**
+  String get fortressStartReading;
+
+  /// No description provided for @fortressSupplicationCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 dhikr} other {{count} adhkar}}'**
+  String fortressSupplicationCount(int count);
+
+  /// No description provided for @fortressSupplicationsInSection.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1 {1 dhikr in this section} other {{count} adhkar in this section}}'**
+  String fortressSupplicationsInSection(int count);
+
+  /// No description provided for @fortressVirtue.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtue'**
+  String get fortressVirtue;
+
+  /// No description provided for @fortressWeakHadithWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Warning: this dhikr is weak or fabricated'**
+  String get fortressWeakHadithWarning;
+
+  /// No description provided for @fortressWelcomeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse chapters from the list, or start from recommendations for your time or favorites.'**
+  String get fortressWelcomeSubtitle;
+
+  /// No description provided for @fortressWelcomeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a chapter and begin dhikr'**
+  String get fortressWelcomeTitle;
+
   /// No description provided for @gettingLocation.
   ///
   /// In en, this message translates to:
   /// **'Getting Location'**
   String get gettingLocation;
+
+  /// No description provided for @goToPrayerPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Prayer Page'**
+  String get goToPrayerPage;
 
   /// No description provided for @graphicalAnalysis.
   ///
@@ -734,11 +1160,23 @@ abstract class AppLocalizations {
   /// **'Active Filters'**
   String get hadithActiveFilters;
 
+  /// No description provided for @hadithAlternateHadithSahih.
+  ///
+  /// In en, this message translates to:
+  /// **'Alternate Authentic Hadith'**
+  String get hadithAlternateHadithSahih;
+
   /// No description provided for @hadithAlternativeAuthentic.
   ///
   /// In en, this message translates to:
   /// **'Alternative Authentic Narrations'**
   String get hadithAlternativeAuthentic;
+
+  /// No description provided for @hadithBackToSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to search'**
+  String get hadithBackToSearch;
 
   /// No description provided for @hadithBooks.
   ///
@@ -758,17 +1196,59 @@ abstract class AppLocalizations {
   /// **'Clear all'**
   String get hadithClearAllRecents;
 
+  /// No description provided for @hadithCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Hadith copied'**
+  String get hadithCopied;
+
+  /// No description provided for @hadithDegreeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All degrees'**
+  String get hadithDegreeAll;
+
+  /// No description provided for @hadithDegreeAuthenticChain.
+  ///
+  /// In en, this message translates to:
+  /// **'Chains scholars ruled authentic'**
+  String get hadithDegreeAuthenticChain;
+
+  /// No description provided for @hadithDegreeAuthenticHadith.
+  ///
+  /// In en, this message translates to:
+  /// **'Hadiths scholars ruled authentic'**
+  String get hadithDegreeAuthenticHadith;
+
   /// No description provided for @hadithDegrees.
   ///
   /// In en, this message translates to:
   /// **'Degrees'**
   String get hadithDegrees;
 
+  /// No description provided for @hadithDegreeWeakChain.
+  ///
+  /// In en, this message translates to:
+  /// **'Chains scholars ruled weak'**
+  String get hadithDegreeWeakChain;
+
+  /// No description provided for @hadithDegreeWeakHadith.
+  ///
+  /// In en, this message translates to:
+  /// **'Hadiths scholars ruled weak'**
+  String get hadithDegreeWeakHadith;
+
   /// No description provided for @hadithDetailsTab.
   ///
   /// In en, this message translates to:
   /// **'Details'**
   String get hadithDetailsTab;
+
+  /// No description provided for @hadithFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{label}:'**
+  String hadithFieldLabel(String label);
 
   /// No description provided for @hadithFilterTab.
   ///
@@ -824,6 +1304,12 @@ abstract class AppLocalizations {
   /// **'Narrators'**
   String get hadithNarrators;
 
+  /// No description provided for @hadithNoBookmarks.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved hadiths yet'**
+  String get hadithNoBookmarks;
+
   /// No description provided for @hadithNoDetailedData.
   ///
   /// In en, this message translates to:
@@ -835,18 +1321,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select a hadith from results to view details'**
   String get hadithNoDetailsSelected;
-
-  /// No description provided for @hadithBackToSearch.
-  ///
-  /// In en, this message translates to:
-  /// **'Back to search'**
-  String get hadithBackToSearch;
-
-  /// No description provided for @hadithNoBookmarks.
-  ///
-  /// In en, this message translates to:
-  /// **'No saved hadiths yet'**
-  String get hadithNoBookmarks;
 
   /// No description provided for @hadithNoMatchingResults.
   ///
@@ -877,18 +1351,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Related Links'**
   String get hadithRelatedLinks;
-
-  /// No description provided for @hadithSimilarHadith.
-  ///
-  /// In en, this message translates to:
-  /// **'Similar Hadith'**
-  String get hadithSimilarHadith;
-
-  /// No description provided for @hadithAlternateHadithSahih.
-  ///
-  /// In en, this message translates to:
-  /// **'Alternate Authentic Hadith'**
-  String get hadithAlternateHadithSahih;
 
   /// No description provided for @hadithResetFilters.
   ///
@@ -980,48 +1442,6 @@ abstract class AppLocalizations {
   /// **'Hadith commentaries'**
   String get hadithSearchZoneSharh;
 
-  /// No description provided for @hadithDegreeAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All degrees'**
-  String get hadithDegreeAll;
-
-  /// No description provided for @hadithDegreeAuthenticHadith.
-  ///
-  /// In en, this message translates to:
-  /// **'Hadiths scholars ruled authentic'**
-  String get hadithDegreeAuthenticHadith;
-
-  /// No description provided for @hadithDegreeAuthenticChain.
-  ///
-  /// In en, this message translates to:
-  /// **'Chains scholars ruled authentic'**
-  String get hadithDegreeAuthenticChain;
-
-  /// No description provided for @hadithDegreeWeakHadith.
-  ///
-  /// In en, this message translates to:
-  /// **'Hadiths scholars ruled weak'**
-  String get hadithDegreeWeakHadith;
-
-  /// No description provided for @hadithDegreeWeakChain.
-  ///
-  /// In en, this message translates to:
-  /// **'Chains scholars ruled weak'**
-  String get hadithDegreeWeakChain;
-
-  /// No description provided for @hadithFieldLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'{label}:'**
-  String hadithFieldLabel(String label);
-
-  /// No description provided for @hadithSourceCitation.
-  ///
-  /// In en, this message translates to:
-  /// **'{book} ({reference})'**
-  String hadithSourceCitation(String book, String reference);
-
   /// No description provided for @hadithSharh.
   ///
   /// In en, this message translates to:
@@ -1034,11 +1454,23 @@ abstract class AppLocalizations {
   /// **'Similar Hadiths'**
   String get hadithSimilar;
 
+  /// No description provided for @hadithSimilarHadith.
+  ///
+  /// In en, this message translates to:
+  /// **'Similar Hadith'**
+  String get hadithSimilarHadith;
+
   /// No description provided for @hadithSource.
   ///
   /// In en, this message translates to:
   /// **'Source'**
   String get hadithSource;
+
+  /// No description provided for @hadithSourceCitation.
+  ///
+  /// In en, this message translates to:
+  /// **'{book} ({reference})'**
+  String hadithSourceCitation(String book, String reference);
 
   /// Filter toggle for Dorar's specialist tab: limits results to hadiths that include takhrij in their metadata (Dorar UI label: متخصص).
   ///
@@ -1064,17 +1496,17 @@ abstract class AppLocalizations {
   /// **'Takhrij'**
   String get hadithTakhrij;
 
-  /// No description provided for @hadithUsulHadith.
-  ///
-  /// In en, this message translates to:
-  /// **'Usul al-Hadith'**
-  String get hadithUsulHadith;
-
   /// No description provided for @hadithTypeToSearch.
   ///
   /// In en, this message translates to:
   /// **'Type to search...'**
   String get hadithTypeToSearch;
+
+  /// No description provided for @hadithUsulHadith.
+  ///
+  /// In en, this message translates to:
+  /// **'Usul al-Hadith'**
+  String get hadithUsulHadith;
 
   /// No description provided for @highLatitudeRule_middleOfTheNight.
   ///
@@ -1099,6 +1531,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'High Latitude Rule'**
   String get highLatitudeRuleLabel;
+
+  /// No description provided for @hizbLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hizb {number}'**
+  String hizbLabel(int number);
+
+  /// No description provided for @integerPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'0'**
+  String get integerPlaceholder;
 
   /// No description provided for @invalidCoordinatesDescription.
   ///
@@ -1148,6 +1592,36 @@ abstract class AppLocalizations {
   /// **'Iqamah (minutes after adhan)'**
   String get iqamahAfterAdhan;
 
+  /// No description provided for @iqamahAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah — {prayer}'**
+  String iqamahAlertTitle(String prayer);
+
+  /// No description provided for @iqamahMuezzinMadinah.
+  ///
+  /// In en, this message translates to:
+  /// **'Madinah'**
+  String get iqamahMuezzinMadinah;
+
+  /// No description provided for @iqamahMuezzinYasserAlDossari.
+  ///
+  /// In en, this message translates to:
+  /// **'Yasser Al-Dossari'**
+  String get iqamahMuezzinYasserAlDossari;
+
+  /// No description provided for @iqamahOsNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah time — tap to focus'**
+  String get iqamahOsNotificationBody;
+
+  /// No description provided for @iqamahPlayingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah — {prayer}'**
+  String iqamahPlayingTitle(String prayer);
+
   /// No description provided for @iqamahSavedDescription.
   ///
   /// In en, this message translates to:
@@ -1165,6 +1639,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Iqamah adjustments saved'**
   String get iqamahSavedTitle;
+
+  /// No description provided for @iqamahSoundLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Iqamah call'**
+  String get iqamahSoundLabel;
 
   /// No description provided for @iqamahSubtitleMessage.
   ///
@@ -1220,17 +1700,35 @@ abstract class AppLocalizations {
   /// **'Juz {number}'**
   String juzLabel(int number);
 
-  /// No description provided for @hizbLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Hizb {number}'**
-  String hizbLabel(int number);
-
   /// No description provided for @karachi.
   ///
   /// In en, this message translates to:
   /// **'University of Islamic Sciences, Karachi'**
   String get karachi;
+
+  /// No description provided for @keyboardShortcutsCategorySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Available when using the app on desktop.'**
+  String get keyboardShortcutsCategorySubtitle;
+
+  /// No description provided for @keyboardShortcutsSectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference list of keyboard shortcuts available on desktop. Shortcuts work app-wide from any screen, including this one. They cannot be customized.'**
+  String get keyboardShortcutsSectionSubtitle;
+
+  /// No description provided for @keyboardShortcutsSectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts'**
+  String get keyboardShortcutsSectionTitle;
+
+  /// No description provided for @keyboardShortcutsTabTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Keyboard shortcuts'**
+  String get keyboardShortcutsTabTitle;
 
   /// No description provided for @kuwait.
   ///
@@ -1286,35 +1784,17 @@ abstract class AppLocalizations {
   /// **'Loading Analytics'**
   String get loadingAnalytics;
 
-  /// No description provided for @loadingSchedule.
-  ///
-  /// In en, this message translates to:
-  /// **'Loading schedule'**
-  String get loadingSchedule;
-
-  /// No description provided for @prayerLocationRequiredTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Set your location'**
-  String get prayerLocationRequiredTitle;
-
-  /// No description provided for @prayerLocationRequiredSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Prayer times need your coordinates. Open location settings to pick a city on the map or enter them manually.'**
-  String get prayerLocationRequiredSubtitle;
-
-  /// No description provided for @prayerLocationRequiredAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Open location settings'**
-  String get prayerLocationRequiredAction;
-
   /// No description provided for @loadingLocationSettings.
   ///
   /// In en, this message translates to:
   /// **'Loading Location Settings'**
   String get loadingLocationSettings;
+
+  /// No description provided for @loadingSchedule.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading schedule'**
+  String get loadingSchedule;
 
   /// No description provided for @locationCoordinatesLookupFailed.
   ///
@@ -1406,6 +1886,42 @@ abstract class AppLocalizations {
   /// **'Maghrib Angle (°)'**
   String get maghribAngleLabel;
 
+  /// No description provided for @menuAddBookmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Add bookmark'**
+  String get menuAddBookmark;
+
+  /// No description provided for @menuAddFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to favorites'**
+  String get menuAddFavorite;
+
+  /// No description provided for @menuCopyText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy text'**
+  String get menuCopyText;
+
+  /// No description provided for @menuOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get menuOpen;
+
+  /// No description provided for @menuRemoveBookmark.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove bookmark'**
+  String get menuRemoveBookmark;
+
+  /// No description provided for @menuRemoveFavorite.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from favorites'**
+  String get menuRemoveFavorite;
+
   /// No description provided for @midnight.
   ///
   /// In en, this message translates to:
@@ -1453,270 +1969,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Muslim Fortress'**
   String get muslimFortress;
-
-  /// No description provided for @fortressCompleted.
-  ///
-  /// In en, this message translates to:
-  /// **'Completed'**
-  String get fortressCompleted;
-
-  /// No description provided for @fortressRemainingCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =0 {None remaining} =1 {1 remaining} other {{count} remaining}}'**
-  String fortressRemainingCount(int count);
-
-  /// No description provided for @fortressSharh.
-  ///
-  /// In en, this message translates to:
-  /// **'Explanation'**
-  String get fortressSharh;
-
-  /// No description provided for @fortressVirtue.
-  ///
-  /// In en, this message translates to:
-  /// **'Virtue'**
-  String get fortressVirtue;
-
-  /// No description provided for @fortressBenefit.
-  ///
-  /// In en, this message translates to:
-  /// **'Benefit'**
-  String get fortressBenefit;
-
-  /// No description provided for @fortressRelatedHadith.
-  ///
-  /// In en, this message translates to:
-  /// **'Related hadith'**
-  String get fortressRelatedHadith;
-
-  /// No description provided for @fortressSourceReference.
-  ///
-  /// In en, this message translates to:
-  /// **'Source'**
-  String get fortressSourceReference;
-
-  /// No description provided for @fortressWeakHadithWarning.
-  ///
-  /// In en, this message translates to:
-  /// **'Warning: this dhikr is weak or fabricated'**
-  String get fortressWeakHadithWarning;
-
-  /// No description provided for @fortressFakeHadithGuide.
-  ///
-  /// In en, this message translates to:
-  /// **'Weak & fabricated hadith guide'**
-  String get fortressFakeHadithGuide;
-
-  /// No description provided for @fortressFakeHadithIntro.
-  ///
-  /// In en, this message translates to:
-  /// **'Reference list from Hisn al-Muslim of hadiths scholars warn against.'**
-  String get fortressFakeHadithIntro;
-
-  /// No description provided for @fortressBrowseWeakHadith.
-  ///
-  /// In en, this message translates to:
-  /// **'Weak & fabricated hadiths'**
-  String get fortressBrowseWeakHadith;
-
-  /// No description provided for @fortressSearchHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Search chapters and adhkar...'**
-  String get fortressSearchHint;
-
-  /// No description provided for @fortressSearchTitles.
-  ///
-  /// In en, this message translates to:
-  /// **'Chapters'**
-  String get fortressSearchTitles;
-
-  /// No description provided for @fortressSearchContents.
-  ///
-  /// In en, this message translates to:
-  /// **'Adhkar'**
-  String get fortressSearchContents;
-
-  /// No description provided for @fortressNoSearchResults.
-  ///
-  /// In en, this message translates to:
-  /// **'No results found'**
-  String get fortressNoSearchResults;
-
-  /// No description provided for @fortressFilterAuthenticity.
-  ///
-  /// In en, this message translates to:
-  /// **'Filter by grading'**
-  String get fortressFilterAuthenticity;
-
-  /// No description provided for @fortressShowDetails.
-  ///
-  /// In en, this message translates to:
-  /// **'Show details'**
-  String get fortressShowDetails;
-
-  /// No description provided for @fortressShowSharh.
-  ///
-  /// In en, this message translates to:
-  /// **'Show explanation'**
-  String get fortressShowSharh;
-
-  /// No description provided for @fortressShowSource.
-  ///
-  /// In en, this message translates to:
-  /// **'Show source'**
-  String get fortressShowSource;
-
-  /// No description provided for @fortressHideDetails.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide details'**
-  String get fortressHideDetails;
-
-  /// No description provided for @fortressLoadError.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load adhkar'**
-  String get fortressLoadError;
-
-  /// No description provided for @fortressRetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Retry'**
-  String get fortressRetry;
-
-  /// No description provided for @fortressAllChapters.
-  ///
-  /// In en, this message translates to:
-  /// **'All adhkar'**
-  String get fortressAllChapters;
-
-  /// No description provided for @fortressFavorites.
-  ///
-  /// In en, this message translates to:
-  /// **'Favorites'**
-  String get fortressFavorites;
-
-  /// No description provided for @fortressEmptyFavoritesTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No favorite sections yet'**
-  String get fortressEmptyFavoritesTitle;
-
-  /// No description provided for @fortressEmptySearchTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'No search results'**
-  String get fortressEmptySearchTitle;
-
-  /// No description provided for @fortressEmptyFavoritesHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap the bookmark icon next to any section to add it here'**
-  String get fortressEmptyFavoritesHint;
-
-  /// No description provided for @fortressEmptySearchHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Try different search terms'**
-  String get fortressEmptySearchHint;
-
-  /// No description provided for @fortressSupplicationCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1 {1 dhikr} other {{count} adhkar}}'**
-  String fortressSupplicationCount(int count);
-
-  /// No description provided for @fortressSupplicationsInSection.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1 {1 dhikr in this section} other {{count} adhkar in this section}}'**
-  String fortressSupplicationsInSection(int count);
-
-  /// No description provided for @fortressStartReading.
-  ///
-  /// In en, this message translates to:
-  /// **'Start reading'**
-  String get fortressStartReading;
-
-  /// No description provided for @fortressNoAdhkarInChapter.
-  ///
-  /// In en, this message translates to:
-  /// **'No adhkar in this chapter'**
-  String get fortressNoAdhkarInChapter;
-
-  /// No description provided for @fortressFinish.
-  ///
-  /// In en, this message translates to:
-  /// **'Finish'**
-  String get fortressFinish;
-
-  /// No description provided for @fortressReadingHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap the dhikr to count · Swipe horizontally to navigate · Space to count'**
-  String get fortressReadingHint;
-
-  /// No description provided for @fortressPrevious.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous'**
-  String get fortressPrevious;
-
-  /// No description provided for @fortressWelcomeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose a chapter and begin dhikr'**
-  String get fortressWelcomeTitle;
-
-  /// No description provided for @fortressWelcomeSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Browse chapters from the list, or start from recommendations for your time or favorites.'**
-  String get fortressWelcomeSubtitle;
-
-  /// No description provided for @fortressRecommendedNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Recommended now'**
-  String get fortressRecommendedNow;
-
-  /// No description provided for @fortressNoRecommendations.
-  ///
-  /// In en, this message translates to:
-  /// **'No recommendations available right now'**
-  String get fortressNoRecommendations;
-
-  /// No description provided for @fortressNoFavoriteChapters.
-  ///
-  /// In en, this message translates to:
-  /// **'No favorite chapters yet — bookmark one from the sidebar'**
-  String get fortressNoFavoriteChapters;
-
-  /// No description provided for @fortressMoreFavoriteChapters.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, =1 {Plus 1 more chapter…} other {Plus {count} more chapters…}}'**
-  String fortressMoreFavoriteChapters(int count);
-
-  /// No description provided for @fortressReadShort.
-  ///
-  /// In en, this message translates to:
-  /// **'Short reading'**
-  String get fortressReadShort;
-
-  /// No description provided for @fortressReadMedium.
-  ///
-  /// In en, this message translates to:
-  /// **'Medium reading'**
-  String get fortressReadMedium;
-
-  /// No description provided for @fortressReadLong.
-  ///
-  /// In en, this message translates to:
-  /// **'Long reading'**
-  String get fortressReadLong;
 
   /// No description provided for @muslimWorldLeague.
   ///
@@ -1783,42 +2035,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Now Active'**
   String get nowActive;
-
-  /// No description provided for @onTime.
-  ///
-  /// In en, this message translates to:
-  /// **'On Time'**
-  String get onTime;
-
-  /// No description provided for @onTimePrayersLast30Days.
-  ///
-  /// In en, this message translates to:
-  /// **'On time prayers (last 30 days)'**
-  String get onTimePrayersLast30Days;
-
-  /// No description provided for @onTimePrayersLast365Days.
-  ///
-  /// In en, this message translates to:
-  /// **'On time prayers (last 365 days)'**
-  String get onTimePrayersLast365Days;
-
-  /// No description provided for @onTimePrayersLast7Days.
-  ///
-  /// In en, this message translates to:
-  /// **'On time prayers (last 7 days)'**
-  String get onTimePrayersLast7Days;
-
-  /// No description provided for @onTimePrayersToday.
-  ///
-  /// In en, this message translates to:
-  /// **'On time prayers (today)'**
-  String get onTimePrayersToday;
-
-  /// No description provided for @onTimeRate.
-  ///
-  /// In en, this message translates to:
-  /// **'On Time Rate'**
-  String get onTimeRate;
 
   /// No description provided for @onboardingFinishAction.
   ///
@@ -2030,6 +2246,54 @@ abstract class AppLocalizations {
   /// **'Welcome to {appName}'**
   String onboardingWelcomeTitle(String appName);
 
+  /// No description provided for @onTime.
+  ///
+  /// In en, this message translates to:
+  /// **'On Time'**
+  String get onTime;
+
+  /// No description provided for @onTimePrayersLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'On time prayers (last 30 days)'**
+  String get onTimePrayersLast30Days;
+
+  /// No description provided for @onTimePrayersLast365Days.
+  ///
+  /// In en, this message translates to:
+  /// **'On time prayers (last 365 days)'**
+  String get onTimePrayersLast365Days;
+
+  /// No description provided for @onTimePrayersLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'On time prayers (last 7 days)'**
+  String get onTimePrayersLast7Days;
+
+  /// No description provided for @onTimePrayersToday.
+  ///
+  /// In en, this message translates to:
+  /// **'On time prayers (today)'**
+  String get onTimePrayersToday;
+
+  /// No description provided for @onTimeRate.
+  ///
+  /// In en, this message translates to:
+  /// **'On Time Rate'**
+  String get onTimeRate;
+
+  /// No description provided for @openFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open folder'**
+  String get openFolder;
+
+  /// No description provided for @openFolderFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open folder'**
+  String get openFolderFailed;
+
   /// No description provided for @optionalHint.
   ///
   /// In en, this message translates to:
@@ -2072,12 +2336,6 @@ abstract class AppLocalizations {
   /// **'This page doesn\'t exist. Please go back to the home page.'**
   String get pageNotFoundDescription;
 
-  /// No description provided for @selectVerseToAddReflection.
-  ///
-  /// In en, this message translates to:
-  /// **'Please select a verse to add a reflection'**
-  String get selectVerseToAddReflection;
-
   /// No description provided for @parametersSavedDescription.
   ///
   /// In en, this message translates to:
@@ -2119,6 +2377,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Prayer'**
   String get prayer;
+
+  /// No description provided for @prayerAlertDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get prayerAlertDismiss;
+
+  /// No description provided for @prayerLocationRequiredAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Open location settings'**
+  String get prayerLocationRequiredAction;
+
+  /// No description provided for @prayerLocationRequiredSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Prayer times need your coordinates. Open location settings to pick a city on the map or enter them manually.'**
+  String get prayerLocationRequiredSubtitle;
+
+  /// No description provided for @prayerLocationRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your location'**
+  String get prayerLocationRequiredTitle;
 
   /// No description provided for @prayerSettingsSubtitle.
   ///
@@ -2174,6 +2456,18 @@ abstract class AppLocalizations {
   /// **'Holy Quran'**
   String get quran;
 
+  /// No description provided for @quranAyahSearchPreviewTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'{preview}...'**
+  String quranAyahSearchPreviewTruncated(String preview);
+
+  /// No description provided for @quranDoublePageWidthFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough width for a two-page spread — showing one page.'**
+  String get quranDoublePageWidthFallback;
+
   /// No description provided for @quranLayoutDoublePage.
   ///
   /// In en, this message translates to:
@@ -2186,11 +2480,569 @@ abstract class AppLocalizations {
   /// **'Study Mode'**
   String get quranLayoutStudyMode;
 
-  /// No description provided for @quranDoublePageWidthFallback.
+  /// No description provided for @quranNoMatchingReciters.
   ///
   /// In en, this message translates to:
-  /// **'Not enough width for a two-page spread — showing one page.'**
-  String get quranDoublePageWidthFallback;
+  /// **'No matching reciters'**
+  String get quranNoMatchingReciters;
+
+  /// No description provided for @quranPlayAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'Play this ayah'**
+  String get quranPlayAyah;
+
+  /// No description provided for @quranPlayRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Play a range…'**
+  String get quranPlayRange;
+
+  /// No description provided for @quranPlaySelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Play selection'**
+  String get quranPlaySelection;
+
+  /// No description provided for @quranPlaySurah.
+  ///
+  /// In en, this message translates to:
+  /// **'Play this surah'**
+  String get quranPlaySurah;
+
+  /// No description provided for @quranRangeFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From — surah & ayah'**
+  String get quranRangeFrom;
+
+  /// No description provided for @quranRangeFromAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'From — ayah'**
+  String get quranRangeFromAyah;
+
+  /// No description provided for @quranRangeFromShort.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get quranRangeFromShort;
+
+  /// No description provided for @quranRangeFromSurah.
+  ///
+  /// In en, this message translates to:
+  /// **'From — surah'**
+  String get quranRangeFromSurah;
+
+  /// No description provided for @quranRangeHizbBoundsNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load hizb boundaries'**
+  String get quranRangeHizbBoundsNotFound;
+
+  /// No description provided for @quranRangeHizbNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not find the hizb for this ayah'**
+  String get quranRangeHizbNotFound;
+
+  /// No description provided for @quranRangeJuzBoundsNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load juz boundaries'**
+  String get quranRangeJuzBoundsNotFound;
+
+  /// No description provided for @quranRangeJuzNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not find the juz for this ayah'**
+  String get quranRangeJuzNotFound;
+
+  /// No description provided for @quranRangeModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'End behavior'**
+  String get quranRangeModeLabel;
+
+  /// No description provided for @quranRangePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play selection'**
+  String get quranRangePlay;
+
+  /// No description provided for @quranRangePresetAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'This ayah'**
+  String get quranRangePresetAyah;
+
+  /// No description provided for @quranRangePresetContinueFromHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue from here'**
+  String get quranRangePresetContinueFromHere;
+
+  /// No description provided for @quranRangePresetCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get quranRangePresetCustom;
+
+  /// No description provided for @quranRangePresetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not apply this range preset'**
+  String get quranRangePresetFailed;
+
+  /// No description provided for @quranRangePresetHizb.
+  ///
+  /// In en, this message translates to:
+  /// **'This hizb'**
+  String get quranRangePresetHizb;
+
+  /// No description provided for @quranRangePresetJuz.
+  ///
+  /// In en, this message translates to:
+  /// **'This juz'**
+  String get quranRangePresetJuz;
+
+  /// No description provided for @quranRangePresetSurah.
+  ///
+  /// In en, this message translates to:
+  /// **'This surah'**
+  String get quranRangePresetSurah;
+
+  /// No description provided for @quranRangeRepeatChip.
+  ///
+  /// In en, this message translates to:
+  /// **'×{count}'**
+  String quranRangeRepeatChip(int count);
+
+  /// No description provided for @quranRangeRepeatEachAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat each ayah'**
+  String get quranRangeRepeatEachAyah;
+
+  /// No description provided for @quranRangeRepeatOnce.
+  ///
+  /// In en, this message translates to:
+  /// **'Once'**
+  String get quranRangeRepeatOnce;
+
+  /// No description provided for @quranRangeRepeatSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat range'**
+  String get quranRangeRepeatSelection;
+
+  /// No description provided for @quranRangeRepeatTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} times'**
+  String quranRangeRepeatTimes(int count);
+
+  /// No description provided for @quranRangeRepeatTwice.
+  ///
+  /// In en, this message translates to:
+  /// **'Twice'**
+  String get quranRangeRepeatTwice;
+
+  /// No description provided for @quranRangeSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save range'**
+  String get quranRangeSave;
+
+  /// No description provided for @quranRangeScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Range'**
+  String get quranRangeScope;
+
+  /// No description provided for @quranRangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Range & repeat for memorization'**
+  String get quranRangeTitle;
+
+  /// No description provided for @quranRangeTo.
+  ///
+  /// In en, this message translates to:
+  /// **'To — surah & ayah'**
+  String get quranRangeTo;
+
+  /// No description provided for @quranRangeToAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'To — ayah'**
+  String get quranRangeToAyah;
+
+  /// No description provided for @quranRangeToShort.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get quranRangeToShort;
+
+  /// No description provided for @quranRangeToSurah.
+  ///
+  /// In en, this message translates to:
+  /// **'To — surah'**
+  String get quranRangeToSurah;
+
+  /// No description provided for @quranRecitationApply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get quranRecitationApply;
+
+  /// No description provided for @quranRecitationAutoScroll.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-scroll'**
+  String get quranRecitationAutoScroll;
+
+  /// No description provided for @quranRecitationAutoScrollDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically scroll the mushaf page to follow the recitation position.'**
+  String get quranRecitationAutoScrollDesc;
+
+  /// No description provided for @quranRecitationCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get quranRecitationCancel;
+
+  /// No description provided for @quranRecitationClosePlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Close player'**
+  String get quranRecitationClosePlayer;
+
+  /// No description provided for @quranRecitationComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Recitation playback coming soon'**
+  String get quranRecitationComingSoon;
+
+  /// No description provided for @quranRecitationDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Caching…'**
+  String get quranRecitationDownloading;
+
+  /// No description provided for @quranRecitationHighlight.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight ayah'**
+  String get quranRecitationHighlight;
+
+  /// No description provided for @quranRecitationHighlightDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight the currently playing ayah in the mushaf.'**
+  String get quranRecitationHighlightDesc;
+
+  /// No description provided for @quranRecitationNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get quranRecitationNext;
+
+  /// No description provided for @quranRecitationNoTiming.
+  ///
+  /// In en, this message translates to:
+  /// **'Per-ayah playback isn\'t available for this reciter'**
+  String get quranRecitationNoTiming;
+
+  /// No description provided for @quranRecitationOfflineAutoSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Recitations are saved automatically while you listen.'**
+  String get quranRecitationOfflineAutoSave;
+
+  /// No description provided for @quranRecitationOfflineEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No recitations saved yet.'**
+  String get quranRecitationOfflineEmpty;
+
+  /// No description provided for @quranRecitationOfflineFileCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} files'**
+  String quranRecitationOfflineFileCount(int count);
+
+  /// No description provided for @quranRecitationOfflineFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline files'**
+  String get quranRecitationOfflineFiles;
+
+  /// No description provided for @quranRecitationOfflineInFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'In this folder'**
+  String get quranRecitationOfflineInFolder;
+
+  /// No description provided for @quranRecitationOfflineOpenFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Open folder'**
+  String get quranRecitationOfflineOpenFolder;
+
+  /// No description provided for @quranRecitationOfflineStorageUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage used'**
+  String get quranRecitationOfflineStorageUsed;
+
+  /// No description provided for @quranRecitationOfflineSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved recitations'**
+  String get quranRecitationOfflineSubtitle;
+
+  /// No description provided for @quranRecitationOpenPlayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Open player'**
+  String get quranRecitationOpenPlayer;
+
+  /// No description provided for @quranRecitationPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get quranRecitationPause;
+
+  /// No description provided for @quranRecitationPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Play'**
+  String get quranRecitationPlay;
+
+  /// No description provided for @quranRecitationPlaybackFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback failed: {error}'**
+  String quranRecitationPlaybackFailed(String error);
+
+  /// No description provided for @quranRecitationPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous'**
+  String get quranRecitationPrevious;
+
+  /// No description provided for @quranRecitationRangeRepeat.
+  ///
+  /// In en, this message translates to:
+  /// **'Range & repeat'**
+  String get quranRecitationRangeRepeat;
+
+  /// No description provided for @quranRecitationRepeatScopeEachAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat each ayah'**
+  String get quranRecitationRepeatScopeEachAyah;
+
+  /// No description provided for @quranRecitationRepeatScopeSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat selection'**
+  String get quranRecitationRepeatScopeSelection;
+
+  /// No description provided for @quranRecitationSleepAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'After {minutes} minutes'**
+  String quranRecitationSleepAfter(String minutes);
+
+  /// No description provided for @quranRecitationSleepEndOfAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'End of current ayah'**
+  String get quranRecitationSleepEndOfAyah;
+
+  /// No description provided for @quranRecitationSleepEndOfRange.
+  ///
+  /// In en, this message translates to:
+  /// **'End of range'**
+  String get quranRecitationSleepEndOfRange;
+
+  /// No description provided for @quranRecitationSleepEndOfSurah.
+  ///
+  /// In en, this message translates to:
+  /// **'End of surah'**
+  String get quranRecitationSleepEndOfSurah;
+
+  /// No description provided for @quranRecitationSleepOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get quranRecitationSleepOff;
+
+  /// No description provided for @quranRecitationSleepTimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep timer'**
+  String get quranRecitationSleepTimer;
+
+  /// No description provided for @quranRecitationStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get quranRecitationStop;
+
+  /// No description provided for @quranRecitationSwitchReciter.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch reciter'**
+  String get quranRecitationSwitchReciter;
+
+  /// No description provided for @quranRecitationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No reciter is available for playback'**
+  String get quranRecitationUnavailable;
+
+  /// No description provided for @quranRecitationVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume'**
+  String get quranRecitationVolume;
+
+  /// No description provided for @quranReciterFilterDownloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get quranReciterFilterDownloaded;
+
+  /// No description provided for @quranReciterFilters.
+  ///
+  /// In en, this message translates to:
+  /// **'Filters'**
+  String get quranReciterFilters;
+
+  /// No description provided for @quranReciterRiwayahCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} riwayat'**
+  String quranReciterRiwayahCount(int count);
+
+  /// No description provided for @quranReciterRiwayahTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reciter & riwayah'**
+  String get quranReciterRiwayahTitle;
+
+  /// Shown when the selected riwayah lacks timing and is auto-upgraded
+  ///
+  /// In en, this message translates to:
+  /// **'This riwayah doesn\'t support ayah sync. Switched to {riwayah}.'**
+  String quranReciterRiwayahUpgraded(String riwayah);
+
+  /// No description provided for @quranReciterSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search for a reciter…'**
+  String get quranReciterSearchHint;
+
+  /// No description provided for @quranReciterStyleMujawwad.
+  ///
+  /// In en, this message translates to:
+  /// **'Mujawwad'**
+  String get quranReciterStyleMujawwad;
+
+  /// No description provided for @quranReciterStyleMurattal.
+  ///
+  /// In en, this message translates to:
+  /// **'Murattal'**
+  String get quranReciterStyleMurattal;
+
+  /// No description provided for @quranReciterSurahOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Surah playback only'**
+  String get quranReciterSurahOnly;
+
+  /// No description provided for @quranReciterTimed.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get quranReciterTimed;
+
+  /// No description provided for @quranSelectReciter.
+  ///
+  /// In en, this message translates to:
+  /// **'Select reciter'**
+  String get quranSelectReciter;
+
+  /// No description provided for @quranSurahLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Surah {surah}'**
+  String quranSurahLabel(String surah);
+
+  /// No description provided for @quranTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran text size'**
+  String get quranTextSize;
+
+  /// No description provided for @quranTextSizeExtraLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra large'**
+  String get quranTextSizeExtraLarge;
+
+  /// No description provided for @quranTextSizeIndependentNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran reading size is independent of app and system text scaling.'**
+  String get quranTextSizeIndependentNote;
+
+  /// No description provided for @quranTextSizeLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get quranTextSizeLarge;
+
+  /// No description provided for @quranTextSizeMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium'**
+  String get quranTextSizeMedium;
+
+  /// No description provided for @quranTextSizePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'**
+  String get quranTextSizePreview;
+
+  /// No description provided for @quranTextSizePreviewLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get quranTextSizePreviewLabel;
+
+  /// No description provided for @quranTextSizeShortExtraLarge.
+  ///
+  /// In en, this message translates to:
+  /// **'XL'**
+  String get quranTextSizeShortExtraLarge;
+
+  /// No description provided for @quranTextSizeSmall.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get quranTextSizeSmall;
+
+  /// No description provided for @quranTranslationQuoted.
+  ///
+  /// In en, this message translates to:
+  /// **'\"{translation}\"'**
+  String quranTranslationQuoted(String translation);
 
   /// No description provided for @red.
   ///
@@ -2252,6 +3104,84 @@ abstract class AppLocalizations {
   /// **'Save Parameters'**
   String get saveParameters;
 
+  /// No description provided for @scheduleAlertEventAdhan.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer} adhan'**
+  String scheduleAlertEventAdhan(String prayer);
+
+  /// No description provided for @scheduleAlertEventIqamah.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer} iqamah'**
+  String scheduleAlertEventIqamah(String prayer);
+
+  /// No description provided for @scheduleAlertEventSunnah.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer}'**
+  String scheduleAlertEventSunnah(String prayer);
+
+  /// No description provided for @scheduleAlertIqamahSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Sound'**
+  String get scheduleAlertIqamahSound;
+
+  /// No description provided for @scheduleAlertIqamahSoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play alert when the time arrives'**
+  String get scheduleAlertIqamahSoundHint;
+
+  /// No description provided for @scheduleAlertNotify.
+  ///
+  /// In en, this message translates to:
+  /// **'Notify'**
+  String get scheduleAlertNotify;
+
+  /// No description provided for @scheduleAlertNotifyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show a notification without sound'**
+  String get scheduleAlertNotifyHint;
+
+  /// No description provided for @scheduleAlertOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Silent'**
+  String get scheduleAlertOff;
+
+  /// No description provided for @scheduleAlertOffHint.
+  ///
+  /// In en, this message translates to:
+  /// **'No alert for this time'**
+  String get scheduleAlertOffHint;
+
+  /// No description provided for @scheduleAlertPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert for {event}'**
+  String scheduleAlertPickerTitle(String event);
+
+  /// No description provided for @scheduleAlertSound.
+  ///
+  /// In en, this message translates to:
+  /// **'Adhan'**
+  String get scheduleAlertSound;
+
+  /// No description provided for @scheduleAlertSoundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Play adhan when the time arrives'**
+  String get scheduleAlertSoundHint;
+
+  /// No description provided for @scrollMoreHint.
+  ///
+  /// In en, this message translates to:
+  /// **'More below'**
+  String get scrollMoreHint;
+
   /// No description provided for @searchForMore.
   ///
   /// In en, this message translates to:
@@ -2275,6 +3205,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select an ayah to see the content.'**
   String get selectAyahToSeeContent;
+
+  /// No description provided for @selectVerseToAddReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a verse to add a reflection'**
+  String get selectVerseToAddReflection;
 
   /// No description provided for @settings.
   ///
@@ -2300,59 +3236,23 @@ abstract class AppLocalizations {
   /// **'Let\'s set up your preferences.'**
   String get setupPreferences;
 
-  /// No description provided for @goToPrayerPage.
-  ///
-  /// In en, this message translates to:
-  /// **'Go to Prayer Page'**
-  String get goToPrayerPage;
-
-  /// No description provided for @decimalPlaceholder.
-  ///
-  /// In en, this message translates to:
-  /// **'0.0'**
-  String get decimalPlaceholder;
-
-  /// No description provided for @integerPlaceholder.
-  ///
-  /// In en, this message translates to:
-  /// **'0'**
-  String get integerPlaceholder;
-
-  /// No description provided for @signedExampleHint.
-  ///
-  /// In en, this message translates to:
-  /// **'20 or -10'**
-  String get signedExampleHint;
-
-  /// No description provided for @singapore.
-  ///
-  /// In en, this message translates to:
-  /// **'Singapore'**
-  String get singapore;
-
-  /// No description provided for @skip.
-  ///
-  /// In en, this message translates to:
-  /// **'Skip'**
-  String get skip;
-
   /// No description provided for @shareAppName.
   ///
   /// In en, this message translates to:
   /// **'App name'**
   String get shareAppName;
 
-  /// No description provided for @shareBasmalah.
-  ///
-  /// In en, this message translates to:
-  /// **'Basmalah'**
-  String get shareBasmalah;
-
   /// No description provided for @shareAttributionPrefix.
   ///
   /// In en, this message translates to:
   /// **'Using'**
   String get shareAttributionPrefix;
+
+  /// No description provided for @shareBasmalah.
+  ///
+  /// In en, this message translates to:
+  /// **'Basmalah'**
+  String get shareBasmalah;
 
   /// No description provided for @shareByApp.
   ///
@@ -2408,23 +3308,17 @@ abstract class AppLocalizations {
   /// **'Image saved'**
   String get shareImageSavedTitle;
 
-  /// No description provided for @openFolder.
-  ///
-  /// In en, this message translates to:
-  /// **'Open folder'**
-  String get openFolder;
-
-  /// No description provided for @openFolderFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not open folder'**
-  String get openFolderFailed;
-
   /// No description provided for @shareIncludeInImage.
   ///
   /// In en, this message translates to:
   /// **'Include in image'**
   String get shareIncludeInImage;
+
+  /// No description provided for @sharePreserveLineBreaks.
+  ///
+  /// In en, this message translates to:
+  /// **'Mushaf line breaks'**
+  String get sharePreserveLineBreaks;
 
   /// No description provided for @sharePreview.
   ///
@@ -2442,29 +3336,23 @@ abstract class AppLocalizations {
     String verseCount,
   );
 
-  /// No description provided for @shareRangeSingleDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'{reference} ({verseCount})'**
-  String shareRangeSingleDescription(String reference, String verseCount);
-
   /// No description provided for @shareRangeOnPage.
   ///
   /// In en, this message translates to:
   /// **'Range on page {page}'**
   String shareRangeOnPage(int page);
 
+  /// No description provided for @shareRangeSingleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'{reference} ({verseCount})'**
+  String shareRangeSingleDescription(String reference, String verseCount);
+
   /// No description provided for @shareSaveImage.
   ///
   /// In en, this message translates to:
   /// **'Save image'**
   String get shareSaveImage;
-
-  /// No description provided for @sharePreserveLineBreaks.
-  ///
-  /// In en, this message translates to:
-  /// **'Mushaf line breaks'**
-  String get sharePreserveLineBreaks;
 
   /// No description provided for @shareSurahHeader.
   ///
@@ -2483,6 +3371,222 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share verses'**
   String get shareVerses;
+
+  /// No description provided for @shortcutCategoryFortress.
+  ///
+  /// In en, this message translates to:
+  /// **'Muslim Fortress'**
+  String get shortcutCategoryFortress;
+
+  /// No description provided for @shortcutCategoryGlobal.
+  ///
+  /// In en, this message translates to:
+  /// **'Global'**
+  String get shortcutCategoryGlobal;
+
+  /// No description provided for @shortcutCategoryHadith.
+  ///
+  /// In en, this message translates to:
+  /// **'Hadith'**
+  String get shortcutCategoryHadith;
+
+  /// No description provided for @shortcutCategoryQuran.
+  ///
+  /// In en, this message translates to:
+  /// **'Quran'**
+  String get shortcutCategoryQuran;
+
+  /// No description provided for @shortcutFocusSearchDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Open or focus the search field on Quran, Hadith, and Muslim Fortress.'**
+  String get shortcutFocusSearchDescription;
+
+  /// No description provided for @shortcutFocusSearchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus search'**
+  String get shortcutFocusSearchLabel;
+
+  /// No description provided for @shortcutFocusSearchUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Search is not available on this screen.'**
+  String get shortcutFocusSearchUnavailable;
+
+  /// No description provided for @shortcutFortressCountDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Decrement the repeat counter during focus reading.'**
+  String get shortcutFortressCountDescription;
+
+  /// No description provided for @shortcutFortressCountLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Count thikr'**
+  String get shortcutFortressCountLabel;
+
+  /// No description provided for @shortcutFortressThikrNextDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the next thikr during focus reading.'**
+  String get shortcutFortressThikrNextDescription;
+
+  /// No description provided for @shortcutFortressThikrNextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next thikr'**
+  String get shortcutFortressThikrNextLabel;
+
+  /// No description provided for @shortcutFortressThikrPrevDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the previous thikr during focus reading.'**
+  String get shortcutFortressThikrPrevDescription;
+
+  /// No description provided for @shortcutFortressThikrPrevLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous thikr'**
+  String get shortcutFortressThikrPrevLabel;
+
+  /// No description provided for @shortcutHadithResultNextDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the next hadith in the results list.'**
+  String get shortcutHadithResultNextDescription;
+
+  /// No description provided for @shortcutHadithResultNextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next hadith'**
+  String get shortcutHadithResultNextLabel;
+
+  /// No description provided for @shortcutHadithResultPrevDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the previous hadith in the results list.'**
+  String get shortcutHadithResultPrevDescription;
+
+  /// No description provided for @shortcutHadithResultPrevLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous hadith'**
+  String get shortcutHadithResultPrevLabel;
+
+  /// No description provided for @shortcutOpenSettingsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the settings screen.'**
+  String get shortcutOpenSettingsDescription;
+
+  /// No description provided for @shortcutOpenSettingsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get shortcutOpenSettingsLabel;
+
+  /// No description provided for @shortcutQuranAyahNextDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the next ayah in study mode.'**
+  String get shortcutQuranAyahNextDescription;
+
+  /// No description provided for @shortcutQuranAyahNextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next ayah'**
+  String get shortcutQuranAyahNextLabel;
+
+  /// No description provided for @shortcutQuranAyahPrevDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Select the previous ayah in study mode.'**
+  String get shortcutQuranAyahPrevDescription;
+
+  /// No description provided for @shortcutQuranAyahPrevLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous ayah'**
+  String get shortcutQuranAyahPrevLabel;
+
+  /// No description provided for @shortcutQuranPageNextDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the next mushaf page (RTL reading direction).'**
+  String get shortcutQuranPageNextDescription;
+
+  /// No description provided for @shortcutQuranPageNextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next page'**
+  String get shortcutQuranPageNextLabel;
+
+  /// No description provided for @shortcutQuranPageNextSpaceDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance to the next mushaf page.'**
+  String get shortcutQuranPageNextSpaceDescription;
+
+  /// No description provided for @shortcutQuranPageNextSpaceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next page (Space)'**
+  String get shortcutQuranPageNextSpaceLabel;
+
+  /// No description provided for @shortcutQuranPagePrevDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to the previous mushaf page.'**
+  String get shortcutQuranPagePrevDescription;
+
+  /// No description provided for @shortcutQuranPagePrevLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous page'**
+  String get shortcutQuranPagePrevLabel;
+
+  /// No description provided for @shortcutToggleLocaleDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch between English and Arabic.'**
+  String get shortcutToggleLocaleDescription;
+
+  /// No description provided for @shortcutToggleLocaleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle language'**
+  String get shortcutToggleLocaleLabel;
+
+  /// No description provided for @shortcutToggleThemeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch between light and dark mode.'**
+  String get shortcutToggleThemeDescription;
+
+  /// No description provided for @shortcutToggleThemeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle theme'**
+  String get shortcutToggleThemeLabel;
+
+  /// No description provided for @signedExampleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'20 or -10'**
+  String get signedExampleHint;
+
+  /// No description provided for @singapore.
+  ///
+  /// In en, this message translates to:
+  /// **'Singapore'**
+  String get singapore;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
 
   /// No description provided for @slate.
   ///
@@ -2520,6 +3624,18 @@ abstract class AppLocalizations {
   /// **'Study Mode'**
   String get studyMode;
 
+  /// No description provided for @sunnahAlertTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{prayer}'**
+  String sunnahAlertTitle(String prayer);
+
+  /// No description provided for @sunnahOsNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Sunnah time — tap to focus'**
+  String get sunnahOsNotificationBody;
+
   /// No description provided for @sunnahTimes.
   ///
   /// In en, this message translates to:
@@ -2555,6 +3671,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tafsir Al-Muyassar'**
   String get tafsirAlMuyassar;
+
+  /// No description provided for @tafsirTextMayBeIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'This commentary may be cut off in the source text.'**
+  String get tafsirTextMayBeIncomplete;
 
   /// No description provided for @tehran.
   ///
@@ -2616,6 +3738,36 @@ abstract class AppLocalizations {
   /// **'Translation'**
   String get translation;
 
+  /// No description provided for @trayHideApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide Tawaq'**
+  String get trayHideApp;
+
+  /// No description provided for @trayMuteAdhan.
+  ///
+  /// In en, this message translates to:
+  /// **'Mute adhan'**
+  String get trayMuteAdhan;
+
+  /// No description provided for @trayNextPrayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {prayer}'**
+  String trayNextPrayer(String prayer);
+
+  /// No description provided for @trayQuit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit'**
+  String get trayQuit;
+
+  /// No description provided for @trayShowApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Tawaq'**
+  String get trayShowApp;
+
   /// No description provided for @tryDifferentSearchTerm.
   ///
   /// In en, this message translates to:
@@ -2628,11 +3780,35 @@ abstract class AppLocalizations {
   /// **'Turkey (Diyanet)'**
   String get turkiye;
 
+  /// No description provided for @typographySectionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust UI text size and Quran reading size separately.'**
+  String get typographySectionSubtitle;
+
+  /// No description provided for @typographySectionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Text & scaling'**
+  String get typographySectionTitle;
+
   /// No description provided for @ummAlQura.
   ///
   /// In en, this message translates to:
   /// **'Umm Al-Qura University'**
   String get ummAlQura;
+
+  /// No description provided for @unavailableShort.
+  ///
+  /// In en, this message translates to:
+  /// **'—'**
+  String get unavailableShort;
+
+  /// No description provided for @unknownLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown location'**
+  String get unknownLocation;
 
   /// No description provided for @unlockToEditCoordinates.
   ///
@@ -2657,18 +3833,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Use My Location'**
   String get useMyLocation;
-
-  /// No description provided for @unavailableShort.
-  ///
-  /// In en, this message translates to:
-  /// **'—'**
-  String get unavailableShort;
-
-  /// No description provided for @unknownLocation.
-  ///
-  /// In en, this message translates to:
-  /// **'Unknown location'**
-  String get unknownLocation;
 
   /// No description provided for @useSystemTimezone.
   ///
@@ -2711,1194 +3875,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Zinc'**
   String get zinc;
-
-  /// No description provided for @a11ySwitchToLightTheme.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to light theme'**
-  String get a11ySwitchToLightTheme;
-
-  /// No description provided for @a11ySwitchToDarkTheme.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch to dark theme'**
-  String get a11ySwitchToDarkTheme;
-
-  /// No description provided for @a11yNavigationUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Unavailable'**
-  String get a11yNavigationUnavailable;
-
-  /// No description provided for @a11yExpandSidebar.
-  ///
-  /// In en, this message translates to:
-  /// **'Expand sidebar'**
-  String get a11yExpandSidebar;
-
-  /// No description provided for @a11yWindowMinimize.
-  ///
-  /// In en, this message translates to:
-  /// **'Minimize window'**
-  String get a11yWindowMinimize;
-
-  /// No description provided for @a11yWindowMaximize.
-  ///
-  /// In en, this message translates to:
-  /// **'Maximize window'**
-  String get a11yWindowMaximize;
-
-  /// No description provided for @a11yWindowRestore.
-  ///
-  /// In en, this message translates to:
-  /// **'Restore window'**
-  String get a11yWindowRestore;
-
-  /// No description provided for @a11yWindowClose.
-  ///
-  /// In en, this message translates to:
-  /// **'Close window'**
-  String get a11yWindowClose;
-
-  /// No description provided for @a11yOpenLocationSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Open location settings'**
-  String get a11yOpenLocationSettings;
-
-  /// No description provided for @a11ySettingsDecreaseIqamah.
-  ///
-  /// In en, this message translates to:
-  /// **'Decrease {prayer} iqamah minutes'**
-  String a11ySettingsDecreaseIqamah(String prayer);
-
-  /// No description provided for @a11ySettingsIncreaseIqamah.
-  ///
-  /// In en, this message translates to:
-  /// **'Increase {prayer} iqamah minutes'**
-  String a11ySettingsIncreaseIqamah(String prayer);
-
-  /// No description provided for @a11ySettingsResetIqamah.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset {prayer} iqamah to default'**
-  String a11ySettingsResetIqamah(String prayer);
-
-  /// No description provided for @scheduleAlertOff.
-  ///
-  /// In en, this message translates to:
-  /// **'Silent'**
-  String get scheduleAlertOff;
-
-  /// No description provided for @scheduleAlertSound.
-  ///
-  /// In en, this message translates to:
-  /// **'Adhan'**
-  String get scheduleAlertSound;
-
-  /// No description provided for @scheduleAlertIqamahSound.
-  ///
-  /// In en, this message translates to:
-  /// **'Sound'**
-  String get scheduleAlertIqamahSound;
-
-  /// No description provided for @scheduleAlertNotify.
-  ///
-  /// In en, this message translates to:
-  /// **'Notify'**
-  String get scheduleAlertNotify;
-
-  /// No description provided for @scheduleAlertOffHint.
-  ///
-  /// In en, this message translates to:
-  /// **'No alert for this time'**
-  String get scheduleAlertOffHint;
-
-  /// No description provided for @scheduleAlertSoundHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Play adhan when the time arrives'**
-  String get scheduleAlertSoundHint;
-
-  /// No description provided for @scheduleAlertIqamahSoundHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Play alert when the time arrives'**
-  String get scheduleAlertIqamahSoundHint;
-
-  /// No description provided for @scheduleAlertNotifyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Show a notification without sound'**
-  String get scheduleAlertNotifyHint;
-
-  /// No description provided for @scheduleAlertPickerTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Alert for {event}'**
-  String scheduleAlertPickerTitle(String event);
-
-  /// No description provided for @scheduleAlertEventAdhan.
-  ///
-  /// In en, this message translates to:
-  /// **'{prayer} adhan'**
-  String scheduleAlertEventAdhan(String prayer);
-
-  /// No description provided for @scheduleAlertEventIqamah.
-  ///
-  /// In en, this message translates to:
-  /// **'{prayer} iqamah'**
-  String scheduleAlertEventIqamah(String prayer);
-
-  /// No description provided for @scheduleAlertEventSunnah.
-  ///
-  /// In en, this message translates to:
-  /// **'{prayer}'**
-  String scheduleAlertEventSunnah(String prayer);
-
-  /// No description provided for @keyboardShortcutsTabTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Keyboard shortcuts'**
-  String get keyboardShortcutsTabTitle;
-
-  /// No description provided for @keyboardShortcutsSectionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Keyboard shortcuts'**
-  String get keyboardShortcutsSectionTitle;
-
-  /// No description provided for @keyboardShortcutsSectionSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Reference list of keyboard shortcuts available on desktop. Shortcuts work app-wide from any screen, including this one. They cannot be customized.'**
-  String get keyboardShortcutsSectionSubtitle;
-
-  /// No description provided for @keyboardShortcutsCategorySubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Available when using the app on desktop.'**
-  String get keyboardShortcutsCategorySubtitle;
-
-  /// No description provided for @shortcutCategoryGlobal.
-  ///
-  /// In en, this message translates to:
-  /// **'Global'**
-  String get shortcutCategoryGlobal;
-
-  /// No description provided for @shortcutCategoryQuran.
-  ///
-  /// In en, this message translates to:
-  /// **'Quran'**
-  String get shortcutCategoryQuran;
-
-  /// No description provided for @shortcutCategoryFortress.
-  ///
-  /// In en, this message translates to:
-  /// **'Muslim Fortress'**
-  String get shortcutCategoryFortress;
-
-  /// No description provided for @shortcutCategoryHadith.
-  ///
-  /// In en, this message translates to:
-  /// **'Hadith'**
-  String get shortcutCategoryHadith;
-
-  /// No description provided for @shortcutToggleThemeLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Toggle theme'**
-  String get shortcutToggleThemeLabel;
-
-  /// No description provided for @shortcutToggleThemeDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch between light and dark mode.'**
-  String get shortcutToggleThemeDescription;
-
-  /// No description provided for @shortcutToggleLocaleLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Toggle language'**
-  String get shortcutToggleLocaleLabel;
-
-  /// No description provided for @shortcutToggleLocaleDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch between English and Arabic.'**
-  String get shortcutToggleLocaleDescription;
-
-  /// No description provided for @shortcutOpenSettingsLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Open settings'**
-  String get shortcutOpenSettingsLabel;
-
-  /// No description provided for @shortcutOpenSettingsDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Go to the settings screen.'**
-  String get shortcutOpenSettingsDescription;
-
-  /// No description provided for @shortcutFocusSearchLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Focus search'**
-  String get shortcutFocusSearchLabel;
-
-  /// No description provided for @shortcutFocusSearchDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Open or focus the search field on Quran, Hadith, and Muslim Fortress.'**
-  String get shortcutFocusSearchDescription;
-
-  /// No description provided for @shortcutFocusSearchUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Search is not available on this screen.'**
-  String get shortcutFocusSearchUnavailable;
-
-  /// No description provided for @shortcutQuranPageNextLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Next page'**
-  String get shortcutQuranPageNextLabel;
-
-  /// No description provided for @shortcutQuranPageNextDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Go to the next mushaf page (RTL reading direction).'**
-  String get shortcutQuranPageNextDescription;
-
-  /// No description provided for @shortcutQuranPagePrevLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous page'**
-  String get shortcutQuranPagePrevLabel;
-
-  /// No description provided for @shortcutQuranPagePrevDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Go to the previous mushaf page.'**
-  String get shortcutQuranPagePrevDescription;
-
-  /// No description provided for @shortcutQuranPageNextSpaceLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Next page (Space)'**
-  String get shortcutQuranPageNextSpaceLabel;
-
-  /// No description provided for @shortcutQuranPageNextSpaceDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Advance to the next mushaf page.'**
-  String get shortcutQuranPageNextSpaceDescription;
-
-  /// No description provided for @shortcutQuranAyahNextLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Next ayah'**
-  String get shortcutQuranAyahNextLabel;
-
-  /// No description provided for @shortcutQuranAyahNextDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Select the next ayah in study mode.'**
-  String get shortcutQuranAyahNextDescription;
-
-  /// No description provided for @shortcutQuranAyahPrevLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous ayah'**
-  String get shortcutQuranAyahPrevLabel;
-
-  /// No description provided for @shortcutQuranAyahPrevDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Select the previous ayah in study mode.'**
-  String get shortcutQuranAyahPrevDescription;
-
-  /// No description provided for @shortcutFortressCountLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Count thikr'**
-  String get shortcutFortressCountLabel;
-
-  /// No description provided for @shortcutFortressCountDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Decrement the repeat counter during focus reading.'**
-  String get shortcutFortressCountDescription;
-
-  /// No description provided for @shortcutFortressThikrNextLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Next thikr'**
-  String get shortcutFortressThikrNextLabel;
-
-  /// No description provided for @shortcutFortressThikrNextDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Go to the next thikr during focus reading.'**
-  String get shortcutFortressThikrNextDescription;
-
-  /// No description provided for @shortcutFortressThikrPrevLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous thikr'**
-  String get shortcutFortressThikrPrevLabel;
-
-  /// No description provided for @shortcutFortressThikrPrevDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Go to the previous thikr during focus reading.'**
-  String get shortcutFortressThikrPrevDescription;
-
-  /// No description provided for @shortcutHadithResultNextLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Next hadith'**
-  String get shortcutHadithResultNextLabel;
-
-  /// No description provided for @shortcutHadithResultNextDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Select the next hadith in the results list.'**
-  String get shortcutHadithResultNextDescription;
-
-  /// No description provided for @shortcutHadithResultPrevLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous hadith'**
-  String get shortcutHadithResultPrevLabel;
-
-  /// No description provided for @shortcutHadithResultPrevDescription.
-  ///
-  /// In en, this message translates to:
-  /// **'Select the previous hadith in the results list.'**
-  String get shortcutHadithResultPrevDescription;
-
-  /// No description provided for @adhanSectionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Adhan'**
-  String get adhanSectionTitle;
-
-  /// No description provided for @adhanSectionSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.'**
-  String get adhanSectionSubtitle;
-
-  /// No description provided for @adhanSoundLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Adhan sound'**
-  String get adhanSoundLabel;
-
-  /// No description provided for @adhanMuezzinMisharyAlafasi.
-  ///
-  /// In en, this message translates to:
-  /// **'Mishary Alafasi'**
-  String get adhanMuezzinMisharyAlafasi;
-
-  /// No description provided for @adhanMuezzinMakkah.
-  ///
-  /// In en, this message translates to:
-  /// **'Makkah'**
-  String get adhanMuezzinMakkah;
-
-  /// No description provided for @adhanMuezzinAbedAlbasaei.
-  ///
-  /// In en, this message translates to:
-  /// **'Abed Al-Basaei'**
-  String get adhanMuezzinAbedAlbasaei;
-
-  /// No description provided for @adhanMuezzinAhmadNufais.
-  ///
-  /// In en, this message translates to:
-  /// **'Ahmad Nufais'**
-  String get adhanMuezzinAhmadNufais;
-
-  /// No description provided for @adhanMuezzinGhaziAlSaadoni.
-  ///
-  /// In en, this message translates to:
-  /// **'Ghazi Al-Saadoni'**
-  String get adhanMuezzinGhaziAlSaadoni;
-
-  /// No description provided for @adhanMuezzinHamadDeghreri.
-  ///
-  /// In en, this message translates to:
-  /// **'Hamad Deghreri'**
-  String get adhanMuezzinHamadDeghreri;
-
-  /// No description provided for @adhanMuezzinHamdanAlMalki.
-  ///
-  /// In en, this message translates to:
-  /// **'Hamdan Al-Malki'**
-  String get adhanMuezzinHamdanAlMalki;
-
-  /// No description provided for @adhanMuezzinIbrahimAlArkani.
-  ///
-  /// In en, this message translates to:
-  /// **'Ibrahim Al-Arkani'**
-  String get adhanMuezzinIbrahimAlArkani;
-
-  /// No description provided for @adhanMuezzinMajedAlHamathani.
-  ///
-  /// In en, this message translates to:
-  /// **'Majed Al-Hamathani'**
-  String get adhanMuezzinMajedAlHamathani;
-
-  /// No description provided for @adhanMuezzinMansoorAlZahrani.
-  ///
-  /// In en, this message translates to:
-  /// **'Mansoor Az-Zahrani'**
-  String get adhanMuezzinMansoorAlZahrani;
-
-  /// No description provided for @adhanMuezzinMohammadAlMenshawy.
-  ///
-  /// In en, this message translates to:
-  /// **'Mohammad Al-Menshawy'**
-  String get adhanMuezzinMohammadAlMenshawy;
-
-  /// No description provided for @adhanMuezzinMohammadRefat.
-  ///
-  /// In en, this message translates to:
-  /// **'Mohammad Refat'**
-  String get adhanMuezzinMohammadRefat;
-
-  /// No description provided for @adhanMuezzinNasserAlQatami.
-  ///
-  /// In en, this message translates to:
-  /// **'Nasser Al-Qatami'**
-  String get adhanMuezzinNasserAlQatami;
-
-  /// No description provided for @adhanMuezzinSuhaibKhatba.
-  ///
-  /// In en, this message translates to:
-  /// **'Suhaib Khatba'**
-  String get adhanMuezzinSuhaibKhatba;
-
-  /// No description provided for @adhanVolumeLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Adhan volume'**
-  String get adhanVolumeLabel;
-
-  /// No description provided for @adhanShowAlertLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Show adhan alert'**
-  String get adhanShowAlertLabel;
-
-  /// No description provided for @adhanShowOsNotificationLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'OS notification when hidden in tray'**
-  String get adhanShowOsNotificationLabel;
-
-  /// No description provided for @adhanAlertPositionLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Alert position'**
-  String get adhanAlertPositionLabel;
-
-  /// No description provided for @adhanAlertPositionTopEnd.
-  ///
-  /// In en, this message translates to:
-  /// **'Top right'**
-  String get adhanAlertPositionTopEnd;
-
-  /// No description provided for @adhanAlertPositionTopStart.
-  ///
-  /// In en, this message translates to:
-  /// **'Top left'**
-  String get adhanAlertPositionTopStart;
-
-  /// No description provided for @adhanAlertPositionCenter.
-  ///
-  /// In en, this message translates to:
-  /// **'Center'**
-  String get adhanAlertPositionCenter;
-
-  /// No description provided for @adhanStop.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop adhan'**
-  String get adhanStop;
-
-  /// No description provided for @adhanAlertTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Adhan — {prayer}'**
-  String adhanAlertTitle(String prayer);
-
-  /// No description provided for @adhanPlayingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Adhan — {prayer}'**
-  String adhanPlayingTitle(String prayer);
-
-  /// No description provided for @adhanOsNotificationBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Adhan is playing — tap to focus'**
-  String get adhanOsNotificationBody;
-
-  /// No description provided for @iqamahAlertTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Iqamah — {prayer}'**
-  String iqamahAlertTitle(String prayer);
-
-  /// No description provided for @iqamahPlayingTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Iqamah — {prayer}'**
-  String iqamahPlayingTitle(String prayer);
-
-  /// No description provided for @iqamahOsNotificationBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Iqamah time — tap to focus'**
-  String get iqamahOsNotificationBody;
-
-  /// No description provided for @sunnahAlertTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{prayer}'**
-  String sunnahAlertTitle(String prayer);
-
-  /// No description provided for @sunnahOsNotificationBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Sunnah time — tap to focus'**
-  String get sunnahOsNotificationBody;
-
-  /// No description provided for @prayerAlertDismiss.
-  ///
-  /// In en, this message translates to:
-  /// **'Dismiss'**
-  String get prayerAlertDismiss;
-
-  /// No description provided for @iqamahSoundLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Iqamah call'**
-  String get iqamahSoundLabel;
-
-  /// No description provided for @iqamahMuezzinYasserAlDossari.
-  ///
-  /// In en, this message translates to:
-  /// **'Yasser Al-Dossari'**
-  String get iqamahMuezzinYasserAlDossari;
-
-  /// No description provided for @iqamahMuezzinMadinah.
-  ///
-  /// In en, this message translates to:
-  /// **'Madinah'**
-  String get iqamahMuezzinMadinah;
-
-  /// No description provided for @desktopSectionTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Desktop'**
-  String get desktopSectionTitle;
-
-  /// No description provided for @desktopSectionSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'System tray, window behaviour, and startup on desktop.'**
-  String get desktopSectionSubtitle;
-
-  /// No description provided for @desktopLaunchAtLogin.
-  ///
-  /// In en, this message translates to:
-  /// **'Start at login'**
-  String get desktopLaunchAtLogin;
-
-  /// No description provided for @desktopLaunchAtLoginHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Start hidden in tray was also enabled so adhan alerts work after login.'**
-  String get desktopLaunchAtLoginHint;
-
-  /// No description provided for @desktopMinimizeToTrayOnClose.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide to tray when closing the window'**
-  String get desktopMinimizeToTrayOnClose;
-
-  /// No description provided for @desktopMinimizeToTray.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide to tray when minimizing'**
-  String get desktopMinimizeToTray;
-
-  /// No description provided for @desktopLaunchToTray.
-  ///
-  /// In en, this message translates to:
-  /// **'Start hidden in tray'**
-  String get desktopLaunchToTray;
-
-  /// No description provided for @trayShowApp.
-  ///
-  /// In en, this message translates to:
-  /// **'Show Tawaq'**
-  String get trayShowApp;
-
-  /// No description provided for @trayHideApp.
-  ///
-  /// In en, this message translates to:
-  /// **'Hide Tawaq'**
-  String get trayHideApp;
-
-  /// No description provided for @trayMuteAdhan.
-  ///
-  /// In en, this message translates to:
-  /// **'Mute adhan'**
-  String get trayMuteAdhan;
-
-  /// No description provided for @trayQuit.
-  ///
-  /// In en, this message translates to:
-  /// **'Quit'**
-  String get trayQuit;
-
-  /// No description provided for @trayNextPrayer.
-  ///
-  /// In en, this message translates to:
-  /// **'Next: {prayer}'**
-  String trayNextPrayer(String prayer);
-
-  /// No description provided for @quranRecitationComingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'Recitation playback coming soon'**
-  String get quranRecitationComingSoon;
-
-  /// No description provided for @quranPlayAyah.
-  ///
-  /// In en, this message translates to:
-  /// **'Play this ayah'**
-  String get quranPlayAyah;
-
-  /// No description provided for @quranPlaySurah.
-  ///
-  /// In en, this message translates to:
-  /// **'Play this surah'**
-  String get quranPlaySurah;
-
-  /// No description provided for @quranPlayRange.
-  ///
-  /// In en, this message translates to:
-  /// **'Play a range…'**
-  String get quranPlayRange;
-
-  /// No description provided for @quranPlaySelection.
-  ///
-  /// In en, this message translates to:
-  /// **'Play selection'**
-  String get quranPlaySelection;
-
-  /// No description provided for @quranSelectReciter.
-  ///
-  /// In en, this message translates to:
-  /// **'Select reciter'**
-  String get quranSelectReciter;
-
-  /// No description provided for @quranReciterTimed.
-  ///
-  /// In en, this message translates to:
-  /// **'Synced'**
-  String get quranReciterTimed;
-
-  /// No description provided for @quranRecitationStop.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop'**
-  String get quranRecitationStop;
-
-  /// No description provided for @quranRecitationPlay.
-  ///
-  /// In en, this message translates to:
-  /// **'Play'**
-  String get quranRecitationPlay;
-
-  /// No description provided for @quranRecitationPause.
-  ///
-  /// In en, this message translates to:
-  /// **'Pause'**
-  String get quranRecitationPause;
-
-  /// No description provided for @quranRecitationNext.
-  ///
-  /// In en, this message translates to:
-  /// **'Next'**
-  String get quranRecitationNext;
-
-  /// No description provided for @quranRecitationPrevious.
-  ///
-  /// In en, this message translates to:
-  /// **'Previous'**
-  String get quranRecitationPrevious;
-
-  /// No description provided for @quranRecitationDownloading.
-  ///
-  /// In en, this message translates to:
-  /// **'Caching…'**
-  String get quranRecitationDownloading;
-
-  /// No description provided for @quranRecitationVolume.
-  ///
-  /// In en, this message translates to:
-  /// **'Volume'**
-  String get quranRecitationVolume;
-
-  /// No description provided for @quranRecitationNoTiming.
-  ///
-  /// In en, this message translates to:
-  /// **'Per-ayah playback isn\'t available for this reciter'**
-  String get quranRecitationNoTiming;
-
-  /// No description provided for @quranRecitationUnavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'No reciter is available for playback'**
-  String get quranRecitationUnavailable;
-
-  /// No description provided for @quranRecitationPlaybackFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Playback failed: {error}'**
-  String quranRecitationPlaybackFailed(String error);
-
-  /// No description provided for @quranRecitationModeStopAtEnd.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop at end'**
-  String get quranRecitationModeStopAtEnd;
-
-  /// No description provided for @quranRecitationModeRepeat.
-  ///
-  /// In en, this message translates to:
-  /// **'Repeat selection'**
-  String get quranRecitationModeRepeat;
-
-  /// No description provided for @quranRecitationModeContinue.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue to next surah'**
-  String get quranRecitationModeContinue;
-
-  /// No description provided for @quranRangeModeLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'End behavior'**
-  String get quranRangeModeLabel;
-
-  /// No description provided for @quranSurahLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Surah {surah}'**
-  String quranSurahLabel(String surah);
-
-  /// No description provided for @quranRecitationOpenPlayer.
-  ///
-  /// In en, this message translates to:
-  /// **'Open player'**
-  String get quranRecitationOpenPlayer;
-
-  /// No description provided for @quranRecitationClosePlayer.
-  ///
-  /// In en, this message translates to:
-  /// **'Close player'**
-  String get quranRecitationClosePlayer;
-
-  /// No description provided for @quranRecitationSwitchReciter.
-  ///
-  /// In en, this message translates to:
-  /// **'Switch reciter'**
-  String get quranRecitationSwitchReciter;
-
-  /// No description provided for @quranRecitationCancel.
-  ///
-  /// In en, this message translates to:
-  /// **'Cancel'**
-  String get quranRecitationCancel;
-
-  /// No description provided for @quranRecitationApply.
-  ///
-  /// In en, this message translates to:
-  /// **'Apply'**
-  String get quranRecitationApply;
-
-  /// No description provided for @quranRecitationRangeRepeat.
-  ///
-  /// In en, this message translates to:
-  /// **'Range & repeat'**
-  String get quranRecitationRangeRepeat;
-
-  /// No description provided for @quranRecitationQueue.
-  ///
-  /// In en, this message translates to:
-  /// **'Queue'**
-  String get quranRecitationQueue;
-
-  /// No description provided for @quranRecitationQueueSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Ayahs in this selection'**
-  String get quranRecitationQueueSubtitle;
-
-  /// No description provided for @quranRecitationQueueEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No timed ayahs to queue for this reciter.'**
-  String get quranRecitationQueueEmpty;
-
-  /// No description provided for @quranRecitationQueueClear.
-  ///
-  /// In en, this message translates to:
-  /// **'Stop & clear'**
-  String get quranRecitationQueueClear;
-
-  /// No description provided for @quranRecitationSleepTimer.
-  ///
-  /// In en, this message translates to:
-  /// **'Sleep timer'**
-  String get quranRecitationSleepTimer;
-
-  /// No description provided for @quranRecitationSleepOff.
-  ///
-  /// In en, this message translates to:
-  /// **'Off'**
-  String get quranRecitationSleepOff;
-
-  /// No description provided for @quranRecitationSleepEndOfAyah.
-  ///
-  /// In en, this message translates to:
-  /// **'End of current ayah'**
-  String get quranRecitationSleepEndOfAyah;
-
-  /// No description provided for @quranRecitationSleepEndOfRange.
-  ///
-  /// In en, this message translates to:
-  /// **'End of range'**
-  String get quranRecitationSleepEndOfRange;
-
-  /// No description provided for @quranRecitationSleepEndOfSurah.
-  ///
-  /// In en, this message translates to:
-  /// **'End of surah'**
-  String get quranRecitationSleepEndOfSurah;
-
-  /// No description provided for @quranRecitationSleepAfter.
-  ///
-  /// In en, this message translates to:
-  /// **'After {minutes} minutes'**
-  String quranRecitationSleepAfter(String minutes);
-
-  /// No description provided for @quranRecitationAutoScroll.
-  ///
-  /// In en, this message translates to:
-  /// **'Auto-scroll'**
-  String get quranRecitationAutoScroll;
-
-  /// No description provided for @quranRecitationAutoScrollDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatically scroll the mushaf page to follow the recitation position.'**
-  String get quranRecitationAutoScrollDesc;
-
-  /// No description provided for @quranRecitationHighlight.
-  ///
-  /// In en, this message translates to:
-  /// **'Highlight ayah'**
-  String get quranRecitationHighlight;
-
-  /// No description provided for @quranRecitationHighlightDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Highlight the currently playing ayah in the mushaf.'**
-  String get quranRecitationHighlightDesc;
-
-  /// No description provided for @quranRecitationOfflineFiles.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline files'**
-  String get quranRecitationOfflineFiles;
-
-  /// No description provided for @quranRecitationOfflineSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Saved recitations'**
-  String get quranRecitationOfflineSubtitle;
-
-  /// No description provided for @quranRecitationOfflineAutoSave.
-  ///
-  /// In en, this message translates to:
-  /// **'Recitations are saved automatically while you listen.'**
-  String get quranRecitationOfflineAutoSave;
-
-  /// No description provided for @quranRecitationOfflineOpenFolder.
-  ///
-  /// In en, this message translates to:
-  /// **'Open folder'**
-  String get quranRecitationOfflineOpenFolder;
-
-  /// No description provided for @quranRecitationOfflineInFolder.
-  ///
-  /// In en, this message translates to:
-  /// **'In this folder'**
-  String get quranRecitationOfflineInFolder;
-
-  /// No description provided for @quranRecitationOfflineEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No recitations saved yet.'**
-  String get quranRecitationOfflineEmpty;
-
-  /// No description provided for @quranRecitationOfflineStorageUsed.
-  ///
-  /// In en, this message translates to:
-  /// **'Storage used'**
-  String get quranRecitationOfflineStorageUsed;
-
-  /// No description provided for @quranRecitationOfflineFileCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} files'**
-  String quranRecitationOfflineFileCount(int count);
-
-  /// No description provided for @quranReciterRiwayahTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Reciter & riwayah'**
-  String get quranReciterRiwayahTitle;
-
-  /// No description provided for @quranReciterSearchHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Search for a reciter…'**
-  String get quranReciterSearchHint;
-
-  /// No description provided for @quranReciterRiwayahCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} riwayat'**
-  String quranReciterRiwayahCount(int count);
-
-  /// No description provided for @quranReciterFilters.
-  ///
-  /// In en, this message translates to:
-  /// **'Filters'**
-  String get quranReciterFilters;
-
-  /// No description provided for @quranReciterSurahOnly.
-  ///
-  /// In en, this message translates to:
-  /// **'Surah playback only'**
-  String get quranReciterSurahOnly;
-
-  /// No description provided for @quranReciterFilterDownloaded.
-  ///
-  /// In en, this message translates to:
-  /// **'Downloaded'**
-  String get quranReciterFilterDownloaded;
-
-  /// No description provided for @quranReciterStyleMurattal.
-  ///
-  /// In en, this message translates to:
-  /// **'Murattal'**
-  String get quranReciterStyleMurattal;
-
-  /// No description provided for @quranReciterStyleMujawwad.
-  ///
-  /// In en, this message translates to:
-  /// **'Mujawwad'**
-  String get quranReciterStyleMujawwad;
-
-  /// Shown when the selected riwayah lacks timing and is auto-upgraded
-  ///
-  /// In en, this message translates to:
-  /// **'This riwayah doesn\'t support ayah sync. Switched to {riwayah}.'**
-  String quranReciterRiwayahUpgraded(String riwayah);
-
-  /// No description provided for @quranNoMatchingReciters.
-  ///
-  /// In en, this message translates to:
-  /// **'No matching reciters'**
-  String get quranNoMatchingReciters;
-
-  /// No description provided for @quranRangeTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Range & repeat for memorization'**
-  String get quranRangeTitle;
-
-  /// No description provided for @quranRangeScope.
-  ///
-  /// In en, this message translates to:
-  /// **'Range'**
-  String get quranRangeScope;
-
-  /// No description provided for @quranRangePresetAyah.
-  ///
-  /// In en, this message translates to:
-  /// **'This ayah'**
-  String get quranRangePresetAyah;
-
-  /// No description provided for @quranRangePresetSurah.
-  ///
-  /// In en, this message translates to:
-  /// **'This surah'**
-  String get quranRangePresetSurah;
-
-  /// No description provided for @quranRangePresetJuz.
-  ///
-  /// In en, this message translates to:
-  /// **'This juz'**
-  String get quranRangePresetJuz;
-
-  /// No description provided for @quranRangePresetHizb.
-  ///
-  /// In en, this message translates to:
-  /// **'This hizb'**
-  String get quranRangePresetHizb;
-
-  /// No description provided for @quranRangePresetContinueFromHere.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue from here'**
-  String get quranRangePresetContinueFromHere;
-
-  /// No description provided for @quranRangePresetCustom.
-  ///
-  /// In en, this message translates to:
-  /// **'Custom'**
-  String get quranRangePresetCustom;
-
-  /// No description provided for @quranRangeFromSurah.
-  ///
-  /// In en, this message translates to:
-  /// **'From — surah'**
-  String get quranRangeFromSurah;
-
-  /// No description provided for @quranRangeFromAyah.
-  ///
-  /// In en, this message translates to:
-  /// **'From — ayah'**
-  String get quranRangeFromAyah;
-
-  /// No description provided for @quranRangeToSurah.
-  ///
-  /// In en, this message translates to:
-  /// **'To — surah'**
-  String get quranRangeToSurah;
-
-  /// No description provided for @quranRangeToAyah.
-  ///
-  /// In en, this message translates to:
-  /// **'To — ayah'**
-  String get quranRangeToAyah;
-
-  /// No description provided for @quranRangeFrom.
-  ///
-  /// In en, this message translates to:
-  /// **'From — surah & ayah'**
-  String get quranRangeFrom;
-
-  /// No description provided for @quranRangeTo.
-  ///
-  /// In en, this message translates to:
-  /// **'To — surah & ayah'**
-  String get quranRangeTo;
-
-  /// No description provided for @quranRangeRepeatWhole.
-  ///
-  /// In en, this message translates to:
-  /// **'Repeat whole range'**
-  String get quranRangeRepeatWhole;
-
-  /// No description provided for @quranRangePlay.
-  ///
-  /// In en, this message translates to:
-  /// **'Play selection'**
-  String get quranRangePlay;
-
-  /// No description provided for @quranRangeJuzNotFound.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not find the juz for this ayah'**
-  String get quranRangeJuzNotFound;
-
-  /// No description provided for @quranRangeHizbNotFound.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not find the hizb for this ayah'**
-  String get quranRangeHizbNotFound;
-
-  /// No description provided for @quranRangeJuzBoundsNotFound.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load juz boundaries'**
-  String get quranRangeJuzBoundsNotFound;
-
-  /// No description provided for @quranRangeHizbBoundsNotFound.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not load hizb boundaries'**
-  String get quranRangeHizbBoundsNotFound;
-
-  /// No description provided for @quranRangePresetFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not apply this range preset'**
-  String get quranRangePresetFailed;
-
-  /// No description provided for @quranRangeFromShort.
-  ///
-  /// In en, this message translates to:
-  /// **'From'**
-  String get quranRangeFromShort;
-
-  /// No description provided for @quranRangeToShort.
-  ///
-  /// In en, this message translates to:
-  /// **'To'**
-  String get quranRangeToShort;
-
-  /// No description provided for @quranRangeRepeatOnce.
-  ///
-  /// In en, this message translates to:
-  /// **'Once'**
-  String get quranRangeRepeatOnce;
-
-  /// No description provided for @quranRangeRepeatTwice.
-  ///
-  /// In en, this message translates to:
-  /// **'Twice'**
-  String get quranRangeRepeatTwice;
-
-  /// No description provided for @quranRangeRepeatTimes.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} times'**
-  String quranRangeRepeatTimes(int count);
-
-  /// No description provided for @quranRangeRepeatChip.
-  ///
-  /// In en, this message translates to:
-  /// **'×{count}'**
-  String quranRangeRepeatChip(int count);
-
-  /// No description provided for @quranRangeSave.
-  ///
-  /// In en, this message translates to:
-  /// **'Save range'**
-  String get quranRangeSave;
 }
 
 class _AppLocalizationsDelegate

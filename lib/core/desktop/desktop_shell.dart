@@ -7,6 +7,7 @@ import 'package:tawaq/core/desktop/desktop_window_controller.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_alert_scheduler_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/media_session_router_provider.dart';
 import 'package:tawaq/feature/settings/data/models/desktop_settings.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -86,7 +87,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell>
     if (isDesktopPlatform) {
       ref
         ..watch(prayerAlertSchedulerProvider)
-        ..watch(desktopTraySyncProvider);
+        ..watch(desktopTraySyncProvider)
+        ..watch(mediaSessionCommandRouterProvider);
     }
     return widget.child;
   }

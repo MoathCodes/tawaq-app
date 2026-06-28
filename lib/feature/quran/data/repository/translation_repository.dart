@@ -2,6 +2,7 @@ import 'package:tawaq/core/database/asset_database_service.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/data/sources/translation_data_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
+import 'package:tawaq/feature/quran/domain/services/translation_text_normalizer.dart';
 
 /// Repository for accessing Quran translations.
 ///
@@ -21,7 +22,8 @@ class TranslationRepository {
     int aya,
   ) async {
     final dataSource = await _getOrCreateDataSource(source);
-    return dataSource.getTranslation(sura, aya);
+    final row = dataSource.getTranslation(sura, aya);
+    return _decorate(row, source);
   }
 
   /// Gets all translations for a surah from the given source.
@@ -30,7 +32,22 @@ class TranslationRepository {
     int sura,
   ) async {
     final dataSource = await _getOrCreateDataSource(source);
-    return dataSource.getTranslationsForSura(sura);
+    final rows = dataSource.getTranslationsForSura(sura);
+    return rows.map((row) => _decorate(row, source)!).toList();
+  }
+
+  Translation? _decorate(Translation? translation, TranslationId source) {
+    if (translation == null) return null;
+    return Translation(
+      id: translation.id,
+      sura: translation.sura,
+      aya: translation.aya,
+      translation: TranslationTextNormalizer.normalize(translation.translation),
+      footnotes: translation.footnotes == null
+          ? null
+          : TranslationTextNormalizer.normalize(translation.footnotes!),
+      fontFamily: source.fontFamily,
+    );
   }
 
   Future<ITranslationDataSource> _getOrCreateDataSource(

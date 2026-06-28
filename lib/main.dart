@@ -21,8 +21,8 @@ import 'package:timezone/data/latest.dart' as tz;
 /// The entry point of the application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initFileLogging();
   await MushafReaderLibrary.ensureInitialized();
+  await initFileLogging();
   tz.initializeTimeZones();
   runApp(const ProviderScope(child: AppBootstrap()));
 }

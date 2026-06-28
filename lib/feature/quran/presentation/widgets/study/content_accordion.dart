@@ -1,73 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/quran/data/sources/quran_content_registry.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/tafsir_accordion_section.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/translation_accordion_section.dart';
+import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/study_content_section.dart';
 import 'package:tawaq/feature/settings/presentation/provider/ui_state_settings_providers.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Content accordion displaying tafsir and translation for the selected ayah.
 class ContentAccordion extends ConsumerWidget {
   /// Creates a [ContentAccordion] instance.
-  const ContentAccordion({this.panelWidth, super.key});
-
-  /// Allocated study-panel width for density-aware layout.
-  final double? panelWidth;
-
-  Widget _sectionTitle(
-    FColors colors,
-    IconData icon,
-    String text, {
-    bool muted = false,
-  }) => Row(
-    children: [
-      QuranSemantics.decorative(
-        Icon(
-          icon,
-          size: 16,
-          color: muted ? colors.mutedForeground : colors.primary,
-        ),
-      ),
-      const SizedBox(width: AppSpacing.sm),
-      Text(
-        text,
-        style: TextStyle(
-          color: muted ? colors.mutedForeground : null,
-        ),
-      ),
-    ],
-  );
-
-  Widget _noAyahSelectedMessage(
-    FColors colors,
-    FTypography typography,
-    String message,
-  ) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-    child: Row(
-      children: [
-        Icon(
-          FLucideIcons.info,
-          size: 16,
-          color: colors.mutedForeground,
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        Expanded(
-          child: Text(
-            message,
-            style: typography.body.sm.copyWith(
-              color: colors.mutedForeground,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
+  const ContentAccordion({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -101,15 +44,9 @@ class ContentAccordion extends ConsumerWidget {
     final selectedTranslation = ref.watch(
       quranScreenSettingsProvider.select(
         (v) =>
-            v.value?.selectedTranslation ??
-            QuranContentRegistry.defaultTranslation,
+            v.value?.selectedTranslation ?? kDefaultTranslationId,
       ),
     );
-
-    final narrowPanel = panelWidth != null
-        ? panelWidth! < context.theme.breakpoints.sm
-        : isLessThan(context, FBreakpoint.sm);
-    final sectionMinHeight = narrowPanel ? 72.0 : 120.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -153,55 +90,33 @@ class ContentAccordion extends ConsumerWidget {
               ),
               children: [
                 FAccordionItem(
-                  title: QuranSemantics.labeledControl(
-                    name: l10n.tafsir,
-                    value: hasSelectedAyah
-                        ? (tafsirEnabled ? l10n.collapse : null)
-                        : l10n.selectAyahToSeeContent,
-                    enabled: hasSelectedAyah,
-                    button: true,
-                    excludeChild: true,
-                    child: _sectionTitle(
-                      colors,
-                      FLucideIcons.messageSquare,
-                      l10n.tafsir,
-                      muted: !hasSelectedAyah,
-                    ),
+                  title: studyAccordionTitle(
+                    context,
+                    label: l10n.tafsir,
+                    icon: FLucideIcons.messageSquare,
+                    hasSelectedAyah: hasSelectedAyah,
+                    expanded: tafsirEnabled,
                   ),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: sectionMinHeight),
-                    child: TafsirAccordionSection(
-                      sura: sura,
-                      aya: aya,
-                      source: selectedTafsir,
-                      enabled: hasSelectedAyah && tafsirEnabled,
-                    ),
+                  child: TafsirAccordionSection(
+                    sura: sura,
+                    aya: aya,
+                    source: selectedTafsir,
+                    enabled: hasSelectedAyah && tafsirEnabled,
                   ),
                 ),
                 FAccordionItem(
-                  title: QuranSemantics.labeledControl(
-                    name: l10n.translation,
-                    value: hasSelectedAyah
-                        ? (translationEnabled ? l10n.collapse : null)
-                        : l10n.selectAyahToSeeContent,
-                    enabled: hasSelectedAyah,
-                    button: true,
-                    excludeChild: true,
-                    child: _sectionTitle(
-                      colors,
-                      FLucideIcons.languages,
-                      l10n.translation,
-                      muted: !hasSelectedAyah,
-                    ),
+                  title: studyAccordionTitle(
+                    context,
+                    label: l10n.translation,
+                    icon: FLucideIcons.languages,
+                    hasSelectedAyah: hasSelectedAyah,
+                    expanded: translationEnabled,
                   ),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: sectionMinHeight),
-                    child: TranslationAccordionSection(
-                      sura: sura,
-                      aya: aya,
-                      source: selectedTranslation,
-                      enabled: hasSelectedAyah && translationEnabled,
-                    ),
+                  child: TranslationAccordionSection(
+                    sura: sura,
+                    aya: aya,
+                    source: selectedTranslation,
+                    enabled: hasSelectedAyah && translationEnabled,
                   ),
                 ),
               ],
@@ -210,10 +125,27 @@ class ContentAccordion extends ConsumerWidget {
         ),
         if (!hasSelectedAyah) ...[
           const SizedBox(height: AppSpacing.md),
-          _noAyahSelectedMessage(
-            colors,
-            typography,
-            l10n.selectAyahToSeeContent,
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            child: Row(
+              children: [
+                Icon(
+                  FLucideIcons.info,
+                  size: 16,
+                  color: colors.mutedForeground,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    l10n.selectAyahToSeeContent,
+                    style: typography.body.sm.copyWith(
+                      color: colors.mutedForeground,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ],

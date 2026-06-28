@@ -8,12 +8,12 @@ import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/directional_content_switcher.dart';
 import 'package:tawaq/core/widgets/reading_swipe_viewport.dart';
-import 'package:tawaq/feature/quran/domain/use_cases/navigate_study_ayah.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/content_accordion.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/notes_section.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_header.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_width_scope.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -21,19 +21,6 @@ import 'package:tawaq/theme/theme.dart';
 class StudyPanel extends HookConsumerWidget {
   /// Creates a study panel.
   const StudyPanel({super.key});
-
-  Future<void> _navigateAyah(WidgetRef ref, int delta) async {
-    final currentAyahId = ref.read(
-      quranScreenSettingsProvider.select(
-        (v) => v.value?.selectedAyah?.ayahId,
-      ),
-    );
-    await navigateStudyAyah(
-      ref: ref,
-      currentAyahId: currentAyahId,
-      delta: delta,
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -43,12 +30,11 @@ class StudyPanel extends HookConsumerWidget {
       ),
     );
     final ayaId = selectedAyah?.ayahId;
+    final navigation = useStudyAyahNavigation(ref);
 
-    // Track previous ayahId to determine animation direction
     final prevAyahId = usePrevious(ayaId);
-    final slideDirection = useState(0); // -1 = left (next), 1 = right (prev)
+    final slideDirection = useState(0);
 
-    // Update slide direction when ayahId changes
     useEffect(
       () {
         if (prevAyahId != null && ayaId != null && prevAyahId != ayaId) {
@@ -58,9 +44,6 @@ class StudyPanel extends HookConsumerWidget {
       },
       [ayaId],
     );
-
-    final canGoNext = ayaId == null || ayaId < kMaxQuranAyahId;
-    final canGoPrevious = ayaId == null || ayaId > 1;
 
     final l10n = context.l10n;
     final panelContent = QuranSemantics.landmark(
@@ -80,14 +63,17 @@ class StudyPanel extends HookConsumerWidget {
                     topPadding: AppSpacing.lg,
                     bottomPadding: AppSpacing.lg + AppSpacing.xl,
                     textDirection: kReadingPageTurnDirection,
-                    canGoNext: canGoNext,
-                    canGoPrevious: canGoPrevious,
-                    onNext: () => unawaited(_navigateAyah(ref, 1)),
-                    onPrevious: () => unawaited(_navigateAyah(ref, -1)),
+                    canGoNext: navigation.canGoNext,
+                    canGoPrevious: navigation.canGoPrevious,
+                    onNext: () => unawaited(navigation.navigateAyah(1)),
+                    onPrevious: () => unawaited(navigation.navigateAyah(-1)),
                     child: DirectionalContentSwitcher(
                       currentKey: ayaId,
                       slideDirection: slideDirection.value,
-                      child: _StudyPanelBody(panelWidth: constraints.maxWidth),
+                      child: StudyPanelWidthScope(
+                        width: constraints.maxWidth,
+                        child: const _StudyPanelBody(),
+                      ),
                     ),
                   );
                 },
@@ -105,8 +91,8 @@ class StudyPanel extends HookConsumerWidget {
         AppShortcut.quranAyahPrev,
       },
       handlers: {
-        AppShortcut.quranAyahNext: () => unawaited(_navigateAyah(ref, 1)),
-        AppShortcut.quranAyahPrev: () => unawaited(_navigateAyah(ref, -1)),
+        AppShortcut.quranAyahNext: () => unawaited(navigation.navigateAyah(1)),
+        AppShortcut.quranAyahPrev: () => unawaited(navigation.navigateAyah(-1)),
       },
       child: panelContent,
     );
@@ -114,18 +100,16 @@ class StudyPanel extends HookConsumerWidget {
 }
 
 class _StudyPanelBody extends StatelessWidget {
-  const _StudyPanelBody({this.panelWidth});
-
-  final double? panelWidth;
+  const _StudyPanelBody();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ContentAccordion(panelWidth: panelWidth),
-        const SizedBox(height: AppSpacing.xl),
-        NotesSection(panelWidth: panelWidth),
+        ContentAccordion(),
+        SizedBox(height: AppSpacing.xl),
+        NotesSection(),
       ],
     );
   }

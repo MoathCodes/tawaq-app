@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:forui/forui.dart';
-import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
-import 'package:tawaq/theme/theme.dart';
 
 /// Accessibility labels and small wrappers for the Hisn (Muslim Fortress) UI.
 abstract final class FortressA11y {
@@ -32,13 +27,6 @@ abstract final class FortressA11y {
         : l10n.fortressRemainingCount(remaining);
     return '$categoryTitle. $position. $progress. ×$targetCount';
   }
-
-  /// Toggle for exposing long dhikr / Quranic body text to screen readers.
-  static String readDhikrToggleLabel(
-    AppLocalizations l10n, {
-    required bool expanded,
-  }) =>
-      expanded ? l10n.fortressHideDetails : l10n.fortressShowDetails;
 
   /// Empty global search state.
   static String searchEmptyLabel(AppLocalizations l10n, String query) =>
@@ -79,113 +67,4 @@ class FortressExcludeDecorative extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ExcludeSemantics(child: child);
-}
-
-/// Focus-reading thikr block: structured header, optional full-text exposure.
-class FortressAccessibleThikrPanel extends HookWidget {
-  /// Creates an accessible thikr panel.
-  const FortressAccessibleThikrPanel({
-    required this.categoryTitle,
-    required this.index,
-    required this.total,
-    required this.remaining,
-    required this.targetCount,
-    required this.isDone,
-    required this.body,
-    super.key,
-  });
-
-  final String categoryTitle;
-  final int index;
-  final int total;
-  final int remaining;
-  final int targetCount;
-  final bool isDone;
-  final Widget body;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final contentVisible = useState(false);
-
-    final headerLabel = FortressA11y.thikrSectionLabel(
-      l10n: l10n,
-      categoryTitle: categoryTitle,
-      index: index,
-      total: total,
-      remaining: remaining,
-      targetCount: targetCount,
-      isDone: isDone,
-    );
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Semantics(
-          header: true,
-          container: true,
-          label: headerLabel,
-          child: const SizedBox(width: double.infinity, height: 0),
-        ),
-        Center(
-          child: FButton(
-            variant: .outline,
-            onPress: () => contentVisible.value = !contentVisible.value,
-            prefix: Icon(
-              contentVisible.value
-                  ? FLucideIcons.eyeOff
-                  : FLucideIcons.eye,
-              size: 18,
-            ),
-            child: Text(
-              FortressA11y.readDhikrToggleLabel(
-                l10n,
-                expanded: contentVisible.value,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        if (contentVisible.value)
-          body
-        else
-          FortressExcludeDecorative(child: body),
-      ],
-    );
-  }
-}
-
-/// Explicit button semantics for fortress nav actions (prev / next / study).
-class FortressLabeledNavButton extends StatelessWidget {
-  /// Creates a labeled nav button.
-  const FortressLabeledNavButton({
-    required this.label,
-    required this.enabled,
-    required this.onPress,
-    required this.child,
-    this.prefix,
-    this.iconOnly = false,
-    super.key,
-  });
-
-  final String label;
-  final bool enabled;
-  final VoidCallback? onPress;
-  final Widget child;
-  final Widget? prefix;
-
-  /// When true, only [prefix] is shown (accessibility via [label]).
-  final bool iconOnly;
-
-  @override
-  Widget build(BuildContext context) => NonSelectable(
-    child: FButton(
-      variant: .outline,
-      semanticsLabel: label,
-      onPress: enabled ? onPress : null,
-      prefix: prefix,
-      child: iconOnly ? const SizedBox.shrink() : child,
-    ),
-  );
 }

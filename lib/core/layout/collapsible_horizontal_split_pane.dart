@@ -12,6 +12,15 @@ const double _kPeekTabHeight = 72;
 /// Inset of the overlaid collapse button from the pane's top inner corner.
 const double _kCollapseButtonInset = AppSpacing.md;
 
+/// Where the collapse affordance is rendered for an expanded side pane.
+enum CollapsePlacement {
+  /// Overlays a compact collapse button on the side pane's divider edge.
+  overlay,
+
+  /// No built-in collapse button — the side pane supplies its own (e.g. header).
+  none,
+}
+
 /// A [PersistedHorizontalSplitPane] that can collapse its side pane along the
 /// horizontal axis.
 ///
@@ -34,6 +43,7 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
     required this.sideRegionIndex,
     required this.expandSemanticLabel,
     required this.collapseSemanticLabel,
+    this.collapsePlacement = CollapsePlacement.overlay,
     this.style,
     this.floatingButtonOffset = const (top: 0, left: 0, right: 0),
     super.key,
@@ -73,6 +83,9 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
   /// Accessibility label for the collapse affordance.
   final String collapseSemanticLabel;
 
+  /// Placement of the collapse affordance when the side pane is expanded.
+  final CollapsePlacement collapsePlacement;
+
   /// See [PersistedHorizontalSplitPane.style].
   final FResizableDividerStyleDelta? style;
 
@@ -82,6 +95,13 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
 
   /// Whether the side pane sits on the physical left edge.
   bool get _sideOnLeft => sideRegionIndex == 0;
+
+  bool get _showOverlayCollapse => collapsePlacement == CollapsePlacement.overlay;
+
+  Widget _wrapSidePane(Widget side) {
+    if (!_showOverlayCollapse) return side;
+    return _sideWithCollapseButton(side);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +158,7 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
       sidePanelRatio: sidePanelRatio,
       resolve: resolve,
       onSidePanelRatioChanged: onSidePanelRatioChanged,
-      sidePane: _sideWithCollapseButton(sidePane),
+      sidePane: _wrapSidePane(sidePane),
       mainPane: mainPane,
       sideRegionIndex: sideRegionIndex,
       style: style,
@@ -155,7 +175,7 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
       value: t,
       child: SizedBox(
         width: resolved.sideExtent,
-        child: _sideWithCollapseButton(sidePane),
+        child: _wrapSidePane(sidePane),
       ),
     );
 

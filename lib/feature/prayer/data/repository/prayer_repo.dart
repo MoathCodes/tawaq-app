@@ -8,6 +8,7 @@ import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:timezone/timezone.dart';
 
@@ -88,17 +89,6 @@ class PrayerRepo {
     return countAllStatusesOnDate(range.start, range.end, location);
   }
 
-  /// Counts deduped prayers with [status] between [from] and [to].
-  Future<int> countPrayerStatusOnDate(
-    CompletionStatus status,
-    DateTime from,
-    DateTime to,
-    Location location,
-  ) async {
-    final counts = await countAllStatusesOnDate(from, to, location);
-    return counts[status] ?? 0;
-  }
-
   /// Computes current and best streaks from the maintained day index.
   Future<({int current, int best})> computeStreaks(Location location) async {
     await _ensureIndex(location);
@@ -108,7 +98,7 @@ class PrayerRepo {
       return _cachedStreaks!;
     }
 
-    final days = _fullyCompletedDayKeys.map(_dayKeyToDate).toList();
+    final days = _fullyCompletedDayKeys.map(dateFromCalendarDayKey).toList();
     final result = PrayerAnalyticsCalculator.computeStreaks(
       fullyCompletedDays: days,
       today: todayNorm,
@@ -143,25 +133,9 @@ class PrayerRepo {
     await _refreshDayInIndex(date, location);
   }
 
-  /// Returns whether a prayer completion exists.
-  Future<bool> doesCompletionExists(int id) {
-    return prayerDatabase.isCompletionExists(id);
-  }
-
-  /// Returns all prayer completions.
-  Future<List<PrayerCompletion>> getAllCompletions() {
-    return prayerDatabase.getAllCompletions();
-  }
-
   /// Returns the earliest logged completion time, if any.
   Future<DateTime?> getEarliestCompletionTime() {
     return prayerDatabase.getEarliestCompletionTime();
-  }
-
-  /// Returns a list of dates on which all prayers were completed.
-  Future<List<DateTime>> getFullyCompletedDays(Location loc) async {
-    await _ensureIndex(loc);
-    return _fullyCompletedDayKeys.map(_dayKeyToDate).toList();
   }
 
   /// Returns prayer completions recorded on [date].
@@ -192,11 +166,6 @@ class PrayerRepo {
     return result
         .where((c) => c.completionTime.isBetween(from, to))
         .toList();
-  }
-
-  /// Returns a prayer completion by its ID.
-  Future<PrayerCompletion?> getSingleCompletion(int id) {
-    return prayerDatabase.getCompletionById(id);
   }
 
   /// Returns the prayer times for a given date, coordinates, and calculation
@@ -280,7 +249,7 @@ class PrayerRepo {
     final statuses = mapPrayerStatuses(
       deduped,
       location,
-      _dayKeyToDate(dayKey),
+      dateFromCalendarDayKey(dayKey),
     );
     final complete = kObligatoryPrayers.every((prayer) {
       final status = statuses[prayer] ?? CompletionStatus.none;
@@ -306,14 +275,6 @@ class PrayerRepo {
     _fullyCompletedDayKeys.clear();
     _cachedStreaks = null;
     _cachedStreaksToday = null;
-  }
-
-  DateTime _dayKeyToDate(int dayKey) {
-    return DateTime(
-      dayKey ~/ 10000,
-      (dayKey % 10000) ~/ 100,
-      dayKey % 100,
-    );
   }
 
   Map<CompletionStatus, int> _emptyStatusCounts() {

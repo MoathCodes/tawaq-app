@@ -9,9 +9,9 @@ import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_day_computer.dart';
-import 'package:tawaq/feature/prayer/domain/services/prayer_time_resolver.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_calendar_utils.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_timeline.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:timezone/timezone.dart';
@@ -161,8 +161,13 @@ PrayerTimes? prayerTimesForDate(Ref ref, DateTime date) {
   return ref.watch(prayerDayBundleForDateProvider(date))?.today;
 }
 
-/// Calendar day key from [prayerDayProvider]; stable within a day so dependents
-/// are not notified on every clock tick.
+/// Derived [prayerDayProvider] projections — watch policy:
+///
+/// - Prefer [prayerCalendarDayKeyProvider] or [currentMinuteBucketProvider]
+///   over the 1 Hz stream when minute/day resolution is enough.
+/// - Use `ref.read(prayerDayProvider)` inside providers that only need stable
+///   bundle data within a calendar day.
+/// - Watch [prayerDayProvider] directly only for live clock UI (countdowns).
 @riverpod
 int prayerCalendarDayKey(Ref ref) {
   return ref.watch(prayerDayProvider).value?.calendarDayKey ?? 0;

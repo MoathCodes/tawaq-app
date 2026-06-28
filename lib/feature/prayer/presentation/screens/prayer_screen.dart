@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:forui/forui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
@@ -35,6 +35,34 @@ class _LocationSetupScreen extends StatelessWidget {
   }
 }
 
+/// Whether the prayer page uses a horizontal hero/schedule vs analysis split.
+bool prayerPageUsesSplit(double containerWidth) {
+  return canUseHorizontalSplit(
+    containerWidth: containerWidth,
+    sideMin: kStudyPanelMinExtent,
+    mainMin: kMainPaneMinExtent,
+    spacer: AppSpacing.lg,
+  );
+}
+
+/// Width available to the analysis column for the given page layout.
+double prayerAnalysisColumnWidth({
+  required double containerWidth,
+  required bool pageSplit,
+}) {
+  if (!pageSplit) return containerWidth;
+  return (containerWidth - AppSpacing.lg) * 4 / 10;
+}
+
+/// Whether daily and trend analysis cards render side-by-side.
+bool prayerAnalysisCardsSideBySide(
+  BuildContext context,
+  double analysisWidth,
+) {
+  final lg = context.theme.breakpoints.lg;
+  return analysisWidth >= 2 * kMainPaneMinExtent || analysisWidth >= lg;
+}
+
 /// Screen that displays prayer times with hero header, schedule, and stats.
 class PrayerScreen extends ConsumerWidget {
   /// Creates a [PrayerScreen] instance.
@@ -60,17 +88,20 @@ class PrayerScreen extends ConsumerWidget {
           constraints: BoxConstraints(maxWidth: maxContentWidth),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final useSplit = canUseHorizontalSplit(
+              final pageSplit = prayerPageUsesSplit(constraints.maxWidth);
+              final analysisWidth = prayerAnalysisColumnWidth(
                 containerWidth: constraints.maxWidth,
-                sideMin: kStudyPanelMinExtent,
-                mainMin: kMainPaneMinExtent,
-                spacer: AppSpacing.lg,
+                pageSplit: pageSplit,
+              );
+              final analysisSideBySide = prayerAnalysisCardsSideBySide(
+                context,
+                analysisWidth,
               );
 
-              if (useSplit) {
-                return const _HorizontalLayout();
-              }
-              return const _VerticalLayout();
+              return _PrayerMainContent(
+                pageSplit: pageSplit,
+                analysisSideBySide: analysisSideBySide,
+              );
             },
           ),
         ),
@@ -79,81 +110,61 @@ class PrayerScreen extends ConsumerWidget {
   }
 }
 
-class _HorizontalLayout extends StatelessWidget {
-  const _HorizontalLayout();
+class _PrayerMainContent extends StatelessWidget {
+  const _PrayerMainContent({
+    required this.pageSplit,
+    required this.analysisSideBySide,
+  });
+
+  final bool pageSplit;
+  final bool analysisSideBySide;
+
+  static const _hero = AnimationEntry(
+    delay: Duration(milliseconds: 100),
+    animateOnce: true,
+    child: PrayerHeroHeader(key: ValueKey('prayer_hero_header')),
+  );
+
+  static const _schedule = AnimationEntry(
+    delay: Duration(milliseconds: 250),
+    animateOnce: true,
+    child: PrayerScheduleList(key: ValueKey('prayer_schedule_list')),
+  );
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          flex: 6,
-          child: Column(
-            spacing: AppSpacing.lg,
-            children: [
-              AnimationEntry(
-                delay: 100.ms,
-                animateOnce: true,
-                child: const PrayerHeroHeader(
-                  key: ValueKey('prayer_hero_header'),
-                ),
-              ),
-              AnimationEntry(
-                delay: 250.ms,
-                animateOnce: true,
-                child: const PrayerScheduleList(
-                  key: ValueKey('prayer_schedule_list'),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: AppSpacing.lg),
-        Expanded(
-          flex: 4,
-          child: AnimationEntry(
-            delay: 400.ms,
-            animateOnce: true,
-            child: const AnalysisSection(
-              key: ValueKey('prayer_analysis_section'),
+    final analysis = AnimationEntry(
+      delay: const Duration(milliseconds: 400),
+      animateOnce: true,
+      child: AnalysisSection(
+        key: const ValueKey('prayer_analysis_section'),
+        sideBySide: analysisSideBySide,
+      ),
+    );
+
+    if (pageSplit) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 6,
+            child: Column(
+              spacing: AppSpacing.lg,
+              children: [_hero, _schedule],
             ),
           ),
-        ),
-      ],
-    );
-  }
-}
+          const SizedBox(width: AppSpacing.lg),
+          Expanded(
+            flex: 4,
+            child: analysis,
+          ),
+        ],
+      );
+    }
 
-/// Narrow stacked layout for smaller screens.
-class _VerticalLayout extends StatelessWidget {
-  const _VerticalLayout();
-
-  @override
-  Widget build(BuildContext context) {
     return Column(
       spacing: AppSpacing.lg,
-      children: [
-        AnimationEntry(
-          delay: 100.ms,
-          animateOnce: true,
-          child: const PrayerHeroHeader(key: ValueKey('prayer_hero_header')),
-        ),
-        AnimationEntry(
-          delay: 250.ms,
-          animateOnce: true,
-          child: const PrayerScheduleList(
-            key: ValueKey('prayer_schedule_list'),
-          ),
-        ),
-        AnimationEntry(
-          delay: 400.ms,
-          animateOnce: true,
-          child: const AnalysisSection(
-            key: ValueKey('prayer_analysis_section'),
-          ),
-        ),
-      ],
+      children: [_hero, _schedule, analysis],
     );
   }
 }

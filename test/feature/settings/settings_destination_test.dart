@@ -1,95 +1,79 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tawaq/feature/settings/presentation/models/settings_destination.dart';
+import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
 
 void main() {
-  group('destinationForKey', () {
-    test('round-trips every destination labelKey', () {
-      for (final destination in kSettingsDestinations) {
-        expect(
-          destinationForKey(destination.labelKey),
-          isA<SettingsDestination>().having(
-            (d) => d.labelKey,
-            'labelKey',
-            destination.labelKey,
-          ),
-        );
+  group('tabForKey', () {
+    test('round-trips every tab key', () {
+      for (final tab in kSettingsTabs) {
+        expect(tabForKey(tab.key).key, tab.key);
       }
     });
 
     test('null key defaults to appearance', () {
-      expect(
-        destinationForKey(null),
-        isA<SettingsAppearanceDestination>(),
-      );
+      expect(tabForKey(null).key, kSettingsDefaultTabKey);
     });
 
     test('unknown key defaults to appearance', () {
-      expect(
-        destinationForKey('deletedSection'),
-        isA<SettingsAppearanceDestination>(),
-      );
+      expect(tabForKey('deletedSection').key, kSettingsDefaultTabKey);
     });
   });
 
-  group('visibleDestinations', () {
+  group('visibleTabs', () {
     test('excludes keyboard shortcuts when unsupported', () {
-      final destinations = visibleDestinations(showKeyboardShortcuts: false);
+      final tabs = visibleTabs(showKeyboardShortcuts: false);
 
-      expect(destinations, hasLength(3));
+      expect(tabs, hasLength(3));
       expect(
-        destinations,
-        isNot(contains(isA<SettingsKeyboardShortcutsDestination>())),
+        tabs.map((t) => t.key),
+        isNot(contains('keyboardShortcutsTabTitle')),
       );
     });
 
     test('includes keyboard shortcuts when supported', () {
-      final destinations = visibleDestinations(showKeyboardShortcuts: true);
+      final tabs = visibleTabs(showKeyboardShortcuts: true);
 
-      expect(destinations, hasLength(4));
+      expect(tabs, hasLength(4));
+      expect(tabs.last.key, 'keyboardShortcutsTabTitle');
+    });
+  });
+
+  group('resolveVisibleTabKey', () {
+    test('falls back to appearance when tab is hidden', () {
       expect(
-        destinations.last,
-        isA<SettingsKeyboardShortcutsDestination>(),
+        resolveVisibleTabKey(
+          'keyboardShortcutsTabTitle',
+          showKeyboardShortcuts: false,
+        ),
+        kSettingsDefaultTabKey,
+      );
+    });
+
+    test('keeps visible tab key', () {
+      expect(
+        resolveVisibleTabKey(
+          kSettingsLocationTabKey,
+          showKeyboardShortcuts: false,
+        ),
+        kSettingsLocationTabKey,
       );
     });
   });
 
-  group('resolveVisibleDestination', () {
-    test('falls back to appearance when destination is hidden', () {
-      expect(
-        resolveVisibleDestination(
-          const SettingsKeyboardShortcutsDestination(),
-          showKeyboardShortcuts: false,
-        ),
-        isA<SettingsAppearanceDestination>(),
-      );
-    });
-
-    test('keeps visible destination', () {
-      expect(
-        resolveVisibleDestination(
-          const SettingsLocationDestination(),
-          showKeyboardShortcuts: false,
-        ),
-        isA<SettingsLocationDestination>(),
-      );
-    });
-  });
-
-  group('indexForDestination', () {
+  group('indexForTabKey', () {
     test('returns correct index for location tab', () {
       expect(
-        indexForDestination(
-          const SettingsLocationDestination(),
+        indexForTabKey(
+          kSettingsLocationTabKey,
           showKeyboardShortcuts: true,
         ),
         2,
       );
     });
 
-    test('returns -1 for hidden destination', () {
+    test('returns -1 for hidden tab', () {
       expect(
-        indexForDestination(
-          const SettingsKeyboardShortcutsDestination(),
+        indexForTabKey(
+          'keyboardShortcutsTabTitle',
           showKeyboardShortcuts: false,
         ),
         -1,

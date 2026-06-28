@@ -5,14 +5,6 @@ import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_pro
 
 part 'prayer_effective_settings_provider.g.dart';
 
-/// Last successfully resolved prayer settings, reused when a (re)build cannot
-/// read storage.
-///
-/// Updated by [PrayerSettingsNotifier] on every good hydrate. Read by
-/// [effectivePrayerSettingsProvider] when the async notifier is loading or
-/// location is not ready yet.
-PrayerSettings lastGoodPrayerSettings = PrayerSettings.defaultSettings();
-
 /// Synchronous prayer settings safe for time math and completions.
 ///
 /// Returns the hydrated settings when location is ready, otherwise the last
@@ -22,7 +14,8 @@ PrayerSettings? effectivePrayerSettings(Ref ref) {
   ref.watch(prayerSettingsProvider);
   final current = ref.read(prayerSettingsProvider).value;
   if (current != null && current.isLocationReady) return current;
-  if (lastGoodPrayerSettings.isLocationReady) return lastGoodPrayerSettings;
+  final lastGood = ref.read(prayerSettingsProvider.notifier).lastGood;
+  if (lastGood.isLocationReady) return lastGood;
   return null;
 }
 

@@ -1,17 +1,4 @@
 import 'package:tawaq/core/audio/audio_track.dart';
-import 'package:tawaq/core/audio/playback_queue.dart' show PlaybackQueue;
-
-/// Repeat behaviour for a [PlaybackQueue].
-enum PlaybackRepeatMode {
-  /// Stop after the last track.
-  off,
-
-  /// Repeat the entire queue.
-  all,
-
-  /// Repeat the current track.
-  one,
-}
 
 /// High-level player state exposed to UI and controllers.
 sealed class PlaybackState {
@@ -30,6 +17,15 @@ final class PlaybackLoading extends PlaybackState {
   const PlaybackLoading(this.track);
 
   /// Track being prepared.
+  final AudioTrack track;
+}
+
+/// Media is buffering mid-playback.
+final class PlaybackBuffering extends PlaybackState {
+  /// Creates [PlaybackBuffering].
+  const PlaybackBuffering(this.track);
+
+  /// Track being buffered.
   final AudioTrack track;
 }
 

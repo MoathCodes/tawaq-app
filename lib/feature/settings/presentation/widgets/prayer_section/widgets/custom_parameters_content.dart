@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:forui_hooks/forui_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
@@ -12,6 +13,37 @@ import 'package:tawaq/feature/settings/presentation/provider/custom_parameters_d
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/theme/theme.dart';
+
+/// Collapsible custom prayer calculation parameters.
+class CustomParametersAccordion extends HookConsumerWidget {
+  /// Creates [CustomParametersAccordion].
+  const CustomParametersAccordion({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(customParametersDraftProvider);
+    final l10n = context.l10n;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: FAccordion(
+        control: .managed(controller: useFAccordionController()),
+        style: const .delta(
+          dividerStyle: .delta(
+            color: Colors.transparent,
+            padding: .value(EdgeInsets.zero),
+          ),
+        ),
+        children: [
+          FAccordionItem(
+            title: Text(l10n.customParametersTitle),
+            child: const CustomParametersContent(),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// The body content of the custom parameters accordion.
 class CustomParametersContent extends ConsumerWidget {

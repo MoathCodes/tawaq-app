@@ -1,36 +1,15 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 
+part 'fortress_flow_state.freezed.dart';
+
 /// Mutable session state for the Muslim Fortress screen.
-class FortressFlowState {
+@freezed
+abstract class FortressFlowState with _$FortressFlowState {
   /// Creates the flow state.
-  const FortressFlowState({
-    this.selectedCategory,
-    this.isFocusMode = false,
-    this.focusStartIndex = 0,
-  });
-
-  /// The chapter currently shown in the main pane.
-  final FortressCategory? selectedCategory;
-
-  /// Whether focus-reading mode is active.
-  final bool isFocusMode;
-
-  /// Initial dua index when entering focus-reading mode.
-  final int focusStartIndex;
-
-  /// Returns a copy with updated flow state values.
-  FortressFlowState copyWith({
+  const factory FortressFlowState({
     FortressCategory? selectedCategory,
-    bool? isFocusMode,
-    int? focusStartIndex,
-    bool clearSelectedCategory = false,
-  }) {
-    return FortressFlowState(
-      selectedCategory: clearSelectedCategory
-          ? null
-          : selectedCategory ?? this.selectedCategory,
-      isFocusMode: isFocusMode ?? this.isFocusMode,
-      focusStartIndex: focusStartIndex ?? this.focusStartIndex,
-    );
-  }
+    @Default(false) bool isFocusMode,
+    @Default(0) int focusStartIndex,
+  }) = _FortressFlowState;
 }

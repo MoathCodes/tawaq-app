@@ -2,8 +2,9 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
-import 'package:tawaq/feature/prayer/domain/services/prayer_time_resolver.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_timeline.dart';
 import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 
@@ -159,5 +160,5 @@ String prayerAlertFireDedupeKey({
   required PrayerAlertKind kind,
   required Prayer prayer,
 }) {
-  return '${adhanDayKey(now)}-${kind.name}-${prayer.name}';
+  return '${calendarDayKeyFromDate(now)}-${kind.name}-${prayer.name}';
 }

@@ -22,18 +22,21 @@ const String _prayerLogPrefix = '[PrayerSettingsNotifier]';
 /// Notifier for prayer settings.
 ///
 /// Persisted as JSON via [JsonPersist] + Hivez-backed [SettingsStorage].
-@riverpod
+@Riverpod(keepAlive: true)
 @JsonPersist()
 class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
+  PrayerSettings _lastGood = PrayerSettings.defaultSettings();
+
+  /// Last successfully hydrated settings, used when storage read fails.
+  PrayerSettings get lastGood => _lastGood;
+
   @override
   Future<PrayerSettings> build() async {
     await ref.watch(hiveCoreInitProvider.future);
     ref.read(loggerProvider).i('$_prayerLogPrefix Building...');
-    // Remember every good value so a later failed read falls back to it
-    // instead of the (0,0) defaults.
     listenSelf((_, next) {
       final value = next.value;
-      if (value != null) lastGoodPrayerSettings = value;
+      if (value != null) _lastGood = value;
     });
     try {
       await persist(
@@ -51,7 +54,7 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
             stackTrace: stack,
           );
     }
-    return state.value ?? lastGoodPrayerSettings;
+    return state.value ?? _lastGood;
   }
 
   void _update(PrayerSettings Function(PrayerSettings) fn, String field) {

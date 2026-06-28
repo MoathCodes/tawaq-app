@@ -4,14 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/layout/collapsible_horizontal_split_pane.dart';
+import 'package:tawaq/core/layout/feature_split_pane.dart';
 import 'package:tawaq/core/layout/side_panel_ui_state.dart';
-import 'package:tawaq/core/layout/split_extent_resolver.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
+import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_service.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_browse_sidebar.dart';
@@ -32,21 +31,23 @@ class MuslimFortressScreen extends HookConsumerWidget {
     final theme = context.theme;
     final l10n = context.l10n;
     final chaptersAsync = ref.watch(muslimFortressChaptersProvider);
-    final selectedCategory = ref.watch(fortressSelectedCategoryProvider);
-    final isFocusMode = ref.watch(fortressIsFocusModeProvider);
+    final flow = ref.watch(fortressScreenControllerProvider);
+    final selectedCategory = flow.selectedCategory;
+    final isFocusMode = flow.isFocusMode;
     final globalSearchQuery = ref.watch(muslimFortressSearchQueryProvider);
-    final isGlobalSearch = globalSearchQuery.length >= 2;
+    final isGlobalSearch =
+        globalSearchQuery.length >= fortressSearchMinQueryLength;
 
     useEffect(() {
       if (!chaptersAsync.hasValue) return null;
 
       var cancelled = false;
       unawaited(() async {
-        final service = await ref.read(fortressServiceProvider.future);
+        final repository = await ref.read(fortressRepositoryProvider.future);
         if (cancelled) return;
         ref
             .read(fortressScreenSettingsProvider.notifier)
-            .ensureDefaultBookmarks(service.defaultBookmarkChapterIds());
+            .ensureDefaultBookmarks(repository.defaultBookmarkChapterIds());
       }());
 
       return () => cancelled = true;
@@ -209,40 +210,24 @@ class _FortressDesktopSplitLayout extends ConsumerWidget {
     );
     final l10n = context.l10n;
 
-    return CollapsibleHorizontalSplitPane(
+    return FeatureSplitPane(
       sidePanelRatio: sidePanelRatio,
+      sideOnStart: false,
       floatingButtonOffset: (
         top: -12,
         left: 0,
         right: 0,
       ),
-      sideRegionIndex: 1,
       collapsed: collapsed,
       onCollapsedChanged: (value) => ref
           .read(fortressScreenSettingsProvider.notifier)
           .setSidePanelCollapsed(collapsed: value),
       expandSemanticLabel: l10n.expandPanel,
       collapseSemanticLabel: l10n.collapsePanel,
-      resolve: ({required totalWidth, required sideWidth}) =>
-          resolveFeatureSplitExtents(
-            totalWidth: totalWidth,
-            sideWidth: sideWidth,
-            sideMin: kStudyPanelMinExtent,
-            mainMin: kMainPaneMinExtent,
-            sideMaxFraction: 0.45,
-          ),
+      sideMaxFraction: 0.45,
       onSidePanelRatioChanged: (ratio) => ref
           .read(fortressScreenSettingsProvider.notifier)
           .setSidePanelRatio(ratio),
-      style: const .delta(
-        thumbStyle: .delta(
-          decoration: .boxDelta(
-            border: .fromBorderSide(
-              .new(color: Colors.transparent),
-            ),
-          ),
-        ),
-      ),
       mainPane: Padding(
         padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
         child: Directionality(

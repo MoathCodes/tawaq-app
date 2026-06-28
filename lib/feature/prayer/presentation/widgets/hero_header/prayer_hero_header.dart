@@ -10,13 +10,13 @@ import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/core/utils/hijri_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/hero_status_popover.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/hero_header/hero_time_square.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/hero_header/hijri_date_pill.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/hero_header/status_selector_button.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Hero header showing current prayer info with gradient background.
-class PrayerHeroHeader extends StatelessWidget {
+class PrayerHeroHeader extends ConsumerWidget {
   /// Creates a [PrayerHeroHeader] instance.
   const PrayerHeroHeader({super.key});
 
@@ -60,21 +60,8 @@ class PrayerHeroHeader extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return const HeroContent();
-  }
-}
-
-/// The main content of the hero header card.
-class HeroContent extends ConsumerWidget {
-  /// Creates a [HeroContent].
-  const HeroContent({super.key});
-
-  @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final dayLoading = ref.watch(prayerDayIsLoadingProvider);
-
-    if (dayLoading) {
+    if (ref.watch(prayerDayIsLoadingProvider)) {
       return Semantics(
         label: context.l10n.loadingSchedule,
         child: const FSkeletonizer(
@@ -95,25 +82,21 @@ class _HeroBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final prayer = ref.watch(
-      prayerCardStaticProvider.select((card) => card.prayer),
-    );
-    final showIqamah = ref.watch(
-      prayerCardStaticProvider.select((card) => card.showIqamah),
-    );
+    final l10n = context.l10n;
+    final card = ref.watch(prayerCardStaticProvider);
+    final prayer = card.prayer;
+    final showIqamah = card.showIqamah;
+    final countdown = ref.watch(prayerCardCountdownProvider);
     final (gradientStart, gradientEnd) = PrayerHeroHeader.getPrayerGradient(
       prayer,
     );
 
-    // Flip gradient direction based on text direction (RTL vs LTR)
     final isRtl = Directionality.of(context) == TextDirection.rtl;
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final breakpoints = theme.breakpoints;
         final width = constraints.maxWidth;
-        // Stack the bottom row when the main column is narrow (e.g. horizontal
-        // prayer layout gives ~480–720 px to the hero column).
         final timeSquareDensity = _resolveTimeSquareDensity(
           width: width,
           breakpoints: breakpoints,
@@ -121,6 +104,39 @@ class _HeroBody extends ConsumerWidget {
         );
         final stackBottomRow = width < breakpoints.lg;
         final watermarkSize = math.min(160, width * 0.32).toDouble();
+
+        Widget buildAdhanSquare({bool leadingSpacing = false}) {
+          final square = HeroTimeSquare(
+            time: card.adhanTime,
+            label: prayer.isObligatory ? l10n.adhan : null,
+            density: timeSquareDensity,
+          );
+          if (!leadingSpacing) return square;
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(width: AppSpacing.lg),
+              square,
+            ],
+          );
+        }
+
+        Widget buildIqamahSquare({bool leadingSpacing = false}) {
+          if (!showIqamah) return const SizedBox.shrink();
+          final square = HeroTimeSquare(
+            time: card.iqamahTime,
+            label: l10n.iqamah,
+            density: timeSquareDensity,
+          );
+          if (!leadingSpacing) return square;
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(width: AppSpacing.lg),
+              square,
+            ],
+          );
+        }
 
         return Container(
           clipBehavior: Clip.antiAlias,
@@ -135,7 +151,6 @@ class _HeroBody extends ConsumerWidget {
           ),
           child: Stack(
             children: [
-              // Watermark Icon — kept inside card bounds
               Positioned(
                 right: isRtl ? null : AppSpacing.lg,
                 left: isRtl ? AppSpacing.lg : null,
@@ -151,24 +166,36 @@ class _HeroBody extends ConsumerWidget {
                   ),
                 ),
               ),
-              // Content
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.xl),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Header (Date)
                     const Align(
                       alignment: AlignmentDirectional.centerEnd,
-                      child: HijriDatePill(),
+                      child: _HeroHijriDatePill(),
                     ),
                     const SizedBox(height: AppSpacing.lg),
-                    const _HeroPrayerTitle(),
+                    Text(
+                      prayer.getLocaleName(l10n),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.typography.body.xl4.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.xs),
-                    const _HeroNextPrayerLine(),
+                    Text(
+                      '${l10n.nextPrayer}: $countdown',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.typography.body.lg.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
                     const SizedBox(height: AppSpacing.lg),
-                    // Adhan/Iqamah boxes + status
                     if (stackBottomRow)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -177,18 +204,14 @@ class _HeroBody extends ConsumerWidget {
                             spacing: AppSpacing.lg,
                             runSpacing: AppSpacing.md,
                             children: [
-                              _HeroAdhanTimeSquare(
-                                density: timeSquareDensity,
-                              ),
-                              _HeroIqamahTimeSquare(
-                                density: timeSquareDensity,
-                              ),
+                              buildAdhanSquare(),
+                              buildIqamahSquare(),
                             ],
                           ),
                           const SizedBox(height: AppSpacing.md),
                           const Align(
                             alignment: AlignmentDirectional.centerStart,
-                            child: StatusSelectorButton(),
+                            child: HeroStatusPopover(),
                           ),
                         ],
                       )
@@ -196,18 +219,13 @@ class _HeroBody extends ConsumerWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          _HeroAdhanTimeSquare(
-                            density: timeSquareDensity,
-                          ),
-                          _HeroIqamahTimeSquare(
-                            density: timeSquareDensity,
-                            leadingSpacing: true,
-                          ),
+                          buildAdhanSquare(),
+                          buildIqamahSquare(leadingSpacing: true),
                           const Spacer(),
                           const Flexible(
                             child: Align(
                               alignment: AlignmentDirectional.centerEnd,
-                              child: StatusSelectorButton(),
+                              child: HeroStatusPopover(),
                             ),
                           ),
                         ],
@@ -258,108 +276,51 @@ class _HeroBody extends ConsumerWidget {
   }
 }
 
-class _HeroPrayerTitle extends ConsumerWidget {
-  const _HeroPrayerTitle();
+class _HeroHijriDatePill extends ConsumerWidget {
+  const _HeroHijriDatePill();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = context.theme;
-    final l10n = context.l10n;
-    final prayer = ref.watch(
-      prayerCardStaticProvider.select((card) => card.prayer),
-    );
+    final theme = FTheme.of(context);
+    final dateLabel = ref.watch(hijriClockProvider);
 
-    return Text(
-      prayer.getLocaleName(l10n),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: theme.typography.body.xl4.copyWith(
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
+    return Semantics(
+      label: dateLabel,
+      excludeSemantics: true,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 280),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
+        decoration: BoxDecoration(
+          color: theme.colors.background.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ExcludeSemantics(
+              child: Icon(
+                FLucideIcons.calendar,
+                color: Colors.white.withValues(alpha: 0.8),
+                size: theme.typography.body.sm.fontSize,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(
+              child: Text(
+                dateLabel,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.typography.body.xs.copyWith(
+                  color: Colors.white.withValues(alpha: 0.9),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    );
-  }
-}
-
-class _HeroNextPrayerLine extends ConsumerWidget {
-  const _HeroNextPrayerLine();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = context.theme;
-    final l10n = context.l10n;
-    final time = ref.watch(prayerCardCountdownProvider);
-
-    return Text(
-      '${l10n.nextPrayer}: $time',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: theme.typography.body.lg.copyWith(
-        color: Colors.white.withValues(alpha: 0.9),
-      ),
-    );
-  }
-}
-
-class _HeroAdhanTimeSquare extends ConsumerWidget {
-  const _HeroAdhanTimeSquare({required this.density});
-
-  final HeroTimeSquareDensity density;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final (adhanTime, prayer) = ref.watch(
-      prayerCardStaticProvider.select((c) => (c.adhanTime, c.prayer)),
-    );
-
-    return HeroTimeSquare(
-      time: adhanTime,
-      label: prayer.isObligatory ? l10n.adhan : null,
-      density: density,
-    );
-  }
-}
-
-class _HeroIqamahTimeSquare extends ConsumerWidget {
-  const _HeroIqamahTimeSquare({
-    required this.density,
-    this.leadingSpacing = false,
-  });
-
-  final HeroTimeSquareDensity density;
-  final bool leadingSpacing;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final showIqamah = ref.watch(
-      prayerCardStaticProvider.select((card) => card.showIqamah),
-    );
-    if (!showIqamah) {
-      return const SizedBox.shrink();
-    }
-
-    final l10n = context.l10n;
-    final iqamahTime = ref.watch(
-      prayerCardStaticProvider.select((card) => card.iqamahTime),
-    );
-
-    final square = HeroTimeSquare(
-      time: iqamahTime,
-      label: l10n.iqamah,
-      density: density,
-    );
-
-    if (!leadingSpacing) {
-      return square;
-    }
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(width: AppSpacing.lg),
-        square,
-      ],
     );
   }
 }

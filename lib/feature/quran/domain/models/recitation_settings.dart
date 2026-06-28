@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_mode.dart';
 
 part 'recitation_settings.freezed.dart';
 part 'recitation_settings.g.dart';
@@ -16,9 +15,6 @@ abstract class RecitationSettings with _$RecitationSettings {
     /// Selected moshaf id within the reciter, or null for the primary moshaf.
     int? moshafId,
 
-    /// End-of-selection behavior.
-    @Default(RecitationMode.stopAtEnd) RecitationMode mode,
-
     /// Output volume (0-100).
     @Default(100) double volume,
 
@@ -28,8 +24,11 @@ abstract class RecitationSettings with _$RecitationSettings {
     /// Whether the page auto-scrolls/follows the played ayah.
     @Default(true) bool autoScroll,
 
+    /// How many times each ayah repeats before advancing (1 = no per-ayah loop).
+    @Default(1) int ayahRepeatCount,
+
     /// How many times the whole selection repeats (1 = play once).
-    @Default(1) int repeatCount,
+    @Default(1) int rangeRepeatCount,
 
     /// Last played surah (1-114), restored on the next launch.
     int? lastSurah,

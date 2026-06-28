@@ -5,7 +5,6 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
-import 'package:tawaq/feature/quran/domain/use_cases/navigate_study_ayah.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
@@ -14,21 +13,9 @@ import 'package:tawaq/feature/settings/presentation/provider/settings_provider.d
 import 'package:tawaq/theme/theme.dart';
 
 /// Header widget for the study panel.
-class StudyPanelHeader extends ConsumerWidget {
+class StudyPanelHeader extends HookConsumerWidget {
   /// Creates a [StudyPanelHeader] instance.
   const StudyPanelHeader({super.key});
-
-  Future<void> _navigateAyah(
-    WidgetRef ref,
-    int? currentAyahId,
-    int delta,
-  ) async {
-    await navigateStudyAyah(
-      ref: ref,
-      currentAyahId: currentAyahId,
-      delta: delta,
-    );
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -38,10 +25,6 @@ class StudyPanelHeader extends ConsumerWidget {
         (value) => value.value?.selectedAyah,
       ),
     );
-    // Effective surah: prefer the selected ayah, falling back to the page's
-    // primary surah only when nothing is selected. Folding the fallback into a
-    // single selection means scrolling pages doesn't rebuild the header while
-    // an ayah is selected (the `??` short-circuits to the stable ayah value).
     final surahNumber = ref.watch(
       quranScreenSettingsProvider.select(
         (value) =>
@@ -49,7 +32,7 @@ class StudyPanelHeader extends ConsumerWidget {
             value.value?.pageInfo.primarySurahNumber,
       ),
     );
-    final currentAyahId = selectedAyah?.ayahId;
+    final navigation = useStudyAyahNavigation(ref);
     final ayahNumber = selectedAyah?.numberInSurah;
 
     final theme = context.theme;
@@ -69,8 +52,8 @@ class StudyPanelHeader extends ConsumerWidget {
       );
     }();
 
-    final atFirstAyah = currentAyahId == 1;
-    final atLastAyah = currentAyahId == kMaxQuranAyahId;
+    final atFirstAyah = navigation.currentAyahId == 1;
+    final atLastAyah = navigation.currentAyahId == kMaxQuranAyahId;
     final contextLabelStyle = typography.body.sm.copyWith(
       color: colors.mutedForeground,
     );
@@ -146,7 +129,7 @@ class StudyPanelHeader extends ConsumerWidget {
                 child: FButton.icon(
                   onPress: atFirstAyah
                       ? null
-                      : () => unawaited(_navigateAyah(ref, currentAyahId, -1)),
+                      : () => unawaited(navigation.navigateAyah(-1)),
                   variant: .secondary,
                   child: QuranSemantics.decorative(
                     const Icon(FLucideIcons.arrowLeft),
@@ -161,7 +144,7 @@ class StudyPanelHeader extends ConsumerWidget {
                 child: FButton.icon(
                   onPress: atLastAyah
                       ? null
-                      : () => unawaited(_navigateAyah(ref, currentAyahId, 1)),
+                      : () => unawaited(navigation.navigateAyah(1)),
                   variant: .secondary,
                   child: QuranSemantics.decorative(
                     const Icon(FLucideIcons.arrowRight),

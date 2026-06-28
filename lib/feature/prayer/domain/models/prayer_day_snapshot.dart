@@ -1,6 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/foundation.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:timezone/timezone.dart';
 
 /// Localized prayer boundaries for the cached today / yesterday pair.
@@ -55,7 +56,7 @@ class PrayerDaySnapshot {
   PrayerDayTimeline get timeline => bundle.timeline;
 
   /// Stable key for providers that only care about the calendar day.
-  int get calendarDayKey => now.year * 10000 + now.month * 100 + now.day;
+  int get calendarDayKey => calendarDayKeyFromDate(now);
 
   /// Whether [date] falls on the same local calendar day as [now].
   bool isSameCalendarDay(DateTime date) =>

@@ -2,9 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_number_search.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_search.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/surah_selector.dart';
 import 'package:tawaq/l10n/app_localizations_en.dart';
+import 'hizb_selector_subtitle_test_helper.dart';
 
 void main() {
   group('searchAyahNumbers', () {

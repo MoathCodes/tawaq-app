@@ -9,7 +9,6 @@ import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/core/widgets/merged_action_semantics.dart';
-import 'package:tawaq/core/widgets/page_shell/shell_providers.dart';
 import 'package:tawaq/core/widgets/shell_a11y.dart';
 import 'package:tawaq/feature/settings/presentation/provider/ui_state_settings_providers.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -55,13 +54,15 @@ class ShellSidebar extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mainRoutes = ref.watch(mainRoutesProvider);
-    final secondaryRoutes = ref.watch(secondaryRoutesProvider);
+    const mainRoutes = kMainRoutes;
+    const secondaryRoutes = kSecondaryRoutes;
     final theme = FTheme.of(context);
     final router = GoRouter.of(context);
     final duration = _sidebarAnimDuration(context);
     final isTablet = isLessThan(context, FBreakpoint.lg);
-    final isCollapsed = ref.watch(shellSidebarCollapsedProvider(isTablet));
+    final isCollapsed = ref.watch(
+      sidebarSettingsProvider.select((s) => s.value ?? isTablet),
+    );
     final wasTablet = useRef<bool?>(null);
 
     useListenable(router.routeInformationProvider);
@@ -284,31 +285,6 @@ Widget _expandedSidebarItem({
     icon: Icon(route.icon),
     selected: selected,
     label: Text(route.localizedLabel(l10n)),
-    children: [
-      if (route.subRoutes.isNotEmpty)
-        ...route.subRoutes.map(
-          (sub) {
-            final subEnabled = sub.navigationEnabled;
-            final subSelected = sub.containsLocation(currentPath);
-            final subItem = FSidebarItem(
-              key: ValueKey(sub.path),
-              style: itemStyle,
-              onPress: subEnabled ? () => sub.activate(context) : null,
-              icon: Icon(sub.icon),
-              selected: subSelected,
-              label: Text(sub.localizedLabel(l10n)),
-            );
-            if (subEnabled) {
-              return subItem;
-            }
-            return Semantics(
-              hint: ShellA11y.navDisabledHint(l10n),
-              enabled: false,
-              child: subItem,
-            );
-          },
-        ),
-    ],
   );
   if (enabled) {
     return item;

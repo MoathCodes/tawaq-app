@@ -119,3 +119,6 @@ enum TranslationId {
     _ => true,
   };
 }
+
+/// Default bundled translation source.
+const kDefaultTranslationId = TranslationId.saheehInternational;

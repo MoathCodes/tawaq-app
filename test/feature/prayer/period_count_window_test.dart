@@ -7,7 +7,7 @@ import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
-import 'package:tawaq/feature/prayer/domain/services/prayer_service.dart';
+import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart';
@@ -23,7 +23,7 @@ void main() {
 
   group('countAllStatusesOnPeriod window', () {
     late Box<int, PrayerCompletion> box;
-    late PrayerService service;
+    late PrayerRepo repo;
     late Location location;
 
     setUp(() async {
@@ -36,8 +36,7 @@ void main() {
       await box.clear();
 
       final db = PrayerDatabase(box);
-      final repo = PrayerRepo(prayerDatabase: db, log: Logger());
-      service = PrayerService(repo, Logger());
+      repo = PrayerRepo(prayerDatabase: db, log: Logger());
     });
 
     tearDown(() async {
@@ -49,7 +48,7 @@ void main() {
       DateTime date,
       CompletionStatus status,
     ) async {
-      await service.addOrUpdateCompletion(
+      await repo.addOrUpdateCompletion(
         PrayerCompletion(
           id: null,
           prayer: Prayer.fajr,
@@ -71,7 +70,7 @@ void main() {
       await seed(dayBeforeRange, CompletionStatus.jamaah);
       await seed(range.start, CompletionStatus.jamaah);
 
-      final counts = await service.countAllStatusesOnPeriod(
+      final counts = await repo.countAllStatusesOnPeriod(
         PrayerAnalyticsPeriod.weekly,
         location,
         anchor,
@@ -89,7 +88,7 @@ void main() {
 
       await seed(range.start, CompletionStatus.onTime);
 
-      final counts = await service.countAllStatusesOnPeriod(
+      final counts = await repo.countAllStatusesOnPeriod(
         PrayerAnalyticsPeriod.weekly,
         location,
         anchor,

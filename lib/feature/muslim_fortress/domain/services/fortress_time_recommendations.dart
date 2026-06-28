@@ -27,33 +27,7 @@ List<String> recommendTitleFragments({
   return _fragmentsFromClockHour(now.hour);
 }
 
-/// Maps recommended fragments to loaded fortress categories (deduped, max 4).
-///
-/// [allCategories] is the full chapter list returned by the Hisn repository.
-/// [now], [prayerTimes], and [location] are forwarded to
-/// [recommendTitleFragments].
-List<FortressCategory> recommendFortressCategories({
-  required List<FortressCategory> allCategories,
-  required DateTime now,
-  PrayerTimes? prayerTimes,
-  Location? location,
-}) {
-  final fragments = recommendTitleFragments(
-    now: now,
-    prayerTimes: prayerTimes,
-    location: location,
-  );
-  return fortressCategoriesForFragments(
-    allCategories: allCategories,
-    fragments: fragments,
-  );
-}
-
-/// Maps already-resolved title [fragments] to categories (deduped, max 4).
-///
-/// Split out from [recommendFortressCategories] so callers can cache the
-/// low-frequency [fragments] (which only change at prayer-window crossings) and
-/// avoid rescanning categories on every clock tick.
+/// Maps title [fragments] to categories (deduped, max 4).
 List<FortressCategory> fortressCategoriesForFragments({
   required List<FortressCategory> allCategories,
   required List<String> fragments,

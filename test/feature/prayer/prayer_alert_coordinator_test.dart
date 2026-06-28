@@ -86,10 +86,11 @@ PlaybackState get _playing => PlaybackPlaying(
 PrayerAlertEvent _event({
   required bool playSound,
   PrayerAlertKind kind = PrayerAlertKind.adhan,
+  Prayer prayer = Prayer.fajr,
 }) {
   return PrayerAlertEvent(
     kind: kind,
-    prayer: Prayer.fajr,
+    prayer: prayer,
     scheduledTime: DateTime(2026, 6, 9, 5, 30),
     playSound: playSound,
     showInApp: true,
@@ -158,8 +159,14 @@ void main() {
       await coordinator.dispatch(_event(playSound: true));
       expect(channel.delivered, 1);
 
+      // A different prayer so this is a genuine preempt rather than the
+      // adhan/iqamah overlap-skip (iqamah for the same prayer is skipped).
       await coordinator.dispatch(
-        _event(playSound: true, kind: PrayerAlertKind.iqamah),
+        _event(
+          playSound: true,
+          kind: PrayerAlertKind.iqamah,
+          prayer: Prayer.dhuhr,
+        ),
       );
 
       expect(channel.delivered, 2);
@@ -205,6 +212,7 @@ void main() {
         channels: [blocking],
         playbackStream: playback.stream,
         notifyOnlyTimeout: const Duration(milliseconds: 20),
+        soundSafetyCap: const Duration(seconds: 5),
       );
 
       unawaited(localCoordinator.dispatch(_event(playSound: false)));

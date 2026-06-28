@@ -4,12 +4,13 @@ import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/format_byte_size.dart';
 import 'package:tawaq/core/utils/reveal_folder.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_data_providers.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -29,12 +30,13 @@ class _OfflineFilesDialog extends ConsumerWidget {
     final colors = context.theme.colors;
     final typography = context.theme.typography;
     final filesAsync = ref.watch(cachedRecitationsProvider);
+    final totalBytesAsync = ref.watch(totalCacheBytesProvider);
     final reciters = ref.watch(recitersProvider).value ?? const <Reciter>[];
     final mushaf = ref.read(quranMushafControllerProvider);
     final repo = ref.read(recitationRepositoryProvider);
 
     final files = filesAsync.value ?? const <CachedRecitation>[];
-    final totalBytes = files.fold<int>(0, (s, f) => s + f.sizeBytes);
+    final totalBytes = totalBytesAsync.value ?? 0;
 
     String reciterName(int id) {
       for (final r in reciters) {
@@ -158,7 +160,7 @@ class _OfflineFilesDialog extends ConsumerWidget {
                     FTile(
                       prefix: const Icon(FLucideIcons.fileAudio),
                       title: fileTitle(f),
-                      subtitle: Text(_formatBytes(f.sizeBytes)),
+                      subtitle: Text(formatByteSize(f.sizeBytes)),
                       suffix: FTappable(
                         onPress: () => unawaited(deleteFile(f)),
                         child: const Icon(FLucideIcons.trash2),
@@ -184,7 +186,7 @@ class _OfflineFilesDialog extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    _formatBytes(totalBytes),
+                    formatByteSize(totalBytes),
                     style: typography.body.sm.copyWith(
                       fontWeight: FontWeight.w600,
                       color: colors.foreground,
@@ -213,16 +215,5 @@ class _OfflineFilesDialog extends ConsumerWidget {
         title: Text(context.l10n.openFolderFailed),
       );
     }
-  }
-
-  static String _formatBytes(int bytes) {
-    if (bytes >= 1024 * 1024 * 1024) {
-      return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
-    }
-    if (bytes >= 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(0)} MB';
-    }
-    if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
-    return '$bytes B';
   }
 }

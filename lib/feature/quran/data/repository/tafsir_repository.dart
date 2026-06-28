@@ -1,7 +1,6 @@
 import 'package:tawaq/core/database/asset_database_service.dart';
 import 'package:tawaq/feature/quran/data/models/tafsir.dart';
 import 'package:tawaq/feature/quran/data/sources/tafsir_data_source.dart';
-import 'package:tawaq/feature/quran/data/tafsir_database_paths.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 
 /// Repository for accessing Quran tafsir (commentary).

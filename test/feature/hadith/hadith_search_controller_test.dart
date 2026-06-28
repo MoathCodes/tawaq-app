@@ -5,16 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tawaq/feature/hadith/data/repository/hadith_repository.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_screen_state.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
-import 'package:tawaq/feature/settings/data/migration/state_settings_legacy_migration.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 class MockHadithRepository extends Mock implements HadithRepository {}
 
 class _TestHadithScreenSettings extends HadithScreenSettingsNotifier {
   @override
-  Future<HadithScreenState> build() async => const HadithScreenState();
+  Future<HadithPersistedSettings> build() async =>
+      const HadithPersistedSettings();
 }
 
 DetailedHadith _hadith(String text) => DetailedHadith(
@@ -46,21 +46,18 @@ void main() {
     container = ProviderContainer(
       overrides: [
         hadithRepositoryProvider.overrideWith((ref) async => repository),
-        stateSettingsLegacyMigrationProvider.overrideWith((ref) async {}),
         hadithScreenSettingsProvider.overrideWith(
           _TestHadithScreenSettings.new,
         ),
       ],
-    )
-      ..listen(hadithScreenControllerProvider, (_, _) {})
-      ..listen(hadithSearchControllerProvider, (_, _) {});
+    )..listen(hadithSessionControllerProvider, (_, _) {});
   });
 
   tearDown(() {
     container.dispose();
   });
 
-  group('HadithSearchController', () {
+  group('HadithSessionController search', () {
     test('ignores stale search when a newer search completes first', () async {
       final first = Completer<ApiResponse<List<DetailedHadith>>>();
       final second = Completer<ApiResponse<List<DetailedHadith>>>();
@@ -74,20 +71,19 @@ void main() {
         };
       });
 
-      final screen = container.read(hadithScreenControllerProvider.notifier);
-      final search = container.read(hadithSearchControllerProvider.notifier);
+      final session = container.read(hadithSessionControllerProvider.notifier);
 
-      screen.state = screen.state.copyWith(query: 'first');
-      final firstSearch = search.search();
+      session.state = session.state.copyWith(query: 'first');
+      final firstSearch = session.search();
 
-      screen.state = screen.state.copyWith(query: 'second');
-      final secondSearch = search.search();
+      session.state = session.state.copyWith(query: 'second');
+      final secondSearch = session.search();
 
       second.complete(_response('second-result'));
       await secondSearch;
 
       expect(
-        container.read(hadithSearchControllerProvider).value?.results.single.hadith,
+        container.read(hadithSessionControllerProvider).results.single.hadith,
         'second-result',
       );
 
@@ -96,7 +92,7 @@ void main() {
       await pumpEventQueue();
 
       expect(
-        container.read(hadithSearchControllerProvider).value?.results.single.hadith,
+        container.read(hadithSessionControllerProvider).results.single.hadith,
         'second-result',
       );
     });
@@ -116,11 +112,10 @@ void main() {
         };
       });
 
-      final screen = container.read(hadithScreenControllerProvider.notifier);
-      final search = container.read(hadithSearchControllerProvider.notifier);
+      final session = container.read(hadithSessionControllerProvider.notifier);
 
-      screen.state = screen.state.copyWith(query: 'initial');
-      final initialSearch = search.search();
+      session.state = session.state.copyWith(query: 'initial');
+      final initialSearch = session.search();
 
       initial.complete(
         ApiResponse(
@@ -130,15 +125,15 @@ void main() {
       );
       await initialSearch;
 
-      final loadMore = search.loadMore();
-      screen.state = screen.state.copyWith(query: 'refreshed');
-      final refreshSearch = search.search();
+      final loadMore = session.loadMore();
+      session.state = session.state.copyWith(query: 'refreshed');
+      final refreshSearch = session.search();
 
       refreshed.complete(_response('refreshed-result'));
       await refreshSearch;
 
       expect(
-        container.read(hadithSearchControllerProvider).value?.results.single.hadith,
+        container.read(hadithSessionControllerProvider).results.single.hadith,
         'refreshed-result',
       );
 
@@ -152,11 +147,11 @@ void main() {
       await pumpEventQueue();
 
       expect(
-        container.read(hadithSearchControllerProvider).value?.results.single.hadith,
+        container.read(hadithSessionControllerProvider).results.single.hadith,
         'refreshed-result',
       );
       expect(
-        container.read(hadithSearchControllerProvider).value?.isLoadingMore,
+        container.read(hadithSessionControllerProvider).isLoadingMore,
         isFalse,
       );
     });

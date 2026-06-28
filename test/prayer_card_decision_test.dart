@@ -53,19 +53,12 @@ void main() {
           anchorNow: testTime,
           repo: repo,
         )!;
-        final yesterdayBundle = computePrayerDayBundle(
-          inputs: inputs,
-          anchorNow: testTime.subtract(const Duration(days: 1)),
-          repo: repo,
-        )!;
 
-        final decision = computePrayerCardDecision(
+        final decision = computePrayerCardDecisionFromParts(
           currentTime: testTime,
           location: location,
+          timeline: bundle.timeline,
           todaysPrayerTimes: bundle.today,
-          yesterdaysPrayerTimes: yesterdayBundle.today,
-          todaysSunnahTimes: bundle.todaySunnah,
-          yesterdaysSunnahTimes: yesterdayBundle.todaySunnah,
         );
 
         expect(decision.prayer, equals(Prayer.fajrAfter));
@@ -79,19 +72,12 @@ void main() {
         anchorNow: testTime,
         repo: repo,
       )!;
-      final yesterdayBundle = computePrayerDayBundle(
-        inputs: inputs,
-        anchorNow: testTime.subtract(const Duration(days: 1)),
-        repo: repo,
-      )!;
 
-      final decision = computePrayerCardDecision(
+      final decision = computePrayerCardDecisionFromParts(
         currentTime: testTime,
         location: location,
+        timeline: bundle.timeline,
         todaysPrayerTimes: bundle.today,
-        yesterdaysPrayerTimes: yesterdayBundle.today,
-        todaysSunnahTimes: bundle.todaySunnah,
-        yesterdaysSunnahTimes: yesterdayBundle.todaySunnah,
       );
 
       expect(decision.prayer, equals(Prayer.ishaBefore));

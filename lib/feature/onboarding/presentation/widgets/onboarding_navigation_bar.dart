@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/feature/onboarding/presentation/models/onboarding_steps.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_controller_provider.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Bottom navigation for onboarding steps.
@@ -18,8 +17,8 @@ class OnboardingNavigationBar extends ConsumerWidget {
     super.key,
   });
 
-  /// Active step index.
-  final int step;
+  /// Active step.
+  final OnboardingStep step;
 
   /// Called when the user taps Continue / Finish.
   final VoidCallback onContinue;
@@ -33,14 +32,7 @@ class OnboardingNavigationBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final isLastStep = step >= kOnboardingStepCount - 1;
-    if (step == kOnboardingLocationStep) {
-      ref.watch(
-        prayerSettingsProvider.select((s) => s.value?.isLocationReady),
-      );
-    }
-    final canContinue =
-        ref.read(onboardingControllerProvider.notifier).canContinue();
+    final canContinue = ref.watch(onboardingCanContinueProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -49,7 +41,7 @@ class OnboardingNavigationBar extends ConsumerWidget {
         Row(
           spacing: AppSpacing.sm,
           children: [
-            if (step > 0)
+            if (step != OnboardingStep.welcome)
               Expanded(
                 child: FButton(
                   variant: .ghost,
@@ -58,17 +50,17 @@ class OnboardingNavigationBar extends ConsumerWidget {
                 ),
               ),
             Expanded(
-              flex: step > 0 ? 2 : 1,
+              flex: step != OnboardingStep.welcome ? 2 : 1,
               child: FButton(
                 onPress: canContinue ? onContinue : null,
                 child: Text(
-                  isLastStep ? l10n.onboardingFinishAction : l10n.next,
+                  step.isLast ? l10n.onboardingFinishAction : l10n.next,
                 ),
               ),
             ),
           ],
         ),
-        if (!isLastStep)
+        if (!step.isLast)
           Align(
             alignment: AlignmentDirectional.center,
             child: FButton(

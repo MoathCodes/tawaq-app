@@ -5,18 +5,14 @@ import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/theme/palette_item.dart';
 import 'package:tawaq/theme/theme.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
-/// Widget for selecting the application color theme.
-class ColorThemeSelector extends ConsumerWidget {
-  /// Creates a [ColorThemeSelector].
-  const ColorThemeSelector({this.embedded = false, super.key});
-
-  /// When true, omits the appearance section header for onboarding.
-  final bool embedded;
+/// Color palette and light/dark mode controls without outer section chrome.
+class ColorThemeSelectorContent extends ConsumerWidget {
+  /// Creates [ColorThemeSelectorContent].
+  const ColorThemeSelectorContent({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,59 +20,40 @@ class ColorThemeSelector extends ConsumerWidget {
       themeProvider.select((t) => t.value?.themeMode),
     );
     final themeReady = ref.watch(themeProvider.select((t) => t.hasValue));
-
-    final theme = FTheme.of(context);
     final l10n = context.l10n;
+    final isLight = selectedMode != ThemeMode.dark;
 
     return Column(
       spacing: AppSpacing.lg,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (!embedded)
-          SettingsSemantics.sectionHeader(
-            label: l10n.appearance,
-            child: Text(
-              l10n.appearance,
-              style: theme.typography.body.lg.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
         SettingsGroup(
-          child: FTabs(
-            control: FTabControl.lifted(
-              index: selectedMode == ThemeMode.light ? 0 : 1,
-              onChange: (value) {
-                if (!themeReady) return;
-                ref
-                    .read(themeProvider.notifier)
-                    .setThemeMode(
-                      value == 0 ? ThemeMode.light : ThemeMode.dark,
-                    );
-              },
-            ),
+          child: Row(
+            spacing: AppSpacing.sm,
             children: [
-              FTabEntry(
-                label: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: AppSpacing.sm,
-                  children: [
-                    const Icon(FLucideIcons.sun, size: 16),
-                    Text(l10n.light),
-                  ],
+              Expanded(
+                child: FButton(
+                  variant: isLight ? .primary : .outline,
+                  onPress: themeReady
+                      ? () => ref
+                          .read(themeProvider.notifier)
+                          .setThemeMode(ThemeMode.light)
+                      : null,
+                  prefix: const Icon(FLucideIcons.sun, size: 16),
+                  child: Text(l10n.light),
                 ),
-                child: const SizedBox.shrink(),
               ),
-              FTabEntry(
-                label: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: AppSpacing.sm,
-                  children: [
-                    const Icon(FLucideIcons.moon, size: 16),
-                    Text(l10n.dark),
-                  ],
+              Expanded(
+                child: FButton(
+                  variant: isLight ? .outline : .primary,
+                  onPress: themeReady
+                      ? () => ref
+                          .read(themeProvider.notifier)
+                          .setThemeMode(ThemeMode.dark)
+                      : null,
+                  prefix: const Icon(FLucideIcons.moon, size: 16),
+                  child: Text(l10n.dark),
                 ),
-                child: const SizedBox.shrink(),
               ),
             ],
           ),

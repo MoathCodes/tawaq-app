@@ -8,6 +8,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/hadith_meta_field.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -24,51 +25,135 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
     ],
   );
 
+  List<FAccordionItem> _accordionItems(
+    BuildContext context,
+    WidgetRef ref,
+    FColors colors,
+  ) {
+    final l10n = context.l10n;
+    final hadithId = hadith.hadithId;
+    final items = <FAccordionItem>[];
+
+    void addSection({
+      required bool visible,
+      required IconData icon,
+      required String title,
+      required Widget child,
+    }) {
+      if (!visible) return;
+      items.add(
+        FAccordionItem(
+          title: _sectionTitle(colors, icon, title),
+          child: child,
+        ),
+      );
+    }
+
+    addSection(
+      visible: hadith.hasSharhMetadata,
+      icon: FLucideIcons.bookOpenText,
+      title: l10n.hadithSharh,
+      child: HadithAsyncDetailsSection<Sharh>(
+        value: ref.watch(hadithSharhProvider(hadith.sharhMetadata!.id)),
+        dataBuilder: (sharh) {
+          final text = sharh.sharhText;
+          if (text == null || text.trim().isEmpty) {
+            return const HadithSectionPlaceholder();
+          }
+          return HadithSharhText(text: text);
+        },
+      ),
+    );
+
+    addSection(
+      visible: hadith.hasUsulHadith && hadithId != null,
+      icon: FLucideIcons.sparkles,
+      title: l10n.hadithUsulHadith,
+      child: HadithAsyncDetailsSection<UsulHadith>(
+        value: ref.watch(hadithUsulProvider(hadithId!)),
+        dataBuilder: (usul) {
+          if (usul.sources.isEmpty) {
+            return const HadithSectionPlaceholder();
+          }
+
+          return Column(
+            spacing: AppSpacing.sm,
+            children: usul.sources
+                .map((source) => HadithUsulSourceCard(source: source))
+                .toList(growable: false),
+          );
+        },
+      ),
+    );
+
+    addSection(
+      visible: hadith.hasSimilarHadith,
+      icon: FLucideIcons.eye,
+      title: l10n.hadithSimilarHadith,
+      child: HadithAsyncDetailsSection<List<DetailedHadith>>(
+        value: ref.watch(hadithSimilarProvider(hadithId)),
+        dataBuilder: (similarItems) {
+          if (similarItems.isEmpty) {
+            return const HadithSectionPlaceholder();
+          }
+
+          return ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: similarItems.length,
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+            itemBuilder: (context, index) {
+              final item = similarItems[index];
+              return HadithResultCard.embedded(
+                hadith: item,
+                onSelect: () {
+                  unawaited(
+                    ref
+                        .read(hadithSessionControllerProvider.notifier)
+                        .openSpecificList(similarItems, selected: item),
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+
+    addSection(
+      visible: hadith.hasAlternateHadithSahih,
+      icon: FLucideIcons.arrowRightFromLine,
+      title: l10n.hadithAlternateHadithSahih,
+      child: HadithAsyncDetailsSection<DetailedHadith?>(
+        value: ref.watch(hadithAlternateProvider(hadithId)),
+        dataBuilder: (alternate) {
+          if (alternate == null) {
+            return const HadithSectionPlaceholder();
+          }
+
+          return HadithResultCard.embedded(
+            hadith: alternate,
+            onSelect: () {
+              unawaited(
+                ref
+                    .read(hadithSessionControllerProvider.notifier)
+                    .selectHadith(alternate),
+              );
+            },
+          );
+        },
+      ),
+    );
+
+    return items;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
-    final hadithId = hadith.hadithId;
-
-    final accordionItems = <FAccordionItem>[
-      if (hadith.hasSharhMetadata)
-        FAccordionItem(
-          title: _sectionTitle(
-            colors,
-            FLucideIcons.bookOpenText,
-            l10n.hadithSharh,
-          ),
-          child: _HadithSharhSection(sharhId: hadith.sharhMetadata!.id),
-        ),
-      if (hadith.hasUsulHadith && hadithId != null)
-        FAccordionItem(
-          title: _sectionTitle(
-            colors,
-            FLucideIcons.sparkles,
-            l10n.hadithUsulHadith,
-          ),
-          child: _HadithUsulSection(hadithId: hadithId),
-        ),
-      if (hadith.hasSimilarHadith && hadithId != null)
-        FAccordionItem(
-          title: _sectionTitle(
-            colors,
-            FLucideIcons.eye,
-            l10n.hadithSimilarHadith,
-          ),
-          child: _HadithSimilarSection(hadithId: hadithId),
-        ),
-      if (hadith.hasAlternateHadithSahih && hadithId != null)
-        FAccordionItem(
-          title: _sectionTitle(
-            colors,
-            FLucideIcons.arrowRightFromLine,
-            l10n.hadithAlternateHadithSahih,
-          ),
-          child: _HadithAlternateSection(hadithId: hadithId),
-        ),
-    ];
+    final accordionItems = _accordionItems(context, ref, colors);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.sm),
@@ -87,21 +172,24 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.lg),
-          HadithMetaItem(title: l10n.hadithNarrator, value: hadith.rawi),
-          HadithMetaItem(title: l10n.hadithMuhaddith, value: hadith.mohdith),
-          HadithMetaItem(
-            title: l10n.hadithSource,
+          HadithMetaField(label: l10n.hadithNarrator, value: hadith.rawi),
+          HadithMetaField(label: l10n.hadithMuhaddith, value: hadith.mohdith),
+          HadithMetaField(
+            label: l10n.hadithSource,
             value: l10n.hadithSourceCitation(
               hadith.book,
               hadith.numberOrPage,
             ),
           ),
-          HadithMetaItem(
-            title: l10n.hadithGradeExplanation,
+          HadithMetaField(
+            label: l10n.hadithGradeExplanation,
             value: hadith.hukm,
           ),
           if ((hadith.takhrij ?? '').trim().isNotEmpty)
-            HadithMetaItem(title: l10n.hadithTakhrij, value: hadith.takhrij!),
+            HadithMetaField(
+              label: l10n.hadithTakhrij,
+              value: hadith.takhrij!,
+            ),
           if (accordionItems.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.lg),
             FAccordion(
@@ -116,118 +204,6 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _HadithSharhSection extends ConsumerWidget {
-  const _HadithSharhSection({required this.sharhId});
-
-  final String sharhId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return HadithAsyncDetailsSection<Sharh>(
-      value: ref.watch(hadithSharhProvider(sharhId)),
-      dataBuilder: (sharh) {
-        final text = sharh.sharhText;
-        if (text == null || text.trim().isEmpty) {
-          return const HadithSectionPlaceholder();
-        }
-        return HadithSharhText(text: text);
-      },
-    );
-  }
-}
-
-class _HadithUsulSection extends ConsumerWidget {
-  const _HadithUsulSection({required this.hadithId});
-
-  final String hadithId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return HadithAsyncDetailsSection<UsulHadith>(
-      value: ref.watch(hadithUsulProvider(hadithId)),
-      dataBuilder: (usul) {
-        if (usul.sources.isEmpty) {
-          return const HadithSectionPlaceholder();
-        }
-
-        return Column(
-          spacing: AppSpacing.sm,
-          children: usul.sources
-              .map((source) => HadithUsulSourceCard(source: source))
-              .toList(growable: false),
-        );
-      },
-    );
-  }
-}
-
-class _HadithSimilarSection extends ConsumerWidget {
-  const _HadithSimilarSection({required this.hadithId});
-
-  final String hadithId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return HadithAsyncDetailsSection<List<DetailedHadith>>(
-      value: ref.watch(hadithSimilarProvider(hadithId)),
-      dataBuilder: (items) {
-        if (items.isEmpty) {
-          return const HadithSectionPlaceholder();
-        }
-
-        return ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: items.length,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-          itemBuilder: (context, index) {
-            final item = items[index];
-            return HadithResultCard.embedded(
-              hadith: item,
-              onSelect: () {
-                unawaited(
-                  ref
-                      .read(hadithScreenControllerProvider.notifier)
-                      .openSpecificList(items, selected: item),
-                );
-              },
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-class _HadithAlternateSection extends ConsumerWidget {
-  const _HadithAlternateSection({required this.hadithId});
-
-  final String hadithId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return HadithAsyncDetailsSection<DetailedHadith?>(
-      value: ref.watch(hadithAlternateProvider(hadithId)),
-      dataBuilder: (alternate) {
-        if (alternate == null) {
-          return const HadithSectionPlaceholder();
-        }
-
-        return HadithResultCard.embedded(
-          hadith: alternate,
-          onSelect: () {
-            unawaited(
-              ref
-                  .read(hadithScreenControllerProvider.notifier)
-                  .selectHadith(alternate),
-            );
-          },
-        );
-      },
     );
   }
 }
@@ -309,38 +285,6 @@ class HadithSectionPlaceholder extends StatelessWidget {
       context.l10n.noDataAvailable,
       style: context.theme.typography.body.md.copyWith(
         color: context.theme.colors.mutedForeground,
-      ),
-    );
-  }
-}
-
-class HadithMetaItem extends StatelessWidget {
-  const HadithMetaItem({required this.title, required this.value, super.key});
-
-  final String title;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 4,
-        children: [
-          Text(
-            title,
-            style: theme.typography.body.sm.copyWith(
-              color: theme.colors.mutedForeground,
-            ),
-          ),
-          Text(
-            value,
-            style: theme.typography.body.md,
-          ),
-        ],
       ),
     );
   }

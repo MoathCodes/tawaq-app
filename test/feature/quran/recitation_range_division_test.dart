@@ -227,18 +227,18 @@ void main() {
 
     test('resolveJuzRangeForAyah returns resolved range', () async {
       final result = await resolveJuzRangeForAyah(controller, 8, 41);
-      expect(result, isA<DivisionRangeResolved>());
-      final resolved = result as DivisionRangeResolved;
-      expect(resolved.from, const AyahReference(surah: 8, ayah: 41));
-      expect(resolved.to, const AyahReference(surah: 9, ayah: 92));
+      expect(result.error, isNull);
+      expect(result.range, isNotNull);
+      expect(result.range!.from, const AyahReference(surah: 8, ayah: 41));
+      expect(result.range!.to, const AyahReference(surah: 9, ayah: 92));
     });
 
     test('resolveHizbRangeForAyah returns resolved range', () async {
       final result = await resolveHizbRangeForAyah(controller, 8, 41);
-      expect(result, isA<DivisionRangeResolved>());
-      final resolved = result as DivisionRangeResolved;
-      expect(resolved.from, const AyahReference(surah: 8, ayah: 41));
-      expect(resolved.to, const AyahReference(surah: 9, ayah: 33));
+      expect(result.error, isNull);
+      expect(result.range, isNotNull);
+      expect(result.range!.from, const AyahReference(surah: 8, ayah: 41));
+      expect(result.range!.to, const AyahReference(surah: 9, ayah: 33));
     });
   });
 

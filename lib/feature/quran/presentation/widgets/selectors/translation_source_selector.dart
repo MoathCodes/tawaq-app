@@ -5,7 +5,6 @@ import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/select_empty_content.dart';
-import 'package:tawaq/feature/quran/data/sources/quran_content_registry.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
@@ -32,12 +31,11 @@ class TranslationSourceSelector extends ConsumerWidget {
     final colors = theme.colors;
     final typography = theme.typography;
     final l10n = context.l10n;
-    final sources = QuranContentRegistry.translations;
+    final sources = TranslationId.values;
     final selected = ref.watch(
       quranScreenSettingsProvider.select(
         (settings) =>
-            settings.value?.selectedTranslation ??
-            QuranContentRegistry.defaultTranslation,
+            settings.value?.selectedTranslation ?? kDefaultTranslationId,
       ),
     );
     final fieldLabel = l10n.translation;

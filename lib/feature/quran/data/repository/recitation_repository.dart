@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:logger/logger.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/utils/cancellation_token.dart';
 import 'package:tawaq/core/utils/lru_map.dart';
 import 'package:tawaq/feature/quran/data/sources/mp3quran_api.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
@@ -104,16 +106,35 @@ class RecitationRepository {
     }
   }
 
-  /// Resolves the playable URI for [surah] in [moshaf].
+  /// Resolves the playable URI for [surah] in [moshaf], optionally streaming
+  /// download progress.
   ///
-  /// Returns a `file://` URI after ensuring the audio is cached locally.
+  /// Returns a record of `uri` and a nullable `progress` stream:
+  /// - When the surah is already cached, returns the cached `file://` URI and
+  ///   a `null` progress stream (no download occurs).
+  /// - Otherwise the download is attempted (honoring [cancellationToken]);
+  ///   the `progress` stream carries the emitted [DownloadProgress] events.
+  ///   - On success the cached `file://` URI is returned.
+  ///   - On a mid-download failure, if the partial `.part` file is large
+  ///     enough to play, its `file://` URI is handed to mpv so playback can
+  ///     proceed from whatever was received.
+  ///   - Otherwise (cancellation, or failure with no usable `.part`) the
+  ///     network `url` is returned as a fallback.
+  ///
   /// [reciter] and [surahName] are used only to build the human-readable,
   /// riwayah-scoped cache path.
-  Future<String> resolveSurahUri({
+  ///
+  /// [onProgress], if given, is invoked for each [DownloadProgress] event as
+  /// it arrives during the download (live), in addition to the events being
+  /// replayed on the returned `progress` stream. Use it to drive a progress UI
+  /// without awaiting this future.
+  Future<({String uri, Stream<DownloadProgress>? progress})> resolveSurahUri({
     required Reciter reciter,
     required Moshaf moshaf,
     required int surah,
     required String surahName,
+    CancellationToken? cancellationToken,
+    void Function(DownloadProgress)? onProgress,
   }) async {
     final cached = await _cache.cachedAudio(
       reciterId: reciter.id,
@@ -123,19 +144,44 @@ class RecitationRepository {
       riwayahName: moshaf.name,
       surahName: surahName,
     );
-    if (cached != null) return cached.uri.toString();
+    if (cached != null) {
+      return (uri: cached.uri.toString(), progress: null);
+    }
 
     final url = surahAudioUrl(moshaf.server, surah);
-    await _cache.downloadAudio(
-      reciterId: reciter.id,
-      moshafId: moshaf.id,
-      surah: surah,
-      reciterName: reciter.name,
-      riwayahName: moshaf.name,
-      surahName: surahName,
-      url: url,
-    );
+    final token = cancellationToken ?? CancellationToken();
+    final events = <DownloadProgress>[];
+    Object? failure;
+    try {
+      // Drain the download stream, collecting progress events to replay on the
+      // returned `progress` stream. `Stream.forEach` propagates download
+      // errors, which are caught below. [onProgress] is forwarded each event
+      // live so callers (e.g. the recitation controller) can drive a progress
+      // UI without waiting for the awaited resolution.
+      await _cache.downloadAudio(
+        reciterId: reciter.id,
+        moshafId: moshaf.id,
+        surah: surah,
+        reciterName: reciter.name,
+        riwayahName: moshaf.name,
+        surahName: surahName,
+        url: url,
+        cancellationToken: token,
+      ).forEach((event) {
+        events.add(event);
+        onProgress?.call(event);
+      });
+    } on Object catch (error, stack) {
+      failure = error;
+      _logger.w(
+        'Recitation download failed, evaluating fallback: $error',
+        stackTrace: stack,
+      );
+    }
 
+    final progressStream = Stream<DownloadProgress>.fromIterable(events);
+
+    // Download succeeded -> play the cached file.
     final file = await _cache.cachedAudio(
       reciterId: reciter.id,
       moshafId: moshaf.id,
@@ -144,9 +190,46 @@ class RecitationRepository {
       riwayahName: moshaf.name,
       surahName: surahName,
     );
-    if (file != null) return file.uri.toString();
+    if (file != null) {
+      return (uri: file.uri.toString(), progress: progressStream);
+    }
 
-    return url;
+    // Download failed mid-way -> hand mpv the partial .part if playable.
+    if (failure != null) {
+      final part = await _cache.partAudioIfLargeEnough(
+        reciterId: reciter.id,
+        moshafId: moshaf.id,
+        surah: surah,
+        reciterName: reciter.name,
+        riwayahName: moshaf.name,
+        surahName: surahName,
+      );
+      if (part != null) {
+        _logger.i('Streaming from partial .part for surah $surah');
+        return (uri: part.uri.toString(), progress: progressStream);
+      }
+    }
+
+    // Cancelled, or failed with no usable .part -> fall back to network.
+    return (uri: url, progress: progressStream);
+  }
+
+  /// Whether the audio for [surah] is already cached locally.
+  Future<bool> isSurahCached({
+    required Reciter reciter,
+    required Moshaf moshaf,
+    required int surah,
+    required String surahName,
+  }) async {
+    final file = await _cache.cachedAudio(
+      reciterId: reciter.id,
+      moshafId: moshaf.id,
+      surah: surah,
+      reciterName: reciter.name,
+      riwayahName: moshaf.name,
+      surahName: surahName,
+    );
+    return file != null;
   }
 
   /// Lists every cached surah audio file.

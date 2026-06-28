@@ -4,13 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 
-/// Resolved layout extents for [PersistedHorizontalSplitPane].
-typedef ResolvedHorizontalSplit = ({
-  double sideExtent,
-  double mainExtent,
-  double sideMin,
-  double mainMin,
-});
+export 'package:tawaq/core/layout/split_pane_constraints.dart'
+    show ResolvedHorizontalSplit;
 
 /// A horizontal [FResizable] split whose regions stay stable across parent
 /// rebuilds.

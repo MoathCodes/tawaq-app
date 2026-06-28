@@ -8,48 +8,64 @@ import 'package:tawaq/gen/assets.gen.dart';
 part 'adhan_settings.freezed.dart';
 part 'adhan_settings.g.dart';
 
+Duration _durationFromJson(int seconds) => Duration(seconds: seconds);
+int _durationToJson(Duration duration) => duration.inSeconds;
+
 /// Bundled adhan muezzin / style variants.
 enum AdhanSound {
   /// Mishary Alafasi (legacy persisted key: `default`).
   @JsonValue('default')
   misharyAlafasi,
 
+  /// Makkah adhan recording.
   @JsonValue('makkah')
   makkah,
 
+  /// Abed Albasaei adhan recording.
   @JsonValue('abed_albasaei')
   abedAlbasaei,
 
+  /// Ahmad Nufais adhan recording.
   @JsonValue('ahmad_nufais')
   ahmadNufais,
 
+  /// Ghazi Al Saadoni adhan recording.
   @JsonValue('ghazi_al_saadoni')
   ghaziAlSaadoni,
 
+  /// Hamad Deghreri adhan recording.
   @JsonValue('hamad_deghreri')
   hamadDeghreri,
 
+  /// Hamdan Al Malki adhan recording.
   @JsonValue('hamdan_al_malki')
   hamdanAlMalki,
 
+  /// Ibrahim Al Arkani adhan recording.
   @JsonValue('ibrahim_al_arkani')
   ibrahimAlArkani,
 
+  /// Majed Al Hamathani adhan recording.
   @JsonValue('majed_al_hamathani')
   majedAlHamathani,
 
+  /// Mansoor Al Zahrani adhan recording.
   @JsonValue('mansoor_al_zahrani')
   mansoorAlZahrani,
 
+  /// Mohammad Al Menshawy adhan recording.
   @JsonValue('mohammad_al_menshawy')
   mohammadAlMenshawy,
 
+  /// Mohammad Refat adhan recording.
   @JsonValue('mohammad_refat')
   mohammadRefat,
 
+  /// Nasser Al Qatami adhan recording.
   @JsonValue('nasser_al_qatami')
   nasserAlQatami,
 
+  /// Suhaib Khatba adhan recording.
   @JsonValue('suhaib_khatba')
   suhaibKhatba,
 }
@@ -60,12 +76,15 @@ enum IqamahSound {
   @JsonValue('default')
   misharyAlafasi,
 
+  /// Yasser Al Dossari iqamah recording.
   @JsonValue('yasser_al_dossari')
   yasserAlDossari,
 
+  /// Makkah iqamah recording.
   @JsonValue('makkah')
   makkah,
 
+  /// Madinah iqamah recording.
   @JsonValue('madinah')
   madinah,
 }
@@ -176,6 +195,16 @@ abstract class AdhanSettings with _$AdhanSettings {
     @Default(true) bool showAdhanAlert,
     @Default(true) bool showOsNotification,
     @Default(AdhanAlertPosition.topEnd) AdhanAlertPosition alertPosition,
+
+    /// Hard ceiling guarding against a stuck/never-completing adhan sound.
+    /// Stored in seconds for JSON compactness; defaults to 8 minutes.
+    @JsonKey(
+      name: 'sound_safety_cap_seconds',
+      fromJson: _durationFromJson,
+      toJson: _durationToJson,
+    )
+    @Default(Duration(minutes: 8))
+    Duration soundSafetyCap,
   }) = _AdhanSettings;
 
   /// Default adhan settings.
@@ -195,7 +224,7 @@ abstract class AdhanSettings with _$AdhanSettings {
       _$AdhanSettingsFromJson(json);
 }
 
-/// Default alert mode when [kind] has no explicit entry for [prayer].
+/// Default alert mode for [kind].
 ScheduleAlertMode defaultScheduleAlertModeFor(PrayerAlertKind kind) {
   return switch (kind) {
     PrayerAlertKind.adhan => ScheduleAlertMode.sound,

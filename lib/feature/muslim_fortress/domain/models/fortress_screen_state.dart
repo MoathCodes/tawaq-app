@@ -27,15 +27,10 @@ abstract class FortressScreenState with _$FortressScreenState {
 
   /// Deserializes the fortress screen state from JSON.
   factory FortressScreenState.fromJson(Map<String, dynamic> json) =>
-      _$FortressScreenStateFromJson(
-        _migrateFortressScreenJson(Map<String, dynamic>.from(json)),
-      );
+      _$FortressScreenStateFromJson(json);
 
   /// Returns the default initial screen state.
   factory FortressScreenState.initial() => const FortressScreenState();
-}
 
-Map<String, dynamic> _migrateFortressScreenJson(Map<String, dynamic> json) {
-  migrateSidePanelJson(json);
-  return json;
+  const FortressScreenState._();
 }

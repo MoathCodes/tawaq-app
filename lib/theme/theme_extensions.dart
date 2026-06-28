@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/theme/durations.dart';
 import 'package:tawaq/theme/radii.dart';
@@ -18,4 +19,15 @@ extension AppTokensExtension on FThemeData {
 
   /// checks if the current theme is dark mode.
   bool get isDark => colors.brightness == .dark;
+}
+
+/// Shared transparent-thumb divider style for feature split panes.
+FResizableDividerStyleDelta splitPaneDividerStyle(BuildContext context) {
+  return const FResizableDividerStyleDelta.delta(
+    thumbStyle: FResizableDividerThumbStyleDelta.delta(
+      decoration: DecorationDelta.boxDelta(
+        border: Border.fromBorderSide(BorderSide(color: Colors.transparent)),
+      ),
+    ),
+  );
 }

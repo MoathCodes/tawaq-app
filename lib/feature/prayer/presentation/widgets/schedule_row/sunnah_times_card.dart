@@ -202,16 +202,6 @@ class _SunnahStripCell extends ConsumerWidget {
   final FThemeData theme;
   final _SunnahCellLayout layout;
 
-  static const List<ScheduleAlertMode> _modes = [
-    ScheduleAlertMode.off,
-    ScheduleAlertMode.notifyOnly,
-  ];
-
-  static const Set<ScheduleAlertMode> _interactiveModes = {
-    ScheduleAlertMode.off,
-    ScheduleAlertMode.notifyOnly,
-  };
-
   static const _iconSize = 28.0;
 
   @override
@@ -272,12 +262,10 @@ class _SunnahStripCell extends ConsumerWidget {
     );
 
     final alert = isDesktopPlatform
-        ? ScheduleAlertPicker(
+        ? ScheduleAlertPicker.sunnah(
             mode: mode,
-            modes: _modes,
-            interactiveModes: hasSettings ? _interactiveModes : const {},
             eventLabel: l10n.scheduleAlertEventSunnah(prayerName),
-            alertKind: PrayerAlertKind.sunnah,
+            hasSettings: hasSettings,
             onChanged: !hasSettings
                 ? null
                 : (next) => ref

@@ -4,12 +4,11 @@ import 'package:tawaq/core/database/asset_database_service.dart';
 import 'package:tawaq/feature/quran/data/models/tafsir.dart';
 import 'package:tawaq/feature/quran/data/repository/tafsir_repository.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
-import 'package:tawaq/feature/quran/domain/services/tafsir_service.dart';
 import 'package:tawaq/feature/quran/presentation/providers/tafsir_provider.dart';
 
-/// Counts [TafsirService.getTafsir] calls for LRU / auto-dispose assertions.
-class CountingTafsirService extends TafsirService {
-  CountingTafsirService() : super(TafsirRepository(AssetDatabaseService()));
+/// Counts [TafsirRepository.getTafsir] calls for LRU / auto-dispose assertions.
+class CountingTafsirRepository extends TafsirRepository {
+  CountingTafsirRepository() : super(AssetDatabaseService());
 
   int callCount = 0;
 
@@ -33,14 +32,14 @@ Future<void> _waitForAutoDispose() async {
 
 void main() {
   group('parsedTafsirProvider', () {
-    late CountingTafsirService service;
+    late CountingTafsirRepository repository;
     late ProviderContainer container;
 
     setUp(() {
-      service = CountingTafsirService();
+      repository = CountingTafsirRepository();
       container = ProviderContainer.test(
         overrides: [
-          tafsirServiceProvider.overrideWithValue(service),
+          tafsirRepositoryProvider.overrideWithValue(repository),
         ],
       );
     });
@@ -53,14 +52,14 @@ void main() {
         (_, _) {},
       );
       await container.read(parsedTafsirProvider(source, 1, 1).future);
-      expect(service.callCount, 1);
+      expect(repository.callCount, 1);
 
       final subB = container.listen(
         parsedTafsirProvider(source, 1, 2),
         (_, _) {},
       );
       await container.read(parsedTafsirProvider(source, 1, 2).future);
-      expect(service.callCount, 2);
+      expect(repository.callCount, 2);
 
       subB.close();
       subA.close();
@@ -74,7 +73,7 @@ void main() {
       subAAgain.close();
 
       expect(
-        service.callCount,
+        repository.callCount,
         2,
         reason: 'LRU row + parse caches should satisfy revisit without fetch',
       );

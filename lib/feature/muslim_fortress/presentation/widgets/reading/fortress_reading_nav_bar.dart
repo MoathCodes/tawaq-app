@@ -4,6 +4,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_nav_controls.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -47,71 +48,30 @@ class FortressReadingNavBar extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact =
+        final iconOnly =
             constraints.maxWidth < context.theme.breakpoints.sm;
-
-        final previous = FortressLabeledNavButton(
-          label: FortressA11y.navActionLabel(l10n, isPrevious: true),
-          enabled: canGoPrevious,
-          onPress: onPrevious,
-          iconOnly: compact,
-          prefix: const Icon(FLucideIcons.chevronLeft, size: 18),
-          child: Text(l10n.fortressPrevious),
-        );
-        final next = FortressLabeledNavButton(
-          label: FortressA11y.navActionLabel(l10n, isPrevious: false),
-          enabled: canGoNext,
-          onPress: onNext,
-          iconOnly: compact,
-          prefix: const Icon(FLucideIcons.chevronRight, size: 18),
-          child: Text(l10n.next),
-        );
-
-        final navRow = Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            previous,
-            const SizedBox(width: AppSpacing.md),
-            Flexible(
-              child: Semantics(
-                liveRegion: true,
-                child: center,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            next,
-          ],
-        );
-
-        if (!showStudy) {
-          return NonSelectable(child: navRow);
-        }
-
-        if (compact) {
-          return NonSelectable(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FortressDuaStudyNavAction(dua: studyDua!),
-                const SizedBox(height: AppSpacing.sm),
-                navRow,
-              ],
-            ),
-          );
-        }
 
         return NonSelectable(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              previous,
+              FortressLabeledNavButton(
+                label: FortressA11y.navActionLabel(l10n, isPrevious: true),
+                enabled: canGoPrevious,
+                onPress: onPrevious,
+                iconOnly: iconOnly,
+                prefix: const Icon(FLucideIcons.chevronLeft, size: 18),
+                child: Text(l10n.fortressPrevious),
+              ),
               const SizedBox(width: AppSpacing.md),
               Flexible(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    FortressDuaStudyNavAction(dua: studyDua!),
-                    const SizedBox(height: AppSpacing.sm),
+                    if (showStudy) ...[
+                      FortressDuaStudyNavAction(dua: studyDua!),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
                     Semantics(
                       liveRegion: true,
                       child: center,
@@ -120,7 +80,14 @@ class FortressReadingNavBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.md),
-              next,
+              FortressLabeledNavButton(
+                label: FortressA11y.navActionLabel(l10n, isPrevious: false),
+                enabled: canGoNext,
+                onPress: onNext,
+                iconOnly: iconOnly,
+                prefix: const Icon(FLucideIcons.chevronRight, size: 18),
+                child: Text(l10n.next),
+              ),
             ],
           ),
         );

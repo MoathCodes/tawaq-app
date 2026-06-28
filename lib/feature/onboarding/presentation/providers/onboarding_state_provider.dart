@@ -23,19 +23,8 @@ class OnboardingStateNotifier extends _$OnboardingStateNotifier {
     return state.value ?? const OnboardingState();
   }
 
-  /// Marks onboarding as finished after the user completes all steps.
-  Future<void> complete() async {
-    if (!state.hasValue) return;
-    state = AsyncData(
-      state.value!.copyWith(
-        completed: true,
-        completedAt: DateTime.now().toIso8601String(),
-      ),
-    );
-  }
-
-  /// Marks onboarding dismissed so the redirect loop stops ("Set up later").
-  Future<void> dismiss() async {
+  /// Marks onboarding as finished (complete flow or "Set up later").
+  Future<void> finish() async {
     if (!state.hasValue) return;
     state = AsyncData(
       state.value!.copyWith(

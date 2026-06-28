@@ -1,41 +1,16 @@
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_flow_state.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_service.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 part 'muslim_fortress_provider.g.dart';
-
-/// Returns the persisted fortress screen state from shared application settings.
-@riverpod
-FortressScreenState fortressUiState(Ref ref) {
-  final settings = ref.watch(fortressScreenSettingsProvider);
-  return settings.asData?.value ?? FortressScreenState.initial();
-}
-
-/// Returns the currently selected fortress chapter.
-@riverpod
-FortressCategory? fortressSelectedCategory(Ref ref) {
-  return ref.watch(fortressScreenControllerProvider).selectedCategory;
-}
-
-/// Returns whether fortress focus-reading mode is active.
-@riverpod
-bool fortressIsFocusMode(Ref ref) {
-  return ref.watch(fortressScreenControllerProvider).isFocusMode;
-}
-
-/// Returns the initial dua index for focus-reading mode.
-@riverpod
-int fortressFocusStartIndex(Ref ref) {
-  return ref.watch(fortressScreenControllerProvider).focusStartIndex;
-}
 
 /// Coordinates fortress screen session state and navigation actions.
 @riverpod
@@ -46,7 +21,7 @@ class FortressScreenController extends _$FortressScreenController {
   /// Selects a chapter in the main pane, or clears selection when tapped again.
   void selectCategory(FortressCategory category) {
     if (state.selectedCategory == category) {
-      state = state.copyWith(clearSelectedCategory: true);
+      state = state.copyWith(selectedCategory: null);
       return;
     }
 
@@ -109,47 +84,43 @@ class FortressScreenController extends _$FortressScreenController {
   }
 }
 
-/// Active time-of-day recommendation window as a value-equal key.
+/// Active recommendation title fragments for the current prayer window.
 ///
-/// Recomputed at most once per minute (via [currentMinuteBucketProvider]) but
-/// its String value only changes when the prayer window crosses (~5–6x/day),
-/// so [fortressRecommendedCategories] re-runs only then rather than every tick.
+/// Recomputed at most once per minute via [currentMinuteBucketProvider].
+/// Const fragment lists are reused across ticks within the same window.
 @riverpod
-String fortressRecommendationWindow(Ref ref) {
+List<String> fortressRecommendationFragments(Ref ref) {
   ref.watch(currentMinuteBucketProvider);
   final day = ref.read(prayerDayProvider).value;
-  if (day == null) return '';
-  // Newline-joined: fragments are single-line phrases that may contain spaces.
+  if (day == null) return const [];
   return recommendTitleFragments(
     now: day.now,
     prayerTimes: day.today,
     location: day.location,
-  ).join('\n');
+  );
 }
 
 /// Time-based recommended fortress categories for the welcome pane.
-///
-/// Keyed on the value-equal [fortressRecommendationWindowProvider], so the
-/// welcome pane rebuilds only at window crossings rather than on every 1 Hz
-/// clock tick (mirrors the [sunnahTimeLabels] dedup pattern).
 @riverpod
 List<FortressCategory> fortressRecommendedCategories(Ref ref) {
-  final window = ref.watch(fortressRecommendationWindowProvider);
+  final fragments = ref.watch(fortressRecommendationFragmentsProvider);
   final categories =
       ref.watch(muslimFortressChaptersProvider).asData?.value ??
       const <FortressCategory>[];
-  if (window.isEmpty || categories.isEmpty) return const <FortressCategory>[];
+  if (fragments.isEmpty || categories.isEmpty) {
+    return const <FortressCategory>[];
+  }
   return fortressCategoriesForFragments(
     allCategories: categories,
-    fragments: window.split('\n'),
+    fragments: fragments,
   );
 }
 
 /// All Hisn al-Muslim titles for the fortress UI.
 @riverpod
 Future<List<FortressCategory>> muslimFortressChapters(Ref ref) async {
-  final service = await ref.watch(fortressServiceProvider.future);
-  return service.loadChapters();
+  final repository = await ref.watch(fortressRepositoryProvider.future);
+  return repository.loadChapters();
 }
 
 /// Dhikr items for a single Hisn title.
@@ -160,10 +131,8 @@ Future<List<FortressDuaItem>> muslimFortressDuas(
   Ref ref,
   int chapterId,
 ) async {
-  final chaptersFuture = ref.watch(muslimFortressChaptersProvider.future);
-  final service = await ref.watch(fortressServiceProvider.future);
-  final chapters = await chaptersFuture;
-  return service.loadDuasForChapter(chapterId, chapters: chapters);
+  final repository = await ref.watch(fortressRepositoryProvider.future);
+  return repository.loadDuas(chapterId);
 }
 
 /// In-memory global search query (trimmed; debounced in the screen).
@@ -180,8 +149,8 @@ class MuslimFortressSearchQuery extends _$MuslimFortressSearchQuery {
 @riverpod
 Future<FortressSearchResults> muslimFortressSearchResults(Ref ref) async {
   final query = ref.watch(muslimFortressSearchQueryProvider);
-  final service = await ref.watch(fortressServiceProvider.future);
-  return service.search(query);
+  final repository = await ref.watch(fortressRepositoryProvider.future);
+  return repository.search(query);
 }
 
 /// On-demand sharh commentary for a Hisn content id.
@@ -190,6 +159,6 @@ Future<HisnCommentary?> muslimFortressCommentary(
   Ref ref,
   int contentId,
 ) async {
-  final service = await ref.watch(fortressServiceProvider.future);
-  return service.loadCommentaryForContent(contentId);
+  final repository = await ref.watch(fortressRepositoryProvider.future);
+  return repository.loadCommentaryForContent(contentId);
 }

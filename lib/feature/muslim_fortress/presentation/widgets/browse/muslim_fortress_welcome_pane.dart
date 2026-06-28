@@ -5,10 +5,11 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
-import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_category_row.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Home pane when no chapter is selected (time-based picks + bookmarks).
@@ -26,7 +27,9 @@ class MuslimFortressWelcomePane extends ConsumerWidget {
       fortressRecommendedCategoriesProvider,
     );
     final favoriteChapterIds = ref.watch(
-      fortressUiStateProvider.select((state) => state.favoriteChapterIds),
+      fortressScreenSettingsProvider.select(
+        (v) => v.asData?.value.favoriteChapterIds ?? const [],
+      ),
     );
     final controller = ref.read(fortressScreenControllerProvider.notifier);
 
@@ -185,7 +188,7 @@ List<FTileMixin> _fortressCategoryTiles(
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: Text(
-          _categoryMeta(categories[i], l10n),
+          fortressCategoryMetaLine(categories[i], l10n),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
@@ -207,9 +210,3 @@ List<FTileMixin> _fortressCategoryTiles(
   ];
 }
 
-String _categoryMeta(FortressCategory category, AppLocalizations l10n) {
-  return [
-    fortressRecurrenceLabel(category.recurrence, l10n),
-    l10n.fortressSupplicationCount(category.supplicationCount),
-  ].join(' · ');
-}

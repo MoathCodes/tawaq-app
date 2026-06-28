@@ -136,43 +136,4 @@ void main() {
       expect(result.mainMin, kMainPaneMinExtent);
     });
   });
-
-  group('migrateSidePanelWidthToRatio', () {
-    test('converts a legacy pixel width to a ratio', () {
-      final map = <String, dynamic>{'sidePanelWidth': 420};
-      migrateSidePanelWidthToRatio(map);
-
-      expect(map.containsKey('sidePanelWidth'), isFalse);
-      expect(
-        map['sidePanelRatio'],
-        closeTo(420 / kSidePanelRatioMigrationWidth, 0.0001),
-      );
-    });
-
-    test('clamps extreme legacy widths into the sane range', () {
-      final tiny = <String, dynamic>{'sidePanelWidth': 50};
-      migrateSidePanelWidthToRatio(tiny);
-      expect(tiny['sidePanelRatio'], 0.15);
-
-      final huge = <String, dynamic>{'sidePanelWidth': 9000};
-      migrateSidePanelWidthToRatio(huge);
-      expect(huge['sidePanelRatio'], 0.5);
-    });
-
-    test('leaves an already-migrated map untouched', () {
-      final map = <String, dynamic>{'sidePanelRatio': 0.4, 'sidePanelWidth': 99};
-      migrateSidePanelWidthToRatio(map);
-
-      expect(map['sidePanelRatio'], 0.4);
-      expect(map['sidePanelWidth'], 99);
-    });
-
-    test('is a no-op when no side-panel key is present', () {
-      final map = <String, dynamic>{'other': 1};
-      migrateSidePanelWidthToRatio(map);
-
-      expect(map.containsKey('sidePanelRatio'), isFalse);
-      expect(map, {'other': 1});
-    });
-  });
 }

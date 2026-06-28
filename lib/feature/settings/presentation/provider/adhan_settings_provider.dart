@@ -12,16 +12,12 @@ part 'adhan_settings_provider.g.dart';
 
 const _logPrefix = '[AdhanSettingsNotifier]';
 
-/// Last successfully resolved adhan settings, reused when a (re)build cannot
-/// read storage — so a failed hydrate never silently resets alert modes,
-/// sounds or mute state to defaults. Module scope to survive autoDispose
-/// rebuilds; seeded with the first-run defaults so it is never null.
-AdhanSettings _lastGoodAdhanSettings = AdhanSettings.defaults();
-
 /// Persisted prayer alert notification and playback settings.
-@riverpod
+@Riverpod(keepAlive: true)
 @JsonPersist()
 class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
+  AdhanSettings _lastGood = AdhanSettings.defaults();
+
   double? _volumePreview;
 
   /// Ephemeral volume while dragging a slider (not persisted).
@@ -31,7 +27,7 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
   Future<AdhanSettings> build() async {
     listenSelf((_, next) {
       final value = next.value;
-      if (value != null) _lastGoodAdhanSettings = value;
+      if (value != null) _lastGood = value;
     });
     try {
       await persist(
@@ -49,7 +45,7 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
             stackTrace: stack,
           );
     }
-    return state.value ?? _lastGoodAdhanSettings;
+    return state.value ?? _lastGood;
   }
 
   void _update(AdhanSettings Function(AdhanSettings) fn, String field) {

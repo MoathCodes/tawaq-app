@@ -143,9 +143,10 @@ void main() {
         ),
       );
 
-      // Prose before and after poetry stay inline; poetry uses a diwan row.
-      expect(find.byType(ScopedSelectableRichText), findsNWidgets(2));
-      expect(find.byType(Row), findsOneWidget);
+      // Prose before and after poetry stay inline; poetry uses a decorated block.
+      expect(find.byType(ScopedSelectableRichText), findsNWidgets(3));
+      expect(find.byType(DecoratedBox), findsOneWidget);
+      expect(find.textContaining('يا من ألوذ به'), findsOneWidget);
     });
   });
 }

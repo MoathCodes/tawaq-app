@@ -1,8 +1,44 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_timeline.dart';
 import 'package:tawaq/feature/prayer/domain/use_cases/compute_prayer_card_decision.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
+
+PrayerDayTimeline _buildTimeline({
+  required Location location,
+  required PrayerTimes todaysPrayerTimes,
+  required PrayerTimes yesterdaysPrayerTimes,
+  required SunnahTimes todaysSunnahTimes,
+  required SunnahTimes yesterdaysSunnahTimes,
+}) {
+  return PrayerDayTimeline(
+    fajrToday: TZDateTime.from(todaysPrayerTimes.fajr, location),
+    sunriseToday: TZDateTime.from(todaysPrayerTimes.sunrise, location),
+    dhuhrToday: TZDateTime.from(todaysPrayerTimes.dhuhr, location),
+    asrToday: TZDateTime.from(todaysPrayerTimes.asr, location),
+    maghribToday: TZDateTime.from(todaysPrayerTimes.maghrib, location),
+    ishaToday: TZDateTime.from(todaysPrayerTimes.isha, location),
+    ishaYesterday: TZDateTime.from(yesterdaysPrayerTimes.isha, location),
+    middleOfNightToday: TZDateTime.from(
+      todaysSunnahTimes.middleOfTheNight,
+      location,
+    ),
+    middleOfNightYesterday: TZDateTime.from(
+      yesterdaysSunnahTimes.middleOfTheNight,
+      location,
+    ),
+    lastThirdToday: TZDateTime.from(
+      todaysSunnahTimes.lastThirdOfTheNight,
+      location,
+    ),
+    lastThirdYesterday: TZDateTime.from(
+      yesterdaysSunnahTimes.lastThirdOfTheNight,
+      location,
+    ),
+  );
+}
 
 void main() {
   setUpAll(tz.initializeTimeZones);
@@ -13,6 +49,8 @@ void main() {
     late PrayerTimes yesterdaysPrayerTimes;
     late SunnahTimes todaysSunnahTimes;
     late SunnahTimes yesterdaysSunnahTimes;
+
+    late PrayerDayTimeline timeline;
 
     setUp(() {
       location = getLocation('Asia/Riyadh');
@@ -33,6 +71,13 @@ void main() {
       );
       todaysSunnahTimes = SunnahTimes(todaysPrayerTimes);
       yesterdaysSunnahTimes = SunnahTimes(yesterdaysPrayerTimes);
+      timeline = _buildTimeline(
+        location: location,
+        todaysPrayerTimes: todaysPrayerTimes,
+        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
+        todaysSunnahTimes: todaysSunnahTimes,
+        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+      );
     });
 
     test('returns fajr when current time is during fajr', () {
@@ -43,10 +88,7 @@ void main() {
       final result = getCurrentPrayer(
         currentTime: testTime,
         location: location,
-        todaysPrayerTimes: todaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+        timeline: timeline,
       );
 
       expect(result, Prayer.fajr);
@@ -59,10 +101,7 @@ void main() {
       final result = getCurrentPrayer(
         currentTime: testTime,
         location: location,
-        todaysPrayerTimes: todaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+        timeline: timeline,
       );
 
       expect(result, Prayer.sunrise);
@@ -75,10 +114,7 @@ void main() {
       final result = getCurrentPrayer(
         currentTime: testTime,
         location: location,
-        todaysPrayerTimes: todaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+        timeline: timeline,
       );
 
       expect(result, Prayer.dhuhr);
@@ -91,10 +127,7 @@ void main() {
       final result = getCurrentPrayer(
         currentTime: testTime,
         location: location,
-        todaysPrayerTimes: todaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+        timeline: timeline,
       );
 
       expect(result, Prayer.asr);
@@ -107,10 +140,7 @@ void main() {
       final result = getCurrentPrayer(
         currentTime: testTime,
         location: location,
-        todaysPrayerTimes: todaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+        timeline: timeline,
       );
 
       expect(result, Prayer.maghrib);
@@ -123,10 +153,7 @@ void main() {
       final result = getCurrentPrayer(
         currentTime: testTime,
         location: location,
-        todaysPrayerTimes: todaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+        timeline: timeline,
       );
 
       expect(result, Prayer.isha);
@@ -144,10 +171,7 @@ void main() {
         final result = getCurrentPrayer(
           currentTime: testTime,
           location: location,
-          todaysPrayerTimes: todaysPrayerTimes,
-          todaysSunnahTimes: todaysSunnahTimes,
-          yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-          yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+          timeline: timeline,
         );
 
         expect(result, Prayer.fajrAfter);
@@ -164,10 +188,7 @@ void main() {
       final result = getCurrentPrayer(
         currentTime: testTime,
         location: location,
-        todaysPrayerTimes: todaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+        timeline: timeline,
       );
 
       expect(result, Prayer.ishaBefore);
@@ -180,10 +201,7 @@ void main() {
       final result = getCurrentPrayer(
         currentTime: testTime,
         location: location,
-        todaysPrayerTimes: todaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+        timeline: timeline,
       );
 
       // Should be in last third or fajrAfter depending on exact times
@@ -200,10 +218,7 @@ void main() {
       final result = getCurrentPrayer(
         currentTime: dhuhrTime,
         location: location,
-        todaysPrayerTimes: todaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+        timeline: timeline,
       );
 
       expect(result, Prayer.dhuhr);
@@ -216,6 +231,8 @@ void main() {
     late PrayerTimes yesterdaysPrayerTimes;
     late SunnahTimes todaysSunnahTimes;
     late SunnahTimes yesterdaysSunnahTimes;
+
+    late PrayerDayTimeline timeline;
 
     setUp(() {
       location = getLocation('Asia/Riyadh');
@@ -235,6 +252,13 @@ void main() {
       );
       todaysSunnahTimes = SunnahTimes(todaysPrayerTimes);
       yesterdaysSunnahTimes = SunnahTimes(yesterdaysPrayerTimes);
+      timeline = _buildTimeline(
+        location: location,
+        todaysPrayerTimes: todaysPrayerTimes,
+        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
+        todaysSunnahTimes: todaysSunnahTimes,
+        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+      );
     });
 
     test('returns countdown when closer to next prayer', () {
@@ -242,13 +266,11 @@ void main() {
       final dhuhrTime = TZDateTime.from(todaysPrayerTimes.dhuhr, location);
       final testTime = dhuhrTime.subtract(const Duration(minutes: 5));
 
-      final result = computePrayerCardDecision(
+      final result = computePrayerCardDecisionFromParts(
         currentTime: testTime,
         location: location,
+        timeline: timeline,
         todaysPrayerTimes: todaysPrayerTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
       );
 
       expect(result.isCountdown, isTrue);
@@ -260,13 +282,11 @@ void main() {
       final dhuhrTime = TZDateTime.from(todaysPrayerTimes.dhuhr, location);
       final testTime = dhuhrTime.add(const Duration(minutes: 5));
 
-      final result = computePrayerCardDecision(
+      final result = computePrayerCardDecisionFromParts(
         currentTime: testTime,
         location: location,
+        timeline: timeline,
         todaysPrayerTimes: todaysPrayerTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
       );
 
       expect(result.isCountdown, isFalse);
@@ -289,13 +309,11 @@ void main() {
       // Just after midpoint should show countdown to asr
       final testTime = midpoint.add(const Duration(minutes: 1));
 
-      final result = computePrayerCardDecision(
+      final result = computePrayerCardDecisionFromParts(
         currentTime: testTime,
         location: location,
+        timeline: timeline,
         todaysPrayerTimes: todaysPrayerTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
       );
 
       expect(result.isCountdown, isTrue);
@@ -306,13 +324,11 @@ void main() {
       final dhuhrTime = TZDateTime.from(todaysPrayerTimes.dhuhr, location);
       final testTime = dhuhrTime.subtract(const Duration(minutes: 10));
 
-      final result = computePrayerCardDecision(
+      final result = computePrayerCardDecisionFromParts(
         currentTime: testTime,
         location: location,
+        timeline: timeline,
         todaysPrayerTimes: todaysPrayerTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
       );
 
       if (result.isCountdown) {
@@ -328,13 +344,11 @@ void main() {
       // Late at night (11 PM)
       final testTime = TZDateTime(location, 2024, 6, 15, 23);
 
-      final result = computePrayerCardDecision(
+      final result = computePrayerCardDecisionFromParts(
         currentTime: testTime,
         location: location,
+        timeline: timeline,
         todaysPrayerTimes: todaysPrayerTimes,
-        yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-        todaysSunnahTimes: todaysSunnahTimes,
-        yesterdaysSunnahTimes: yesterdaysSunnahTimes,
       );
 
       // Should be in isha or approaching midnight

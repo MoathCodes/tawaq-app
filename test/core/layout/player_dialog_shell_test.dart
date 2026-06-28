@@ -26,13 +26,13 @@ void main() {
     );
   }
 
-  group('PlayerDialogShell', () {
+  group('TawaqDialogShell', () {
     testWidgets('clamps preferred width to viewport at 400px', (tester) async {
       await tester.pumpWidget(
         wrap(
           viewport: const Size(400, 800),
           child: const Center(
-            child: PlayerDialogShell(
+            child: TawaqDialogShell(
               title: 'Reciter',
               child: SizedBox(height: 120),
             ),
@@ -42,7 +42,7 @@ void main() {
 
       final shellBox = tester.renderObject<RenderBox>(
         find.descendant(
-          of: find.byType(PlayerDialogShell),
+          of: find.byType(TawaqDialogShell),
           matching: find.byType(Container).first,
         ),
       );
@@ -56,7 +56,7 @@ void main() {
         wrap(
           viewport: const Size(1200, 900),
           child: const Center(
-            child: PlayerDialogShell(
+            child: TawaqDialogShell(
               title: 'Reciter',
               child: SizedBox(height: 120),
             ),
@@ -66,7 +66,7 @@ void main() {
 
       final shellBox = tester.renderObject<RenderBox>(
         find.descendant(
-          of: find.byType(PlayerDialogShell),
+          of: find.byType(TawaqDialogShell),
           matching: find.byType(Container).first,
         ),
       );

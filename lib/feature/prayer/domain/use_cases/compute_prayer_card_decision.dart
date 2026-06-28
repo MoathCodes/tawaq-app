@@ -1,6 +1,8 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_card_decision.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/services/prayer_timeline.dart';
 import 'package:timezone/timezone.dart';
 
 /// Picks the hero card prayer and whether to count down or up.
@@ -8,36 +10,23 @@ import 'package:timezone/timezone.dart';
 /// Switches to the next prayer in the cycle when less than half of the current
 /// slot remains ([PrayerCardDecision.isCountdown] becomes `true`).
 PrayerCardDecision computePrayerCardDecision({
+  required PrayerDaySnapshot snapshot,
+}) {
+  return computePrayerCardDecisionFromParts(
+    currentTime: snapshot.now,
+    location: snapshot.location,
+    timeline: snapshot.timeline,
+    todaysPrayerTimes: snapshot.today,
+  );
+}
+
+/// Same as [computePrayerCardDecision] with explicit parts (for tests).
+PrayerCardDecision computePrayerCardDecisionFromParts({
   required DateTime currentTime,
   required Location location,
+  required PrayerDayTimeline timeline,
   required PrayerTimes todaysPrayerTimes,
-  required PrayerTimes yesterdaysPrayerTimes,
-  required SunnahTimes todaysSunnahTimes,
-  required SunnahTimes yesterdaysSunnahTimes,
 }) {
-  final fajrToday = todaysPrayerTimes.fajr.toLocation(location);
-  final useTodayNight = !currentTime.isBefore(fajrToday);
-
-  final nightPrayerTimes = useTodayNight
-      ? todaysPrayerTimes
-      : yesterdaysPrayerTimes;
-  final nightSunnahTimes = useTodayNight
-      ? todaysSunnahTimes
-      : yesterdaysSunnahTimes;
-
-  // adhan_dart's SunnahTimes are DateTime values which may be anchored to the
-  // same calendar day as "today" even though they conceptually belong to the
-  // night *after* Isha (i.e. after midnight). Normalize them so they always
-  // land after the corresponding Isha anchor.
-  final nightIsha = nightPrayerTimes.isha.toLocation(location);
-  DateTime normalizeNight(DateTime value) {
-    final local = value.toLocation(location);
-    return local.isBefore(nightIsha) ? local.add(const Duration(days: 1)) : local;
-  }
-  final nightMiddle = normalizeNight(nightSunnahTimes.middleOfTheNight);
-  final nightLastThird = normalizeNight(nightSunnahTimes.lastThirdOfTheNight);
-
-  // Build an ordered cycle of prayers.
   const orderedPrayers = <Prayer>[
     Prayer.isha,
     Prayer.fajrAfter,
@@ -50,34 +39,47 @@ PrayerCardDecision computePrayerCardDecision({
   ];
 
   DateTime timeOf(Prayer p) => switch (p) {
-    Prayer.isha => nightIsha,
-    Prayer.fajrAfter => nightMiddle,
-    Prayer.ishaBefore => nightLastThird,
-    Prayer.fajr => fajrToday,
+    Prayer.isha => currentTime.isBefore(timeline.fajrToday)
+        ? timeline.ishaYesterday
+        : timeline.ishaToday,
+    Prayer.fajrAfter => normalizeNightAfterIsha(
+      sunnahTime: currentTime.isBefore(timeline.fajrToday)
+          ? timeline.middleOfNightYesterday
+          : timeline.middleOfNightToday,
+      ishaAnchor: currentTime.isBefore(timeline.fajrToday)
+          ? timeline.ishaYesterday
+          : timeline.ishaToday,
+      location: location,
+    ),
+    Prayer.ishaBefore => normalizeNightAfterIsha(
+      sunnahTime: currentTime.isBefore(timeline.fajrToday)
+          ? timeline.lastThirdYesterday
+          : timeline.lastThirdToday,
+      ishaAnchor: currentTime.isBefore(timeline.fajrToday)
+          ? timeline.ishaYesterday
+          : timeline.ishaToday,
+      location: location,
+    ),
+    Prayer.fajr => timeline.fajrToday,
     _ => todaysPrayerTimes.getTimesForPrayer(p, location),
   };
 
   final cp = getCurrentPrayer(
     currentTime: currentTime,
     location: location,
-    todaysPrayerTimes: todaysPrayerTimes,
-    todaysSunnahTimes: todaysSunnahTimes,
-    yesterdaysPrayerTimes: yesterdaysPrayerTimes,
-    yesterdaysSunnahTimes: yesterdaysSunnahTimes,
+    timeline: timeline,
   );
 
   var currentIdx = orderedPrayers.indexOf(cp);
-  if (currentIdx == -1) currentIdx = 0; // Defensive: should not happen.
+  if (currentIdx == -1) currentIdx = 0;
   final nextIdx = (currentIdx + 1) % orderedPrayers.length;
 
   var currentRef = timeOf(orderedPrayers[currentIdx]);
   var nextRef = timeOf(orderedPrayers[nextIdx]);
 
-  // Ensure forward progression when the cycle wraps (e.g., lastThird -> fajr).
   if (!nextRef.isAfter(currentRef)) {
     nextRef = nextRef.add(const Duration(days: 1));
   }
-  // Clamp currentRef to now if the slot hasn't started yet.
   if (currentTime.isBefore(currentRef)) currentRef = currentTime;
 
   final totalSeconds = nextRef.difference(currentRef).inSeconds;
@@ -95,121 +97,4 @@ PrayerCardDecision computePrayerCardDecision({
           prayer: orderedPrayers[currentIdx],
           isCountdown: false,
         );
-}
-
-/// Returns the active prayer slot for [currentTime], including night windows
-/// ([Prayer.fajrAfter], [Prayer.ishaBefore]) between Isha and Fajr.
-Prayer getCurrentPrayer({
-  required DateTime currentTime,
-  required Location location,
-  required PrayerTimes todaysPrayerTimes,
-  required SunnahTimes todaysSunnahTimes,
-  required PrayerTimes yesterdaysPrayerTimes,
-  required SunnahTimes yesterdaysSunnahTimes,
-}) {
-  final tFajr = todaysPrayerTimes.fajr.toLocation(location);
-  final beforeFajr = currentTime.isBefore(tFajr);
-
-  // Night anchors (yesterday vs today) and day anchors (today)
-  final nIsha = (beforeFajr ? yesterdaysPrayerTimes : todaysPrayerTimes).isha
-      .toLocation(location);
-  DateTime normalizeNight(DateTime value, DateTime ishaAnchor) {
-    final local = value.toLocation(location);
-    return local.isBefore(ishaAnchor) ? local.add(const Duration(days: 1)) : local;
-  }
-  final nMiddle = normalizeNight(
-    (beforeFajr ? yesterdaysSunnahTimes : todaysSunnahTimes).middleOfTheNight,
-    nIsha,
-  );
-  final nLastThird = normalizeNight(
-    (beforeFajr ? yesterdaysSunnahTimes : todaysSunnahTimes).lastThirdOfTheNight,
-    nIsha,
-  );
-
-  final tSunrise = todaysPrayerTimes.sunrise.toLocation(location);
-  final tDhuhr = todaysPrayerTimes.dhuhr.toLocation(location);
-  final tAsr = todaysPrayerTimes.asr.toLocation(location);
-  final tMaghrib = todaysPrayerTimes.maghrib.toLocation(location);
-  final tIsha = todaysPrayerTimes.isha.toLocation(location);
-  final tMiddle = normalizeNight(todaysSunnahTimes.middleOfTheNight, tIsha);
-  final tLastThird = normalizeNight(todaysSunnahTimes.lastThirdOfTheNight, tIsha);
-
-  // Construct an ordered timeline of [start) -> end events with labels.
-  // Use start-inclusive, end-exclusive ranges.
-  late final List<DateTime> pts;
-  late final List<Prayer> labels;
-  if (beforeFajr) {
-    pts = [
-      nIsha,
-      nMiddle,
-      nLastThird,
-      tFajr,
-      tSunrise,
-      tDhuhr,
-      tAsr,
-      tMaghrib,
-      tIsha,
-      tMiddle,
-      tLastThird,
-      tFajr.add(const Duration(days: 1)),
-    ];
-    labels = const [
-      Prayer.isha,
-      Prayer.fajrAfter,
-      Prayer.ishaBefore,
-      Prayer.fajr,
-      Prayer.sunrise,
-      Prayer.dhuhr,
-      Prayer.asr,
-      Prayer.maghrib,
-      Prayer.isha,
-      Prayer.fajrAfter,
-      Prayer.ishaBefore,
-    ];
-  } else {
-    pts = [
-      tFajr,
-      tSunrise,
-      tDhuhr,
-      tAsr,
-      tMaghrib,
-      tIsha,
-      tMiddle,
-      tLastThird,
-      tFajr.add(const Duration(days: 1)),
-    ];
-    labels = const [
-      Prayer.fajr,
-      Prayer.sunrise,
-      Prayer.dhuhr,
-      Prayer.asr,
-      Prayer.maghrib,
-      Prayer.isha,
-      Prayer.fajrAfter,
-      Prayer.ishaBefore,
-    ];
-  }
-
-  for (var i = 0; i < labels.length; i++) {
-    final start = pts[i];
-    final end = pts[i + 1];
-    if ((currentTime.isAtSameMomentAs(start) || currentTime.isAfter(start)) &&
-        currentTime.isBefore(end)) {
-      return labels[i];
-    }
-  }
-
-  // Fallback: pick the last start that is <= now.
-  var idx = -1;
-  for (var i = 0; i < pts.length; i++) {
-    final p = pts[i];
-    if (p.isBefore(currentTime) || p.isAtSameMomentAs(currentTime)) {
-      idx = i;
-    } else {
-      break;
-    }
-  }
-  if (idx == -1) return labels.first;
-  if (idx >= labels.length) idx = labels.length - 1;
-  return labels[idx];
 }

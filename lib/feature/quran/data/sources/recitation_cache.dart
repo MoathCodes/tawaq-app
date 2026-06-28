@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:tawaq/core/utils/cancellation_token.dart';
 
 /// A cached surah audio file on disk.
 class CachedRecitation {
@@ -33,6 +34,25 @@ class CachedRecitation {
 
   /// File size in bytes.
   final int sizeBytes;
+}
+
+/// Progress of an in-flight surah download.
+class DownloadProgress {
+  /// Creates [DownloadProgress].
+  const DownloadProgress({required this.receivedBytes, this.totalBytes});
+
+  /// Bytes received so far.
+  final int receivedBytes;
+
+  /// Total bytes to receive, or null when unknown (no Content-Length).
+  final int? totalBytes;
+
+  /// Completion fraction in `[0, 1]`, or null when [totalBytes] is unknown.
+  double? get fraction {
+    final total = totalBytes;
+    if (total == null || total == 0) return null;
+    return receivedBytes / total;
+  }
 }
 
 /// Plain scan result reconstructed into [CachedRecitation] on the main isolate.
@@ -96,11 +116,20 @@ List<_CachedScanEntry> _scanCachedRecitations(String audioDirPath) {
 ///   audio/<reciterId>-<moshafId> <ReciterName> — <Riwayah>/<NNN> <SurahName>.mp3
 /// ```
 class RecitationCache {
-  /// Creates a [RecitationCache].
-  RecitationCache({required this._client, required this._logger});
+  /// Creates a [RecitationCache]. [rootOverride] is for tests; production code
+  /// leaves it null so the app-support directory is used.
+  RecitationCache({
+    required this._client,
+    required this._logger,
+    this.rootOverride,
+  });
 
   final http.Client _client;
   final Logger _logger;
+
+  /// When non-null, used as the cache root instead of the app-support dir.
+  /// Test-only.
+  final Directory? rootOverride;
 
   /// Catalog entries older than this are refetched.
   static const catalogTtl = Duration(days: 7);
@@ -115,8 +144,13 @@ class RecitationCache {
   Future<Directory> _ensureRoot() async {
     final cached = _root;
     if (cached != null) return cached;
-    final support = await getApplicationSupportDirectory();
-    final dir = Directory(p.join(support.path, 'tawaq', 'recitations'));
+    final Directory dir;
+    if (rootOverride != null) {
+      dir = rootOverride!;
+    } else {
+      final support = await getApplicationSupportDirectory();
+      dir = Directory(p.join(support.path, 'tawaq', 'recitations'));
+    }
     await dir.create(recursive: true);
     _root = dir;
     return dir;
@@ -185,17 +219,26 @@ class RecitationCache {
     return file.existsSync() ? file : null;
   }
 
-  /// Downloads the surah audio to the cache if absent. Streams to a `.part`
-  /// file and atomically renames on success so a partial file is never treated
-  /// as cached. Safe to call repeatedly; concurrent duplicates are ignored.
-  Future<void> downloadAudio({
+  /// Minimum `.part` size considered playable when a download fails mid-way.
+  ///
+  /// Anything smaller is almost certainly not a decodable MP3 frame sequence,
+  /// so it is deleted and the caller falls back to the network URL.
+  static const kMinPlayablePartBytes = 1024;
+
+  /// Returns the partially-downloaded `.part` file for [surah] when it exists
+  /// and is at least [minBytes] large, else null.
+  ///
+  /// Used after a failed download to hand mpv the partial file so playback can
+  /// still proceed from whatever was received. An undersized `.part` is
+  /// deleted (cleaned up) so it does not accumulate.
+  Future<File?> partAudioIfLargeEnough({
     required int reciterId,
     required int moshafId,
     required int surah,
     required String reciterName,
     required String riwayahName,
     required String surahName,
-    required String url,
+    int minBytes = kMinPlayablePartBytes,
   }) async {
     final file = await _audioFile(
       reciterId: reciterId,
@@ -205,9 +248,55 @@ class RecitationCache {
       riwayahName: riwayahName,
       surahName: surahName,
     );
-    if (file.existsSync()) return;
+    final part = File('${file.path}.part');
+    if (!part.existsSync()) return null;
+    final size = await part.length();
+    if (size < minBytes) {
+      try {
+        await part.delete();
+      } on Object catch (_) {}
+      return null;
+    }
+    return part;
+  }
+
+  /// Downloads the surah audio, streaming [DownloadProgress].
+  ///
+  /// Streams to a `.part` file and atomically renames on success so a partial
+  /// file is never treated as cached. Safe to call repeatedly; concurrent
+  /// duplicates are ignored (the stream completes immediately with no events).
+  ///
+  /// On [cancellationToken] cancellation the `.part` file is deleted and the
+  /// stream ends without renaming. On other errors the error is added to the
+  /// stream and the `.part` file is deleted.
+  Stream<DownloadProgress> downloadAudio({
+    required int reciterId,
+    required int moshafId,
+    required int surah,
+    required String reciterName,
+    required String riwayahName,
+    required String surahName,
+    required String url,
+    required CancellationToken cancellationToken,
+  }) async* {
+    final file = await _audioFile(
+      reciterId: reciterId,
+      moshafId: moshafId,
+      surah: surah,
+      reciterName: reciterName,
+      riwayahName: riwayahName,
+      surahName: surahName,
+    );
+    if (file.existsSync()) {
+      final size = file.lengthSync();
+      yield DownloadProgress(receivedBytes: size, totalBytes: size);
+      return;
+    }
     final key = file.path;
-    if (_inFlight.contains(key)) return;
+    if (_inFlight.contains(key)) {
+      // Another download is already reporting progress elsewhere.
+      return;
+    }
     _inFlight.add(key);
     final part = File('${file.path}.part');
     try {
@@ -217,22 +306,51 @@ class RecitationCache {
       if (response.statusCode != 200) {
         throw HttpException('GET $url failed with ${response.statusCode}');
       }
+      final totalBytes = response.contentLength;
+      yield DownloadProgress(receivedBytes: 0, totalBytes: totalBytes);
       final sink = part.openWrite();
-      await response.stream.pipe(sink);
-      await sink.close();
+      var received = 0;
+      try {
+        await for (final chunk in response.stream) {
+          if (cancellationToken.isCancelled) break;
+          sink.add(chunk);
+          received += chunk.length;
+          yield DownloadProgress(
+            receivedBytes: received,
+            totalBytes: totalBytes,
+          );
+        }
+        await sink.flush();
+      } finally {
+        await sink.close();
+      }
+      if (cancellationToken.isCancelled) {
+        if (part.existsSync()) {
+          try {
+            await part.delete();
+          } on Object catch (_) {}
+        }
+        _logger.i('Download canceled $reciterId/$surah');
+        return;
+      }
       await part.rename(file.path);
       _logger.i('Cached recitation $reciterId/$surah');
+      yield DownloadProgress(
+        receivedBytes: received,
+        totalBytes: totalBytes ?? received,
+      );
     } on Object catch (error, stack) {
       _logger.w(
         'Failed to cache recitation $reciterId/$surah',
         error: error,
         stackTrace: stack,
       );
-      if (part.existsSync()) {
-        try {
-          await part.delete();
-        } on Object catch (_) {}
-      }
+      // NOTE: the `.part` file is intentionally KEPT on error (not deleted)
+      // so a caller can hand mpv the partially-downloaded file when it is
+      // large enough to play. Callers inspect it via
+      // [partAudioIfLargeEnough], which cleans up undersized parts. Only
+      // explicit cancellation deletes the `.part` (handled above).
+      rethrow;
     } finally {
       _inFlight.remove(key);
     }
