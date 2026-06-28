@@ -208,7 +208,7 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
     final recitation = ref.read(recitationControllerProvider.notifier);
     final service = ref.read(tawaqAudioServiceProvider);
     final sound = SoundAlertChannel(
-      service: service,
+      adhanPlayer: ref.read(audioPlayerControllerProvider.notifier),
       onCaptureRecitationVolume: () async => service.volume,
       onSuspend: recitation.suspendForAlert,
       onRestoreRecitationVolume: service.setVolume,

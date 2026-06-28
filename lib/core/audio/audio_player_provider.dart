@@ -19,8 +19,6 @@ TawaqAudioService tawaqAudioService(Ref ref) {
 /// High-level playback controller for adhan transport and UI state mirroring.
 @Riverpod(keepAlive: true)
 class AudioPlayerController extends _$AudioPlayerController {
-  AudioLease? _lease;
-
   @override
   PlaybackState build() {
     final service = ref.watch(tawaqAudioServiceProvider);
@@ -34,11 +32,12 @@ class AudioPlayerController extends _$AudioPlayerController {
   TawaqAudioService get _service => ref.read(tawaqAudioServiceProvider);
 
   /// Plays a single [track], optionally ramping the volume up over [fadeIn].
+  ///
+  /// Acquires the adhan lease via [TawaqAudioService.play] when needed.
   Future<void> playTrack(
     AudioTrack track, {
     Duration fadeIn = kAudioDefaultFadeIn,
   }) async {
-    _lease = await _service.acquire(owner: kAdhanLeaseOwner);
     await _service.play(
       track,
       fadeIn: fadeIn,
@@ -55,7 +54,6 @@ class AudioPlayerController extends _$AudioPlayerController {
   /// Stops playback, optionally ramping the volume down over [fadeOut].
   Future<void> stop({Duration fadeOut = Duration.zero}) async {
     await _service.stop(fadeOut: fadeOut, owner: kAdhanLeaseOwner);
-    _lease = null;
   }
 
   /// Sets output volume from 0 to 100.
