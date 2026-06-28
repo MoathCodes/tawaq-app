@@ -2,14 +2,15 @@ import 'dart:async';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:timezone/timezone.dart';
 
@@ -19,9 +20,6 @@ typedef _TrendCacheKey = (PrayerAnalyticsPeriod, int rangeEndDayKey);
 
 /// Async notifier for the prayer analysis section (today's gauge + trend
 /// chart).
-///
-/// Rebuilds when completions or the selected analytics period change. Period
-/// selection is persisted via [prayerAnalyticsSettingsProvider].
 @Riverpod(keepAlive: true)
 class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
   _TrendCacheKey? _cachedTrendKey;
@@ -29,14 +27,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
 
   @override
   FutureOr<PrayerAnalysisSectionData> build() async {
-    ref.listen(
-      prayerCompletionProvider,
-      (_, _) => unawaited(_refresh()),
-    );
-    ref.listen(
-      prayerCalendarDayKeyProvider,
-      (_, _) => unawaited(_refresh()),
-    );
+    ref.listen(prayerCalendarDayKeyProvider, (_, _) => unawaited(_refresh()));
     ref.listen(
       prayerAnalyticsSettingsProvider,
       (previous, next) {
@@ -45,6 +36,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
         }
       },
     );
+    _listenTodayCompletions();
 
     final period = _selectedPeriod;
     try {
@@ -59,6 +51,15 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
           );
       rethrow;
     }
+  }
+
+  void _listenTodayCompletions() {
+    final dayKey = ref.read(prayerCalendarDayKeyProvider);
+    if (dayKey == 0) return;
+    final today = dateFromCalendarDayKey(dayKey);
+    ref.listen(prayerCompletionsForDateProvider(today), (_, _) {
+      unawaited(_refresh());
+    });
   }
 
   PrayerAnalyticsPeriod get _selectedPeriod =>
@@ -93,7 +94,6 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     }
 
     final calendarDayKey = ref.read(prayerCalendarDayKeyProvider);
-    final completionsAsync = ref.read(prayerCompletionProvider);
     final log = ref.read(loggerProvider);
     try {
       final repo = ref.read(prayerRepoProvider);
@@ -103,7 +103,8 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       }
 
       final location = settings.location;
-      final now = ref.read(currentLocationTimeProvider) ?? TZDateTime.now(location);
+      final now = ref.read(prayerDayProvider).value?.now ??
+        TZDateTime.now(location);
       final todayStart = DateTime(now.year, now.month, now.day);
       final todayEnd = todayStart
           .add(const Duration(days: 1))
@@ -128,7 +129,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
         location,
         now,
       );
-      final firstRecordedDate = await _resolveFirstRecordedDate(repo);
+      final firstRecordedDate = await _resolveFirstRecordedDate();
       final expectedPrayers =
           PrayerAnalyticsCalculator.calculateExpectedPrayers(
         period: period,
@@ -164,17 +165,14 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
           rangeEnd: todayEnd,
         );
         _cachedTrendKey = trendKey;
-      } else if (
-        completionsAsync.hasValue &&
-        period == PrayerAnalyticsPeriod.weekly
-      ) {
+      } else if (period == PrayerAnalyticsPeriod.weekly) {
         _cachedTrendBuckets = PrayerAnalyticsCalculator.updateTrendBucketForDate(
           buckets: _cachedTrendBuckets!,
           date: todayStart,
           completions: todayCompletions,
           location: location,
         );
-      } else if (completionsAsync.hasValue) {
+      } else {
         _cachedTrendBuckets = await _loadTrendBuckets(
           repo: repo,
           period: period,
@@ -223,11 +221,11 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     );
   }
 
-  Future<DateTime?> _resolveFirstRecordedDate(PrayerRepo repo) async {
+  Future<DateTime?> _resolveFirstRecordedDate() async {
     final persisted = ref.read(firstPrayerRecordedDateTimeProvider);
     if (persisted != null) return persisted;
 
-    final earliest = await repo.getEarliestCompletionTime();
+    final earliest = await ref.read(prayerDatabaseProvider).getEarliestCompletionTime();
     if (earliest == null) return null;
 
     final normalized = DateTime(earliest.year, earliest.month, earliest.day);

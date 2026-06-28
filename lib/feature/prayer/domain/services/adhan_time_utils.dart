@@ -1,5 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:timezone/timezone.dart';
 
 /// Applies per-prayer adhan minute adjustments from settings.
@@ -12,15 +13,6 @@ DateTime applyAdhanAdjustment({
   if (minutes == 0) return prayerTime;
   return prayerTime.add(Duration(minutes: minutes));
 }
-
-/// Obligatory prayers that can trigger adhan.
-const List<Prayer> obligatoryAdhanPrayers = [
-  Prayer.fajr,
-  Prayer.dhuhr,
-  Prayer.asr,
-  Prayer.maghrib,
-  Prayer.isha,
-];
 
 /// Builds adjusted adhan [DateTime]s for [date]'s obligatory prayers.
 Map<Prayer, DateTime> adjustedAdhanTimesForDay({

@@ -9,6 +9,7 @@ import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:timezone/timezone.dart';
 
@@ -133,11 +134,6 @@ class PrayerRepo {
     await _refreshDayInIndex(date, location);
   }
 
-  /// Returns the earliest logged completion time, if any.
-  Future<DateTime?> getEarliestCompletionTime() {
-    return prayerDatabase.getEarliestCompletionTime();
-  }
-
   /// Returns prayer completions recorded on [date].
   Future<List<PrayerCompletion>> getPrayerCompletionForDate(
     DateTime date,
@@ -166,27 +162,6 @@ class PrayerRepo {
     return result
         .where((c) => c.completionTime.isBetween(from, to))
         .toList();
-  }
-
-  /// Returns the prayer times for a given date, coordinates, and calculation
-  /// parameters.
-  PrayerTimes getPrayerTimes(
-    DateTime date,
-    Coordinates coordinates,
-    CalculationMethod calculationMethod, {
-    bool roundToMinutes = true,
-  }) {
-    return PrayerTimes(
-      date: date,
-      coordinates: coordinates,
-      calculationMethod: calculationMethod,
-      roundToMinutes: roundToMinutes,
-    );
-  }
-
-  /// Returns the sunnah times for a given prayer times.
-  SunnahTimes getSunnahTime(PrayerTimes prayerTimes) {
-    return SunnahTimes(prayerTimes);
   }
 
   Future<void> _ensureIndex(Location location) async {

@@ -3,8 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 
 part 'prayer_completions_for_date_provider.g.dart';
 
@@ -28,21 +27,26 @@ Future<List<PrayerCompletion>> prayerCompletionsForDate(
       .getPrayerCompletionForDate(normalized, location);
 }
 
-/// Canonical status for [prayer] on today's calendar day.
+/// Canonical completion status for [prayer] on [completionDay].
 @riverpod
-Future<CompletionStatus> prayerTodayStatus(Ref ref, Prayer prayer) async {
-  ref.watch(prayerCalendarDayKeyProvider);
-  final now = ref.read(currentLocationTimeProvider);
-  if (now == null) return CompletionStatus.none;
-
-  final today = normalizeCompletionDay(now);
-  final location = ref.read(prayerTimeInputsProvider)?.location;
+CompletionStatus completionStatus(
+  Ref ref,
+  Prayer prayer,
+  DateTime completionDay,
+) {
+  final normalized = normalizeCompletionDay(completionDay);
+  final location = ref.watch(prayerTimeInputsProvider)?.location;
   if (location == null) return CompletionStatus.none;
 
-  final completions = await ref.watch(
-    prayerCompletionsForDateProvider(today).future,
+  final completionsAsync = ref.watch(
+    prayerCompletionsForDateProvider(normalized),
   );
-  return mapPrayerStatuses(completions, location, today)[prayer] ??
+  if (!completionsAsync.hasValue) return CompletionStatus.none;
+  return mapPrayerStatuses(
+        completionsAsync.value!,
+        location,
+        normalized,
+      )[prayer] ??
       CompletionStatus.none;
 }
 

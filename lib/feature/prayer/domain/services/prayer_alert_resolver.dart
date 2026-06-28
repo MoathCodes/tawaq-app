@@ -4,7 +4,7 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
-import 'package:tawaq/feature/prayer/domain/services/prayer_timeline.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 

@@ -1,5 +1,5 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 
 /// Category of scheduled prayer alert (adhan, iqamah, or sunnah time).
 enum PrayerAlertKind {
@@ -21,4 +21,4 @@ const List<Prayer> sunnahAlertPrayers = [
 ];
 
 /// Obligatory prayers — alias for scheduler use.
-const List<Prayer> obligatoryAlertPrayers = obligatoryAdhanPrayers;
+const List<Prayer> obligatoryAlertPrayers = kObligatoryPrayers;

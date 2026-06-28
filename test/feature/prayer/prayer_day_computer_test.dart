@@ -1,10 +1,5 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hivez_flutter/hivez_flutter.dart';
-import 'package:logger/logger.dart';
-import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
-import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_day_computer.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
@@ -20,17 +15,9 @@ PrayerTimeInputs inputsFromSettings(PrayerSettings settings) => PrayerTimeInputs
 void main() {
   setUpAll(tz.initializeTimeZones);
 
-  late PrayerRepo repo;
   late PrayerSettings jeddahSettings;
 
   setUp(() {
-    final box = Box<int, PrayerCompletion>(
-      'computer_test_${DateTime.now().microsecondsSinceEpoch}',
-    );
-    repo = PrayerRepo(
-      prayerDatabase: PrayerDatabase(box),
-      log: Logger(),
-    );
     jeddahSettings = PrayerSettings.defaultSettings().copyWith(
       coordinates: const Coordinates(21.575224, 39.210725),
       location: getLocation('Asia/Riyadh'),
@@ -45,7 +32,6 @@ void main() {
       final result = computePrayerTimesForAnchor(
         inputs: inputsFromSettings(settings),
         anchor: TZDateTime(getLocation('Asia/Riyadh'), 2026, 6, 18),
-        repo: repo,
       );
 
       // Location readiness is enforced by [prayerTimeInputsProvider], not here.
@@ -59,7 +45,6 @@ void main() {
       final result = computePrayerDayBundle(
         inputs: inputsFromSettings(settings),
         anchorNow: TZDateTime(getLocation('Asia/Riyadh'), 2026, 6, 18, 12),
-        repo: repo,
       );
       expect(result, isNotNull);
     });
@@ -69,7 +54,6 @@ void main() {
       final bundle = computePrayerDayBundle(
         inputs: inputsFromSettings(jeddahSettings),
         anchorNow: anchor,
-        repo: repo,
       );
 
       expect(bundle, isNotNull);
@@ -88,12 +72,10 @@ void main() {
       final morningBundle = computePrayerDayBundle(
         inputs: inputsFromSettings(jeddahSettings),
         anchorNow: morning,
-        repo: repo,
       );
       final eveningBundle = computePrayerDayBundle(
         inputs: inputsFromSettings(jeddahSettings),
         anchorNow: evening,
-        repo: repo,
       );
 
       expect(morningBundle!.today.fajr, eveningBundle!.today.fajr);
@@ -119,12 +101,10 @@ void main() {
       final liveBundle = computePrayerDayBundle(
         inputs: inputsFromSettings(jeddahSettings),
         anchorNow: liveAnchor,
-        repo: repo,
       );
       final dateOnly = computePrayerTimesForAnchor(
         inputs: inputsFromSettings(jeddahSettings),
         anchor: dateAnchor,
-        repo: repo,
       );
 
       expect(liveBundle!.today.fajr, dateOnly!.fajr);

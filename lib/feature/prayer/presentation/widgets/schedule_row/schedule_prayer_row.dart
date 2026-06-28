@@ -8,10 +8,11 @@ import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/presentation/utils/compute_prayer_relative_time.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_icon.dart'
     show PrayerIcon;
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/schedule_alert_picker.dart';
@@ -52,7 +53,7 @@ class SchedulePrayerRow extends ConsumerWidget {
           row.prayerTime.day,
         );
     final completionStatus = ref.watch(
-      schedulePrayerStatusProvider(row.prayer, completionDay),
+      completionStatusProvider(row.prayer, completionDay),
     );
     final isActive =
         currentPrayer != null &&
@@ -328,7 +329,7 @@ class _RelativeTimeSubtitle extends ConsumerWidget {
     final l10n = context.l10n;
 
     ref.watch(currentMinuteBucketProvider);
-    final clockNow = ref.read(currentLocationTimeProvider);
+    final clockNow = ref.read(prayerDayProvider).value?.now;
     if (isToday && clockNow == null) {
       return const SizedBox.shrink();
     }

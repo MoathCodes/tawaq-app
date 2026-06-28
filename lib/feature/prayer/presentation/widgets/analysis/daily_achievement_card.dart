@@ -7,7 +7,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';

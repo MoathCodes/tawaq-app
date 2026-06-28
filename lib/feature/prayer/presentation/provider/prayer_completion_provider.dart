@@ -4,23 +4,12 @@ import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_completion_provider.g.dart';
-
-/// Today's prayer completions (alias for [prayerCompletionsForDate]).
-@riverpod
-Future<List<PrayerCompletion>> prayerCompletion(Ref ref) {
-  ref.watch(prayerCalendarDayKeyProvider);
-  final now = ref.read(currentLocationTimeProvider);
-  if (now == null) return Future.value(const []);
-
-  final today = normalizeCompletionDay(now);
-  return ref.watch(prayerCompletionsForDateProvider(today).future);
-}
 
 /// Write actions for prayer completion records.
 @Riverpod(keepAlive: true)
@@ -87,7 +76,7 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
   }) async {
     if (!ref.mounted) return;
 
-    final now = ref.read(currentLocationTimeProvider);
+    final now = ref.read(prayerDayProvider).value?.now;
     if (now == null) return;
 
     final completionDay = normalizeCompletionDay(now);

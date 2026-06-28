@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/analysis_section.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/hero_header/prayer_hero_header.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_location_setup_alert.dart';

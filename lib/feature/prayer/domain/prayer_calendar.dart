@@ -1,4 +1,4 @@
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:timezone/timezone.dart';
 
 /// Converts a calendar day key (`yyyymmdd`) to a naive [DateTime].

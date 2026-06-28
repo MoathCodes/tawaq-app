@@ -9,9 +9,10 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -26,11 +27,14 @@ class TrackerStatusChip extends HookConsumerWidget {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
+    final dayKey = ref.watch(prayerCalendarDayKeyProvider);
+    final completionDay = dayKey != 0
+        ? dateFromCalendarDayKey(dayKey)
+        : normalizeCompletionDay(
+            ref.watch(prayerDayProvider).value?.now ?? DateTime.now(),
+          );
     final status = ref.watch(
-      prayerAnalysisSectionProvider.select(
-        (state) =>
-            state.value?.todayPrayerStatuses[prayer] ?? CompletionStatus.none,
-      ),
+      completionStatusProvider(prayer, completionDay),
     );
     final prayerTime = ref.watch(
       prayerScheduleProvider().select(
@@ -41,9 +45,12 @@ class TrackerStatusChip extends HookConsumerWidget {
       ),
     );
     final enable = ref.watch(
-      currentLocationTimeProvider.select(
-        (now) => now != null && prayerTime != null && prayerTime.isBefore(now),
-      ),
+      prayerDayProvider.select((asyncDay) {
+        final now = asyncDay.value?.now;
+        return now != null &&
+            prayerTime != null &&
+            prayerTime.isBefore(now);
+      }),
     );
     final isLogged = status != CompletionStatus.none;
     final statusColor = isLogged

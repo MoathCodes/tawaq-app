@@ -1,7 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hijri_date/hijri.dart';
 import 'package:logger/logger.dart';
-import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
@@ -14,13 +13,12 @@ const kPrayerTimesRoundToMinutes = false;
 PrayerTimes? computePrayerTimesForAnchor({
   required PrayerTimeInputs inputs,
   required DateTime anchor,
-  required PrayerRepo repo,
   Logger? log,
 }) {
-  var times = repo.getPrayerTimes(
-    anchor,
-    inputs.coordinates,
-    inputs.method,
+  var times = PrayerTimes(
+    date: anchor,
+    coordinates: inputs.coordinates,
+    calculationMethod: inputs.method,
     roundToMinutes: kPrayerTimesRoundToMinutes,
   );
 
@@ -36,7 +34,6 @@ PrayerTimes? computePrayerTimesForAnchor({
 PrayerDayBundle? computePrayerDayBundle({
   required PrayerTimeInputs inputs,
   required TZDateTime anchorNow,
-  required PrayerRepo repo,
   Logger? log,
 }) {
   final location = inputs.location;
@@ -45,19 +42,17 @@ PrayerDayBundle? computePrayerDayBundle({
   final today = computePrayerTimesForAnchor(
     inputs: inputs,
     anchor: localNow,
-    repo: repo,
     log: log,
   );
   final yesterday = computePrayerTimesForAnchor(
     inputs: inputs,
     anchor: localNow.subtract(const Duration(days: 1)),
-    repo: repo,
     log: log,
   );
   if (today == null || yesterday == null) return null;
 
-  final todaySunnah = repo.getSunnahTime(today);
-  final yesterdaySunnah = repo.getSunnahTime(yesterday);
+  final todaySunnah = SunnahTimes(today);
+  final yesterdaySunnah = SunnahTimes(yesterday);
 
   final timeline = PrayerDayTimeline(
     fajrToday: TZDateTime.from(today.fajr, location),

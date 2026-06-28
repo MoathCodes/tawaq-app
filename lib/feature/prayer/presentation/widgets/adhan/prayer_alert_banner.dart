@@ -11,7 +11,7 @@ import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/desktop/adhan_alert_controller.dart';
 import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/prayer_alert_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_icon.dart';
 import 'package:tawaq/theme/theme.dart';

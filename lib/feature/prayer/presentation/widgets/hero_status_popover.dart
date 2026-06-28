@@ -9,7 +9,7 @@ import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -29,9 +29,7 @@ class HeroStatusPopover extends ConsumerWidget {
       return const SizedBox.shrink();
     }
     final completionDay = dateFromCalendarDayKey(dayKey);
-    final status =
-        ref.watch(prayerTodayStatusProvider(prayer)).value ??
-        CompletionStatus.none;
+    final status = ref.watch(completionStatusProvider(prayer, completionDay));
 
     final menuTriggerLabel = PrayerSemantics.statusMenuTrigger(
       l10n: l10n,

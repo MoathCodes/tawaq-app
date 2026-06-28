@@ -6,7 +6,7 @@ import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/hijri_format.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/schedule_selected_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/schedule_prayer_row.dart';
@@ -27,7 +27,7 @@ class PrayerScheduleList extends ConsumerWidget {
     final todayKey = ref.watch(prayerCalendarDayKeyProvider);
     final todayDate = todayKey != 0
         ? dateFromCalendarDayKey(todayKey)
-        : (ref.watch(currentLocationTimeProvider) ??
+        : (ref.watch(prayerDayProvider).value?.now ??
               DateTime(
                 selectedDate.year,
                 selectedDate.month,

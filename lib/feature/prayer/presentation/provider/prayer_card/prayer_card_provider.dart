@@ -3,9 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/utils/date_formatter.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
-import 'package:tawaq/feature/prayer/domain/use_cases/compute_prayer_card_decision.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 part 'prayer_card_provider.g.dart';

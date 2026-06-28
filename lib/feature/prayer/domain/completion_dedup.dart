@@ -1,9 +1,8 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:tawaq/core/utils/date_extensions.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:timezone/timezone.dart';
 
 export 'package:tawaq/feature/prayer/domain/prayer_calendar.dart'
@@ -81,20 +80,6 @@ Map<CompletionStatus, int> countDedupedStatuses(
     counts[completion.status] = (counts[completion.status] ?? 0) + 1;
   }
   return counts;
-}
-
-/// Counts deduped statuses for rows whose calendar day falls in [from, to].
-Map<CompletionStatus, int> countDedupedStatusesInRange(
-  List<PrayerCompletion> rows,
-  Location location,
-  DateTime from,
-  DateTime to,
-) {
-  final filtered = rows.where((c) {
-    final day = completionCalendarDay(c.completionTime, location);
-    return day.isBetween(from, to);
-  });
-  return countDedupedStatuses(filtered.toList(), location);
 }
 
 /// Highest [PrayerCompletion.id] wins; tie-break by latest [completionTime].
