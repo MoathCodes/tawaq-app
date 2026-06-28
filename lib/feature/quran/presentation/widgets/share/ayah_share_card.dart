@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/quran/presentation/models/ayah_share_ui.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Card rendered with mushaf typography for sharing as an image.

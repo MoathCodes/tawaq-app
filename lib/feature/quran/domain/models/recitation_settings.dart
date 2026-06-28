@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 
 part 'recitation_settings.freezed.dart';
 part 'recitation_settings.g.dart';

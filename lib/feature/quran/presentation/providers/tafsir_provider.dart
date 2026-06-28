@@ -4,7 +4,7 @@ import 'package:tawaq/core/utils/lru_ayah_cache.dart';
 import 'package:tawaq/core/utils/lru_map.dart';
 import 'package:tawaq/feature/quran/data/models/tafsir.dart';
 import 'package:tawaq/feature/quran/data/repository/tafsir_repository.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_parse_result.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
 
@@ -20,101 +20,65 @@ TafsirRepository tafsirRepository(Ref ref) {
   return TafsirRepository(dbService);
 }
 
-/// In-memory LRU for recently fetched tafsir database rows.
-///
-/// Intentionally keepAlive: bounded session cache (see [LruAyahCache]).
-/// Auto-dispose [ayahTafsirRowProvider] families consult this layer so per-ayah
-/// provider state can drop without unbounded family growth.
+/// Bounded in-memory cache for parsed tafsir per ayah/source.
 @Riverpod(keepAlive: true)
-LruAyahCache<Tafsir> ayahTafsirRowLru(Ref ref) => LruAyahCache<Tafsir>();
+_TafsirAyahCache tafsirAyahCache(Ref ref) => _TafsirAyahCache();
 
-/// Raw tafsir row for a specific ayah and source, with LRU row caching.
-///
-/// Auto-dispose family: disposes when no widget listens to this ayah/source.
-@riverpod
-Future<Tafsir?> ayahTafsirRow(
-  Ref ref,
-  TafsirId source,
-  int sura,
-  int aya,
-) async {
-  final lru = ref.read(ayahTafsirRowLruProvider);
-  final cached = lru.lookup(source.name, sura, aya);
-  if (cached.hit) return cached.value;
+class _TafsirAyahCache {
+  static const _maxSize = 256;
 
-  final result = await ref
-      .read(tafsirRepositoryProvider)
-      .getTafsir(source, sura, aya);
-  lru.store(source.name, sura, aya, result);
-  return result;
-}
+  final _rows = LruAyahCache<Tafsir>();
+  final _parsed = LruMap<String, TafsirParseResult>(_maxSize);
 
-/// In-memory LRU for parsed tafsir commentary.
-///
-/// Intentionally keepAlive: bounded parse-result cache. Auto-dispose
-/// [parsedTafsirProvider] families read and write through this layer.
-@Riverpod(keepAlive: true)
-ParsedTafsirLru parsedTafsirLru(Ref ref) => ParsedTafsirLru();
-
-/// LRU cache for [TafsirParseResult] keyed by source/ayah or raw text.
-class ParsedTafsirLru {
-  /// Maximum number of cached parse results.
-  static const maxSize = 256;
-
-  final _byAyah = LruMap<String, TafsirParseResult>(maxSize);
-  final _byText = LruMap<String, TafsirParseResult>(maxSize);
-
-  static String _ayahKey(TafsirId source, int sura, int aya) =>
+  static String _parseKey(TafsirId source, int sura, int aya) =>
       '${source.name}-$sura-$aya';
 
-  static String _textKey(String text, TafsirId? tafsirId) =>
-      '${tafsirId?.name ?? ''}|$text';
+  TafsirParseResult? lookup(TafsirId source, int sura, int aya) =>
+      _parsed[_parseKey(source, sura, aya)];
 
-  /// Returns a cached parse result for [source]/[sura]/[aya], if present.
-  TafsirParseResult? lookupAyah(TafsirId source, int sura, int aya) =>
-      _byAyah[_ayahKey(source, sura, aya)];
-
-  /// Stores a parse result for [source]/[sura]/[aya].
-  void storeAyah(
-    TafsirId source,
-    int sura,
-    int aya,
-    TafsirParseResult result,
-  ) {
-    _byAyah[_ayahKey(source, sura, aya)] = result;
+  void store(TafsirId source, int sura, int aya, TafsirParseResult result) {
+    _parsed[_parseKey(source, sura, aya)] = result;
   }
 
   /// Parses [text] with LRU caching for tests and direct text entry.
   TafsirParseResult parseText(String text, {TafsirId? tafsirId}) {
-    final key = _textKey(text, tafsirId);
-    final cached = _byText[key];
+    final key = '${tafsirId?.name ?? ''}|$text';
+    final cached = _parsed[key];
     if (cached != null) return cached;
 
     final result = TafsirTextParser.parse(text, tafsirId: tafsirId);
-    _byText[key] = result;
+    _parsed[key] = result;
     return result;
   }
+
+  LruAyahCache<Tafsir> get rows => _rows;
 }
 
-/// Parsed tafsir segments for a specific ayah and source.
+/// Parsed tafsir for a specific ayah and source (row fetch + parse, LRU cached).
 ///
-/// Auto-dispose family. Watches [ayahTafsirRowProvider] synchronously before
-/// awaiting its future (Riverpod 3 async-gap safe).
+/// Auto-dispose family: disposes when no widget listens to this ayah/source.
 @riverpod
-Future<TafsirParseResult?> parsedTafsir(
+Future<TafsirParseResult?> tafsirForAyah(
   Ref ref,
   TafsirId source,
   int sura,
   int aya,
 ) async {
-  final lru = ref.read(parsedTafsirLruProvider);
-  final cached = lru.lookupAyah(source, sura, aya);
+  final cache = ref.read(tafsirAyahCacheProvider);
+  final cached = cache.lookup(source, sura, aya);
   if (cached != null) return cached;
 
-  final row = await ref.watch(ayahTafsirRowProvider(source, sura, aya).future);
+  final rowLru = cache.rows;
+  final rowHit = rowLru.lookup(source.name, sura, aya);
+  final row = rowHit.hit
+      ? rowHit.value
+      : await ref.read(tafsirRepositoryProvider).getTafsir(source, sura, aya);
+  if (!rowHit.hit) {
+    rowLru.store(source.name, sura, aya, row);
+  }
   if (row == null) return null;
 
   final result = TafsirTextParser.parse(row.ayaTafseer, tafsirId: source);
-  lru.storeAyah(source, sura, aya, result);
+  cache.store(source, sura, aya, result);
   return result;
 }

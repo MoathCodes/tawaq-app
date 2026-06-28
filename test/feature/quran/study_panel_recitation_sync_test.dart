@@ -7,7 +7,7 @@ import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_parse_result.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_notes_provider.dart';
@@ -186,10 +186,10 @@ void main() {
         ayahTranslationProvider(1, 7).overrideWithValue(
           const AsyncData<Translation?>(null),
         ),
-        parsedTafsirProvider(TafsirId.tafseerMouaser, 1, 1).overrideWithValue(
+        tafsirForAyahProvider(TafsirId.tafseerMouaser, 1, 1).overrideWithValue(
           const AsyncData<TafsirParseResult?>(null),
         ),
-        parsedTafsirProvider(TafsirId.tafseerMouaser, 1, 7).overrideWithValue(
+        tafsirForAyahProvider(TafsirId.tafseerMouaser, 1, 7).overrideWithValue(
           const AsyncData<TafsirParseResult?>(null),
         ),
         appThemeDataProvider.overrideWithValue(theme),

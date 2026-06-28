@@ -1,5 +1,5 @@
 import 'package:tawaq/core/text/qawl_patterns.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 
 /// Repairs common markup gaps in parsed tafsir segments before normalization.
 abstract final class TafsirSegmentRepair {

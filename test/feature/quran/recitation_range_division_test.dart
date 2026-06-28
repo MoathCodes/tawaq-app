@@ -5,7 +5,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:mushaf_reader/src/data/hive/hive_adapters.dart';
 import 'package:path/path.dart' as p;
-import 'package:tawaq/feature/quran/domain/models/ayah_reference.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 
 class _BoundsTestRepo implements IQuranRepository {

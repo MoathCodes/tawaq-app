@@ -1,21 +1,33 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mpv_audio_kit/mpv_audio_kit.dart';
+import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/format_byte_size.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/core/widgets/volume_slider.dart';
+import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
+import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_data_providers.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_drawer_actions_section.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_drawer_header.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_drawer_settings_section.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_drawer_transport_section.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/offline_files_dialog.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/range_repeat_dialog.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/reciter_dialog.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/sleep_timer_dialog.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_seek_bar.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport_controls.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_range_formatters.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
+
+part 'recitation_drawer_controls.dart';
 
 /// The full recitation transport that drops down under the title bar when the
 /// user expands the compact transport. Rendered as an overlay (scrim + panel)
@@ -248,19 +260,19 @@ class _DrawerPanel extends HookConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              RecitationDrawerHeader(
+              _DrawerHeader(
                 reciterName: reciterName,
                 riwayah: riwayah,
                 rangeWidget: rangeWidget,
                 showSubtitle: showSubtitle,
               ),
               const SizedBox(height: AppSpacing.lg),
-              RecitationDrawerTransportSection(
+              _DrawerTransportSection(
                 leftSlot: leftSlot,
                 rightSlot: rightSlot,
               ),
               const SizedBox(height: AppSpacing.lg),
-              RecitationDrawerActionsSection(
+              _DrawerActionsSection(
                 rangeLabel: rangeLabel,
                 rangeWidget: rangeWidget,
                 surahName: surahName,
@@ -269,7 +281,7 @@ class _DrawerPanel extends HookConsumerWidget {
               const SizedBox(height: AppSpacing.lg),
               Container(height: 1, color: colors.border),
               const SizedBox(height: AppSpacing.md),
-              RecitationDrawerSettingsSection(
+              _DrawerSettingsSection(
                 isNarrow: isNarrow,
                 persistedVolume: persistedVolume,
               ),

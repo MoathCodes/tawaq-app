@@ -1,6 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:tawaq/feature/quran/domain/models/ayah_reference.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_sleep.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 
 part 'recitation_state.freezed.dart';

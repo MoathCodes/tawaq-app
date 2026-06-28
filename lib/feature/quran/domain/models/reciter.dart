@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_pick_intent.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/services/reciter_tags.dart';
 
 part 'reciter.freezed.dart';

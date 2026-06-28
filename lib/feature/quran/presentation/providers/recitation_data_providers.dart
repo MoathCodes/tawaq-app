@@ -8,35 +8,23 @@ import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 
 part 'recitation_data_providers.g.dart';
 
-/// Shared HTTP client for recitation API + downloads.
+/// Recitation repository (API + on-disk cache).
 @Riverpod(keepAlive: true)
-http.Client recitationHttpClient(Ref ref) {
+RecitationRepository recitationRepository(Ref ref) {
   final client = http.Client();
   ref.onDispose(client.close);
-  return client;
+  return RecitationRepository(
+    api: Mp3QuranApi(
+      client: client,
+      logger: ref.watch(loggerProvider),
+    ),
+    cache: RecitationCache(
+      client: client,
+      logger: ref.watch(loggerProvider),
+    ),
+    logger: ref.watch(loggerProvider),
+  );
 }
-
-/// mp3quran.net API client.
-@Riverpod(keepAlive: true)
-Mp3QuranApi mp3QuranApi(Ref ref) => Mp3QuranApi(
-  client: ref.watch(recitationHttpClientProvider),
-  logger: ref.watch(loggerProvider),
-);
-
-/// On-disk recitation cache.
-@Riverpod(keepAlive: true)
-RecitationCache recitationCache(Ref ref) => RecitationCache(
-  client: ref.watch(recitationHttpClientProvider),
-  logger: ref.watch(loggerProvider),
-);
-
-/// Recitation repository (API + cache).
-@Riverpod(keepAlive: true)
-RecitationRepository recitationRepository(Ref ref) => RecitationRepository(
-  api: ref.watch(mp3QuranApiProvider),
-  cache: ref.watch(recitationCacheProvider),
-  logger: ref.watch(loggerProvider),
-);
 
 /// The reciter catalog (timing links merged), cached on disk.
 @Riverpod(keepAlive: true)

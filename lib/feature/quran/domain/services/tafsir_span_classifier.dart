@@ -1,5 +1,5 @@
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_segment_repair.dart';
 
 /// Source-aware heuristics for compact tafsir span kinds (`t2`/`t3`).

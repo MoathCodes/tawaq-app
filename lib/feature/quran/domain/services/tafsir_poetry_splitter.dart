@@ -1,4 +1,4 @@
-import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 
 /// Splits commentary prose that contains Arabic poetry layout gaps.
 abstract final class TafsirPoetrySplitter {
