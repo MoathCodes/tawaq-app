@@ -11,20 +11,17 @@ import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_locale_extensions.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_lookup_section.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
-import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Scrollable hadith search filter form (method, scope, degrees, lookups).
 class HadithFilterForm extends ConsumerWidget {
-  /// Creates the filter form.
   const HadithFilterForm({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ui = ref.watch(hadithScreenUiProvider);
-    final panelEnabled = !ui.searchBusy;
-    final filters = ui.filters;
+    final session = ref.watch(hadithSessionControllerProvider);
+    final panelEnabled = !session.searchBusy;
+    final filters = session.filters;
     final theme = context.theme;
     final l10n = context.l10n;
 
@@ -180,246 +177,18 @@ class HadithFilterForm extends ConsumerWidget {
           },
         ),
         const SizedBox(height: AppSpacing.lg),
-        const HadithScholarsLookupSection(),
+        HadithLookupSection(
+          config: HadithLookupSectionConfig.scholars(l10n),
+        ),
         const SizedBox(height: AppSpacing.md),
-        const HadithBooksLookupSection(),
+        HadithLookupSection(
+          config: HadithLookupSectionConfig.books(l10n),
+        ),
         const SizedBox(height: AppSpacing.md),
-        const HadithRawiLookupSection(),
+        HadithLookupSection(
+          config: HadithLookupSectionConfig.rawi(l10n),
+        ),
       ],
     );
   }
-}
-
-/// Removable chips for each active hadith search filter.
-class HadithActiveFilterChips extends ConsumerWidget {
-  /// Creates the active filter chips row.
-  const HadithActiveFilterChips({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ui = ref.watch(hadithScreenUiProvider);
-    final theme = context.theme;
-    final l10n = context.l10n;
-    final chips = buildActiveHadithFilterChips(ui.filters, l10n);
-
-    if (chips.isEmpty) return const SizedBox.shrink();
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < context.theme.breakpoints.md;
-
-        return Padding(
-          padding: const EdgeInsets.only(top: AppSpacing.xs),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: AppSpacing.xs,
-            children: [
-              Row(
-                spacing: AppSpacing.sm,
-                children: [
-                  Semantics(
-                    label: compact ? l10n.hadithActiveFilters : null,
-                    child: Icon(
-                      FLucideIcons.slidersHorizontal,
-                      size: 12,
-                      color: theme.colors.mutedForeground,
-                    ),
-                  ),
-                  if (!compact)
-                    Text(
-                      l10n.hadithActiveFilters,
-                      style: theme.typography.body.xs.copyWith(
-                        color: theme.colors.mutedForeground,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  if (!compact) const Spacer(),
-                  if (!compact)
-                    FButton(
-                      variant: FButtonVariant.ghost,
-                      size: FButtonSizeVariant.sm,
-                      mainAxisSize: MainAxisSize.min,
-                      semanticsLabel: l10n.hadithClearAllFilters,
-                      onPress: ui.filterInteractionsEnabled
-                          ? () {
-                              unawaited(
-                                ref
-                                    .read(
-                                      hadithSessionControllerProvider.notifier,
-                                    )
-                                    .clearFilters(),
-                              );
-                            }
-                          : null,
-                      child: Text(l10n.hadithClearAllFilters),
-                    ),
-                ],
-              ),
-              Wrap(
-                spacing: AppSpacing.xs,
-                runSpacing: AppSpacing.xs,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  for (final chip in chips)
-                    FButton(
-                      variant: FButtonVariant.outline,
-                      size: FButtonSizeVariant.sm,
-                      mainAxisSize: MainAxisSize.min,
-                      semanticsLabel: hadithFilterChipSemanticsLabel(
-                        chip.label,
-                        l10n,
-                      ),
-                      onPress: ui.filterInteractionsEnabled
-                          ? () {
-                              unawaited(
-                                ref
-                                    .read(
-                                      hadithSessionControllerProvider.notifier,
-                                    )
-                                    .setFilters(
-                                      chip.nextFilters,
-                                      debounced: false,
-                                    ),
-                              );
-                            }
-                          : null,
-                      suffix: const HadithDecorExcludeSemantics(
-                        child: Icon(FLucideIcons.x, size: 11),
-                      ),
-                      child: HadithDecorExcludeSemantics(
-                        child: Text(chip.label),
-                      ),
-                    ),
-                  if (compact)
-                    FButton.icon(
-                      variant: FButtonVariant.ghost,
-                      size: FButtonSizeVariant.sm,
-                      semanticsLabel: l10n.hadithClearAllFilters,
-                      onPress: ui.filterInteractionsEnabled
-                          ? () {
-                              unawaited(
-                                ref
-                                    .read(
-                                      hadithSessionControllerProvider.notifier,
-                                    )
-                                    .clearFilters(),
-                              );
-                            }
-                          : null,
-                      child: const HadithDecorExcludeSemantics(
-                        child: Icon(FLucideIcons.rotateCcw, size: 12),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// Builds removable chip descriptors for the active [filters].
-List<HadithFilterChipAction> buildActiveHadithFilterChips(
-  HadithFilters filters,
-  AppLocalizations l10n,
-) {
-  final chips = <HadithFilterChipAction>[];
-
-  if (filters.searchMethod != SearchMethod.anyWord) {
-    chips.add(
-      HadithFilterChipAction(
-        label: filters.searchMethod.getLocaleName(l10n),
-        nextFilters: filters.copyWith(searchMethod: SearchMethod.anyWord),
-      ),
-    );
-  }
-
-  if (filters.zone != SearchZone.all) {
-    chips.add(
-      HadithFilterChipAction(
-        label: filters.zone.getLocaleName(l10n),
-        nextFilters: filters.copyWith(zone: SearchZone.all),
-      ),
-    );
-  }
-
-  if (filters.specialist) {
-    chips.add(
-      HadithFilterChipAction(
-        label: l10n.hadithSpecialist,
-        nextFilters: filters.copyWith(specialist: false),
-      ),
-    );
-  }
-
-  for (final degree in filters.degrees) {
-    chips.add(
-      HadithFilterChipAction(
-        label: degree.getLocaleName(l10n),
-        nextFilters: filters.copyWith(
-          degrees: filters.degrees
-              .where((entry) => entry != degree)
-              .toList(growable: false),
-        ),
-      ),
-    );
-  }
-
-  for (final scholar in filters.scholars) {
-    chips.add(
-      HadithFilterChipAction(
-        label: scholar.name,
-        nextFilters: filters.copyWith(
-          scholars: filters.scholars
-              .where((entry) => entry.id != scholar.id)
-              .toList(growable: false),
-        ),
-      ),
-    );
-  }
-
-  for (final book in filters.books) {
-    chips.add(
-      HadithFilterChipAction(
-        label: book.name,
-        nextFilters: filters.copyWith(
-          books: filters.books
-              .where((entry) => entry.id != book.id)
-              .toList(growable: false),
-        ),
-      ),
-    );
-  }
-
-  for (final rawi in filters.rawi) {
-    chips.add(
-      HadithFilterChipAction(
-        label: rawi.name,
-        nextFilters: filters.copyWith(
-          rawi: filters.rawi
-              .where((entry) => entry.id != rawi.id)
-              .toList(growable: false),
-        ),
-      ),
-    );
-  }
-
-  return chips;
-}
-
-/// A single removable active-filter chip action.
-class HadithFilterChipAction {
-  /// Creates a filter chip action.
-  const HadithFilterChipAction({
-    required this.label,
-    required this.nextFilters,
-  });
-
-  /// Display label for the chip.
-  final String label;
-
-  /// Filter state after removing this chip.
-  final HadithFilters nextFilters;
 }

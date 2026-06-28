@@ -4,6 +4,18 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'hadith_filters.freezed.dart';
 part 'hadith_filters.g.dart';
 
+/// Lookup dimension for hadith filter autocomplete.
+enum HadithLookupKind {
+  /// Scholars (mohdith).
+  scholars,
+
+  /// Books.
+  books,
+
+  /// Narrators (rawi).
+  rawi,
+}
+
 /// A lookup reference used by hadith search filters.
 @freezed
 abstract class HadithLookupRef with _$HadithLookupRef {

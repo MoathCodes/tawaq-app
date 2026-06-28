@@ -1,59 +1,41 @@
 import 'dart:async';
 
 import 'package:dorar_hadith/dorar_hadith.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/hadith/data/repository/hadith_repository.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_screen_ui.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 part 'hadith_provider.g.dart';
 
-/// Aggregated read-only Hadith screen UI state for presentation widgets.
-@riverpod
-HadithScreenUi hadithScreenUi(Ref ref) {
-  final session = ref.watch(hadithSessionControllerProvider);
-  final settings =
-      ref.watch(hadithScreenSettingsProvider).asData?.value ??
-      HadithPersistedSettings.initial();
+/// Widget-layer helper for the active hadith results list.
+extension HadithVisibleResultsRef on WidgetRef {
+  /// Results list for the active hadith view mode.
+  AsyncValue<List<DetailedHadith>> hadithVisibleResults(
+    HadithSessionState session,
+  ) {
+    return switch (session.mode) {
+      HadithViewMode.search => AsyncData(session.results),
+      HadithViewMode.bookmarks => watch(hadithFavoritesProvider),
+      HadithViewMode.specificList => AsyncData(session.specificHadiths),
+    };
+  }
+}
 
-  final filterInteractionsEnabled =
-      !session.searchBusy &&
-      session.isSearchMode &&
-      session.query.trim().isNotEmpty;
-
-  final visibleResults = switch (session.mode) {
-    HadithViewMode.search => AsyncData(session.results),
-    HadithViewMode.bookmarks => ref.watch(hadithFavoritesProvider),
-    HadithViewMode.specificList => AsyncData(session.specificHadiths),
+/// Synchronous visible results when favorites are already resolved.
+List<DetailedHadith>? hadithVisibleResultsList(
+  Ref ref,
+  HadithSessionState session,
+) {
+  return switch (session.mode) {
+    HadithViewMode.search => session.results,
+    HadithViewMode.bookmarks => ref.read(hadithFavoritesProvider).value,
+    HadithViewMode.specificList => session.specificHadiths,
   };
-
-  final recentSearches = session.isSearchMode
-      ? ref.watch(hadithRecentSearchesProvider)
-      : const AsyncData<List<String>>(<String>[]);
-
-  return HadithScreenUi(
-    filters: session.filters,
-    query: session.query,
-    viewMode: session.mode,
-    isSearchMode: session.isSearchMode,
-    searchBusy: session.searchBusy,
-    activeTab: settings.activeTab,
-    visibleResults: visibleResults,
-    filterInteractionsEnabled: filterInteractionsEnabled,
-    sidePanelCollapsed: settings.sidePanelCollapsed,
-    sidePanelRatio: settings.sidePanelRatio,
-    recentSearches: recentSearches,
-    selectedHadith: session.selectedHadith,
-    searchResults: session.results,
-    searchError: session.error,
-    searchLoading: session.isLoading,
-    searchLoadingMore: session.isLoadingMore,
-    searchHasNextPage: session.hasNextPage,
-  );
 }
 
 /// Bookmarked hadiths loaded from local storage.
@@ -284,7 +266,7 @@ class HadithSessionController extends _$HadithSessionController {
   Future<void> selectAdjacentResult(int delta) async {
     if (delta == 0) return;
 
-    final results = ref.read(hadithScreenUiProvider).visibleResults.value;
+    final results = hadithVisibleResultsList(ref, state);
     if (results == null || results.isEmpty) return;
 
     final current = state.selectedHadith;
@@ -478,46 +460,29 @@ class HadithRecentSearches extends _$HadithRecentSearches {
   }
 }
 
-/// Searches books that can be used to narrow hadith lookups.
+/// Searches lookup entries for hadith filter autocomplete.
 @riverpod
-Future<List<HadithLookupRef>> hadithBooksLookup(Ref ref, String query) async {
-  final q = query.trim();
-  if (q.length < 2) return const [];
-
-  final repository = await ref.read(hadithRepositoryProvider.future);
-  final response = await repository.searchBooks(q);
-  return response.data
-      .map((item) => HadithLookupRef(id: item.id, name: item.name))
-      .toList(growable: false);
-}
-
-/// Searches scholars that can be used to narrow hadith lookups.
-@riverpod
-Future<List<HadithLookupRef>> hadithScholarsLookup(
+Future<List<HadithLookupRef>> hadithLookup(
   Ref ref,
+  HadithLookupKind kind,
   String query,
 ) async {
   final q = query.trim();
   if (q.length < 2) return const [];
 
   final repository = await ref.read(hadithRepositoryProvider.future);
-  final response = await repository.searchScholars(q);
-  return response
-      .map((item) => HadithLookupRef(id: item.id, name: item.name))
-      .toList(growable: false);
-}
-
-/// Searches rawi entries that can be used to narrow hadith lookups.
-@riverpod
-Future<List<HadithLookupRef>> hadithRawiLookup(Ref ref, String query) async {
-  final q = query.trim();
-  if (q.length < 2) return const [];
-
-  final repository = await ref.read(hadithRepositoryProvider.future);
-  final response = await repository.searchRawi(q);
-  return response
-      .map((item) => HadithLookupRef(id: item.id, name: item.name))
-      .toList(growable: false);
+  return switch (kind) {
+    HadithLookupKind.scholars => (await repository.searchScholars(q))
+        .map((item) => HadithLookupRef(id: item.id, name: item.name))
+        .toList(growable: false),
+    HadithLookupKind.books => (await repository.searchBooks(q))
+        .data
+        .map((item) => HadithLookupRef(id: item.id, name: item.name))
+        .toList(growable: false),
+    HadithLookupKind.rawi => (await repository.searchRawi(q))
+        .map((item) => HadithLookupRef(id: item.id, name: item.name))
+        .toList(growable: false),
+  };
 }
 
 /// Loads the sharh metadata for the given sharh identifier.

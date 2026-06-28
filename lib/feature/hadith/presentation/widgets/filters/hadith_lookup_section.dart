@@ -7,103 +7,24 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
-import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
-
-/// Configuration for a searchable multi-select lookup filter section.
-class HadithLookupSectionConfig {
-  const HadithLookupSectionConfig._({
-    required this.title,
-    required this.hint,
-    required this.selected,
-    required this.withSelected,
-    required this.lookup,
-  });
-
-  /// Scholars lookup section.
-  factory HadithLookupSectionConfig.scholars(AppLocalizations l10n) {
-    return HadithLookupSectionConfig._(
-      title: l10n.hadithScholars,
-      hint: l10n.hadithTypeToSearch,
-      selected: (filters) => filters.scholars,
-      withSelected: (filters, selected) =>
-          filters.copyWith(scholars: selected),
-      lookup: (ref, query) =>
-          ref.read(hadithScholarsLookupProvider(query).future),
-    );
-  }
-
-  /// Books lookup section.
-  factory HadithLookupSectionConfig.books(AppLocalizations l10n) {
-    return HadithLookupSectionConfig._(
-      title: l10n.hadithBooks,
-      hint: l10n.hadithTypeToSearch,
-      selected: (filters) => filters.books,
-      withSelected: (filters, selected) => filters.copyWith(books: selected),
-      lookup: (ref, query) => ref.read(hadithBooksLookupProvider(query).future),
-    );
-  }
-
-  /// Narrators (rawi) lookup section.
-  factory HadithLookupSectionConfig.rawi(AppLocalizations l10n) {
-    return HadithLookupSectionConfig._(
-      title: l10n.hadithNarrators,
-      hint: l10n.hadithTypeToSearch,
-      selected: (filters) => filters.rawi,
-      withSelected: (filters, selected) => filters.copyWith(rawi: selected),
-      lookup: (ref, query) => ref.read(hadithRawiLookupProvider(query).future),
-    );
-  }
-
-  final String title;
-  final String hint;
-  final List<HadithLookupRef> Function(HadithFilters) selected;
-  final HadithFilters Function(HadithFilters, List<HadithLookupRef>) withSelected;
-  final Future<Iterable<HadithLookupRef>> Function(WidgetRef ref, String query)
-  lookup;
-}
-
-/// Scholars multi-select lookup filter.
-class HadithScholarsLookupSection extends ConsumerWidget {
-  const HadithScholarsLookupSection({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return HadithLookupSection(
-      config: HadithLookupSectionConfig.scholars(context.l10n),
-    );
-  }
-}
-
-/// Books multi-select lookup filter.
-class HadithBooksLookupSection extends ConsumerWidget {
-  const HadithBooksLookupSection({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return HadithLookupSection(
-      config: HadithLookupSectionConfig.books(context.l10n),
-    );
-  }
-}
-
-/// Narrators multi-select lookup filter.
-class HadithRawiLookupSection extends ConsumerWidget {
-  const HadithRawiLookupSection({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return HadithLookupSection(
-      config: HadithLookupSectionConfig.rawi(context.l10n),
-    );
-  }
-}
 
 /// Searchable multi-select for one lookup filter dimension.
 class HadithLookupSection extends HookConsumerWidget {
-  const HadithLookupSection({required this.config, super.key});
+  const HadithLookupSection({
+    required this.title,
+    required this.hint,
+    required this.kind,
+    required this.selected,
+    required this.withSelected,
+    super.key,
+  });
 
-  final HadithLookupSectionConfig config;
+  final String title;
+  final String hint;
+  final HadithLookupKind kind;
+  final List<HadithLookupRef> Function(HadithFilters) selected;
+  final HadithFilters Function(HadithFilters, List<HadithLookupRef>) withSelected;
 
   static const _lookupDebounceDuration = Duration(milliseconds: 200);
   static const _lookupMinLength = 2;
@@ -124,16 +45,16 @@ class HadithLookupSection extends HookConsumerWidget {
       return const <HadithLookupRef>[];
     }
 
-    return config.lookup(ref, trimmed);
+    return ref.read(hadithLookupProvider(kind, trimmed).future);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final ui = ref.watch(hadithScreenUiProvider);
-    final filters = ui.filters;
-    final interactionsEnabled = !ui.searchBusy;
-    final selected = config.selected(filters);
+    final session = ref.watch(hadithSessionControllerProvider);
+    final filters = session.filters;
+    final interactionsEnabled = !session.searchBusy;
+    final selected = this.selected(filters);
     final selectedSet = selected.toSet();
     final lookupRequestId = useRef(0);
 
@@ -153,7 +74,7 @@ class HadithLookupSection extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          config.title,
+          title,
           style: theme.typography.body.sm.copyWith(
             color: theme.colors.mutedForeground,
           ),
