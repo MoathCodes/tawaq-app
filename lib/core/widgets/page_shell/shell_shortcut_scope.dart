@@ -14,8 +14,8 @@ class ShellShortcutScope extends ConsumerStatefulWidget {
   /// Child widget tree.
   final Widget child;
 
-  /// Global shortcuts dispatched via [GlobalAppShortcut.invokeGlobal].
-  static const List<GlobalAppShortcut> globalShortcuts = [
+  /// Global shortcuts dispatched via [invokeGlobalShortcut].
+  static final List<ShortcutDef> globalShortcuts = [
     AppShortcut.toggleTheme,
     AppShortcut.toggleLocale,
     AppShortcut.openSettings,

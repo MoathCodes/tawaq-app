@@ -30,7 +30,7 @@ class ShortcutTooltip extends StatelessWidget {
         activators = null;
 
   /// Catalog shortcut to display in the tooltip.
-  final AppShortcut? shortcut;
+  final ShortcutDef? shortcut;
 
   /// Raw activators when not using a catalog [shortcut].
   final List<SingleActivator>? activators;

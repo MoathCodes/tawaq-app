@@ -3,14 +3,14 @@ import 'dart:async';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:tawaq/core/audio/audio_lease.dart';
+import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/audio_service.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
 import 'package:tawaq/core/desktop/alerts/sound_alert_channel.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 
-class _MockTawaqAudioService extends Mock implements TawaqAudioService {}
+class _MockAudioPlayerController extends Mock implements AudioPlayerController {}
 
 PrayerAlertEvent _event({
   PrayerAlertKind kind = PrayerAlertKind.adhan,
@@ -52,31 +52,18 @@ void main() {
   });
 
   group('SoundAlertChannel lease coordination', () {
-    late _MockTawaqAudioService service;
-    late AudioLease adhanLease;
+    late _MockAudioPlayerController adhanPlayer;
 
-    setUp(() async {
-      service = _MockTawaqAudioService();
+    setUp(() {
+      adhanPlayer = _MockAudioPlayerController();
 
-      final registry = AudioLeaseRegistry();
-      addTearDown(registry.dispose);
-      adhanLease = await registry.acquire(owner: kAdhanLeaseOwner);
-
-      when(() => service.acquire(owner: kAdhanLeaseOwner))
-          .thenAnswer((_) async => adhanLease);
-      when(() => service.volume).thenReturn(70);
+      when(() => adhanPlayer.stop(fadeOut: any(named: 'fadeOut')))
+          .thenAnswer((_) async {});
+      when(() => adhanPlayer.setVolume(any())).thenAnswer((_) async {});
       when(
-        () => service.stop(
-          fadeOut: any(named: 'fadeOut'),
-          owner: kAdhanLeaseOwner,
-        ),
-      ).thenAnswer((_) async {});
-      when(() => service.setVolume(any())).thenAnswer((_) async {});
-      when(
-        () => service.play(
+        () => adhanPlayer.playTrack(
           any(),
           fadeIn: any(named: 'fadeIn'),
-          owner: kAdhanLeaseOwner,
         ),
       ).thenAnswer((_) async {});
     });
@@ -88,9 +75,9 @@ void main() {
       Future<void> Function()? onResume,
     }) {
       return SoundAlertChannel(
-        service: service,
+        adhanPlayer: adhanPlayer,
         onCaptureRecitationVolume:
-            onCaptureRecitationVolume ?? () async => service.volume,
+            onCaptureRecitationVolume ?? () async => 70,
         onSuspend: onSuspend ?? () async {},
         onRestoreRecitationVolume:
             onRestoreRecitationVolume ?? (_) async {},
@@ -98,31 +85,29 @@ void main() {
       );
     }
 
-    test('deliver acquires adhan lease before play', () async {
-      var acquired = false;
-      when(() => service.acquire(owner: kAdhanLeaseOwner)).thenAnswer((_) async {
-        acquired = true;
-        return adhanLease;
-      });
+    test('deliver plays through adhan player after suspend', () async {
+      var suspended = false;
       when(
-        () => service.play(
+        () => adhanPlayer.playTrack(
           any(),
           fadeIn: any(named: 'fadeIn'),
-          owner: kAdhanLeaseOwner,
         ),
       ).thenAnswer((_) async {
-        expect(acquired, isTrue);
+        expect(suspended, isTrue);
       });
 
-      final channel = makeChannel();
+      final channel = makeChannel(
+        onSuspend: () async {
+          suspended = true;
+        },
+      );
       await channel.deliver(_event());
 
-      verify(() => service.acquire(owner: kAdhanLeaseOwner)).called(1);
+      verify(() => adhanPlayer.setVolume(80)).called(1);
       verify(
-        () => service.play(
+        () => adhanPlayer.playTrack(
           any(),
-          fadeIn: any(named: 'fadeIn'),
-          owner: kAdhanLeaseOwner,
+          fadeIn: kAudioDefaultFadeIn,
         ),
       ).called(1);
     });
@@ -133,7 +118,8 @@ void main() {
 
       final channel = makeChannel(
         onCaptureRecitationVolume: () async {
-          return capturedVolume = service.volume;
+          capturedVolume = 70;
+          return capturedVolume;
         },
         onSuspend: () async {
           expect(capturedVolume, 70);
@@ -147,11 +133,15 @@ void main() {
       expect(suspendCalled, isTrue);
     });
 
-    test('deliver suspends recitation before acquiring adhan lease', () async {
+    test('deliver suspends recitation before adhan playback', () async {
       var suspended = false;
-      when(() => service.acquire(owner: kAdhanLeaseOwner)).thenAnswer((_) async {
+      when(
+        () => adhanPlayer.playTrack(
+          any(),
+          fadeIn: any(named: 'fadeIn'),
+        ),
+      ).thenAnswer((_) async {
         expect(suspended, isTrue);
-        return adhanLease;
       });
 
       final channel = makeChannel(
@@ -163,7 +153,6 @@ void main() {
       await channel.deliver(_event());
 
       expect(suspended, isTrue);
-      verify(() => service.acquire(owner: kAdhanLeaseOwner)).called(1);
     });
 
     test('cancel stops adhan playback', () async {
@@ -172,10 +161,7 @@ void main() {
       await channel.cancel();
 
       verify(
-        () => service.stop(
-          fadeOut: any(named: 'fadeOut'),
-          owner: kAdhanLeaseOwner,
-        ),
+        () => adhanPlayer.stop(fadeOut: kAudioDefaultFadeOut),
       ).called(1);
     });
 

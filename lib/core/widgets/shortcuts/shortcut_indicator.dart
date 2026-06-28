@@ -31,7 +31,7 @@ class ShortcutIndicator extends StatelessWidget {
         activators = null;
 
   /// Catalog shortcut to display.
-  final AppShortcut? shortcut;
+  final ShortcutDef? shortcut;
 
   /// Raw activators when not using a catalog [shortcut].
   final List<SingleActivator>? activators;
@@ -93,7 +93,7 @@ class ShortcutIndicatorGroup extends StatelessWidget {
   });
 
   /// Catalog shortcuts to display.
-  final List<AppShortcut> shortcuts;
+  final List<ShortcutDef> shortcuts;
 
   @override
   Widget build(BuildContext context) {

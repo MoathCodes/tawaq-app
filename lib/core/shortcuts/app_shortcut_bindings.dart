@@ -1,17 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut.dart';
+import 'package:tawaq/core/shortcuts/app_shortcut_global_handlers.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_invocation.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 
-/// Builds activator bindings for global shortcuts via [GlobalAppShortcut.invokeGlobal].
+/// Builds activator bindings for global shortcuts.
 Map<ShortcutActivator, VoidCallback> buildGlobalShortcutBindings({
-  required Iterable<GlobalAppShortcut> shortcuts,
+  required Iterable<ShortcutDef> shortcuts,
   required AppShortcutInvocation Function() invocationFor,
-  bool Function(AppShortcut shortcut)? shouldSuppress,
+  bool Function(ShortcutDef shortcut)? shouldSuppress,
 }) {
   final bindings = <ShortcutActivator, VoidCallback>{};
-  final usedKeys = <String, GlobalAppShortcut>{};
+  final usedKeys = <String, ShortcutDef>{};
 
   for (final shortcut in shortcuts) {
     for (final activator in shortcut.activators) {
@@ -29,7 +30,7 @@ Map<ShortcutActivator, VoidCallback> buildGlobalShortcutBindings({
         if (shouldSuppress != null && shouldSuppress(shortcut)) {
           return;
         }
-        shortcut.invokeGlobal(invocationFor());
+        invokeGlobalShortcut(shortcut, invocationFor());
       };
     }
   }
@@ -39,14 +40,14 @@ Map<ShortcutActivator, VoidCallback> buildGlobalShortcutBindings({
 
 /// Builds a [CallbackShortcuts] binding map for route/contextual shortcuts.
 Map<ShortcutActivator, VoidCallback> buildAppShortcutBindings({
-  required Set<AppShortcut> shortcuts,
-  required Map<AppShortcut, VoidCallback> handlers,
-  bool Function(AppShortcut shortcut)? shouldSuppress,
+  required Set<ShortcutDef> shortcuts,
+  required Map<ShortcutDef, VoidCallback> handlers,
+  bool Function(ShortcutDef shortcut)? shouldSuppress,
 }) {
   if (kDebugMode) {
     for (final shortcut in shortcuts) {
       assert(
-        shortcut is! GlobalAppShortcut,
+        shortcut.scope != ShortcutScope.global,
         'Global shortcuts belong in ShellShortcutScope, not AppShortcutScope: '
         '$shortcut',
       );
@@ -58,7 +59,7 @@ Map<ShortcutActivator, VoidCallback> buildAppShortcutBindings({
   }
 
   final bindings = <ShortcutActivator, VoidCallback>{};
-  final usedKeys = <String, AppShortcut>{};
+  final usedKeys = <String, ShortcutDef>{};
 
   for (final shortcut in shortcuts) {
     final handler = handlers[shortcut];
@@ -101,7 +102,7 @@ bool isTextInputFocused() {
 }
 
 /// Returns true when [shortcut] should be suppressed due to text-field focus.
-bool shouldSuppressForTextFieldFocus(AppShortcut shortcut) {
+bool shouldSuppressForTextFieldFocus(ShortcutDef shortcut) {
   if (shortcut.allowWhenTextFieldFocused) return false;
   return isTextInputFocused();
 }

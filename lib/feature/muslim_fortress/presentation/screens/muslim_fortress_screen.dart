@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/layout/feature_split_pane.dart';
+import 'package:tawaq/core/layout/collapsible_horizontal_split_pane.dart';
+import 'package:tawaq/core/layout/responsive_horizontal_split.dart';
 import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
@@ -142,42 +143,43 @@ class MuslimFortressScreen extends HookConsumerWidget {
       ),
       child: LayoutBuilder(
         builder: (context, viewport) {
-          final contentHeight = viewport.maxHeight.isFinite
-              ? viewport.maxHeight - AppSpacing.md * 2
-              : MediaQuery.sizeOf(context).height - AppSpacing.md * 2;
-          final useSplit = canUseHorizontalSplit(
-            containerWidth: viewport.maxWidth,
+          return ResponsiveHorizontalSplitGate(
             sideMin: kStudyPanelMinExtent,
             mainMin: kMainPaneMinExtent,
-          );
+            builder: (context, useSplit) {
+              final contentHeight = viewport.maxHeight.isFinite
+                  ? viewport.maxHeight - AppSpacing.md * 2
+                  : MediaQuery.sizeOf(context).height - AppSpacing.md * 2;
 
-          return FSkeletonizer(
-            enabled: chaptersAsync.isLoading,
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: SizedBox(
-                height: contentHeight,
-                child: useSplit
-                    ? _FortressDesktopSplitLayout(
-                        mainPane: buildMainPane(),
-                        sidebar: buildSidebar(),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            flex: 2,
-                            child: buildSidebar(),
+              return FSkeletonizer(
+                enabled: chaptersAsync.isLoading,
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: SizedBox(
+                    height: contentHeight,
+                    child: useSplit
+                        ? _FortressDesktopSplitLayout(
+                            mainPane: buildMainPane(),
+                            sidebar: buildSidebar(),
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: buildSidebar(),
+                              ),
+                              const SizedBox(height: AppSpacing.md),
+                              Expanded(
+                                flex: 3,
+                                child: buildMainPane(),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: AppSpacing.md),
-                          Expanded(
-                            flex: 3,
-                            child: buildMainPane(),
-                          ),
-                        ],
-                      ),
-              ),
-            ),
+                  ),
+                ),
+              );
+            },
           );
         },
       ),
@@ -210,7 +212,7 @@ class _FortressDesktopSplitLayout extends ConsumerWidget {
     );
     final l10n = context.l10n;
 
-    return FeatureSplitPane(
+    return CollapsibleHorizontalSplitPane.feature(
       sidePanelRatio: sidePanelRatio,
       sideOnStart: false,
       floatingButtonOffset: (

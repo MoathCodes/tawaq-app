@@ -7,8 +7,8 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/layout/collapsible_horizontal_split_pane.dart';
-import 'package:tawaq/core/layout/feature_split_pane.dart';
 import 'package:tawaq/core/layout/lazy_tab_content.dart';
+import 'package:tawaq/core/layout/responsive_horizontal_split.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
@@ -48,7 +48,7 @@ class HadithPage extends HookConsumerWidget {
 
     return AppShortcutScope(
       autofocus: true,
-      shortcuts: const {
+      shortcuts: {
         AppShortcut.hadithResultNext,
         AppShortcut.hadithResultPrev,
       },
@@ -58,28 +58,36 @@ class HadithPage extends HookConsumerWidget {
         AppShortcut.hadithResultPrev: () =>
             unawaited(screenController.selectAdjacentResult(-1)),
       },
-      child: LayoutBuilder(
-        builder: (context, constraints) => _HadithResponsiveBody(
-          containerWidth: constraints.maxWidth,
-        ),
+      child: const Padding(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: _HadithResponsiveBody(),
       ),
     );
   }
 }
 
-class _HadithResponsiveBody extends HookConsumerWidget {
-  const _HadithResponsiveBody({required this.containerWidth});
-
-  final double containerWidth;
+class _HadithResponsiveBody extends ConsumerWidget {
+  const _HadithResponsiveBody();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final useSplitLayout = canUseHorizontalSplit(
-      containerWidth: containerWidth,
+    return ResponsiveHorizontalSplitGate(
       sideMin: kStudyPanelMinExtent,
       mainMin: kMainPaneMinExtent,
+      builder: (context, useSplitLayout) => _HadithSplitGateBody(
+        useSplitLayout: useSplitLayout,
+      ),
     );
+  }
+}
 
+class _HadithSplitGateBody extends HookConsumerWidget {
+  const _HadithSplitGateBody({required this.useSplitLayout});
+
+  final bool useSplitLayout;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     useEffect(
       () {
         if (!useSplitLayout) {
@@ -97,12 +105,9 @@ class _HadithResponsiveBody extends HookConsumerWidget {
       [useSplitLayout],
     );
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: useSplitLayout
-          ? _HadithSplitLayout(useSplitLayout: useSplitLayout)
-          : _HadithMainColumn(useSplitLayout: useSplitLayout),
-    );
+    return useSplitLayout
+        ? _HadithSplitLayout(useSplitLayout: useSplitLayout)
+        : _HadithMainColumn(useSplitLayout: useSplitLayout);
   }
 }
 
@@ -136,7 +141,7 @@ class _HadithSplitLayout extends ConsumerWidget {
     final textDirection = Directionality.of(context);
     final l10n = context.l10n;
 
-    return FeatureSplitPane(
+    return CollapsibleHorizontalSplitPane.feature(
       sidePanelRatio: settings.sidePanelRatio,
       collapsed: settings.sidePanelCollapsed,
       collapsePlacement: CollapsePlacement.none,
@@ -220,7 +225,7 @@ class _HadithSidePanel extends ConsumerWidget {
       if (session.isSearchMode)
         FTabEntry(
           label: Text(l10n.hadithFilterTab),
-          child: LazyIndexedContent(
+          child: LazyPanelContent.indexed(
             selectedIndex: tabIndex,
             index: HadithPanelTab.filters.index,
             builder: () => const HadithFilterPanel(),

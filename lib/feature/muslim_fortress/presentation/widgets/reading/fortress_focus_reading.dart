@@ -115,7 +115,7 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
           backgroundColor: theme.colors.background,
           body: AppShortcutScope(
             autofocus: true,
-            shortcuts: const {
+            shortcuts: {
               AppShortcut.fortressCount,
               AppShortcut.fortressThikrNext,
               AppShortcut.fortressThikrPrev,

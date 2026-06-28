@@ -14,7 +14,7 @@ class ShortcutListRow extends StatelessWidget {
   });
 
   /// Shortcut metadata from the catalog.
-  final AppShortcut shortcut;
+  final ShortcutDef shortcut;
 
   @override
   Widget build(BuildContext context) {
