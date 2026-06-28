@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/layout/persisted_horizontal_split_pane.dart';
+import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Width of the slim peek tab shown in place of a collapsed side pane.
@@ -93,6 +94,58 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
   /// collapsed.
   final ({double top, double left, double right}) floatingButtonOffset;
 
+  /// Feature split layout (Hadith, Quran study, Fortress).
+  ///
+  /// Assumes the container already satisfies [canUseHorizontalSplit].
+  factory CollapsibleHorizontalSplitPane.feature({
+    required double sidePanelRatio,
+    required bool collapsed,
+    required ValueChanged<bool> onCollapsedChanged,
+    required ValueChanged<double> onSidePanelRatioChanged,
+    required Widget sidePane,
+    required Widget mainPane,
+    required String expandSemanticLabel,
+    required String collapseSemanticLabel,
+    bool sideOnStart = true,
+    double sideMin = kStudyPanelMinExtent,
+    double mainMin = kMainPaneMinExtent,
+    double? sideMaxFraction,
+    double? sideMaxPixels,
+    double spacer = 0,
+    CollapsePlacement collapsePlacement = CollapsePlacement.overlay,
+    ({double top, double left, double right}) floatingButtonOffset =
+        const (top: 0, left: 0, right: 0),
+    FResizableDividerStyleDelta? style,
+    Key? key,
+  }) {
+    final sideRegionIndex = sideOnStart ? 0 : 1;
+    return CollapsibleHorizontalSplitPane(
+      key: key,
+      sidePanelRatio: sidePanelRatio,
+      sideRegionIndex: sideRegionIndex,
+      collapsed: collapsed,
+      onCollapsedChanged: onCollapsedChanged,
+      expandSemanticLabel: expandSemanticLabel,
+      collapseSemanticLabel: collapseSemanticLabel,
+      collapsePlacement: collapsePlacement,
+      floatingButtonOffset: floatingButtonOffset,
+      style: style,
+      resolve: ({required totalWidth, required sideWidth}) =>
+          resolveFeatureSplitExtents(
+            totalWidth: totalWidth,
+            sideWidth: sideWidth,
+            sideMin: sideMin,
+            mainMin: mainMin,
+            sideMaxFraction: sideMaxFraction,
+            sideMaxPixels: sideMaxPixels,
+            spacer: spacer,
+          ),
+      onSidePanelRatioChanged: onSidePanelRatioChanged,
+      sidePane: sidePane,
+      mainPane: mainPane,
+    );
+  }
+
   /// Whether the side pane sits on the physical left edge.
   bool get _sideOnLeft => sideRegionIndex == 0;
 
@@ -161,7 +214,7 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
       sidePane: _wrapSidePane(sidePane),
       mainPane: mainPane,
       sideRegionIndex: sideRegionIndex,
-      style: style,
+      style: style ?? splitPaneDividerStyle(context),
     );
   }
 

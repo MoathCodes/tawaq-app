@@ -160,7 +160,7 @@ class SettingsScreen extends HookConsumerWidget {
                   for (final (i, tab) in tabs.indexed)
                     centeredViewportScrollTab(
                       maxContentWidth: _maxContentWidth,
-                      child: LazyTabContent(
+                      child: LazyPanelContent.tab(
                         controller: tabController,
                         index: i,
                         builder: () => KeyedSubtree(
