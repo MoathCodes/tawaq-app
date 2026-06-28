@@ -15,7 +15,7 @@ import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.d
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/range_repeat_dialog.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/reciter_dialog.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_dialog.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Animated floating bar for copy, share, and play on the selected ayah.

@@ -11,7 +11,7 @@ import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_search_select.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_select_search.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 
 export 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_select_search.dart'
     show normalizeArabicForSurahSearch, searchSurahs;

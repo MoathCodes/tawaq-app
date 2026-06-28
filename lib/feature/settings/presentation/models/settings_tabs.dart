@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/keyboard_shortcuts/keyboard_shortcuts_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/adhan_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/time_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/tabs/settings_appearance_tab.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/tabs/settings_keyboard_shortcuts_tab.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/tabs/settings_location_tab.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/tabs/settings_prayer_times_tab.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Persisted key for the default settings tab.
 const kSettingsDefaultTabKey = 'appearance';
@@ -88,13 +91,19 @@ String _keyboardShortcutsLabel(AppLocalizations l10n) =>
 
 Widget _appearanceBody(AppLocalizations l10n) => const SettingsAppearanceTab();
 
-Widget _prayerTimesBody(AppLocalizations l10n) =>
-    const SettingsPrayerTimesTab();
+Widget _prayerTimesBody(AppLocalizations l10n) => const Column(
+  crossAxisAlignment: CrossAxisAlignment.stretch,
+  spacing: AppSpacing.lg,
+  children: [
+    PrayerTimeSettings(),
+    PrayerAdhanSettings(chrome: SettingsChrome.section),
+  ],
+);
 
-Widget _locationBody(AppLocalizations l10n) => const SettingsLocationTab();
+Widget _locationBody(AppLocalizations l10n) => const PrayerLocationSettings();
 
 Widget _keyboardShortcutsBody(AppLocalizations l10n) =>
-    const SettingsKeyboardShortcutsTab();
+    const KeyboardShortcutsSection();
 
 /// Resolves a persisted tab key, defaulting to appearance.
 SettingsTab tabForKey(String? key) {

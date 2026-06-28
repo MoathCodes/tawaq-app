@@ -8,7 +8,7 @@ import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/pray
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/period_completion_summary.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/period_rate_bars.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/trend_chart.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 

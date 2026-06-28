@@ -18,7 +18,7 @@ import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_detail_p
 import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_panel.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_results_column.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_search_column.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Main Hadith search and exploration page.

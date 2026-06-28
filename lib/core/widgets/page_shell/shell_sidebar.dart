@@ -10,7 +10,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/core/widgets/merged_action_semantics.dart';
 import 'package:tawaq/core/widgets/shell_a11y.dart';
-import 'package:tawaq/feature/settings/presentation/provider/ui_state_settings_providers.dart';
+import 'package:tawaq/core/widgets/page_shell/sidebar_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/spacing.dart';
 import 'package:tawaq/theme/theme_extensions.dart';

@@ -1,7 +1,7 @@
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_mushaf_pane.dart' show QuranMushafInitGate;
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 
 part 'quran_mushaf_controller_provider.g.dart';
 

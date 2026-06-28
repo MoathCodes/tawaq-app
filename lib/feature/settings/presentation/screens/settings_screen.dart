@@ -10,7 +10,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 import 'package:tawaq/core/widgets/icon_label.dart';
 import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
-import 'package:tawaq/feature/settings/presentation/provider/ui_state_settings_providers.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_screen_settings_provider.dart';
 import 'package:tawaq/theme/spacing.dart';
 
 /// Screen for application settings.

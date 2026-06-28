@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/theme/theme.dart';
 

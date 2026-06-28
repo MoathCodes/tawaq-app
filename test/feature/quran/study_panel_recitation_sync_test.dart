@@ -15,7 +15,7 @@ import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.d
 import 'package:tawaq/feature/quran/presentation/providers/tafsir_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/translation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';

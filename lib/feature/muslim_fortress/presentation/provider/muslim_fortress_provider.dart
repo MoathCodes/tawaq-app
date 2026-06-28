@@ -8,7 +8,7 @@ import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_stat
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 
 part 'muslim_fortress_provider.g.dart';
 

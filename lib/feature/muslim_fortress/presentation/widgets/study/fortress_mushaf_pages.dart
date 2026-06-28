@@ -7,7 +7,7 @@ import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_mus
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Embeds one or more mushaf pages inside scrollable thikr content.

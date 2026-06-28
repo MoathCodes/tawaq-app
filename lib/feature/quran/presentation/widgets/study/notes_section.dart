@@ -8,7 +8,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_notes_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_width_scope.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Notes section for the study panel.

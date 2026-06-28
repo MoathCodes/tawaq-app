@@ -16,7 +16,7 @@ import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controll
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_dialog_body.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_export.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_range_slider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 

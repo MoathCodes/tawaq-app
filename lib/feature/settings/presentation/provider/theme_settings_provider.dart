@@ -44,26 +44,26 @@ class ThemeNotifier extends _$ThemeNotifier {
     return state.value ?? _lastGoodThemePrefs;
   }
 
-  /// Sets the application palette.
-  void setPalette(AppPalette p) {
+  void _commit(ThemePrefs Function(ThemePrefs) fn, String field) {
     final prefs = state.value;
-    if (prefs == null || p == prefs.appPalette) return;
-    state = AsyncData(prefs.copyWith(appPalette: p));
+    if (prefs == null) return;
+    final next = fn(prefs);
+    if (next == prefs) return;
+    state = AsyncData(next);
+    ref.read(loggerProvider).i('$_themeLogPrefix $field updated');
   }
+
+  /// Sets the application palette.
+  void setPalette(AppPalette p) =>
+      _commit((s) => s.copyWith(appPalette: p), 'Palette');
 
   /// Sets the theme mode.
-  void setThemeMode(ThemeMode m) {
-    final prefs = state.value;
-    if (prefs == null || m == prefs.themeMode) return;
-    state = AsyncData(prefs.copyWith(themeMode: m));
-  }
+  void setThemeMode(ThemeMode m) =>
+      _commit((s) => s.copyWith(themeMode: m), 'Theme mode');
 
   /// Sets the app-wide UI text scale.
-  void setAppTextScale(AppTextScale scale) {
-    final prefs = state.value;
-    if (prefs == null || scale == prefs.appTextScale) return;
-    state = AsyncData(prefs.copyWith(appTextScale: scale));
-  }
+  void setAppTextScale(AppTextScale scale) =>
+      _commit((s) => s.copyWith(appTextScale: scale), 'App text scale');
 
   /// Toggles the theme mode between light and dark.
   void toggleThemeMode() => setThemeMode(

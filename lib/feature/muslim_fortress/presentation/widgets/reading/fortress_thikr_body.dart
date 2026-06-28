@@ -7,7 +7,7 @@ import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.da
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_mushaf_pages.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_quran_passage.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 const _kFortressAyahBaseFontSize = 32.0;

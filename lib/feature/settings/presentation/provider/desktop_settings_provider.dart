@@ -27,7 +27,7 @@ class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
     return state.value ?? DesktopSettings.defaults();
   }
 
-  void _update(DesktopSettings Function(DesktopSettings) fn, String field) {
+  void _commit(DesktopSettings Function(DesktopSettings) fn, String field) {
     if (!state.hasValue) return;
     final next = fn(state.value!);
     if (next == state.value) return;
@@ -36,18 +36,18 @@ class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
   }
 
   /// Sets whether closing the window hides to tray instead of quitting.
-  void setMinimizeToTrayOnClose({required bool value}) => _update(
+  void setMinimizeToTrayOnClose({required bool value}) => _commit(
     (s) => s.copyWith(minimizeToTrayOnClose: value),
     'Minimize to tray on close',
   );
 
   /// Sets whether the minimize button hides to tray.
   void setMinimizeToTray({required bool value}) =>
-      _update((s) => s.copyWith(minimizeToTray: value), 'Minimize to tray');
+      _commit((s) => s.copyWith(minimizeToTray: value), 'Minimize to tray');
 
   /// Sets whether the app starts hidden in the tray.
   void setLaunchToTray({required bool value}) =>
-      _update((s) => s.copyWith(launchToTray: value), 'Launch to tray');
+      _commit((s) => s.copyWith(launchToTray: value), 'Launch to tray');
 
   /// Sets whether the app starts automatically at login.
   ///
@@ -68,8 +68,7 @@ class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
 
     if (next == current) return false;
 
-    state = AsyncData(next);
-    ref.read(loggerProvider).i('$_logPrefix Launch at login updated');
+    _commit((_) => next, 'Launch at login');
 
     if (isDesktopPlatform) {
       await LaunchAtLoginService.setEnabled(value: value);

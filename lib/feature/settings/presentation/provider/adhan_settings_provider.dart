@@ -48,7 +48,7 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
     return state.value ?? _lastGood;
   }
 
-  void _update(AdhanSettings Function(AdhanSettings) fn, String field) {
+  void _commit(AdhanSettings Function(AdhanSettings) fn, String field) {
     if (!state.hasValue) return;
     final next = fn(state.value!);
     if (next == state.value) return;
@@ -61,27 +61,27 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
     PrayerAlertKind kind,
     Prayer prayer,
     ScheduleAlertMode mode,
-  ) => _update(
+  ) => _commit(
     (s) => adhanSettingsWithMode(s, kind, prayer, mode),
     '${kind.name} mode for $prayer',
   );
 
   /// Sets whether all prayer alert playback is muted.
   void setMuteAll({required bool value}) =>
-      _update((s) => s.copyWith(muteAll: value), 'Mute all');
+      _commit((s) => s.copyWith(muteAll: value), 'Mute all');
 
   /// Sets the bundled adhan sound.
   void setSound(AdhanSound sound) =>
-      _update((s) => s.copyWith(sound: sound), 'Sound');
+      _commit((s) => s.copyWith(sound: sound), 'Sound');
 
   /// Sets the bundled iqamah sound.
   void setIqamahSound(IqamahSound sound) =>
-      _update((s) => s.copyWith(iqamahSound: sound), 'Iqamah sound');
+      _commit((s) => s.copyWith(iqamahSound: sound), 'Iqamah sound');
 
   /// Sets playback volume (0–100) and persists immediately.
   void setVolume(double volume) {
     _volumePreview = null;
-    _update((s) => s.copyWith(volume: volume.clamp(0, 100)), 'Volume');
+    _commit((s) => s.copyWith(volume: volume.clamp(0, 100)), 'Volume');
   }
 
   /// Updates volume in memory during slider drag without persisting.
@@ -95,13 +95,13 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
 
   /// Sets whether the in-app alert overlay is shown.
   void setShowAdhanAlert({required bool value}) =>
-      _update((s) => s.copyWith(showAdhanAlert: value), 'Show alert');
+      _commit((s) => s.copyWith(showAdhanAlert: value), 'Show alert');
 
   /// Sets whether a companion OS notification is shown from tray.
   void setShowOsNotification({required bool value}) =>
-      _update((s) => s.copyWith(showOsNotification: value), 'OS notification');
+      _commit((s) => s.copyWith(showOsNotification: value), 'OS notification');
 
   /// Sets compact alert window placement.
   void setAlertPosition(AdhanAlertPosition position) =>
-      _update((s) => s.copyWith(alertPosition: position), 'Alert position');
+      _commit((s) => s.copyWith(alertPosition: position), 'Alert position');
 }

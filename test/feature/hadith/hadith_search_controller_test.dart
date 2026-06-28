@@ -7,7 +7,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:tawaq/feature/hadith/data/repository/hadith_repository.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
 
 class MockHadithRepository extends Mock implements HadithRepository {}
 

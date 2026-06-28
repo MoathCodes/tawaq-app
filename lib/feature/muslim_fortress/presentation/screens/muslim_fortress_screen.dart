@@ -18,7 +18,7 @@ import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortre
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/muslim_fortress_welcome_pane.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/search/fortress_search_results.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Muslim Fortress screen — sidebar browse, welcome home, and focus reading.

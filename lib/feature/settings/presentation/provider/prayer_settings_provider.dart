@@ -8,7 +8,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:tawaq/feature/settings/data/location_constants.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
@@ -57,7 +56,7 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     return state.value ?? _lastGood;
   }
 
-  void _update(PrayerSettings Function(PrayerSettings) fn, String field) {
+  void _commit(PrayerSettings Function(PrayerSettings) fn, String field) {
     if (state.value == null) return;
     final newSettings = fn(state.value!);
     if (state.value == newSettings) return;
@@ -67,34 +66,31 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
 
   /// Sets whether to use 24-hour time format.
   void set24HourFormat({required bool value}) =>
-      _update((s) => s.copyWith(is24Hours: value), '24h format');
+      _commit((s) => s.copyWith(is24Hours: value), '24h format');
 
   /// Sets the coordinates for prayer time calculations.
   void setCoordinates(Coordinates c) =>
-      _update((s) => s.copyWith(coordinates: c), 'Coordinates');
+      _commit((s) => s.copyWith(coordinates: c), 'Coordinates');
 
   /// Sets the iqamah times for prayers.
   void setIqamahTimes(Map<Prayer, int> t) =>
-      _update((s) => s.copyWith(iqamahSettings: t), 'Iqamah times');
+      _commit((s) => s.copyWith(iqamahSettings: t), 'Iqamah times');
 
   /// Sets the timezone location for prayer time calculations.
   void setLocation(Location l) =>
-      _update((s) => s.copyWith(location: l), 'Location');
+      _commit((s) => s.copyWith(location: l), 'Location');
 
   /// Sets whether to use automatic location detection.
   void setAutoLocation({required bool value}) =>
-      _update((s) => s.copyWith(autoLocation: value), 'Auto location');
+      _commit((s) => s.copyWith(autoLocation: value), 'Auto location');
 
   /// Sets the display name for the current location.
   void setLocationName(String n) =>
-      _update((s) => s.copyWith(locationName: n), 'Location name');
+      _commit((s) => s.copyWith(locationName: n), 'Location name');
 
   /// Sets the complete prayer settings object.
-  void setPrayerSettings(PrayerSettings s) {
-    if (state.value == null || state.value == s) return;
-    state = AsyncData(s);
-    ref.read(loggerProvider).i('$_prayerLogPrefix Settings updated');
-  }
+  void setPrayerSettings(PrayerSettings s) =>
+      _commit((_) => s, 'Settings');
 
   /// Applies [cb] to the current settings, logging failures before rethrowing.
   @override
@@ -134,14 +130,14 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
       } catch (_) {}
     }
     final s = state.value!;
-    final newSettings = s.copyWith(
-      coordinates: coordinates ?? s.coordinates,
-      locationName: locationName ?? s.locationName,
-      location: loc ?? s.location,
+    _commit(
+      (_) => s.copyWith(
+        coordinates: coordinates ?? s.coordinates,
+        locationName: locationName ?? s.locationName,
+        location: loc ?? s.location,
+      ),
+      'Location',
     );
-    if (s == newSettings) return;
-    state = AsyncData(newSettings);
-    ref.read(loggerProvider).i('$_prayerLogPrefix Location updated');
   }
 
   /// Fetches and sets the current device location.
@@ -169,7 +165,7 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     if ((state.value!.iqamahSettings[prayer] ?? 0) == time) return;
     final newMap = Map<Prayer, int>.from(state.value!.iqamahSettings)
       ..[prayer] = time;
-    _update((s) => s.copyWith(iqamahSettings: newMap), 'Iqamah for $prayer');
+    _commit((s) => s.copyWith(iqamahSettings: newMap), 'Iqamah for $prayer');
   }
 }
 

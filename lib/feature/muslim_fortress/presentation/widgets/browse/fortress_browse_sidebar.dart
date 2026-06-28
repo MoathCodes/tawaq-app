@@ -18,7 +18,7 @@ import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortr
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_category_row.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_favorite_toggle.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Sidebar browse panel: filter, favorites tab, and chapter list.

@@ -6,7 +6,8 @@ import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_u
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/first_prayer_recorded_provider.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_completion_provider.g.dart';

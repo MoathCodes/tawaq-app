@@ -24,7 +24,7 @@ import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_seek_
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport_controls.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_range_formatters.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 part 'recitation_drawer_controls.dart';

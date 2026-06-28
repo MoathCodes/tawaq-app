@@ -25,7 +25,7 @@ import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controll
 import 'package:tawaq/feature/quran/presentation/providers/quran_route_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_data_providers.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_state_machine.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 
 export 'recitation_data_providers.dart';
 

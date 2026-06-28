@@ -12,7 +12,7 @@ import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.d
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/timed_riwayat_suggestions.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_range_formatters.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/range_endpoint_row.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';

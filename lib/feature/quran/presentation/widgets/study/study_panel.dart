@@ -17,7 +17,7 @@ import 'package:tawaq/feature/quran/presentation/widgets/study/study_content_sec
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_header.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_width_scope.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/tafsir_text.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// A study companion panel for the Quran screen.

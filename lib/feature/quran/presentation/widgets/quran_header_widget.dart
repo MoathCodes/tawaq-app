@@ -15,7 +15,7 @@ import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_search_s
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/juz_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/surah_selector.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 const _kSearchMinWidth = 280.0;

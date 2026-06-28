@@ -5,7 +5,7 @@ import 'package:tawaq/core/utils/lru_ayah_cache.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/data/repository/translation_repository.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 
 part 'translation_provider.g.dart';
 

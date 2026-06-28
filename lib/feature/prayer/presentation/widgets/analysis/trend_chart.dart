@@ -12,7 +12,7 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Stacked bar chart for prayer completion trends over a period.
