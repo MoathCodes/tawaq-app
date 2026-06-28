@@ -1,10 +1,5 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hivez_flutter/hivez_flutter.dart';
-import 'package:logger/logger.dart';
-import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
-import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_day_computer.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
@@ -23,19 +18,11 @@ void main() {
 
   group('Prayer Card Decision Tests', () {
     late Location location;
-    late PrayerRepo repo;
     late PrayerSettings settings;
     late PrayerTimeInputs inputs;
 
     setUpAll(() {
       location = getLocation('Asia/Riyadh');
-      final box = Box<int, PrayerCompletion>(
-        'card_decision_${DateTime.now().microsecondsSinceEpoch}',
-      );
-      repo = PrayerRepo(
-        prayerDatabase: PrayerDatabase(box),
-        log: Logger(),
-      );
       settings = PrayerSettings.defaultSettings().copyWith(
         coordinates: const Coordinates(24.7136, 46.6753),
         location: location,
@@ -51,7 +38,6 @@ void main() {
         final bundle = computePrayerDayBundle(
           inputs: inputs,
           anchorNow: testTime,
-          repo: repo,
         )!;
 
         final decision = computePrayerCardDecisionFromParts(
@@ -70,7 +56,6 @@ void main() {
       final bundle = computePrayerDayBundle(
         inputs: inputs,
         anchorNow: testTime,
-        repo: repo,
       )!;
 
       final decision = computePrayerCardDecisionFromParts(

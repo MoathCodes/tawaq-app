@@ -66,17 +66,18 @@ Settings notifiers use `@JsonPersist()` (from `riverpod_annotation/experimental/
 - `LocaleNotifier` — sync, stores language code (`"en"` / `"ar"`) — lives in `lib/core/locale/locale_provider.dart`, re-exported via `settings_provider.dart`
 - `PrayerSettingsNotifier` — async, coordinates, timezone, iqamah offsets, 24h toggle
 - `ThemeNotifier` — async, stores `AppPalette` + `ThemeMode` + `**AppTextScale`**
-- **UI state** (split from legacy monolith) in `ui_state_settings_providers.dart`:
-  - `SidebarSettingsNotifier` — shell sidebar collapsed
-  - `PrayerAnalyticsSettingsNotifier` — analytics period
-  - `QuranScreenSettingsNotifier` — page, layout, ayah, side panel ratio + collapsed, tafsir/translation toggles, `**QuranTextScale`**
-  - `HadithScreenSettingsNotifier` — filters, tab, side panel ratio + collapsed
-  - `FortressScreenSettingsNotifier` — sidebar tab, favorites, side panel ratio + collapsed
+- **UI state** — screen/session prefs live in each feature (not a shared settings junk drawer):
+  - `SidebarSettingsNotifier` — `lib/core/widgets/page_shell/sidebar_settings_provider.dart`
+  - `PrayerAnalyticsSettingsNotifier` — `lib/feature/prayer/presentation/provider/prayer_analytics_settings_provider.dart`
+  - `QuranScreenSettingsNotifier` + `RecitationSettingsNotifier` — `lib/feature/quran/presentation/providers/quran_screen_settings_provider.dart`
+  - `HadithScreenSettingsNotifier` — `lib/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart`
+  - `FortressScreenSettingsNotifier` — `lib/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart`
+  - `SettingsScreenSettingsNotifier` — active settings tab only (`settings_screen_settings_provider.dart`)
 - `FirstPrayerRecordedDate` — ISO date of first recorded prayer (analytics)
 
-Common internal pattern: `_update()` helper that guards against null state, applies a transform, and logs the changed field name. Async notifiers call `persist()` in `build()` after `await .future`; `LocaleNotifier` calls `persist()` synchronously. All use `StorageOptions(cacheTime: unsafe_forever)`. One-time migration: `stateSettingsLegacyMigrationProvider` splits the old monolithic blob.
+Common internal pattern: `_commit()` helper that guards against null state, applies a transform, and logs the changed field name. Async notifiers call `persist()` in `build()` after `await .future`; `LocaleNotifier` calls `persist()` synchronously. All use `StorageOptions(cacheTime: unsafe_forever)`. One-time migration: `stateSettingsLegacyMigrationProvider` splits the old monolithic blob.
 
-**Barrel import:** `import '.../settings_provider.dart'` re-exports all persisted settings providers.
+**Barrel import:** `import '.../settings_provider.dart'` re-exports settings-owned persisted providers only. Feature screen settings import from their feature (`quran_screen_settings_provider.dart`, etc.). Prayer effective settings: `prayer_effective_settings_provider.dart` (re-exported where needed for cross-feature prayer time reads).
 
 ## Routing
 
@@ -155,15 +156,16 @@ Defined in `lib/theme/theme_extensions.dart`:
 | `responsive.dart`                  | Viewport helpers (`isAtLeast`, `isLessThan`), `isContainerAtLeast` for `LayoutBuilder` widths, `FBreakpoint` enum | All features                  |
 | `split_pane_constraints.dart`      | `kStudyPanelMinExtent` (320), `kMainPaneMinExtent` (480), `kMushafPaneMinExtent` (400), `resolveSplitExtents()`, `migrateSidePanelWidthToRatio()`, `minSplitContainerWidth()`, `canUseHorizontalSplit()` | Hadith, Quran study, Fortress |
 | `persisted_horizontal_split_pane.dart` | `PersistedHorizontalSplitPane` — `FResizableRegion.flex` split that persists a **ratio**; stable regions across rebuilds | Hadith, Quran study, Fortress |
-| `collapsible_horizontal_split_pane.dart` | `CollapsibleHorizontalSplitPane` — wraps the above; collapses the side pane via `FCollapsible(axis: horizontal)` with a divider-edge handle + rail | Hadith, Quran study, Fortress |
+| `collapsible_horizontal_split_pane.dart` | `CollapsibleHorizontalSplitPane` (+ `.feature(...)` factory) — wraps persisted split; collapses the side pane via `FCollapsible(axis: horizontal)` with a divider-edge handle + rail | Hadith, Quran study, Fortress |
+| `responsive_horizontal_split.dart`   | `ResponsiveHorizontalSplitGate` — shared `canUseHorizontalSplit` gating + stacked fallback | Hadith, Quran study, Fortress |
 | `viewport_dialog_constraints.dart` | `dialogConstraints()`, `selectPopoverPortalConstraints()`                                                       | Dialogs, Quran selectors      |
 | `responsive_field_row.dart`        | `ResponsiveFieldRow` — column below 640px, row above                                                            | Settings forms, wizard        |
-| `lazy_tab_content.dart`            | `LazyTabContent` (Material `TabController`) and `LazyIndexedContent` (index-controlled tabs e.g. Forui `FTabs`) | Settings, Hadith filters    |
+| `lazy_tab_content.dart`            | `LazyPanelContent.tab` / `LazyPanelContent.indexed` — defer tab/panel build until first selected | Settings, Hadith filters    |
 
 
-**FResizable split-pane convention:** prefer the shared `PersistedHorizontalSplitPane` / `CollapsibleHorizontalSplitPane` over hand-rolled `FResizable`. Pattern: `LayoutBuilder` → feature-specific extent resolver → `resolveSplitExtents()` → `FResizableRegion.flex` regions inside a `Directionality(textDirection: TextDirection.ltr)` (consistent resize handles in RTL); restore user `Directionality` inside each region. Side size is persisted as a **ratio** (0..1, not pixels) via the feature screen-settings notifier on `onResizeEnd`, so panels keep their share across monitor sizes; legacy pixel state upgrades through `migrateSidePanelWidthToRatio()`. Collapsed state is a separate persisted bool per screen.
+**FResizable split-pane convention:** prefer `ResponsiveHorizontalSplitGate` → `CollapsibleHorizontalSplitPane.feature(...)` over hand-rolled `FResizable`. Pattern: gate checks `canUseHorizontalSplit` → feature factory wires `resolveFeatureSplitExtents()` → `FResizableRegion.flex` regions inside a `Directionality(textDirection: TextDirection.ltr)` (consistent resize handles in RTL); restore user `Directionality` inside each region. Side size is persisted as a **ratio** (0..1, not pixels) via the feature screen-settings notifier on `onResizeEnd`, so panels keep their share across monitor sizes; legacy pixel state upgrades through `migrateSidePanelWidthToRatio()`. Collapsed state is a separate persisted bool per screen.
 
-**Split gating:** before rendering a horizontal split, check `canUseHorizontalSplit(containerWidth: constraints.maxWidth, sideMin: kStudyPanelMinExtent, mainMin: kMainPaneMinExtent)` (or `kMushafPaneMinExtent` for Quran study). When false, fall back to a stacked layout and prefer showing `mainPane` only inside `PersistedHorizontalSplitPane` when normalized extents collapse to zero.
+**Split gating:** use `ResponsiveHorizontalSplitGate` (or inline `canUseHorizontalSplit` + `LayoutBuilder`) before rendering a horizontal split. When false, fall back to a stacked layout showing `mainPane` only.
 
 ### Text scaling
 
@@ -211,7 +213,7 @@ Defined in `lib/core/widgets/tawaq_scroll_behavior.dart`:
 
 ### Keyboard shortcuts (`lib/core/shortcuts/`)
 
-Sealed catalog: `AppShortcut.all` → `ShellShortcutScope` (global `invokeGlobal`) + `AppShortcutScope` (route/contextual handler maps). `useRegisterAppSearchFocus` hook for Ctrl+K search focus. UI helpers in `lib/core/widgets/shortcuts/`.
+Sealed catalog: flat `ShortcutDef` list in `app_shortcut.dart` → `ShellShortcutScope` (`invokeGlobalShortcut`) + `AppShortcutScope` (route/contextual handler maps). `useRegisterAppSearchFocus` hook for Ctrl+K search focus. UI helpers in `lib/core/widgets/shortcuts/`.
 
 ### Accessibility
 
@@ -269,7 +271,7 @@ Sealed catalog: `AppShortcut.all` → `ShellShortcutScope` (global `invokeGlobal
 
 ### Hadith
 
-Dorar API search + local Hive (favorites, recents). Dual-layer state: persisted `hadithScreenSettingsProvider` + session `hadithScreenControllerProvider` + `hadithSearchControllerProvider`. Sharh parsing pipeline in `domain/services/` (parallel to Quran tafsir). Split layout at viewport `lg`. Screen uses `part` files for filters/layout/results.
+Dorar API search + local Hive (favorites, recents). State: persisted `hadithScreenSettingsProvider` + session `hadithSessionControllerProvider` (search, filters, results, selection). UI: `hadith_screen.dart`, `hadith_search_column.dart`, `hadith_results_column.dart` (+ shared filter/detail widgets). Sharh parsing pipeline in `domain/services/` (parallel to Quran tafsir). Split layout via `ResponsiveHorizontalSplitGate` at viewport `lg`.
 
 ### Muslim Fortress
 
@@ -277,13 +279,13 @@ Powered by `hisn_elmoslem` package. Chapters, duas, search, commentary, focus re
 
 ### Prayer
 
-**Single source of truth for prayer times:** `prayerDayProvider` (live 1 Hz `PrayerDaySnapshot`) for today; `prayerDayBundleForDateProvider` / `prayerTimesForDateProvider` for historical schedule days. All computation goes through `PrayerDayComputer` + `prayerTimeInputsProvider` / `effectivePrayerSettingsProvider` in `feature/prayer/presentation/provider/prayer_effective_settings_provider.dart` (re-exported via `settings_provider.dart`). Never compute times via `PrayerService` (completions/analytics only). Sunnah display and alerts share `resolveSunnahTime`.
+**Single source of truth for prayer times:** `prayerDayProvider` (live 1 Hz `PrayerDaySnapshot`) in `prayer_day.dart`; historical bundles via `prayerDayBundleForDateProvider`. All computation goes through `PrayerDayComputer` + `effectivePrayerSettingsProvider` / `prayerTimeInputsProvider` (re-exported via `prayer_effective_settings_provider.dart` for cross-feature reads). Slot logic (current prayer, card decision, schedule highlight) lives in `prayer_slots.dart`. Completions read via `completionStatusProvider(prayer, day)`. Never compute times via ad-hoc `PrayerService` calls.
 
 `PrayerDay` (`@Riverpod(keepAlive: true)`) emits snapshot every 1s — **all live time UI** should watch this, not local timers. Derived providers (`scheduleCurrentPrayerProvider`, `prayerCardProvider`, `prayerCalendarDayKeyProvider`) minimize rebuilds.
 
 ### Quran
 
-Mushaf via `mushaf_reader`. Study mode uses `StudyModeLayout` with FResizable split. Tafsir text pipeline: `TafsirTextParser` → normalizer, classifier, poetry splitter, segment repair, integrity check. Shared commentary rendering in `lib/core/commentary/`. `useMushafController` + ayah selection sync keep controller aligned with persisted `selectedAyah`.
+Mushaf via `mushaf_reader`. Study mode uses `StudyModeLayout` with `ResponsiveHorizontalSplitGate` + collapsible split. Tafsir: `tafsirForAyahProvider` → `TafsirTextParser` pipeline → `TafsirStudySection` in `tafsir_text.dart`. Shared commentary rendering in `lib/core/commentary/`. Recitation state machine in `recitation_state_machine.dart` + `recitation_provider.dart` (not yet collapsed). `useMushafController` + ayah selection sync keep controller aligned with persisted `selectedAyah`.
 
 ## Localization
 
