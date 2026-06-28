@@ -5,16 +5,12 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/presentation/models/study_panel_text_styles.dart';
-import 'package:tawaq/feature/quran/presentation/providers/tafsir_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/translation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/tafsir_source_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/translation_source_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_width_scope.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/tafsir_text.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Builds a study accordion title row.
@@ -206,70 +202,6 @@ class StudyContentSection<T> extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         _messagePlaceholder(typography, colors, message),
       ],
-    );
-  }
-}
-
-/// Tafsir accordion body with source selector, loading, and parsed commentary.
-class TafsirAccordionSection extends ConsumerWidget {
-  /// Creates a tafsir accordion section.
-  const TafsirAccordionSection({
-    required this.sura,
-    required this.aya,
-    required this.source,
-    required this.enabled,
-    super.key,
-  });
-
-  /// Surah number for the selected ayah.
-  final int sura;
-
-  /// Ayah number within the surah.
-  final int aya;
-
-  /// Active tafsir source from persisted settings.
-  final TafsirId? source;
-
-  /// Whether the tafsir accordion is expanded and should fetch content.
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = context.theme;
-    final colors = theme.colors;
-    final typography = theme.typography;
-    final l10n = context.l10n;
-    final resolvedSource = source ?? kDefaultTafsirId;
-    final narrowPanel = StudyPanelWidthScope.isNarrow(context);
-    final sectionMinHeight = narrowPanel ? 72.0 : 120.0;
-
-    final parsedAsync = enabled
-        ? ref.watch(parsedTafsirProvider(resolvedSource, sura, aya))
-        : const AsyncData(null);
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: sectionMinHeight),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return StudyContentSection(
-            asyncValue: parsedAsync,
-            contentKey: '${resolvedSource.name}-$sura-$aya',
-            errorMessage: l10n.errorLoadingTafsir,
-            emptyMessage: l10n.noTafsirAvailable,
-            sourceSelector: const TafsirSourceSelector(),
-            contentBuilder: (parsed) => TafsirText(
-              parseResult: parsed,
-              tafsirId: resolvedSource,
-              baseStyle: StudyPanelTextStyles.tafsirBase(
-                context: context,
-                typography: typography,
-                colors: colors,
-                containerWidth: constraints.maxWidth,
-              ),
-            ),
-          );
-        },
-      ),
     );
   }
 }

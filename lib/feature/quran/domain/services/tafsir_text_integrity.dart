@@ -1,7 +1,7 @@
 /// Heuristics for detecting truncated or incomplete tafsir rows in bundled DBs.
 library;
 
-import 'package:tawaq/feature/quran/domain/models/tafsir_truncation_report.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 
 /// Detects likely database truncation in raw tafsir markup.
 abstract final class TafsirTextIntegrity {

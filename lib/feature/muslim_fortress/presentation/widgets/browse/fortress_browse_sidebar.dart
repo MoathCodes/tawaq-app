@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
@@ -13,7 +15,6 @@ import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_exte
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_sidebar_search.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_category_row.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_favorite_toggle.dart';
@@ -35,7 +36,31 @@ class FortressBrowseSidebar extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final searchField = useFortressSearchField(ref);
+    final committedQuery = ref.watch(muslimFortressSearchQueryProvider);
+    final searchController = useTextEditingController(text: committedQuery);
+    useListenable(searchController);
+    final searchFocusNode = useFocusNode();
+    final focusSearch = useCallback(
+      searchFocusNode.requestFocus,
+      [searchFocusNode],
+    );
+    useRegisterAppSearchFocus(focusSearch);
+    useEffect(() {
+      if (searchController.text != committedQuery) {
+        searchController.text = committedQuery;
+      }
+      return null;
+    }, [committedQuery]);
+    final debouncedCommit = useDebouncedCallback(
+      () => ref
+          .read(muslimFortressSearchQueryProvider.notifier)
+          .setQuery(searchController.text),
+      duration: const Duration(milliseconds: 300),
+    );
+    useEffect(() {
+      debouncedCommit();
+      return null;
+    }, [searchController.text]);
     final animatedSidebarChapterIds = useRef(<int>{});
     final favoriteChapterIds = ref.watch(
       fortressScreenSettingsProvider.select(
@@ -50,7 +75,7 @@ class FortressBrowseSidebar extends HookConsumerWidget {
       ),
     );
 
-    final sidebarQuery = searchField.query.toLowerCase();
+    final sidebarQuery = searchController.text.toLowerCase();
     final sourceCategories = isFavoritesTab
         ? categories
               .where((c) => favoriteChapterIds.contains(c.chapterId))
@@ -93,10 +118,10 @@ class FortressBrowseSidebar extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   FTextField(
-                    focusNode: searchField.focusNode,
+                    focusNode: searchFocusNode,
                     hint: l10n.fortressSearchHint,
                     control: FTextFieldControl.managed(
-                      controller: searchField.controller,
+                      controller: searchController,
                     ),
                     prefixBuilder: (context, style, variants) =>
                         const Icon(FLucideIcons.search),

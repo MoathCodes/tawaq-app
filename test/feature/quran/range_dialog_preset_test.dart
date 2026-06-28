@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 
 /// Mirrors continue-from-here preset behavior in the range dialog.
 bool shouldForceCustomOnFromEdit(RangeScopePreset preset) =>

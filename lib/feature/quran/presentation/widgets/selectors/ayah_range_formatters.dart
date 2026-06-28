@@ -1,5 +1,5 @@
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/feature/quran/domain/models/ayah_reference.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 /// Localized label for a repeat count (1, 2, or N times).

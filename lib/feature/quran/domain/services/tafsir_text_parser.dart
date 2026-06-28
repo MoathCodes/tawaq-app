@@ -1,7 +1,6 @@
 import 'package:tawaq/core/text/arabic_text_normalizer.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_parse_result.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_poetry_splitter.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_segment_repair.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_span_classifier.dart';

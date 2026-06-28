@@ -12,7 +12,6 @@ import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.da
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_nav_controls.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_commentary_text.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_study_section_header.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -289,7 +288,7 @@ class FortressDuaStudyContent extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (hasSharh) ...[
-          FortressStudySectionHeader(
+          _StudySectionHeader(
             icon: FLucideIcons.bookOpenText,
             title: l10n.fortressSharh,
             prominent: true,
@@ -308,7 +307,7 @@ class FortressDuaStudyContent extends HookConsumerWidget {
         ),
         if (dua.hasSource) ...[
           SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
-          FortressStudySectionHeader(
+          _StudySectionHeader(
             icon: FLucideIcons.bookMarked,
             title: l10n.fortressSourceReference,
           ),
@@ -416,12 +415,52 @@ class _FortressSecondaryInsights extends HookWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          FortressStudySectionHeader(
+          _StudySectionHeader(
             icon: singleIcon,
             title: singleTitle,
           ),
           const SizedBox(height: AppSpacing.md),
           body(singleText),
+        ],
+      ),
+    );
+  }
+}
+
+class _StudySectionHeader extends StatelessWidget {
+  const _StudySectionHeader({
+    required this.icon,
+    required this.title,
+    this.prominent = false,
+  });
+
+  final IconData icon;
+  final String title;
+  final bool prominent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final colors = theme.colors;
+    final typography = theme.typography;
+
+    return Semantics(
+      header: true,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: prominent ? 20 : 16,
+            color: prominent ? colors.primary : colors.mutedForeground,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            title,
+            style: (prominent ? typography.body.md : typography.body.sm).copyWith(
+              fontWeight: prominent ? FontWeight.w700 : FontWeight.w600,
+              color: prominent ? colors.primary : colors.foreground,
+            ),
+          ),
         ],
       ),
     );

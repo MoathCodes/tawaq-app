@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/core/text/arabic_text_normalizer.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_poetry_splitter.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
 

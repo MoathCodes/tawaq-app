@@ -31,7 +31,7 @@ Future<void> _waitForAutoDispose() async {
 }
 
 void main() {
-  group('parsedTafsirProvider', () {
+  group('tafsirForAyahProvider', () {
     late CountingTafsirRepository repository;
     late ProviderContainer container;
 
@@ -48,17 +48,17 @@ void main() {
       const source = TafsirId.tafseerMouaser;
 
       final subA = container.listen(
-        parsedTafsirProvider(source, 1, 1),
+        tafsirForAyahProvider(source, 1, 1),
         (_, _) {},
       );
-      await container.read(parsedTafsirProvider(source, 1, 1).future);
+      await container.read(tafsirForAyahProvider(source, 1, 1).future);
       expect(repository.callCount, 1);
 
       final subB = container.listen(
-        parsedTafsirProvider(source, 1, 2),
+        tafsirForAyahProvider(source, 1, 2),
         (_, _) {},
       );
-      await container.read(parsedTafsirProvider(source, 1, 2).future);
+      await container.read(tafsirForAyahProvider(source, 1, 2).future);
       expect(repository.callCount, 2);
 
       subB.close();
@@ -66,10 +66,10 @@ void main() {
       await _waitForAutoDispose();
 
       final subAAgain = container.listen(
-        parsedTafsirProvider(source, 1, 1),
+        tafsirForAyahProvider(source, 1, 1),
         (_, _) {},
       );
-      await container.read(parsedTafsirProvider(source, 1, 1).future);
+      await container.read(tafsirForAyahProvider(source, 1, 1).future);
       subAAgain.close();
 
       expect(

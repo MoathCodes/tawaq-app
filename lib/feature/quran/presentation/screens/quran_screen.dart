@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_header_widget.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_mushaf_pane.dart';

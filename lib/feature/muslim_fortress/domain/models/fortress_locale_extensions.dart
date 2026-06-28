@@ -12,10 +12,3 @@ String fortressRecurrenceLabel(
       HisnRecurrence.monthly => l10n.monthly,
       HisnRecurrence.yearly => l10n.yearly,
     };
-
-/// Localized reading-length hint from item count.
-String fortressReadingDurationLabel(int itemCount, AppLocalizations l10n) {
-  if (itemCount <= 3) return l10n.fortressReadShort;
-  if (itemCount <= 8) return l10n.fortressReadMedium;
-  return l10n.fortressReadLong;
-}

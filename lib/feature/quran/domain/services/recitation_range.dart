@@ -1,6 +1,5 @@
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/feature/quran/domain/models/ayah_reference.dart';
-import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 
 /// Maps global endpoints to the first surah-local segment to load.

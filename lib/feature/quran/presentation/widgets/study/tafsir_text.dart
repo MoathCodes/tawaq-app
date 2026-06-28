@@ -1,19 +1,89 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/commentary/commentary_inline_run_builder.dart';
 import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
 import 'package:tawaq/core/commentary/commentary_text_styles.dart';
 import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/text/qawl_patterns.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_parse_result.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
-import 'package:tawaq/feature/quran/domain/services/tafsir_segment_repair.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
+import 'package:tawaq/feature/quran/presentation/models/study_panel_text_styles.dart';
+import 'package:tawaq/feature/quran/presentation/providers/tafsir_provider.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/tafsir_source_selector.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/study_content_section.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_width_scope.dart';
 import 'package:tawaq/theme/theme.dart';
+
+const _arabicPrefixParticles = 'لوبفك';
+
+bool _isArabicPrefixParticle(String text) =>
+    text.length == 1 && _arabicPrefixParticles.contains(text);
+
+bool _startsWithQawlLead(String text) =>
+    QawlPatterns.qawlLeadPrefix.hasMatch(text);
+
+/// Tafsir accordion body: source selector, fetch, and parsed commentary.
+class TafsirStudySection extends ConsumerWidget {
+  /// Creates a tafsir study section.
+  const TafsirStudySection({
+    required this.sura,
+    required this.aya,
+    required this.source,
+    required this.enabled,
+    super.key,
+  });
+
+  final int sura;
+  final int aya;
+  final TafsirId? source;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final colors = theme.colors;
+    final typography = theme.typography;
+    final l10n = context.l10n;
+    final resolvedSource = source ?? kDefaultTafsirId;
+    final narrowPanel = StudyPanelWidthScope.isNarrow(context);
+    final sectionMinHeight = narrowPanel ? 72.0 : 120.0;
+
+    final parsedAsync = enabled
+        ? ref.watch(tafsirForAyahProvider(resolvedSource, sura, aya))
+        : const AsyncData(null);
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: sectionMinHeight),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return StudyContentSection(
+            asyncValue: parsedAsync,
+            contentKey: '${resolvedSource.name}-$sura-$aya',
+            errorMessage: l10n.errorLoadingTafsir,
+            emptyMessage: l10n.noTafsirAvailable,
+            sourceSelector: const TafsirSourceSelector(),
+            contentBuilder: (parsed) => TafsirText(
+              parseResult: parsed,
+              tafsirId: resolvedSource,
+              baseStyle: StudyPanelTextStyles.tafsirBase(
+                context: context,
+                typography: typography,
+                colors: colors,
+                containerWidth: constraints.maxWidth,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
 
 /// Widget that renders tafsir text with proper font styling.
 ///
@@ -251,8 +321,8 @@ class TafsirCommentaryBody extends HookWidget {
     final currentText = current.text;
     if (currentText.isEmpty) return null;
 
-    if (TafsirSegmentRepair.isArabicPrefixParticle(previous.text) &&
-        TafsirSegmentRepair.startsWithQawlLead(currentText)) {
+    if (_isArabicPrefixParticle(previous.text) &&
+        _startsWithQawlLead(currentText)) {
       return null;
     }
 
@@ -264,8 +334,8 @@ class TafsirCommentaryBody extends HookWidget {
       final previousLast = previousText.characters.last;
       if (previousLast == ' ' || previousLast == '\n') return null;
 
-      if (TafsirSegmentRepair.isArabicPrefixParticle(previousLast) &&
-          TafsirSegmentRepair.startsWithQawlLead(currentText)) {
+      if (_isArabicPrefixParticle(previousLast) &&
+          _startsWithQawlLead(currentText)) {
         return null;
       }
     }

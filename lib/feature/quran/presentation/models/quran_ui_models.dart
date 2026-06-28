@@ -1,7 +1,10 @@
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+
+/// Export width for verse share images.
+const double kAyahShareCardWidth = 480;
 
 /// Presentation helpers for [QuranReadingLayout].
 extension QuranReadingLayoutUi on QuranReadingLayout {
