@@ -1,47 +1,44 @@
 import 'package:tawaq/core/shortcuts/app_shortcut.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
-/// Localized labels and descriptions for [AppShortcut] entries.
-extension AppShortcutL10n on AppShortcut {
+/// Localized labels and descriptions for [ShortcutDef] entries.
+extension ShortcutDefL10n on ShortcutDef {
   /// Localized action label.
-  String label(AppLocalizations l10n) => switch (this) {
-        ToggleThemeShortcut() => l10n.shortcutToggleThemeLabel,
-        ToggleLocaleShortcut() => l10n.shortcutToggleLocaleLabel,
-        OpenSettingsShortcut() => l10n.shortcutOpenSettingsLabel,
-        FocusSearchShortcut() => l10n.shortcutFocusSearchLabel,
-        QuranPageNextShortcut() => l10n.shortcutQuranPageNextLabel,
-        QuranPagePrevShortcut() => l10n.shortcutQuranPagePrevLabel,
-        QuranPageNextSpaceShortcut() => l10n.shortcutQuranPageNextSpaceLabel,
-        QuranAyahNextShortcut() => l10n.shortcutQuranAyahNextLabel,
-        QuranAyahPrevShortcut() => l10n.shortcutQuranAyahPrevLabel,
-        FortressCountShortcut() => l10n.shortcutFortressCountLabel,
-        FortressThikrNextShortcut() => l10n.shortcutFortressThikrNextLabel,
-        FortressThikrPrevShortcut() => l10n.shortcutFortressThikrPrevLabel,
-        HadithResultNextShortcut() => l10n.shortcutHadithResultNextLabel,
-        HadithResultPrevShortcut() => l10n.shortcutHadithResultPrevLabel,
+  String label(AppLocalizations l10n) => switch (id) {
+        'toggleTheme' => l10n.shortcutToggleThemeLabel,
+        'toggleLocale' => l10n.shortcutToggleLocaleLabel,
+        'openSettings' => l10n.shortcutOpenSettingsLabel,
+        'focusSearch' => l10n.shortcutFocusSearchLabel,
+        'quranPageNext' => l10n.shortcutQuranPageNextLabel,
+        'quranPagePrev' => l10n.shortcutQuranPagePrevLabel,
+        'quranPageNextSpace' => l10n.shortcutQuranPageNextSpaceLabel,
+        'quranAyahNext' => l10n.shortcutQuranAyahNextLabel,
+        'quranAyahPrev' => l10n.shortcutQuranAyahPrevLabel,
+        'fortressCount' => l10n.shortcutFortressCountLabel,
+        'fortressThikrNext' => l10n.shortcutFortressThikrNextLabel,
+        'fortressThikrPrev' => l10n.shortcutFortressThikrPrevLabel,
+        'hadithResultNext' => l10n.shortcutHadithResultNextLabel,
+        'hadithResultPrev' => l10n.shortcutHadithResultPrevLabel,
+        _ => id,
       };
 
   /// Localized description shown in the settings reference list.
-  String description(AppLocalizations l10n) => switch (this) {
-        ToggleThemeShortcut() => l10n.shortcutToggleThemeDescription,
-        ToggleLocaleShortcut() => l10n.shortcutToggleLocaleDescription,
-        OpenSettingsShortcut() => l10n.shortcutOpenSettingsDescription,
-        FocusSearchShortcut() => l10n.shortcutFocusSearchDescription,
-        QuranPageNextShortcut() => l10n.shortcutQuranPageNextDescription,
-        QuranPagePrevShortcut() => l10n.shortcutQuranPagePrevDescription,
-        QuranPageNextSpaceShortcut() =>
-          l10n.shortcutQuranPageNextSpaceDescription,
-        QuranAyahNextShortcut() => l10n.shortcutQuranAyahNextDescription,
-        QuranAyahPrevShortcut() => l10n.shortcutQuranAyahPrevDescription,
-        FortressCountShortcut() => l10n.shortcutFortressCountDescription,
-        FortressThikrNextShortcut() =>
-          l10n.shortcutFortressThikrNextDescription,
-        FortressThikrPrevShortcut() =>
-          l10n.shortcutFortressThikrPrevDescription,
-        HadithResultNextShortcut() =>
-          l10n.shortcutHadithResultNextDescription,
-        HadithResultPrevShortcut() =>
-          l10n.shortcutHadithResultPrevDescription,
+  String description(AppLocalizations l10n) => switch (id) {
+        'toggleTheme' => l10n.shortcutToggleThemeDescription,
+        'toggleLocale' => l10n.shortcutToggleLocaleDescription,
+        'openSettings' => l10n.shortcutOpenSettingsDescription,
+        'focusSearch' => l10n.shortcutFocusSearchDescription,
+        'quranPageNext' => l10n.shortcutQuranPageNextDescription,
+        'quranPagePrev' => l10n.shortcutQuranPagePrevDescription,
+        'quranPageNextSpace' => l10n.shortcutQuranPageNextSpaceDescription,
+        'quranAyahNext' => l10n.shortcutQuranAyahNextDescription,
+        'quranAyahPrev' => l10n.shortcutQuranAyahPrevDescription,
+        'fortressCount' => l10n.shortcutFortressCountDescription,
+        'fortressThikrNext' => l10n.shortcutFortressThikrNextDescription,
+        'fortressThikrPrev' => l10n.shortcutFortressThikrPrevDescription,
+        'hadithResultNext' => l10n.shortcutHadithResultNextDescription,
+        'hadithResultPrev' => l10n.shortcutHadithResultPrevDescription,
+        _ => id,
       };
 }
 

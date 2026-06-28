@@ -109,7 +109,7 @@ class QuranMushafPane extends HookConsumerWidget {
 
         final mushaf = AppShortcutScope(
           autofocus: true,
-          shortcuts: const {
+          shortcuts: {
             AppShortcut.quranPageNext,
             AppShortcut.quranPagePrev,
             AppShortcut.quranPageNextSpace,

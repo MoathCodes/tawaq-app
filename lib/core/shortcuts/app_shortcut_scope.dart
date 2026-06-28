@@ -19,10 +19,10 @@ class AppShortcutScope extends StatefulWidget {
   });
 
   /// Shortcuts active in this scope (route or contextual only).
-  final Set<AppShortcut> shortcuts;
+  final Set<ShortcutDef> shortcuts;
 
-  /// Handlers keyed by [AppShortcut].
-  final Map<AppShortcut, VoidCallback> handlers;
+  /// Handlers keyed by [ShortcutDef].
+  final Map<ShortcutDef, VoidCallback> handlers;
 
   /// Child widget tree.
   final Widget child;
@@ -39,7 +39,7 @@ class AppShortcutScope extends StatefulWidget {
 
 class _AppShortcutScopeState extends State<AppShortcutScope> {
   Map<ShortcutActivator, VoidCallback>? _bindings;
-  Set<AppShortcut>? _boundShortcuts;
+  Set<ShortcutDef>? _boundShortcuts;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +68,7 @@ class _AppShortcutScopeState extends State<AppShortcutScope> {
       return;
     }
 
-    _boundShortcuts = Set<AppShortcut>.from(widget.shortcuts);
+    _boundShortcuts = Set<ShortcutDef>.from(widget.shortcuts);
     _bindings = buildAppShortcutBindings(
       shortcuts: widget.shortcuts,
       handlers: widget.handlers,
@@ -79,7 +79,7 @@ class _AppShortcutScopeState extends State<AppShortcutScope> {
     );
   }
 
-  bool _setEquals(Set<AppShortcut>? a, Set<AppShortcut> b) {
+  bool _setEquals(Set<ShortcutDef>? a, Set<ShortcutDef> b) {
     if (a == null) return false;
     if (a.length != b.length) return false;
     return a.containsAll(b);

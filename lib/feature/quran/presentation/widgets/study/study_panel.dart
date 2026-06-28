@@ -89,7 +89,7 @@ class StudyPanel extends HookConsumerWidget {
 
     return AppShortcutScope(
       autofocus: true,
-      shortcuts: const {
+      shortcuts: {
         AppShortcut.quranAyahNext,
         AppShortcut.quranAyahPrev,
       },
