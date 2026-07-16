@@ -33,12 +33,6 @@ abstract class RecitationSettings with _$RecitationSettings {
     /// Last played surah (1-114), restored on the next launch.
     int? lastSurah,
 
-    /// When non-null, the selection range start ayah within [lastSurah].
-    int? lastRangeStart,
-
-    /// When non-null, the selection range end ayah within [lastSurah].
-    int? lastRangeEnd,
-
     /// Cross-surah range start surah (null when the range is single-surah).
     int? lastRangeFromSurah,
 
@@ -56,6 +50,12 @@ abstract class RecitationSettings with _$RecitationSettings {
 
     /// Last saved playback offset in ms (ayah start for timed, exact for untimed).
     int? lastPlaybackPositionMs,
+
+    /// Whether surah audio is downloaded to disk automatically while listening.
+    ///
+    /// When false, playback streams from the network unless the surah was
+    /// saved explicitly for offline use.
+    @Default(true) bool autoSaveRecitations,
   }) = _RecitationSettings;
 
   /// Creates [RecitationSettings] from JSON.

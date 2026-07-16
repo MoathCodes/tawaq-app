@@ -11,5 +11,6 @@ abstract class FortressFlowState with _$FortressFlowState {
     FortressCategory? selectedCategory,
     @Default(false) bool isFocusMode,
     @Default(0) int focusStartIndex,
+    @Default('') String query,
   }) = _FortressFlowState;
 }

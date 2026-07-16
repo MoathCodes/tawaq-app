@@ -22,7 +22,9 @@ class FortressSearchResultsPane extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final query = ref.watch(muslimFortressSearchQueryProvider);
+    final query = ref.watch(
+      fortressScreenControllerProvider.select((s) => s.query),
+    );
     final repositoryAsync = ref.watch(fortressRepositoryProvider);
 
     final l10n = context.l10n;

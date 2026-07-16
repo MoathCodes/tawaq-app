@@ -10,6 +10,7 @@ import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -29,14 +30,21 @@ class _OfflineFilesDialog extends ConsumerWidget {
     final l10n = context.l10n;
     final colors = context.theme.colors;
     final typography = context.theme.typography;
-    final filesAsync = ref.watch(cachedRecitationsProvider);
-    final totalBytesAsync = ref.watch(totalCacheBytesProvider);
+    final filesAsync = ref.watch(cachedRecitationsSnapshotProvider);
     final reciters = ref.watch(recitersProvider).value ?? const <Reciter>[];
     final mushaf = ref.read(quranMushafControllerProvider);
     final repo = ref.read(recitationRepositoryProvider);
+    final autoSave =
+        ref.watch(
+          recitationSettingsProvider.select(
+            (s) => s.value?.autoSaveRecitations,
+          ),
+        ) ??
+        true;
 
-    final files = filesAsync.value ?? const <CachedRecitation>[];
-    final totalBytes = totalBytesAsync.value ?? 0;
+    final snapshot = filesAsync.value;
+    final files = snapshot?.files ?? const <CachedRecitation>[];
+    final totalBytes = snapshot?.totalBytes ?? 0;
 
     String reciterName(int id) {
       for (final r in reciters) {
@@ -78,7 +86,7 @@ class _OfflineFilesDialog extends ConsumerWidget {
 
     Future<void> deleteFile(CachedRecitation f) async {
       await repo.deleteCached(f.file.path);
-      ref.invalidate(cachedRecitationsProvider);
+      ref.invalidate(cachedRecitationsSnapshotProvider);
     }
 
     return PlayerDialogShell(
@@ -92,7 +100,6 @@ class _OfflineFilesDialog extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Auto-save banner.
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
@@ -102,16 +109,24 @@ class _OfflineFilesDialog extends ConsumerWidget {
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(FLucideIcons.download, size: 20, color: colors.primary),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Text(
-                      l10n.quranRecitationOfflineAutoSave,
-                      style: typography.body.xs.copyWith(
-                        color: colors.foreground,
-                      ),
+                  FSwitch(
+                    leadingLabel: true,
+                    label: Text(l10n.quranRecitationOfflineAutoSave),
+                    value: autoSave,
+                    onChange: (value) => ref
+                        .read(recitationSettingsProvider.notifier)
+                        .setAutoSaveRecitations(value: value),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    autoSave
+                        ? l10n.quranRecitationOfflineAutoSaveOnHint
+                        : l10n.quranRecitationOfflineAutoSaveOffHint,
+                    style: typography.body.xs.copyWith(
+                      color: colors.foreground,
                     ),
                   ),
                 ],

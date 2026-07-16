@@ -112,6 +112,8 @@ class RecitationRepository {
   /// Returns a record of `uri` and a nullable `progress` stream:
   /// - When the surah is already cached, returns the cached `file://` URI and
   ///   a `null` progress stream (no download occurs).
+  /// - When [persist] is false and the surah is not cached, returns the
+  ///   network URL immediately without writing any files.
   /// - Otherwise the download is attempted (honoring [cancellationToken]);
   ///   the `progress` stream carries the emitted [DownloadProgress] events.
   ///   - On success the cached `file://` URI is returned.
@@ -133,6 +135,7 @@ class RecitationRepository {
     required Moshaf moshaf,
     required int surah,
     required String surahName,
+    bool persist = true,
     CancellationToken? cancellationToken,
     void Function(DownloadProgress)? onProgress,
   }) async {
@@ -149,6 +152,10 @@ class RecitationRepository {
     }
 
     final url = surahAudioUrl(moshaf.server, surah);
+    if (!persist) {
+      return (uri: url, progress: null);
+    }
+
     final token = cancellationToken ?? CancellationToken();
     final events = <DownloadProgress>[];
     Object? failure;
@@ -214,6 +221,49 @@ class RecitationRepository {
     return (uri: url, progress: progressStream);
   }
 
+  /// Downloads [surah] audio into the on-disk cache for offline playback.
+  ///
+  /// No-ops when the file is already cached. Does not start or stop playback.
+  Future<void> saveSurahAudio({
+    required Reciter reciter,
+    required Moshaf moshaf,
+    required int surah,
+    required String surahName,
+    CancellationToken? cancellationToken,
+    void Function(DownloadProgress)? onProgress,
+  }) async {
+    final cached = await _cache.cachedAudio(
+      reciterId: reciter.id,
+      moshafId: moshaf.id,
+      surah: surah,
+      reciterName: reciter.name,
+      riwayahName: moshaf.name,
+      surahName: surahName,
+    );
+    if (cached != null) {
+      final size = cached.lengthSync();
+      onProgress?.call(
+        DownloadProgress(receivedBytes: size, totalBytes: size),
+      );
+      return;
+    }
+
+    final url = surahAudioUrl(moshaf.server, surah);
+    final token = cancellationToken ?? CancellationToken();
+    await _cache
+        .downloadAudio(
+          reciterId: reciter.id,
+          moshafId: moshaf.id,
+          surah: surah,
+          reciterName: reciter.name,
+          riwayahName: moshaf.name,
+          surahName: surahName,
+          url: url,
+          cancellationToken: token,
+        )
+        .forEach((event) => onProgress?.call(event));
+  }
+
   /// Whether the audio for [surah] is already cached locally.
   Future<bool> isSurahCached({
     required Reciter reciter,
@@ -234,9 +284,6 @@ class RecitationRepository {
 
   /// Lists every cached surah audio file.
   Future<List<CachedRecitation>> listCached() => _cache.listCached();
-
-  /// Total bytes used by cached surah audio.
-  Future<int> totalCacheBytes() => _cache.totalCacheBytes();
 
   /// Deletes a cached audio file at [path].
   Future<void> deleteCached(String path) => _cache.deleteCached(path);

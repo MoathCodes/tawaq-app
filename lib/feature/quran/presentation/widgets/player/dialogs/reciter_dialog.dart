@@ -78,7 +78,8 @@ class _ReciterDialog extends HookConsumerWidget {
     final selectedReciterId = settings?.reciterId;
     final selectedMoshafId = settings?.moshafId;
 
-    final cached = ref.watch(cachedRecitationsProvider).value ?? const [];
+    final cached =
+        ref.watch(cachedRecitationsSnapshotProvider).value?.files ?? const [];
     final downloadedKeys = useMemoized(
       () => cached.map((c) => (c.reciterId, c.moshafId)).toSet(),
       [cached],

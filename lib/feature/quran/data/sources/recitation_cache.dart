@@ -55,6 +55,39 @@ class DownloadProgress {
   }
 }
 
+/// Explicit offline-save progress scoped to a surah identity.
+class OfflineSaveSnapshot {
+  /// Creates [OfflineSaveSnapshot].
+  const OfflineSaveSnapshot({
+    required this.reciterId,
+    required this.moshafId,
+    required this.surah,
+    required this.progress,
+  });
+
+  /// Reciter id for the surah being saved.
+  final int reciterId;
+
+  /// Moshaf id for the surah being saved.
+  final int moshafId;
+
+  /// Surah number (1-114) being saved.
+  final int surah;
+
+  /// Latest download progress for this save.
+  final DownloadProgress progress;
+
+  /// Whether this snapshot targets the given surah identity.
+  bool matches({
+    required int reciterId,
+    required int moshafId,
+    required int surah,
+  }) =>
+      this.reciterId == reciterId &&
+      this.moshafId == moshafId &&
+      this.surah == surah;
+}
+
 /// Plain scan result reconstructed into [CachedRecitation] on the main isolate.
 typedef _CachedScanEntry = ({
   int reciterId,
@@ -139,7 +172,7 @@ class RecitationCache {
   static const catalogVersion = 2;
 
   Directory? _root;
-  final Set<String> _inFlight = {};
+  final Map<String, Future<void>> _inFlight = {};
 
   Future<Directory> _ensureRoot() async {
     final cached = _root;
@@ -264,7 +297,8 @@ class RecitationCache {
   ///
   /// Streams to a `.part` file and atomically renames on success so a partial
   /// file is never treated as cached. Safe to call repeatedly; concurrent
-  /// duplicates are ignored (the stream completes immediately with no events).
+  /// callers for the same path wait for the in-flight download, then yield the
+  /// final cached progress (or complete with no events if it did not land).
   ///
   /// On [cancellationToken] cancellation the `.part` file is deleted and the
   /// stream ends without renaming. On other errors the error is added to the
@@ -293,11 +327,31 @@ class RecitationCache {
       return;
     }
     final key = file.path;
-    if (_inFlight.contains(key)) {
-      // Another download is already reporting progress elsewhere.
+    final existing = _inFlight[key];
+    if (existing != null) {
+      // Join the in-flight download rather than silently no-oping, so an
+      // explicit "Save for offline" during auto-save still completes.
+      await existing;
+      if (file.existsSync()) {
+        final size = file.lengthSync();
+        yield DownloadProgress(receivedBytes: size, totalBytes: size);
+        return;
+      }
+      // Prior download did not land (cancelled/failed); fall through and
+      // attempt a fresh download below.
+    }
+    // Another waiter may have started a download while we were checking.
+    final raced = _inFlight[key];
+    if (raced != null) {
+      await raced;
+      if (file.existsSync()) {
+        final size = file.lengthSync();
+        yield DownloadProgress(receivedBytes: size, totalBytes: size);
+      }
       return;
     }
-    _inFlight.add(key);
+    final done = Completer<void>();
+    _inFlight[key] = done.future;
     final part = File('${file.path}.part');
     try {
       await file.parent.create(recursive: true);
@@ -353,6 +407,7 @@ class RecitationCache {
       rethrow;
     } finally {
       _inFlight.remove(key);
+      if (!done.isCompleted) done.complete();
     }
   }
 
@@ -378,12 +433,6 @@ class RecitationCache {
           sizeBytes: entry.sizeBytes,
         ),
     ];
-  }
-
-  /// Total bytes used by cached audio.
-  Future<int> totalCacheBytes() async {
-    final files = await listCached();
-    return files.fold<int>(0, (sum, f) => sum + f.sizeBytes);
   }
 
   /// Deletes a cached audio file.

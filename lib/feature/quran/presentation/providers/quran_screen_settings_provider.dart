@@ -204,8 +204,6 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
   /// Persists the current playback state (surah/range) for session restore.
   void setPlaybackState({
     int? surah,
-    int? rangeStart,
-    int? rangeEnd,
     int? rangeFromSurah,
     int? rangeFromAyah,
     int? rangeToSurah,
@@ -213,8 +211,6 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
   }) => _commit(
     (s) => s.copyWith(
       lastSurah: surah,
-      lastRangeStart: rangeStart,
-      lastRangeEnd: rangeEnd,
       lastRangeFromSurah: rangeFromSurah,
       lastRangeFromAyah: rangeFromAyah,
       lastRangeToSurah: rangeToSurah,
@@ -227,8 +223,6 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
   void persistPlaybackCheckpoint({
     required int surah,
     required int positionMs,
-    int? rangeStart,
-    int? rangeEnd,
     int? rangeFromSurah,
     int? rangeFromAyah,
     int? rangeToSurah,
@@ -236,8 +230,6 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
   }) => _commit(
     (s) => s.copyWith(
       lastSurah: surah,
-      lastRangeStart: rangeStart,
-      lastRangeEnd: rangeEnd,
       lastRangeFromSurah: rangeFromSurah,
       lastRangeFromAyah: rangeFromAyah,
       lastRangeToSurah: rangeToSurah,
@@ -256,4 +248,10 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
   /// Persists the last range scope preset selected in the dialog.
   void setLastRangePreset(RangeScopePreset? preset) =>
       _commit((s) => s.copyWith(lastRangePreset: preset), 'Range preset');
+
+  /// Persists whether listening auto-downloads surah audio for offline use.
+  void setAutoSaveRecitations({required bool value}) => _commit(
+    (s) => s.copyWith(autoSaveRecitations: value),
+    'Auto-save recitations',
+  );
 }

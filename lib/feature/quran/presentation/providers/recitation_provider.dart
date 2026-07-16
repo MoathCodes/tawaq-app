@@ -56,15 +56,19 @@ RecitationRepository recitationRepository(Ref ref) {
 Future<List<Reciter>> reciters(Ref ref) =>
     ref.watch(recitationRepositoryProvider).reciters();
 
-/// The recitation audio files currently cached on disk.
-@Riverpod(keepAlive: true)
-Future<List<CachedRecitation>> cachedRecitations(Ref ref) =>
-    ref.watch(recitationRepositoryProvider).listCached();
+/// Cached surah audio listing plus total size from a single disk scan.
+typedef CachedRecitationsSnapshot = ({
+  List<CachedRecitation> files,
+  int totalBytes,
+});
 
-/// Total bytes used by cached recitation audio files on disk.
+/// The recitation audio files currently cached on disk, with total bytes.
 @Riverpod(keepAlive: true)
-Future<int> totalCacheBytes(Ref ref) =>
-    ref.watch(recitationRepositoryProvider).totalCacheBytes();
+Future<CachedRecitationsSnapshot> cachedRecitationsSnapshot(Ref ref) async {
+  final files = await ref.watch(recitationRepositoryProvider).listCached();
+  final totalBytes = files.fold<int>(0, (sum, f) => sum + f.sizeBytes);
+  return (files: files, totalBytes: totalBytes);
+}
 
 /// Live download progress for the in-flight recitation surah download, or
 /// null when no download is active (cached, finished, cancelled, or idle).
@@ -85,6 +89,64 @@ class RecitationDownloadProgress extends _$RecitationDownloadProgress {
   void clear() => state = null;
 }
 
+/// Live progress for an explicit "Save for offline" download, or null when
+/// idle. Scoped to the surah identity being saved.
+@riverpod
+class RecitationOfflineSaveProgress extends _$RecitationOfflineSaveProgress {
+  @override
+  OfflineSaveSnapshot? build() => null;
+
+  /// Updates the latest scoped progress snapshot.
+  // ignore: avoid_setters_without_getters
+  set snapshot(OfflineSaveSnapshot value) => state = value;
+
+  /// Clears the progress (save finished/cancelled/failed).
+  void clear() => state = null;
+}
+
+/// Surah identities treated as offline-saved until
+/// [cachedRecitationsSnapshotProvider] refreshes after a successful download.
+@Riverpod(keepAlive: true)
+class OptimisticOfflineSaved extends _$OptimisticOfflineSaved {
+  @override
+  Set<({int reciterId, int moshafId, int surah})> build() {
+    ref.listen(cachedRecitationsSnapshotProvider, (previous, next) {
+      // Any fresh listing is source of truth — drop optimistic entries.
+      if (next is AsyncData && state.isNotEmpty) {
+        state = {};
+      }
+    });
+    return {};
+  }
+
+  /// Marks [reciterId]/[moshafId]/[surah] as saved until the cache list
+  /// catches up.
+  void mark({
+    required int reciterId,
+    required int moshafId,
+    required int surah,
+  }) {
+    state = {
+      ...state,
+      (reciterId: reciterId, moshafId: moshafId, surah: surah),
+    };
+  }
+}
+
+/// Latest offline-save failure message for toast UI, or null when idle.
+@riverpod
+class RecitationOfflineSaveError extends _$RecitationOfflineSaveError {
+  @override
+  String? build() => null;
+
+  /// Surfaces [message] to listeners (drawer toast).
+  // ignore: avoid_setters_without_getters
+  set message(String value) => state = value;
+
+  /// Clears the surfaced error after it has been shown.
+  void clear() => state = null;
+}
+
 /// Whether the recitation panel is expanded.
 @riverpod
 class RecitationDrawer extends _$RecitationDrawer {
@@ -101,34 +163,38 @@ class RecitationDrawer extends _$RecitationDrawer {
   void close() => state = false;
 }
 
-/// The currently selected reciter, falling back to the first timed reciter.
+/// Resolved reciter + moshaf from persisted settings (with catalog fallbacks).
+typedef SelectedRecitation = ({Reciter reciter, Moshaf moshaf});
+
+/// The currently selected reciter and moshaf, falling back to the first timed
+/// reciter when no persisted id matches.
 @Riverpod(keepAlive: true)
-Future<Reciter?> selectedReciter(Ref ref) async {
+Future<SelectedRecitation?> selectedRecitation(Ref ref) async {
   final reciters = await ref.watch(recitersProvider.future);
   if (reciters.isEmpty) return null;
-  final id = ref.watch(
-    recitationSettingsProvider.select((s) => s.value?.reciterId),
-  );
+  final settings = ref.watch(recitationSettingsProvider.select((s) => s.value));
+  Reciter? reciter;
+  final id = settings?.reciterId;
   if (id != null) {
     for (final r in reciters) {
-      if (r.id == id) return r;
+      if (r.id == id) {
+        reciter = r;
+        break;
+      }
     }
   }
-  for (final r in reciters) {
-    if (r.hasTiming) return r;
+  if (reciter == null) {
+    for (final r in reciters) {
+      if (r.hasTiming) {
+        reciter = r;
+        break;
+      }
+    }
+    reciter ??= reciters.first;
   }
-  return reciters.first;
-}
-
-/// The persisted moshaf for [selectedReciterProvider].
-@Riverpod(keepAlive: true)
-Future<Moshaf?> selectedMoshaf(Ref ref) async {
-  final reciter = await ref.watch(selectedReciterProvider.future);
-  if (reciter == null) return null;
-  final moshafId = ref.watch(
-    recitationSettingsProvider.select((s) => s.value?.moshafId),
-  );
-  return reciter.resolveMoshaf(moshafId);
+  final moshaf = reciter.resolveMoshaf(settings?.moshafId);
+  if (moshaf == null) return null;
+  return (reciter: reciter, moshaf: moshaf);
 }
 
 /// Shows a toast when [RecitationState.error] is set.
@@ -141,19 +207,32 @@ class RecitationErrorToastListener extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(
-      recitationControllerProvider.select((p) => p.error),
-      (previous, next) {
+    ref
+      ..listen(
+        recitationControllerProvider.select((p) => p.error),
+        (previous, next) {
+          if (next == null || next == previous) return;
+          showFToast(
+            context: context,
+            variant: .destructive,
+            icon: const Icon(FLucideIcons.triangleAlert),
+            title: Text(context.l10n.quranRecitationPlaybackFailed(next)),
+          );
+          ref.read(recitationControllerProvider.notifier).clearError();
+        },
+      )
+      ..listen(recitationOfflineSaveErrorProvider, (previous, next) {
         if (next == null || next == previous) return;
+        final l10n = context.l10n;
         showFToast(
           context: context,
           variant: .destructive,
           icon: const Icon(FLucideIcons.triangleAlert),
-          title: Text(context.l10n.quranRecitationPlaybackFailed(next)),
+          title: Text(l10n.errorOccurredWhile(l10n.quranRecitationSaveOffline)),
+          description: Text(next),
         );
-        ref.read(recitationControllerProvider.notifier).clearError();
-      },
-    );
+        ref.read(recitationOfflineSaveErrorProvider.notifier).clear();
+      });
     return child;
   }
 }
@@ -202,6 +281,7 @@ class RecitationController extends _$RecitationController {
   bool _sessionBootstrapped = false;
   String? _lastResolvedUri;
   CancellationToken? _downloadToken;
+  CancellationToken? _offlineSaveToken;
   int? _lastAbLoopRemaining;
   int? _lastTrackIndex;
   Duration? _pendingLoadSeek;
@@ -289,6 +369,128 @@ class RecitationController extends _$RecitationController {
   /// URL (or a usable `.part`) and playback proceeds.
   Future<void> cancelDownload() async {
     _downloadToken?.cancel();
+  }
+
+  /// Cancels an in-flight explicit offline save, if one is active.
+  Future<void> cancelOfflineSave() async {
+    _offlineSaveToken?.cancel();
+  }
+
+  /// Downloads the currently loaded surah into the offline cache.
+  ///
+  /// No-ops when there is no active surah or the file is already cached.
+  /// Does not interrupt playback. If an auto-save download for the same
+  /// surah is already in flight, joins it rather than silently returning.
+  Future<void> saveCurrentSurahOffline() async {
+    final reciter = state.reciter;
+    final moshaf = state.moshaf;
+    final surah = state.surah;
+    if (reciter == null || moshaf == null || surah == null) return;
+
+    final surahName = _surahTitle(surah);
+    final alreadyCached = await _repo.isSurahCached(
+      reciter: reciter,
+      moshaf: moshaf,
+      surah: surah,
+      surahName: surahName,
+    );
+    if (alreadyCached) {
+      _invalidateCachedRecitations();
+      return;
+    }
+
+    _offlineSaveToken?.cancel();
+    final token = CancellationToken();
+    _offlineSaveToken = token;
+    ref.read(recitationOfflineSaveProgressProvider.notifier).clear();
+
+    var failed = false;
+    Object? failure;
+    try {
+      await _repo.saveSurahAudio(
+        reciter: reciter,
+        moshaf: moshaf,
+        surah: surah,
+        surahName: surahName,
+        cancellationToken: token,
+        onProgress: (p) {
+          ref.read(recitationOfflineSaveProgressProvider.notifier).snapshot =
+              OfflineSaveSnapshot(
+                reciterId: reciter.id,
+                moshafId: moshaf.id,
+                surah: surah,
+                progress: p,
+              );
+        },
+      );
+    } on Object catch (error, stack) {
+      failed = true;
+      failure = error;
+      ref.read(loggerProvider).w(
+        'Offline save failed for surah $surah',
+        error: error,
+        stackTrace: stack,
+      );
+    } finally {
+      if (identical(_offlineSaveToken, token)) {
+        _offlineSaveToken = null;
+        ref.read(recitationOfflineSaveProgressProvider.notifier).clear();
+      }
+    }
+
+    if (!token.isCancelled && !failed) {
+      final saved = await _repo.isSurahCached(
+        reciter: reciter,
+        moshaf: moshaf,
+        surah: surah,
+        surahName: surahName,
+      );
+      if (saved) {
+        _markOptimisticSaved(
+          reciterId: reciter.id,
+          moshafId: moshaf.id,
+          surah: surah,
+        );
+        _invalidateCachedRecitations();
+      }
+    } else if (failed && !token.isCancelled) {
+      ref.read(recitationOfflineSaveErrorProvider.notifier).message =
+          '$failure';
+    }
+  }
+
+  void _invalidateCachedRecitations() {
+    ref.invalidate(cachedRecitationsSnapshotProvider);
+  }
+
+  void _markOptimisticSaved({
+    required int reciterId,
+    required int moshafId,
+    required int surah,
+  }) {
+    ref.read(optimisticOfflineSavedProvider.notifier).mark(
+      reciterId: reciterId,
+      moshafId: moshafId,
+      surah: surah,
+    );
+  }
+
+  /// Invalidates cache listings when a resolve just downloaded a local file.
+  void _invalidateIfDownloaded({
+    required String uri,
+    required Stream<DownloadProgress>? progress,
+    required Reciter reciter,
+    required Moshaf moshaf,
+    required int surah,
+  }) {
+    if (progress != null && uri.startsWith('file://')) {
+      _markOptimisticSaved(
+        reciterId: reciter.id,
+        moshafId: moshaf.id,
+        surah: surah,
+      );
+      _invalidateCachedRecitations();
+    }
   }
 
   // ---- Public controls ---------------------------------------------------
@@ -836,8 +1038,6 @@ class RecitationController extends _$RecitationController {
             notifier.persistPlaybackCheckpoint(
               surah: effect.surah!,
               positionMs: effect.positionMs!,
-              rangeStart: effect.rangeStart,
-              rangeEnd: effect.rangeEnd,
               rangeFromSurah: effect.rangeFromSurah,
               rangeFromAyah: effect.rangeFromAyah,
               rangeToSurah: effect.rangeToSurah,
@@ -846,8 +1046,6 @@ class RecitationController extends _$RecitationController {
           } else {
             notifier.setPlaybackState(
               surah: effect.surah,
-              rangeStart: effect.rangeStart,
-              rangeEnd: effect.rangeEnd,
               rangeFromSurah: effect.rangeFromSurah,
               rangeFromAyah: effect.rangeFromAyah,
               rangeToSurah: effect.rangeToSurah,
@@ -907,12 +1105,9 @@ class RecitationController extends _$RecitationController {
     }
     if (position <= Duration.zero) return;
 
-    final seg = s.currentSegmentRefs;
     ref.read(recitationSettingsProvider.notifier).persistPlaybackCheckpoint(
       surah: s.surah!,
       positionMs: position.inMilliseconds,
-      rangeStart: seg?.from.ayah,
-      rangeEnd: seg?.to?.ayah,
       rangeFromSurah: s.rangeFrom?.surah,
       rangeFromAyah: s.rangeFrom?.ayah,
       rangeToSurah: s.rangeTo?.surah,
@@ -964,9 +1159,13 @@ class RecitationController extends _$RecitationController {
       return;
     }
 
-    final settings = ref.read(recitationSettingsProvider).value;
-    final volume = settings?.volume ?? 100;
-    final ayahRepeatCount = (settings?.ayahRepeatCount ?? 1).clamp(1, 99);
+    // Await hydration so auto-save respects the user's persisted preference
+    // instead of defaulting to persist:true while settings are still loading.
+    final settings = await ref.read(recitationSettingsProvider.future);
+    if (newGen != state.loadGeneration) return;
+    final volume = settings.volume;
+    final ayahRepeatCount = settings.ayahRepeatCount.clamp(1, 99);
+    final persist = settings.autoSaveRecitations;
 
     final token = _startDownload();
     final resolved = await _repo.resolveSurahUri(
@@ -974,6 +1173,7 @@ class RecitationController extends _$RecitationController {
       moshaf: moshaf,
       surah: surah,
       surahName: _surahTitle(surah),
+      persist: persist,
       cancellationToken: token,
       onProgress: (p) =>
           ref.read(recitationDownloadProgressProvider.notifier).progress = p,
@@ -981,6 +1181,13 @@ class RecitationController extends _$RecitationController {
     _finishDownload(token);
     if (newGen != state.loadGeneration) return;
     _lastResolvedUri = resolved.uri;
+    _invalidateIfDownloaded(
+      uri: resolved.uri,
+      progress: resolved.progress,
+      reciter: reciter,
+      moshaf: moshaf,
+      surah: surah,
+    );
 
     if (moshaf.hasTiming) {
       final timing = await _repo.timing(surah, moshaf.timingReadId!);
@@ -1134,43 +1341,62 @@ class RecitationController extends _$RecitationController {
     final newGen = state.loadGeneration + 1;
     state = state.copyWith(loadGeneration: newGen, userStopped: false);
 
+    final settings = await ref.read(recitationSettingsProvider.future);
+    if (newGen != state.loadGeneration) return;
+    final persist = settings.autoSaveRecitations;
     final token = _startDownload();
-    final currentUri = (await _repo.resolveSurahUri(
+    final currentResolved = await _repo.resolveSurahUri(
       reciter: reciter,
       moshaf: moshaf,
       surah: fromSurah,
       surahName: _surahTitle(fromSurah),
+      persist: persist,
       cancellationToken: token,
       onProgress: (p) =>
           ref.read(recitationDownloadProgressProvider.notifier).progress = p,
-    )).uri;
+    );
     if (newGen != state.loadGeneration) {
       _finishDownload(token);
       return;
     }
+    _invalidateIfDownloaded(
+      uri: currentResolved.uri,
+      progress: currentResolved.progress,
+      reciter: reciter,
+      moshaf: moshaf,
+      surah: fromSurah,
+    );
 
-    final nextUri = (await _repo.resolveSurahUri(
+    final nextResolved = await _repo.resolveSurahUri(
       reciter: reciter,
       moshaf: moshaf,
       surah: toSurah,
       surahName: _surahTitle(toSurah),
+      persist: persist,
       cancellationToken: token,
       onProgress: (p) =>
           ref.read(recitationDownloadProgressProvider.notifier).progress = p,
-    )).uri;
+    );
     _finishDownload(token);
     if (newGen != state.loadGeneration) return;
+    _invalidateIfDownloaded(
+      uri: nextResolved.uri,
+      progress: nextResolved.progress,
+      reciter: reciter,
+      moshaf: moshaf,
+      surah: toSurah,
+    );
 
     final currentTrack = AudioTrack.network(
       id: 'recitation-${reciter.id}-$fromSurah',
       title: _surahTitle(fromSurah),
-      url: currentUri,
+      url: currentResolved.uri,
       subtitle: reciter.name,
     );
     final nextTrack = AudioTrack.network(
       id: 'recitation-${reciter.id}-$toSurah',
       title: _surahTitle(toSurah),
-      url: nextUri,
+      url: nextResolved.uri,
       subtitle: reciter.name,
     );
 
@@ -1357,15 +1583,14 @@ class RecitationController extends _$RecitationController {
   Future<void> _bootstrapSession() async {
     if (state.reciter != null) return;
     try {
-      final reciter = await ref.read(selectedReciterProvider.future);
-      final moshaf = await ref.read(selectedMoshafProvider.future);
-      if (reciter == null || moshaf == null) return;
+      final selected = await ref.read(selectedRecitationProvider.future);
+      if (selected == null) return;
       final settings = ref.read(recitationSettingsProvider).value;
       final positionMs = settings?.lastPlaybackPositionMs;
       _dispatch(
         RecitationSettingsLoaded(
-          reciter: reciter,
-          moshaf: moshaf,
+          reciter: selected.reciter,
+          moshaf: selected.moshaf,
           surah: settings?.lastSurah,
           rangeFrom: _reference(
             settings?.lastRangeFromSurah,

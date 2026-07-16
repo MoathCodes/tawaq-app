@@ -168,9 +168,3 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     _commit((s) => s.copyWith(iqamahSettings: newMap), 'Iqamah for $prayer');
   }
 }
-
-/// Display name for the current prayer location (shell app bar).
-@riverpod
-String? prayerLocationName(Ref ref) {
-  return ref.watch(prayerSettingsProvider).value?.locationName;
-}

@@ -12,12 +12,10 @@ import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
@@ -313,7 +311,7 @@ class _DailyTrackerRow extends ConsumerWidget {
 
     return Row(
       children: [
-        _TrackerStatusChip(prayer: prayer),
+        _TrackerStatusChip(prayer: prayer, status: status),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Text(
@@ -490,24 +488,19 @@ class _DailyStatusChip extends StatelessWidget {
 }
 
 class _TrackerStatusChip extends HookConsumerWidget {
-  const _TrackerStatusChip({required this.prayer});
+  const _TrackerStatusChip({
+    required this.prayer,
+    required this.status,
+  });
 
   final Prayer prayer;
+  final CompletionStatus status;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
-    final dayKey = ref.watch(prayerCalendarDayKeyProvider);
-    final completionDay = dayKey != 0
-        ? dateFromCalendarDayKey(dayKey)
-        : normalizeCompletionDay(
-            ref.watch(prayerDayProvider).value?.now ?? DateTime.now(),
-          );
-    final status = ref.watch(
-      completionStatusProvider(prayer, completionDay),
-    );
     final prayerTime = ref.watch(
       prayerScheduleProvider().select(
         (rows) => rows

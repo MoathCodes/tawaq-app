@@ -202,18 +202,14 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
     WidgetRef ref, {
     RecitationPickIntent intent = RecitationPickIntent.ayahLevel,
   }) async {
-    var reciter = ref.read(selectedReciterProvider).value;
-    var settings = ref.read(recitationSettingsProvider).value;
-    if (reciter == null) {
+    var selected = ref.read(selectedRecitationProvider).value;
+    if (selected == null) {
       await showReciterDialog(context, intent: intent);
       if (!context.mounted) return null;
-      reciter = ref.read(selectedReciterProvider).value;
-      settings = ref.read(recitationSettingsProvider).value;
+      selected = ref.read(selectedRecitationProvider).value;
     }
-    if (reciter == null) return null;
-    final moshaf = reciter.resolveMoshaf(settings?.moshafId);
-    if (moshaf == null) return null;
-    return (reciter: reciter, moshaf: moshaf);
+    if (selected == null) return null;
+    return (reciter: selected.reciter, moshaf: selected.moshaf);
   }
 
   Future<void> _playAyahAction(

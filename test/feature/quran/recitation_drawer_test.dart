@@ -372,11 +372,11 @@ void main() {
             MushafReaderController.withRepository(repository: _FakeRepo()),
           ),
           recitationDownloadProgressProvider.overrideWithValue(null),
-          totalCacheBytesProvider.overrideWithValue(
-            const AsyncData(2 * 1024 * 1024),
-          ),
-          cachedRecitationsProvider.overrideWithValue(
-            const AsyncData(<CachedRecitation>[]),
+          cachedRecitationsSnapshotProvider.overrideWithValue(
+            const AsyncData((
+              files: <CachedRecitation>[],
+              totalBytes: 2 * 1024 * 1024,
+            )),
           ),
           recitersProvider.overrideWithValue(const AsyncData(<Reciter>[])),
           localeProvider.overrideWithValue('en'),

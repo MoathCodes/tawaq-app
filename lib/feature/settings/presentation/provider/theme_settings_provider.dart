@@ -70,10 +70,3 @@ class ThemeNotifier extends _$ThemeNotifier {
     state.value?.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark,
   );
 }
-
-/// App-wide text scale multiplier from persisted theme prefs.
-@riverpod
-double appTextScaleFactor(Ref ref) {
-  final prefs = ref.watch(themeProvider).value ?? ThemePrefs.defaults();
-  return prefs.appTextScale.scalar;
-}

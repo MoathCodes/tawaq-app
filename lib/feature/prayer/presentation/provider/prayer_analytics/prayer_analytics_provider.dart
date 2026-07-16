@@ -28,7 +28,9 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
 
   @override
   FutureOr<PrayerAnalysisSectionData> build() async {
-    ref.listen(prayerCalendarDayKeyProvider, (_, _) => unawaited(_refresh()));
+    // Watch day key so cold start (0 → valid) and midnight rebind the
+    // completions listener via a fresh build (listeners dispose on rebuild).
+    final dayKey = ref.watch(prayerCalendarDayKeyProvider);
     ref.listen(
       prayerAnalyticsSettingsProvider,
       (previous, next) {
@@ -37,7 +39,12 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
         }
       },
     );
-    _listenTodayCompletions();
+    if (dayKey != 0) {
+      final today = dateFromCalendarDayKey(dayKey);
+      ref.listen(prayerCompletionsForDateProvider(today), (_, _) {
+        unawaited(_refresh());
+      });
+    }
 
     final period = _selectedPeriod;
     try {
@@ -52,15 +59,6 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
           );
       rethrow;
     }
-  }
-
-  void _listenTodayCompletions() {
-    final dayKey = ref.read(prayerCalendarDayKeyProvider);
-    if (dayKey == 0) return;
-    final today = dateFromCalendarDayKey(dayKey);
-    ref.listen(prayerCompletionsForDateProvider(today), (_, _) {
-      unawaited(_refresh());
-    });
   }
 
   PrayerAnalyticsPeriod get _selectedPeriod =>
@@ -111,9 +109,8 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
           .add(const Duration(days: 1))
           .subtract(const Duration(milliseconds: 1));
 
-      final todayCompletions = await repo.getPrayerCompletionForDate(
-        now,
-        location,
+      final todayCompletions = await ref.watch(
+        prayerCompletionsForDateProvider(todayStart).future,
       );
       final todayCounts = countDedupedStatuses(todayCompletions, location);
       final todayPrayerStatuses = mapPrayerStatuses(
@@ -231,7 +228,10 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     final earliest = await ref.read(prayerDatabaseProvider).getEarliestCompletionTime();
     if (earliest == null) return null;
 
-    final normalized = DateTime(earliest.year, earliest.month, earliest.day);
+    final location = ref.read(effectivePrayerSettingsProvider)?.location;
+    final normalized = location != null
+        ? completionCalendarDay(earliest, location)
+        : DateTime(earliest.year, earliest.month, earliest.day);
     ref.read(firstPrayerRecordedDateProvider.notifier).setIfNull(normalized);
     return normalized;
   }

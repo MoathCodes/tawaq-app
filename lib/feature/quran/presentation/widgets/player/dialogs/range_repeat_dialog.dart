@@ -74,7 +74,8 @@ class _RangeRepeatDialog extends HookConsumerWidget {
     final colors = context.theme.colors;
     final playback = ref.watch(recitationControllerProvider);
     final settings = ref.watch(recitationSettingsProvider).value;
-    final selectedReciter = ref.watch(selectedReciterProvider).value;
+    final selectedReciter =
+        ref.watch(selectedRecitationProvider).value?.reciter;
     final mushaf = ref.read(quranMushafControllerProvider);
 
     final seedSurah =

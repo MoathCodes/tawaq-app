@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/feature/settings/data/models/theme_prefs.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -70,7 +71,11 @@ FThemeData appThemeData(Ref ref) {
 @Riverpod(keepAlive: true)
 FThemeData appThemeWithTextScale(Ref ref) {
   final base = ref.watch(appThemeDataProvider);
-  final scale = ref.watch(appTextScaleFactorProvider);
+  final scale = ref.watch(
+    themeProvider.select(
+      (t) => (t.value ?? ThemePrefs.defaults()).appTextScale.scalar,
+    ),
+  );
   return buildAppTheme(
     palette: ref.read(
       themeProvider.select((t) => t.value?.appPalette ?? AppPalette.manuscript),

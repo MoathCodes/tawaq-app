@@ -30,7 +30,9 @@ class ShellAppBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locationName = ref.watch(prayerLocationNameProvider);
+    final locationName = ref.watch(
+      prayerSettingsProvider.select((s) => s.value?.locationName),
+    );
     final theme = context.theme;
 
     final isArabic = context.l10n.localeName == 'ar';

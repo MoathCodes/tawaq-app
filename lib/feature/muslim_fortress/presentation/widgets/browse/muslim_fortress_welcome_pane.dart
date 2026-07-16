@@ -5,6 +5,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
@@ -30,8 +31,9 @@ class MuslimFortressWelcomePane extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    final repositoryAsync = ref.watch(fortressRepositoryProvider);
     final allCategories =
-        ref.watch(fortressRepositoryProvider).asData?.value.loadChapters() ??
+        repositoryAsync.asData?.value.loadChapters() ??
         const <FortressCategory>[];
     final recommendedCategories = ref.watch(
       fortressRecommendedCategoriesProvider,
@@ -41,7 +43,6 @@ class MuslimFortressWelcomePane extends ConsumerWidget {
         (v) => v.asData?.value.favoriteChapterIds ?? const [],
       ),
     );
-    final controller = ref.read(fortressScreenControllerProvider.notifier);
 
     final categoriesByChapterId = {
       for (final category in allCategories) category.chapterId: category,
@@ -68,7 +69,8 @@ class MuslimFortressWelcomePane extends ConsumerWidget {
               const SizedBox(height: AppSpacing.xxl),
               FTileGroup(
                 label: Text(l10n.fortressRecommendedNow),
-                description: recommendedCategories.isEmpty
+                description: repositoryAsync.hasValue &&
+                        recommendedCategories.isEmpty
                     ? Text(
                         l10n.fortressNoRecommendations,
                         style: context.theme.typography.body.sm.copyWith(
@@ -109,7 +111,9 @@ class MuslimFortressWelcomePane extends ConsumerWidget {
                   alignment: AlignmentDirectional.centerStart,
                   child: FButton(
                     variant: .ghost,
-                    onPress: controller.openFavoritesTab,
+                    onPress: () => ref
+                        .read(fortressScreenSettingsProvider.notifier)
+                        .setSidebarTab(FortressSidebarTab.favorites),
                     child: Text(
                       l10n.fortressMoreFavoriteChapters(favoritesOverflow),
                     ),

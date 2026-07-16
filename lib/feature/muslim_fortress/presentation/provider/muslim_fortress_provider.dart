@@ -2,10 +2,8 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_flow_state.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 
 part 'muslim_fortress_provider.g.dart';
@@ -44,16 +42,17 @@ class FortressScreenController extends _$FortressScreenController {
     state = state.copyWith(isFocusMode: false);
   }
 
-  /// Switches the sidebar to the favorites tab.
-  void openFavoritesTab() {
-    ref
-        .read(fortressScreenSettingsProvider.notifier)
-        .setSidebarTab(FortressSidebarTab.favorites);
+  /// Updates the active search query (trimmed).
+  void setQuery(String query) {
+    final trimmed = query.trim();
+    if (state.query == trimmed) return;
+    state = state.copyWith(query: trimmed);
   }
 
   /// Clears the global fortress search query.
   void clearGlobalSearch() {
-    ref.read(muslimFortressSearchQueryProvider.notifier).setQuery('');
+    if (state.query.isEmpty) return;
+    state = state.copyWith(query: '');
   }
 
   /// Opens a title search result in the main pane.
@@ -86,20 +85,25 @@ class FortressScreenController extends _$FortressScreenController {
 /// Fragments are recomputed at most once per minute via
 /// [currentMinuteBucketProvider]. Const fragment lists are reused across ticks
 /// within the same window.
+///
+/// Falls back to clock-hour fragments when [prayerDayProvider] has no snapshot.
+/// Returns `[]` while the repository is loading — treat that as loading, not
+/// “no recommendations”, until [fortressRepositoryProvider] has data.
 @riverpod
 List<FortressCategory> fortressRecommendedCategories(Ref ref) {
   ref.watch(currentMinuteBucketProvider);
   final day = ref.read(prayerDayProvider).value;
-  if (day == null) return const [];
-
   final fragments = recommendTitleFragments(
-    now: day.now,
-    prayerTimes: day.today,
-    location: day.location,
+    now: day?.now ?? DateTime.now(),
+    prayerTimes: day?.today,
+    location: day?.location,
   );
-  final categories =
-      ref.watch(fortressRepositoryProvider).asData?.value.loadChapters() ??
-      const <FortressCategory>[];
+
+  final repository = ref.watch(fortressRepositoryProvider).asData?.value;
+  if (repository == null) {
+    return const <FortressCategory>[];
+  }
+  final categories = repository.loadChapters();
   if (fragments.isEmpty || categories.isEmpty) {
     return const <FortressCategory>[];
   }
@@ -107,14 +111,4 @@ List<FortressCategory> fortressRecommendedCategories(Ref ref) {
     allCategories: categories,
     fragments: fragments,
   );
-}
-
-/// In-memory global search query (trimmed; debounced in the screen).
-@riverpod
-class MuslimFortressSearchQuery extends _$MuslimFortressSearchQuery {
-  @override
-  String build() => '';
-
-  /// Updates the active search query.
-  void setQuery(String query) => state = query.trim();
 }

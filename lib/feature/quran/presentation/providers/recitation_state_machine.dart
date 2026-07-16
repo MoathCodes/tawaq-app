@@ -490,8 +490,6 @@ final class PersistPlaybackState extends RecitationEffect {
   /// Creates [PersistPlaybackState].
   const PersistPlaybackState({
     this.surah,
-    this.rangeStart,
-    this.rangeEnd,
     this.rangeFromSurah,
     this.rangeFromAyah,
     this.rangeToSurah,
@@ -500,8 +498,6 @@ final class PersistPlaybackState extends RecitationEffect {
   });
 
   final int? surah;
-  final int? rangeStart;
-  final int? rangeEnd;
   final int? rangeFromSurah;
   final int? rangeFromAyah;
   final int? rangeToSurah;
@@ -755,8 +751,6 @@ RecitationTransition _playRange(
       ),
       PersistPlaybackState(
         surah: event.from.surah,
-        rangeStart: segStart,
-        rangeEnd: segEnd,
         rangeFromSurah: globalFrom.surah,
         rangeFromAyah: globalFrom.ayah,
         rangeToSurah: globalTo?.surah,

@@ -524,41 +524,121 @@ class _DrawerActionsSection extends ConsumerWidget {
     }
     final rangeConfigSubtitle = configParts.join(' · ');
 
-    return FTileGroup(
+    final saveSnapshot = ref.watch(recitationOfflineSaveProgressProvider);
+    final playDownloadProgress = ref.watch(recitationDownloadProgressProvider);
+    final cached =
+        ref.watch(cachedRecitationsSnapshotProvider).value?.files ?? const [];
+    final optimisticSaved = ref.watch(optimisticOfflineSavedProvider);
+    final reciter = playback.reciter;
+    final moshaf = playback.moshaf;
+    final surah = playback.surah;
+    final isCached = reciter != null &&
+        moshaf != null &&
+        surah != null &&
+        cached.any(
+          (f) =>
+              f.reciterId == reciter.id &&
+              f.moshafId == moshaf.id &&
+              f.surah == surah,
+        );
+    final isOptimisticSaved = reciter != null &&
+        moshaf != null &&
+        surah != null &&
+        optimisticSaved.any(
+          (k) =>
+              k.reciterId == reciter.id &&
+              k.moshafId == moshaf.id &&
+              k.surah == surah,
+        );
+    final isSaved = isCached || isOptimisticSaved;
+    final isExplicitSaving = saveSnapshot != null &&
+        reciter != null &&
+        moshaf != null &&
+        surah != null &&
+        saveSnapshot.matches(
+          reciterId: reciter.id,
+          moshafId: moshaf.id,
+          surah: surah,
+        );
+    // Play-download progress lives only in the transport section to avoid a
+    // duplicate progress row; still reflect auto-save on the tile subtitle.
+    final isPlayDownloading =
+        playback.isLoading && playDownloadProgress != null;
+    final isSaving = isExplicitSaving || isPlayDownloading;
+    final saveSubtitle = isSaving
+        ? l10n.quranRecitationSavingOffline
+        : isSaved
+        ? l10n.quranRecitationSavedOffline
+        : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FTile(
-          prefix: const Icon(FLucideIcons.folder),
-          title: Text(l10n.quranRecitationOfflineFiles),
-          subtitle: _DrawerCacheSizeSubtitle(
-            bytesAsync: ref.watch(totalCacheBytesProvider),
+        FTileGroup(
+          children: [
+            FTile(
+              prefix: const Icon(FLucideIcons.folder),
+              title: Text(l10n.quranRecitationOfflineFiles),
+              subtitle: _DrawerCacheSizeSubtitle(
+                bytes: ref
+                        .watch(cachedRecitationsSnapshotProvider)
+                        .value
+                        ?.totalBytes ??
+                    0,
+              ),
+              onPress: () => showOfflineFilesDialog(context),
+            ),
+            if (surah != null)
+              FTile(
+                prefix: Icon(
+                  isSaved ? FLucideIcons.circleCheck : FLucideIcons.download,
+                ),
+                title: Text(l10n.quranRecitationSaveOffline),
+                subtitle: saveSubtitle == null ? null : Text(saveSubtitle),
+                onPress: isSaved || isSaving
+                    ? null
+                    : () => unawaited(
+                        ref
+                            .read(recitationControllerProvider.notifier)
+                            .saveCurrentSurahOffline(),
+                      ),
+              ),
+            FTile(
+              prefix: const Icon(FLucideIcons.repeat),
+              title: Text(l10n.quranRecitationRangeRepeat),
+              subtitle: Text(rangeConfigSubtitle),
+              onPress: () => showRangeRepeatDialog(context),
+            ),
+            FTile(
+              prefix: const Icon(FLucideIcons.moon),
+              title: Text(l10n.quranRecitationSleepTimer),
+              subtitle: Text(sleepLabel),
+              onPress: () => showSleepTimerDialog(context),
+            ),
+          ],
+        ),
+        // Explicit offline-save progress only — play downloads use transport.
+        if (isExplicitSaving) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _DrawerDownloadProgress(
+            progress: saveSnapshot.progress,
+            onCancel: ref
+                .read(recitationControllerProvider.notifier)
+                .cancelOfflineSave,
           ),
-          onPress: () => showOfflineFilesDialog(context),
-        ),
-        FTile(
-          prefix: const Icon(FLucideIcons.repeat),
-          title: Text(l10n.quranRecitationRangeRepeat),
-          subtitle: Text(rangeConfigSubtitle),
-          onPress: () => showRangeRepeatDialog(context),
-        ),
-        FTile(
-          prefix: const Icon(FLucideIcons.moon),
-          title: Text(l10n.quranRecitationSleepTimer),
-          subtitle: Text(sleepLabel),
-          onPress: () => showSleepTimerDialog(context),
-        ),
+        ],
       ],
     );
   }
 }
 
 class _DrawerCacheSizeSubtitle extends StatelessWidget {
-  const _DrawerCacheSizeSubtitle({required this.bytesAsync});
+  const _DrawerCacheSizeSubtitle({required this.bytes});
 
-  final AsyncValue<int> bytesAsync;
+  final int bytes;
 
   @override
   Widget build(BuildContext context) {
-    final bytes = bytesAsync.value ?? 0;
     return Text(formatByteSize(bytes));
   }
 }
@@ -583,7 +663,7 @@ class _DrawerSettingsSection extends ConsumerWidget {
     final colors = theme.colors;
     final controller = ref.read(recitationControllerProvider.notifier);
     final settings = ref.watch(recitationSettingsProvider).value;
-    final moshaf = ref.watch(selectedMoshafProvider).value;
+    final moshaf = ref.watch(selectedRecitationProvider).value?.moshaf;
     final nonHafs = moshaf != null && !isHafsRiwayah(moshaf.name);
     final highlightOn = settings?.highlightAyah ?? true;
     final showHighlightWarning = nonHafs && highlightOn;

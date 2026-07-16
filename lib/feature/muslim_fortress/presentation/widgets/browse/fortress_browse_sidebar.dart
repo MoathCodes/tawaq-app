@@ -35,7 +35,9 @@ class FortressBrowseSidebar extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final committedQuery = ref.watch(muslimFortressSearchQueryProvider);
+    final committedQuery = ref.watch(
+      fortressScreenControllerProvider.select((s) => s.query),
+    );
     final searchController = useTextEditingController(text: committedQuery);
     useListenable(searchController);
     final searchFocusNode = useFocusNode();
@@ -52,7 +54,7 @@ class FortressBrowseSidebar extends HookConsumerWidget {
     }, [committedQuery]);
     final debouncedCommit = useDebouncedCallback(
       () => ref
-          .read(muslimFortressSearchQueryProvider.notifier)
+          .read(fortressScreenControllerProvider.notifier)
           .setQuery(searchController.text),
       duration: const Duration(milliseconds: 300),
     );

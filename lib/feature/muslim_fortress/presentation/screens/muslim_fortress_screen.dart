@@ -33,7 +33,9 @@ class MuslimFortressScreen extends HookConsumerWidget {
     final flow = ref.watch(fortressScreenControllerProvider);
     final selectedCategory = flow.selectedCategory;
     final isFocusMode = flow.isFocusMode;
-    final globalSearchQuery = ref.watch(muslimFortressSearchQueryProvider);
+    final globalSearchQuery = ref.watch(
+      fortressScreenControllerProvider.select((s) => s.query),
+    );
     final isGlobalSearch =
         globalSearchQuery.length >= fortressSearchMinQueryLength;
 
