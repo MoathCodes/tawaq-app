@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
@@ -46,6 +47,17 @@ class DesktopSettingsSection extends ConsumerWidget {
       child: Column(
         spacing: AppSpacing.md,
         children: [
+          if (!Platform.isMacOS)
+            NonSelectable(
+              child: FSwitch(
+                enabled: ready,
+                value: settings?.forceMacStyleWindowControls ?? false,
+                onChange: (value) => ref
+                    .read(desktopSettingsProvider.notifier)
+                    .setForceMacStyleWindowControls(value: value),
+                label: Text(l10n.desktopForceMacStyleWindowControls),
+              ),
+            ),
           NonSelectable(
             child: FSwitch(
               enabled: ready,

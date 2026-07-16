@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 
 part 'iqamah_draft_provider.g.dart';
 
@@ -118,6 +118,31 @@ class IqamahDraft extends _$IqamahDraft {
   void saveAll(BuildContext context) {
     for (final prayer in List<Prayer>.from(state.unsavedPrayers)) {
       save(context, prayer);
+    }
+  }
+
+  /// Commits unsaved iqamah offsets to [prayerSettingsProvider] without toasts.
+  ///
+  /// Used by onboarding finish — the draft is only a text-field buffer.
+  void commitPending() {
+    for (final prayer in List<Prayer>.from(state.unsavedPrayers)) {
+      final controller = _controllers[prayer]!;
+      final text = controller.text.trim();
+      if (text.isEmpty) continue;
+
+      final value = int.tryParse(text);
+      if (value == null) continue;
+
+      ref
+          .read(prayerSettingsProvider.notifier)
+          .updatePrayerIqamahTime(prayer, value);
+
+      final normalized = value.toString();
+      if (controller.text != normalized) {
+        controller.text = normalized;
+      }
+      _initialValues[prayer] = normalized;
+      _setUnsaved(prayer, unsaved: false);
     }
   }
 

@@ -4,7 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 import 'package:tawaq/theme/theme_model.dart';

@@ -3,7 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/keyboard_shortcuts/keyboard_shortcuts_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/adhan_section.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/prayer_location_settings.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/time_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/tabs/settings_appearance_tab.dart';

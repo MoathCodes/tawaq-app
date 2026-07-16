@@ -4,10 +4,10 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/select_empty_content.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 
 /// Builds a search [FSelect] for [CalculationMethod] tied to prayer settings.
 ///

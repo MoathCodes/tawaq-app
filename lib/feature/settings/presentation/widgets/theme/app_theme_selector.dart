@@ -3,7 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/theme/palette_item.dart';
 import 'package:tawaq/theme/theme.dart';

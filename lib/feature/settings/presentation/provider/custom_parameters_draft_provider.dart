@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/settings/domain/use_cases/calculation_method_form.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 
 part 'custom_parameters_draft_provider.g.dart';
 

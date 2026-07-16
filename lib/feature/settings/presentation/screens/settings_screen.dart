@@ -28,7 +28,7 @@ class SettingsScreen extends HookConsumerWidget {
     final l10n = context.l10n;
     final showKeyboardShortcuts = supportsKeyboardShortcuts;
     final persistedKey = ref.watch(
-      settingsScreenSettingsProvider.select((s) => s.value?.activeTabKey),
+      settingsScreenSettingsProvider.select((s) => s.value),
     );
 
     final tabs = useMemoized(
@@ -158,7 +158,7 @@ class SettingsScreen extends HookConsumerWidget {
                 physics: const BouncingScrollPhysics(),
                 children: [
                   for (final (i, tab) in tabs.indexed)
-                    centeredViewportScrollTab(
+                    CenteredViewportShell.scrollTab(
                       maxContentWidth: _maxContentWidth,
                       child: LazyPanelContent.tab(
                         controller: tabController,

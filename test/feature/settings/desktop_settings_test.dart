@@ -8,6 +8,7 @@ void main() {
 
       expect(settings.launchAtLogin, isFalse);
       expect(settings.launchAtLoginHintSeen, isFalse);
+      expect(settings.forceMacStyleWindowControls, isFalse);
     });
 
     test('fromJson fills missing launch-at-login keys with defaults', () {
@@ -19,6 +20,7 @@ void main() {
 
       expect(settings.launchAtLogin, isFalse);
       expect(settings.launchAtLoginHintSeen, isFalse);
+      expect(settings.forceMacStyleWindowControls, isFalse);
       expect(settings.launchToTray, isTrue);
     });
 
@@ -27,6 +29,7 @@ void main() {
         launchAtLogin: true,
         launchAtLoginHintSeen: true,
         launchToTray: true,
+        forceMacStyleWindowControls: true,
       );
 
       final restored = DesktopSettings.fromJson(settings.toJson());

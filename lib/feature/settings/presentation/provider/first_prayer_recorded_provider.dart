@@ -32,11 +32,3 @@ class FirstPrayerRecordedDate extends _$FirstPrayerRecordedDate {
     state = date.toIso8601String();
   }
 }
-
-/// The parsed [DateTime] from the persisted first-prayer-recorded date string.
-@riverpod
-DateTime? firstPrayerRecordedDateTime(Ref ref) {
-  final raw = ref.watch(firstPrayerRecordedDateProvider);
-  if (raw == null || raw.isEmpty) return null;
-  return DateTime.tryParse(raw);
-}

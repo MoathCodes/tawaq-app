@@ -76,4 +76,10 @@ class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
 
     return showHint;
   }
+
+  /// Sets whether the app forces macOS-style window controls.
+  void setForceMacStyleWindowControls({required bool value}) => _commit(
+    (s) => s.copyWith(forceMacStyleWindowControls: value),
+    'Force macOS style window controls',
+  );
 }

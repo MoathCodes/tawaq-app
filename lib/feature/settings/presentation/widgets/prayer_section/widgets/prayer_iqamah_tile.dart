@@ -5,11 +5,11 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
 import 'package:tawaq/feature/settings/presentation/provider/iqamah_draft_provider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 

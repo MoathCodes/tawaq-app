@@ -14,6 +14,7 @@ abstract class DesktopSettings with _$DesktopSettings {
     @Default(false) bool launchToTray,
     @Default(false) bool launchAtLogin,
     @Default(false) bool launchAtLoginHintSeen,
+    @Default(false) bool forceMacStyleWindowControls,
   }) = _DesktopSettings;
 
   /// Default desktop settings.

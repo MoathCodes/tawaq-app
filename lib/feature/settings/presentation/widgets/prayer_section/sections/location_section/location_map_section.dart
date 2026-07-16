@@ -10,8 +10,8 @@ import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_helpers.dart';
+import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_controls.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 

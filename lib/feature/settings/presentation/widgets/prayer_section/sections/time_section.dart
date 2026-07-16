@@ -7,7 +7,7 @@ import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/settings/presentation/provider/iqamah_draft_provider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/calculation_method_selector.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/custom_parameters_content.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/prayer_iqamah_tile.dart';
@@ -195,7 +195,7 @@ class PrayerTimeSettings extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final content = const Column(
+    const content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.lg,
       children: [

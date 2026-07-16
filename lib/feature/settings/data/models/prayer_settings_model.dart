@@ -109,12 +109,14 @@ abstract class PrayerSettings with _$PrayerSettings {
     @JsonKey(name: 'auto_location') @Default(false) bool autoLocation,
   }) = _PrayerSettings;
 
+  const PrayerSettings._();
+
   /// Returns the default prayer settings.
   factory PrayerSettings.defaultSettings() {
     return PrayerSettings(
       method: CalculationMethod.ummAlQura,
       is24Hours: false,
-      iqamahSettings: {Prayer.dhuhr: 20},
+      iqamahSettings: {},
       adhanAdjustments: {},
       coordinates: const Coordinates(0, 0),
       locationName: LocationConstants.defaultLocationName,
@@ -125,10 +127,7 @@ abstract class PrayerSettings with _$PrayerSettings {
   /// Creates a [PrayerSettings] instance from a JSON map.
   factory PrayerSettings.fromJson(Map<String, dynamic> json) =>
       _$PrayerSettingsFromJson(json);
-}
 
-/// Location and prayer-time helpers for [PrayerSettings].
-extension PrayerSettingsLocation on PrayerSettings {
   /// Whether [coordinates] are set to a real location (not the 0,0 sentinel).
   bool get isLocationReady =>
       !(coordinates.latitude == 0 && coordinates.longitude == 0);
