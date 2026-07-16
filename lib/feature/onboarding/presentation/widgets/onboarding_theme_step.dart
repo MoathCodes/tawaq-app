@@ -4,7 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/semantics_scale_step_picker.dart';
 import 'package:tawaq/feature/settings/data/models/app_text_scale.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/theme/app_theme_selector.dart';
 import 'package:tawaq/theme/theme.dart';

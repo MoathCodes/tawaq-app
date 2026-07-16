@@ -32,7 +32,8 @@ class OnboardingScreen extends ConsumerWidget {
     }
 
     Future<void> completeOnboarding() async {
-      ref.read(iqamahDraftProvider.notifier).saveAll(context);
+      // Draft buffers iqamah text fields; commit without settings toasts.
+      ref.read(iqamahDraftProvider.notifier).commitPending();
       await ref.read(onboardingStateProvider.notifier).finish();
       if (!context.mounted) return;
       const PrayerRoute().go(context);

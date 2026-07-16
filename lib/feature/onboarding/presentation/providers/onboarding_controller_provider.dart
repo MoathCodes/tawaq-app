@@ -1,8 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/onboarding/presentation/models/onboarding_steps.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
 
 part 'onboarding_controller_provider.g.dart';
 
@@ -52,16 +49,4 @@ class OnboardingController extends _$OnboardingController {
       slideDirection: 1,
     );
   }
-}
-
-/// Whether the user can advance from the current onboarding step.
-@riverpod
-bool onboardingCanContinue(Ref ref) {
-  final step = ref.watch(onboardingControllerProvider).step;
-  if (step.requiresLocation) {
-    return ref.watch(
-      prayerSettingsProvider.select((s) => s.value?.isLocationReady ?? false),
-    );
-  }
-  return true;
 }

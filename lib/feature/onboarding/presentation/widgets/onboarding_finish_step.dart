@@ -4,9 +4,9 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/date_formatter.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Final onboarding step showing today's prayer schedule preview.
