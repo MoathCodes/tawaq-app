@@ -345,6 +345,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get defaultSurahName => 'Al-Fatihah';
 
   @override
+  String get desktopForceMacStyleWindowControls =>
+      'Use macOS-style window controls';
+
+  @override
   String get desktopLaunchAtLogin => 'Start at login';
 
   @override
@@ -1065,6 +1069,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get midnight => 'Midnight';
 
   @override
+  String get mediaSessionAppName => 'Tawaq';
+
+  @override
+  String mediaSessionAudioBy(String source) {
+    return 'Audio by $source';
+  }
+
+  @override
   String get minute => 'minute';
 
   @override
@@ -1390,6 +1402,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranPlaySurah => 'Play this surah';
 
   @override
+  String get quranRangeChooseSyncedReciter => 'Choose synced reciter';
+
+  @override
   String get quranRangeFrom => 'From — surah & ayah';
 
   @override
@@ -1463,6 +1478,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranRangeRepeatTwice => 'Twice';
 
   @override
+  String get quranRangeRequiresTimedReciter =>
+      'Select a synced reciter to play this ayah range';
+
+  @override
   String get quranRangeSave => 'Save range';
 
   @override
@@ -1506,14 +1525,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranRecitationDownloading => 'Caching…';
 
   @override
+  String get quranRecitationEnded => 'Ended';
+
+  @override
+  String get quranRecitationGoToQuran => 'Go to Quran';
+
+  @override
   String get quranRecitationHighlight => 'Highlight ayah';
+
+  @override
+  String get quranRecitationHighlightAutoDisabled =>
+      'Highlight and auto-scroll disabled for this riwayah';
+
+  @override
+  String get quranRecitationHighlightAutoEnabled =>
+      'Highlight and auto-scroll enabled for this riwayah';
 
   @override
   String get quranRecitationHighlightDesc =>
       'Highlight the currently playing ayah in the mushaf.';
 
   @override
+  String get quranRecitationHighlightNonHafsWarning =>
+      'Ayah highlighting may be inaccurate for this riwayah.';
+
+  @override
   String get quranRecitationNext => 'Next';
+
+  @override
+  String get quranRecitationNextAyah => 'Next ayah';
+
+  @override
+  String get quranRecitationNextSurah => 'Next surah';
 
   @override
   String get quranRecitationNoTiming =>
@@ -1564,13 +1607,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranRecitationPrevious => 'Previous';
 
   @override
+  String get quranRecitationPreviousAyah => 'Previous ayah';
+
+  @override
+  String get quranRecitationPreviousSurah => 'Previous surah';
+
+  @override
   String get quranRecitationRangeRepeat => 'Range & repeat';
+
+  @override
+  String quranRecitationRepeatProgress(int current, int total) {
+    return '$current of $total';
+  }
 
   @override
   String get quranRecitationRepeatScopeEachAyah => 'Repeat each ayah';
 
   @override
   String get quranRecitationRepeatScopeSelection => 'Repeat selection';
+
+  @override
+  String quranRecitationSelectionLoopProgress(int current, int total) {
+    return 'Loop $current of $total';
+  }
 
   @override
   String quranRecitationSleepAfter(String minutes) {
@@ -1720,6 +1779,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String scheduleAlertEventIqamah(String prayer) {
     return '$prayer iqamah';
   }
+
+  @override
+  String get or => 'or';
 
   @override
   String scheduleAlertEventSunnah(String prayer) {

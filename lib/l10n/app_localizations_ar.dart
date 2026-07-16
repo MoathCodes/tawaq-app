@@ -364,6 +364,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get defaultSurahName => 'الفاتحة';
 
   @override
+  String get desktopForceMacStyleWindowControls =>
+      'استخدام أزرار نافذة بنمط macOS';
+
+  @override
   String get desktopLaunchAtLogin => 'البدء عند تسجيل الدخول';
 
   @override
@@ -1101,6 +1105,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get midnight => 'منتصف الليل';
 
   @override
+  String get mediaSessionAppName => 'طوّق';
+
+  @override
+  String mediaSessionAudioBy(String source) {
+    return 'صوت بواسطة $source';
+  }
+
+  @override
   String get minute => 'دقيقة';
 
   @override
@@ -1421,6 +1433,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranPlaySurah => 'تشغيل هذه السورة';
 
   @override
+  String get quranRangeChooseSyncedReciter => 'اختر قارئًا متزامنًا';
+
+  @override
   String get quranRangeFrom => 'من — السورة والآية';
 
   @override
@@ -1494,6 +1509,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranRangeRepeatTwice => 'مرتان';
 
   @override
+  String get quranRangeRequiresTimedReciter =>
+      'اختر قارئًا متزامنًا لتشغيل مدى الآيات هذا';
+
+  @override
   String get quranRangeSave => 'حفظ المدى';
 
   @override
@@ -1537,14 +1556,38 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranRecitationDownloading => 'جارٍ التخزين…';
 
   @override
+  String get quranRecitationEnded => 'انتهى';
+
+  @override
+  String get quranRecitationGoToQuran => 'الانتقال إلى القرآن';
+
+  @override
   String get quranRecitationHighlight => 'تظليل الآية';
+
+  @override
+  String get quranRecitationHighlightAutoDisabled =>
+      'تم إيقاف التظليل والتمرير التلقائي لهذه الرواية';
+
+  @override
+  String get quranRecitationHighlightAutoEnabled =>
+      'تم تفعيل التظليل والتمرير التلقائي لهذه الرواية';
 
   @override
   String get quranRecitationHighlightDesc =>
       'يُظلّل الآية الجاري تشغيلها في المصحف.';
 
   @override
+  String get quranRecitationHighlightNonHafsWarning =>
+      'قد لا يكون تظليل الآيات دقيقاً لهذه الرواية.';
+
+  @override
   String get quranRecitationNext => 'التالي';
+
+  @override
+  String get quranRecitationNextAyah => 'الآية التالية';
+
+  @override
+  String get quranRecitationNextSurah => 'السورة التالية';
 
   @override
   String get quranRecitationNoTiming =>
@@ -1595,13 +1638,29 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranRecitationPrevious => 'السابق';
 
   @override
+  String get quranRecitationPreviousAyah => 'الآية السابقة';
+
+  @override
+  String get quranRecitationPreviousSurah => 'السورة السابقة';
+
+  @override
   String get quranRecitationRangeRepeat => 'المدى والتكرار';
+
+  @override
+  String quranRecitationRepeatProgress(int current, int total) {
+    return '$current من $total';
+  }
 
   @override
   String get quranRecitationRepeatScopeEachAyah => 'تكرار كل آية';
 
   @override
   String get quranRecitationRepeatScopeSelection => 'تكرار المقطع';
+
+  @override
+  String quranRecitationSelectionLoopProgress(int current, int total) {
+    return 'تكرار $current من $total';
+  }
 
   @override
   String quranRecitationSleepAfter(String minutes) {
@@ -1750,6 +1809,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String scheduleAlertEventIqamah(String prayer) {
     return 'إقامة $prayer';
   }
+
+  @override
+  String get or => 'أو';
 
   @override
   String scheduleAlertEventSunnah(String prayer) {

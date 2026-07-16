@@ -171,6 +171,7 @@
   "decimalPlaceholder": "0.0",
   "defaultLocation": "Default location",
   "defaultSurahName": "Al-Fatihah",
+  "desktopForceMacStyleWindowControls": "Use macOS-style window controls",
   "desktopLaunchAtLogin": "Start at login",
   "desktopLaunchAtLoginHint": "Start hidden in tray was also enabled so adhan alerts work after login.",
   "desktopLaunchToTray": "Start hidden in tray",
@@ -511,6 +512,15 @@
   "menuRemoveBookmark": "Remove bookmark",
   "menuRemoveFavorite": "Remove from favorites",
   "midnight": "Midnight",
+  "mediaSessionAppName": "Tawaq",
+  "mediaSessionAudioBy": "Audio by {source}",
+  "@mediaSessionAudioBy": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
   "minute": "minute",
   "missed": "Missed",
   "missedRate": "Missed Rate",
@@ -653,6 +663,7 @@
   "quranPlayRange": "Play a range…",
   "quranPlaySelection": "Play selection",
   "quranPlaySurah": "Play this surah",
+  "quranRangeChooseSyncedReciter": "Choose synced reciter",
   "quranRangeFrom": "From — surah & ayah",
   "quranRangeFromAyah": "From — ayah",
   "quranRangeFromShort": "From",
@@ -690,6 +701,7 @@
     }
   },
   "quranRangeRepeatTwice": "Twice",
+  "quranRangeRequiresTimedReciter": "Select a synced reciter to play this ayah range",
   "quranRangeSave": "Save range",
   "quranRangeScope": "Range",
   "quranRangeTitle": "Range & repeat for memorization",
@@ -704,9 +716,16 @@
   "quranRecitationClosePlayer": "Close player",
   "quranRecitationComingSoon": "Recitation playback coming soon",
   "quranRecitationDownloading": "Caching…",
+  "quranRecitationEnded": "Ended",
+  "quranRecitationGoToQuran": "Go to Quran",
   "quranRecitationHighlight": "Highlight ayah",
+  "quranRecitationHighlightAutoDisabled": "Highlight and auto-scroll disabled for this riwayah",
+  "quranRecitationHighlightAutoEnabled": "Highlight and auto-scroll enabled for this riwayah",
   "quranRecitationHighlightDesc": "Highlight the currently playing ayah in the mushaf.",
+  "quranRecitationHighlightNonHafsWarning": "Ayah highlighting may be inaccurate for this riwayah.",
   "quranRecitationNext": "Next",
+  "quranRecitationNextAyah": "Next ayah",
+  "quranRecitationNextSurah": "Next surah",
   "quranRecitationNoTiming": "Per-ayah playback isn't available for this reciter",
   "quranRecitationOfflineAutoSave": "Recitations are saved automatically while you listen.",
   "quranRecitationOfflineEmpty": "No recitations saved yet.",
@@ -735,9 +754,33 @@
     }
   },
   "quranRecitationPrevious": "Previous",
+  "quranRecitationPreviousAyah": "Previous ayah",
+  "quranRecitationPreviousSurah": "Previous surah",
   "quranRecitationRangeRepeat": "Range & repeat",
+  "quranRecitationRepeatProgress": "{current} of {total}",
+  "@quranRecitationRepeatProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "quranRecitationRepeatScopeEachAyah": "Repeat each ayah",
   "quranRecitationRepeatScopeSelection": "Repeat selection",
+  "quranRecitationSelectionLoopProgress": "Loop {current} of {total}",
+  "@quranRecitationSelectionLoopProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "quranRecitationSleepAfter": "After {minutes} minutes",
   "@quranRecitationSleepAfter": {
     "placeholders": {
@@ -832,7 +875,8 @@
         "type": "String"
       }
     }
-  },
+  }, 
+  "or": "or",
   "scheduleAlertEventSunnah": "{prayer}",
   "@scheduleAlertEventSunnah": {
     "placeholders": {

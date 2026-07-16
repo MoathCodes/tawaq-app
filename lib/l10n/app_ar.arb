@@ -154,6 +154,7 @@
   "decimalPlaceholder": "٠٫٠",
   "defaultLocation": "الموقع الافتراضي",
   "defaultSurahName": "الفاتحة",
+  "desktopForceMacStyleWindowControls": "استخدام أزرار نافذة بنمط macOS",
   "desktopLaunchAtLogin": "البدء عند تسجيل الدخول",
   "desktopLaunchAtLoginHint": "تم تفعيل البدء مخفياً في الشريط أيضاً حتى تعمل تنبيهات الأذان بعد تسجيل الدخول.",
   "desktopLaunchToTray": "البدء مخفياً في الشريط",
@@ -480,6 +481,15 @@
   "menuRemoveBookmark": "إزالة الإشارة المرجعية",
   "menuRemoveFavorite": "إزالة من المفضلة",
   "midnight": "منتصف الليل",
+  "mediaSessionAppName": "طوّق",
+  "mediaSessionAudioBy": "صوت بواسطة {source}",
+  "@mediaSessionAudioBy": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
   "minute": "دقيقة",
   "missed": "فائتة",
   "missedRate": "نسبة الفوائت",
@@ -564,6 +574,7 @@
   "openFolder": "فتح المجلد",
   "openFolderFailed": "تعذر فتح المجلد",
   "optionalHint": "اختياري",
+  "or": "أو",
   "orange": "برتقالي",
   "other": "أخرى",
   "pageJuzInfo": "صفحة {page} • الجزء {juz}",
@@ -624,6 +635,7 @@
   "quranPlayRange": "تشغيل مقطع…",
   "quranPlaySelection": "تشغيل المحدد",
   "quranPlaySurah": "تشغيل هذه السورة",
+  "quranRangeChooseSyncedReciter": "اختر قارئًا متزامنًا",
   "quranRangeFrom": "من — السورة والآية",
   "quranRangeFromAyah": "من — الآية",
   "quranRangeFromShort": "من",
@@ -661,6 +673,7 @@
     }
   },
   "quranRangeRepeatTwice": "مرتان",
+  "quranRangeRequiresTimedReciter": "اختر قارئًا متزامنًا لتشغيل مدى الآيات هذا",
   "quranRangeSave": "حفظ المدى",
   "quranRangeScope": "المدى",
   "quranRangeTitle": "المدى والتكرار للحفظ",
@@ -675,9 +688,16 @@
   "quranRecitationClosePlayer": "إغلاق المشغّل",
   "quranRecitationComingSoon": "تشغيل التلاوة قريباً",
   "quranRecitationDownloading": "جارٍ التخزين…",
+  "quranRecitationEnded": "انتهى",
+  "quranRecitationGoToQuran": "الانتقال إلى القرآن",
   "quranRecitationHighlight": "تظليل الآية",
+  "quranRecitationHighlightAutoDisabled": "تم إيقاف التظليل والتمرير التلقائي لهذه الرواية",
+  "quranRecitationHighlightAutoEnabled": "تم تفعيل التظليل والتمرير التلقائي لهذه الرواية",
   "quranRecitationHighlightDesc": "يُظلّل الآية الجاري تشغيلها في المصحف.",
+  "quranRecitationHighlightNonHafsWarning": "قد لا يكون تظليل الآيات دقيقاً لهذه الرواية.",
   "quranRecitationNext": "التالي",
+  "quranRecitationNextAyah": "الآية التالية",
+  "quranRecitationNextSurah": "السورة التالية",
   "quranRecitationNoTiming": "تشغيل الآيات منفردة غير متاح لهذا القارئ",
   "quranRecitationOfflineAutoSave": "تُحفظ التلاوات تلقائيًا أثناء الاستماع.",
   "quranRecitationOfflineEmpty": "لا توجد تلاوات محفوظة بعد.",
@@ -706,9 +726,33 @@
     }
   },
   "quranRecitationPrevious": "السابق",
+  "quranRecitationPreviousAyah": "الآية السابقة",
+  "quranRecitationPreviousSurah": "السورة السابقة",
   "quranRecitationRangeRepeat": "المدى والتكرار",
+  "quranRecitationRepeatProgress": "{current} من {total}",
+  "@quranRecitationRepeatProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "quranRecitationRepeatScopeEachAyah": "تكرار كل آية",
   "quranRecitationRepeatScopeSelection": "تكرار المقطع",
+  "quranRecitationSelectionLoopProgress": "تكرار {current} من {total}",
+  "@quranRecitationSelectionLoopProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "quranRecitationSleepAfter": "بعد {minutes} دقيقة",
   "@quranRecitationSleepAfter": {
     "placeholders": {

@@ -680,6 +680,12 @@ abstract class AppLocalizations {
   /// **'Al-Fatihah'**
   String get defaultSurahName;
 
+  /// No description provided for @desktopForceMacStyleWindowControls.
+  ///
+  /// In en, this message translates to:
+  /// **'Use macOS-style window controls'**
+  String get desktopForceMacStyleWindowControls;
+
   /// No description provided for @desktopLaunchAtLogin.
   ///
   /// In en, this message translates to:
@@ -1928,6 +1934,18 @@ abstract class AppLocalizations {
   /// **'Midnight'**
   String get midnight;
 
+  /// No description provided for @mediaSessionAppName.
+  ///
+  /// In en, this message translates to:
+  /// **'Tawaq'**
+  String get mediaSessionAppName;
+
+  /// No description provided for @mediaSessionAudioBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio by {source}'**
+  String mediaSessionAudioBy(String source);
+
   /// No description provided for @minute.
   ///
   /// In en, this message translates to:
@@ -2510,6 +2528,12 @@ abstract class AppLocalizations {
   /// **'Play this surah'**
   String get quranPlaySurah;
 
+  /// No description provided for @quranRangeChooseSyncedReciter.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose synced reciter'**
+  String get quranRangeChooseSyncedReciter;
+
   /// No description provided for @quranRangeFrom.
   ///
   /// In en, this message translates to:
@@ -2648,6 +2672,12 @@ abstract class AppLocalizations {
   /// **'Twice'**
   String get quranRangeRepeatTwice;
 
+  /// No description provided for @quranRangeRequiresTimedReciter.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a synced reciter to play this ayah range'**
+  String get quranRangeRequiresTimedReciter;
+
   /// No description provided for @quranRangeSave.
   ///
   /// In en, this message translates to:
@@ -2732,11 +2762,35 @@ abstract class AppLocalizations {
   /// **'Caching…'**
   String get quranRecitationDownloading;
 
+  /// No description provided for @quranRecitationEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Ended'**
+  String get quranRecitationEnded;
+
+  /// No description provided for @quranRecitationGoToQuran.
+  ///
+  /// In en, this message translates to:
+  /// **'Go to Quran'**
+  String get quranRecitationGoToQuran;
+
   /// No description provided for @quranRecitationHighlight.
   ///
   /// In en, this message translates to:
   /// **'Highlight ayah'**
   String get quranRecitationHighlight;
+
+  /// No description provided for @quranRecitationHighlightAutoDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight and auto-scroll disabled for this riwayah'**
+  String get quranRecitationHighlightAutoDisabled;
+
+  /// No description provided for @quranRecitationHighlightAutoEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Highlight and auto-scroll enabled for this riwayah'**
+  String get quranRecitationHighlightAutoEnabled;
 
   /// No description provided for @quranRecitationHighlightDesc.
   ///
@@ -2744,11 +2798,29 @@ abstract class AppLocalizations {
   /// **'Highlight the currently playing ayah in the mushaf.'**
   String get quranRecitationHighlightDesc;
 
+  /// No description provided for @quranRecitationHighlightNonHafsWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Ayah highlighting may be inaccurate for this riwayah.'**
+  String get quranRecitationHighlightNonHafsWarning;
+
   /// No description provided for @quranRecitationNext.
   ///
   /// In en, this message translates to:
   /// **'Next'**
   String get quranRecitationNext;
+
+  /// No description provided for @quranRecitationNextAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'Next ayah'**
+  String get quranRecitationNextAyah;
+
+  /// No description provided for @quranRecitationNextSurah.
+  ///
+  /// In en, this message translates to:
+  /// **'Next surah'**
+  String get quranRecitationNextSurah;
 
   /// No description provided for @quranRecitationNoTiming.
   ///
@@ -2834,11 +2906,29 @@ abstract class AppLocalizations {
   /// **'Previous'**
   String get quranRecitationPrevious;
 
+  /// No description provided for @quranRecitationPreviousAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous ayah'**
+  String get quranRecitationPreviousAyah;
+
+  /// No description provided for @quranRecitationPreviousSurah.
+  ///
+  /// In en, this message translates to:
+  /// **'Previous surah'**
+  String get quranRecitationPreviousSurah;
+
   /// No description provided for @quranRecitationRangeRepeat.
   ///
   /// In en, this message translates to:
   /// **'Range & repeat'**
   String get quranRecitationRangeRepeat;
+
+  /// No description provided for @quranRecitationRepeatProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} of {total}'**
+  String quranRecitationRepeatProgress(int current, int total);
 
   /// No description provided for @quranRecitationRepeatScopeEachAyah.
   ///
@@ -2851,6 +2941,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Repeat selection'**
   String get quranRecitationRepeatScopeSelection;
+
+  /// No description provided for @quranRecitationSelectionLoopProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Loop {current} of {total}'**
+  String quranRecitationSelectionLoopProgress(int current, int total);
 
   /// No description provided for @quranRecitationSleepAfter.
   ///
@@ -3115,6 +3211,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{prayer} iqamah'**
   String scheduleAlertEventIqamah(String prayer);
+
+  /// No description provided for @or.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get or;
 
   /// No description provided for @scheduleAlertEventSunnah.
   ///
