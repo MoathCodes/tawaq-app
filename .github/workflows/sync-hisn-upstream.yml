@@ -14,13 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - uses: dart-lang/setup-dart@v1
-
-      - name: Update HisnElmoslem_App submodule
-        run: git submodule update --remote packages/HisnElmoslem_App
 
       - name: Sync database assets
         working-directory: packages/hisn_elmoslem
@@ -42,4 +37,3 @@ jobs:
           add-paths: |
             packages/hisn_elmoslem/assets/database/
             packages/hisn_elmoslem/assets/upstream.lock.json
-            packages/HisnElmoslem_App

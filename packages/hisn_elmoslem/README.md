@@ -22,13 +22,7 @@ Works in **any Dart program** (CLI, server, tests) and in **Flutter apps** with 
 
 ## Data attribution
 
-Content is sourced from [muslimpack/HisnElmoslem_App](https://github.com/muslimpack/HisnElmoslem_App). Database files are synced from:
-
-```
-packages/HisnElmoslem_App/hisnelmoslem/assets/db/
-```
-
-into this package's `assets/database/`. See [Keeping data up to date](#keeping-data-up-to-date).
+Content is sourced from [muslimpack/HisnElmoslem_App](https://github.com/muslimpack/HisnElmoslem_App). Database files are copied from upstream `hisnelmoslem/assets/db/` into this package's `assets/database/` by the sync tool. See [Keeping data up to date](#keeping-data-up-to-date).
 
 Current bundled snapshot (see `assets/upstream.lock.json`):
 
@@ -505,27 +499,27 @@ final client = await HisnClient.openFromDirectory(
 
 ## Keeping data up to date
 
-Databases are maintained upstream in [muslimpack/HisnElmoslem_App](https://github.com/muslimpack/HisnElmoslem_App). This repo tracks that project as a git submodule at `packages/HisnElmoslem_App`.
+Databases are maintained upstream in [muslimpack/HisnElmoslem_App](https://github.com/muslimpack/HisnElmoslem_App). Sync does **not** use a git submodule — the tool shallow-clones upstream into a temp directory, copies the DBs, then deletes the clone.
 
 ### Manual sync
 
 ```bash
-# 1. Update the upstream submodule
-git submodule update --remote packages/HisnElmoslem_App
-
-# 2. Copy databases into this package and refresh the lock file
 cd packages/hisn_elmoslem
 dart run tool/sync_upstream.dart
+
+# Optional: pin a branch/tag
+HISN_UPSTREAM_REF=master dart run tool/sync_upstream.dart
 ```
 
 The sync tool:
 
-1. Copies `hisn_elmoslem.db`, `commentary.db`, `fake_hadith.db`, and `quran.ar.uthmani.v2.db`
-2. Writes `assets/upstream.lock.json` with the upstream commit SHA and table row counts
+1. Shallow-clones the upstream repo
+2. Copies `hisn_elmoslem.db`, `commentary.db`, `fake_hadith.db`, and `quran.ar.uthmani.v2.db`
+3. Writes `assets/upstream.lock.json` with the upstream commit SHA and table row counts
 
 ### Automated sync
 
-GitHub Actions workflow `.github/workflows/sync-hisn-upstream.yml` runs weekly (and on manual dispatch) to update the submodule, run the sync tool, test, and open a PR if databases changed.
+GitHub Actions workflow `.github/workflows/sync-hisn-upstream.yml` runs weekly (and on manual dispatch) to run the sync tool, test, and open a PR if databases changed.
 
 ### Lock file
 
@@ -636,7 +630,6 @@ packages/hisn_elmoslem/
 |---|---|
 | `hisn_elmoslem` | This package — structured Hisn al-Muslim data |
 | `mushaf_reader` | Quranic ayah rendering in the Muslim Fortress UI |
-| `packages/HisnElmoslem_App` | Upstream git submodule (data source only, not compiled) |
 
 ## License
 
