@@ -6,8 +6,7 @@ import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_default_bookmarks.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 

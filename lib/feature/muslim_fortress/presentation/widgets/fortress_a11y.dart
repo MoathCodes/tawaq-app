@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
-/// Accessibility labels and small wrappers for the Hisn (Muslim Fortress) UI.
+/// Accessibility labels for the Hisn (Muslim Fortress) UI.
 abstract final class FortressA11y {
   FortressA11y._();
 
@@ -56,15 +55,4 @@ abstract final class FortressA11y {
   }) =>
       '$oneBasedIndex. ×$targetCount. '
       '${isExpanded ? l10n.collapse : l10n.fortressShowDetails}';
-}
-
-/// Drops decorative / redundant nodes from the semantics tree.
-class FortressExcludeDecorative extends StatelessWidget {
-  /// Creates an exclusion wrapper.
-  const FortressExcludeDecorative({required this.child, super.key});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => ExcludeSemantics(child: child);
 }

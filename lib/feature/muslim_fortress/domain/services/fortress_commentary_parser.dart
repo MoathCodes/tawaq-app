@@ -1,6 +1,6 @@
 import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
 import 'package:tawaq/core/text/arabic_text_normalizer.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_commentary_block.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 
 /// Splits raw Hisn sharh into readable blocks.
 abstract final class FortressCommentaryParser {

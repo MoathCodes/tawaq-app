@@ -3,7 +3,6 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -39,7 +38,7 @@ class FortressFavoriteToggle extends ConsumerWidget {
       semanticsLabel: l10n.fortressFavorites,
       child: FTooltip(
         tipBuilder: (_, _) => Text(l10n.fortressFavorites),
-        child: FortressExcludeDecorative(
+        child: ExcludeSemantics(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xs),
             child: Icon(

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_default_bookmarks.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 
 void main() {
   group('fortress default bookmarks', () {

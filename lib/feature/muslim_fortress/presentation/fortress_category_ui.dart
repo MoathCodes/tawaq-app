@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 /// Presentation helpers for [FortressCategory] icons and loading placeholders.

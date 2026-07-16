@@ -5,7 +5,7 @@ import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
 import 'package:tawaq/core/commentary/commentary_text_styles.dart';
 import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_commentary_block.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_commentary_parser.dart';
 import 'package:tawaq/theme/theme.dart';
 

@@ -13,14 +13,15 @@ import 'package:tawaq/core/widgets/directional_content_switcher.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/reading_swipe_viewport.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
+import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_nav_controls.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_dua_content.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_reading_nav_bar.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Full-screen focus reading for a fortress chapter.
@@ -35,15 +36,15 @@ class FortressFocusReadingView extends HookConsumerWidget {
     if (category == null) return const SizedBox.shrink();
 
     final l10n = context.l10n;
-    final duasAsync = ref.watch(muslimFortressDuasProvider(category.chapterId));
+    final repositoryAsync = ref.watch(fortressRepositoryProvider);
     final initialIndex = ref.watch(
       fortressScreenControllerProvider.select((s) => s.focusStartIndex),
     );
 
-    return duasAsync.when(
-      data: (duas) => _FortressFocusReadingBody(
+    return repositoryAsync.when(
+      data: (repository) => _FortressFocusReadingBody(
         category: category,
-        duas: duas,
+        duas: repository.loadDuas(category.chapterId),
         initialIndex: initialIndex,
       ),
       loading: () => FSkeletonizer(
@@ -59,9 +60,7 @@ class FortressFocusReadingView extends HookConsumerWidget {
             message: l10n.fortressLoadError,
             detail: '$error',
             retryLabel: l10n.fortressRetry,
-            onRetry: () => ref.invalidate(
-              muslimFortressDuasProvider(category.chapterId),
-            ),
+            onRetry: () => ref.invalidate(fortressRepositoryProvider),
           ),
         ),
       ),
@@ -169,7 +168,7 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
                       AppSpacing.lg,
                       AppSpacing.lg,
                     ),
-                    child: FortressReadingNavBar(
+                    child: _ReadingNavBar(
                       canGoPrevious: session.index > 0,
                       canGoNext: session.index < duas.length - 1,
                       onPrevious: session.goToPrevious,
@@ -384,7 +383,7 @@ class _FocusToolbar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FortressExcludeDecorative(
+        ExcludeSemantics(
           child: TweenAnimationBuilder<double>(
             tween: Tween(end: progress),
             duration: const Duration(milliseconds: 280),
@@ -601,7 +600,7 @@ class _FocusThikrStage extends StatelessWidget {
                   left: 0,
                   right: 0,
                   bottom: AppSpacing.lg,
-                  child: FortressExcludeDecorative(
+                  child: ExcludeSemantics(
                     child: IgnorePointer(
                       child: Text(
                         l10n.fortressReadingHint,
@@ -671,7 +670,7 @@ class _FocusTapRipple extends HookWidget {
     return Positioned(
       left: position.dx - 28,
       top: position.dy - 28,
-      child: FortressExcludeDecorative(
+      child: ExcludeSemantics(
         child: IgnorePointer(
           child: FadeTransition(
             opacity: opacityAnimation,
@@ -690,6 +689,78 @@ class _FocusTapRipple extends HookWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Bottom prev/next controls for fortress reading (RTL layout).
+class _ReadingNavBar extends StatelessWidget {
+  const _ReadingNavBar({
+    required this.center,
+    required this.canGoPrevious,
+    required this.canGoNext,
+    required this.onPrevious,
+    required this.onNext,
+    this.studyDua,
+  });
+
+  final Widget center;
+  final FortressDuaItem? studyDua;
+  final bool canGoPrevious;
+  final bool canGoNext;
+  final VoidCallback? onPrevious;
+  final VoidCallback? onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final showStudy = studyDua != null && studyDua!.hasFocusStudyAction;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final iconOnly = constraints.maxWidth < context.theme.breakpoints.sm;
+
+        return NonSelectable(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              FortressLabeledNavButton(
+                label: FortressA11y.navActionLabel(l10n, isPrevious: true),
+                enabled: canGoPrevious,
+                onPress: onPrevious,
+                iconOnly: iconOnly,
+                prefix: const Icon(FLucideIcons.chevronLeft, size: 18),
+                child: Text(l10n.fortressPrevious),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showStudy) ...[
+                      FortressDuaStudyNavAction(dua: studyDua!),
+                      const SizedBox(height: AppSpacing.sm),
+                    ],
+                    Semantics(
+                      liveRegion: true,
+                      child: center,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              FortressLabeledNavButton(
+                label: FortressA11y.navActionLabel(l10n, isPrevious: false),
+                enabled: canGoNext,
+                onPress: onNext,
+                iconOnly: iconOnly,
+                prefix: const Icon(FLucideIcons.chevronRight, size: 18),
+                child: Text(l10n.next),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_extensions.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:timezone/timezone.dart';
 
 /// Resolves [HisnFeaturedTitles] fragments that fit the current time of day.

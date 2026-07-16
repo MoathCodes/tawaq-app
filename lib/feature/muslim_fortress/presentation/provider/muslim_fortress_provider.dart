@@ -1,14 +1,12 @@
-import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_flow_state.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 
 part 'muslim_fortress_provider.g.dart';
 
@@ -68,44 +66,39 @@ class FortressScreenController extends _$FortressScreenController {
   Future<void> selectSearchContent(FortressSearchContentHit hit) async {
     clearGlobalSearch();
 
-    final chapters = await ref.read(muslimFortressChaptersProvider.future);
-    final category = chapters
+    final repository = await ref.read(fortressRepositoryProvider.future);
+    final category = repository
+        .loadChapters()
         .where((chapter) => chapter.chapterId == hit.chapterId)
         .firstOrNull;
     if (category == null) return;
 
     selectCategory(category);
 
-    final duas = await ref.read(
-      muslimFortressDuasProvider(hit.chapterId).future,
-    );
+    final duas = repository.loadDuas(hit.chapterId);
     final index = duas.indexWhere((dua) => dua.contentId == hit.item.contentId);
     startFocusReading(initialIndex: index >= 0 ? index : 0);
   }
 }
 
-/// Active recommendation title fragments for the current prayer window.
+/// Time-based recommended fortress categories for the welcome pane.
 ///
-/// Recomputed at most once per minute via [currentMinuteBucketProvider].
-/// Const fragment lists are reused across ticks within the same window.
+/// Fragments are recomputed at most once per minute via
+/// [currentMinuteBucketProvider]. Const fragment lists are reused across ticks
+/// within the same window.
 @riverpod
-List<String> fortressRecommendationFragments(Ref ref) {
+List<FortressCategory> fortressRecommendedCategories(Ref ref) {
   ref.watch(currentMinuteBucketProvider);
   final day = ref.read(prayerDayProvider).value;
   if (day == null) return const [];
-  return recommendTitleFragments(
+
+  final fragments = recommendTitleFragments(
     now: day.now,
     prayerTimes: day.today,
     location: day.location,
   );
-}
-
-/// Time-based recommended fortress categories for the welcome pane.
-@riverpod
-List<FortressCategory> fortressRecommendedCategories(Ref ref) {
-  final fragments = ref.watch(fortressRecommendationFragmentsProvider);
   final categories =
-      ref.watch(muslimFortressChaptersProvider).asData?.value ??
+      ref.watch(fortressRepositoryProvider).asData?.value.loadChapters() ??
       const <FortressCategory>[];
   if (fragments.isEmpty || categories.isEmpty) {
     return const <FortressCategory>[];
@@ -116,25 +109,6 @@ List<FortressCategory> fortressRecommendedCategories(Ref ref) {
   );
 }
 
-/// All Hisn al-Muslim titles for the fortress UI.
-@riverpod
-Future<List<FortressCategory>> muslimFortressChapters(Ref ref) async {
-  final repository = await ref.watch(fortressRepositoryProvider.future);
-  return repository.loadChapters();
-}
-
-/// Dhikr items for a single Hisn title.
-///
-/// [chapterId] is the Hisn title id.
-@riverpod
-Future<List<FortressDuaItem>> muslimFortressDuas(
-  Ref ref,
-  int chapterId,
-) async {
-  final repository = await ref.watch(fortressRepositoryProvider.future);
-  return repository.loadDuas(chapterId);
-}
-
 /// In-memory global search query (trimmed; debounced in the screen).
 @riverpod
 class MuslimFortressSearchQuery extends _$MuslimFortressSearchQuery {
@@ -143,22 +117,4 @@ class MuslimFortressSearchQuery extends _$MuslimFortressSearchQuery {
 
   /// Updates the active search query.
   void setQuery(String query) => state = query.trim();
-}
-
-/// Search results for [muslimFortressSearchQueryProvider].
-@riverpod
-Future<FortressSearchResults> muslimFortressSearchResults(Ref ref) async {
-  final query = ref.watch(muslimFortressSearchQueryProvider);
-  final repository = await ref.watch(fortressRepositoryProvider.future);
-  return repository.search(query);
-}
-
-/// On-demand sharh commentary for a Hisn content id.
-@riverpod
-Future<HisnCommentary?> muslimFortressCommentary(
-  Ref ref,
-  int contentId,
-) async {
-  final repository = await ref.watch(fortressRepositoryProvider.future);
-  return repository.loadCommentaryForContent(contentId);
 }

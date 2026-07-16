@@ -5,7 +5,8 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
+import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
@@ -22,13 +23,13 @@ class FortressSearchResultsPane extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final query = ref.watch(muslimFortressSearchQueryProvider);
-    final resultsAsync = ref.watch(muslimFortressSearchResultsProvider);
+    final repositoryAsync = ref.watch(fortressRepositoryProvider);
 
     final l10n = context.l10n;
 
-    return resultsAsync.when(
-      data: (results) => _FortressSearchResultsBody(
-        results: results,
+    return repositoryAsync.when(
+      data: (repository) => _FortressSearchResultsBody(
+        results: repository.search(query),
         query: query,
       ),
       loading: () => const Center(child: FCircularProgress.loader()),
@@ -37,7 +38,7 @@ class FortressSearchResultsPane extends ConsumerWidget {
           message: l10n.fortressLoadError,
           detail: '$error',
           retryLabel: l10n.fortressRetry,
-          onRetry: () => ref.invalidate(muslimFortressSearchResultsProvider),
+          onRetry: () => ref.invalidate(fortressRepositoryProvider),
         ),
       ),
     );
@@ -186,7 +187,7 @@ class _TitleResultTile extends ConsumerWidget {
           .read(fortressScreenControllerProvider.notifier)
           .selectSearchTitle(category),
       semanticsLabel: category.title,
-      child: FortressExcludeDecorative(
+      child: ExcludeSemantics(
           child: StaticCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
           borderRadius: theme.radii.md,
@@ -223,7 +224,7 @@ class _ContentResultTile extends ConsumerWidget {
           .read(fortressScreenControllerProvider.notifier)
           .selectSearchContent(hit),
       semanticsLabel: '${hit.categoryTitle}. ${item.text}',
-      child: FortressExcludeDecorative(
+      child: ExcludeSemantics(
         child: StaticCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
           borderRadius: theme.radii.md,

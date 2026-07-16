@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
@@ -11,15 +9,15 @@ import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_browse_sidebar.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/muslim_fortress_welcome_pane.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/search/fortress_search_results.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Muslim Fortress screen — sidebar browse, welcome home, and focus reading.
@@ -31,7 +29,7 @@ class MuslimFortressScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final chaptersAsync = ref.watch(muslimFortressChaptersProvider);
+    final repositoryAsync = ref.watch(fortressRepositoryProvider);
     final flow = ref.watch(fortressScreenControllerProvider);
     final selectedCategory = flow.selectedCategory;
     final isFocusMode = flow.isFocusMode;
@@ -40,22 +38,17 @@ class MuslimFortressScreen extends HookConsumerWidget {
         globalSearchQuery.length >= fortressSearchMinQueryLength;
 
     useEffect(() {
-      if (!chaptersAsync.hasValue) return null;
+      final repository = repositoryAsync.asData?.value;
+      if (repository == null) return null;
 
-      var cancelled = false;
-      unawaited(() async {
-        final repository = await ref.read(fortressRepositoryProvider.future);
-        if (cancelled) return;
-        ref
-            .read(fortressScreenSettingsProvider.notifier)
-            .ensureDefaultBookmarks(repository.defaultBookmarkChapterIds());
-      }());
+      ref
+          .read(fortressScreenSettingsProvider.notifier)
+          .ensureDefaultBookmarks(repository.defaultBookmarkChapterIds());
+      return null;
+    }, [repositoryAsync.hasValue]);
 
-      return () => cancelled = true;
-    }, [chaptersAsync.hasValue]);
-
-    final allCategories = chaptersAsync.when(
-      data: (value) => value,
+    final allCategories = repositoryAsync.when(
+      data: (repository) => repository.loadChapters(),
       loading: () => fortressCategoryPlaceholders(l10n: l10n),
       error: (_, _) => const <FortressCategory>[],
     );
@@ -67,7 +60,7 @@ class MuslimFortressScreen extends HookConsumerWidget {
       );
     }
 
-    if (chaptersAsync.hasError) {
+    if (repositoryAsync.hasError) {
       return Directionality(
         textDirection: TextDirection.rtl,
         child: FScaffold(
@@ -90,7 +83,7 @@ class MuslimFortressScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '$chaptersAsync.error',
+                  '$repositoryAsync.error',
                   style: theme.typography.body.sm.copyWith(
                     color: theme.colors.mutedForeground,
                   ),
@@ -98,7 +91,7 @@ class MuslimFortressScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 FButton(
-                  onPress: () => ref.invalidate(muslimFortressChaptersProvider),
+                  onPress: () => ref.invalidate(fortressRepositoryProvider),
                   child: Text(l10n.fortressRetry),
                 ),
               ],
@@ -152,7 +145,7 @@ class MuslimFortressScreen extends HookConsumerWidget {
                   : MediaQuery.sizeOf(context).height - AppSpacing.md * 2;
 
               return FSkeletonizer(
-                enabled: chaptersAsync.isLoading,
+                enabled: repositoryAsync.isLoading,
                 child: Directionality(
                   textDirection: TextDirection.rtl,
                   child: SizedBox(

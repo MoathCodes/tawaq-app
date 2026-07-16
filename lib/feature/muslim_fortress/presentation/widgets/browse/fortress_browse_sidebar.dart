@@ -10,15 +10,14 @@ import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_category_row.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_favorite_toggle.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Sidebar browse panel: filter, favorites tab, and chapter list.
@@ -249,7 +248,7 @@ class FortressCategoryListTile extends ConsumerWidget {
           borderRadius: theme.radii.md,
           border: Border.all(color: borderColor),
         ),
-        child: FortressExcludeDecorative(
+        child: ExcludeSemantics(
           child: FortressCategoryRow(
             category: category,
             l10n: l10n,

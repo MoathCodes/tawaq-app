@@ -8,8 +8,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_nav_controls.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_commentary_text.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -261,11 +261,10 @@ class FortressDuaStudyContent extends HookConsumerWidget {
 
         var cancelled = false;
         unawaited(
-          ref
-              .read(muslimFortressCommentaryProvider(dua.contentId).future)
-              .then((commentary) {
+          ref.read(fortressRepositoryProvider.future).then((repository) {
             if (cancelled) return;
-            commentaryState.value = commentary;
+            commentaryState.value =
+                repository.loadCommentaryForContent(dua.contentId);
             isLoading.value = false;
           }),
         );

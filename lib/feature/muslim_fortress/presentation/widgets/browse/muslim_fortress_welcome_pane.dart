@@ -3,12 +3,12 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
+import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -30,8 +30,8 @@ class MuslimFortressWelcomePane extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final chaptersAsync = ref.watch(muslimFortressChaptersProvider);
-    final allCategories = chaptersAsync.asData?.value ??
+    final allCategories =
+        ref.watch(fortressRepositoryProvider).asData?.value.loadChapters() ??
         const <FortressCategory>[];
     final recommendedCategories = ref.watch(
       fortressRecommendedCategoriesProvider,

@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 
 part 'fortress_flow_state.freezed.dart';
 

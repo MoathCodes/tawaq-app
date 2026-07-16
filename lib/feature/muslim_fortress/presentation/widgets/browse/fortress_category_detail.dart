@@ -12,15 +12,15 @@ import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_category.dart';
+import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_locale_extensions.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_favorite_toggle.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_dua_content.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 class FortressCategoryDetailView extends ConsumerWidget {
@@ -34,12 +34,12 @@ class FortressCategoryDetailView extends ConsumerWidget {
     if (category == null) return const SizedBox.shrink();
 
     final l10n = context.l10n;
-    final duasAsync = ref.watch(muslimFortressDuasProvider(category.chapterId));
+    final repositoryAsync = ref.watch(fortressRepositoryProvider);
 
-    return duasAsync.when(
-      data: (duas) => _FortressCategoryDetailBody(
+    return repositoryAsync.when(
+      data: (repository) => _FortressCategoryDetailBody(
         category: category,
-        duas: duas,
+        duas: repository.loadDuas(category.chapterId),
       ),
       loading: () => _FortressCategoryDetailBody(
         category: category,
@@ -51,9 +51,7 @@ class FortressCategoryDetailView extends ConsumerWidget {
           message: l10n.fortressLoadError,
           detail: '$error',
           retryLabel: l10n.fortressRetry,
-          onRetry: () => ref.invalidate(
-            muslimFortressDuasProvider(category.chapterId),
-          ),
+          onRetry: () => ref.invalidate(fortressRepositoryProvider),
         ),
       ),
     );
@@ -139,7 +137,7 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
           ],
         ),
       ),
-      body: centeredViewportScrollTab(
+      body: CenteredViewportShell.scrollTab(
         maxContentWidth: kFortressReadingMaxWidth,
         child: Padding(
           padding: const EdgeInsets.only(
@@ -269,7 +267,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        title: FortressExcludeDecorative(
+        title: ExcludeSemantics(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -283,7 +281,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
           ),
         ),
         subtitle: !isExpanded && hasInsights
-            ? FortressExcludeDecorative(
+            ? ExcludeSemantics(
                 child: Wrap(
                   spacing: AppSpacing.xs,
                   runSpacing: AppSpacing.xs,
@@ -302,7 +300,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
                 ),
               )
             : null,
-        suffix: FortressExcludeDecorative(
+        suffix: ExcludeSemantics(
           child: isExpanded
               ? MouseClick(
                   onClick: onToggleExpanded,
