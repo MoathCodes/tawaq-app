@@ -5,10 +5,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
+import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
-import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 
 class _MockChannel extends Mock implements PrayerAlertChannel {
   _MockChannel(this._name);

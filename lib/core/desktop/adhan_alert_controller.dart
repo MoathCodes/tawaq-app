@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:forui/forui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:tawaq/core/desktop/adhan_alert_state.dart';
@@ -17,7 +16,7 @@ part 'adhan_alert_controller.g.dart';
 
 /// In-app prayer alert channel.
 ///
-/// Owns the alert overlay, the window morph/restore, the in-app toast, and the
+/// Owns the alert overlay, the window morph/restore, and the
 /// [AdhanAlertState] the UI watches. It is intentionally visuals-only: sound
 /// and OS notifications are separate channels, and preemption/completion are
 /// coordinated by the dispatcher.
@@ -26,19 +25,12 @@ class AdhanAlertController extends _$AdhanAlertController
     implements PrayerAlertChannel {
   WindowSnapshot? _snapshot;
   AlertWindowFlags? _overlayFlags;
-  FToasterEntry? _toastEntry;
 
   @override
   AdhanAlertState build() => const AdhanAlertState.idle();
 
   @override
   String get debugName => 'in-app';
-
-  /// Registers the in-app toast shown during overlay-mode alerts.
-  void registerToastEntry(FToasterEntry entry) {
-    _toastEntry?.dismiss();
-    _toastEntry = entry;
-  }
 
   @override
   Future<void> deliver(PrayerAlertEvent event) async {
@@ -73,7 +65,6 @@ class AdhanAlertController extends _$AdhanAlertController
   @override
   Future<void> cancel() async {
     if (!state.isShowing) return;
-    _dismissToast();
     await _restoreWindowArtifacts();
     state = const AdhanAlertState.idle();
   }
@@ -86,11 +77,6 @@ class AdhanAlertController extends _$AdhanAlertController
     if (state.isShowing) {
       await windowManager.setAlwaysOnTop(true);
     }
-  }
-
-  void _dismissToast() {
-    _toastEntry?.dismiss();
-    _toastEntry = null;
   }
 
   Future<void> _restoreWindowArtifacts() async {

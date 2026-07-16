@@ -9,7 +9,7 @@ import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_alert_scheduler_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/media_session_router_provider.dart';
 import 'package:tawaq/feature/settings/data/models/desktop_settings.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Desktop root that wires tray, window lifecycle, and background adhan.

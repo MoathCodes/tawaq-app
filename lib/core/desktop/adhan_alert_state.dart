@@ -35,6 +35,7 @@ class AdhanAlertState {
   /// Whether audio playback is expected for this alert.
   final bool playsSound;
 
-  /// Whether an alert is currently shown.
-  bool get isShowing => prayer != null;
+  /// Whether an alert is currently shown with a complete display payload.
+  bool get isShowing =>
+      kind != null && prayer != null && scheduledTime != null;
 }

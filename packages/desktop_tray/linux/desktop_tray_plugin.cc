@@ -54,6 +54,7 @@ static DesktopTrayPlugin* g_plugin = nullptr;
 
 static AppIndicator* g_indicator = nullptr;
 static GtkWidget*    g_menu      = nullptr;
+static gchar*        g_stashed_title = nullptr;
 
 static bool g_tray_unavailable = false;
 
@@ -245,6 +246,20 @@ static void split_icon_path(const char* icon_path,
   *out_name = base;
 }
 
+// ----- Tray title (maps Dart setToolTip to app_indicator_set_title) -----------
+
+static void stash_indicator_title(const gchar* title) {
+  g_free(g_stashed_title);
+  g_stashed_title = (title != nullptr && title[0] != '\0')
+                        ? g_strdup(title)
+                        : nullptr;
+}
+
+static void apply_indicator_title() {
+  if (g_indicator == nullptr || g_stashed_title == nullptr) return;
+  app_indicator_set_title(g_indicator, g_stashed_title);
+}
+
 // ----- Method-channel handlers ----------------------------------------------
 
 static FlMethodResponse* handle_check_available(FlValue* /*args*/) {
@@ -290,7 +305,7 @@ static FlMethodResponse* handle_set_icon(FlValue* args) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     g_indicator = app_indicator_new_with_path(
-        "desktop_tray", icon_name,
+        "tawaq", icon_name,
         APP_INDICATOR_CATEGORY_APPLICATION_STATUS, icon_dir);
 #pragma GCC diagnostic pop
 
@@ -306,7 +321,10 @@ static FlMethodResponse* handle_set_icon(FlValue* args) {
 
   app_indicator_set_icon_theme_path(g_indicator, icon_dir);
   app_indicator_set_status(g_indicator, APP_INDICATOR_STATUS_ACTIVE);
-  app_indicator_set_icon_full(g_indicator, icon_name, "");
+  app_indicator_set_icon_full(
+      g_indicator, icon_name,
+      g_stashed_title != nullptr ? g_stashed_title : "");
+  apply_indicator_title();
 
   g_free(icon_dir);
   g_free(icon_name);
@@ -315,8 +333,13 @@ static FlMethodResponse* handle_set_icon(FlValue* args) {
       fl_method_success_response_new(fl_value_new_bool(true)));
 }
 
-static FlMethodResponse* handle_set_tooltip(FlValue* /*args*/) {
-  // libayatana-appindicator3 has no tooltip API — safe no-op.
+static FlMethodResponse* handle_set_tooltip(FlValue* args) {
+  // AppIndicator has no hover-tooltip API; map setToolTip to the panel title.
+  FlValue* tool_tip_val = fl_value_lookup_string(args, "toolTip");
+  const char* tool_tip =
+      tool_tip_val != nullptr ? fl_value_get_string(tool_tip_val) : "";
+  stash_indicator_title(tool_tip);
+  apply_indicator_title();
   return FL_METHOD_RESPONSE(
       fl_method_success_response_new(fl_value_new_bool(true)));
 }

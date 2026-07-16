@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -107,7 +106,6 @@ void main() {
       verify(
         () => adhanPlayer.playTrack(
           any(),
-          fadeIn: kAudioDefaultFadeIn,
         ),
       ).called(1);
     });

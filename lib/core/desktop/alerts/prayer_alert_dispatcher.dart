@@ -25,18 +25,14 @@ typedef _AlertFlight = ({PrayerAlertKind kind, String prayer});
 /// Coordinates prayer alert delivery across a set of [PrayerAlertChannel]s.
 class PrayerAlertCoordinator {
   PrayerAlertCoordinator({
-    required List<PrayerAlertChannel> channels,
-    required Stream<PlaybackState> playbackStream,
-    required Duration soundSafetyCap,
-    PlaybackState Function()? currentPlayback,
-    AlertErrorSink? onError,
+    required this._channels,
+    required this._playbackStream,
+    required this._soundSafetyCap,
+    this._currentPlayback,
+    this._onError,
     this.onFinished,
     this.notifyOnlyTimeout = const Duration(seconds: 30),
-  }) : _channels = channels,
-       _playbackStream = playbackStream,
-       _soundSafetyCap = soundSafetyCap,
-       _currentPlayback = currentPlayback,
-       _onError = onError;
+  });
 
   final List<PrayerAlertChannel> _channels;
   final Stream<PlaybackState> _playbackStream;
@@ -139,7 +135,8 @@ class PrayerAlertCoordinator {
 
   void _watchPlaybackCompletion(int generation) {
     if (_disposed || generation != _generation) return;
-    var sawPlaying = _currentPlayback?.call() is PlaybackPlaying;
+    final initial = _currentPlayback?.call() ?? const PlaybackIdle();
+    var sawPlaying = initial is PlaybackPlaying;
     _playbackSub = _playbackStream.listen((playback) {
       if (_disposed || generation != _generation) return;
 
@@ -229,7 +226,9 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
       soundSafetyCap: soundSafetyCap ?? const Duration(minutes: 8),
     );
 
-    ref.onDispose(_coordinator.dispose);
+    ref.onDispose(() {
+      _coordinator.dispose();
+    });
     return _coordinator;
   }
 

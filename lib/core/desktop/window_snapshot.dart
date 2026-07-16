@@ -83,7 +83,7 @@ class AlertWindowFlags {
 }
 
 /// Compact alert card size when morphing from tray.
-const Size kAdhanAlertCompactSize = Size(400, 240);
+const Size kAdhanAlertCompactSize = Size(400, 104);
 
 /// Screen edge inset for compact alert placement.
 const double kAdhanAlertScreenInset = 16;

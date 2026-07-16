@@ -69,7 +69,9 @@ class DesktopTrayService with DesktopTrayListener {
 
   /// Tears down the tray and quits the app from a native menu callback.
   Future<void> quitFromTray() async {
-    await shutdownDesktop(_ref);
+    // Pass [this] so shutdown does not re-read [desktopTrayServiceProvider]
+    // through this provider's own [Ref] (self-dependency assertion).
+    await shutdownDesktop(_ref, tray: this);
   }
 
   @override

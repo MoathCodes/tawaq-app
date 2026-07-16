@@ -12,16 +12,12 @@ import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 class SoundAlertChannel implements PrayerAlertChannel {
   /// Creates a [SoundAlertChannel] over [_adhanPlayer].
   SoundAlertChannel({
-    required AudioPlayerController adhanPlayer,
-    required Future<double> Function() onCaptureRecitationVolume,
-    required Future<void> Function() onSuspend,
-    required Future<void> Function(double volume) onRestoreRecitationVolume,
-    required Future<void> Function() onResume,
-  })  : _adhanPlayer = adhanPlayer,
-        _onCaptureRecitationVolume = onCaptureRecitationVolume,
-        _onSuspend = onSuspend,
-        _onRestoreRecitationVolume = onRestoreRecitationVolume,
-        _onResume = onResume;
+    required this._adhanPlayer,
+    required this._onCaptureRecitationVolume,
+    required this._onSuspend,
+    required this._onRestoreRecitationVolume,
+    required this._onResume,
+  });
 
   final AudioPlayerController _adhanPlayer;
   final Future<double> Function() _onCaptureRecitationVolume;
@@ -39,18 +35,22 @@ class SoundAlertChannel implements PrayerAlertChannel {
     final assetPath = event.soundAssetPath;
     if (!event.playSound || assetPath == null) return;
 
-    _capturedVolume = await _onCaptureRecitationVolume();
-    await _onSuspend();
+    try {
+      _capturedVolume = await _onCaptureRecitationVolume();
+      await _onSuspend();
 
-    await _adhanPlayer.setVolume(event.volume);
-    await _adhanPlayer.playTrack(
-      AudioTrack.asset(
-        id: event.slug,
-        title: event.soundTitle ?? event.soundSubtitle ?? 'Tawaq',
-        assetPath: assetPath,
-        subtitle: event.soundSubtitle,
-      ),
-    );
+      await _adhanPlayer.setVolume(event.volume);
+      await _adhanPlayer.playTrack(
+        AudioTrack.asset(
+          id: event.slug,
+          title: event.soundTitle ?? event.soundSubtitle ?? 'Tawaq',
+          assetPath: assetPath,
+          subtitle: event.soundSubtitle,
+        ),
+      );
+    } on Object catch (error, stack) {
+      rethrow;
+    }
   }
 
   @override

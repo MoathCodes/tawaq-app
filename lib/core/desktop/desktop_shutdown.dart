@@ -9,11 +9,20 @@ import 'package:window_manager/window_manager.dart';
 ///
 /// Force-shuts down prayer alerts, stops audio, removes the tray icon,
 /// then destroys the native window.
-Future<void> shutdownDesktop(Ref ref) async {
+///
+/// [tray] must be passed when called from [DesktopTrayService] itself —
+/// reading [desktopTrayServiceProvider] through that provider's [Ref]
+/// asserts ("A provider cannot depend on itself").
+Future<void> shutdownDesktop(Ref ref, {DesktopTrayService? tray}) async {
   if (!isDesktopPlatform) return;
 
   await ref.read(prayerAlertDispatcherProvider.notifier).forceShutdown();
-  await ref.read(audioPlayerControllerProvider.notifier).stop();
-  await ref.read(desktopTrayServiceProvider).dispose();
+  // Stop via the service (no lease owner) so recitation or adhan both halt.
+  await ref.read(tawaqAudioServiceProvider).stop();
+  if (tray != null) {
+    await tray.dispose();
+  } else {
+    await ref.read(desktopTrayServiceProvider).dispose();
+  }
   await windowManager.destroy();
 }
