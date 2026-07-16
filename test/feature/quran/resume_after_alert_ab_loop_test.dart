@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart' show RecitationController;
 
 const _reciter = Reciter(id: 1, name: 'Test', moshaf: [_moshaf]);
 const _moshaf = Moshaf(
@@ -64,7 +64,6 @@ void main() {
         moshaf: _moshaf,
         surah: 1,
         currentAyah: 3,
-        ayahRepeatCount: 1,
         status: RecitationStatus.playing,
       );
       expect(shouldRearmAyahLoopAfterAlert(snapshot), isFalse);

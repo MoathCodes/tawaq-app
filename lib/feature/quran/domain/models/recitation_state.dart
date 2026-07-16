@@ -77,6 +77,10 @@ abstract class RecitationState with _$RecitationState {
 
     /// Snapshot captured when an alert suspends playback, for later resume.
     RecitationState? suspendedSnapshot,
+
+    /// Optimistic seek target; stale audio-position ticks are ignored until
+    /// playback is near this value.
+    Duration? pendingSeekTarget,
   }) = _RecitationState;
 
   const RecitationState._();
@@ -150,6 +154,9 @@ abstract class RecitationState with _$RecitationState {
 
   /// Whether playback failed.
   bool get isError => status == RecitationStatus.error;
+
+  /// Whether the current selection finished and is ready to replay.
+  bool get isEnded => status == RecitationStatus.ended;
 }
 
 /// Unified playback status for [RecitationState].
@@ -171,6 +178,9 @@ enum RecitationStatus {
 
   /// Playback failed.
   error,
+
+  /// The current selection finished; press replay to start again.
+  ended,
 }
 
 /// Kind of playback selection active in a recitation session.

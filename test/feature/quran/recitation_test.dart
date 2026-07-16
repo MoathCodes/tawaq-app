@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_url_builder.dart';
 import 'package:tawaq/feature/quran/domain/services/reciter_tags.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 
 void main() {
   group('surahAudioUrl', () {
@@ -83,4 +86,138 @@ void main() {
       expect(tags.riwayah, isNull);
     });
   });
+
+  group('isHafsRiwayah', () {
+    test('returns true for Hafs moshaf names', () {
+      expect(isHafsRiwayah('حفص عن عاصم - مرتل'), isTrue);
+      expect(isHafsRiwayah('المصحف المجود - حفص'), isTrue);
+    });
+
+    test('returns false for other recognized riwayat', () {
+      expect(isHafsRiwayah('ورش عن نافع'), isFalse);
+      expect(isHafsRiwayah('قالون عن نافع'), isFalse);
+    });
+
+    test('returns false for unrecognized names', () {
+      expect(isHafsRiwayah('تلاوة خاصة'), isFalse);
+    });
+  });
+
+  group('setReciter highlight auto-disable', () {
+    test('disables highlightAyah for non-Hafs moshaf', () {
+      final container = ProviderContainer(
+        overrides: [
+          recitationSettingsProvider.overrideWith(
+            _TestRecitationSettingsNotifier.new,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(recitationSettingsProvider.notifier);
+      notifier.setHighlightAyah(value: true);
+      final autoHighlight = notifier.setReciter(
+        reciterId: 1,
+        moshafId: 2,
+        moshafName: 'ورش عن نافع',
+      );
+
+      final settings = container.read(recitationSettingsProvider).value;
+      expect(settings?.reciterId, 1);
+      expect(settings?.moshafId, 2);
+      expect(settings?.highlightAyah, isFalse);
+      expect(autoHighlight, isFalse);
+    });
+
+    test('re-enables highlightAyah when switching from non-Hafs to Hafs', () {
+      final container = ProviderContainer(
+        overrides: [
+          recitationSettingsProvider.overrideWith(
+            _TestRecitationSettingsNotifier.new,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(recitationSettingsProvider.notifier);
+      notifier.setReciter(
+        reciterId: 1,
+        moshafId: 2,
+        moshafName: 'ورش عن نافع',
+      );
+      expect(
+        container.read(recitationSettingsProvider).value?.highlightAyah,
+        isFalse,
+      );
+
+      final autoHighlight = notifier.setReciter(
+        reciterId: 3,
+        moshafId: 4,
+        moshafName: 'حفص عن عاصم - مرتل',
+      );
+      expect(
+        container.read(recitationSettingsProvider).value?.highlightAyah,
+        isTrue,
+      );
+      expect(autoHighlight, isTrue);
+    });
+
+    test('enables highlightAyah for Hafs moshaf', () {
+      final container = ProviderContainer(
+        overrides: [
+          recitationSettingsProvider.overrideWith(
+            _TestRecitationSettingsNotifier.new,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(recitationSettingsProvider.notifier);
+      notifier.setHighlightAyah(value: false);
+      final autoHighlight = notifier.setReciter(
+        reciterId: 1,
+        moshafId: 2,
+        moshafName: 'حفص عن عاصم - مرتل',
+      );
+
+      expect(
+        container.read(recitationSettingsProvider).value?.highlightAyah,
+        isTrue,
+      );
+      expect(autoHighlight, isTrue);
+    });
+
+    test('leaves highlightAyah unchanged for unrecognized moshaf name', () {
+      final container = ProviderContainer(
+        overrides: [
+          recitationSettingsProvider.overrideWith(
+            _TestRecitationSettingsNotifier.new,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final notifier = container.read(recitationSettingsProvider.notifier);
+      notifier.setHighlightAyah(value: true);
+      final autoHighlight = notifier.setReciter(
+        reciterId: 1,
+        moshafId: 2,
+        moshafName: 'تلاوة خاصة',
+      );
+
+      expect(
+        container.read(recitationSettingsProvider).value?.highlightAyah,
+        isTrue,
+      );
+      expect(autoHighlight, isNull);
+    });
+  });
+}
+
+class _TestRecitationSettingsNotifier extends RecitationSettingsNotifier {
+  @override
+  Future<RecitationSettings> build() async {
+    state = const AsyncData(RecitationSettings());
+    return const RecitationSettings();
+  }
 }

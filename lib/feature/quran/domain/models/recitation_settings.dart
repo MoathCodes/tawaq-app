@@ -53,6 +53,9 @@ abstract class RecitationSettings with _$RecitationSettings {
 
     /// Last range scope preset selected in the range dialog.
     RangeScopePreset? lastRangePreset,
+
+    /// Last saved playback offset in ms (ayah start for timed, exact for untimed).
+    int? lastPlaybackPositionMs,
   }) = _RecitationSettings;
 
   /// Creates [RecitationSettings] from JSON.

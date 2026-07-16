@@ -502,6 +502,7 @@ class MushafReaderController implements Listenable {
 
   void onPageChanged(int pageIndex) {
     final pageNumber = pageIndex * pagesPerViewport + 1;
+    if (pageNumber == currentPage) return;
     _setCurrentPage(pageNumber);
   }
 

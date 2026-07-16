@@ -163,6 +163,12 @@ void main() {
         TafsirTextNormalizer.formatAyahDisplay('﴿already wrapped﴾'),
         '﴿already wrapped﴾',
       );
+      expect(
+        TafsirTextNormalizer.formatAyahDisplay(
+          '${TafsirTextNormalizer.mouaserAyahOpen}ٱللَّهِ${TafsirTextNormalizer.mouaserAyahClose}',
+        ),
+        '﴿ٱللَّهِ﴾',
+      );
     });
   });
 }

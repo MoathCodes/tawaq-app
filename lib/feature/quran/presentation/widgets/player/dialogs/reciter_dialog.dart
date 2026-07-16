@@ -1,31 +1,32 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/layout/centered_viewport_shell.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/core/widgets/scroll_overflow_hint_viewport.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/reciter_tags.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/timed_riwayat_suggestions.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
-import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
-import 'package:tawaq/core/layout/centered_viewport_shell.dart';
-import 'package:tawaq/core/widgets/scroll_overflow_hint_viewport.dart';
+import 'package:tawaq/theme/theme.dart';
 
-export 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/timed_riwayat_suggestions.dart'
-    show ReciterPick;
+/// The reciter/riwayah a user picked.
+typedef ReciterPick = ({Reciter reciter, Moshaf moshaf});
 
 /// Opens the reciter & riwayah picker.
 Future<ReciterPick?> showReciterDialog(
   BuildContext context, {
   RecitationPickIntent intent = RecitationPickIntent.general,
   bool pickOnly = false,
+  bool initialTimedFilter = false,
 }) => showFDialog<ReciterPick>(
   context: context,
   useRootNavigator: true,
@@ -42,6 +43,7 @@ Future<ReciterPick?> showReciterDialog(
     builder: (context, _) => _ReciterDialog(
       intent: intent,
       pickOnly: pickOnly,
+      initialTimedFilter: initialTimedFilter,
     ),
   ),
 );
@@ -50,10 +52,12 @@ class _ReciterDialog extends HookConsumerWidget {
   const _ReciterDialog({
     required this.intent,
     required this.pickOnly,
+    required this.initialTimedFilter,
   });
 
   final RecitationPickIntent intent;
   final bool pickOnly;
+  final bool initialTimedFilter;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,8 +66,9 @@ class _ReciterDialog extends HookConsumerWidget {
     final colors = theme.colors;
 
     final query = useState('');
-    final filtersOpen = useState(false);
+    final filtersOpen = useState(initialTimedFilter);
     final downloadedFilter = useState(false);
+    final timedFilter = useState(initialTimedFilter);
     final styleFilter = useState<Set<RecitationStyle>>(const {});
     final riwayahFilter = useState<Set<String>>(const {});
 
@@ -99,6 +104,9 @@ class _ReciterDialog extends HookConsumerWidget {
           !r.moshaf.any(
             (m) => downloadedKeys.contains((r.id, m.id)),
           )) {
+        return false;
+      }
+      if (timedFilter.value && !r.hasTiming) {
         return false;
       }
       if (styleFilter.value.isNotEmpty &&
@@ -145,6 +153,7 @@ class _ReciterDialog extends HookConsumerWidget {
 
     final activeFilterCount = [
       if (downloadedFilter.value) 1,
+      if (timedFilter.value) 1,
       styleFilter.value.length,
       riwayahFilter.value.length,
     ].fold<int>(0, (sum, n) => sum + n);
@@ -169,6 +178,12 @@ class _ReciterDialog extends HookConsumerWidget {
 
         final currentSettings = ref.read(recitationSettingsProvider).value;
         final playback = ref.read(recitationControllerProvider);
+        if (pickOnly) {
+          if (!context.mounted) return;
+          Navigator.of(context).pop((reciter: r, moshaf: resolved));
+          return;
+        }
+
         if (currentSettings?.reciterId == r.id &&
             currentSettings?.moshafId == resolved.id &&
             playback.surah != null) {
@@ -176,14 +191,15 @@ class _ReciterDialog extends HookConsumerWidget {
           return;
         }
 
-        await ref
+        final autoHighlight = await ref
             .read(recitationControllerProvider.notifier)
             .switchReciter(r, resolved);
 
-        if (pickOnly) {
-          if (!context.mounted) return;
-          Navigator.of(context).pop((reciter: r, moshaf: resolved));
-          return;
+        if (autoHighlight != null && context.mounted) {
+          showRecitationHighlightAutoChangeToast(
+            context,
+            enabled: autoHighlight,
+          );
         }
 
         if (context.mounted) Navigator.of(context).pop();
@@ -215,65 +231,61 @@ class _ReciterDialog extends HookConsumerWidget {
               .where((r) => r.id == focusedReciterId.value)
               .firstOrNull;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        0,
-        0,
-        0,
-        AppSpacing.lg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          PlayerDialogHeader(
-            title: l10n.quranReciterRiwayahTitle,
-            headerBottom: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: FTextField(
-                        hint: l10n.quranReciterSearchHint,
-                        control: FTextFieldControl.managed(
-                          onChange: (value) => query.value = value.text,
-                        ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PlayerDialogHeader(
+          title: l10n.quranReciterRiwayahTitle,
+          headerBottom: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: FTextField(
+                      hint: l10n.quranReciterSearchHint,
+                      control: FTextFieldControl.managed(
+                        onChange: (value) => query.value = value.text,
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    FButton.icon(
-                      variant: filtersOpen.value || activeFilterCount > 0
-                          ? FButtonVariant.primary
-                          : FButtonVariant.outline,
-                      onPress: () => filtersOpen.value = !filtersOpen.value,
-                      child: Badge(
-                        isLabelVisible: activeFilterCount > 0,
-                        label: Text('$activeFilterCount'),
-                        backgroundColor: theme.colors.background,
-                        offset: const Offset(-12, -12),
-                        child: const Icon(
-                          FLucideIcons.slidersHorizontal,
-                          size: 16,
-                        ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  FButton.icon(
+                    variant: filtersOpen.value || activeFilterCount > 0
+                        ? FButtonVariant.primary
+                        : FButtonVariant.outline,
+                    onPress: () => filtersOpen.value = !filtersOpen.value,
+                    child: Badge(
+                      isLabelVisible: activeFilterCount > 0,
+                      label: Text('$activeFilterCount'),
+                      backgroundColor: theme.colors.background,
+                      offset: const Offset(-12, -12),
+                      child: const Icon(
+                        FLucideIcons.slidersHorizontal,
+                        size: 16,
                       ),
                     ),
-                  ],
-                ),
-                if (filtersOpen.value) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  _ReciterFilterBar(
-                    downloadedFilter: downloadedFilter,
-                    styleFilter: styleFilter,
-                    riwayahFilter: riwayahFilter,
-                    riwayahOptions: riwayahOptions,
                   ),
                 ],
+              ),
+              if (filtersOpen.value) ...[
+                const SizedBox(height: AppSpacing.sm),
+                _ReciterFilterBar(
+                  downloadedFilter: downloadedFilter,
+                  timedFilter: timedFilter,
+                  styleFilter: styleFilter,
+                  riwayahFilter: riwayahFilter,
+                  riwayahOptions: riwayahOptions,
+                ),
               ],
-            ),
+            ],
           ),
-          Container(height: 1, color: colors.border),
-          const SizedBox(height: AppSpacing.sm),
-          Expanded(
+        ),
+        Container(height: 1, color: colors.border),
+        const SizedBox(height: AppSpacing.sm),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
             child: recitersAsync.isLoading && reciters.isEmpty
                 ? const Center(child: FCircularProgress())
                 : visibleReciterList.isEmpty
@@ -350,8 +362,8 @@ class _ReciterDialog extends HookConsumerWidget {
                     },
                   ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -445,7 +457,6 @@ class _ReciterMetaIcon extends StatelessWidget {
     required this.icon,
     required this.color,
     this.size = 13,
-    super.key,
   });
 
   /// Tooltip and semantics label.
@@ -475,7 +486,7 @@ class _ReciterMetaIcon extends StatelessWidget {
 /// Prefix icon for a moshaf row based on recitation style.
 class _MoshafPrefix extends StatelessWidget {
   /// Creates a moshaf prefix icon.
-  const _MoshafPrefix({required this.style, super.key});
+  const _MoshafPrefix({required this.style});
 
   /// Parsed recitation style from the moshaf name.
   final RecitationStyle? style;
@@ -502,7 +513,6 @@ class _ReciterHeaderMeta extends StatelessWidget {
   const _ReciterHeaderMeta({
     required this.reciter,
     required this.downloadedKeys,
-    super.key,
   });
 
   /// Reciter being displayed.
@@ -546,7 +556,6 @@ class _MoshafMetaRow extends StatelessWidget {
   const _MoshafMetaRow({
     required this.moshaf,
     required this.downloaded,
-    super.key,
   });
 
   /// Moshaf being displayed.
@@ -590,14 +599,17 @@ class _ReciterFilterBar extends StatelessWidget {
   /// Creates the filter bar.
   const _ReciterFilterBar({
     required this.downloadedFilter,
+    required this.timedFilter,
     required this.styleFilter,
     required this.riwayahFilter,
     required this.riwayahOptions,
-    super.key,
   });
 
   /// Downloaded-only filter toggle.
   final ValueNotifier<bool> downloadedFilter;
+
+  /// Timed-only (ayah-sync) filter toggle.
+  final ValueNotifier<bool> timedFilter;
 
   /// Selected recitation styles.
   final ValueNotifier<Set<RecitationStyle>> styleFilter;
@@ -621,6 +633,11 @@ class _ReciterFilterBar extends StatelessWidget {
           label: l10n.quranReciterFilterDownloaded,
           active: downloadedFilter.value,
           onPress: () => downloadedFilter.value = !downloadedFilter.value,
+        ),
+        _FilterChip(
+          label: l10n.quranReciterTimed,
+          active: timedFilter.value,
+          onPress: () => timedFilter.value = !timedFilter.value,
         ),
         _FilterChip(
           label: l10n.quranReciterStyleMurattal,
@@ -753,7 +770,6 @@ class _ReciterListPane extends StatelessWidget {
     this.inlineRiwayahFor,
     this.onPick,
     this.applyingReciterId,
-    super.key,
   });
 
   final List<Reciter> reciters;
@@ -779,7 +795,6 @@ class _ReciterListPane extends StatelessWidget {
       divider: FItemDivider.full,
       tileBuilder: (context, index) {
         if (index >= entries.length) return null;
-
         return switch (entries[index]) {
           _ReciterRowEntry(:final reciter) => _buildReciterTile(
             context,
@@ -926,7 +941,6 @@ class _ReciterRiwayahPane extends StatelessWidget {
     required this.selectedMoshafId,
     required this.downloadedKeys,
     required this.onPick,
-    super.key,
   });
 
   final Reciter? reciter;
@@ -1006,7 +1020,6 @@ class _ReciterMoshafGroup extends StatelessWidget {
     required this.downloadedKeys,
     required this.onPick,
     this.label,
-    super.key,
   });
 
   final Reciter reciter;
@@ -1030,7 +1043,7 @@ class _ReciterMoshafGroup extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) => ScrollOverflowHintViewport(
-        builder: (controller) => centeredViewportScrollTab(
+        builder: (controller) => CenteredViewportShell.scrollTab(
           controller: controller,
           maxContentWidth: constraints.maxWidth,
           child: FSelectTileGroup<_ReciterMoshafKey>(

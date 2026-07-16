@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
@@ -18,6 +16,8 @@ const _moshaf = Moshaf(
   surahTotal: 3,
 );
 
+late MushafReaderController _intentMushaf;
+
 RecitationTimeline _timeline({List<AyahTiming>? ayat}) {
   return RecitationTimeline(
     timing: ayat == null ? null : SurahTiming(surah: 1, readId: 1, ayat: ayat),
@@ -30,6 +30,8 @@ RecitationTransition _run(
   RecitationTimeline? timeline,
   int ayahRepeatCount = 1,
   int rangeRepeatCount = 1,
+  bool trackLoaded = false,
+  bool? nativePlayWhenReady,
 }) {
   return transition(
     state,
@@ -37,10 +39,19 @@ RecitationTransition _run(
     timeline: timeline ?? _timeline(),
     defaultAyahRepeatCount: ayahRepeatCount,
     defaultRangeRepeatCount: rangeRepeatCount,
+    trackLoaded: trackLoaded,
+    nativePlayWhenReady: nativePlayWhenReady,
   );
 }
 
 void main() {
+  setUpAll(() async {
+    _intentMushaf = MushafReaderController.withRepository(
+      repository: _IntentMushafRepo(),
+    );
+    await _intentMushaf.ensureReady();
+  });
+
   group('Play events', () {
     test('PlaySurah sets loading and emits LoadSurah', () {
       const state = RecitationState();
@@ -54,9 +65,12 @@ void main() {
       expect(result.state.surah, 1);
       expect(result.state.isLoading, isTrue);
       expect(result.state.active, isTrue);
-      expect(result.effects, hasLength(2));
       expect(result.effects.whereType<CancelSleepTimer>(), hasLength(1));
+      expect(result.effects.whereType<ResetNativePlaybackModes>(), hasLength(1));
+      expect(result.effects.whereType<ClearNativeAbLoop>(), hasLength(1));
+      expect(result.effects.whereType<SetNativeLoop>(), hasLength(1));
       expect(result.effects.whereType<LoadSurah>(), hasLength(1));
+      expect(result.effects.whereType<PersistPlaybackState>(), hasLength(1));
     });
 
     test('PlayRange sets range and emits LoadRange + Persist', () {
@@ -134,6 +148,32 @@ void main() {
       final load = result.effects.whereType<LoadRange>().single;
       expect(load.seekTo, resume);
     });
+
+    test('PlaySurah with range repeat emits SetNativeLoop.file', () {
+      const state = RecitationState();
+      final result = _run(
+        state,
+        const PlaySurah(reciter: _reciter, moshaf: _moshaf, surah: 1),
+        rangeRepeatCount: 3,
+      );
+      final loop = result.effects.whereType<SetNativeLoop>().single;
+      expect(loop.mode, NativeLoopMode.file);
+    });
+
+    test('PlayRange emits SetNativeLoop.off for bounded range', () {
+      const state = RecitationState();
+      final result = _run(
+        state,
+        const PlayRange(
+          reciter: _reciter,
+          moshaf: _moshaf,
+          from: AyahReference(surah: 1, ayah: 2),
+          to: AyahReference(surah: 1, ayah: 3),
+        ),
+      );
+      final loop = result.effects.whereType<SetNativeLoop>().single;
+      expect(loop.mode, NativeLoopMode.off);
+    });
   });
 
   group('Toggle play/pause', () {
@@ -161,6 +201,58 @@ void main() {
       expect(result.effects, const [ResumeAudio()]);
     });
 
+    test('track loaded + native playing -> pause only (no reload)', () {
+      const state = RecitationState(
+        status: RecitationStatus.loading,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        position: Duration(seconds: 45),
+        active: true,
+      );
+      final result = _run(
+        state,
+        const TogglePlayPause(),
+        trackLoaded: true,
+        nativePlayWhenReady: true,
+      );
+      expect(result.effects, const [PauseAudio()]);
+      expect(result.effects.whereType<LoadSurah>(), isEmpty);
+    });
+
+    test('track loaded + native paused -> resume only (no reload)', () {
+      const state = RecitationState(
+        status: RecitationStatus.loading,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        position: Duration(seconds: 45),
+        active: true,
+      );
+      final result = _run(
+        state,
+        const TogglePlayPause(),
+        trackLoaded: true,
+        nativePlayWhenReady: false,
+      );
+      expect(result.effects, const [ResumeAudio()]);
+      expect(result.effects.whereType<LoadSurah>(), isEmpty);
+    });
+
+    test('userStopped -> replay from start (not stale position)', () {
+      const state = RecitationState(
+        userStopped: true,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        position: Duration(seconds: 45),
+        active: true,
+      );
+      final result = _run(state, const TogglePlayPause());
+      final load = result.effects.whereType<LoadSurah>().single;
+      expect(load.seekTo, isNull);
+    });
+
     test('idle with metadata -> reload', () {
       const state = RecitationState(
         reciter: _reciter,
@@ -170,6 +262,20 @@ void main() {
       );
       final result = _run(state, const TogglePlayPause());
       expect(result.effects.whereType<LoadSurah>(), hasLength(1));
+    });
+
+    test('idle with saved position resumes from checkpoint', () {
+      const resume = Duration(seconds: 45);
+      const state = RecitationState(
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        position: resume,
+        active: true,
+      );
+      final result = _run(state, const TogglePlayPause());
+      final load = result.effects.whereType<LoadSurah>().single;
+      expect(load.seekTo, resume);
     });
   });
 
@@ -189,31 +295,321 @@ void main() {
       );
       final result = _run(
         state,
-        const Seek(Duration(milliseconds: 12000)),
+        const Seek(Duration(milliseconds: 7500)),
         timeline: timeline,
       );
       expect(
         result.state.position,
-        const Duration(milliseconds: 10000),
+        const Duration(milliseconds: 5000),
       );
+      expect(result.state.currentAyah, 2);
+      expect(result.state.pendingSeekTarget, const Duration(milliseconds: 5000));
       final seek = result.effects.whereType<SeekAudio>().firstOrNull;
       expect(seek, isNotNull);
-      expect(seek!.position, const Duration(milliseconds: 10000));
+      expect(seek!.position, const Duration(milliseconds: 5000));
+      expect(result.effects.whereType<HighlightAyah>(), hasLength(1));
     });
 
-    test('Stop resets state, sets userStopped, and emits StopAudio', () {
+    test('Seek on untimed timeline emits SeekAudio at scrubbed position', () {
+      const target = Duration(milliseconds: 723046);
+      const state = RecitationState(
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        active: true,
+      );
+      final result = _run(
+        state,
+        const Seek(target),
+        timeline: _timeline(),
+      );
+      expect(result.state.position, target);
+      expect(result.state.pendingSeekTarget, target);
+      final seek = result.effects.whereType<SeekAudio>().firstOrNull;
+      expect(seek, isNotNull);
+      expect(seek!.position, target);
+      expect(result.effects.whereType<HighlightAyah>(), isEmpty);
+    });
+
+    test('stale AudioPosition is ignored while pending seek is active', () {
+      final timeline = _timeline(
+        ayat: [
+          const AyahTiming(ayah: 1, startMs: 0, endMs: 5000),
+          const AyahTiming(ayah: 2, startMs: 5000, endMs: 10000),
+        ],
+      );
       const state = RecitationState(
         status: RecitationStatus.playing,
         reciter: _reciter,
         moshaf: _moshaf,
         surah: 1,
+        position: Duration(milliseconds: 1000),
+        currentAyah: 1,
+        active: true,
+      );
+      final sought = _run(
+        state,
+        const Seek(Duration(milliseconds: 5000)),
+        timeline: timeline,
+      );
+      final tick = _run(
+        sought.state,
+        const AudioPosition(Duration(milliseconds: 1000)),
+        timeline: timeline,
+      );
+      expect(tick.state.position, const Duration(milliseconds: 5000));
+      expect(tick.state.currentAyah, 2);
+    });
+
+    test('Seek while ended transitions to paused when position > 0', () {
+      final timeline = _timeline(
+        ayat: const [AyahTiming(ayah: 1, startMs: 0, endMs: 5000)],
+      );
+      const state = RecitationState(
+        status: RecitationStatus.ended,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        active: true,
+      );
+      final result = _run(
+        state,
+        const Seek(Duration()),
+        timeline: timeline,
+      );
+      expect(result.state.isEnded, isTrue);
+      expect(result.state.isPaused, isFalse);
+    });
+
+    test('Seek while ended with non-zero position transitions to paused', () {
+      final timeline = _timeline(
+        ayat: const [
+          AyahTiming(ayah: 1, startMs: 0, endMs: 5000),
+          AyahTiming(ayah: 2, startMs: 5000, endMs: 10000),
+        ],
+      );
+      const state = RecitationState(
+        status: RecitationStatus.ended,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        active: true,
+      );
+      final result = _run(
+        state,
+        const Seek(Duration(milliseconds: 6000)),
+        timeline: timeline,
+      );
+      expect(result.state.isPaused, isTrue);
+      expect(result.state.isEnded, isFalse);
+      expect(result.state.position, const Duration(milliseconds: 5000));
+    });
+
+    test('PlaySurah clears pendingSeekTarget and resumes position ticks', () {
+      final timeline = _timeline(
+        ayat: const [AyahTiming(ayah: 1, startMs: 0, endMs: 5000)],
+      );
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        position: Duration(milliseconds: 5000),
+        currentAyah: 1,
+        pendingSeekTarget: Duration(milliseconds: 5000),
+        active: true,
+      );
+      final played = _run(
+        state,
+        const PlaySurah(reciter: _reciter, moshaf: _moshaf, surah: 1),
+      );
+      expect(played.state.pendingSeekTarget, isNull);
+
+      final tick = _run(
+        played.state.copyWith(status: RecitationStatus.playing),
+        const AudioPosition(Duration(milliseconds: 1200)),
+        timeline: timeline,
+      );
+      expect(tick.state.position, const Duration(milliseconds: 1200));
+    });
+
+    test('Stop clears pendingSeekTarget', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        pendingSeekTarget: Duration(milliseconds: 5000),
+        active: true,
+      );
+      final result = _run(state, const Stop());
+      expect(result.state.pendingSeekTarget, isNull);
+    });
+
+    test('ended seek then play resumes from scrubbed position', () {
+      final timeline = _timeline(
+        ayat: const [
+          AyahTiming(ayah: 1, startMs: 0, endMs: 5000),
+          AyahTiming(ayah: 2, startMs: 5000, endMs: 10000),
+        ],
+      );
+      const state = RecitationState(
+        status: RecitationStatus.ended,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        duration: Duration(milliseconds: 10000),
+        ayahRepeatCount: 3,
+        active: true,
+      );
+      final sought = _run(
+        state,
+        const Seek(Duration(milliseconds: 6000)),
+        timeline: timeline,
+      );
+      expect(sought.state.isPaused, isTrue);
+      expect(sought.state.position, const Duration(milliseconds: 5000));
+
+      final played = _run(
+        sought.state,
+        const TogglePlayPause(),
+        timeline: timeline,
+        ayahRepeatCount: 3,
+        rangeRepeatCount: 2,
+      );
+      expect(played.state.isPaused, isTrue);
+      expect(played.state.position, const Duration(milliseconds: 5000));
+      expect(played.effects, const [ResumeAudio()]);
+    });
+
+    test('ended toggle always replays from start with full repeat budgets', () {
+      const state = RecitationState(
+        status: RecitationStatus.ended,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        duration: Duration(milliseconds: 10000),
+        position: Duration(milliseconds: 8000),
+        ayahRepeatCount: 3,
+        active: true,
+      );
+      final played = _run(
+        state,
+        const TogglePlayPause(),
+        ayahRepeatCount: 3,
+        rangeRepeatCount: 2,
+      );
+      expect(played.state.isLoading, isTrue);
+      expect(played.state.repeatsRemaining, 2);
+      expect(played.state.ayahRepeatsRemaining, 3);
+      expect(played.state.position, Duration.zero);
+      final load = played.effects.whereType<LoadSurah>().single;
+      expect(load.seekTo, isNull);
+    });
+
+    test('Seek during loading preserves requested position', () {
+      const state = RecitationState(
+        status: RecitationStatus.loading,
+        timelinePending: true,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        active: true,
+      );
+      final result = _run(
+        state,
+        const Seek(Duration(milliseconds: 5000)),
+        timeline: const RecitationTimeline(),
+      );
+      expect(result.state.position, const Duration(milliseconds: 5000));
+      expect(result.state.pendingSeekTarget, const Duration(milliseconds: 5000));
+      expect(
+        result.effects.whereType<SeekAudio>().single.position,
+        const Duration(milliseconds: 5000),
+      );
+    });
+
+    test('SeekFailed reverts optimistic position', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        position: Duration(milliseconds: 8000),
+        pendingSeekTarget: Duration(milliseconds: 3000),
+        active: true,
+      );
+      const revert = Duration(milliseconds: 1200);
+      final result = _run(state, const SeekFailed(revertTo: revert));
+      expect(result.state.position, revert);
+      expect(result.state.pendingSeekTarget, isNull);
+    });
+
+    test('PendingSeekTimeout clears pending seek guard and reverts', () {
+      final timeline = _timeline(
+        ayat: const [AyahTiming(ayah: 1, startMs: 0, endMs: 5000)],
+      );
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        position: Duration(milliseconds: 5000),
+        currentAyah: 1,
+        pendingSeekTarget: Duration(milliseconds: 5000),
+        active: true,
+      );
+      const revert = Duration(milliseconds: 900);
+      final timedOut = _run(
+        state,
+        const PendingSeekTimeout(revertTo: revert),
+      );
+      expect(timedOut.state.pendingSeekTarget, isNull);
+      expect(timedOut.state.position, revert);
+
+      final tick = _run(
+        timedOut.state,
+        const AudioPosition(Duration(milliseconds: 1200)),
+        timeline: timeline,
+      );
+      expect(tick.state.position, const Duration(milliseconds: 1200));
+    });
+
+    test('AudioPosition ignored after Stop (userStopped + idle)', () {
+      const state = RecitationState(
+        userStopped: true,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        active: true,
+      );
+      final result = _run(
+        state,
+        const AudioPosition(Duration(seconds: 45)),
+      );
+      expect(result.state.position, Duration.zero);
+    });
+
+    test('Stop resets state, sets userStopped, and emits teardown effects', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        ayahRepeatCount: 3,
+        ayahRepeatsRemaining: 2,
         active: true,
       );
       final result = _run(state, const Stop());
       expect(result.state.isIdle, isTrue);
       expect(result.state.userStopped, isTrue);
       expect(result.state.position, Duration.zero);
-      expect(result.effects, const [StopAudio()]);
+      expect(result.state.ayahRepeatsRemaining, 3);
+      expect(result.state.ayahLoopExiting, isFalse);
+      expect(result.effects.whereType<StopAudio>(), hasLength(1));
+      expect(result.effects.whereType<ClearPlaybackPosition>(), hasLength(1));
+      expect(result.effects.whereType<ResetNativePlaybackModes>(), hasLength(1));
+      expect(result.effects.whereType<ClearNativeAbLoop>(), hasLength(1));
     });
   });
 
@@ -291,7 +687,7 @@ void main() {
       ],
     );
 
-    test('whole surah repeat restarts', () {
+    test('whole surah repeat decrements via native Loop.file', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         reciter: _reciter,
@@ -303,16 +699,38 @@ void main() {
       );
       final result = _run(
         state,
-        const AudioPosition(Duration(milliseconds: 10000)),
+        const AudioCompleted(),
+        timeline: timeline,
+      );
+      expect(result.state.repeatsRemaining, 1);
+      expect(result.state.isPlaying, isTrue);
+      expect(result.effects, isEmpty);
+      expect(result.effects.whereType<LoadSurah>(), isEmpty);
+    });
+
+    test('whole surah repeat reloads when ayahRepeatCount > 1', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        duration: Duration(milliseconds: 10000),
+        repeatsRemaining: 2,
+        ayahRepeatCount: 3,
+        active: true,
+      );
+      final result = _run(
+        state,
+        const AudioCompleted(),
         timeline: timeline,
       );
       expect(result.state.repeatsRemaining, 1);
       expect(result.state.isLoading, isTrue);
+      expect(result.effects.whereType<LoadRange>(), isEmpty);
       expect(result.effects.whereType<LoadSurah>(), hasLength(1));
-      expect(result.effects.whereType<SeekAudio>(), isEmpty);
     });
 
-    test('whole surah stopAtEnd pauses', () {
+    test('whole surah stopAtEnd ends with pause-at-EOF', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         reciter: _reciter,
@@ -323,21 +741,24 @@ void main() {
       );
       final result = _run(
         state,
-        const AudioPosition(Duration(milliseconds: 10000)),
+        const AudioCompleted(),
         timeline: timeline,
       );
-      expect(result.state.isPaused, isTrue);
-      expect(result.effects.whereType<PauseAudio>(), hasLength(1));
+      expect(result.state.isEnded, isTrue);
+      expect(result.state.position, const Duration(milliseconds: 10000));
+      expect(result.effects.whereType<PauseAtEof>(), hasLength(1));
+      expect(result.effects.whereType<SetNativeLoop>(), hasLength(1));
+      expect(result.effects.whereType<StopAudio>(), isEmpty);
+      expect(result.effects.whereType<ClearPlaybackPosition>(), isEmpty);
     });
 
-    test('continueFromHere loads next surah via gapless continuation', () {
+    test('open-ended continueFromHere loads next surah via gapless', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         reciter: _reciter,
         moshaf: _moshaf,
         surah: 1,
         rangeFrom: AyahReference(surah: 1, ayah: 5),
-        rangeTo: AyahReference(surah: 1, ayah: 7),
         duration: Duration(milliseconds: 10000),
         active: true,
       );
@@ -354,14 +775,13 @@ void main() {
       expect(effect.toSurah, 2);
     });
 
-    test('continueFromHere with no next surah emits error not pause', () {
+    test('open-ended with no next surah emits error', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         reciter: _reciter,
         moshaf: _moshaf,
         surah: 3,
         rangeFrom: AyahReference(surah: 3, ayah: 5),
-        rangeTo: AyahReference(surah: 3, ayah: 7),
         duration: Duration(milliseconds: 10000),
         active: true,
       );
@@ -374,6 +794,30 @@ void main() {
       expect(result.state.surah, 3);
       expect(result.effects.whereType<PauseAudio>(), isEmpty);
       expect(result.effects.whereType<LoadSurah>(), isEmpty);
+    });
+
+    test('bounded range ends at range boundary with pause-at-EOF', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        rangeFrom: AyahReference(surah: 1, ayah: 1),
+        rangeTo: AyahReference(surah: 1, ayah: 2),
+        segmentStartAyah: 1,
+        segmentEndAyah: 2,
+        duration: Duration(milliseconds: 10000),
+        active: true,
+      );
+      final result = _run(
+        state,
+        const AudioPosition(Duration(milliseconds: 10000)),
+        timeline: timeline,
+      );
+      expect(result.state.isEnded, isTrue);
+      expect(result.effects.whereType<PauseAtEof>(), hasLength(1));
+      expect(result.effects.whereType<StopAudio>(), isEmpty);
+      expect(result.effects.whereType<ClearPlaybackPosition>(), isEmpty);
     });
 
     test('eachAyah position within looped ayah keeps current ayah', () {
@@ -449,7 +893,7 @@ void main() {
       expect(result.state.ayahLoopExiting, isFalse);
       expect(result.state.ayahRepeatsRemaining, 3);
       expect(result.effects.whereType<LoadAyahLoop>(), hasLength(1));
-      expect(result.effects.whereType<SeekAudio>(), hasLength(1));
+      expect(result.effects.whereType<SeekAudio>(), isEmpty);
       expect(result.effects.whereType<HighlightAyah>(), hasLength(1));
     });
   });
@@ -526,7 +970,7 @@ void main() {
   });
 
   group('Skip routing', () {
-    test('SkipNext within range seeks to next ayah', () {
+    test('SkipAyahNext within range seeks to next ayah', () {
       final timeline = _timeline(
         ayat: [
           const AyahTiming(ayah: 1, startMs: 0, endMs: 5000),
@@ -546,16 +990,41 @@ void main() {
         currentAyah: 1,
         active: true,
       );
-      final result = _run(state, const SkipNext(), timeline: timeline);
+      final result = _run(state, const SkipAyahNext(), timeline: timeline);
       expect(result.state.currentAyah, 2);
       expect(result.effects.whereType<SeekAudio>(), hasLength(1));
+      expect(result.effects.whereType<HighlightAyah>(), hasLength(1));
       expect(
         result.effects.whereType<SeekAudio>().first.position,
         const Duration(milliseconds: 5000),
       );
     });
 
-    test('SkipNext past segment end loads next surah', () {
+    test('SkipAyahNext at last ayah in range is a no-op', () {
+      final timeline = _timeline(
+        ayat: [
+          const AyahTiming(ayah: 1, startMs: 0, endMs: 5000),
+          const AyahTiming(ayah: 2, startMs: 5000, endMs: 10000),
+        ],
+      );
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        rangeFrom: AyahReference(surah: 1, ayah: 1),
+        rangeTo: AyahReference(surah: 1, ayah: 2),
+        segmentStartAyah: 1,
+        segmentEndAyah: 2,
+        currentAyah: 2,
+        active: true,
+      );
+      final result = _run(state, const SkipAyahNext(), timeline: timeline);
+      expect(result.state.currentAyah, 2);
+      expect(result.effects, isEmpty);
+    });
+
+    test('SkipSurahNext loads next surah', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         reciter: _reciter,
@@ -563,13 +1032,13 @@ void main() {
         surah: 1,
         active: true,
       );
-      final result = _run(state, const SkipNext());
+      final result = _run(state, const SkipSurahNext());
       expect(result.state.surah, 2);
       expect(result.state.isLoading, isTrue);
       expect(result.effects.whereType<LoadSurah>(), hasLength(1));
     });
 
-    test('SkipNext with no next surah does nothing', () {
+    test('SkipSurahNext with no next surah does nothing', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         reciter: _reciter,
@@ -577,12 +1046,12 @@ void main() {
         surah: 3,
         active: true,
       );
-      final result = _run(state, const SkipNext());
+      final result = _run(state, const SkipSurahNext());
       expect(result.state.surah, 3);
       expect(result.effects, isEmpty);
     });
 
-    test('SkipPrevious within range seeks to previous ayah', () {
+    test('SkipAyahPrevious within range seeks to previous ayah', () {
       final timeline = _timeline(
         ayat: [
           const AyahTiming(ayah: 1, startMs: 0, endMs: 5000),
@@ -602,12 +1071,12 @@ void main() {
         currentAyah: 3,
         active: true,
       );
-      final result = _run(state, const SkipPrevious(), timeline: timeline);
+      final result = _run(state, const SkipAyahPrevious(), timeline: timeline);
       expect(result.state.currentAyah, 2);
       expect(result.effects.whereType<SeekAudio>(), hasLength(1));
     });
 
-    test('SkipPrevious before segment start loads previous surah', () {
+    test('SkipSurahPrevious loads previous surah', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         reciter: _reciter,
@@ -615,10 +1084,40 @@ void main() {
         surah: 2,
         active: true,
       );
-      final result = _run(state, const SkipPrevious());
+      final result = _run(state, const SkipSurahPrevious());
       expect(result.state.surah, 1);
       expect(result.state.isLoading, isTrue);
       expect(result.effects.whereType<LoadSurah>(), hasLength(1));
+    });
+
+    test('SkipSurahNext at rangeTo surah is a no-op', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 3,
+        rangeFrom: AyahReference(surah: 2, ayah: 1),
+        rangeTo: AyahReference(surah: 3, ayah: 5),
+        active: true,
+      );
+      final result = _run(state, const SkipSurahNext());
+      expect(result.state.surah, 3);
+      expect(result.effects, isEmpty);
+    });
+
+    test('SkipSurahPrevious before rangeFrom surah is a no-op', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 2,
+        rangeFrom: AyahReference(surah: 2, ayah: 1),
+        rangeTo: AyahReference(surah: 3, ayah: 5),
+        active: true,
+      );
+      final result = _run(state, const SkipSurahPrevious());
+      expect(result.state.surah, 2);
+      expect(result.effects, isEmpty);
     });
   });
 
@@ -628,8 +1127,9 @@ void main() {
         preset: RangeScopePreset.thisSurah,
         reciter: _reciter,
         moshaf: _moshaf,
-        from: const AyahReference(surah: 1, ayah: 1),
-        to: const AyahReference(surah: 1, ayah: 7),
+        from: const AyahReference(surah: 8, ayah: 1),
+        to: const AyahReference(surah: 8, ayah: 75),
+        mushafReader: _intentMushaf,
       );
       expect(result, isA<PlayWholeSurahIntent>());
     });
@@ -639,7 +1139,8 @@ void main() {
         preset: RangeScopePreset.continueFromHere,
         reciter: _reciter,
         moshaf: _moshaf,
-        from: const AyahReference(surah: 1, ayah: 1),
+        from: const AyahReference(surah: 8, ayah: 1),
+        mushafReader: _intentMushaf,
       );
       expect(result, isA<PlayWholeSurahIntent>());
     });
@@ -649,9 +1150,10 @@ void main() {
         preset: RangeScopePreset.continueFromHere,
         reciter: _reciter,
         moshaf: _moshaf,
-        from: const AyahReference(surah: 1, ayah: 5),
+        from: const AyahReference(surah: 8, ayah: 5),
+        mushafReader: _intentMushaf,
       ) as PlayAyahRangeIntent;
-      expect(result.from, const AyahReference(surah: 1, ayah: 5));
+      expect(result.from, const AyahReference(surah: 8, ayah: 5));
       expect(result.to, isNull);
     });
 
@@ -660,8 +1162,9 @@ void main() {
         preset: RangeScopePreset.thisAyah,
         reciter: _reciter,
         moshaf: _moshaf,
-        from: const AyahReference(surah: 1, ayah: 3),
-        to: const AyahReference(surah: 1, ayah: 3),
+        from: const AyahReference(surah: 8, ayah: 41),
+        to: const AyahReference(surah: 8, ayah: 41),
+        mushafReader: _intentMushaf,
       );
       expect(result, isA<PlayAyahRangeIntent>());
     });
@@ -671,10 +1174,55 @@ void main() {
         preset: RangeScopePreset.custom,
         reciter: _reciter,
         moshaf: _moshaf,
-        from: const AyahReference(surah: 1, ayah: 2),
-        to: const AyahReference(surah: 1, ayah: 6),
+        from: const AyahReference(surah: 8, ayah: 41),
+        to: const AyahReference(surah: 8, ayah: 50),
+        mushafReader: _intentMushaf,
       );
       expect(result, isA<PlayAyahRangeIntent>());
+    });
+
+    test('custom full-surah endpoints same surah produce PlayWholeSurahIntent',
+        () {
+      final result = playbackIntentForPreset(
+        preset: RangeScopePreset.custom,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        from: const AyahReference(surah: 8, ayah: 1),
+        to: const AyahReference(surah: 8, ayah: 75),
+        mushafReader: _intentMushaf,
+      );
+      expect(result, isA<PlayWholeSurahIntent>());
+    });
+
+    test('custom cross-surah full endpoints produce PlayAyahRangeIntent', () {
+      final result = playbackIntentForPreset(
+        preset: RangeScopePreset.custom,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        from: const AyahReference(surah: 8, ayah: 1),
+        to: const AyahReference(surah: 9, ayah: 129),
+        mushafReader: _intentMushaf,
+      );
+      expect(result, isA<PlayAyahRangeIntent>());
+    });
+  });
+
+  group('Multi-surah range advancement', () {
+    test('AudioCompleted advances bounded cross-surah range', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 8,
+        rangeFrom: AyahReference(surah: 8, ayah: 1),
+        rangeTo: AyahReference(surah: 9, ayah: 129),
+        segmentStartAyah: 1,
+        segmentEndAyah: 75,
+        active: true,
+      );
+      final result = _run(state, const AudioCompleted());
+      expect(result.state.isLoading, isTrue);
+      expect(result.effects.whereType<LoadNextRangeSegment>(), hasLength(1));
     });
   });
 
@@ -692,12 +1240,13 @@ void main() {
       expect(result.effects, isEmpty);
     });
 
-    test('SetRepeatCounts updates range and ayah budgets', () {
+    test('SetRepeatCounts updates budgets and refreshes native loops', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         reciter: _reciter,
         moshaf: _moshaf,
         surah: 1,
+        currentAyah: 2,
         active: true,
       );
       final result = _run(
@@ -707,7 +1256,10 @@ void main() {
       expect(result.state.repeatsRemaining, 3);
       expect(result.state.ayahRepeatsRemaining, 2);
       expect(result.state.ayahRepeatCount, 2);
-      expect(result.effects, isEmpty);
+      expect(result.effects.whereType<ResetNativePlaybackModes>(), hasLength(1));
+      expect(result.effects.whereType<SetNativeLoop>(), hasLength(1));
+      expect(result.effects.whereType<LoadAyahLoop>(), hasLength(1));
+      expect(result.effects.whereType<RefreshAbLoop>(), hasLength(1));
     });
 
     test('SetRepeatCounts clamps below 1 to 1', () {
@@ -748,6 +1300,22 @@ void main() {
       expect(result.state.active, isTrue);
       expect(result.state.error, isNull);
       expect(result.effects, isEmpty);
+    });
+
+    test('RecitationSettingsLoaded restores saved playback position', () {
+      const resume = Duration(seconds: 22);
+      const state = RecitationState();
+      final result = _run(
+        state,
+        const RecitationSettingsLoaded(
+          reciter: _reciter,
+          moshaf: _moshaf,
+          surah: 2,
+          resumeFrom: resume,
+        ),
+      );
+      expect(result.state.position, resume);
+      expect(result.state.isIdle, isTrue);
     });
 
     test('AudioLoading sets loading status', () {
@@ -805,7 +1373,7 @@ void main() {
       expect(result.state.duration, const Duration(seconds: 60));
     });
 
-    test('AudioCompleted delegates to selection end (whole surah pauses)', () {
+    test('AudioCompleted delegates to selection end (whole surah ends)', () {
       final timeline = _timeline(
         ayat: [
           const AyahTiming(ayah: 1, startMs: 0, endMs: 5000),
@@ -824,11 +1392,14 @@ void main() {
         const AudioCompleted(),
         timeline: timeline,
       );
-      expect(result.state.isPaused, isTrue);
-      expect(result.effects.whereType<PauseAudio>(), hasLength(1));
+      expect(result.state.isEnded, isTrue);
+      expect(result.state.position, const Duration(milliseconds: 5000));
+      expect(result.effects.whereType<PauseAtEof>(), hasLength(1));
+      expect(result.effects.whereType<StopAudio>(), isEmpty);
+      expect(result.effects.whereType<ClearPlaybackPosition>(), isEmpty);
     });
 
-    test('AudioCompleted with repeats remaining emits LoadSurah reload', () {
+    test('AudioCompleted with repeats remaining uses native file loop', () {
       final timeline = _timeline(
         ayat: [
           const AyahTiming(ayah: 1, startMs: 0, endMs: 5000),
@@ -849,9 +1420,57 @@ void main() {
         timeline: timeline,
       );
       expect(result.state.repeatsRemaining, 1);
+      expect(result.state.isPlaying, isTrue);
+      expect(result.effects, isEmpty);
+    });
+
+    test(
+      'duplicate AudioCompleted on same EOF ends early with repeats left',
+      () {
+        final timeline = _timeline(
+          ayat: [
+            const AyahTiming(ayah: 1, startMs: 0, endMs: 5000),
+          ],
+        );
+        const state = RecitationState(
+          status: RecitationStatus.playing,
+          reciter: _reciter,
+          moshaf: _moshaf,
+          surah: 1,
+          duration: Duration(milliseconds: 5000),
+          repeatsRemaining: 2,
+          active: true,
+        );
+        final once = _run(state, const AudioCompleted(), timeline: timeline);
+        expect(once.state.repeatsRemaining, 1);
+        expect(once.state.isPlaying, isTrue);
+        expect(once.effects, isEmpty);
+
+        // Mirrors completionStream + PlaybackCompleted firing on the same EOF.
+        final twice = _run(
+          once.state,
+          const AudioCompleted(),
+          timeline: timeline,
+        );
+        expect(twice.state.repeatsRemaining, 1);
+        expect(twice.state.isEnded, isTrue);
+        expect(twice.effects.whereType<PauseAtEof>(), hasLength(1));
+      },
+    );
+
+    test('TogglePlayPause when ended replays whole surah', () {
+      const state = RecitationState(
+        status: RecitationStatus.ended,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        active: true,
+        ayahRepeatCount: 2,
+        repeatsRemaining: 2,
+      );
+      final result = _run(state, const TogglePlayPause());
       expect(result.state.isLoading, isTrue);
       expect(result.effects.whereType<LoadSurah>(), hasLength(1));
-      expect(result.effects.whereType<SeekAudio>(), isEmpty);
     });
 
     test('TogglePlayPause at end seeks to start and resumes', () {
@@ -900,4 +1519,114 @@ void main() {
       expect(result.effects, isEmpty);
     });
   });
+}
+
+class _IntentMushafRepo implements IQuranRepository {
+  static final _surahs = <int, Surah>{
+    8: Surah(number: 8, glyph: 'S8', hasBasmalah: true, ayahCount: 75),
+    9: Surah(number: 9, glyph: 'S9', hasBasmalah: false, ayahCount: 129),
+  };
+
+  @override
+  void dispose() {}
+
+  @override
+  Future<void> ensureReady() async {}
+
+  @override
+  Future<List<Surah>> getAllSurahs() async => _surahs.values.toList();
+
+  @override
+  Future<Ayah> getAyah(int ayahId, [bool removeNewLines = true]) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Ayah> getAyahBySurah(
+    int surah,
+    int ayahInSurah, [
+    bool removeNewLines = true,
+  ]) =>
+      throw UnimplementedError();
+
+  @override
+  Future<String> getBasmalah() async => '';
+
+  @override
+  String? getBasmalahSync() => null;
+
+  @override
+  Future<Juz> getJuz(int number) => throw UnimplementedError();
+
+  @override
+  Future<List<Juz>> getJuzs() async => [];
+
+  @override
+  Map<int, Juz> getJuzsSync() => {};
+
+  @override
+  Future<int> getJuzStartPage(int juzNumber) async => 1;
+
+  @override
+  Juz? getJuzSync(int number) => null;
+
+  @override
+  ({int startAyahId, int endAyahId})? juzAyahBounds(int juzNumber) => null;
+
+  @override
+  Future<Hizb> getHizb(int number) => throw UnimplementedError();
+
+  @override
+  Future<List<Hizb>> getHizbs() async => [];
+
+  @override
+  Map<int, Hizb> getHizbsSync() => {};
+
+  @override
+  Future<int> getHizbStartPage(int hizbNumber) async => 1;
+
+  @override
+  Hizb? getHizbSync(int number) => null;
+
+  @override
+  ({int startAyahId, int endAyahId})? hizbAyahBounds(int hizbNumber) => null;
+
+  @override
+  Future<QuranPage> getPage(int page) async {
+    return QuranPage(
+      pageNumber: page,
+      glyphText: '',
+      lines: const [],
+      surahs: const [],
+      juzNumber: 1,
+    );
+  }
+
+  @override
+  QuranPage? peekCachedPage(int page) => null;
+
+  @override
+  Future<int> getPageForAyah(int ayahId) async => 1;
+
+  @override
+  Future<int> getStartPageForSurah(int surahNumber) async => 1;
+
+  @override
+  Future<Surah?> getSurah(int surahNumber) async => _surahs[surahNumber];
+
+  @override
+  List<Surah> getSurahsSync() => _surahs.values.toList();
+
+  @override
+  Surah? getSurahSync(int number) => _surahs[number];
+
+  @override
+  Future<List<Ayah>> searchAyahs(
+    String query, {
+    int? surahNumber,
+    int maxResults = 100,
+  }) async =>
+      [];
+
+  @override
+  Future<void> warmUpSearchIndex() async {}
 }

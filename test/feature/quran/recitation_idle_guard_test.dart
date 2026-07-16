@@ -1,9 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tawaq/core/audio/audio_service.dart' show TawaqAudioService;
+import 'package:tawaq/core/audio/playback_state.dart' show PlaybackCompleted;
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart' show RecitationController;
 import 'package:tawaq/feature/quran/presentation/providers/recitation_state_machine.dart';
 
-/// Mirrors the [RecitationController._onServiceState] guard for PlaybackIdle.
+/// Mirrors completion guards in [RecitationController._onNaturalCompletion].
+/// [AudioCompleted] is dispatched only from [TawaqAudioService.completionStream],
+/// not from [PlaybackCompleted] on [stateStream] (which would duplicate natural EOF).
 bool shouldDispatchAudioCompleted(RecitationState state) {
   return state.active &&
       !state.userStopped &&
@@ -16,7 +21,6 @@ void main() {
   group('PlaybackIdle completion guard', () {
     test('after Stop (userStopped) does not dispatch completion', () {
       const afterStop = RecitationState(
-        status: RecitationStatus.idle,
         userStopped: true,
         repeatsRemaining: 3,
         active: true,
@@ -27,8 +31,6 @@ void main() {
     test('during load (untimed) does not dispatch completion', () {
       const duringLoad = RecitationState(
         status: RecitationStatus.loading,
-        userStopped: false,
-        timelinePending: false,
         repeatsRemaining: 3,
         active: true,
       );
@@ -48,8 +50,6 @@ void main() {
     test('natural eof while playing dispatches completion', () {
       const playing = RecitationState(
         status: RecitationStatus.playing,
-        userStopped: false,
-        timelinePending: false,
         repeatsRemaining: 3,
         active: true,
       );

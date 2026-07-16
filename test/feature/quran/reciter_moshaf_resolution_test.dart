@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 
@@ -69,7 +68,6 @@ void main() {
 
       final resolved = reciter.resolveMoshaf(
         10,
-        intent: RecitationPickIntent.general,
       );
 
       expect(resolved, untimed);

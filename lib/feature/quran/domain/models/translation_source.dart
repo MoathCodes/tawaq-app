@@ -121,4 +121,4 @@ enum TranslationId {
 }
 
 /// Default bundled translation source.
-const kDefaultTranslationId = TranslationId.saheehInternational;
+const TranslationId kDefaultTranslationId = TranslationId.saheehInternational;

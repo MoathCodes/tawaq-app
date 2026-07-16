@@ -9,13 +9,13 @@ import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/scale/quran_text_scale_popover.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_search_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/juz_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/surah_selector.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 const _kSearchMinWidth = 280.0;
@@ -99,7 +99,6 @@ class QuranHeaderWidget extends HookConsumerWidget {
                     displayTools,
                     const _HeaderDivider(),
                     Expanded(
-                      flex: 2,
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(
                           minWidth: _kSearchMinWidth,

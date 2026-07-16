@@ -3,11 +3,12 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/select_empty_content.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Searchable select for choosing a Quran tafsir source.
@@ -28,7 +29,7 @@ class TafsirSourceSelector extends ConsumerWidget {
     final typography = theme.typography;
     final l10n = context.l10n;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final sources = TafsirId.values;
+    const sources = TafsirId.values;
     final selected = ref.watch(
       quranScreenSettingsProvider.select(
         (settings) =>
@@ -68,7 +69,7 @@ class TafsirSourceSelector extends ConsumerWidget {
             final normalized = query.toLowerCase().trim();
             return sources.where(
               (source) =>
-                  source.arabicName.toLowerCase().contains(normalized) ||
+                  arabicSearchContains(source.arabicName, normalized) ||
                   source.englishName.toLowerCase().contains(normalized) ||
                   source.language.toLowerCase().contains(normalized),
             );

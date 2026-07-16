@@ -1,3 +1,5 @@
+import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_card.dart' show AyahShareCard;
+
 /// Optional elements to include in a shared ayah image.
 enum AyahShareInclude {
   /// Decorative surah header banner.
@@ -18,6 +20,15 @@ class AyahShareCardOptions {
   /// Creates share card options from [includes].
   const AyahShareCardOptions(this.includes);
 
+  /// Default include options for a share image.
+  factory AyahShareCardOptions.defaults({required bool basmalahAvailable}) {
+    return AyahShareCardOptions({
+      AyahShareInclude.surahHeader,
+      AyahShareInclude.appName,
+      if (basmalahAvailable) AyahShareInclude.basmalah,
+    });
+  }
+
   /// Selected include options.
   final Set<AyahShareInclude> includes;
 
@@ -34,21 +45,12 @@ class AyahShareCardOptions {
   bool get preserveMushafLineBreaks =>
       includes.contains(AyahShareInclude.preserveLineBreaks);
 
-  /// Default include options for a share image.
-  factory AyahShareCardOptions.defaults({required bool basmalahAvailable}) {
-    return AyahShareCardOptions({
-      AyahShareInclude.surahHeader,
-      AyahShareInclude.appName,
-      if (basmalahAvailable) AyahShareInclude.basmalah,
-    });
-  }
-
   /// Applies availability constraints and returns updated options.
   AyahShareCardOptions constrained({
     required bool basmalahAvailable,
     required bool lineBreaksToggleAvailable,
   }) {
-    var next = Set.of(includes);
+    final next = Set.of(includes);
     if (!basmalahAvailable) {
       next.remove(AyahShareInclude.basmalah);
     }

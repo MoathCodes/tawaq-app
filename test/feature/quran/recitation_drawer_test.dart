@@ -3,8 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/audio/audio_player_provider.dart';
+import 'package:tawaq/core/audio/audio_service.dart';
+import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
@@ -12,10 +18,11 @@ import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_drawer.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
+import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
@@ -45,6 +52,20 @@ Widget _wrap(Widget child, {TextDirection dir = TextDirection.ltr}) {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUpAll(() async {
+    registerFallbackValue(const Media('asset:///fallback'));
+    registerFallbackValue(Duration.zero);
+    registerFallbackValue(0.0);
+    registerFallbackValue(const MediaSession());
+    registerFallbackValue('');
+
+    Hive
+      ..init('./test/hive_test_db')
+      ..registerAdapters();
+  });
+
   group('skip-control RTL helpers', () {
     test('LTR: left slot is previous (skipBack + skipPrevious)', () {
       final left = leftSkipControl(
@@ -276,6 +297,56 @@ void main() {
   });
 
   group('cache management tile', () {
+    late _FakePlayer player;
+    late _FakePlayerStream stream;
+    late StreamController<DemuxerCacheState> demuxerCacheState;
+    late TawaqAudioService audioService;
+
+    setUp(() {
+      stream = _FakePlayerStream();
+      player = _FakePlayer();
+      demuxerCacheState =
+          StreamController<DemuxerCacheState>.broadcast();
+      when(() => stream.demuxerCacheState)
+          .thenAnswer((_) => demuxerCacheState.stream);
+      when(() => stream.playing)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.playWhenReady)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.completed)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.eofReached)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.error)
+          .thenAnswer((_) => const Stream<MpvPlayerError>.empty());
+      when(() => stream.endFile)
+          .thenAnswer((_) => const Stream<MpvFileEndedEvent>.empty());
+      when(() => stream.buffering)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.pausedForCache)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.seekCompleted)
+          .thenAnswer((_) => const Stream<void>.empty());
+      when(() => stream.position)
+          .thenAnswer((_) => const Stream<Duration>.empty());
+      when(() => stream.duration)
+          .thenAnswer((_) => const Stream<Duration>.empty());
+      when(() => stream.remainingAbLoops)
+          .thenAnswer((_) => const Stream<int?>.empty());
+      when(() => stream.mediaSessionCommands)
+          .thenAnswer((_) => const Stream<MediaSessionCommand>.empty());
+      when(() => player.stream).thenReturn(stream);
+      when(() => player.state).thenReturn(const PlayerState());
+      when(() => player.setAudioClientName(any())).thenAnswer((_) async {});
+      when(player.dispose).thenAnswer((_) async {});
+      audioService = TawaqAudioService(player: player);
+    });
+
+    tearDown(() async {
+      await demuxerCacheState.close();
+      await audioService.dispose();
+    });
+
     Widget scopeWrap(Widget child) {
       final theme = buildAppTheme(
         palette: AppPalette.zinc,
@@ -308,6 +379,8 @@ void main() {
             const AsyncData(<CachedRecitation>[]),
           ),
           recitersProvider.overrideWithValue(const AsyncData(<Reciter>[])),
+          localeProvider.overrideWithValue('en'),
+          tawaqAudioServiceProvider.overrideWithValue(audioService),
         ],
         child: FTheme(
           data: theme,
@@ -315,13 +388,26 @@ void main() {
             debugShowCheckedModeBanner: false,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(body: RecitationDrawerOverlay()),
+            home: MediaQuery(
+              data: MediaQueryData(size: Size(400, 1600)),
+              child: Scaffold(
+                body: SizedBox(
+                  width: 400,
+                  child: RecitationDrawerOverlay(),
+                ),
+              ),
+            ),
           ),
         ),
       );
     }
 
     testWidgets('shows cache tile with formatted total bytes', (tester) async {
+      tester.view.physicalSize = const Size(400, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(scopeWrap(const SizedBox.shrink()));
       await tester.pump();
       await tester.pumpAndSettle(const Duration(seconds: 1));
@@ -333,6 +419,11 @@ void main() {
 
     testWidgets('opens offline files dialog when cache tile tapped',
         (tester) async {
+      tester.view.physicalSize = const Size(400, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(scopeWrap(const SizedBox.shrink()));
       await tester.pump();
       await tester.pumpAndSettle(const Duration(seconds: 1));
@@ -470,3 +561,7 @@ class _FakeRepo implements IQuranRepository {
 
   bool isReady() => true;
 }
+
+class _FakePlayer extends Mock implements PlayerApi {}
+
+class _FakePlayerStream extends Mock implements PlayerStream {}

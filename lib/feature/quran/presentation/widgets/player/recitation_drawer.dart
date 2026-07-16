@@ -1,33 +1,55 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mpv_audio_kit/mpv_audio_kit.dart';
+import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/utils/format_byte_size.dart';
+import 'package:tawaq/core/utils/playback_duration.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/core/widgets/volume_slider.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
+import 'package:tawaq/feature/quran/domain/services/reciter_tags.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_data_providers.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/offline_files_dialog.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/range_repeat_dialog.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/reciter_dialog.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/sleep_timer_dialog.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_seek_bar.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport_controls.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/segmented_seek_bar.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_range_formatters.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_search_result_item.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 part 'recitation_drawer_controls.dart';
+
+/// Builds [_DrawerPlaybackStatus] for widget tests.
+@visibleForTesting
+Widget drawerPlaybackStatusForTest({
+  required String rangeLabel,
+  required int rangeRepeatCount,
+  required int repeatsRemaining,
+  required int ayahRepeatCount,
+  int? currentAyah,
+}) => _DrawerPlaybackStatus(
+  rangeLabel: rangeLabel,
+  rangeRepeatCount: rangeRepeatCount,
+  repeatsRemaining: repeatsRemaining,
+  ayahRepeatCount: ayahRepeatCount,
+  currentAyah: currentAyah,
+);
 
 /// The full recitation transport that drops down under the title bar when the
 /// user expands the compact transport. Rendered as an overlay (scrim + panel)
@@ -127,8 +149,7 @@ class RecitationDrawerSurfaceState extends State<RecitationDrawerSurface>
                 child: MouseClick(
                   onClick: widget.onClose,
                   child: ColoredBox(
-                    color: colors.barrier
-                        .withValues(alpha: 0.45 * _fade.value),
+                    color: colors.barrier.withValues(alpha: 0.45 * _fade.value),
                   ),
                 ),
               ),
@@ -166,20 +187,40 @@ class _DrawerPanel extends HookConsumerWidget {
 
     final playback = ref.watch(recitationControllerProvider);
     final controller = ref.read(recitationControllerProvider.notifier);
-    final leftSlot = leftSkipControl(
+    final hasAyahTiming = controller.hasAyahTiming;
+
+    final surahLeftSlot = leftSkipControl(
       isRtl: isRtl,
-      skipPrevious: controller.skipPrevious,
-      skipNext: controller.skipNext,
-      previousLabel: l10n.quranRecitationPrevious,
-      nextLabel: l10n.quranRecitationNext,
+      skipPrevious: controller.skipSurahPrevious,
+      skipNext: controller.skipSurahNext,
+      previousLabel: l10n.quranRecitationPreviousSurah,
+      nextLabel: l10n.quranRecitationNextSurah,
     );
-    final rightSlot = rightSkipControl(
+    final surahRightSlot = rightSkipControl(
       isRtl: isRtl,
-      skipPrevious: controller.skipPrevious,
-      skipNext: controller.skipNext,
-      previousLabel: l10n.quranRecitationPrevious,
-      nextLabel: l10n.quranRecitationNext,
+      skipPrevious: controller.skipSurahPrevious,
+      skipNext: controller.skipSurahNext,
+      previousLabel: l10n.quranRecitationPreviousSurah,
+      nextLabel: l10n.quranRecitationNextSurah,
     );
+    final ayahLeftSlot = hasAyahTiming
+        ? leftSkipControl(
+            isRtl: isRtl,
+            skipPrevious: controller.skipAyahPrevious,
+            skipNext: controller.skipAyahNext,
+            previousLabel: l10n.quranRecitationPreviousAyah,
+            nextLabel: l10n.quranRecitationNextAyah,
+          )
+        : null;
+    final ayahRightSlot = hasAyahTiming
+        ? rightSkipControl(
+            isRtl: isRtl,
+            skipPrevious: controller.skipAyahPrevious,
+            skipNext: controller.skipAyahNext,
+            previousLabel: l10n.quranRecitationPreviousAyah,
+            nextLabel: l10n.quranRecitationNextAyah,
+          )
+        : null;
     final settings = ref.watch(recitationSettingsProvider).value;
     final mushaf = ref.read(quranMushafControllerProvider);
 
@@ -199,36 +240,9 @@ class _DrawerPanel extends HookConsumerWidget {
             to: playback.rangeTo,
           )
         : surahName;
-    final subtitleStyle = theme.typography.body.xs.copyWith(
-      color: colors.mutedForeground,
-    );
-    final rangeWidget = rangeLabel.isEmpty
-        ? null
-        : AyahRangeLabelText(
-            rangeLabel,
-            style: subtitleStyle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          );
-    final showSubtitle = riwayah.isNotEmpty || rangeWidget != null;
 
     final ayahRepeat = settings?.ayahRepeatCount ?? 1;
     final rangeRepeat = settings?.rangeRepeatCount ?? 1;
-    final repeatSuffix = () {
-      if (ayahRepeat <= 1 && rangeRepeat <= 1) return '';
-      final parts = <String>[];
-      if (ayahRepeat > 1) {
-        parts.add(
-          '${l10n.quranRangeRepeatChip(ayahRepeat)} ${l10n.quranRangeRepeatEachAyah}',
-        );
-      }
-      if (rangeRepeat > 1) {
-        parts.add(
-          '${l10n.quranRangeRepeatChip(rangeRepeat)} ${l10n.quranRangeRepeatSelection}',
-        );
-      }
-      return ' · ${parts.join(' · ')}';
-    }();
     final persistedVolume = settings?.volume ?? 100;
 
     return LayoutBuilder(
@@ -263,20 +277,21 @@ class _DrawerPanel extends HookConsumerWidget {
               _DrawerHeader(
                 reciterName: reciterName,
                 riwayah: riwayah,
-                rangeWidget: rangeWidget,
-                showSubtitle: showSubtitle,
               ),
               const SizedBox(height: AppSpacing.lg),
               _DrawerTransportSection(
-                leftSlot: leftSlot,
-                rightSlot: rightSlot,
+                surahLeftSlot: surahLeftSlot,
+                surahRightSlot: surahRightSlot,
+                ayahLeftSlot: ayahLeftSlot,
+                ayahRightSlot: ayahRightSlot,
               ),
               const SizedBox(height: AppSpacing.lg),
               _DrawerActionsSection(
-                rangeLabel: rangeLabel,
-                rangeWidget: rangeWidget,
-                surahName: surahName,
-                repeatSuffix: repeatSuffix,
+                configuredRangeLabel: rangeLabel.isNotEmpty
+                    ? rangeLabel
+                    : surahName,
+                ayahRepeatCount: ayahRepeat,
+                rangeRepeatCount: rangeRepeat,
               ),
               const SizedBox(height: AppSpacing.lg),
               Container(height: 1, color: colors.border),

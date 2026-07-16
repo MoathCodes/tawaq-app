@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/commentary/commentary_inline_run_builder.dart';
 import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
 import 'package:tawaq/core/commentary/commentary_text_styles.dart';
 import 'package:tawaq/core/hooks/hooks.dart';
@@ -17,7 +16,6 @@ import 'package:tawaq/feature/quran/presentation/models/study_panel_text_styles.
 import 'package:tawaq/feature/quran/presentation/providers/tafsir_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/tafsir_source_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_content_section.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_width_scope.dart';
 import 'package:tawaq/theme/theme.dart';
 
 const _arabicPrefixParticles = 'لوبفك';
@@ -36,6 +34,7 @@ class TafsirStudySection extends ConsumerWidget {
     required this.aya,
     required this.source,
     required this.enabled,
+    required this.narrowPanel,
     super.key,
   });
 
@@ -44,6 +43,9 @@ class TafsirStudySection extends ConsumerWidget {
   final TafsirId? source;
   final bool enabled;
 
+  /// Whether the study panel is narrower than the small breakpoint.
+  final bool narrowPanel;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
@@ -51,7 +53,6 @@ class TafsirStudySection extends ConsumerWidget {
     final typography = theme.typography;
     final l10n = context.l10n;
     final resolvedSource = source ?? kDefaultTafsirId;
-    final narrowPanel = StudyPanelWidthScope.isNarrow(context);
     final sectionMinHeight = narrowPanel ? 72.0 : 120.0;
 
     final parsedAsync = enabled

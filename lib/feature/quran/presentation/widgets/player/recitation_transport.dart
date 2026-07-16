@@ -1,6 +1,8 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
@@ -10,7 +12,7 @@ import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/theme/theme.dart';
 
 export 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport_controls.dart'
-    show leftSkipControl, rightSkipControl, SkipAction, SkipControl;
+    show SkipAction, SkipControl, leftSkipControl, rightSkipControl;
 
 /// Compact inline transport that lives in the title bar.
 ///
@@ -25,7 +27,7 @@ class RecitationTransport extends ConsumerWidget {
   }
 }
 
-class _TransportPill extends ConsumerWidget {
+class _TransportPill extends HookConsumerWidget {
   const _TransportPill();
 
   @override
@@ -38,10 +40,21 @@ class _TransportPill extends ConsumerWidget {
     final drawerOpen = ref.watch(recitationDrawerProvider);
     final controller = ref.read(recitationControllerProvider.notifier);
     final mushaf = ref.read(quranMushafControllerProvider);
+    final hasAyahTiming = controller.hasAyahTiming;
 
-    final isPlaying = playback.isPlaying;
     final isLoading = playback.isLoading;
+    final isEnded = playback.isEnded;
     final showMetadata = playback.active;
+
+    final audioService = ref.watch(tawaqAudioServiceProvider);
+    final playWhenReady =
+        useStream(
+          useMemoized(
+            () => audioService.playWhenReadyStream,
+            [audioService],
+          ),
+        ).data ??
+        audioService.playWhenReady;
 
     final surah = playback.surah;
     final surahName = surah == null
@@ -86,30 +99,63 @@ class _TransportPill extends ConsumerWidget {
                   ? l10n.quranRecitationClosePlayer
                   : l10n.quranRecitationOpenPlayer,
               prefix: RecitationTransportControls(
-                isPlaying: isPlaying,
+                isPlaying: playWhenReady,
                 isLoading: isLoading,
+                isEnded: isEnded,
                 onPlayPause: controller.togglePlayPause,
                 leftSlot: leftSkipControl(
                   isRtl: isRtl,
-                  skipPrevious: controller.skipPrevious,
-                  skipNext: controller.skipNext,
-                  previousLabel: l10n.quranRecitationPrevious,
-                  nextLabel: l10n.quranRecitationNext,
+                  skipPrevious: hasAyahTiming
+                      ? controller.skipAyahPrevious
+                      : controller.skipSurahPrevious,
+                  skipNext: hasAyahTiming
+                      ? controller.skipAyahNext
+                      : controller.skipSurahNext,
+                  previousLabel: hasAyahTiming
+                      ? l10n.quranRecitationPreviousAyah
+                      : l10n.quranRecitationPreviousSurah,
+                  nextLabel: hasAyahTiming
+                      ? l10n.quranRecitationNextAyah
+                      : l10n.quranRecitationNextSurah,
                 ),
                 rightSlot: rightSkipControl(
                   isRtl: isRtl,
-                  skipPrevious: controller.skipPrevious,
-                  skipNext: controller.skipNext,
-                  previousLabel: l10n.quranRecitationPrevious,
-                  nextLabel: l10n.quranRecitationNext,
+                  skipPrevious: hasAyahTiming
+                      ? controller.skipAyahPrevious
+                      : controller.skipSurahPrevious,
+                  skipNext: hasAyahTiming
+                      ? controller.skipAyahNext
+                      : controller.skipSurahNext,
+                  previousLabel: hasAyahTiming
+                      ? l10n.quranRecitationPreviousAyah
+                      : l10n.quranRecitationPreviousSurah,
+                  nextLabel: hasAyahTiming
+                      ? l10n.quranRecitationNextAyah
+                      : l10n.quranRecitationNextSurah,
                 ),
                 showSkip: showSkip,
               ),
               title: showMetadata || surahName.isNotEmpty
-                  ? titleWidget
+                  ? Row(
+                      children: [
+                        Container(
+                          width: 1,
+                          height: 24,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.border,
+                            borderRadius: theme.radii.sm,
+                          ),
+                        ),
+                        titleWidget,
+                      ],
+                    )
                   : const SizedBox.shrink(),
               suffix: _TransportSuffix(
-                isPlaying: isPlaying,
+                isPlaying: playWhenReady,
+                isEnded: isEnded,
                 drawerOpen: drawerOpen,
               ),
               onPress: ref.read(recitationDrawerProvider.notifier).toggle,
@@ -125,10 +171,12 @@ class _TransportPill extends ConsumerWidget {
 class _TransportSuffix extends StatelessWidget {
   const _TransportSuffix({
     required this.isPlaying,
+    required this.isEnded,
     required this.drawerOpen,
   });
 
   final bool isPlaying;
+  final bool isEnded;
   final bool drawerOpen;
 
   @override
@@ -137,7 +185,7 @@ class _TransportSuffix extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (isPlaying) ...[
+        if (isPlaying && !isEnded) ...[
           RecitationEqualizer(
             color: colors.primary,
             animating: !drawerOpen,
@@ -158,7 +206,10 @@ class _TransportSuffix extends StatelessWidget {
 FTileStyle _compactTileStyle(FThemeData theme) {
   final base = theme.tileStyles.primary;
   return base.copyWith(
-    contentStyle: (base.contentStyle as FTileContentStyle).copyWith(
+    contentDecoration: .delta([
+      .all(.boxDelta(border: .all(color: Colors.transparent))),
+    ]),
+    contentStyle: base.contentStyle.copyWith(
       suffixedPadding: const EdgeInsetsGeometryDelta.value(
         EdgeInsets.fromLTRB(6, 4, 8, 4),
       ),

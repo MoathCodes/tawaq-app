@@ -5,7 +5,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
@@ -14,9 +13,9 @@ import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/ayah_selection_actions.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 const _kPagePersistDebounce = Duration(milliseconds: 400);
@@ -95,6 +94,7 @@ class QuranMushafPane extends HookConsumerWidget {
             : 1;
 
         final reader = MushafReader(
+          key: ValueKey(pagesPerViewport),
           controller: controller,
           pagesPerViewport: pagesPerViewport,
           loadingWidget: const FCircularProgress.loader(),
@@ -211,23 +211,4 @@ Alignment _ayahActionsAlignment(
 
   final isArabic = Localizations.localeOf(context).languageCode == 'ar';
   return isArabic ? Alignment.bottomLeft : Alignment.bottomRight;
-}
-
-/// Gates mushaf content until the reader library has initialized.
-class QuranMushafInitGate extends ConsumerWidget {
-  /// Creates [QuranMushafInitGate].
-  const QuranMushafInitGate({required this.child, super.key});
-
-  /// Content shown once [mushafLibraryInitProvider] completes.
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final init = ref.watch(mushafLibraryInitProvider);
-    return init.when(
-      loading: () => const Center(child: FCircularProgress.loader()),
-      error: (error, _) => Center(child: Text('$error')),
-      data: (_) => child,
-    );
-  }
 }

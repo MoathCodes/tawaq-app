@@ -6,8 +6,8 @@ import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
 /// Minimal theme wrapper so the slider renders without a full ProviderScope.
-/// The sync + debounce logic lives in [PersistedVolumeSlider] and needs no
-/// Riverpod scope or live audio service.
+/// The sync logic lives in [PersistedVolumeSlider] and needs no Riverpod scope
+/// or live audio service.
 Widget _wrap(Widget child) {
   final theme = buildAppTheme(
     palette: AppPalette.zinc,
@@ -61,11 +61,8 @@ void main() {
           )),
         );
         await tester.pumpAndSettle();
-        expect(find.text('80%'), findsOneWidget);
+        expect(previews, isEmpty);
 
-        // Externally change the persisted volume (e.g. reset from another
-        // surface). The useEffect resyncs the local state, so the displayed
-        // value follows — but no preview write is emitted for external changes.
         await tester.pumpWidget(
           _wrap(PersistedVolumeSlider(
             persistedVolume: 40,
@@ -74,13 +71,20 @@ void main() {
           )),
         );
         await tester.pumpAndSettle();
-        expect(find.text('40%'), findsOneWidget);
-        expect(find.text('80%'), findsNothing);
         expect(previews, isEmpty);
+
+        final trackPoint = await _trackCenter(tester);
+        final gesture = await tester.startGesture(trackPoint);
+        await tester.pump();
+        await gesture.up();
+        await tester.pump();
+
+        expect(previews, hasLength(1));
+        expect(previews.first, lessThan(80));
       },
     );
 
-    testWidgets('debounces preview writes during a drag', (tester) async {
+    testWidgets('fires preview immediately when the value changes', (tester) async {
       final previews = <double>[];
       final commits = <double>[];
 
@@ -97,26 +101,15 @@ void main() {
 
       final trackPoint = await _trackCenter(tester);
 
-      // Press, pump one frame (onTapDown -> onChange -> preview scheduled),
-      // then release and pump one frame (onTapUp -> onEnd -> commit). We use
-      // explicit gestures + zero-duration pumps so the debounce timer (100ms)
-      // does not fire during the interaction.
       final gesture = await tester.startGesture(trackPoint);
       await tester.pump();
       await gesture.up();
       await tester.pump();
 
-      // Preview is debounced: not fired synchronously on the interaction.
-      expect(previews, isEmpty);
-      // Commit fires on release (onEnd), before the debounce window elapses.
-      expect(commits, hasLength(1));
-
-      // After the debounce window elapses, exactly one preview fires with the
-      // value chosen by the tap (which moved away from the persisted 80%).
-      await tester.pump(const Duration(milliseconds: 100));
       expect(previews, hasLength(1));
       expect(previews.first, greaterThanOrEqualTo(0));
       expect(previews.first, lessThan(80));
+      expect(commits, hasLength(1));
     });
 
     testWidgets('disabled slider does not emit previews or commits',

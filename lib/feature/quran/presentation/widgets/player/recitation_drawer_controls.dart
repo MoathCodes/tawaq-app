@@ -8,15 +8,10 @@ class _DrawerHeader extends ConsumerWidget {
   const _DrawerHeader({
     required this.reciterName,
     required this.riwayah,
-    required this.rangeWidget,
-    required this.showSubtitle,
-    super.key,
   });
 
   final String reciterName;
   final String riwayah;
-  final Widget? rangeWidget;
-  final bool showSubtitle;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,6 +21,27 @@ class _DrawerHeader extends ConsumerWidget {
     final subtitleStyle = theme.typography.body.xs.copyWith(
       color: colors.mutedForeground,
     );
+
+    final playback = ref.watch(recitationControllerProvider);
+    final settings = ref.watch(recitationSettingsProvider).value;
+    final mushaf = ref.read(quranMushafControllerProvider);
+
+    final surah = playback.surah;
+    final surahName = surah == null
+        ? ''
+        : mushaf.getSurahSync(surah)?.displayName ??
+              l10n.quranSurahLabel('$surah');
+    final rangeLabel = playback.rangeFrom != null
+        ? formatAyahRangeLabel(
+            mushaf: mushaf,
+            l10n: l10n,
+            from: playback.rangeFrom!,
+            to: playback.rangeTo,
+          )
+        : surahName;
+    final ayahRepeat = settings?.ayahRepeatCount ?? 1;
+    final rangeRepeat = settings?.rangeRepeatCount ?? 1;
+    final showPlaybackStatus = playback.active && rangeLabel.isNotEmpty;
 
     return MouseClick(
       onClick: () => showReciterDialog(context),
@@ -46,32 +62,47 @@ class _DrawerHeader extends ConsumerWidget {
                     color: colors.foreground,
                   ),
                 ),
-                if (showSubtitle)
-                  Row(
-                    children: [
-                      if (riwayah.isNotEmpty) ...[
-                        Flexible(
-                          child: Text(
-                            riwayah,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: subtitleStyle,
-                          ),
-                        ),
-                        if (rangeWidget != null)
-                          Text(' · ', style: subtitleStyle),
-                      ],
-                      if (rangeWidget != null) Flexible(child: rangeWidget!),
-                    ],
+                if (riwayah.isNotEmpty)
+                  Text(
+                    riwayah,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: subtitleStyle,
                   ),
+                if (showPlaybackStatus) ...[
+                  const SizedBox(height: AppSpacing.xs),
+                  _DrawerPlaybackStatus(
+                    rangeLabel: rangeLabel,
+                    rangeRepeatCount: rangeRepeat,
+                    repeatsRemaining: playback.repeatsRemaining,
+                    ayahRepeatCount: ayahRepeat,
+                    currentAyah: playback.currentAyah,
+                  ),
+                ],
               ],
             ),
           ),
           const SizedBox(width: AppSpacing.md),
-          _DrawerChipButton(
-            icon: FLucideIcons.mic,
-            label: l10n.quranRecitationSwitchReciter,
+          FTooltip(
+            tipBuilder: (_, _) => Text(l10n.quranRecitationGoToQuran),
+            child: FButton.icon(
+              variant: .ghost,
+              onPress: surah == null
+                  ? null
+                  : () => unawaited(
+                        ref
+                            .read(recitationControllerProvider.notifier)
+                            .goToPlaybackInMushaf(context),
+                      ),
+              child: const Icon(FLucideIcons.book),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          FButton(
+            prefix: const Icon(FLucideIcons.mic),
             onPress: () => showReciterDialog(context),
+            variant: .outline,
+            child: Text(l10n.quranRecitationSwitchReciter),
           ),
         ],
       ),
@@ -79,96 +110,107 @@ class _DrawerHeader extends ConsumerWidget {
   }
 }
 
-/// Compact chip button used in the recitation drawer.
-class _DrawerChipButton extends StatelessWidget {
-  /// Creates a chip button.
-  const _DrawerChipButton({
-    required this.icon,
-    required this.label,
-    required this.onPress,
-    super.key,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final typography = context.theme.typography;
-    return MouseClick(
-      onClick: onPress,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: colors.secondary,
-          border: Border.all(color: colors.border),
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 15, color: colors.secondaryForeground),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              label,
-              style: typography.body.xs.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colors.secondaryForeground,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Formatted ayah range label for drawer subtitles.
-class _DrawerRangeSubtitle extends StatelessWidget {
-  /// Creates a range subtitle.
-  const _DrawerRangeSubtitle({
+/// Live playback status: range, current ayah, and repeat progress.
+class _DrawerPlaybackStatus extends HookWidget {
+  /// Creates a playback status line.
+  const _DrawerPlaybackStatus({
     required this.rangeLabel,
-    required this.suffix,
-    super.key,
+    required this.rangeRepeatCount,
+    required this.repeatsRemaining,
+    required this.ayahRepeatCount,
+    this.currentAyah,
   });
 
   final String rangeLabel;
-  final String suffix;
+  final int rangeRepeatCount;
+  final int repeatsRemaining;
+  final int ayahRepeatCount;
+  final int? currentAyah;
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    return AyahRangeLabelText(
+    final l10n = context.l10n;
+    final colors = theme.colors;
+    final subtitleStyle = theme.typography.body.xs.copyWith(
+      color: colors.mutedForeground,
+    );
+
+    final prevRepeats = useRef(repeatsRemaining);
+    final pulseTick = useState(0);
+    useEffect(
+      () {
+        if (rangeRepeatCount > 1 &&
+            repeatsRemaining < prevRepeats.value &&
+            repeatsRemaining > 0) {
+          pulseTick.value++;
+        }
+        prevRepeats.value = repeatsRemaining;
+        return null;
+      },
+      [repeatsRemaining, rangeRepeatCount],
+    );
+
+    final suffixParts = <String>[];
+    final ayah = currentAyah;
+    if (ayah != null) {
+      suffixParts.add('${l10n.ayahLabel} $ayah');
+    }
+    if (ayahRepeatCount > 1) {
+      suffixParts.add(
+        '${l10n.quranRangeRepeatChip(ayahRepeatCount)} '
+        '${l10n.quranRangeRepeatEachAyah}',
+      );
+    }
+    if (rangeRepeatCount > 1) {
+      final loopCurrent = rangeRepeatCount - repeatsRemaining + 1;
+      suffixParts.add(
+        l10n.quranRecitationSelectionLoopProgress(
+          loopCurrent.clamp(1, rangeRepeatCount),
+          rangeRepeatCount,
+        ),
+      );
+    }
+    final suffix = suffixParts.isEmpty ? '' : ' · ${suffixParts.join(' · ')}';
+
+    final baseLabel = AyahRangeLabelText(
       rangeLabel,
-      style: theme.typography.body.xs.copyWith(
-        color: theme.colors.mutedForeground,
-      ),
+      style: subtitleStyle,
       suffix: suffix,
-      maxLines: 1,
+      maxLines: 2,
       overflow: TextOverflow.ellipsis,
     );
+
+    if (pulseTick.value == 0) return baseLabel;
+
+    return baseLabel
+        .animate(key: ValueKey(pulseTick.value))
+        .fadeIn(duration: theme.durations.fast)
+        .scale(
+          begin: const Offset(0.98, 0.98),
+          end: const Offset(1, 1),
+          duration: theme.durations.normal,
+          curve: Curves.easeOutCubic,
+        );
   }
 }
 
 // --- transport ---
 
-
 /// Transport, seek bar, and elapsed time for the recitation drawer.
 class _DrawerTransportSection extends HookConsumerWidget {
   /// Creates the transport section.
   const _DrawerTransportSection({
-    required this.leftSlot,
-    required this.rightSlot,
-    super.key,
+    required this.surahLeftSlot,
+    required this.surahRightSlot,
+    this.ayahLeftSlot,
+    this.ayahRightSlot,
   });
 
-  final SkipControl leftSlot;
-  final SkipControl rightSlot;
+  final SkipControl surahLeftSlot;
+  final SkipControl surahRightSlot;
+  final SkipControl? ayahLeftSlot;
+  final SkipControl? ayahRightSlot;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -179,42 +221,53 @@ class _DrawerTransportSection extends HookConsumerWidget {
     final showDownload = playback.isLoading && downloadProgress != null;
 
     final timing = controller.currentTiming;
-    final timeline = timing != null
-        ? timelineFor(playback, timing)
-        : null;
+    final timeline = timing != null ? timelineFor(playback, timing) : null;
     final audioService = ref.watch(tawaqAudioServiceProvider);
-    final bufferedRanges = useStream(
-      useMemoized(
-        () => audioService.player.stream.demuxerCacheState.map(
-          (s) => s.seekableRanges,
-        ),
-        [audioService],
-      ),
-    ).data ?? const <CacheRange>[];
+    final playWhenReady =
+        useStream(
+          useMemoized(
+            () => audioService.playWhenReadyStream,
+            [audioService],
+          ),
+        ).data ??
+        audioService.playWhenReady;
+    final bufferedRanges =
+        useStream(
+          useMemoized(
+            () => audioService.player.stream.demuxerCacheState.map(
+              (s) => s.seekableRanges,
+            ),
+            [audioService],
+          ),
+        ).data ??
+        const <CacheRange>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (showDownload) ...[
           _DrawerDownloadProgress(
-            progress: downloadProgress!,
+            progress: downloadProgress,
             onCancel: controller.cancelDownload,
           ),
           const SizedBox(height: AppSpacing.lg),
         ],
-        RecitationTransportControls(
-          isPlaying: playback.isPlaying,
+        RecitationDrawerTransportControls(
+          isPlaying: playWhenReady,
           isLoading: playback.isLoading,
+          isEnded: playback.isEnded,
           onPlayPause: controller.togglePlayPause,
-          leftSlot: leftSlot,
-          rightSlot: rightSlot,
-          density: RecitationTransportDensity.expanded,
+          surahLeftSlot: surahLeftSlot,
+          surahRightSlot: surahRightSlot,
+          ayahLeftSlot: ayahLeftSlot,
+          ayahRightSlot: ayahRightSlot,
         ),
         const SizedBox(height: AppSpacing.lg),
-        RecitationSeekBar(
+        _RecitationSegmentedSeekBar(
           playback: playback,
           timeline: timeline,
           bufferedRanges: bufferedRanges,
+          isLoading: playback.isLoading,
           onSeek: controller.seekTo,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -222,22 +275,125 @@ class _DrawerTransportSection extends HookConsumerWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _DrawerTimeLabel(
-              playback.currentAyah != null
-                  ? '${_fmt(playback.position)} · '
+              playback.isEnded
+                  ? l10n.quranRecitationEnded
+                  : playback.currentAyah != null
+                  ? '${formatPlaybackDuration(playback.position)} · '
                         '${l10n.ayahLabel} ${playback.currentAyah}'
-                  : _fmt(playback.position),
+                  : formatPlaybackDuration(playback.position),
             ),
-            _DrawerTimeLabel(_fmt(playback.duration)),
+            _DrawerTimeLabel(formatPlaybackDuration(playback.duration)),
           ],
         ),
       ],
     );
   }
 
-  static String _fmt(Duration d) {
-    final m = d.inMinutes;
-    final s = d.inSeconds % 60;
-    return '$m:${s.toString().padLeft(2, '0')}';
+}
+
+/// Maps recitation state into the neutral [SegmentedSeekBar].
+class _RecitationSegmentedSeekBar extends ConsumerWidget {
+  const _RecitationSegmentedSeekBar({
+    required this.playback,
+    required this.timeline,
+    required this.bufferedRanges,
+    required this.onSeek,
+    this.isLoading = false,
+  });
+
+  final RecitationState playback;
+  final RecitationTimeline? timeline;
+  final List<CacheRange> bufferedRanges;
+  final ValueChanged<Duration> onSeek;
+  final bool isLoading;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    final theme = context.theme;
+    final colors = theme.colors;
+    final typography = theme.typography;
+    final durations = theme.durations;
+    final isArabic = ref.watch(localeProvider) == 'ar';
+    final mushaf = ref.read(quranMushafControllerProvider);
+    final surah = playback.surah;
+
+    String formatAyahNumber(int ayah) =>
+        isArabic ? ayah.toHinduArabic() : '$ayah';
+
+    final timing = timeline?.timing;
+    final segments = timing == null
+        ? const <SeekBarSegment>[]
+        : [
+            for (final a in timing.ayat)
+              if (a.ayah > 0)
+                SeekBarSegment(
+                  index: a.ayah,
+                  start: Duration(milliseconds: a.startMs),
+                  end: Duration(milliseconds: a.endMs),
+                ),
+          ];
+
+    final buffered = bufferedRanges
+        .map((r) => (r.start, r.end))
+        .toList(growable: false);
+
+    RepeatStatus? repeat;
+    if (playback.ayahRepeatCount > 1 && playback.currentAyah != null) {
+      repeat = RepeatStatus(
+        current: playback.ayahRepeatCount - playback.ayahRepeatsRemaining + 1,
+        total: playback.ayahRepeatCount,
+        segmentIndex: playback.currentAyah!,
+      );
+    }
+
+    final style = SegmentedSeekBarStyle(
+      activeColor: colors.primary,
+      inactiveColor: colors.mutedForeground,
+      bufferedColor: colors.primary.withValues(alpha: 0.3),
+      thumbColor: colors.primary,
+      thumbBorderColor: colors.primaryForeground,
+      repeatBadgeColor: colors.primary,
+      repeatBadgeTextColor: colors.primaryForeground,
+      repeatPulseColor: colors.primary,
+      tooltipTextStyle: typography.body.xs.copyWith(
+        color: colors.foreground,
+        fontWeight: FontWeight.w600,
+      ),
+      tooltipBackgroundColor: colors.card,
+      tooltipBorderColor: colors.border,
+      segmentGapColor: colors.card,
+      ayahGlowColor: colors.primary,
+      thumbRadius: 8,
+      trackHeight: 4,
+      thumbTweenDuration: durations.fast,
+      snapScaleDuration: durations.instant,
+      pulseDuration: durations.slow,
+      revealDuration: durations.normal,
+    );
+
+    return SegmentedSeekBar(
+      position: playback.pendingSeekTarget ?? playback.position,
+      duration: playback.duration,
+      enabled: playback.duration.inMilliseconds > 0 && !isLoading,
+      segments: segments,
+      bufferedRanges: buffered,
+      repeat: repeat,
+      onSeek: onSeek,
+      style: style,
+      segmentLabel: (index) =>
+          '${l10n.ayahLabel} ${formatAyahNumber(index)}',
+      segmentNumberLabel: formatAyahNumber,
+      segmentUthmaniExcerpt: surah == null
+          ? null
+          : (index) async {
+              final ayah = await mushaf.getAyahBySurah(surah, index);
+              final preview = ayahSearchPreviewText(ayah);
+              return preview.isEmpty ? null : preview;
+            },
+      repeatLabel: l10n.quranRecitationRepeatProgress,
+      unavailableLabel: l10n.quranRecitationUnavailable,
+    );
   }
 }
 
@@ -247,7 +403,6 @@ class _DrawerDownloadProgress extends StatelessWidget {
   const _DrawerDownloadProgress({
     required this.progress,
     required this.onCancel,
-    super.key,
   });
 
   final DownloadProgress progress;
@@ -307,7 +462,7 @@ class _DrawerDownloadProgress extends StatelessWidget {
 }
 
 class _DrawerTimeLabel extends StatelessWidget {
-  const _DrawerTimeLabel(this.text, {super.key});
+  const _DrawerTimeLabel(this.text);
 
   final String text;
 
@@ -330,17 +485,14 @@ class _DrawerTimeLabel extends StatelessWidget {
 class _DrawerActionsSection extends ConsumerWidget {
   /// Creates the actions section.
   const _DrawerActionsSection({
-    required this.rangeLabel,
-    required this.rangeWidget,
-    required this.surahName,
-    required this.repeatSuffix,
-    super.key,
+    required this.configuredRangeLabel,
+    required this.ayahRepeatCount,
+    required this.rangeRepeatCount,
   });
 
-  final String rangeLabel;
-  final Widget? rangeWidget;
-  final String surahName;
-  final String repeatSuffix;
+  final String configuredRangeLabel;
+  final int ayahRepeatCount;
+  final int rangeRepeatCount;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -357,6 +509,21 @@ class _DrawerActionsSection extends ConsumerWidget {
       RecitationSleep.after30 => l10n.quranRecitationSleepAfter('30'),
     };
 
+    final configParts = <String>[configuredRangeLabel];
+    if (ayahRepeatCount > 1) {
+      configParts.add(
+        '${l10n.quranRangeRepeatChip(ayahRepeatCount)} '
+        '${l10n.quranRangeRepeatEachAyah}',
+      );
+    }
+    if (rangeRepeatCount > 1) {
+      configParts.add(
+        '${l10n.quranRangeRepeatChip(rangeRepeatCount)} '
+        '${l10n.quranRecitationRepeatScopeSelection}',
+      );
+    }
+    final rangeConfigSubtitle = configParts.join(' · ');
+
     return FTileGroup(
       children: [
         FTile(
@@ -370,12 +537,7 @@ class _DrawerActionsSection extends ConsumerWidget {
         FTile(
           prefix: const Icon(FLucideIcons.repeat),
           title: Text(l10n.quranRecitationRangeRepeat),
-          subtitle: rangeWidget != null
-              ? _DrawerRangeSubtitle(
-                  rangeLabel: rangeLabel,
-                  suffix: repeatSuffix,
-                )
-              : Text(surahName),
+          subtitle: Text(rangeConfigSubtitle),
           onPress: () => showRangeRepeatDialog(context),
         ),
         FTile(
@@ -390,7 +552,7 @@ class _DrawerActionsSection extends ConsumerWidget {
 }
 
 class _DrawerCacheSizeSubtitle extends StatelessWidget {
-  const _DrawerCacheSizeSubtitle({required this.bytesAsync, super.key});
+  const _DrawerCacheSizeSubtitle({required this.bytesAsync});
 
   final AsyncValue<int> bytesAsync;
 
@@ -403,14 +565,12 @@ class _DrawerCacheSizeSubtitle extends StatelessWidget {
 
 // --- settings ---
 
-
 /// Volume slider and playback toggles in the recitation drawer.
 class _DrawerSettingsSection extends ConsumerWidget {
   /// Creates the settings section.
   const _DrawerSettingsSection({
     required this.isNarrow,
     required this.persistedVolume,
-    super.key,
   });
 
   final bool isNarrow;
@@ -419,9 +579,14 @@ class _DrawerSettingsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final colors = context.theme.colors;
+    final theme = context.theme;
+    final colors = theme.colors;
     final controller = ref.read(recitationControllerProvider.notifier);
     final settings = ref.watch(recitationSettingsProvider).value;
+    final moshaf = ref.watch(selectedMoshafProvider).value;
+    final nonHafs = moshaf != null && !isHafsRiwayah(moshaf.name);
+    final highlightOn = settings?.highlightAyah ?? true;
+    final showHighlightWarning = nonHafs && highlightOn;
 
     final volumeSlider = PersistedVolumeSlider(
       persistedVolume: persistedVolume,
@@ -431,8 +596,9 @@ class _DrawerSettingsSection extends ConsumerWidget {
 
     final autoScrollToggle = FTooltip(
       tipBuilder: (_, _) => Text(l10n.quranRecitationAutoScrollDesc),
-      child: _DrawerToggleChip(
-        label: l10n.quranRecitationAutoScroll,
+      child: FSwitch(
+        leadingLabel: true,
+        label: Text(l10n.quranRecitationAutoScroll),
         value: settings?.autoScroll ?? true,
         onChange: (v) => ref
             .read(recitationSettingsProvider.notifier)
@@ -440,21 +606,56 @@ class _DrawerSettingsSection extends ConsumerWidget {
       ),
     );
 
-    final highlightToggle = FTooltip(
-      tipBuilder: (_, _) => Text(l10n.quranRecitationHighlightDesc),
-      child: _DrawerToggleChip(
-        label: l10n.quranRecitationHighlight,
-        value: settings?.highlightAyah ?? true,
-        onChange: (v) => ref
-            .read(recitationSettingsProvider.notifier)
-            .setHighlightAyah(value: v),
-      ),
+    final highlightToggle = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FTooltip(
+          tipBuilder: (_, _) => Text(l10n.quranRecitationHighlightDesc),
+          child: FSwitch(
+            leadingLabel: true,
+            label: Text(l10n.quranRecitationHighlight),
+            value: highlightOn,
+            onChange: (v) => ref
+                .read(recitationSettingsProvider.notifier)
+                .setHighlightAyah(value: v),
+          ),
+        ),
+        if (nonHafs) ...[
+          const SizedBox(width: AppSpacing.xs),
+          FTooltip(
+            tipBuilder: (_, _) =>
+                Text(l10n.quranRecitationHighlightNonHafsWarning),
+            child: const Icon(
+              FLucideIcons.triangleAlert,
+              size: 16,
+              // color: colors.destructive,
+            ),
+          ),
+        ],
+      ],
     );
+
+    final highlightWarningAlert = showHighlightWarning
+        ? Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: Opacity(
+              opacity: 0.88,
+              child: FAlert(
+                icon: const Icon(FLucideIcons.triangleAlert, size: 16),
+                title: Text(
+                  l10n.quranRecitationHighlightNonHafsWarning,
+                  style: theme.typography.body.sm,
+                ),
+              ),
+            ),
+          )
+        : null;
 
     if (isNarrow) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          ?highlightWarningAlert,
           Row(
             children: [
               Icon(
@@ -476,51 +677,26 @@ class _DrawerSettingsSection extends ConsumerWidget {
       );
     }
 
-    return Row(
-      children: [
-        Icon(
-          FLucideIcons.volume2,
-          size: 17,
-          color: colors.mutedForeground,
-        ),
-        const SizedBox(width: AppSpacing.sm),
-        SizedBox(width: 110, child: volumeSlider),
-        const Spacer(),
-        autoScrollToggle,
-        const SizedBox(width: AppSpacing.md),
-        highlightToggle,
-      ],
-    );
-  }
-}
-
-class _DrawerToggleChip extends StatelessWidget {
-  const _DrawerToggleChip({
-    required this.label,
-    required this.value,
-    required this.onChange,
-    super.key,
-  });
-
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChange;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final typography = context.theme.typography;
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        FSwitch(value: value, onChange: onChange),
-        const SizedBox(width: AppSpacing.sm),
-        Text(
-          label,
-          style: typography.body.xs.copyWith(
-            fontWeight: FontWeight.w600,
-            color: colors.secondaryForeground,
-          ),
+        ?highlightWarningAlert,
+        Row(
+          children: [
+            Expanded(flex: 2, child: volumeSlider),
+            const Spacer(),
+            Expanded(
+              flex: 4,
+              child: Row(
+                spacing: AppSpacing.md,
+                children: [
+                  autoScrollToggle,
+                  highlightToggle,
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );

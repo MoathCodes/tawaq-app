@@ -1,9 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_integrity.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
 

@@ -3,8 +3,8 @@
 import 'dart:io';
 
 import 'package:tawaq/core/text/arabic_text_normalizer.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
-import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_poetry_splitter.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_segment_repair.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_normalizer.dart';
@@ -41,7 +41,9 @@ void main() {
   print('total_spans: ${spanPattern.allMatches(raw).length}');
 
   // Nested spans
-  print('nested_spans: ${RegExp("<span[^>]*>.*<span", dotAll: true).hasMatch(raw)}');
+  print(
+    'nested_spans: ${RegExp("<span[^>]*>.*<span", dotAll: true).hasMatch(raw)}',
+  );
 
   // All spans inventory
   print('\n=== SPAN INVENTORY ===');
@@ -73,7 +75,9 @@ void main() {
   // Unclosed parens / broken markup
   print('\n=== BROKEN MARKUP PATTERNS ===');
   if (raw.contains('] .')) print('FOUND: stray ] . pattern');
-  if (RegExp(r'\)\s*<span').hasMatch(raw)) print('FOUND: ) immediately before span');
+  if (RegExp(r'\)\s*<span').hasMatch(raw)) {
+    print('FOUND: ) immediately before span');
+  }
   if (RegExp(r'[^)]\)\s*<span class="t2">').hasMatch(raw)) {
     print('FOUND: unclosed ayah before t2 reference');
   }
@@ -92,20 +96,29 @@ void main() {
       final commentary = normalized.substring(lastEnd, match.start);
       final cleaned = commentary.replaceAll(RegExp('<[^>]+>'), '').trimRight();
       if (cleaned.trim().isNotEmpty) {
-        preRepair.add(TafsirTextSegment(text: cleaned, kind: TafsirSegmentKind.commentary));
+        preRepair.add(
+          TafsirTextSegment(text: cleaned, kind: TafsirSegmentKind.commentary),
+        );
       }
     }
     final cssClass = match.group(1)?.trim() ?? '';
     final inner = match.group(2)!.replaceAll(RegExp('<[^>]+>'), '');
     if (inner.isNotEmpty) {
-      preRepair.add(TafsirTextSegment(text: inner, kind: _classify(cssClass, inner)));
+      preRepair.add(
+        TafsirTextSegment(text: inner, kind: _classify(cssClass, inner)),
+      );
     }
     lastEnd = match.end;
   }
   if (lastEnd < normalized.length) {
-    final tail = normalized.substring(lastEnd).replaceAll(RegExp('<[^>]+>'), '').trimRight();
+    final tail = normalized
+        .substring(lastEnd)
+        .replaceAll(RegExp('<[^>]+>'), '')
+        .trimRight();
     if (tail.trim().isNotEmpty) {
-      preRepair.add(TafsirTextSegment(text: tail, kind: TafsirSegmentKind.commentary));
+      preRepair.add(
+        TafsirTextSegment(text: tail, kind: TafsirSegmentKind.commentary),
+      );
     }
   }
 
@@ -117,11 +130,14 @@ void main() {
   if (postRepair.length != preRepair.length) {
     print('REPAIR CHANGES:');
     for (var i = 0; i < postRepair.length; i++) {
-      final changed = i >= preRepair.length ||
+      final changed =
+          i >= preRepair.length ||
           postRepair[i].text != preRepair[i].text ||
           postRepair[i].kind != preRepair[i].kind;
       if (changed) {
-        print('  [$i] ${postRepair[i].kind.name}: ${_trunc(postRepair[i].text, 120)}');
+        print(
+          '  [$i] ${postRepair[i].kind.name}: ${_trunc(postRepair[i].text, 120)}',
+        );
       }
     }
   }
@@ -234,7 +250,9 @@ void main() {
     final t = parsed[i].text;
     if (t.contains('الآية') && !t.contains('﴿')) {
       issueNum++;
-      print('ISSUE $issueNum [MEDIUM] الآية marker without ayah styling seg $i kind=${parsed[i].kind.name}');
+      print(
+        'ISSUE $issueNum [MEDIUM] الآية marker without ayah styling seg $i kind=${parsed[i].kind.name}',
+      );
       print('  ${_trunc(t, 150)}');
     }
   }
@@ -261,7 +279,9 @@ void main() {
     if (lines[i].contains('الشاعر') && i + 1 < lines.length) {
       final next = lines[i + 1];
       final detected = parsed.any(
-        (s) => s.kind == TafsirSegmentKind.poetry && s.text.contains(next.trim().substring(0, 10)),
+        (s) =>
+            s.kind == TafsirSegmentKind.poetry &&
+            s.text.contains(next.trim().substring(0, 10)),
       );
       if (!detected) {
         issueNum++;
@@ -282,7 +302,8 @@ void main() {
 
   // Stray bracket
   for (var i = 0; i < parsed.length; i++) {
-    if (RegExp(r'^\s*\]').hasMatch(parsed[i].text) || parsed[i].text.contains('] .')) {
+    if (RegExp(r'^\s*\]').hasMatch(parsed[i].text) ||
+        parsed[i].text.contains('] .')) {
       issueNum++;
       print('ISSUE $issueNum [MEDIUM] stray bracket seg $i');
       print('  ${_trunc(parsed[i].text, 120)}');

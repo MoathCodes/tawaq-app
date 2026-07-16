@@ -330,6 +330,65 @@ void main() {
       );
     });
   });
+
+  group('isWholeSurahEndpoints / rangeNeedsAyahTiming', () {
+    late MushafReaderController controller;
+
+    setUp(() async {
+      controller = MushafReaderController.withRepository(
+        repository: _SegmentTestRepo(),
+      );
+      await controller.ensureReady();
+    });
+
+    test('detects same-surah full endpoints', () {
+      const from = AyahReference(surah: 8, ayah: 1);
+      const to = AyahReference(surah: 8, ayah: 75);
+
+      expect(isWholeSurahEndpoints(from, to, controller), isTrue);
+      expect(
+        rangeNeedsAyahTiming(
+          preset: RangeScopePreset.custom,
+          from: from,
+          to: to,
+          mushaf: controller,
+        ),
+        isFalse,
+      );
+    });
+
+    test('detects cross-surah full endpoints', () {
+      const from = AyahReference(surah: 8, ayah: 1);
+      const to = AyahReference(surah: 9, ayah: 129);
+
+      expect(isWholeSurahEndpoints(from, to, controller), isTrue);
+      expect(
+        rangeNeedsAyahTiming(
+          preset: RangeScopePreset.custom,
+          from: from,
+          to: to,
+          mushaf: controller,
+        ),
+        isFalse,
+      );
+    });
+
+    test('partial custom range still needs timing', () {
+      const from = AyahReference(surah: 8, ayah: 2);
+      const to = AyahReference(surah: 8, ayah: 75);
+
+      expect(isWholeSurahEndpoints(from, to, controller), isFalse);
+      expect(
+        rangeNeedsAyahTiming(
+          preset: RangeScopePreset.custom,
+          from: from,
+          to: to,
+          mushaf: controller,
+        ),
+        isTrue,
+      );
+    });
+  });
 }
 
 class _SegmentTestRepo implements IQuranRepository {

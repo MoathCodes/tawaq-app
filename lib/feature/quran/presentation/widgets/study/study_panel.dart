@@ -11,13 +11,12 @@ import 'package:tawaq/core/widgets/directional_content_switcher.dart';
 import 'package:tawaq/core/widgets/reading_swipe_viewport.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/notes_section.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_content_section.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_header.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_width_scope.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/tafsir_text.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// A study companion panel for the Quran screen.
@@ -60,6 +59,8 @@ class StudyPanel extends HookConsumerWidget {
             Expanded(
               child: LayoutBuilder(
                 builder: (context, constraints) {
+                  final narrowPanel =
+                      constraints.maxWidth < context.theme.breakpoints.sm;
                   return ReadingSwipeViewport(
                     viewportMinHeight: constraints.maxHeight,
                     horizontalPadding: AppSpacing.lg,
@@ -73,10 +74,7 @@ class StudyPanel extends HookConsumerWidget {
                     child: DirectionalContentSwitcher(
                       currentKey: ayaId,
                       slideDirection: slideDirection.value,
-                      child: StudyPanelWidthScope(
-                        width: constraints.maxWidth,
-                        child: const _StudyPanelBody(),
-                      ),
+                      child: _StudyPanelBody(narrowPanel: narrowPanel),
                     ),
                   );
                 },
@@ -103,16 +101,18 @@ class StudyPanel extends HookConsumerWidget {
 }
 
 class _StudyPanelBody extends StatelessWidget {
-  const _StudyPanelBody();
+  const _StudyPanelBody({required this.narrowPanel});
+
+  final bool narrowPanel;
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _StudyContentAccordion(),
-        SizedBox(height: AppSpacing.xl),
-        NotesSection(),
+        _StudyContentAccordion(narrowPanel: narrowPanel),
+        const SizedBox(height: AppSpacing.xl),
+        NotesSection(narrowPanel: narrowPanel),
       ],
     );
   }
@@ -120,7 +120,9 @@ class _StudyPanelBody extends StatelessWidget {
 
 /// Tafsir and translation accordion for the selected ayah.
 class _StudyContentAccordion extends ConsumerWidget {
-  const _StudyContentAccordion();
+  const _StudyContentAccordion({required this.narrowPanel});
+
+  final bool narrowPanel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -205,6 +207,7 @@ class _StudyContentAccordion extends ConsumerWidget {
                     aya: aya,
                     source: selectedTafsir,
                     enabled: hasSelectedAyah && tafsirEnabled,
+                    narrowPanel: narrowPanel,
                   ),
                 ),
                 FAccordionItem(
@@ -220,6 +223,7 @@ class _StudyContentAccordion extends ConsumerWidget {
                     aya: aya,
                     source: selectedTranslation,
                     enabled: hasSelectedAyah && translationEnabled,
+                    narrowPanel: narrowPanel,
                   ),
                 ),
               ],

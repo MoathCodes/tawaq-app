@@ -10,7 +10,6 @@ import 'package:tawaq/feature/quran/presentation/models/study_panel_text_styles.
 import 'package:tawaq/feature/quran/presentation/providers/translation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/translation_source_selector.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_width_scope.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Builds a study accordion title row.
@@ -214,6 +213,7 @@ class TranslationAccordionSection extends ConsumerWidget {
     required this.aya,
     required this.source,
     required this.enabled,
+    required this.narrowPanel,
     super.key,
   });
 
@@ -229,17 +229,19 @@ class TranslationAccordionSection extends ConsumerWidget {
   /// Whether the translation accordion is expanded and should fetch content.
   final bool enabled;
 
+  /// Whether the study panel is narrower than the small breakpoint.
+  final bool narrowPanel;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final colors = theme.colors;
     final typography = theme.typography;
     final l10n = context.l10n;
-    final narrowPanel = StudyPanelWidthScope.isNarrow(context);
     final sectionMinHeight = narrowPanel ? 72.0 : 120.0;
 
     final translationAsync = enabled
-        ? ref.watch(ayahTranslationProvider(sura, aya))
+        ? ref.watch(ayahTranslationRowProvider(source, sura, aya))
         : const AsyncData<Translation?>(null);
 
     return ConstrainedBox(

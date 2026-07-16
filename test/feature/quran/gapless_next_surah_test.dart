@@ -45,7 +45,7 @@ RecitationTransition _run(
 
 void main() {
   group('continueFromHere gapless continuation', () {
-    test('end of selection emits LoadGaplessContinuation for next surah', () {
+    test('end of open-ended selection emits LoadGaplessContinuation', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         active: true,
@@ -53,7 +53,6 @@ void main() {
         moshaf: _moshaf,
         surah: 1,
         rangeFrom: AyahReference(surah: 1, ayah: 2),
-        rangeTo: AyahReference(surah: 1, ayah: 3),
         segmentStartAyah: 2,
         segmentEndAyah: 3,
         currentAyah: 3,
@@ -75,7 +74,7 @@ void main() {
       expect(effect.moshaf, _moshaf);
     });
 
-    test('whole-surah preset pauses instead of continuing', () {
+    test('whole-surah preset ends instead of continuing', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         active: true,
@@ -91,12 +90,16 @@ void main() {
         timeline: _timeline(),
       );
 
-      expect(result.state.status, RecitationStatus.paused);
-      expect(result.effects.whereType<PauseAudio>(), hasLength(1));
+      expect(result.state.status, RecitationStatus.ended);
+      expect(result.state.position, const Duration(milliseconds: 15000));
+      expect(result.effects.whereType<PauseAtEof>(), hasLength(1));
+      expect(result.effects.whereType<SetNativeLoop>(), hasLength(1));
+      expect(result.effects.whereType<StopAudio>(), isEmpty);
+      expect(result.effects.whereType<ClearPlaybackPosition>(), isEmpty);
       expect(result.effects.whereType<LoadGaplessContinuation>(), isEmpty);
     });
 
-    test('continueFromHere from ayah 1 pauses instead of continuing', () {
+    test('bounded range ends instead of continuing', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         active: true,
@@ -116,12 +119,16 @@ void main() {
         timeline: _timeline(),
       );
 
-      expect(result.state.status, RecitationStatus.paused);
-      expect(result.effects.whereType<PauseAudio>(), hasLength(1));
+      expect(result.state.status, RecitationStatus.ended);
+      expect(result.state.position, const Duration(milliseconds: 15000));
+      expect(result.effects.whereType<PauseAtEof>(), hasLength(1));
+      expect(result.effects.whereType<SetNativeLoop>(), hasLength(1));
+      expect(result.effects.whereType<StopAudio>(), isEmpty);
+      expect(result.effects.whereType<ClearPlaybackPosition>(), isEmpty);
       expect(result.effects.whereType<LoadGaplessContinuation>(), isEmpty);
     });
 
-    test('missing next surah emits error instead of loading', () {
+    test('missing next surah on open-ended emits error', () {
       const moshaf = Moshaf(
         id: 1,
         name: 'Hafs',
@@ -136,7 +143,6 @@ void main() {
         moshaf: moshaf,
         surah: 1,
         rangeFrom: AyahReference(surah: 1, ayah: 2),
-        rangeTo: AyahReference(surah: 1, ayah: 3),
         segmentStartAyah: 2,
         segmentEndAyah: 3,
         currentAyah: 3,

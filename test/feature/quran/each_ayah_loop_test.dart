@@ -90,7 +90,6 @@ void main() {
         rangeTo: AyahReference(surah: 1, ayah: 3),
         segmentEndAyah: 3,
         ayahRepeatCount: 3,
-        repeatsRemaining: 1,
         ayahRepeatsRemaining: 3,
       );
       final result = _run(state, const AyahLoopExhausted());
@@ -112,7 +111,6 @@ void main() {
         rangeTo: AyahReference(surah: 1, ayah: 3),
         segmentEndAyah: 3,
         ayahRepeatCount: 3,
-        repeatsRemaining: 1,
         ayahRepeatsRemaining: 3,
         ayahLoopExiting: true,
       );
@@ -125,7 +123,7 @@ void main() {
       expect(result.state.ayahLoopExiting, isFalse);
       expect(result.state.ayahRepeatsRemaining, 3);
       expect(result.effects.whereType<LoadAyahLoop>(), hasLength(1));
-      expect(result.effects.whereType<SeekAudio>(), hasLength(1));
+      expect(result.effects.whereType<SeekAudio>(), isEmpty);
       expect(result.effects.whereType<HighlightAyah>(), hasLength(1));
     });
 
@@ -163,7 +161,6 @@ void main() {
         surah: 1,
         currentAyah: 1,
         ayahRepeatCount: 3,
-        repeatsRemaining: 1,
         ayahRepeatsRemaining: 3,
         ayahLoopExiting: true,
       );
@@ -190,7 +187,6 @@ void main() {
         surah: 1,
         currentAyah: 2,
         ayahRepeatCount: 3,
-        repeatsRemaining: 1,
       );
       final result = _run(
         state,
@@ -199,6 +195,27 @@ void main() {
 
       expect(result.state.currentAyah, 2);
       expect(result.effects.whereType<HighlightAyah>(), isEmpty);
+    });
+
+    test('loop wrap decrements ayahRepeatsRemaining', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        active: true,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        currentAyah: 1,
+        position: Duration(milliseconds: 4800),
+        ayahRepeatCount: 3,
+        ayahRepeatsRemaining: 3,
+      );
+      final result = _run(
+        state,
+        const AudioPosition(Duration(milliseconds: 200)),
+      );
+
+      expect(result.state.ayahRepeatsRemaining, 2);
+      expect(result.state.currentAyah, 1);
     });
   });
 }

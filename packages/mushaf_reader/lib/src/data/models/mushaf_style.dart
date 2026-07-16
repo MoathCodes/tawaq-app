@@ -124,7 +124,7 @@ class MushafScale {
     this.ayahFontSize,
     this.basmalahFontSize,
     this.pageNumberFontSize,
-    this.minScale = 0.5,
+    this.minScale = 0.3,
     this.maxScale = 2.0,
     this.referenceWidth = 500.0,
     this.readingBoost = 1,

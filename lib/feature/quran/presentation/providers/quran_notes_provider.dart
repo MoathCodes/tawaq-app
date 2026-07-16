@@ -1,7 +1,7 @@
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/feature/quran/data/repository/quran_notes_repo.dart';
+import 'package:tawaq/feature/quran/data/sources/quran_notes.dart';
 
 part 'quran_notes_provider.g.dart';
 
@@ -26,7 +26,7 @@ class QuranNotesNotifier extends _$QuranNotesNotifier {
     }
 
     _log.d('$logPrefix Loading note for ayahId: $ayahId');
-    return ref.read(quranNotesRepoProvider).getNote(ayahId);
+    return ref.read(quranNotesSourceProvider).getNote(ayahId);
   }
 
   /// Adds or updates a note for the current ayah.
@@ -41,7 +41,7 @@ class QuranNotesNotifier extends _$QuranNotesNotifier {
 
     try {
       _log.d('$logPrefix Adding note for ayahId: $ayahId');
-      await ref.read(quranNotesRepoProvider).addNote(ayahId, note);
+      await ref.read(quranNotesSourceProvider).addNote(ayahId, note);
       state = AsyncData(note);
       _log.d('$logPrefix Note added successfully');
     } catch (e, stackTrace) {
@@ -62,7 +62,7 @@ class QuranNotesNotifier extends _$QuranNotesNotifier {
 
     try {
       _log.d('$logPrefix Deleting note for ayahId: $ayahId');
-      await ref.read(quranNotesRepoProvider).deleteNote(ayahId);
+      await ref.read(quranNotesSourceProvider).deleteNote(ayahId);
       state = const AsyncData(null);
       _log.d('$logPrefix Note deleted successfully');
     } catch (e, stackTrace) {

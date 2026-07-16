@@ -46,3 +46,7 @@ const _riwayat = <String, List<String>>{
 
   return (style: style, riwayah: riwayah);
 }
+
+/// Whether [moshafName] identifies the Hafs 'an 'Asim riwayah.
+bool isHafsRiwayah(String moshafName) =>
+    moshafTags(moshafName).riwayah == 'حفص';

@@ -22,13 +22,14 @@ int? nextStudyAyahId({
 }
 
 /// Keeps [MushafReaderController] highlight aligned with persisted selection.
-void useQuranAyahSelectionSync(WidgetRef ref) {
+void useQuranAyahSelectionSync(WidgetRef ref, {int? page}) {
   final controller = ref.watch(quranMushafControllerProvider);
   final selectedAyahId = ref.watch(
     quranScreenSettingsProvider.select(
       (v) => v.value?.selectedAyah?.ayahId,
     ),
   );
+  if (page != null) controller.jumpToPage(page);
 
   useEffect(() {
     if (controller.selectedAyahId == selectedAyahId) return null;

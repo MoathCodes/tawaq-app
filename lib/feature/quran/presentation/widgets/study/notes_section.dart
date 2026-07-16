@@ -6,15 +6,17 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_notes_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_width_scope.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Notes section for the study panel.
 class NotesSection extends HookConsumerWidget {
   /// Creates a [NotesSection] instance.
-  const NotesSection({super.key});
+  const NotesSection({required this.narrowPanel, super.key});
+
+  /// Whether the study panel is narrower than the small breakpoint.
+  final bool narrowPanel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -74,7 +76,6 @@ class NotesSection extends HookConsumerWidget {
       debounceTimer.value = Timer(const Duration(milliseconds: 500), saveNote);
     }
 
-    final narrowPanel = StudyPanelWidthScope.isNarrow(context);
     final noteMinLines = narrowPanel ? 3 : 5;
     final noteMaxLines = narrowPanel ? 6 : 10;
 

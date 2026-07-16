@@ -2,8 +2,8 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_content_source_converter.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 

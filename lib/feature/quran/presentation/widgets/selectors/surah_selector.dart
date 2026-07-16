@@ -6,15 +6,66 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_search_select.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_select_search.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 
-export 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_select_search.dart'
-    show normalizeArabicForSurahSearch, searchSurahs;
+/// Ranks [surahs] by relevance to [query] using the shared Quran surah search.
+Iterable<Surah> searchSurahs(List<Surah> surahs, String query) {
+  if (query.isEmpty) return surahs;
+
+  final normalized = query.toLowerCase().trim();
+  final arabicQuery = normalizeArabicForSearch(normalized);
+  final queryNum = int.tryParse(normalized);
+
+  final results = <(Surah, int)>[];
+  for (final surah in surahs) {
+    var score = 0;
+
+    if (queryNum != null && surah.number == queryNum) {
+      score = 100;
+    } else if (surah.number.toString().startsWith(normalized)) {
+      score = 80;
+    } else if (surah.nameEnglish?.toLowerCase().startsWith(normalized) ?? false) {
+      score = 70;
+    } else if (surah.nameArabicSimplified != null &&
+        normalizeArabicForSearch(
+          surah.nameArabicSimplified!,
+        ).startsWith(arabicQuery)) {
+      score = 70;
+    } else if (surah.englishNameTranslation?.toLowerCase().startsWith(
+          normalized,
+        ) ??
+        false) {
+      score = 65;
+    } else if (surah.nameEnglish?.toLowerCase().contains(normalized) ?? false) {
+      score = 50;
+    } else if (surah.englishNameTranslation?.toLowerCase().contains(
+          normalized,
+        ) ??
+        false) {
+      score = 45;
+    } else if (surah.nameArabicSimplified != null &&
+        normalizeArabicForSearch(
+          surah.nameArabicSimplified!,
+        ).contains(arabicQuery)) {
+      score = 50;
+    }
+
+    if (score > 0) results.add((surah, score));
+  }
+
+  results.sort((a, b) {
+    final scoreCompare = b.$2.compareTo(a.$2);
+    if (scoreCompare != 0) return scoreCompare;
+    return a.$1.number.compareTo(b.$1.number);
+  });
+
+  return results.map((e) => e.$1);
+}
 
 /// Searchable surah picker shared by the Quran header and range dialog.
 class SurahSearchSelect extends HookConsumerWidget {

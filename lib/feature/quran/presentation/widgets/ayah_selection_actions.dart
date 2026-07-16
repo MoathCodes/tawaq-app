@@ -11,11 +11,11 @@ import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/range_repeat_dialog.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/reciter_dialog.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_dialog.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Animated floating bar for copy, share, and play on the selected ayah.

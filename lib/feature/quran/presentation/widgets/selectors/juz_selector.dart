@@ -6,14 +6,13 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_ordinals.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_search_select.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_glyph_text.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
-import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// English closed/list label for a Juz.

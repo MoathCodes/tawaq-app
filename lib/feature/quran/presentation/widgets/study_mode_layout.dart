@@ -6,8 +6,8 @@ import 'package:tawaq/core/layout/responsive_horizontal_split.dart';
 import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel.dart';
 import 'package:tawaq/theme/theme.dart';
 
 const _kResizableSpacer = 20.0;
@@ -100,7 +100,6 @@ class StudyModeLayout extends ConsumerWidget {
                   sidePanelRatio: sidePanelRatio,
                   collapsed: collapsed,
                   sideOnStart: !isRtl,
-                  sideMin: kStudyPanelMinExtent,
                   mainMin: kMushafPaneMinExtent,
                   sideMaxFraction: 0.45,
                   sideMaxPixels: _kStudyPanelMaxExtent,

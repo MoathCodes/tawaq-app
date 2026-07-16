@@ -72,7 +72,25 @@ void main() {
       );
     });
 
-    test('snapToNearestAyah snaps to closest ayah start', () {
+    test('clampToRange passes through position when untimed', () {
+      const timeline = RecitationTimeline();
+      const target = Duration(milliseconds: 723046);
+      expect(timeline.clampToRange(target), target);
+    });
+
+    test('clampToRange clamps whole timed surah to totalDuration', () {
+      const timeline = RecitationTimeline(timing: timing);
+      expect(
+        timeline.clampToRange(const Duration(milliseconds: 25000)),
+        const Duration(milliseconds: 20000),
+      );
+      expect(
+        timeline.clampToRange(const Duration(milliseconds: 7000)),
+        const Duration(milliseconds: 7000),
+      );
+    });
+
+    test('snapToNearestAyah snaps to containing ayah start', () {
       const timeline = RecitationTimeline(timing: timing);
       expect(
         timeline.snapToNearestAyah(const Duration(milliseconds: 1000)),
@@ -84,10 +102,14 @@ void main() {
       );
       expect(
         timeline.snapToNearestAyah(const Duration(milliseconds: 9000)),
-        const Duration(milliseconds: 12000),
+        const Duration(milliseconds: 5000),
       );
       expect(
         timeline.snapToNearestAyah(const Duration(milliseconds: 11900)),
+        const Duration(milliseconds: 5000),
+      );
+      expect(
+        timeline.snapToNearestAyah(const Duration(milliseconds: 15000)),
         const Duration(milliseconds: 12000),
       );
     });

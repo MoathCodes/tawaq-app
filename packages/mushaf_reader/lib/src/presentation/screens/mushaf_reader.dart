@@ -129,6 +129,15 @@ class _MushafReaderState extends State<MushafReader> {
   bool _ownsController = false;
   bool _isInitialized = false;
 
+  /// True while the user is dragging or flinging the [PageView].
+  ///
+  /// [PageView.onPageChanged] also fires when the viewport is resized or
+  /// re-attached after a layout change; those callbacks must not overwrite
+  /// [MushafReaderController.currentPage].
+  bool _userInteractingWithPageView = false;
+
+  bool _syncScheduled = false;
+
   bool get _isTwoPage => widget.pagesPerViewport == 2;
 
   /// Keeps only the visible page(s) and immediate neighbors alive in the
@@ -155,21 +164,24 @@ class _MushafReaderState extends State<MushafReader> {
 
     return Directionality(
       textDirection: widget.textDirection,
-      child: PageView.builder(
-        controller: _controller.pageController,
-        reverse: widget.reverse,
-        clipBehavior: widget.clipBehavior,
-        physics: widget.physics,
-        itemCount: _isTwoPage
-            ? MushafConstants.twoPageSpreadCount
-            : MushafConstants.pageCount,
-        onPageChanged: _onPageChanged,
-        itemBuilder: (context, index) {
-          if (_isTwoPage) {
-            return _buildSpread(index);
-          }
-          return _buildSinglePage(index + 1);
-        },
+      child: NotificationListener<ScrollNotification>(
+        onNotification: _onScrollNotification,
+        child: PageView.builder(
+          controller: _controller.pageController,
+          reverse: widget.reverse,
+          clipBehavior: widget.clipBehavior,
+          physics: widget.physics,
+          itemCount: _isTwoPage
+              ? MushafConstants.twoPageSpreadCount
+              : MushafConstants.pageCount,
+          onPageChanged: _onPageChanged,
+          itemBuilder: (context, index) {
+            if (_isTwoPage) {
+              return _buildSpread(index);
+            }
+            return _buildSinglePage(index + 1);
+          },
+        ),
       ),
     );
   }
@@ -269,10 +281,54 @@ class _MushafReaderState extends State<MushafReader> {
     setState(() {
       _isInitialized = true;
     });
+    _scheduleSyncPageViewToController();
     await _controller.loadCurrentPageInfo();
   }
 
+  int _expectedViewportIndex() =>
+      (_controller.currentPage - 1) ~/ widget.pagesPerViewport;
+
+  void _scheduleSyncPageViewToController() {
+    if (_syncScheduled) return;
+    _syncScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncScheduled = false;
+      if (!mounted) return;
+      _syncPageViewToController();
+    });
+  }
+
+  void _syncPageViewToController() {
+    final pageController = _controller.pageController;
+    if (!pageController.hasClients) return;
+
+    final expectedIndex = _expectedViewportIndex();
+    final currentIndex = pageController.page?.round();
+    if (currentIndex == expectedIndex) return;
+
+    pageController.jumpToPage(expectedIndex);
+  }
+
+  bool _onScrollNotification(ScrollNotification notification) {
+    if (notification.depth != 0) return false;
+
+    if (notification is ScrollStartNotification) {
+      if (notification.dragDetails != null) {
+        _userInteractingWithPageView = true;
+      }
+    } else if (notification is ScrollEndNotification) {
+      _userInteractingWithPageView = false;
+    }
+    return false;
+  }
+
   void _onPageChanged(int index) {
+    final expectedIndex = _expectedViewportIndex();
+    if (index != expectedIndex && !_userInteractingWithPageView) {
+      _scheduleSyncPageViewToController();
+      return;
+    }
+
     _controller.onPageChanged(index);
     if (mounted) setState(() {});
 

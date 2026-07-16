@@ -3,13 +3,14 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_layouts.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
-import 'package:tawaq/feature/quran/domain/models/range_scope_preset.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
+import 'package:tawaq/feature/quran/domain/services/reciter_tags.dart';
 import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
 
 part 'quran_screen_settings_provider.g.dart';
@@ -134,10 +135,36 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
   }
 
   /// Persists the selected reciter and moshaf.
-  void setReciter({required int reciterId, int? moshafId}) => _commit(
-    (s) => s.copyWith(reciterId: reciterId, moshafId: moshafId),
-    'Reciter',
-  );
+  ///
+  /// When [moshafName] is provided, ayah highlighting is turned on for Hafs
+  /// riwayat and off for all other recognized non-Hafs riwayat.
+  ///
+  /// Returns whether highlighting was auto-changed (`true` enabled, `false`
+  /// disabled), or `null` when unchanged or [moshafName] is unrecognized.
+  bool? setReciter({
+    required int reciterId,
+    int? moshafId,
+    String? moshafName,
+  }) {
+    if (!state.hasValue) return null;
+    final current = state.value!;
+    var next = current.copyWith(reciterId: reciterId, moshafId: moshafId);
+    bool? autoHighlight;
+    if (moshafName != null) {
+      final riwayah = moshafTags(moshafName).riwayah;
+      if (riwayah != null) {
+        final highlightAyah = riwayah == 'حفص';
+        if (highlightAyah != current.highlightAyah) {
+          autoHighlight = highlightAyah;
+        }
+        next = next.copyWith(highlightAyah: highlightAyah);
+      }
+    }
+    if (current == next) return null;
+    state = AsyncData(next);
+    ref.read(loggerProvider).i('$_recitationLogPrefix Reciter updated');
+    return autoHighlight;
+  }
 
   /// Persists the output volume (0-100).
   void setVolume(double volume) {
@@ -194,6 +221,36 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
       lastRangeToAyah: rangeToAyah,
     ),
     'Playback state',
+  );
+
+  /// Persists surah/range metadata and playback position in one write.
+  void persistPlaybackCheckpoint({
+    required int surah,
+    required int positionMs,
+    int? rangeStart,
+    int? rangeEnd,
+    int? rangeFromSurah,
+    int? rangeFromAyah,
+    int? rangeToSurah,
+    int? rangeToAyah,
+  }) => _commit(
+    (s) => s.copyWith(
+      lastSurah: surah,
+      lastRangeStart: rangeStart,
+      lastRangeEnd: rangeEnd,
+      lastRangeFromSurah: rangeFromSurah,
+      lastRangeFromAyah: rangeFromAyah,
+      lastRangeToSurah: rangeToSurah,
+      lastRangeToAyah: rangeToAyah,
+      lastPlaybackPositionMs: positionMs,
+    ),
+    'Playback checkpoint',
+  );
+
+  /// Clears the saved playback position without touching surah/range metadata.
+  void clearPlaybackPosition() => _commit(
+    (s) => s.copyWith(lastPlaybackPositionMs: null),
+    'Playback position',
   );
 
   /// Persists the last range scope preset selected in the dialog.

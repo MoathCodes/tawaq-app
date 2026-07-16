@@ -66,36 +66,46 @@ class RecitationTimeline {
   }
 
   /// Clamps [position] inside the current range.
+  ///
+  /// Without timing, [rangeEnd] resolves to zero — pass [position] through so
+  /// untimed continuous scrub is not collapsed to the start of the file.
   Duration clampToRange(Duration position) {
-    final startMs = rangeStart.inMilliseconds;
-    final endMs = rangeEnd.inMilliseconds;
-    final clamped = position.inMilliseconds.clamp(startMs, endMs);
+    final start = rangeStart;
+    final end = rangeEnd;
+
+    if (end <= start) {
+      if (start > Duration.zero && position < start) {
+        return start;
+      }
+      return position;
+    }
+
+    final clamped = position.inMilliseconds.clamp(
+      start.inMilliseconds,
+      end.inMilliseconds,
+    );
     return Duration(milliseconds: clamped);
   }
 
-  /// Snaps [position] to the start of the nearest ayah when timing exists.
-  ///
-  /// Returns the original position when no timing is available.
+  /// Snaps [position] to the start of the ayah that contains it when timing
+  /// exists; otherwise returns [position] unchanged.
   Duration snapToNearestAyah(Duration position) {
     final timing = this.timing;
     if (timing == null) return position;
 
-    final ayat = timing.ayat;
+    final ayah = timing.ayahAt(position.inMilliseconds);
+    if (ayah != null) {
+      return startOfAyah(ayah) ?? position;
+    }
+
+    final ayat = timing.ayat.where((a) => a.ayah > 0).toList();
     if (ayat.isEmpty) return position;
 
     final posMs = position.inMilliseconds;
-    var bestIndex = 0;
-    var bestDistance = (posMs - ayat.first.startMs).abs();
-
-    for (var i = 1; i < ayat.length; i++) {
-      final distance = (posMs - ayat[i].startMs).abs();
-      if (distance < bestDistance) {
-        bestDistance = distance;
-        bestIndex = i;
-      }
+    if (posMs < ayat.first.startMs) {
+      return Duration(milliseconds: ayat.first.startMs);
     }
-
-    return Duration(milliseconds: ayat[bestIndex].startMs);
+    return Duration(milliseconds: ayat.last.startMs);
   }
 
   /// Returns the first ayah at or after [position], or null without timing.

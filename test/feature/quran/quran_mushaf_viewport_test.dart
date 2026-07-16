@@ -3,12 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/core/bootstrap/app_init_providers.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/quran_mushaf_pane.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/quran_mushaf_pane.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/l10n/app_localizations_en.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
@@ -42,8 +41,7 @@ class _MushafViewportTestRepo implements IQuranRepository {
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
-  ]) =>
-      throw UnimplementedError();
+  ]) => throw UnimplementedError();
 
   @override
   Future<String> getBasmalah() async => '';
@@ -121,8 +119,7 @@ class _MushafViewportTestRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}
@@ -154,7 +151,6 @@ void main() {
 
     return ProviderScope(
       overrides: [
-        mushafLibraryInitProvider.overrideWith((ref) async {}),
         quranScreenSettingsProvider.overrideWith(_TestQuranScreenSettings.new),
         quranMushafControllerProvider.overrideWithValue(controller),
         appThemeDataProvider.overrideWithValue(theme),

@@ -41,6 +41,53 @@ import 'package:tawaq/feature/quran/domain/models/reciter.dart';
   return (surah: nextSurah, startAyah: startAyah, endAyah: endAyah);
 }
 
+/// Whether [from]/[to] span whole surah(s): ayah 1 of [from.surah] through the
+/// last ayah of [to.surah] (same or different surahs).
+bool isWholeSurahEndpoints(
+  AyahReference from,
+  AyahReference? to,
+  MushafReaderController mushaf,
+) {
+  if (to == null) return false;
+  if (from.surah > to.surah) return false;
+  if (from.ayah != 1) return false;
+  final toCount = mushaf.getSurahSync(to.surah)?.ayahCount;
+  return toCount != null && to.ayah == toCount;
+}
+
+/// Whether a surah-local segment covers the full surah file.
+bool isFullSurahSegment({
+  required int surah,
+  required int startAyah,
+  required int endAyah,
+  required MushafReaderController mushaf,
+}) {
+  if (startAyah != 1) return false;
+  final count = mushaf.getSurahSync(surah)?.ayahCount;
+  return count != null && endAyah == count;
+}
+
+/// Whether the resolved range requires ayah-by-ayah timing data.
+bool rangeNeedsAyahTiming({
+  required RangeScopePreset preset,
+  required AyahReference from,
+  required AyahReference? to,
+  required MushafReaderController mushaf,
+}) {
+  switch (preset) {
+    case RangeScopePreset.thisSurah:
+      return false;
+    case RangeScopePreset.continueFromHere:
+      if (from.ayah == 1) return false;
+      return true;
+    case RangeScopePreset.thisAyah:
+    case RangeScopePreset.thisJuz:
+    case RangeScopePreset.thisHizb:
+    case RangeScopePreset.custom:
+      return !isWholeSurahEndpoints(from, to, mushaf);
+  }
+}
+
 /// Whether the global [to] endpoint has been reached in [surah]/[endAyah].
 ///
 /// A null [to] means the range continues to the end of the Quran.
@@ -221,47 +268,53 @@ final class PlayAyahRangeIntent extends RecitationPlaybackIntent {
 
 /// Maps a [RangeScopePreset] and resolved range endpoints to playback intent.
 ///
-/// - [RangeScopePreset.thisSurah] -> whole surah (untimed-compatible).
-/// - [RangeScopePreset.continueFromHere] with `from.ayah == 1` -> whole surah.
-/// - [RangeScopePreset.continueFromHere] with `from.ayah > 1` -> open range.
-/// - All other presets -> bounded range (requires timing).
+/// - Whole-surah selections (preset, `from.ayah == 1`, or full-surah endpoints)
+///   map to [PlayWholeSurahIntent] when [from] and [to] share a surah.
+/// - Cross-surah full-surah endpoint spans use [PlayAyahRangeIntent] so playback
+///   can chain consecutive whole-surah files without timings.
+/// - Partial ranges and open-ended continue require ayah timing.
 RecitationPlaybackIntent playbackIntentForPreset({
   required RangeScopePreset preset,
   required Reciter reciter,
   required Moshaf moshaf,
   required AyahReference from,
+  required MushafReaderController mushafReader,
   AyahReference? to,
 }) {
-  switch (preset) {
-    case RangeScopePreset.thisSurah:
+  if (!rangeNeedsAyahTiming(
+    preset: preset,
+    from: from,
+    to: to,
+    mushaf: mushafReader,
+  )) {
+    if (to == null || from.surah == to.surah) {
       return PlayWholeSurahIntent(
         reciter: reciter,
         moshaf: moshaf,
         surah: from.surah,
       );
-    case RangeScopePreset.continueFromHere:
-      if (from.ayah == 1) {
-        return PlayWholeSurahIntent(
-          reciter: reciter,
-          moshaf: moshaf,
-          surah: from.surah,
-        );
-      }
-      return PlayAyahRangeIntent(
-        reciter: reciter,
-        moshaf: moshaf,
-        from: from,
-        to: to,
-      );
-    case RangeScopePreset.thisAyah:
-    case RangeScopePreset.thisJuz:
-    case RangeScopePreset.thisHizb:
-    case RangeScopePreset.custom:
-      return PlayAyahRangeIntent(
-        reciter: reciter,
-        moshaf: moshaf,
-        from: from,
-        to: to,
-      );
+    }
+    return PlayAyahRangeIntent(
+      reciter: reciter,
+      moshaf: moshaf,
+      from: from,
+      to: to,
+    );
   }
+
+  if (preset == RangeScopePreset.continueFromHere) {
+    return PlayAyahRangeIntent(
+      reciter: reciter,
+      moshaf: moshaf,
+      from: from,
+      to: to,
+    );
+  }
+
+  return PlayAyahRangeIntent(
+    reciter: reciter,
+    moshaf: moshaf,
+    from: from,
+    to: to,
+  );
 }

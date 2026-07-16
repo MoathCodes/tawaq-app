@@ -3,19 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
+import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_notes_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/tafsir_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/translation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
@@ -173,17 +173,18 @@ void main() {
 
     return ProviderScope(
       overrides: [
-        mushafLibraryInitProvider.overrideWith((ref) async {}),
         quranScreenSettingsProvider.overrideWith(_TestQuranScreenSettings.new),
         quranMushafControllerProvider.overrideWithValue(controller),
         recitationControllerProvider.overrideWithValue(recitationState),
         quranNotesProvider(null).overrideWith(_TestQuranNotesNotifier.new),
         quranNotesProvider(1).overrideWith(_TestQuranNotesNotifier.new),
         quranNotesProvider(7).overrideWith(_TestQuranNotesNotifier.new),
-        ayahTranslationProvider(1, 1).overrideWithValue(
+        ayahTranslationRowProvider(kDefaultTranslationId, 1, 1)
+            .overrideWithValue(
           const AsyncData<Translation?>(null),
         ),
-        ayahTranslationProvider(1, 7).overrideWithValue(
+        ayahTranslationRowProvider(kDefaultTranslationId, 1, 7)
+            .overrideWithValue(
           const AsyncData<Translation?>(null),
         ),
         tafsirForAyahProvider(TafsirId.tafseerMouaser, 1, 1).overrideWithValue(

@@ -6,8 +6,8 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/select_empty_content.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Searchable select for choosing a Quran translation source.
@@ -31,7 +31,7 @@ class TranslationSourceSelector extends ConsumerWidget {
     final colors = theme.colors;
     final typography = theme.typography;
     final l10n = context.l10n;
-    final sources = TranslationId.values;
+    const sources = TranslationId.values;
     final selected = ref.watch(
       quranScreenSettingsProvider.select(
         (settings) =>

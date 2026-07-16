@@ -91,4 +91,4 @@ enum TafsirId {
 }
 
 /// Default bundled tafsir source.
-const kDefaultTafsirId = TafsirId.tafseerMouaser;
+const TafsirId kDefaultTafsirId = TafsirId.tafseerMouaser;

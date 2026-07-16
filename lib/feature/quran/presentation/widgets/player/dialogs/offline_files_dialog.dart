@@ -10,7 +10,7 @@ import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_data_providers.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/theme/theme.dart';
 

@@ -1,9 +1,11 @@
+import 'dart:math' show max;
+
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 // The event/effect classes are self-describing and the file has many long
 // switch signatures, so suppress documentation and line-length lints.
-// ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
+// ignore_for_file: public_member_api_docs
 
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
 
@@ -25,6 +27,8 @@ RecitationTransition transition(
   required RecitationTimeline timeline,
   required int defaultAyahRepeatCount,
   required int defaultRangeRepeatCount,
+  bool trackLoaded = false,
+  bool? nativePlayWhenReady,
 }) {
   final ayahCount = defaultAyahRepeatCount.clamp(1, 99);
   final rangeCount = defaultRangeRepeatCount.clamp(1, 99);
@@ -47,15 +51,36 @@ RecitationTransition transition(
         rangeRepeatCount: rangeCount,
       );
     case TogglePlayPause():
-      return _togglePlayPause(state, timeline: timeline);
+      return _togglePlayPause(
+        state,
+        timeline: timeline,
+        ayahRepeatCount: ayahCount,
+        rangeRepeatCount: rangeCount,
+        trackLoaded: trackLoaded,
+        nativePlayWhenReady: nativePlayWhenReady,
+      );
     case Seek():
       return _seek(state, event, timeline: timeline);
     case Stop():
       return _stop(state);
-    case SkipNext():
-      return _skipNext(state, timeline: timeline);
-    case SkipPrevious():
-      return _skipPrevious(state, timeline: timeline);
+    case SkipAyahNext():
+      return _skipAyahNext(state, timeline: timeline);
+    case SkipAyahPrevious():
+      return _skipAyahPrevious(state, timeline: timeline);
+    case SkipSurahNext():
+      return _skipSurahNext(
+        state,
+        timeline: timeline,
+        ayahRepeatCount: ayahCount,
+        rangeRepeatCount: rangeCount,
+      );
+    case SkipSurahPrevious():
+      return _skipSurahPrevious(
+        state,
+        timeline: timeline,
+        ayahRepeatCount: ayahCount,
+        rangeRepeatCount: rangeCount,
+      );
     case SetSleep():
       return _setSleep(state, event);
     case AudioPosition():
@@ -74,6 +99,10 @@ RecitationTransition transition(
       return _onAudioCompleted(state, timeline: timeline);
     case AudioError():
       return _onAudioError(state, event);
+    case PendingSeekTimeout():
+      return _onPendingSeekTimeout(state, event);
+    case SeekFailed():
+      return _onSeekFailed(state, event);
     case AlertSuspend():
       return _alertSuspend(state);
     case AlertResume():
@@ -177,22 +206,53 @@ final class Seek extends RecitationEvent {
   final Duration position;
 }
 
+/// Clears a stale [RecitationState.pendingSeekTarget] when mpv never lands
+/// near the requested position.
+final class PendingSeekTimeout extends RecitationEvent {
+  /// Creates [PendingSeekTimeout].
+  const PendingSeekTimeout({this.revertTo});
+
+  /// Last confirmed mpv position to restore when the seek never lands.
+  final Duration? revertTo;
+}
+
+/// Seek did not land in mpv — revert optimistic UI state.
+final class SeekFailed extends RecitationEvent {
+  /// Creates [SeekFailed].
+  const SeekFailed({required this.revertTo});
+
+  /// Last confirmed mpv position before the failed seek.
+  final Duration revertTo;
+}
+
 /// Stop playback but keep the session visible.
 final class Stop extends RecitationEvent {
   /// Creates [Stop].
   const Stop();
 }
 
-/// Advance to the next ayah (within range) or the next surah.
-final class SkipNext extends RecitationEvent {
-  /// Creates [SkipNext].
-  const SkipNext();
+/// Advance to the next ayah within the current surah/range.
+final class SkipAyahNext extends RecitationEvent {
+  /// Creates [SkipAyahNext].
+  const SkipAyahNext();
 }
 
-/// Go back to the previous ayah (within range) or the previous surah.
-final class SkipPrevious extends RecitationEvent {
-  /// Creates [SkipPrevious].
-  const SkipPrevious();
+/// Go back to the previous ayah within the current surah/range.
+final class SkipAyahPrevious extends RecitationEvent {
+  /// Creates [SkipAyahPrevious].
+  const SkipAyahPrevious();
+}
+
+/// Load the next available surah in the moshaf.
+final class SkipSurahNext extends RecitationEvent {
+  /// Creates [SkipSurahNext].
+  const SkipSurahNext();
+}
+
+/// Load the previous available surah in the moshaf.
+final class SkipSurahPrevious extends RecitationEvent {
+  /// Creates [SkipSurahPrevious].
+  const SkipSurahPrevious();
 }
 
 /// Change sleep timer.
@@ -294,6 +354,7 @@ final class RecitationSettingsLoaded extends RecitationEvent {
     this.surah,
     this.rangeFrom,
     this.rangeTo,
+    this.resumeFrom,
   });
 
   final Reciter? reciter;
@@ -301,6 +362,7 @@ final class RecitationSettingsLoaded extends RecitationEvent {
   final int? surah;
   final AyahReference? rangeFrom;
   final AyahReference? rangeTo;
+  final Duration? resumeFrom;
 }
 
 /// Gapless playlist advanced to a new surah.
@@ -434,6 +496,7 @@ final class PersistPlaybackState extends RecitationEffect {
     this.rangeFromAyah,
     this.rangeToSurah,
     this.rangeToAyah,
+    this.positionMs,
   });
 
   final int? surah;
@@ -443,6 +506,13 @@ final class PersistPlaybackState extends RecitationEffect {
   final int? rangeFromAyah;
   final int? rangeToSurah;
   final int? rangeToAyah;
+  final int? positionMs;
+}
+
+/// Clears the saved playback position without touching surah/range metadata.
+final class ClearPlaybackPosition extends RecitationEffect {
+  /// Creates [ClearPlaybackPosition].
+  const ClearPlaybackPosition();
 }
 
 /// Load the current and next surah as a gapless playlist so the following
@@ -460,6 +530,132 @@ final class LoadGaplessContinuation extends RecitationEffect {
   final Moshaf moshaf;
   final int fromSurah;
   final int toSurah;
+}
+
+/// Load the next surah-local segment in a global multi-surah range.
+final class LoadNextRangeSegment extends RecitationEffect {
+  /// Creates [LoadNextRangeSegment].
+  const LoadNextRangeSegment({
+    required this.reciter,
+    required this.moshaf,
+    required this.globalFrom,
+    required this.globalTo,
+    required this.currentSurah,
+  });
+
+  final Reciter reciter;
+  final Moshaf moshaf;
+  final AyahReference globalFrom;
+  final AyahReference globalTo;
+  final int currentSurah;
+}
+
+/// Native mpv repeat mode applied via [SetNativeLoop].
+enum NativeLoopMode {
+  /// No native file/playlist looping.
+  off,
+
+  /// Loop the current file (native mpv file loop).
+  file,
+}
+
+/// Sets native mpv repeat mode.
+final class SetNativeLoop extends RecitationEffect {
+  /// Creates [SetNativeLoop].
+  const SetNativeLoop(this.mode);
+
+  final NativeLoopMode mode;
+}
+
+/// Clears armed A-B loop markers without reloading audio.
+final class ClearNativeAbLoop extends RecitationEffect {
+  /// Creates [ClearNativeAbLoop].
+  const ClearNativeAbLoop();
+}
+
+/// Resets native loop/gapless/prefetch to safe defaults.
+final class ResetNativePlaybackModes extends RecitationEffect {
+  /// Creates [ResetNativePlaybackModes].
+  const ResetNativePlaybackModes();
+}
+
+/// Pauses at EOF while keeping the loaded track and media session intact.
+final class PauseAtEof extends RecitationEffect {
+  /// Creates [PauseAtEof].
+  const PauseAtEof();
+}
+
+/// Refreshes native A-B loop after a mid-playback repeat-count change.
+final class RefreshAbLoop extends RecitationEffect {
+  /// Creates [RefreshAbLoop].
+  const RefreshAbLoop({
+    required this.reciter,
+    required this.moshaf,
+    required this.surah,
+    required this.ayah,
+    required this.repeatCount,
+  });
+
+  final Reciter reciter;
+  final Moshaf moshaf;
+  final int surah;
+  final int ayah;
+  final int repeatCount;
+}
+
+// ---------------------------------------------------------------------------
+// Native loop helpers
+// ---------------------------------------------------------------------------
+
+bool _eligibleForNativeFileLoop(RecitationState state) {
+  return state.isWholeSurah && state.ayahRepeatCount <= 1;
+}
+
+bool _shouldUseNativeFileLoop(RecitationState state) {
+  return _eligibleForNativeFileLoop(state) && state.repeatsRemaining > 1;
+}
+
+List<RecitationEffect> _nativeLoopEffectsForSession(
+  RecitationState state, {
+  int? ayah,
+  bool resetModes = true,
+  bool clearAbLoop = true,
+}) {
+  final effects = <RecitationEffect>[];
+  if (resetModes) {
+    effects.add(const ResetNativePlaybackModes());
+  }
+  if (clearAbLoop) {
+    effects.add(const ClearNativeAbLoop());
+  }
+  if (_shouldUseNativeFileLoop(state)) {
+    effects.add(const SetNativeLoop(NativeLoopMode.file));
+  } else {
+    effects.add(const SetNativeLoop(NativeLoopMode.off));
+  }
+  final loopAyah = ayah ?? state.currentAyah ?? state.currentSegment?.startAyah;
+  if (state.ayahRepeatCount > 1 &&
+      loopAyah != null &&
+      state.reciter != null &&
+      state.moshaf != null &&
+      state.surah != null) {
+    effects.add(
+      LoadAyahLoop(
+        reciter: state.reciter!,
+        moshaf: state.moshaf!,
+        surah: state.surah!,
+        ayah: loopAyah,
+      ),
+    );
+  }
+  return effects;
+}
+
+List<RecitationEffect> _terminalEndedEffects() {
+  return const [
+    SetNativeLoop(NativeLoopMode.off),
+    PauseAtEof(),
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -491,17 +687,21 @@ RecitationTransition _playSurah(
     ayahRepeatsRemaining: ayahRepeatCount,
     ayahRepeatCount: ayahRepeatCount,
     ayahLoopExiting: false,
+    userStopped: false,
+    pendingSeekTarget: null,
   );
   return (
     state: next,
     effects: [
       const CancelSleepTimer(),
+      ..._nativeLoopEffectsForSession(next, ayah: firstAyah),
       LoadSurah(
         reciter: event.reciter,
         moshaf: event.moshaf,
         surah: event.surah,
         seekTo: event.resumeFrom,
       ),
+      PersistPlaybackState(surah: event.surah),
     ],
   );
 }
@@ -537,12 +737,15 @@ RecitationTransition _playRange(
     ayahRepeatsRemaining: ayahRepeatCount,
     ayahRepeatCount: ayahRepeatCount,
     ayahLoopExiting: false,
+    userStopped: false,
+    pendingSeekTarget: null,
   );
 
   return (
     state: next,
     effects: [
       const CancelSleepTimer(),
+      ..._nativeLoopEffectsForSession(next, ayah: segStart),
       LoadRange(
         reciter: event.reciter,
         moshaf: event.moshaf,
@@ -563,19 +766,117 @@ RecitationTransition _playRange(
   );
 }
 
+// ---------------------------------------------------------------------------
+// Navigation helpers
+// ---------------------------------------------------------------------------
+
+const _pendingSeekToleranceMs = 500;
+
+bool _positionNearTarget(Duration position, Duration target) {
+  return (position.inMilliseconds - target.inMilliseconds).abs() <=
+      _pendingSeekToleranceMs;
+}
+
+int? _currentAyahOrGuess(
+  RecitationState state,
+  RecitationTimeline timeline,
+) {
+  return state.currentAyah ?? timeline.ayahAt(state.position);
+}
+
+int _firstPlayableAyah(RecitationState state) {
+  return state.currentSegment?.startAyah ?? 1;
+}
+
+int? _lastPlayableAyah(
+  RecitationState state,
+  RecitationTimeline timeline,
+) {
+  final segEnd = state.currentSegment?.endAyah;
+  if (segEnd != null) return segEnd;
+  final ayat = timeline.timing?.ayat.where((a) => a.ayah > 0).toList();
+  return ayat?.lastOrNull?.ayah;
+}
+
+RecitationTransition _navigateToAyah(
+  RecitationState state, {
+  required int targetAyah,
+  required RecitationTimeline timeline,
+}) {
+  final startRaw = timeline.startOfAyah(targetAyah);
+  if (startRaw == null) {
+    return (state: state, effects: const []);
+  }
+
+  final start = timeline.clampToRange(startRaw);
+  final surah = state.surah;
+  final reciter = state.reciter;
+  final moshaf = state.moshaf;
+
+  var next = state.copyWith(
+    position: start,
+    currentAyah: targetAyah,
+    ayahLoopExiting: false,
+    pendingSeekTarget: start,
+    ayahRepeatsRemaining: state.ayahRepeatCount > 1
+        ? state.ayahRepeatCount
+        : state.ayahRepeatsRemaining,
+  );
+
+  if (state.isEnded) {
+    next = next.copyWith(
+      status: start > Duration.zero
+          ? RecitationStatus.paused
+          : RecitationStatus.ended,
+    );
+  }
+
+  final effects = <RecitationEffect>[SeekAudio(start)];
+  if (state.ayahRepeatCount > 1 &&
+      reciter != null &&
+      moshaf != null &&
+      surah != null) {
+    effects.add(
+      LoadAyahLoop(
+        reciter: reciter,
+        moshaf: moshaf,
+        surah: surah,
+        ayah: targetAyah,
+      ),
+    );
+  }
+  if (surah != null) {
+    effects.add(HighlightAyah(surah: surah, ayah: targetAyah));
+  }
+
+  return (state: next, effects: effects);
+}
+
 RecitationTransition _togglePlayPause(
   RecitationState state, {
   required RecitationTimeline timeline,
+  required int ayahRepeatCount,
+  required int rangeRepeatCount,
+  bool trackLoaded = false,
+  bool? nativePlayWhenReady,
 }) {
-  if (state.isLoading) return (state: state, effects: const []);
-
-  if (state.isPlaying) {
-    return (state: state, effects: const [PauseAudio()]);
+  if (state.isEnded) {
+    return _replaySelection(
+      state,
+      timeline: timeline,
+      ayahRepeatCount: ayahRepeatCount,
+      rangeRepeatCount: rangeRepeatCount,
+    );
   }
 
-  if (state.isPaused) {
-    final atEnd = state.position >= state.duration - const Duration(milliseconds: 500) &&
-        state.duration > Duration.zero;
+  // Track loaded in mpv: follow native playWhenReady (never unload+reload).
+  if (trackLoaded && nativePlayWhenReady != null) {
+    if (nativePlayWhenReady) {
+      return (state: state, effects: const [PauseAudio()]);
+    }
+    final atEnd =
+        state.position >= state.duration - const Duration(milliseconds: 500) &&
+            state.duration > Duration.zero;
     if (atEnd) {
       return (
         state: state.copyWith(position: timeline.rangeStart),
@@ -585,7 +886,80 @@ RecitationTransition _togglePlayPause(
     return (state: state, effects: const [ResumeAudio()]);
   }
 
-  // Idle/error: re-load the current selection.
+  if (state.isLoading) return (state: state, effects: const []);
+
+  if (state.userStopped) {
+    return _replaySelection(
+      state,
+      timeline: timeline,
+      ayahRepeatCount: ayahRepeatCount,
+      rangeRepeatCount: rangeRepeatCount,
+    );
+  }
+
+  if (state.isPlaying) {
+    return (state: state, effects: const [PauseAudio()]);
+  }
+
+  if (state.isPaused) {
+    final atEnd =
+        state.position >= state.duration - const Duration(milliseconds: 500) &&
+            state.duration > Duration.zero;
+    if (atEnd) {
+      return (
+        state: state.copyWith(position: timeline.rangeStart),
+        effects: [SeekAudio(timeline.rangeStart), const ResumeAudio()],
+      );
+    }
+    return (state: state, effects: const [ResumeAudio()]);
+  }
+
+  // Idle/error with no loaded track: start playback.
+  final reciter = state.reciter;
+  final moshaf = state.moshaf;
+  final surah = state.surah;
+  if (reciter == null || moshaf == null || surah == null) {
+    return (state: state, effects: const []);
+  }
+
+  final resumeFrom =
+      state.position > Duration.zero ? state.position : null;
+
+  if (state.isRange && state.currentSegmentRefs != null) {
+    return _playRange(
+      state,
+      _playRangeFromState(
+        state,
+        reciter: reciter,
+        moshaf: moshaf,
+        resumeFrom: resumeFrom,
+      ),
+      timeline: timeline,
+      ayahRepeatCount: ayahRepeatCount,
+      rangeRepeatCount: rangeRepeatCount,
+    );
+  }
+
+  return _playSurah(
+    state,
+    PlaySurah(
+      reciter: reciter,
+      moshaf: moshaf,
+      surah: surah,
+      resumeFrom: resumeFrom,
+    ),
+    timeline: timeline,
+    ayahRepeatCount: ayahRepeatCount,
+    rangeRepeatCount: rangeRepeatCount,
+  );
+}
+
+RecitationTransition _replaySelection(
+  RecitationState state, {
+  required RecitationTimeline timeline,
+  required int ayahRepeatCount,
+  required int rangeRepeatCount,
+}) {
   final reciter = state.reciter;
   final moshaf = state.moshaf;
   final surah = state.surah;
@@ -598,8 +972,8 @@ RecitationTransition _togglePlayPause(
       state,
       _playRangeFromState(state, reciter: reciter, moshaf: moshaf),
       timeline: timeline,
-      ayahRepeatCount: state.ayahRepeatCount.clamp(1, 99),
-      rangeRepeatCount: state.repeatsRemaining.clamp(1, 99),
+      ayahRepeatCount: ayahRepeatCount,
+      rangeRepeatCount: rangeRepeatCount,
     );
   }
 
@@ -607,8 +981,8 @@ RecitationTransition _togglePlayPause(
     state,
     PlaySurah(reciter: reciter, moshaf: moshaf, surah: surah),
     timeline: timeline,
-    ayahRepeatCount: state.ayahRepeatCount.clamp(1, 99),
-    rangeRepeatCount: state.repeatsRemaining.clamp(1, 99),
+    ayahRepeatCount: ayahRepeatCount,
+    rangeRepeatCount: rangeRepeatCount,
   );
 }
 
@@ -617,9 +991,43 @@ RecitationTransition _seek(
   Seek event, {
   required RecitationTimeline timeline,
 }) {
+  if (state.isLoading || state.timelinePending) {
+    var next = state.copyWith(
+      position: event.position,
+      pendingSeekTarget: event.position,
+    );
+    if (state.isEnded) {
+      next = next.copyWith(
+        status: event.position > Duration.zero
+            ? RecitationStatus.paused
+            : RecitationStatus.ended,
+      );
+    }
+    return (
+      state: next,
+      effects: [SeekAudio(event.position)],
+    );
+  }
+
   final clamped = timeline.clampToRange(event.position);
+  final ayah = timeline.ayahAt(clamped);
+  if (ayah != null && timeline.startOfAyah(ayah) != null) {
+    return _navigateToAyah(state, targetAyah: ayah, timeline: timeline);
+  }
+
+  var next = state.copyWith(
+    position: clamped,
+    pendingSeekTarget: clamped,
+  );
+  if (state.isEnded) {
+    next = next.copyWith(
+      status: clamped > Duration.zero
+          ? RecitationStatus.paused
+          : RecitationStatus.ended,
+    );
+  }
   return (
-    state: state.copyWith(position: clamped),
+    state: next,
     effects: [SeekAudio(clamped)],
   );
 }
@@ -634,14 +1042,60 @@ RecitationTransition _stop(RecitationState state) {
       active: true,
       sleep: RecitationSleep.off,
       userStopped: true,
+      ayahLoopExiting: false,
+      ayahRepeatsRemaining: state.ayahRepeatCount,
+      pendingSeekTarget: null,
     ),
-    effects: const [StopAudio()],
+    effects: const [
+      StopAudio(),
+      ClearPlaybackPosition(),
+      ResetNativePlaybackModes(),
+      ClearNativeAbLoop(),
+    ],
   );
 }
 
-RecitationTransition _skipNext(
+RecitationTransition _skipAyahNext(
   RecitationState state, {
   required RecitationTimeline timeline,
+}) {
+  final current = _currentAyahOrGuess(state, timeline);
+  if (current == null) return (state: state, effects: const []);
+
+  final last = _lastPlayableAyah(state, timeline);
+  if (last == null || current >= last) {
+    return (state: state, effects: const []);
+  }
+
+  return _navigateToAyah(
+    state,
+    targetAyah: current + 1,
+    timeline: timeline,
+  );
+}
+
+RecitationTransition _skipAyahPrevious(
+  RecitationState state, {
+  required RecitationTimeline timeline,
+}) {
+  final current = _currentAyahOrGuess(state, timeline);
+  if (current == null) return (state: state, effects: const []);
+
+  final first = _firstPlayableAyah(state);
+  if (current <= first) return (state: state, effects: const []);
+
+  return _navigateToAyah(
+    state,
+    targetAyah: current - 1,
+    timeline: timeline,
+  );
+}
+
+RecitationTransition _skipSurahNext(
+  RecitationState state, {
+  required RecitationTimeline timeline,
+  required int ayahRepeatCount,
+  required int rangeRepeatCount,
 }) {
   final reciter = state.reciter;
   final moshaf = state.moshaf;
@@ -650,27 +1104,13 @@ RecitationTransition _skipNext(
     return (state: state, effects: const []);
   }
 
-  // Within a range: advance to the next ayah if not past the segment end.
-  if (state.isRange && state.currentAyah != null) {
-    final endAyah = state.currentSegment?.endAyah;
-    if (endAyah != null) {
-      final nextAyah = state.currentAyah! + 1;
-      if (nextAyah <= endAyah) {
-        final start = timeline.startOfAyah(nextAyah);
-        if (start != null) {
-          return (
-            state: state.copyWith(currentAyah: nextAyah, position: start),
-            effects: [SeekAudio(start)],
-          );
-        }
-      }
-    }
-  }
-
-  // Otherwise: jump to the next available surah the moshaf has.
   var nextSurah = surah + 1;
   while (nextSurah <= 114 && !moshaf.hasSurah(nextSurah)) {
     nextSurah++;
+  }
+  final rangeTo = state.rangeTo;
+  if (rangeTo != null && nextSurah > rangeTo.surah) {
+    return (state: state, effects: const []);
   }
   if (nextSurah > 114 || !moshaf.hasSurah(nextSurah)) {
     return (state: state, effects: const []);
@@ -679,14 +1119,16 @@ RecitationTransition _skipNext(
     state,
     PlaySurah(reciter: reciter, moshaf: moshaf, surah: nextSurah),
     timeline: timeline,
-    ayahRepeatCount: state.ayahRepeatCount.clamp(1, 99),
-    rangeRepeatCount: state.repeatsRemaining.clamp(1, 99),
+    ayahRepeatCount: ayahRepeatCount,
+    rangeRepeatCount: rangeRepeatCount,
   );
 }
 
-RecitationTransition _skipPrevious(
+RecitationTransition _skipSurahPrevious(
   RecitationState state, {
   required RecitationTimeline timeline,
+  required int ayahRepeatCount,
+  required int rangeRepeatCount,
 }) {
   final reciter = state.reciter;
   final moshaf = state.moshaf;
@@ -695,28 +1137,13 @@ RecitationTransition _skipPrevious(
     return (state: state, effects: const []);
   }
 
-  // Within a range: go back to the previous ayah if not before the segment
-  // start.
-  if (state.isRange && state.currentAyah != null) {
-    final startAyah = state.currentSegment?.startAyah;
-    if (startAyah != null) {
-      final prevAyah = state.currentAyah! - 1;
-      if (prevAyah >= startAyah) {
-        final start = timeline.startOfAyah(prevAyah);
-        if (start != null) {
-          return (
-            state: state.copyWith(currentAyah: prevAyah, position: start),
-            effects: [SeekAudio(start)],
-          );
-        }
-      }
-    }
-  }
-
-  // Otherwise: jump to the previous available surah the moshaf has.
   var prevSurah = surah - 1;
   while (prevSurah >= 1 && !moshaf.hasSurah(prevSurah)) {
     prevSurah--;
+  }
+  final rangeFrom = state.rangeFrom;
+  if (rangeFrom != null && prevSurah < rangeFrom.surah) {
+    return (state: state, effects: const []);
   }
   if (prevSurah < 1 || !moshaf.hasSurah(prevSurah)) {
     return (state: state, effects: const []);
@@ -725,8 +1152,8 @@ RecitationTransition _skipPrevious(
     state,
     PlaySurah(reciter: reciter, moshaf: moshaf, surah: prevSurah),
     timeline: timeline,
-    ayahRepeatCount: state.ayahRepeatCount.clamp(1, 99),
-    rangeRepeatCount: state.repeatsRemaining.clamp(1, 99),
+    ayahRepeatCount: ayahRepeatCount,
+    rangeRepeatCount: rangeRepeatCount,
   );
 }
 
@@ -739,7 +1166,19 @@ RecitationTransition _onAudioPosition(
   AudioPosition event, {
   required RecitationTimeline timeline,
 }) {
+  if (state.userStopped || state.isIdle) {
+    return (state: state, effects: const []);
+  }
+
   final effects = <RecitationEffect>[];
+
+  final pending = state.pendingSeekTarget;
+  if (pending != null && !_positionNearTarget(event.position, pending)) {
+    return (state: state, effects: effects);
+  }
+  if (pending != null) {
+    state = state.copyWith(pendingSeekTarget: null);
+  }
 
   if (state.isPlaying) {
     // Sleep boundary is evaluated against the ayah that was current when the
@@ -756,8 +1195,8 @@ RecitationTransition _onAudioPosition(
       );
     }
 
-    // Whole range/surah boundary (skipped while per-ayah A-B loop is active).
-    if (state.ayahRepeatCount <= 1) {
+    // Range boundary only (whole surah ends via natural EOF).
+    if (state.ayahRepeatCount <= 1 && state.isRange) {
       final endBoundary = timeline.rangeEnd;
       if (event.position >= endBoundary && state.duration > Duration.zero) {
         return _handleSelectionEnd(
@@ -780,10 +1219,18 @@ RecitationTransition _onAudioPosition(
   }
 
   // Per-ayah repeat: pin currentAyah so position ticks never regress the
-  // highlight while mpv loops or overshoots past B.
+  // highlight while mpv loops or overshoots past B. Detect loop wraps to
+  // decrement [ayahRepeatsRemaining] for live UI repeat counters.
   if (state.ayahRepeatCount > 1) {
+    var ayahRepeatsRemaining = state.ayahRepeatsRemaining;
+    if (_detectAyahLoopWrap(state, event.position, timeline)) {
+      ayahRepeatsRemaining = max(1, ayahRepeatsRemaining - 1);
+    }
     return (
-      state: state.copyWith(position: event.position),
+      state: state.copyWith(
+        position: event.position,
+        ayahRepeatsRemaining: ayahRepeatsRemaining,
+      ),
       effects: effects,
     );
   }
@@ -803,6 +1250,33 @@ RecitationTransition _onAudioPosition(
   }
 
   return (state: next, effects: effects);
+}
+
+/// True when mpv's A-B loop wrapped the current ayah (position jumped back).
+bool _detectAyahLoopWrap(
+  RecitationState state,
+  Duration newPosition,
+  RecitationTimeline timeline,
+) {
+  final ayah = state.currentAyah;
+  if (ayah == null || state.ayahRepeatsRemaining <= 1) return false;
+
+  final start = timeline.startOfAyah(ayah);
+  final end = timeline.endOfAyah(ayah);
+  if (start == null || end == null) return false;
+
+  final prevMs = state.position.inMilliseconds;
+  final newMs = newPosition.inMilliseconds;
+  final startMs = start.inMilliseconds;
+  final endMs = end.inMilliseconds;
+  final span = endMs - startMs;
+  if (span <= 0) return false;
+
+  final wasNearEnd = prevMs >= startMs + (span * 0.55);
+  final isNearStart = newMs <= startMs + (span * 0.45);
+  final jumpedBack = newMs < prevMs - 80;
+
+  return wasNearEnd && isNearStart && jumpedBack;
 }
 
 Duration? _sleepBoundary(
@@ -876,6 +1350,7 @@ RecitationTransition _onGaplessTrackAdvanced(
       duration: Duration.zero,
       status: RecitationStatus.playing,
       active: true,
+      pendingSeekTarget: null,
     ),
     effects: const [],
   );
@@ -890,6 +1365,36 @@ RecitationTransition _onAudioError(
       status: RecitationStatus.error,
       error: event.message,
       currentAyah: null,
+      pendingSeekTarget: null,
+    ),
+    effects: const [],
+  );
+}
+
+RecitationTransition _onPendingSeekTimeout(
+  RecitationState state,
+  PendingSeekTimeout event,
+) {
+  if (state.pendingSeekTarget == null) {
+    return (state: state, effects: const []);
+  }
+  return (
+    state: state.copyWith(
+      pendingSeekTarget: null,
+      position: event.revertTo ?? state.position,
+    ),
+    effects: const [],
+  );
+}
+
+RecitationTransition _onSeekFailed(
+  RecitationState state,
+  SeekFailed event,
+) {
+  return (
+    state: state.copyWith(
+      pendingSeekTarget: null,
+      position: event.revertTo,
     ),
     effects: const [],
   );
@@ -951,7 +1456,6 @@ RecitationTransition _advanceAfterAyahLoop(
       position: nextStart,
     ),
     effects: [
-      SeekAudio(nextStart),
       LoadAyahLoop(
         reciter: reciter,
         moshaf: moshaf,
@@ -968,29 +1472,86 @@ RecitationTransition _handleSelectionEnd(
   required RecitationTimeline timeline,
 }) {
   if (state.repeatsRemaining > 1) {
+    if (_shouldUseNativeFileLoop(state)) {
+      return (
+        state: state.copyWith(
+          repeatsRemaining: state.repeatsRemaining - 1,
+          ayahLoopExiting: false,
+          pendingSeekTarget: null,
+        ),
+        effects: const [],
+      );
+    }
     return _repeatSelection(state, timeline: timeline);
   }
 
-  // Whole-surah presets that start at ayah 1 are untimed-compatible.
-  final isWholeSurahOrFromAyah1 =
-      state.isWholeSurah || (state.rangeFrom?.ayah == 1);
+  final endedPosition =
+      state.duration > Duration.zero ? state.duration : state.position;
 
-  if (isWholeSurahOrFromAyah1) {
-    // No continuation for whole-surah presets.
+  // Terminal: whole surah playback.
+  if (state.isWholeSurah) {
     return (
       state: state.copyWith(
-        status: RecitationStatus.paused,
-        position: timeline.rangeEnd,
+        status: RecitationStatus.ended,
+        position: endedPosition,
         currentAyah: null,
+        ayahLoopExiting: false,
+        pendingSeekTarget: null,
       ),
-      effects: const [PauseAudio()],
+      effects: _terminalEndedEffects(),
     );
   }
 
-  // continueFromHere with from.ayah > 1 — try next surah if possible.
-  final nextSurah = (state.surah ?? 0) + 1;
+  // Bounded multi-surah range — advance to the next surah-local segment.
+  final rangeFrom = state.rangeFrom;
+  final rangeTo = state.rangeTo;
+  final surah = state.surah;
   final reciter = state.reciter;
   final moshaf = state.moshaf;
+  if (rangeFrom != null &&
+      rangeTo != null &&
+      surah != null &&
+      reciter != null &&
+      moshaf != null &&
+      surah < rangeTo.surah) {
+    final loading = state.copyWith(
+      status: RecitationStatus.loading,
+      currentAyah: null,
+      position: Duration.zero,
+      ayahLoopExiting: false,
+      pendingSeekTarget: null,
+    );
+    return (
+      state: loading,
+      effects: [
+        ..._nativeLoopEffectsForSession(loading),
+        LoadNextRangeSegment(
+          reciter: reciter,
+          moshaf: moshaf,
+          globalFrom: rangeFrom,
+          globalTo: rangeTo,
+          currentSurah: surah,
+        ),
+      ],
+    );
+  }
+
+  // Terminal: bounded ayah range finished.
+  if (state.isRange && rangeTo != null) {
+    return (
+      state: state.copyWith(
+        status: RecitationStatus.ended,
+        position: endedPosition,
+        currentAyah: null,
+        ayahLoopExiting: false,
+        pendingSeekTarget: null,
+      ),
+      effects: _terminalEndedEffects(),
+    );
+  }
+
+  // Open-ended continueFromHere — try next surah if possible.
+  final nextSurah = (state.surah ?? 0) + 1;
   if (reciter == null ||
       moshaf == null ||
       nextSurah < 1 ||
@@ -1001,23 +1562,27 @@ RecitationTransition _handleSelectionEnd(
         status: RecitationStatus.error,
         error: 'No next surah available',
         currentAyah: null,
+        pendingSeekTarget: null,
       ),
       effects: const [],
     );
   }
 
+  final gapless = state.copyWith(
+    surah: nextSurah,
+    rangeFrom: null,
+    rangeTo: null,
+    currentAyah: null,
+    position: Duration.zero,
+    status: RecitationStatus.loading,
+    repeatsRemaining: state.repeatsRemaining,
+    ayahRepeatsRemaining: state.ayahRepeatCount,
+    pendingSeekTarget: null,
+  );
   return (
-    state: state.copyWith(
-      surah: nextSurah,
-      rangeFrom: null,
-      rangeTo: null,
-      currentAyah: null,
-      position: Duration.zero,
-      status: RecitationStatus.loading,
-      repeatsRemaining: state.repeatsRemaining,
-      ayahRepeatsRemaining: state.repeatsRemaining,
-    ),
+    state: gapless,
     effects: [
+      ..._nativeLoopEffectsForSession(gapless),
       LoadGaplessContinuation(
         reciter: reciter,
         moshaf: moshaf,
@@ -1043,11 +1608,12 @@ RecitationTransition _repeatSelection(
 
   final next = state.copyWith(
     repeatsRemaining: state.repeatsRemaining - 1,
-    ayahRepeatsRemaining: state.repeatsRemaining - 1,
+    ayahRepeatsRemaining: state.ayahRepeatCount,
     position: start,
     currentAyah: firstAyah,
     status: RecitationStatus.loading,
     ayahLoopExiting: false,
+    pendingSeekTarget: null,
   );
 
   if (state.isRange && state.currentSegmentRefs != null) {
@@ -1055,6 +1621,7 @@ RecitationTransition _repeatSelection(
     return (
       state: next,
       effects: [
+        ..._nativeLoopEffectsForSession(next, ayah: firstAyah),
         LoadRange(
           reciter: reciter,
           moshaf: moshaf,
@@ -1069,6 +1636,7 @@ RecitationTransition _repeatSelection(
   return (
     state: next,
     effects: [
+      ..._nativeLoopEffectsForSession(next, ayah: firstAyah),
       LoadSurah(
         reciter: reciter,
         moshaf: moshaf,
@@ -1143,14 +1711,41 @@ RecitationTransition _setRepeatCounts(
 ) {
   final ayah = event.ayahRepeatCount?.clamp(1, 99);
   final range = event.rangeRepeatCount?.clamp(1, 99);
-  return (
-    state: state.copyWith(
-      ayahRepeatCount: ayah ?? state.ayahRepeatCount,
-      repeatsRemaining: range ?? state.repeatsRemaining,
-      ayahRepeatsRemaining: ayah ?? state.ayahRepeatsRemaining,
-    ),
-    effects: const [],
+  final next = state.copyWith(
+    ayahRepeatCount: ayah ?? state.ayahRepeatCount,
+    repeatsRemaining: range ?? state.repeatsRemaining,
+    ayahRepeatsRemaining: ayah ?? state.ayahRepeatsRemaining,
   );
+
+  final effects = <RecitationEffect>[];
+  final activePlayback =
+      next.isPlaying || next.isPaused || next.isBuffering || next.isLoading;
+  if (activePlayback && next.reciter != null && next.moshaf != null) {
+    effects.addAll(
+      _nativeLoopEffectsForSession(
+        next,
+        ayah: next.currentAyah ?? next.currentSegment?.startAyah,
+      ),
+    );
+    final loopAyah = next.currentAyah ?? next.currentSegment?.startAyah;
+    if (next.ayahRepeatCount > 1 &&
+        loopAyah != null &&
+        next.surah != null &&
+        ayah != null &&
+        ayah != state.ayahRepeatCount) {
+      effects.add(
+        RefreshAbLoop(
+          reciter: next.reciter!,
+          moshaf: next.moshaf!,
+          surah: next.surah!,
+          ayah: loopAyah,
+          repeatCount: next.ayahRepeatCount,
+        ),
+      );
+    }
+  }
+
+  return (state: next, effects: effects);
 }
 
 RecitationTransition _settingsLoaded(
@@ -1164,6 +1759,7 @@ RecitationTransition _settingsLoaded(
       surah: event.surah,
       rangeFrom: event.rangeFrom,
       rangeTo: event.rangeTo,
+      position: event.resumeFrom ?? Duration.zero,
       active: true,
       error: null,
     ),

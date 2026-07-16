@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
 
 /// Renders a Juz QCF4 glyph using the mushaf basmalah font.
 class JuzNameText extends StatelessWidget {

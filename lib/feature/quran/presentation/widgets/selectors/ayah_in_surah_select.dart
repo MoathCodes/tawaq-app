@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -8,10 +9,32 @@ import 'package:tawaq/core/widgets/numeric_step_button.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_input_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_range_formatters.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
+
+/// [TextInputFormatter] for ayah input that converts Hindu-Arabic numerals and
+/// filters non-digit characters.
+class AyahInputFormatter extends TextInputFormatter {
+  const AyahInputFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) return newValue;
+
+    final normalized = normalizeAyahInput(newValue.text);
+    if (normalized != newValue.text) {
+      return TextEditingValue(
+        text: normalized,
+        selection: TextSelection.collapsed(offset: normalized.length),
+      );
+    }
+    return newValue;
+  }
+}
 
 /// Inline ayah input within a surah for range endpoint editing.
 class AyahInSurahSelect extends HookConsumerWidget {

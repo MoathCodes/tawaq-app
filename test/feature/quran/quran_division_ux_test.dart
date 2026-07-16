@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_number_search.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_search.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/surah_selector.dart';
 import 'package:tawaq/l10n/app_localizations_en.dart';
 import 'hizb_selector_subtitle_test_helper.dart';
@@ -76,7 +77,7 @@ void main() {
 
     test('prefix match on Arabic surah name', () {
       final surah8 = controller.getSurahSync(8)!;
-      final simplified = normalizeArabicForSurahSearch(
+      final simplified = normalizeArabicForSearch(
         surah8.nameArabicSimplified!,
       );
       String? matchingQuery;
@@ -114,6 +115,31 @@ void main() {
         ).length,
         hizbs.length,
       );
+    });
+  });
+
+  group('searchSurahs', () {
+    test('typed ال matches surahs with alef wasla in the name', () {
+      final surahs = [
+        Surah(
+          number: 2,
+          glyph: 'S2',
+          hasBasmalah: true,
+          nameArabic: 'سُورَةُ ٱلْبَقَرَةِ',
+          nameEnglish: 'Al-Baqara',
+        ),
+        Surah(
+          number: 8,
+          glyph: 'S8',
+          hasBasmalah: true,
+          nameArabic: 'سُورَةُ ٱلْأَنفَالِ',
+          nameEnglish: 'Al-Anfaal',
+        ),
+      ];
+
+      final results = searchSurahs(surahs, 'ال').map((s) => s.number).toList();
+
+      expect(results, containsAll([2, 8]));
     });
   });
 

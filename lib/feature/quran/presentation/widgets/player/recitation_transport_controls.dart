@@ -53,12 +53,14 @@ class RecitationPlayButton extends StatelessWidget {
     required this.isPlaying,
     required this.isLoading,
     required this.onPress,
+    this.isEnded = false,
     this.density = RecitationTransportDensity.compact,
     super.key,
   });
 
   final bool isPlaying;
   final bool isLoading;
+  final bool isEnded;
   final Future<void> Function() onPress;
   final RecitationTransportDensity density;
 
@@ -99,7 +101,11 @@ class RecitationPlayButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: Icon(
-          isPlaying ? FLucideIcons.pause : FLucideIcons.play,
+          isEnded
+              ? FLucideIcons.rotateCcw
+              : isPlaying
+              ? FLucideIcons.pause
+              : FLucideIcons.play,
           size: iconSize,
           color: colors.primaryForeground,
         ),
@@ -150,16 +156,89 @@ SkipControl rightSkipControl({
 }) {
   if (isRtl) {
     return (
-      icon: FLucideIcons.skipBack,
+      icon:  FLucideIcons.skipBack,
       label: previousLabel,
       onPress: skipPrevious,
     );
   }
   return (
-    icon: FLucideIcons.skipForward,
+    icon:  FLucideIcons.skipForward,
     label: nextLabel,
     onPress: skipNext,
   );
+}
+
+/// Drawer transport with optional ayah-level skips flanking surah-level skips.
+class RecitationDrawerTransportControls extends StatelessWidget {
+  const RecitationDrawerTransportControls({
+    required this.isPlaying,
+    required this.isLoading,
+    required this.onPlayPause,
+    required this.surahLeftSlot,
+    required this.surahRightSlot,
+    this.ayahLeftSlot,
+    this.ayahRightSlot,
+    this.isEnded = false,
+    super.key,
+  });
+
+  final bool isPlaying;
+  final bool isLoading;
+  final bool isEnded;
+  final Future<void> Function() onPlayPause;
+  final SkipControl surahLeftSlot;
+  final SkipControl surahRightSlot;
+  final SkipControl? ayahLeftSlot;
+  final SkipControl? ayahRightSlot;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (ayahLeftSlot != null) ...[
+          RecitationTransportIcon(
+            icon: ayahLeftSlot!.icon,
+            tooltip: ayahLeftSlot!.label,
+            onPress: ayahLeftSlot!.onPress,
+            density: RecitationTransportDensity.expanded,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+        ],
+        RecitationTransportIcon(
+          icon: surahLeftSlot.icon,
+          tooltip: surahLeftSlot.label,
+          onPress: surahLeftSlot.onPress,
+          density: RecitationTransportDensity.expanded,
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        RecitationPlayButton(
+          isPlaying: isPlaying,
+          isLoading: isLoading,
+          isEnded: isEnded,
+          onPress: onPlayPause,
+          density: RecitationTransportDensity.expanded,
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        RecitationTransportIcon(
+          icon: surahRightSlot.icon,
+          tooltip: surahRightSlot.label,
+          onPress: surahRightSlot.onPress,
+          density: RecitationTransportDensity.expanded,
+        ),
+        if (ayahRightSlot != null) ...[
+          const SizedBox(width: AppSpacing.sm),
+          RecitationTransportIcon(
+            icon: ayahRightSlot!.icon,
+            tooltip: ayahRightSlot!.label,
+            onPress: ayahRightSlot!.onPress,
+            density: RecitationTransportDensity.expanded,
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 /// Centered play/pause with optional skip controls for both transport surfaces.
@@ -170,6 +249,7 @@ class RecitationTransportControls extends StatelessWidget {
     required this.onPlayPause,
     required this.leftSlot,
     required this.rightSlot,
+    this.isEnded = false,
     this.density = RecitationTransportDensity.compact,
     this.showSkip = true,
     super.key,
@@ -177,6 +257,7 @@ class RecitationTransportControls extends StatelessWidget {
 
   final bool isPlaying;
   final bool isLoading;
+  final bool isEnded;
   final Future<void> Function() onPlayPause;
   final SkipControl leftSlot;
   final SkipControl rightSlot;
@@ -206,6 +287,7 @@ class RecitationTransportControls extends StatelessWidget {
         RecitationPlayButton(
           isPlaying: isPlaying,
           isLoading: isLoading,
+          isEnded: isEnded,
           onPress: onPlayPause,
           density: density,
         ),

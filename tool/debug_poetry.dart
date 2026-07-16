@@ -1,6 +1,6 @@
 // ignore_for_file: avoid_print
 
-import 'package:tawaq/feature/quran/domain/models/tafsir_text_segment.dart';
+import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_poetry_splitter.dart';
 import 'package:tawaq/feature/quran/domain/services/tafsir_text_parser.dart';
 
@@ -28,8 +28,9 @@ void main() {
       print('${s.kind.name}: ${s.text}');
       print('  hemis: ${s.poetryHemistichs}');
     }
-    final parsed =
-        TafsirTextParser.parse(text.replaceAll('\n', '<br>')).segments;
+    final parsed = TafsirTextParser.parse(
+      text.replaceAll('\n', '<br>'),
+    ).segments;
     print('--- parser ---');
     for (final s in parsed) {
       if (s.kind == TafsirSegmentKind.poetry) {

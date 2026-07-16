@@ -20,7 +20,11 @@ TextStyle surahNameTextStyle(TextStyle base, {double? fontSize}) {
 }
 
 /// Uses Uthmanic Hafs when [name] is Arabic script; otherwise [base] unchanged.
-TextStyle textStyleForSurahName(String name, TextStyle base, {double? fontSize}) {
+TextStyle textStyleForSurahName(
+  String name,
+  TextStyle base, {
+  double? fontSize,
+}) {
   if (!containsArabicScript(name)) return base;
   return surahNameTextStyle(base, fontSize: fontSize);
 }
@@ -225,7 +229,10 @@ class AyahRangeLabelText extends StatelessWidget {
       if (arrowIndex > 0) ...[
         ...surahAyahReferenceSpans(label.substring(0, arrowIndex), base),
         TextSpan(text: _arrow, style: base),
-        ...surahAyahReferenceSpans(label.substring(arrowIndex + _arrow.length), base),
+        ...surahAyahReferenceSpans(
+          label.substring(arrowIndex + _arrow.length),
+          base,
+        ),
       ] else
         ...surahAyahReferenceSpans(label, base),
       if (suffix.isNotEmpty) TextSpan(text: suffix, style: base),
