@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:tawaq/core/audio/audio_lease.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
@@ -18,14 +19,73 @@ const kAudioDefaultFadeIn = Duration(milliseconds: 800);
 /// explicit ramp.
 const kAudioDefaultFadeOut = Duration(milliseconds: 500);
 
-/// Interval between volume steps while fading.
-const _fadeStep = Duration(milliseconds: 40);
+/// Linux MPRIS `.desktop` basename for Tawaq (see install script).
+const kMediaSessionDesktopEntry = 'flutter-tawaq';
+
+/// Stable MPRIS / SMTC app identity. Must be set on the first
+/// [Player.setMediaSession] call — mpv_audio_kit locks the bus name at enable.
+const kMediaSessionAppName = 'Tawaq';
+
+/// mpv player defaults for Tawaq.
+///
+/// Resume is owned by Hive checkpoints + [openAndSeekTo]; native watch-later
+/// must stay off so it does not fight app-side seek/resume.
+const kTawaqPlayerConfiguration = PlayerConfiguration(
+  resumePlayback: false,
+  forceSeekable: true,
+);
+
+/// Bundled artwork published to the OS media session for recitation.
+const kMediaSessionAppIconAsset = 'assets/images/app_icon.png';
+
+const kRecitationSeekLogName = 'tawaq.recitation.seek';
+
+/// Caller-resolved display fields for the OS media session.
+///
+/// Title and artist must be the surah and reciter names — never defer to mp3
+/// file tags once published. [appName] and [album] come from localized ARB
+/// strings (`mediaSessionAppName`, `mediaSessionAudioBy`).
+class MediaSessionPublishMetadata {
+  /// Creates [MediaSessionPublishMetadata].
+  const MediaSessionPublishMetadata({
+    required this.title,
+    required this.artist,
+    required this.appName,
+    required this.album,
+  });
+
+  /// Surah name shown as the session title.
+  final String title;
+
+  /// Reciter name shown as the session artist.
+  final String artist;
+
+  /// Localized app display name (MPRIS / SMTC identity).
+  final String appName;
+
+  /// Localized album line (e.g. "Audio by mp3quran.net").
+  final String album;
+}
+
+/// Throttle for refreshing the audio lease during continuous playback.
+const _leaseKeepAliveThrottle = Duration(seconds: 10);
 
 /// Process-wide mpv-backed audio engine for adhan and Quran recitation.
 class TawaqAudioService {
   /// Creates a [TawaqAudioService].
-  TawaqAudioService({PlayerApi? player})
-      : _player = player ?? Player() {
+  ///
+  /// [leaseRegistry] is for tests that need a short watchdog timeout.
+  TawaqAudioService({
+    PlayerApi? player,
+    AudioLeaseRegistry? leaseRegistry,
+  })  : _leases = leaseRegistry ??
+            AudioLeaseRegistry(
+              onWatchdogForceRelease: (owner) => developer.log(
+                'Watchdog force-releasing lease for $owner',
+                name: 'tawaq.audio',
+              ),
+            ),
+        _player = player ?? Player(configuration: kTawaqPlayerConfiguration) {
     // autoPlay defaults to false: open(play: false) never starts playback
     // until play() is called explicitly, so seeks complete before audio.
     // Identify the audio client once; it never changes for the lifetime of
@@ -37,9 +97,25 @@ class TawaqAudioService {
       // [positionStream]/[durationStream] directly, which avoids reallocating
       // and re-broadcasting a full [PlaybackState] many times per second.
       _player.stream.playing.listen((_) => _emitState()),
+      _player.stream.playWhenReady.listen((_) => _emitState()),
+      _player.stream.completed.listen((completed) {
+        if (completed) {
+          _onNaturalCompletion();
+        } else {
+          _trackCompleted = false;
+          _emitState();
+        }
+      }),
+      _player.stream.eofReached.listen((reached) {
+        if (reached) {
+          _onNaturalCompletion();
+        }
+      }),
+      _player.stream.duration.listen((_) => unawaited(_refreshPublishedSession())),
       _player.stream.error.listen((error) {
         final track = _activeTrack;
         _activeTrack = null;
+        _trackCompleted = false;
         _cancelFade();
         _emit(PlaybackError(track: track, message: error.toString()));
       }),
@@ -62,17 +138,19 @@ class TawaqAudioService {
             if (isNetworkDrop) {
               final track = _activeTrack;
               _activeTrack = null;
+              _trackCompleted = false;
               _cancelFade();
               _emit(PlaybackError(
                 track: track,
                 message: 'network drop: ended at $position of $duration',
               ));
             } else {
-              unawaited(stop());
+              _onNaturalCompletion();
             }
           case MpvEndFileReason.error:
             final track = _activeTrack;
             _activeTrack = null;
+            _trackCompleted = false;
             _cancelFade();
             _emit(PlaybackError(
               track: track,
@@ -88,15 +166,20 @@ class TawaqAudioService {
       }),
       _player.stream.buffering.listen((_) => _emitBuffering()),
       _player.stream.pausedForCache.listen((_) => _emitBuffering()),
+      _player.stream.position.listen(_refreshLeaseKeepAliveFromPlayback),
     ]);
     _stateController.add(_state);
   }
 
   final PlayerApi _player;
   final _stateController = StreamController<PlaybackState>.broadcast();
+  final _completionController = StreamController<void>.broadcast();
   final _subscriptions = <StreamSubscription<dynamic>>[];
   AudioTrack? _activeTrack;
   PlaybackState _state = const PlaybackIdle();
+  MediaSessionPublishMetadata? _publishedMetadata;
+  CoverArt? _appIconArtwork;
+  bool _trackCompleted = false;
 
   /// Desired output volume (0-100) used as the fade target.
   double _targetVolume = 100;
@@ -107,12 +190,8 @@ class TawaqAudioService {
   // ---- Lease state ----------------------------------------------------------
   // Pure, mpv-free ownership coordination is delegated to AudioLeaseRegistry
   // so the lease logic stays unit-testable without native player init.
-  final AudioLeaseRegistry _leases = AudioLeaseRegistry(
-    onWatchdogForceRelease: (owner) => developer.log(
-      'Watchdog force-releasing lease for $owner',
-      name: 'tawaq.audio',
-    ),
-  );
+  final AudioLeaseRegistry _leases;
+  Duration? _lastKeepAlivePosition;
 
   /// Current lease owner, or null when idle.
   String? get currentLeaseOwner => _leases.currentOwner;
@@ -123,6 +202,18 @@ class TawaqAudioService {
   PlaybackState get state => _state;
 
   Stream<PlaybackState> get stateStream => _stateController.stream;
+
+  /// Fires once when the active track reaches its natural end without unloading.
+  Stream<void> get completionStream => _completionController.stream;
+
+  /// Whether a track is currently loaded (including paused-at-EOF).
+  bool get hasActiveTrack => _activeTrack != null;
+
+  /// Whether the user/play intent axis is set (stable across seeks/buffering).
+  bool get playWhenReady => _player.state.playWhenReady;
+
+  /// Emits whenever [playWhenReady] changes.
+  Stream<bool> get playWhenReadyStream => _player.stream.playWhenReady;
 
   Stream<Duration> get positionStream => _player.stream.position;
 
@@ -158,22 +249,6 @@ class TawaqAudioService {
     MediaAction.stop,
   };
 
-  /// Builds the rich [MediaSession] metadata for [track] using the current
-  /// advertised actions, duration, and a fallback artist.
-  ///
-  /// The duration is only set when mpv already reports one; otherwise `null`
-  /// lets the OS media session fall back to mpv's `duration` property once it
-  /// resolves, instead of pinning an explicit zero that would suppress it.
-  MediaSession _mediaSessionFor(AudioTrack track) {
-    final duration = _player.state.duration;
-    return MediaSession(
-      title: track.title,
-      artist: track.subtitle ?? 'Tawaq',
-      duration: duration > Duration.zero ? duration : null,
-      actions: _mediaSessionActions,
-    );
-  }
-
   /// Low-level player handle for visualizers and advanced UI.
   PlayerApi get player => _player;
 
@@ -190,6 +265,20 @@ class TawaqAudioService {
     }
     final position = _player.state.position;
     final duration = _player.state.duration;
+    final owner = _leases.currentOwner;
+    if (_player.state.playWhenReady && owner != null) {
+      _leases.keepAlive(owner: owner);
+    }
+    if (_trackCompleted) {
+      _emit(
+        PlaybackCompleted(
+          track: track,
+          position: position,
+          duration: duration,
+        ),
+      );
+      return;
+    }
     _emit(
       _player.state.playWhenReady
           ? PlaybackPlaying(
@@ -207,9 +296,30 @@ class TawaqAudioService {
 
   void _emitBuffering() {
     final track = _activeTrack;
-    if (track != null) {
+    if (track != null && !_trackCompleted) {
+      final owner = _leases.currentOwner;
+      if (owner != null) {
+        _leases.keepAlive(owner: owner);
+      }
       _emit(PlaybackBuffering(track));
     }
+  }
+
+  /// Refreshes the lease watchdog during continuous playback.
+  ///
+  /// [_emitState] only runs on lifecycle transitions; mpv position ticks keep
+  /// long sessions from losing the lease while audio is still playing.
+  void _refreshLeaseKeepAliveFromPlayback(Duration position) {
+    if (_activeTrack == null || _trackCompleted) return;
+    final owner = _leases.currentOwner;
+    if (owner == null) return;
+
+    final last = _lastKeepAlivePosition;
+    if (last != null && position - last < _leaseKeepAliveThrottle) {
+      return;
+    }
+    _lastKeepAlivePosition = position;
+    _leases.keepAlive(owner: owner);
   }
 
   /// Returns true when an eof event likely reflects a network stall rather
@@ -226,6 +336,116 @@ class TawaqAudioService {
     return position.inMilliseconds < thresholdMs;
   }
 
+  void _onNaturalCompletion() {
+    if (_activeTrack == null || _trackCompleted) return;
+    _trackCompleted = true;
+    _completionController.add(null);
+    unawaited(_player.pause());
+    _emitState();
+  }
+
+  /// Pauses at EOF while keeping the loaded track and media session intact.
+  Future<void> pauseAtEof() async {
+    if (_activeTrack == null) return;
+    _trackCompleted = true;
+    await _player.pause();
+    _emitState();
+  }
+
+  /// Resets native loop/gapless/prefetch modes to safe defaults.
+  ///
+  /// Called automatically on [stop], [play], [openAll], and [openAndSeekTo].
+  /// Controllers should also call this when tearing down gapless recitation.
+  Future<void> resetPlaybackModes() async {
+    await _player.setLoop(Loop.off);
+    await _player.setGapless(Gapless.weak);
+    await _player.setPrefetchPlaylist(false);
+  }
+
+  /// Publishes rich OS media-session metadata using caller-resolved strings.
+  ///
+  /// Title/artist are explicit overrides — mpv file tags never replace them.
+  /// Artwork uses the bundled Tawaq app icon; duration refreshes automatically
+  /// when [durationStream] resolves.
+  Future<void> publishMediaSession(MediaSessionPublishMetadata metadata) async {
+    _publishedMetadata = metadata;
+    await _ensureAppIconArtwork();
+    await _player.setMediaSession(_buildMediaSession());
+  }
+
+  Future<void> _refreshPublishedSession() async {
+    if (_publishedMetadata == null || _activeTrack == null) return;
+    final current = _player.state.mediaSession;
+    if (current == null) {
+      await _player.setMediaSession(_buildMediaSession());
+      return;
+    }
+    final duration = _player.state.duration;
+    final nextDuration = duration > Duration.zero ? duration : null;
+    if (current.duration == nextDuration) return;
+    await _player.setMediaSession(
+      current.copyWith(duration: nextDuration),
+    );
+  }
+
+  Future<void> _ensureAppIconArtwork() async {
+    if (_appIconArtwork != null) return;
+    try {
+      final data = await rootBundle.load(kMediaSessionAppIconAsset);
+      _appIconArtwork = CoverArt(
+        bytes: data.buffer.asUint8List(),
+        mimeType: 'image/png',
+      );
+    } on Object catch (error) {
+      developer.log(
+        'Failed to load media session app icon: $error',
+        name: 'tawaq.audio',
+      );
+    }
+  }
+
+  MediaSession _buildMediaSession() {
+    final metadata = _publishedMetadata;
+    final duration = _player.state.duration;
+    final artwork = _appIconArtwork == null
+        ? MediaSessionArtwork.none
+        : MediaSessionArtwork.custom(_appIconArtwork!);
+    return MediaSession(
+      title: metadata?.title,
+      artist: metadata?.artist,
+      album: metadata?.album,
+      appName: metadata?.appName ?? kMediaSessionAppName,
+      desktopEntry: kMediaSessionDesktopEntry,
+      artwork: artwork,
+      duration: duration > Duration.zero ? duration : null,
+      actions: _mediaSessionActions,
+      autoApplyPlaylistNavigation: false,
+    );
+  }
+
+  /// Adhan/simple fallback when no [publishMediaSession] metadata is set.
+  MediaSession _mediaSessionFor(AudioTrack track) {
+    final duration = _player.state.duration;
+    return MediaSession(
+      title: track.title,
+      artist: track.subtitle ?? kMediaSessionAppName,
+      appName: kMediaSessionAppName,
+      desktopEntry: kMediaSessionDesktopEntry,
+      duration: duration > Duration.zero ? duration : null,
+      actions: _mediaSessionActions,
+      autoApplyPlaylistNavigation: false,
+    );
+  }
+
+  Future<void> _applyMediaSessionForTrack(AudioTrack track) async {
+    if (_publishedMetadata != null) {
+      await _ensureAppIconArtwork();
+      await _player.setMediaSession(_buildMediaSession());
+    } else {
+      await _player.setMediaSession(_mediaSessionFor(track));
+    }
+  }
+
   /// Loads [tracks] as a playlist, optionally starting at [index], and
   /// starts playback. Replaces any current file or playlist.
   Future<void> openAll(
@@ -238,7 +458,10 @@ class TawaqAudioService {
       await acquire(owner: effectiveOwner);
     }
     _cancelFade();
+    _trackCompleted = false;
+    await _clearWatchLater();
     await clearAbLoop();
+    await resetPlaybackModes();
     final activeTrack = tracks.elementAtOrNull(index);
     _activeTrack = activeTrack;
     _emit(PlaybackLoading(activeTrack ?? _fallbackTrack(tracks)));
@@ -250,13 +473,14 @@ class TawaqAudioService {
         index: index,
       );
       if (tracks.isNotEmpty) {
-        await _player.setMediaSession(
-          _mediaSessionFor(tracks[index.clamp(0, tracks.length - 1)]),
+        await _applyMediaSessionForTrack(
+          tracks[index.clamp(0, tracks.length - 1)],
         );
       }
       _emitState();
     } on Object catch (error) {
       _activeTrack = null;
+      _trackCompleted = false;
       _cancelFade();
       _emit(PlaybackError(track: null, message: error.toString()));
     }
@@ -272,13 +496,16 @@ class TawaqAudioService {
       await acquire(owner: effectiveOwner);
     }
     _cancelFade();
+    _trackCompleted = false;
+    await _clearWatchLater();
     await clearAbLoop();
+    await resetPlaybackModes();
     _activeTrack = track;
     _emit(PlaybackLoading(track));
     try {
       await _player.setVolume(fadeIn > Duration.zero ? 0 : _targetVolume);
       await _player.open(Media(track.uri), play: false);
-      await _player.setMediaSession(_mediaSessionFor(track));
+      await _applyMediaSessionForTrack(track);
       if (fadeIn > Duration.zero) {
         unawaited(_fadeVolume(from: 0, to: _targetVolume, duration: fadeIn));
       }
@@ -286,12 +513,25 @@ class TawaqAudioService {
       _emitState();
     } on Object catch (error) {
       _activeTrack = null;
+      _trackCompleted = false;
       _cancelFade();
       _emit(PlaybackError(track: track, message: error.toString()));
     }
   }
 
   int _seekGeneration = 0;
+
+  Future<void> _clearWatchLater() async {
+    try {
+      await _player.deleteResumeConfig();
+      developer.log('deleteResumeConfig', name: kRecitationSeekLogName);
+    } on Object catch (error) {
+      developer.log(
+        'deleteResumeConfig failed (continuing): $error',
+        name: kRecitationSeekLogName,
+      );
+    }
+  }
 
   /// Opens media without auto-play then seeks to [start] and begins playback.
   ///
@@ -309,34 +549,61 @@ class TawaqAudioService {
       await acquire(owner: effectiveOwner);
     }
     _cancelFade();
+    _trackCompleted = false;
+    await _clearWatchLater();
     await clearAbLoop();
+    await resetPlaybackModes();
     _activeTrack = track;
     _emit(PlaybackLoading(track));
     final loadGen = ++_seekGeneration;
     try {
+      developer.log(
+        'openAndSeekTo start uri=${track.uri} '
+        'startMs=${start?.inMilliseconds ?? 0} loadGen=$loadGen',
+        name: kRecitationSeekLogName,
+      );
       await _player.setVolume(fadeIn > Duration.zero ? 0 : _targetVolume);
       final loadReady = _player.stream.seekCompleted
           .firstWhere((_) => _seekGeneration == loadGen)
           .timeout(const Duration(seconds: 15));
       await _player.open(Media(track.uri), play: false);
-      await _player.setMediaSession(_mediaSessionFor(track));
+      await _applyMediaSessionForTrack(track);
       await loadReady;
+      developer.log(
+        'openAndSeekTo loadReady loadGen=$loadGen',
+        name: kRecitationSeekLogName,
+      );
 
       if (start != null && start > Duration.zero) {
         final seekGen = ++_seekGeneration;
+        developer.log(
+          'openAndSeekTo start seek targetMs=${start.inMilliseconds} '
+          'seekGen=$seekGen',
+          name: kRecitationSeekLogName,
+        );
         final seekLanding = _player.stream.seekCompleted
             .firstWhere((_) => _seekGeneration == seekGen)
             .timeout(const Duration(seconds: 15));
         await _player.seek(start);
         await seekLanding;
+        developer.log(
+          'openAndSeekTo seekCompleted seekGen=$seekGen',
+          name: kRecitationSeekLogName,
+        );
       }
       if (fadeIn > Duration.zero) {
         unawaited(_fadeVolume(from: 0, to: _targetVolume, duration: fadeIn));
       }
       await _player.play();
+      developer.log('openAndSeekTo play', name: kRecitationSeekLogName);
       _emitState();
     } on Object catch (error) {
+      developer.log(
+        'openAndSeekTo failed loadGen=$loadGen: $error',
+        name: kRecitationSeekLogName,
+      );
       _activeTrack = null;
+      _trackCompleted = false;
       _cancelFade();
       _emit(PlaybackError(track: track, message: error.toString()));
     }
@@ -344,24 +611,69 @@ class TawaqAudioService {
 
   /// Seeks to [position] in the currently loaded track.
   ///
-  /// Returns `false` when nothing is loaded or [owner] does not hold the lease.
+  /// Returns `false` when nothing is loaded or another owner holds the lease.
+  /// Re-acquires an idle lease when a track is still loaded (e.g. after the
+  /// unattended watchdog released ownership during continuous play).
   /// Prefer this over [PlayerApi.seek] so callers avoid mpv errors during file
   /// reloads (e.g. reciter switches).
   Future<bool> seek(Duration position, {String? owner}) async {
-    if (_activeTrack == null) return false;
-    final effectiveOwner = owner ?? _leases.currentOwner;
-    if (effectiveOwner != null && !_leases.hasValidLease(effectiveOwner)) {
+    if (_activeTrack == null) {
+      developer.log(
+        'seek reject reason=noTrack',
+        name: kRecitationSeekLogName,
+      );
       return false;
     }
+
+    final effectiveOwner = owner ?? _leases.currentOwner;
+    if (effectiveOwner == null) {
+      developer.log(
+        'seek reject reason=noOwner',
+        name: kRecitationSeekLogName,
+      );
+      return false;
+    }
+
+    if (!_leases.hasValidLease(effectiveOwner)) {
+      final holder = _leases.currentOwner;
+      if (holder != null && holder != effectiveOwner) {
+        developer.log(
+          'seek reject reason=leaseHeldBy other=$holder requested=$effectiveOwner',
+          name: kRecitationSeekLogName,
+        );
+        return false;
+      }
+      developer.log(
+        'seek reacquire owner=$effectiveOwner',
+        name: kRecitationSeekLogName,
+      );
+      await acquire(owner: effectiveOwner);
+    }
+
+    final seekGen = ++_seekGeneration;
+    developer.log(
+      'seek begin targetMs=${position.inMilliseconds} seekGen=$seekGen',
+      name: kRecitationSeekLogName,
+    );
     try {
-      await _player.seek(position);
+      final seekLanding = _player.stream.seekCompleted
+          .firstWhere((_) => _seekGeneration == seekGen)
+          .timeout(const Duration(seconds: 15));
+      await _player.seek(position, exact: true);
+      await seekLanding;
+      developer.log(
+        'seekCompleted landed targetMs=${position.inMilliseconds} '
+        'seekGen=$seekGen',
+        name: kRecitationSeekLogName,
+      );
       _emitState();
       return true;
     } on Object catch (error) {
-      final track = _activeTrack;
-      _activeTrack = null;
-      _cancelFade();
-      _emit(PlaybackError(track: track, message: error.toString()));
+      developer.log(
+        'seek failed/timeout targetMs=${position.inMilliseconds} '
+        'seekGen=$seekGen: $error',
+        name: kRecitationSeekLogName,
+      );
       return false;
     }
   }
@@ -373,6 +685,7 @@ class TawaqAudioService {
 
   Future<void> resume() async {
     await _player.play();
+    _trackCompleted = false;
     _emitState();
   }
 
@@ -386,7 +699,11 @@ class TawaqAudioService {
       await _fadeVolume(from: _targetVolume, to: 0, duration: fadeOut);
     }
     _activeTrack = null;
+    _trackCompleted = false;
+    _publishedMetadata = null;
+    await _clearWatchLater();
     await clearAbLoop();
+    await resetPlaybackModes();
     await _player.stop();
     await _player.setMediaSession(null);
     await _player.setVolume(_targetVolume);
@@ -504,6 +821,7 @@ class TawaqAudioService {
     _cancelFade();
     await _leases.dispose();
     await _volumeController.close();
+    await _completionController.close();
     for (final sub in _subscriptions) {
       await sub.cancel();
     }
@@ -521,3 +839,6 @@ class TawaqAudioService {
   Future<AudioLease> acquire({required String owner}) =>
       _leases.acquire(owner: owner);
 }
+
+/// Interval between volume steps while fading.
+const _fadeStep = Duration(milliseconds: 40);

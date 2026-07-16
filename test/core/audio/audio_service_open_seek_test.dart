@@ -1,131 +1,50 @@
 import 'dart:async';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:mpv_audio_kit/mpv_audio_kit.dart';
+import 'package:tawaq/core/audio/audio_lease.dart';
 import 'package:tawaq/core/audio/audio_service.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
 
-class _FakePlayer extends Mock implements PlayerApi {}
+import 'fake_audio_player.dart';
 
-class _FakePlayerStream extends Mock implements PlayerStream {}
-
-class _StreamHandles {
-  _StreamHandles(this.player, this.stream);
-
-  final _FakePlayer player;
-  final _FakePlayerStream stream;
-
-  final StreamController<bool> playing = StreamController<bool>.broadcast();
-  final StreamController<MpvPlayerError> error =
-      StreamController<MpvPlayerError>.broadcast();
-  final StreamController<MpvFileEndedEvent> endFile =
-      StreamController<MpvFileEndedEvent>.broadcast();
-  final StreamController<bool> buffering = StreamController<bool>.broadcast();
-  final StreamController<bool> pausedForCache =
-      StreamController<bool>.broadcast();
-  final StreamController<void> seekCompleted = StreamController.broadcast();
-  final StreamController<Duration> position =
-      StreamController<Duration>.broadcast();
-  final StreamController<Duration> duration =
-      StreamController<Duration>.broadcast();
-  final StreamController<int?> remainingAbLoops =
-      StreamController<int?>.broadcast();
-
-  Future<void> dispose() async {
-    await playing.close();
-    await error.close();
-    await endFile.close();
-    await buffering.close();
-    await pausedForCache.close();
-    await seekCompleted.close();
-    await position.close();
-    await duration.close();
-    await remainingAbLoops.close();
-  }
-}
-
-Future<void> _noop(Invocation _) async {}
-
-_StreamHandles _buildFakePlayer() {
-  final stream = _FakePlayerStream();
-  final player = _FakePlayer();
-  final h = _StreamHandles(player, stream);
-  when(() => stream.playing).thenAnswer((_) => h.playing.stream);
-  when(() => stream.error).thenAnswer((_) => h.error.stream);
-  when(() => stream.endFile).thenAnswer((_) => h.endFile.stream);
-  when(() => stream.buffering).thenAnswer((_) => h.buffering.stream);
-  when(() => stream.pausedForCache)
-      .thenAnswer((_) => h.pausedForCache.stream);
-  when(() => stream.seekCompleted)
-      .thenAnswer((_) => h.seekCompleted.stream);
-  when(() => stream.position).thenAnswer((_) => h.position.stream);
-  when(() => stream.duration).thenAnswer((_) => h.duration.stream);
-  when(() => stream.remainingAbLoops)
-      .thenAnswer((_) => h.remainingAbLoops.stream);
-  when(() => player.stream).thenReturn(stream);
-  when(() => player.state).thenReturn(const PlayerState());
-  when(() => player.open(any(), play: any(named: 'play')))
-      .thenAnswer(_noop);
-  when(player.play).thenAnswer(_noop);
-  when(player.pause).thenAnswer(_noop);
-  when(player.stop).thenAnswer(_noop);
-  when(() => player.seek(
-        any(),
-        relative: any(named: 'relative'),
-        exact: any(named: 'exact'),
-      )).thenAnswer(_noop);
-  when(() => player.setVolume(any())).thenAnswer(_noop);
-  when(() => player.setMediaSession(any())).thenAnswer(_noop);
-  when(() => player.setAudioClientName(any())).thenAnswer(_noop);
-  when(() => player.setAbLoopA(any())).thenAnswer(_noop);
-  when(() => player.setAbLoopB(any())).thenAnswer(_noop);
-  when(() => player.setAbLoopCount(any())).thenAnswer(_noop);
-  when(player.dispose).thenAnswer(_noop);
-  return h;
-}
-
-final AudioTrack _track = AudioTrack.network(
+final _track = AudioTrack.network(
   id: 't1',
   title: 'Test',
   url: 'https://example.com/audio.mp3',
 );
 
 void main() {
-  setUpAll(() {
-    registerFallbackValue(const Media('asset:///fallback'));
-    registerFallbackValue(Duration.zero);
-    registerFallbackValue(0.0);
-    registerFallbackValue(const MediaSession());
-    registerFallbackValue('');
-  });
+  setUpAll(registerAudioServiceFallbacks);
 
   group('openAndSeekTo', () {
     test('waits for file load before seeking', () async {
-      final h = _buildFakePlayer();
+      final handles = buildFakeAudioPlayer();
       final seekCalls = <Duration>[];
       var openCompleted = false;
 
-      when(() => h.player.open(any(), play: any(named: 'play'))).thenAnswer(
+      when(() => handles.player.open(any(), play: any(named: 'play'))).thenAnswer(
         (_) async {
           openCompleted = true;
         },
       );
       when(
-        () => h.player.seek(
+        () => handles.player.seek(
           any(),
           relative: any(named: 'relative'),
           exact: any(named: 'exact'),
         ),
       ).thenAnswer((inv) async {
         seekCalls.add(inv.positionalArguments[0] as Duration);
-        h.seekCompleted.add(null);
+        handles.seekCompleted.add(null);
       });
 
-      final service = TawaqAudioService(player: h.player);
+      final service = TawaqAudioService(player: handles.player);
       addTearDown(() async {
-        await h.dispose();
+        await handles.dispose();
         await service.dispose();
       });
 
@@ -142,23 +61,23 @@ void main() {
       expect(openCompleted, isTrue);
       expect(seekCalls, isEmpty);
 
-      h.seekCompleted.add(null);
+      handles.seekCompleted.add(null);
       await done;
 
       expect(seekCalls, [const Duration(seconds: 30)]);
-      verify(() => h.player.play()).called(1);
+      verify(handles.player.play).called(1);
     });
 
     test('skips seek when start is zero', () async {
-      final h = _buildFakePlayer();
-      when(() => h.player.open(any(), play: any(named: 'play'))).thenAnswer(
+      final handles = buildFakeAudioPlayer();
+      when(() => handles.player.open(any(), play: any(named: 'play'))).thenAnswer(
         (_) async {
-          h.seekCompleted.add(null);
+          handles.seekCompleted.add(null);
         },
       );
-      final service = TawaqAudioService(player: h.player);
+      final service = TawaqAudioService(player: handles.player);
       addTearDown(() async {
-        await h.dispose();
+        await handles.dispose();
         await service.dispose();
       });
 
@@ -171,22 +90,22 @@ void main() {
       );
 
       verifyNever(
-        () => h.player.seek(
+        () => handles.player.seek(
           any(),
           relative: any(named: 'relative'),
           exact: any(named: 'exact'),
         ),
       );
-      verify(() => h.player.play()).called(1);
+      verify(handles.player.play).called(1);
     });
   });
 
   group('seek', () {
     test('returns false when no track is loaded', () async {
-      final h = _buildFakePlayer();
-      final service = TawaqAudioService(player: h.player);
+      final handles = buildFakeAudioPlayer();
+      final service = TawaqAudioService(player: handles.player);
       addTearDown(() async {
-        await h.dispose();
+        await handles.dispose();
         await service.dispose();
       });
 
@@ -197,7 +116,7 @@ void main() {
 
       expect(ok, isFalse);
       verifyNever(
-        () => h.player.seek(
+        () => handles.player.seek(
           any(),
           relative: any(named: 'relative'),
           exact: any(named: 'exact'),
@@ -206,10 +125,19 @@ void main() {
     });
 
     test('seeks when a track is active', () async {
-      final h = _buildFakePlayer();
-      final service = TawaqAudioService(player: h.player);
+      final handles = buildFakeAudioPlayer();
+      when(
+        () => handles.player.seek(
+          any(),
+          relative: any(named: 'relative'),
+          exact: any(named: 'exact'),
+        ),
+      ).thenAnswer((_) async {
+        handles.seekCompleted.add(null);
+      });
+      final service = TawaqAudioService(player: handles.player);
       addTearDown(() async {
-        await h.dispose();
+        await handles.dispose();
         await service.dispose();
       });
 
@@ -223,19 +151,43 @@ void main() {
 
       expect(ok, isTrue);
       verify(
-        () => h.player.seek(
+        () => handles.player.seek(
           const Duration(seconds: 15),
           relative: any(named: 'relative'),
-          exact: any(named: 'exact'),
+          exact: true,
         ),
       ).called(1);
     });
 
-    test('returns false after stop clears the active track', () async {
-      final h = _buildFakePlayer();
-      final service = TawaqAudioService(player: h.player);
+    test('deleteResumeConfig called before openAndSeekTo load', () async {
+      final handles = buildFakeAudioPlayer();
+      when(() => handles.player.open(any(), play: any(named: 'play'))).thenAnswer(
+        (_) async {
+          handles.seekCompleted.add(null);
+        },
+      );
+      final service = TawaqAudioService(player: handles.player);
       addTearDown(() async {
-        await h.dispose();
+        await handles.dispose();
+        await service.dispose();
+      });
+
+      await service.acquire(owner: 'test');
+      await service.openAndSeekTo(
+        _track,
+        fadeIn: Duration.zero,
+        owner: 'test',
+      );
+      verify(
+        () => handles.player.deleteResumeConfig(filename: any(named: 'filename')),
+      ).called(1);
+    });
+
+    test('returns false after stop clears the active track', () async {
+      final handles = buildFakeAudioPlayer();
+      final service = TawaqAudioService(player: handles.player);
+      addTearDown(() async {
+        await handles.dispose();
         await service.dispose();
       });
 
@@ -252,12 +204,127 @@ void main() {
 
       expect(ok, isFalse);
       verifyNever(
-        () => h.player.seek(
+        () => handles.player.seek(
           any(),
           relative: any(named: 'relative'),
           exact: any(named: 'exact'),
         ),
       );
+    });
+
+    test('re-acquires idle lease when track is still loaded', () async {
+      final handles = buildFakeAudioPlayer();
+      when(
+        () => handles.player.seek(
+          any(),
+          relative: any(named: 'relative'),
+          exact: any(named: 'exact'),
+        ),
+      ).thenAnswer((_) async {
+        handles.seekCompleted.add(null);
+      });
+      final service = TawaqAudioService(player: handles.player);
+      addTearDown(() async {
+        await handles.dispose();
+        await service.dispose();
+      });
+
+      await service.acquire(owner: kRecitationLeaseOwner);
+      await service.play(
+        _track,
+        fadeIn: Duration.zero,
+        owner: kRecitationLeaseOwner,
+      );
+      await service.release(owner: kRecitationLeaseOwner);
+
+      expect(service.currentLeaseOwner, isNull);
+      expect(service.hasActiveTrack, isTrue);
+
+      final ok = await service.seek(
+        const Duration(seconds: 5),
+        owner: kRecitationLeaseOwner,
+      );
+
+      expect(ok, isTrue);
+      expect(service.currentLeaseOwner, kRecitationLeaseOwner);
+      verify(
+        () => handles.player.seek(
+          const Duration(seconds: 5),
+          relative: any(named: 'relative'),
+          exact: true,
+        ),
+      ).called(1);
+    });
+
+    test('returns false when another owner holds the lease', () async {
+      final handles = buildFakeAudioPlayer();
+      final service = TawaqAudioService(player: handles.player);
+      addTearDown(() async {
+        await handles.dispose();
+        await service.dispose();
+      });
+
+      await service.acquire(owner: kAdhanLeaseOwner);
+      await service.play(
+        _track,
+        fadeIn: Duration.zero,
+        owner: kAdhanLeaseOwner,
+      );
+
+      final ok = await service.seek(
+        const Duration(seconds: 5),
+        owner: kRecitationLeaseOwner,
+      );
+
+      expect(ok, isFalse);
+      verifyNever(
+        () => handles.player.seek(
+          any(),
+          relative: any(named: 'relative'),
+          exact: any(named: 'exact'),
+        ),
+      );
+    });
+  });
+
+  group('lease keepAlive during playback', () {
+    test('position ticks refresh lease past watchdog deadline', () {
+      FakeAsync().run((fa) {
+        final registry = AudioLeaseRegistry(
+          
+        );
+        final handles = buildFakeAudioPlayer(
+          initialState: const PlayerState(playWhenReady: true),
+        );
+        final service = TawaqAudioService(
+          player: handles.player,
+          leaseRegistry: registry,
+        );
+
+        unawaited(() async {
+          await service.acquire(owner: kRecitationLeaseOwner);
+          await service.play(
+            _track,
+            fadeIn: Duration.zero,
+            owner: kRecitationLeaseOwner,
+          );
+        }());
+        fa.flushMicrotasks();
+
+        expect(registry.currentOwner, kRecitationLeaseOwner);
+        expect(service.hasActiveTrack, isTrue);
+
+        for (var i = 0; i < 4; i++) {
+          fa.elapse(const Duration(seconds: 11));
+          handles.position.add(Duration(seconds: (i + 1) * 11));
+          fa.flushMicrotasks();
+        }
+
+        expect(registry.currentOwner, kRecitationLeaseOwner);
+
+        unawaited(handles.dispose());
+        unawaited(service.dispose());
+      });
     });
   });
 }

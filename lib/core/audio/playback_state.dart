@@ -1,3 +1,4 @@
+import 'package:tawaq/core/audio/audio_service.dart' show TawaqAudioService;
 import 'package:tawaq/core/audio/audio_track.dart';
 
 /// High-level player state exposed to UI and controllers.
@@ -61,6 +62,28 @@ final class PlaybackPaused extends PlaybackState {
   final AudioTrack track;
 
   /// Current position.
+  final Duration position;
+
+  /// Known duration, or zero when unknown.
+  final Duration duration;
+}
+
+/// Track reached its natural end while media remains loaded.
+///
+/// The OS media session stays populated until [TawaqAudioService.stop] or lease
+/// release; use [TawaqAudioService.completionStream] for ended transitions.
+final class PlaybackCompleted extends PlaybackState {
+  /// Creates [PlaybackCompleted].
+  const PlaybackCompleted({
+    required this.track,
+    required this.position,
+    required this.duration,
+  });
+
+  /// Active track.
+  final AudioTrack track;
+
+  /// Current position (typically at or near [duration]).
   final Duration position;
 
   /// Known duration, or zero when unknown.

@@ -62,6 +62,21 @@ class AudioLeaseRegistry {
   /// True when [owner] currently holds an active lease.
   bool hasValidLease(String owner) => _owner == owner;
 
+  /// Resets the watchdog deadline for [owner] while it holds the lease.
+  ///
+  /// Call periodically during active playback so long sessions are not
+  /// force-released by the unattended-lease watchdog.
+  void keepAlive({required String owner}) {
+    if (_disposed || _owner != owner) return;
+    _watchdog?.cancel();
+    _watchdog = Timer(watchdogTimeout, () {
+      if (_owner == owner) {
+        onWatchdogForceRelease?.call(owner);
+        releaseCurrent();
+      }
+    });
+  }
+
   /// Acquires exclusive ownership of the lease.
   ///
   /// If another owner currently holds the lease, this call waits (blocking on

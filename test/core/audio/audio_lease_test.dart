@@ -103,6 +103,31 @@ void main() {
       expect(registry.currentOwner, isNull);
     });
 
+    test('keepAlive resets watchdog during active playback', () {
+      FakeAsync().run((fa) {
+        String? releasedOwner;
+        final registry = AudioLeaseRegistry(
+          watchdogTimeout: const Duration(milliseconds: 100),
+          onWatchdogForceRelease: (owner) => releasedOwner = owner,
+        );
+
+        unawaited(registry.acquire(owner: 'recitation'));
+        fa.flushMicrotasks();
+
+        fa.elapse(const Duration(milliseconds: 80));
+        registry.keepAlive(owner: 'recitation');
+        fa.flushMicrotasks();
+
+        fa.elapse(const Duration(milliseconds: 80));
+        fa.flushMicrotasks();
+
+        expect(releasedOwner, isNull);
+        expect(registry.currentOwner, 'recitation');
+
+        unawaited(registry.dispose());
+      });
+    });
+
     test('watchdog force-releases an unattended lease', () async {
       String? releasedOwner;
       final registry = AudioLeaseRegistry(
