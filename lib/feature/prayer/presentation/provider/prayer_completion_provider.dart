@@ -1,12 +1,11 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
-import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/first_prayer_recorded_provider.dart';
 import 'package:timezone/timezone.dart';
 
@@ -58,16 +57,6 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
     invalidatePrayerCompletionsForDate(ref, normalizedDay);
   }
 
-  /// Adds or updates a prayer completion record.
-  Future<void> addOrUpdateCompletion(PrayerCompletion completion) async {
-    if (!ref.mounted) return;
-    await setPrayerStatus(
-      prayer: completion.prayer,
-      completionDay: completion.completionTime,
-      status: completion.status,
-    );
-  }
-
   /// Cycles [prayer]'s completion on today's calendar day.
   ///
   /// Order: none → jamaah → onTime → late → missed → cleared.
@@ -88,15 +77,6 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
       completionDay: completionDay,
       status: nextStatus ?? CompletionStatus.none,
     );
-  }
-
-  /// Returns the canonical completion for [prayer] on [date].
-  Future<PrayerCompletion?> getPrayerCompletionForPrayerOnDate(
-    Prayer prayer,
-    DateTime date,
-  ) async {
-    if (!prayer.isObligatory) return null;
-    return _loadCanonical(prayer, normalizeCompletionDay(date));
   }
 
   Future<PrayerCompletion?> _loadCanonical(

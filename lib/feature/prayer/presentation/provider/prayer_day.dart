@@ -144,15 +144,6 @@ class PrayerDay extends _$PrayerDay {
   }
 }
 
-/// Live today/yesterday bundle from [PrayerDay] without 1 Hz rebuilds.
-@Riverpod(keepAlive: true)
-PrayerDayBundle? todayPrayerDayBundle(Ref ref) {
-  ref
-    ..watch(prayerCalendarDayKeyProvider)
-    ..watch(prayerTimeInputsProvider);
-  return ref.read(prayerDayProvider).value?.bundle;
-}
-
 /// Prayer bundle for a calendar date via the shared computation engine.
 @riverpod
 PrayerDayBundle? prayerDayBundleForDate(Ref ref, DateTime date) {
@@ -162,7 +153,8 @@ PrayerDayBundle? prayerDayBundleForDate(Ref ref, DateTime date) {
   final normalized = DateTime(date.year, date.month, date.day);
   final todayKey = ref.watch(prayerCalendarDayKeyProvider);
   if (todayKey != 0 && calendarDayKeyFromDate(normalized) == todayKey) {
-    return ref.watch(todayPrayerDayBundleProvider);
+    // Day-key watch above already throttles; read cached bundle non-reactively.
+    return ref.read(prayerDayProvider).value?.bundle;
   }
 
   final anchor = TZDateTime(
@@ -178,13 +170,19 @@ PrayerDayBundle? prayerDayBundleForDate(Ref ref, DateTime date) {
   );
 }
 
-/// Cross-feature alias: calendar day key from the live prayer-day stream.
+/// Day-boundary signal from the live prayer-day stream.
+///
+/// Kept as a named provider so listeners/tests can subscribe to calendar-day
+/// changes without rebuilding on every 1 Hz tick.
 @riverpod
 int prayerCalendarDayKey(Ref ref) {
   return ref.watch(prayerDayProvider).value?.calendarDayKey ?? 0;
 }
 
-/// Cross-feature alias: minute bucket from the live prayer-day stream.
+/// Minute-bucket signal from the live prayer-day stream.
+///
+/// Perf gate: schedule/card/fortress UIs watch this instead of the 1 Hz stream
+/// so they recompute at most once per minute.
 @riverpod
 int currentMinuteBucket(Ref ref) {
   final now = ref.watch(prayerDayProvider).value?.now;

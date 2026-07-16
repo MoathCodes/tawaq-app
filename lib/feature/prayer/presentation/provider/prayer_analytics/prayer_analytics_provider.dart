@@ -9,10 +9,9 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart'
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics_settings_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics_settings_provider.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/first_prayer_recorded_provider.dart';
 import 'package:timezone/timezone.dart';
 
@@ -224,7 +223,9 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
   }
 
   Future<DateTime?> _resolveFirstRecordedDate() async {
-    final persisted = ref.read(firstPrayerRecordedDateTimeProvider);
+    final raw = ref.read(firstPrayerRecordedDateProvider);
+    final persisted =
+        (raw == null || raw.isEmpty) ? null : DateTime.tryParse(raw);
     if (persisted != null) return persisted;
 
     final earliest = await ref.read(prayerDatabaseProvider).getEarliestCompletionTime();

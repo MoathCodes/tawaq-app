@@ -96,12 +96,10 @@ class _AdhanAlertOverlay extends ConsumerWidget {
             autofocus: true,
             child: compact
                 ? ColoredBox(
-                    color: colors.background,
-                    child: const SafeArea(
-                      child: Padding(
-                        padding: EdgeInsets.all(AppSpacing.md),
-                        child: Center(child: AdhanAlertCard()),
-                      ),
+                    color: colors.card,
+                    child: const Align(
+                      alignment: Alignment.topCenter,
+                      child: AdhanAlertCard(),
                     ),
                   )
                 : Center(

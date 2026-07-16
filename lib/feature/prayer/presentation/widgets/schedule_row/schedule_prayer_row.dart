@@ -5,11 +5,10 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
-import 'package:tawaq/core/utils/prayer_extensions.dart';
-import 'package:tawaq/feature/prayer/presentation/utils/compute_prayer_relative_time.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
@@ -19,7 +18,46 @@ import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/schedule_
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_status_chips.dart';
 import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
 import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
+
+/// Relative subtitle for a schedule row (e.g. "in 2 hours", "30 mins ago").
+String? _computePrayerRelativeTime({
+  required DateTime prayerTime,
+  required DateTime now,
+  required bool isCurrentPrayer,
+  required CompletionStatus status,
+  required AppLocalizations l10n,
+}) {
+  if (isCurrentPrayer) {
+    return l10n.currentPrayer;
+  }
+
+  final isFuture = prayerTime.isAfter(now);
+  final difference = now.difference(prayerTime).abs();
+  final hours = difference.inHours;
+  final totalMinutes = difference.inMinutes;
+
+  if (status != CompletionStatus.none) {
+    if (isFuture) {
+      return l10n.completed;
+    }
+    final timeAgo = hours > 0
+        ? l10n.adhanHoursAgo(hours)
+        : l10n.adhanMinsAgo(totalMinutes);
+    return '${l10n.completed} - $timeAgo';
+  }
+
+  if (isFuture) {
+    return hours > 0
+        ? l10n.adhanHoursLeft(hours)
+        : l10n.adhanMinsLeft(totalMinutes);
+  } else {
+    return hours > 0
+        ? l10n.adhanHoursAgo(hours)
+        : l10n.adhanMinsAgo(totalMinutes);
+  }
+}
 
 /// A single prayer row in the schedule list with inline status logging.
 class SchedulePrayerRow extends ConsumerWidget {
@@ -337,7 +375,7 @@ class _RelativeTimeSubtitle extends ConsumerWidget {
         ? clockNow!
         : DateTime(prayerTime.year, prayerTime.month, prayerTime.day);
 
-    final subtitle = computePrayerRelativeTime(
+    final subtitle = _computePrayerRelativeTime(
       prayerTime: prayerTime,
       now: now,
       isCurrentPrayer: isCurrentPrayer,

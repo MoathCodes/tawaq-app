@@ -99,7 +99,12 @@ class PrayerRepo {
       return _cachedStreaks!;
     }
 
-    final days = _fullyCompletedDayKeys.map(dateFromCalendarDayKey).toList();
+    final days = _fullyCompletedDayKeys
+        .map((key) {
+          final day = calendarDayFromKey(key, location);
+          return DateTime(day.year, day.month, day.day);
+        })
+        .toList();
     final result = PrayerAnalyticsCalculator.computeStreaks(
       fullyCompletedDays: days,
       today: todayNorm,
@@ -224,7 +229,7 @@ class PrayerRepo {
     final statuses = mapPrayerStatuses(
       deduped,
       location,
-      dateFromCalendarDayKey(dayKey),
+      calendarDayFromKey(dayKey, location),
     );
     final complete = kObligatoryPrayers.every((prayer) {
       final status = statuses[prayer] ?? CompletionStatus.none;

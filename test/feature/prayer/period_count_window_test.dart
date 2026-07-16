@@ -7,7 +7,6 @@ import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
-import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart';

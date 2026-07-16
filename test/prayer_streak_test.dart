@@ -5,7 +5,6 @@ import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart';

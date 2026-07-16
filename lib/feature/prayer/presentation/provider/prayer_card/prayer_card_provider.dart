@@ -1,12 +1,13 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/utils/date_formatter.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 
 part 'prayer_card_provider.g.dart';
 

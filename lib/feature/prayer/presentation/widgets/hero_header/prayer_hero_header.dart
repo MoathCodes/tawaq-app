@@ -5,14 +5,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/widgets/f_skeletonizer.dart';
+import 'package:tawaq/core/utils/hijri_provider.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/core/widgets/f_skeletonizer.dart';
+import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
+import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
-import 'package:tawaq/core/utils/hijri_provider.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/hero_status_popover.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/hero_header/hero_time_square.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Hero header showing current prayer info with gradient background.
@@ -106,7 +111,7 @@ class _HeroBody extends ConsumerWidget {
         final watermarkSize = math.min(160, width * 0.32).toDouble();
 
         Widget buildAdhanSquare({bool leadingSpacing = false}) {
-          final square = HeroTimeSquare(
+          final square = _HeroTimeSquare(
             time: card.adhanTime,
             label: prayer.isObligatory ? l10n.adhan : null,
             density: timeSquareDensity,
@@ -123,7 +128,7 @@ class _HeroBody extends ConsumerWidget {
 
         Widget buildIqamahSquare({bool leadingSpacing = false}) {
           if (!showIqamah) return const SizedBox.shrink();
-          final square = HeroTimeSquare(
+          final square = _HeroTimeSquare(
             time: card.iqamahTime,
             label: l10n.iqamah,
             density: timeSquareDensity,
@@ -211,7 +216,7 @@ class _HeroBody extends ConsumerWidget {
                           const SizedBox(height: AppSpacing.md),
                           const Align(
                             alignment: AlignmentDirectional.centerStart,
-                            child: HeroStatusPopover(),
+                            child: _HeroStatusPopover(),
                           ),
                         ],
                       )
@@ -225,7 +230,7 @@ class _HeroBody extends ConsumerWidget {
                           const Flexible(
                             child: Align(
                               alignment: AlignmentDirectional.centerEnd,
-                              child: HeroStatusPopover(),
+                              child: _HeroStatusPopover(),
                             ),
                           ),
                         ],
@@ -240,7 +245,7 @@ class _HeroBody extends ConsumerWidget {
     );
   }
 
-  static HeroTimeSquareDensity _resolveTimeSquareDensity({
+  static _HeroTimeSquareDensity _resolveTimeSquareDensity({
     required double width,
     required FBreakpoints breakpoints,
     required bool showIqamah,
@@ -256,23 +261,23 @@ class _HeroBody extends ConsumerWidget {
         : normalMin;
 
     if (width >= breakpoints.lg && width >= squaresWidth + statusReserve) {
-      return HeroTimeSquareDensity.normal;
+      return _HeroTimeSquareDensity.normal;
     }
     if (width >= breakpoints.sm) {
       final compactWidth = squareCount == 2
           ? compactMin * 2 + squareSpacing
           : compactMin;
       if (width >= compactWidth + statusReserve) {
-        return HeroTimeSquareDensity.compact;
+        return _HeroTimeSquareDensity.compact;
       }
     }
     final ultraWidth = squareCount == 2
         ? ultraMin * 2 + squareSpacing
         : ultraMin;
     if (width >= ultraWidth) {
-      return HeroTimeSquareDensity.ultraCompact;
+      return _HeroTimeSquareDensity.ultraCompact;
     }
-    return HeroTimeSquareDensity.ultraCompact;
+    return _HeroTimeSquareDensity.ultraCompact;
   }
 }
 
@@ -321,6 +326,210 @@ class _HeroHijriDatePill extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+enum _HeroTimeSquareDensity { normal, compact, ultraCompact }
+
+class _HeroTimeSquare extends StatelessWidget {
+  const _HeroTimeSquare({
+    required this.time,
+    required this.label,
+    this.density = _HeroTimeSquareDensity.normal,
+  });
+
+  final String time;
+  final String? label;
+  final _HeroTimeSquareDensity density;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    final (horizontal, vertical, labelStyle, timeStyle, minWidth) = switch (
+      density
+    ) {
+      _HeroTimeSquareDensity.normal => (
+        AppSpacing.xl,
+        AppSpacing.lg,
+        theme.typography.body.sm,
+        theme.typography.body.xl2,
+        112.0,
+      ),
+      _HeroTimeSquareDensity.compact => (
+        AppSpacing.lg,
+        AppSpacing.md,
+        theme.typography.body.xs,
+        theme.typography.body.xl,
+        96.0,
+      ),
+      _HeroTimeSquareDensity.ultraCompact => (
+        AppSpacing.sm,
+        AppSpacing.xs,
+        theme.typography.body.xs,
+        theme.typography.body.lg,
+        80.0,
+      ),
+    };
+
+    return Semantics(
+      label: PrayerSemantics.heroTimeSquare(time: time, caption: label),
+      readOnly: true,
+      excludeSemantics: true,
+      child: Container(
+        constraints: BoxConstraints(minWidth: minWidth),
+        padding: EdgeInsets.symmetric(
+          horizontal: horizontal,
+          vertical: vertical,
+        ),
+        decoration: BoxDecoration(
+          color: theme.colors.background.withValues(alpha: 0.2),
+          borderRadius: theme.radii.md,
+          border: Border.all(
+            color: theme.colors.border.withValues(alpha: 0.1),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (label != null)
+              Text(
+                label!.toUpperCase(),
+                style: labelStyle.copyWith(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                ),
+              ),
+            if (label != null) const SizedBox(height: AppSpacing.xs),
+            Text(
+              time,
+              style: timeStyle.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HeroStatusPopover extends ConsumerWidget {
+  const _HeroStatusPopover();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final l10n = context.l10n;
+    final (prayer, canSetStatus) = ref.watch(
+      prayerCardStaticProvider.select((c) => (c.prayer, c.canSetStatus)),
+    );
+    final dayKey = ref.watch(prayerCalendarDayKeyProvider);
+    if (!canSetStatus || dayKey == 0) {
+      return const SizedBox.shrink();
+    }
+    final completionDay = dateFromCalendarDayKey(dayKey);
+    final status = ref.watch(completionStatusProvider(prayer, completionDay));
+
+    final menuTriggerLabel = PrayerSemantics.statusMenuTrigger(
+      l10n: l10n,
+      status: status,
+    );
+
+    return FPopoverMenu(
+      menu: [
+        FItemGroup(
+          children: CompletionStatus.values
+              .where((v) => v != CompletionStatus.none)
+              .map(
+                (e) => FItem(
+                  title: Text(e.getLocaleName(l10n)),
+                  prefix: Icon(
+                    e.getIcon(),
+                    color: e.getBadgeColor(theme.colors),
+                  ),
+                  onPress: () async {
+                    await ref
+                        .read(prayerCompletionActionsProvider.notifier)
+                        .setPrayerStatus(
+                          prayer: prayer,
+                          completionDay: completionDay,
+                          status: e,
+                        );
+                  },
+                ),
+              )
+              .toList(),
+        ),
+      ],
+      builder: (context, controller, _) {
+        final isSet = status != CompletionStatus.none;
+        return MouseClick(
+          semanticsLabel: menuTriggerLabel,
+          onClick: controller.toggle,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              color: isSet
+                  ? theme.colors.secondary
+                  : theme.colors.background.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSet
+                    ? theme.colors.secondary
+                    : theme.colors.border.withValues(alpha: 0.1),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isSet) ...[
+                  Icon(
+                    status.getIcon(),
+                    color: theme.colors.secondaryForeground,
+                    size: theme.typography.body.md.fontSize,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Flexible(
+                    child: Text(
+                      status.getLocaleName(l10n),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.typography.body.sm.copyWith(
+                        color: theme.colors.secondaryForeground,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Icon(
+                    FLucideIcons.chevronDown,
+                    color: theme.colors.secondaryForeground,
+                    size: theme.typography.body.sm.fontSize,
+                  ),
+                ] else ...[
+                  Text(
+                    l10n.logPrayerStatus,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.body.sm.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

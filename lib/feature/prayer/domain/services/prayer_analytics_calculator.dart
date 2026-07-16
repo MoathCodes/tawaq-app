@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:tawaq/core/utils/date_extensions.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
-import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:timezone/timezone.dart';
 
 /// Pure functions for prayer analytics and trend aggregation.

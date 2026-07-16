@@ -61,24 +61,6 @@ class ScheduleAlertPicker extends StatelessWidget {
     super.key,
   });
 
-  /// Current alert mode.
-  final ScheduleAlertMode mode;
-
-  /// Modes shown in the picker (order preserved).
-  final List<ScheduleAlertMode> modes;
-
-  /// Modes the user can actually select.
-  final Set<ScheduleAlertMode> interactiveModes;
-
-  /// What this picker controls (e.g. "Fajr adhan") for the popover title.
-  final String eventLabel;
-
-  /// Alert category — adjusts sound-mode labels for iqamah vs adhan.
-  final PrayerAlertKind? alertKind;
-
-  /// Called when an interactive mode is chosen.
-  final ValueChanged<ScheduleAlertMode>? onChanged;
-
   /// Obligatory prayer alert picker (adhan / iqamah).
   factory ScheduleAlertPicker.obligatory({
     required ScheduleAlertMode mode,
@@ -135,6 +117,24 @@ class ScheduleAlertPicker extends StatelessWidget {
       onChanged: onChanged,
     );
   }
+
+  /// Current alert mode.
+  final ScheduleAlertMode mode;
+
+  /// Modes shown in the picker (order preserved).
+  final List<ScheduleAlertMode> modes;
+
+  /// Modes the user can actually select.
+  final Set<ScheduleAlertMode> interactiveModes;
+
+  /// What this picker controls (e.g. "Fajr adhan") for the popover title.
+  final String eventLabel;
+
+  /// Alert category — adjusts sound-mode labels for iqamah vs adhan.
+  final PrayerAlertKind? alertKind;
+
+  /// Called when an interactive mode is chosen.
+  final ValueChanged<ScheduleAlertMode>? onChanged;
 
   static const _triggerSize = 30.0;
 

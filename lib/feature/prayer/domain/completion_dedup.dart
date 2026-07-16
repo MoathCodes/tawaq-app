@@ -1,7 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
-import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:timezone/timezone.dart';
 
@@ -25,7 +24,8 @@ PrayerCompletion? pickCanonical(
   final matches = rows.where(
     (c) =>
         c.prayer == prayer &&
-        c.completionTime.isSameCalendarDay(day, location),
+        completionDayKey(c.completionTime, location) ==
+            completionDayKey(day, location),
   );
   if (matches.isEmpty) return null;
   return matches.reduce(preferCanonicalCompletion);

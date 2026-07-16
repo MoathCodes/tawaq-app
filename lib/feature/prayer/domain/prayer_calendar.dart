@@ -2,8 +2,21 @@ import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:timezone/timezone.dart';
 
 /// Converts a calendar day key (`yyyymmdd`) to a naive [DateTime].
+///
+/// Prefer [calendarDayFromKey] when the day key was computed in a specific
+/// [Location]; this helper keeps legacy call sites that only need components.
 DateTime dateFromCalendarDayKey(int dayKey) {
   return DateTime(
+    dayKey ~/ 10000,
+    (dayKey % 10000) ~/ 100,
+    dayKey % 100,
+  );
+}
+
+/// Calendar midnight for [dayKey] in [location].
+DateTime calendarDayFromKey(int dayKey, Location location) {
+  return TZDateTime(
+    location,
     dayKey ~/ 10000,
     (dayKey % 10000) ~/ 100,
     dayKey % 100,

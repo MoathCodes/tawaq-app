@@ -3,9 +3,9 @@ import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
-import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:timezone/timezone.dart';
 

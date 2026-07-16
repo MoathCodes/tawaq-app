@@ -1,11 +1,28 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
+import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
+import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
+
+Future<bool> isDayFullyComplete(
+  PrayerRepo repo,
+  Location location,
+  DateTime date,
+) async {
+  final completions = await repo.getPrayerCompletionForDate(date, location);
+  final statuses = mapPrayerStatuses(completions, location, date);
+  return kObligatoryPrayers.every((prayer) {
+    final status = statuses[prayer] ?? CompletionStatus.none;
+    return status != CompletionStatus.none && status != CompletionStatus.missed;
+  });
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -20,6 +37,7 @@ void main() {
   group('PrayerDatabase', () {
     late Box<int, PrayerCompletion> box;
     late PrayerDatabase db;
+    late PrayerRepo repo;
     late Location location;
 
     setUp(() async {
@@ -28,6 +46,7 @@ void main() {
       box = Box<int, PrayerCompletion>(boxName);
       await box.clear();
       db = PrayerDatabase(box);
+      repo = PrayerRepo(prayerDatabase: db, log: Logger());
     });
 
     tearDown(() async {
@@ -339,9 +358,10 @@ void main() {
           location,
         );
 
-        final result = await db.getCompletionsBetween(
+        final result = await repo.getCompletionsBetween(
           DateTime(2024, 5, 15),
           DateTime(2024, 5, 20),
+          location,
         );
 
         expect(result, hasLength(2));
@@ -398,7 +418,7 @@ void main() {
           location,
         );
 
-        final result = await db.countAllPrayerStatusOnDate(
+        final result = await repo.countAllStatusesOnDate(
           baseDate.subtract(const Duration(days: 1)),
           baseDate.add(const Duration(days: 1)),
           location,
@@ -412,7 +432,7 @@ void main() {
       });
 
       test('returns zeros for empty database', () async {
-        final result = await db.countAllPrayerStatusOnDate(
+        final result = await repo.countAllStatusesOnDate(
           DateTime(2024, 5),
           DateTime(2024, 5, 31),
           location,
@@ -426,7 +446,7 @@ void main() {
       });
     });
 
-    group('getFullyCompletedDays', () {
+    group('fully completed days via repo index', () {
       Future<void> seedDay(
         DateTime date,
         List<CompletionStatus> statuses,
@@ -461,10 +481,7 @@ void main() {
           CompletionStatus.jamaah,
         ]);
 
-        final result = await db.getFullyCompletedDays(location);
-
-        expect(result, hasLength(1));
-        expect(result.first.day, 15);
+        expect(await isDayFullyComplete(repo, location, date), isTrue);
       });
 
       test('excludes day when any prayer is missed', () async {
@@ -477,9 +494,7 @@ void main() {
           CompletionStatus.onTime,
         ]);
 
-        final result = await db.getFullyCompletedDays(location);
-
-        expect(result, isEmpty);
+        expect(await isDayFullyComplete(repo, location, date), isFalse);
       });
 
       test('excludes day when not all prayers are recorded', () async {
@@ -513,9 +528,7 @@ void main() {
           location,
         );
 
-        final result = await db.getFullyCompletedDays(location);
-
-        expect(result, isEmpty);
+        expect(await isDayFullyComplete(repo, location, date), isFalse);
       });
 
       test('includes late prayers as completed', () async {
@@ -528,31 +541,25 @@ void main() {
           CompletionStatus.late,
         ]);
 
-        final result = await db.getFullyCompletedDays(location);
-
-        expect(result, hasLength(1));
+        expect(await isDayFullyComplete(repo, location, date), isTrue);
       });
 
-      test('returns sorted list of dates', () async {
-        await seedDay(
+      test('tracks multiple fully completed days', () async {
+        final dates = [
           DateTime(2024, 5, 20),
-          List.filled(5, CompletionStatus.onTime),
-        );
-        await seedDay(
           DateTime(2024, 5, 10),
-          List.filled(5, CompletionStatus.onTime),
-        );
-        await seedDay(
           DateTime(2024, 5, 15),
-          List.filled(5, CompletionStatus.onTime),
-        );
+        ];
+        for (final date in dates) {
+          await seedDay(date, List.filled(5, CompletionStatus.onTime));
+        }
 
-        final result = await db.getFullyCompletedDays(location);
+        final completed = [
+          for (final date in dates)
+            if (await isDayFullyComplete(repo, location, date)) date.day,
+        ]..sort();
 
-        expect(result, hasLength(3));
-        expect(result[0].day, 10);
-        expect(result[1].day, 15);
-        expect(result[2].day, 20);
+        expect(completed, [10, 15, 20]);
       });
 
       test('does not count day with 4 obligatory plus sunnah only', () async {
@@ -583,9 +590,7 @@ void main() {
           location,
         );
 
-        final result = await db.getFullyCompletedDays(location);
-
-        expect(result, isEmpty);
+        expect(await isDayFullyComplete(repo, location, date), isFalse);
       });
 
       test('counts day with all 5 obligatory even if sunnah also logged', () async {
@@ -601,10 +606,7 @@ void main() {
           location,
         );
 
-        final result = await db.getFullyCompletedDays(location);
-
-        expect(result, hasLength(1));
-        expect(result.first.day, 16);
+        expect(await isDayFullyComplete(repo, location, date), isTrue);
       });
     });
 
@@ -630,8 +632,8 @@ void main() {
       });
     });
 
-    group('isCompletionExists', () {
-      test('returns true when completion exists', () async {
+    group('getCompletionById', () {
+      test('returns completion when it exists', () async {
         await db.insertOrUpdateCompletion(
           PrayerCompletion(
             id: null,
@@ -643,15 +645,15 @@ void main() {
         );
 
         final all = await db.getAllCompletions();
-        final exists = await db.isCompletionExists(all.first.id!);
+        final found = await db.getCompletionById(all.first.id!);
 
-        expect(exists, isTrue);
+        expect(found, isNotNull);
       });
 
-      test('returns false when completion does not exist', () async {
-        final exists = await db.isCompletionExists(999999);
+      test('returns null when completion does not exist', () async {
+        final found = await db.getCompletionById(999999);
 
-        expect(exists, isFalse);
+        expect(found, isNull);
       });
     });
   });

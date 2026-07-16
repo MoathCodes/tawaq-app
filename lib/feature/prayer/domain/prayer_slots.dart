@@ -1,7 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_card_decision.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
-import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:timezone/timezone.dart';
 
 /// The five obligatory prayers used across schedule, analytics, and alerts.

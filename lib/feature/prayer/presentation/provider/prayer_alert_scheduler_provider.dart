@@ -7,12 +7,12 @@ import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
-import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
+import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_resolver.dart';
+import 'package:tawaq/feature/prayer/presentation/prayer_alert_copy.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
@@ -184,22 +184,6 @@ PrayerAlertEvent _buildPrayerAlertEvent({
 }) {
   final prayerName = target.prayer.getLocaleName(l10n);
 
-  final soundTitle = switch (target.kind) {
-    PrayerAlertKind.adhan => l10n.adhanPlayingTitle(prayerName),
-    PrayerAlertKind.iqamah => l10n.iqamahPlayingTitle(prayerName),
-    PrayerAlertKind.sunnah => l10n.sunnahAlertTitle(prayerName),
-  };
-  final osTitle = switch (target.kind) {
-    PrayerAlertKind.adhan => l10n.adhanAlertTitle(prayerName),
-    PrayerAlertKind.iqamah => l10n.iqamahAlertTitle(prayerName),
-    PrayerAlertKind.sunnah => l10n.sunnahAlertTitle(prayerName),
-  };
-  final osBody = switch (target.kind) {
-    PrayerAlertKind.adhan => l10n.adhanOsNotificationBody,
-    PrayerAlertKind.iqamah => l10n.iqamahOsNotificationBody,
-    PrayerAlertKind.sunnah => l10n.sunnahOsNotificationBody,
-  };
-
   return PrayerAlertEvent(
     kind: target.kind,
     prayer: target.prayer,
@@ -209,9 +193,9 @@ PrayerAlertEvent _buildPrayerAlertEvent({
     showOsNotification: delivery.showOsNotification,
     volume: settings.volume,
     soundAssetPath: delivery.soundAssetPath,
-    soundTitle: soundTitle,
+    soundTitle: prayerAlertSoundTitle(l10n, target.kind, prayerName),
     soundSubtitle: prayerName,
-    osTitle: osTitle,
-    osBody: osBody,
+    osTitle: prayerAlertTitle(l10n, target.kind, prayerName),
+    osBody: prayerAlertOsBody(l10n, target.kind),
   );
 }
