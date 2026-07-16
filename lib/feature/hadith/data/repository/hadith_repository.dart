@@ -52,7 +52,7 @@ class HadithRepository {
 
   /// Persists a hadith as a favorite.
   Future<DetailedHadith> createFavorite(DetailedHadith hadith) async {
-    final key = favoriteKeyFromHadith(hadith);
+    final key = hadithStableKey(hadith);
     await _local.addFavorite(key, hadith);
     return hadith;
   }
@@ -70,11 +70,6 @@ class HadithRepository {
   /// Removes one stored recent-search query.
   Future<void> removeRecentSearch(String query) async {
     await _local.removeRecentSearch(query);
-  }
-
-  /// Returns the stable bookmark key for a hadith.
-  String favoriteKeyFromHadith(HadithBase hadith) {
-    return hadithStableKey(hadith);
   }
 
   /// Returns all saved favorites.
@@ -120,27 +115,6 @@ class HadithRepository {
     return _client.searchMohdith(query);
   }
 
-  /// Fetches a sharh record by ID.
-  Future<Sharh> getSharh(String sharhId) async {
-    return _client.getSharhById(sharhId);
-  }
-
-  /// Fetches hadiths similar to the supplied hadith ID.
-  Future<List<DetailedHadith>> getSimilarHadith(String hadithId) async {
-    return _client.getSimilarHadith(hadithId);
-  }
-
-  /// Fetches the alternate narration for the supplied hadith ID.
-  Future<DetailedHadith?> getAlternateHadith(String hadithId) async {
-    return _client.getAlternateHadith(hadithId);
-  }
-
-  /// Fetches the usul entry for the supplied hadith ID.
-  Future<UsulHadith> getUsulHadith(String hadithId) async {
-    final response = await _client.getUsulHadith(hadithId);
-    return response.data;
-  }
-
   /// Searches rawi entries in the remote hadith API.
   Future<List<RawiItem>> searchRawi(String query) async {
     return _client.searchRawi(query);
@@ -172,7 +146,7 @@ class HadithRepository {
   Future<void> toggleFavorite(HadithBase hadith) async {
     const logPrefix = '[HadithRepository.toggleFavorite] ';
     try {
-      final key = favoriteKeyFromHadith(hadith);
+      final key = hadithStableKey(hadith);
       final isFavorite = await isFavoriteByKey(key);
       if (isFavorite) {
         await deleteFavorite(key);

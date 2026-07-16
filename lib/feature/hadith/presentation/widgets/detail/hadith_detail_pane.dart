@@ -54,7 +54,14 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
       icon: FLucideIcons.bookOpenText,
       title: l10n.hadithSharh,
       child: HadithAsyncDetailsSection<Sharh>(
-        value: ref.watch(hadithSharhProvider(hadith.sharhMetadata!.id)),
+        value: ref
+            .watch(
+              hadithDetailProvider(
+                HadithDetailKind.sharh,
+                hadith.sharhMetadata!.id,
+              ),
+            )
+            .whenData((value) => value! as Sharh),
         dataBuilder: (sharh) {
           final text = sharh.sharhText;
           if (text == null || text.trim().isEmpty) {
@@ -65,85 +72,100 @@ class HadithSelectedDetailsPane extends ConsumerWidget {
       ),
     );
 
-    addSection(
-      visible: hadith.hasUsulHadith && hadithId != null,
-      icon: FLucideIcons.sparkles,
-      title: l10n.hadithUsulHadith,
-      child: HadithAsyncDetailsSection<UsulHadith>(
-        value: ref.watch(hadithUsulProvider(hadithId!)),
-        dataBuilder: (usul) {
-          if (usul.sources.isEmpty) {
-            return const HadithSectionPlaceholder();
-          }
+    if (hadith.hasUsulHadith && hadithId != null) {
+      addSection(
+        visible: true,
+        icon: FLucideIcons.sparkles,
+        title: l10n.hadithUsulHadith,
+        child: HadithAsyncDetailsSection<UsulHadith>(
+          value: ref
+              .watch(hadithDetailProvider(HadithDetailKind.usul, hadithId))
+              .whenData((value) => value! as UsulHadith),
+          dataBuilder: (usul) {
+            if (usul.sources.isEmpty) {
+              return const HadithSectionPlaceholder();
+            }
 
-          return Column(
-            spacing: AppSpacing.sm,
-            children: usul.sources
-                .map((source) => HadithUsulSourceCard(source: source))
-                .toList(growable: false),
-          );
-        },
-      ),
-    );
+            return Column(
+              spacing: AppSpacing.sm,
+              children: usul.sources
+                  .map((source) => HadithUsulSourceCard(source: source))
+                  .toList(growable: false),
+            );
+          },
+        ),
+      );
+    }
 
-    addSection(
-      visible: hadith.hasSimilarHadith,
-      icon: FLucideIcons.eye,
-      title: l10n.hadithSimilarHadith,
-      child: HadithAsyncDetailsSection<List<DetailedHadith>>(
-        value: ref.watch(hadithSimilarProvider(hadithId)),
-        dataBuilder: (similarItems) {
-          if (similarItems.isEmpty) {
-            return const HadithSectionPlaceholder();
-          }
+    if (hadith.hasSimilarHadith && hadithId != null) {
+      addSection(
+        visible: true,
+        icon: FLucideIcons.eye,
+        title: l10n.hadithSimilarHadith,
+        child: HadithAsyncDetailsSection<List<DetailedHadith>>(
+          value: ref
+              .watch(hadithDetailProvider(HadithDetailKind.similar, hadithId))
+              .whenData((value) => value! as List<DetailedHadith>),
+          dataBuilder: (similarItems) {
+            if (similarItems.isEmpty) {
+              return const HadithSectionPlaceholder();
+            }
 
-          return ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: similarItems.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) {
-              final item = similarItems[index];
-              return HadithResultCard.embedded(
-                hadith: item,
-                onSelect: () {
-                  unawaited(
-                    ref
-                        .read(hadithSessionControllerProvider.notifier)
-                        .openSpecificList(similarItems, selected: item),
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
-    );
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: similarItems.length,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                final item = similarItems[index];
+                return HadithResultCard.embedded(
+                  hadith: item,
+                  onSelect: () {
+                    unawaited(
+                      ref
+                          .read(hadithSessionControllerProvider.notifier)
+                          .openSpecificList(similarItems, selected: item),
+                    );
+                  },
+                );
+              },
+            );
+          },
+        ),
+      );
+    }
 
-    addSection(
-      visible: hadith.hasAlternateHadithSahih,
-      icon: FLucideIcons.arrowRightFromLine,
-      title: l10n.hadithAlternateHadithSahih,
-      child: HadithAsyncDetailsSection<DetailedHadith?>(
-        value: ref.watch(hadithAlternateProvider(hadithId)),
-        dataBuilder: (alternate) {
-          if (alternate == null) {
-            return const HadithSectionPlaceholder();
-          }
+    if (hadith.hasAlternateHadithSahih && hadithId != null) {
+      addSection(
+        visible: true,
+        icon: FLucideIcons.arrowRightFromLine,
+        title: l10n.hadithAlternateHadithSahih,
+        child: HadithAsyncDetailsSection<DetailedHadith?>(
+          value: ref
+              .watch(
+                hadithDetailProvider(HadithDetailKind.alternate, hadithId),
+              )
+              .whenData((value) => value as DetailedHadith?),
+          dataBuilder: (alternate) {
+            if (alternate == null) {
+              return const HadithSectionPlaceholder();
+            }
 
-          return HadithResultCard.embedded(
-            hadith: alternate,
-            onSelect: () {
-              unawaited(
-                ref
-                    .read(hadithSessionControllerProvider.notifier)
-                    .selectHadith(alternate),
-              );
-            },
-          );
-        },
-      ),
-    );
+            return HadithResultCard.embedded(
+              hadith: alternate,
+              onSelect: () {
+                unawaited(
+                  ref
+                      .read(hadithSessionControllerProvider.notifier)
+                      .selectHadith(alternate),
+                );
+              },
+            );
+          },
+        ),
+      );
+    }
 
     return items;
   }

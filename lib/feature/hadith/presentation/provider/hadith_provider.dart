@@ -82,21 +82,6 @@ class HadithSessionController extends _$HadithSessionController {
     return 'specificList:${keys.join('|')}';
   }
 
-  /// Clears the persisted recent-search history.
-  Future<void> clearRecentSearches() {
-    return ref.read(hadithRecentSearchesProvider.notifier).clearAll();
-  }
-
-  /// Removes one query from the persisted recent-search history.
-  Future<void> removeRecentSearch(String query) {
-    return ref.read(hadithRecentSearchesProvider.notifier).removeQuery(query);
-  }
-
-  /// Persists the active hadith panel tab.
-  void setActiveTab(HadithPanelTab tab) {
-    return ref.read(hadithScreenSettingsProvider.notifier).setActiveTab(tab);
-  }
-
   /// Commits the session search query and triggers a search when in search mode.
   Future<void> setQuery(String query) async {
     if (query == state.query) {
@@ -253,7 +238,9 @@ class HadithSessionController extends _$HadithSessionController {
   }) async {
     state = state.copyWith(selectedHadith: hadith);
     if (openDetailsTab) {
-      setActiveTab(HadithPanelTab.details);
+      ref
+          .read(hadithScreenSettingsProvider.notifier)
+          .setActiveTab(HadithPanelTab.details);
     }
   }
 
@@ -355,7 +342,9 @@ class HadithSessionController extends _$HadithSessionController {
     );
 
     await search();
-    setActiveTab(HadithPanelTab.details);
+    ref
+        .read(hadithScreenSettingsProvider.notifier)
+        .setActiveTab(HadithPanelTab.details);
 
     final target = selected ?? (hadiths.isEmpty ? null : hadiths.first);
     if (target == null) {
@@ -485,32 +474,35 @@ Future<List<HadithLookupRef>> hadithLookup(
   };
 }
 
-/// Loads the sharh metadata for the given sharh identifier.
+/// Kind of remote detail payload for a hadith accordion section.
+enum HadithDetailKind {
+  /// Sharh explanation by sharh id.
+  sharh,
+
+  /// Similar narrations by hadith id.
+  similar,
+
+  /// Alternate authentic narration by hadith id.
+  alternate,
+
+  /// Usul sources by hadith id.
+  usul,
+}
+
+/// Loads a remote hadith detail payload for the accordion sections.
 ///
-/// Auto-dispose family: disposes when the detail pane stops watching this id.
+/// Auto-dispose family: disposes when the detail pane stops watching this key.
 @riverpod
-Future<Sharh> hadithSharh(Ref ref, String sharhId) async {
-  final repository = await ref.read(hadithRepositoryProvider.future);
-  return repository.getSharh(sharhId);
-}
-
-/// Loads hadiths that are similar to the given hadith identifier.
-@riverpod
-Future<List<DetailedHadith>> hadithSimilar(Ref ref, String hadithId) async {
-  final repository = await ref.read(hadithRepositoryProvider.future);
-  return repository.getSimilarHadith(hadithId);
-}
-
-/// Loads the alternate narration for the given hadith identifier.
-@riverpod
-Future<DetailedHadith?> hadithAlternate(Ref ref, String hadithId) async {
-  final repository = await ref.read(hadithRepositoryProvider.future);
-  return repository.getAlternateHadith(hadithId);
-}
-
-/// Loads the usul record for the given hadith identifier.
-@riverpod
-Future<UsulHadith> hadithUsul(Ref ref, String hadithId) async {
-  final repository = await ref.read(hadithRepositoryProvider.future);
-  return repository.getUsulHadith(hadithId);
+Future<Object?> hadithDetail(
+  Ref ref,
+  HadithDetailKind kind,
+  String id,
+) async {
+  final client = await ref.watch(dorarClientProvider.future);
+  return switch (kind) {
+    HadithDetailKind.sharh => client.getSharhById(id),
+    HadithDetailKind.similar => client.getSimilarHadith(id),
+    HadithDetailKind.alternate => client.getAlternateHadith(id),
+    HadithDetailKind.usul => (await client.getUsulHadith(id)).data,
+  };
 }

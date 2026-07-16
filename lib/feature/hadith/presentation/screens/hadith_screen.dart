@@ -14,11 +14,11 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_detail_pane.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_panel.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_form.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_results_column.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_search_column.dart';
-import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Main Hadith search and exploration page.
@@ -268,7 +268,7 @@ class _HadithSidePanel extends ConsumerWidget {
                   }
 
                   ref
-                      .read(hadithSessionControllerProvider.notifier)
+                      .read(hadithScreenSettingsProvider.notifier)
                       .setActiveTab(HadithPanelTab.values[index]);
                 },
               ),

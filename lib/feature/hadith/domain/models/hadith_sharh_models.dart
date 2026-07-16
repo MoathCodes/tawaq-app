@@ -1,3 +1,75 @@
+/// Structural zones of a Dorar hadith sharh string.
+class HadithSharhZones {
+  /// Creates sharh zones.
+  const HadithSharhZones({
+    required this.commentary,
+    this.matnPrefix,
+    this.metadata,
+  });
+
+  /// Matn text duplicated before the metadata block (metadata-rich family).
+  final String? matnPrefix;
+
+  /// Raw metadata block (`الراوي` … `التخريج`).
+  final String? metadata;
+
+  /// Commentary body after metadata (or the full text for pure-essay family).
+  final String commentary;
+
+  /// Whether this sharh uses the metadata-rich Dorar layout.
+  bool get isMetadataRich => metadata != null;
+}
+
+/// Inline segment kinds discovered in Dorar sharh commentary.
+enum HadithSharhSegmentKind {
+  /// Plain commentary prose.
+  prose,
+
+  /// Matn phrase in `"…"` or «…».
+  quote,
+
+  /// Lexical gloss lead (`أي:` / `بمعنى:` / `المراد` / `ومعناها`).
+  gloss,
+
+  /// Dorar pedagogical pair: `"phrase"، أي: explanation`.
+  glossChain,
+
+  /// Narrator/scholar dialogue lead (`قال X:` / `فقال`).
+  scholarLead,
+
+  /// Alternate opinion stack (`وقيل:`).
+  alternateOpinion,
+
+  /// Section pivot (`وفي هذا الحديث` / `في الحديث:` / `وفيه:`).
+  sectionLead,
+
+  /// Editorial bracket content (`[هذا]`).
+  editorialBracket,
+}
+
+/// A tokenized commentary segment.
+class HadithSharhSegment {
+  /// Creates a sharh segment.
+  const HadithSharhSegment({
+    required this.kind,
+    required this.text,
+    this.quotedPhrase,
+    this.glossText,
+  });
+
+  /// Segment classification.
+  final HadithSharhSegmentKind kind;
+
+  /// Full matched text (or prose chunk).
+  final String text;
+
+  /// Quoted phrase for [HadithSharhSegmentKind.glossChain].
+  final String? quotedPhrase;
+
+  /// Gloss explanation for [HadithSharhSegmentKind.glossChain].
+  final String? glossText;
+}
+
 /// Known Dorar sharh metadata header labels in display order.
 enum HadithSharhMetadataLabel {
   /// Narrator (`الراوي`).
@@ -95,4 +167,27 @@ class HadithSharhMetadataFields {
       }
     }
   }
+}
+
+/// Parsed Dorar sharh ready for presentation.
+class HadithSharhParsed {
+  /// Creates a parsed sharh view model.
+  const HadithSharhParsed({
+    required this.zones,
+    required this.segments,
+    required this.metadataFields,
+  });
+
+  /// Structural zones (matn prefix, metadata block, commentary).
+  final HadithSharhZones zones;
+
+  /// Tokenized commentary segments.
+  final List<HadithSharhSegment> segments;
+
+  /// Parsed metadata header fields.
+  final HadithSharhMetadataFields metadataFields;
+
+  /// Whether the sharh has displayable metadata or matn prefix content.
+  bool get hasMetadataContent =>
+      zones.matnPrefix != null || metadataFields.hasAny;
 }

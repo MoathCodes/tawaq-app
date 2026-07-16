@@ -1,5 +1,22 @@
-import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_segment.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_models.dart';
+import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_metadata_parser.dart';
 import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_normalizer.dart';
+import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_zone_splitter.dart';
+
+/// Parses raw Dorar sharh text into zones, segments, and metadata fields.
+HadithSharhParsed parseHadithSharh(String raw) {
+  final zones = HadithSharhZoneSplitter.split(raw);
+  final segments = zones.commentary.isEmpty
+      ? const <HadithSharhSegment>[]
+      : HadithSharhSegmentTokenizer.tokenize(zones.commentary);
+  final metadataFields = HadithSharhMetadataParser.parse(zones.metadata);
+
+  return HadithSharhParsed(
+    zones: zones,
+    segments: segments,
+    metadataFields: metadataFields,
+  );
+}
 
 /// Tokenizes Dorar sharh commentary into styled inline segments.
 abstract final class HadithSharhSegmentTokenizer {

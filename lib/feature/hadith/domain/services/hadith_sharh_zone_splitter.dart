@@ -1,5 +1,5 @@
 import 'package:tawaq/core/text/dorar_text_cleaner.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_zones.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_models.dart';
 
 /// Splits raw Dorar sharh text into matn prefix, metadata, and commentary
 /// zones.

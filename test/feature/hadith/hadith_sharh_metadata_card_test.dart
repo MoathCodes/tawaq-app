@@ -7,7 +7,6 @@ import 'package:forui/forui.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_metadata_parser.dart';
 import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_zone_splitter.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_metadata_card.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
@@ -41,10 +40,6 @@ void main() {
     );
   }
 
-  TextStyle baseStyle(FThemeData theme) {
-    return theme.typography.body.sm.copyWith(height: 1.8);
-  }
-
   Iterable<String> visibleTexts(WidgetTester tester) sync* {
     for (final widget in tester.widgetList<Text>(find.byType(Text))) {
       if (widget.data case final text? when text.isNotEmpty) yield text;
@@ -56,27 +51,16 @@ void main() {
     }
   }
 
-  group('HadithSharhMetadataCard', () {
+  group('HadithSharhText metadata', () {
     testWidgets('renders matn prefix in blockquote area', (tester) async {
       final sample = fixture('113371');
       final zones = HadithSharhZoneSplitter.split(sample['sharh'] as String);
-      final fields = HadithSharhMetadataParser.parse(zones.metadata);
+      expect(zones.matnPrefix, isNotNull);
 
       await tester.pumpWidget(
-        wrap(
-          Builder(
-            builder: (context) {
-              return HadithSharhMetadataCard(
-                fields: fields,
-                matnPrefix: zones.matnPrefix,
-                baseStyle: baseStyle(context.theme),
-              );
-            },
-          ),
-        ),
+        wrap(HadithSharhText(text: sample['sharh'] as String)),
       );
 
-      expect(zones.matnPrefix, isNotNull);
       expect(find.textContaining('السلامُ اسمٌ'), findsOneWidget);
     });
 
@@ -91,17 +75,7 @@ void main() {
       expect(fields.mohdith, 'الألباني');
 
       await tester.pumpWidget(
-        wrap(
-          Builder(
-            builder: (context) {
-              return HadithSharhMetadataCard(
-                fields: fields,
-                matnPrefix: zones.matnPrefix,
-                baseStyle: baseStyle(context.theme),
-              );
-            },
-          ),
-        ),
+        wrap(HadithSharhText(text: sample['sharh'] as String)),
       );
 
       final texts = visibleTexts(tester).toList(growable: false);
@@ -135,21 +109,9 @@ void main() {
 
     testWidgets('renders takhrij as one flowing paragraph', (tester) async {
       final sample = fixture('113371');
-      final zones = HadithSharhZoneSplitter.split(sample['sharh'] as String);
-      final fields = HadithSharhMetadataParser.parse(zones.metadata);
 
       await tester.pumpWidget(
-        wrap(
-          Builder(
-            builder: (context) {
-              return HadithSharhMetadataCard(
-                fields: fields,
-                matnPrefix: zones.matnPrefix,
-                baseStyle: baseStyle(context.theme),
-              );
-            },
-          ),
-        ),
+        wrap(HadithSharhText(text: sample['sharh'] as String)),
       );
 
       final takhrijText = tester.widgetList<ScopedSelectableText>(
@@ -174,7 +136,6 @@ void main() {
         wrap(HadithSharhText(text: sample['sharh'] as String)),
       );
 
-      expect(find.byType(HadithSharhMetadataCard), findsOneWidget);
       expect(find.textContaining('السلامُ اسمٌ'), findsOneWidget);
       expect(find.text('الراوي'), findsOneWidget);
       expect(find.textContaining('عبدالله بن مسعود'), findsOneWidget);
@@ -204,7 +165,6 @@ void main() {
 
       await tester.pumpWidget(wrap(const HadithSharhText(text: stubSharh)));
 
-      expect(find.byType(HadithSharhMetadataCard), findsOneWidget);
       expect(find.text('الراوي'), findsOneWidget);
       expect(find.textContaining('أبو هريرة'), findsOneWidget);
     });

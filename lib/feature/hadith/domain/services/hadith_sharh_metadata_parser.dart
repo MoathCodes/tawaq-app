@@ -1,5 +1,5 @@
 import 'package:tawaq/core/text/dorar_text_cleaner.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_metadata_fields.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_models.dart';
 
 /// Parses Dorar sharh metadata zone text into structured header fields.
 abstract final class HadithSharhMetadataParser {

@@ -3,15 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tawaq/feature/hadith/data/repository/hadith_repository.dart';
-import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart'
-    show hadithSharhProvider;
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 
-class MockHadithRepository extends Mock implements HadithRepository {}
-
-/// Counts [HadithRepository.getSharh] calls for auto-dispose assertions.
-class CountingHadithRepository extends Mock implements HadithRepository {
-  CountingHadithRepository() {
-    when(() => getSharh(any())).thenAnswer((invocation) async {
+/// Counts [DorarClient.getSharhById] calls for auto-dispose assertions.
+class CountingDorarClient extends Mock implements DorarClient {
+  CountingDorarClient() {
+    when(() => getSharhById(any())).thenAnswer((invocation) async {
       sharhCallCount++;
       final sharhId = invocation.positionalArguments[0]! as String;
       return Sharh(
@@ -36,15 +33,15 @@ Future<void> _waitForAutoDispose() async {
 }
 
 void main() {
-  group('hadithSharhProvider', () {
-    late CountingHadithRepository repository;
+  group('hadithDetailProvider', () {
+    late CountingDorarClient client;
     late ProviderContainer container;
 
     setUp(() {
-      repository = CountingHadithRepository();
+      client = CountingDorarClient();
       container = ProviderContainer.test(
         overrides: [
-          hadithRepositoryProvider.overrideWith((ref) async => repository),
+          dorarClientProvider.overrideWith((ref) async => client),
         ],
       );
     });
@@ -54,27 +51,39 @@ void main() {
     });
 
     test('is auto-dispose and refetches after all listeners drop', () async {
-      final subA = container.listen(hadithSharhProvider('sharh-a'), (_, _) {});
-      await container.read(hadithSharhProvider('sharh-a').future);
-      expect(repository.sharhCallCount, 1);
+      final subA = container.listen(
+        hadithDetailProvider(HadithDetailKind.sharh, 'sharh-a'),
+        (_, _) {},
+      );
+      await container.read(
+        hadithDetailProvider(HadithDetailKind.sharh, 'sharh-a').future,
+      );
+      expect(client.sharhCallCount, 1);
 
-      final subB = container.listen(hadithSharhProvider('sharh-b'), (_, _) {});
-      await container.read(hadithSharhProvider('sharh-b').future);
-      expect(repository.sharhCallCount, 2);
+      final subB = container.listen(
+        hadithDetailProvider(HadithDetailKind.sharh, 'sharh-b'),
+        (_, _) {},
+      );
+      await container.read(
+        hadithDetailProvider(HadithDetailKind.sharh, 'sharh-b').future,
+      );
+      expect(client.sharhCallCount, 2);
 
       subB.close();
       subA.close();
       await _waitForAutoDispose();
 
       final subAAgain = container.listen(
-        hadithSharhProvider('sharh-a'),
+        hadithDetailProvider(HadithDetailKind.sharh, 'sharh-a'),
         (_, _) {},
       );
-      await container.read(hadithSharhProvider('sharh-a').future);
+      await container.read(
+        hadithDetailProvider(HadithDetailKind.sharh, 'sharh-a').future,
+      );
       subAAgain.close();
 
       expect(
-        repository.sharhCallCount,
+        client.sharhCallCount,
         3,
         reason: 'auto-dispose family should not retain sharh-a after unlisten',
       );

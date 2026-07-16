@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
@@ -11,13 +10,12 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_locale_extensions.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_panel.dart';
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_form.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
-import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Search header with query field, bookmarks chrome, filter chips, and recents.
@@ -187,7 +185,9 @@ class _QueryField extends HookConsumerWidget {
                 onPress: session.searchBusy
                     ? null
                     : () {
-                        screenController.setActiveTab(HadithPanelTab.filters);
+                        ref
+                            .read(hadithScreenSettingsProvider.notifier)
+                            .setActiveTab(HadithPanelTab.filters);
                       },
                 semanticsLabel: compactActions ? l10n.hadithOpenFilters : null,
                 child: compactActions
@@ -462,7 +462,6 @@ class _RecentSearchesSection extends ConsumerWidget {
     final theme = context.theme;
     final l10n = context.l10n;
     final session = ref.watch(hadithSessionControllerProvider);
-    final screenController = ref.read(hadithSessionControllerProvider.notifier);
     final recentSearches = session.isSearchMode
         ? ref.watch(hadithRecentSearchesProvider)
         : const AsyncData<List<String>>(<String>[]);
@@ -491,7 +490,11 @@ class _RecentSearchesSection extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 onPress: session.searchBusy
                     ? null
-                    : () => unawaited(screenController.clearRecentSearches()),
+                    : () => unawaited(
+                        ref
+                            .read(hadithRecentSearchesProvider.notifier)
+                            .clearAll(),
+                      ),
                 child: Text(l10n.hadithClearAllRecents),
               ),
             ),
@@ -580,7 +583,11 @@ class _RecentSearchChip extends HookConsumerWidget {
                         l10n,
                       ),
                       onPress: () {
-                        unawaited(screenController.removeRecentSearch(query));
+                        unawaited(
+                          ref
+                              .read(hadithRecentSearchesProvider.notifier)
+                              .removeQuery(query),
+                        );
                       },
                       child: const HadithDecorExcludeSemantics(
                         child: Icon(FLucideIcons.x, size: 12),
@@ -628,104 +635,4 @@ class _SearchMetaSectionHeader extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Builds removable chip descriptors for the active [filters].
-List<HadithFilterChipAction> buildActiveHadithFilterChips(
-  HadithFilters filters,
-  AppLocalizations l10n,
-) {
-  final chips = <HadithFilterChipAction>[];
-
-  if (filters.searchMethod != SearchMethod.anyWord) {
-    chips.add(
-      HadithFilterChipAction(
-        label: filters.searchMethod.getLocaleName(l10n),
-        nextFilters: filters.copyWith(searchMethod: SearchMethod.anyWord),
-      ),
-    );
-  }
-
-  if (filters.zone != SearchZone.all) {
-    chips.add(
-      HadithFilterChipAction(
-        label: filters.zone.getLocaleName(l10n),
-        nextFilters: filters.copyWith(zone: SearchZone.all),
-      ),
-    );
-  }
-
-  if (filters.specialist) {
-    chips.add(
-      HadithFilterChipAction(
-        label: l10n.hadithSpecialist,
-        nextFilters: filters.copyWith(specialist: false),
-      ),
-    );
-  }
-
-  for (final degree in filters.degrees) {
-    chips.add(
-      HadithFilterChipAction(
-        label: degree.getLocaleName(l10n),
-        nextFilters: filters.copyWith(
-          degrees: filters.degrees
-              .where((entry) => entry != degree)
-              .toList(growable: false),
-        ),
-      ),
-    );
-  }
-
-  for (final scholar in filters.scholars) {
-    chips.add(
-      HadithFilterChipAction(
-        label: scholar.name,
-        nextFilters: filters.copyWith(
-          scholars: filters.scholars
-              .where((entry) => entry.id != scholar.id)
-              .toList(growable: false),
-        ),
-      ),
-    );
-  }
-
-  for (final book in filters.books) {
-    chips.add(
-      HadithFilterChipAction(
-        label: book.name,
-        nextFilters: filters.copyWith(
-          books: filters.books
-              .where((entry) => entry.id != book.id)
-              .toList(growable: false),
-        ),
-      ),
-    );
-  }
-
-  for (final rawi in filters.rawi) {
-    chips.add(
-      HadithFilterChipAction(
-        label: rawi.name,
-        nextFilters: filters.copyWith(
-          rawi: filters.rawi
-              .where((entry) => entry.id != rawi.id)
-              .toList(growable: false),
-        ),
-      ),
-    );
-  }
-
-  return chips;
-}
-
-/// A single removable active-filter chip action.
-class HadithFilterChipAction {
-  const HadithFilterChipAction({
-    required this.label,
-    required this.nextFilters,
-  });
-
-  final String label;
-  final HadithFilters nextFilters;
 }
