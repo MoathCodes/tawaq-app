@@ -192,6 +192,7 @@ class TawaqAudioService {
   // so the lease logic stays unit-testable without native player init.
   final AudioLeaseRegistry _leases;
   Duration? _lastKeepAlivePosition;
+  Timer? _leaseKeepAliveTimer;
 
   /// Current lease owner, or null when idle.
   String? get currentLeaseOwner => _leases.currentOwner;
@@ -260,15 +261,13 @@ class TawaqAudioService {
   void _emitState() {
     final track = _activeTrack;
     if (track == null) {
+      _stopLeaseKeepAliveTimer();
       _emit(const PlaybackIdle());
       return;
     }
     final position = _player.state.position;
     final duration = _player.state.duration;
-    final owner = _leases.currentOwner;
-    if (_player.state.playWhenReady && owner != null) {
-      _leases.keepAlive(owner: owner);
-    }
+    _refreshLeaseKeepAlive();
     if (_trackCompleted) {
       _emit(
         PlaybackCompleted(
@@ -297,12 +296,37 @@ class TawaqAudioService {
   void _emitBuffering() {
     final track = _activeTrack;
     if (track != null && !_trackCompleted) {
-      final owner = _leases.currentOwner;
-      if (owner != null) {
-        _leases.keepAlive(owner: owner);
-      }
+      _refreshLeaseKeepAlive();
       _emit(PlaybackBuffering(track));
     }
+  }
+
+  /// Refreshes the lease watchdog while a track is loaded for the current
+  /// owner — including paused and EOF — not only while [playWhenReady].
+  ///
+  /// Position ticks cover continuous play; a periodic timer covers pause/EOF
+  /// where mpv stops advancing position.
+  void _refreshLeaseKeepAlive() {
+    final owner = _leases.currentOwner;
+    if (_activeTrack == null || owner == null) {
+      _stopLeaseKeepAliveTimer();
+      return;
+    }
+    _leases.keepAlive(owner: owner);
+    _leaseKeepAliveTimer ??= Timer.periodic(_leaseKeepAliveThrottle, (_) {
+      final currentOwner = _leases.currentOwner;
+      if (_activeTrack == null || currentOwner == null) {
+        _stopLeaseKeepAliveTimer();
+        return;
+      }
+      _leases.keepAlive(owner: currentOwner);
+    });
+  }
+
+  void _stopLeaseKeepAliveTimer() {
+    _leaseKeepAliveTimer?.cancel();
+    _leaseKeepAliveTimer = null;
+    _lastKeepAlivePosition = null;
   }
 
   /// Refreshes the lease watchdog during continuous playback.
@@ -310,7 +334,7 @@ class TawaqAudioService {
   /// [_emitState] only runs on lifecycle transitions; mpv position ticks keep
   /// long sessions from losing the lease while audio is still playing.
   void _refreshLeaseKeepAliveFromPlayback(Duration position) {
-    if (_activeTrack == null || _trackCompleted) return;
+    if (_activeTrack == null) return;
     final owner = _leases.currentOwner;
     if (owner == null) return;
 
@@ -319,7 +343,7 @@ class TawaqAudioService {
       return;
     }
     _lastKeepAlivePosition = position;
-    _leases.keepAlive(owner: owner);
+    _refreshLeaseKeepAlive();
   }
 
   /// Returns true when an eof event likely reflects a network stall rather
@@ -701,6 +725,7 @@ class TawaqAudioService {
     _activeTrack = null;
     _trackCompleted = false;
     _publishedMetadata = null;
+    _stopLeaseKeepAliveTimer();
     await _clearWatchLater();
     await clearAbLoop();
     await resetPlaybackModes();
@@ -808,17 +833,22 @@ class TawaqAudioService {
 
   /// Releases the lease for [owner] if it currently holds it.
   ///
+  /// Clears published media-session metadata so a subsequent owner (e.g. adhan)
+  /// does not inherit surah/reciter identity from a prior recitation session.
   /// Idempotent: safe to call when the lease is idle or held by another
   /// owner.
   Future<void> release({required String owner}) async {
-    if (_leases.hasValidLease(owner)) {
-      _leases.releaseCurrent();
-    }
+    if (!_leases.hasValidLease(owner)) return;
+    _publishedMetadata = null;
+    _stopLeaseKeepAliveTimer();
+    await _player.setMediaSession(null);
+    _leases.releaseCurrent();
   }
 
   /// Releases native handles. Called on app shutdown.
   Future<void> dispose() async {
     _cancelFade();
+    _stopLeaseKeepAliveTimer();
     await _leases.dispose();
     await _volumeController.close();
     await _completionController.close();

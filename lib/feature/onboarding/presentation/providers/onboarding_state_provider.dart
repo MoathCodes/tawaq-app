@@ -1,11 +1,14 @@
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/feature/onboarding/data/models/onboarding_state.dart';
 import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
 import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 
 part 'onboarding_state_provider.g.dart';
+
+const String _onboardingLogPrefix = '[OnboardingStateNotifier]';
 
 /// Persisted onboarding completion flag.
 @Riverpod(keepAlive: true)
@@ -13,12 +16,20 @@ part 'onboarding_state_provider.g.dart';
 class OnboardingStateNotifier extends _$OnboardingStateNotifier {
   @override
   Future<OnboardingState> build() async {
-    await persist(
-      ref.read(settingsStorageProvider),
-      options: const StorageOptions(
-        cacheTime: StorageCacheTime.unsafe_forever,
-      ),
-    ).future;
+    try {
+      await persist(
+        ref.read(settingsStorageProvider),
+        options: const StorageOptions(
+          cacheTime: StorageCacheTime.unsafe_forever,
+        ),
+      ).future;
+    } on Object catch (error, stack) {
+      ref.read(loggerProvider).e(
+        '$_onboardingLogPrefix hydrate failed; using empty state',
+        error: error,
+        stackTrace: stack,
+      );
+    }
     if (!ref.mounted) return const OnboardingState();
     return state.value ?? const OnboardingState();
   }

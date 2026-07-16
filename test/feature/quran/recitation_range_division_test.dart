@@ -131,8 +131,7 @@ class _BoundsTestRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}
@@ -204,7 +203,10 @@ void main() {
     });
 
     test('resolveJuzAyahRange uses hive endAyahId for juz 10', () async {
-      final range = await resolveJuzAyahRange(mushaf: controller, juzNumber: 10);
+      final range = await resolveJuzAyahRange(
+        mushaf: controller,
+        juzNumber: 10,
+      );
       expect(range, isNotNull);
       expect(range!.from, const AyahReference(surah: 8, ayah: 41));
       expect(range.to, const AyahReference(surah: 9, ayah: 92));
@@ -307,28 +309,31 @@ void main() {
       expect(next, isNull);
     });
 
-    test('isGlobalRangeComplete is false until end of Quran for open-ended', () {
-      const from = AyahReference(surah: 8, ayah: 41);
+    test(
+      'isGlobalRangeComplete is false until end of Quran for open-ended',
+      () {
+        const from = AyahReference(surah: 8, ayah: 41);
 
-      expect(
-        isGlobalRangeComplete(
-          to: null,
-          surah: 8,
-          endAyah: 75,
-          mushaf: controller,
-        ),
-        isFalse,
-      );
-      expect(
-        isGlobalRangeComplete(
-          to: null,
-          surah: 9,
-          endAyah: 129,
-          mushaf: controller,
-        ),
-        isFalse,
-      );
-    });
+        expect(
+          isGlobalRangeComplete(
+            to: null,
+            surah: 8,
+            endAyah: 75,
+            mushaf: controller,
+          ),
+          isFalse,
+        );
+        expect(
+          isGlobalRangeComplete(
+            to: null,
+            surah: 9,
+            endAyah: 129,
+            mushaf: controller,
+          ),
+          isFalse,
+        );
+      },
+    );
   });
 
   group('isWholeSurahEndpoints / rangeNeedsAyahTiming', () {
@@ -415,8 +420,7 @@ class _SegmentTestRepo implements IQuranRepository {
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
-  ]) =>
-      throw UnimplementedError();
+  ]) => throw UnimplementedError();
 
   @override
   Future<String> getBasmalah() async => '';
@@ -494,8 +498,7 @@ class _SegmentTestRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}

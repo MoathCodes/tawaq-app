@@ -47,12 +47,11 @@ class FortressFocusReadingView extends HookConsumerWidget {
         duas: repository.loadDuas(category.chapterId),
         initialIndex: initialIndex,
       ),
-      loading: () => FSkeletonizer(
-        child: _FortressFocusReadingBody(
-          category: category,
-          duas: const [],
-          initialIndex: initialIndex,
-        ),
+      loading: () => _FortressFocusReadingBody(
+        category: category,
+        duas: const [],
+        initialIndex: initialIndex,
+        isLoading: true,
       ),
       error: (error, _) => Scaffold(
         body: Center(
@@ -73,11 +72,13 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
     required this.category,
     required this.duas,
     required this.initialIndex,
+    this.isLoading = false,
   });
 
   final FortressCategory category;
   final List<FortressDuaItem> duas;
   final int initialIndex;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,12 +87,57 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
     final onExit =
         ref.read(fortressScreenControllerProvider.notifier).exitFocusMode;
 
-    if (duas.isEmpty) {
+    if (duas.isEmpty && !isLoading) {
       return Scaffold(
         body: Center(
           child: Text(
             l10n.fortressNoAdhkarInChapter,
             style: theme.typography.body.md,
+          ),
+        ),
+      );
+    }
+
+    if (isLoading) {
+      return Scaffold(
+        backgroundColor: theme.colors.background,
+        body: FSkeletonizer(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                ),
+                child: Text(
+                  category.title,
+                  style: theme.typography.body.sm.copyWith(
+                    color: theme.colors.mutedForeground,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
+                    child: Text(
+                      '████████████████\n██████████████\n████████████████',
+                      style: theme.typography.body.xl3.copyWith(
+                        fontWeight: FontWeight.w600,
+                        height: 2,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       );

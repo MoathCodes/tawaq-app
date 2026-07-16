@@ -64,7 +64,8 @@ class AdhanAlertController extends _$AdhanAlertController
 
   @override
   Future<void> cancel() async {
-    if (!state.isShowing) return;
+    // Restore even when `!isShowing`: a partial `deliver` may have captured
+    // snapshot/flags and morphed the window before state was assigned.
     await _restoreWindowArtifacts();
     state = const AdhanAlertState.idle();
   }

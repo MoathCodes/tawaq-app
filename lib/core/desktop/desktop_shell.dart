@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/desktop/desktop_tray_service.dart';
 import 'package:tawaq/core/desktop/desktop_tray_sync_provider.dart';
 import 'package:tawaq/core/desktop/desktop_window_controller.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
@@ -49,7 +50,15 @@ class _DesktopShellState extends ConsumerState<DesktopShell>
       ),
     );
 
-    if (settings.launchToTray) {
+    // Only launch hidden when a tray icon exists to restore the window.
+    var launchHidden = settings.launchToTray;
+    if (launchHidden) {
+      final tray = ref.read(desktopTrayServiceProvider);
+      await tray.ensureInitialized();
+      launchHidden = tray.isAvailable;
+    }
+
+    if (launchHidden) {
       await windowManager.hide();
       ref
           .read(desktopMainWindowVisibleProvider.notifier)

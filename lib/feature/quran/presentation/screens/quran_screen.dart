@@ -16,7 +16,7 @@ class QuranScreen extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    useQuranAyahSelectionSync(ref);
+    useQuranAyahSelectionSync(ref, page: page);
 
     final viewMode = ref.watch(
       quranScreenSettingsProvider.select(

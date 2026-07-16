@@ -1,4 +1,4 @@
-import 'dart:ui' show FontFeature, Tristate;
+import 'dart:ui' show Tristate;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -57,50 +57,50 @@ const _style = SegmentedSeekBarStyle(
 );
 
 List<SeekBarSegment> _segments() => const [
-      SeekBarSegment(
-        index: 1,
-        start: Duration.zero,
-        end: Duration(seconds: 5),
-      ),
-      SeekBarSegment(
-        index: 2,
-        start: Duration(seconds: 5),
-        end: Duration(seconds: 10),
-      ),
-      SeekBarSegment(
-        index: 3,
-        start: Duration(seconds: 10),
-        end: Duration(seconds: 15),
-      ),
-    ];
+  SeekBarSegment(
+    index: 1,
+    start: Duration.zero,
+    end: Duration(seconds: 5),
+  ),
+  SeekBarSegment(
+    index: 2,
+    start: Duration(seconds: 5),
+    end: Duration(seconds: 10),
+  ),
+  SeekBarSegment(
+    index: 3,
+    start: Duration(seconds: 10),
+    end: Duration(seconds: 15),
+  ),
+];
 
 List<SeekBarSegment> _fiveSegments() => const [
-      SeekBarSegment(
-        index: 1,
-        start: Duration.zero,
-        end: Duration(seconds: 5),
-      ),
-      SeekBarSegment(
-        index: 2,
-        start: Duration(seconds: 5),
-        end: Duration(seconds: 10),
-      ),
-      SeekBarSegment(
-        index: 3,
-        start: Duration(seconds: 10),
-        end: Duration(seconds: 15),
-      ),
-      SeekBarSegment(
-        index: 4,
-        start: Duration(seconds: 15),
-        end: Duration(seconds: 20),
-      ),
-      SeekBarSegment(
-        index: 5,
-        start: Duration(seconds: 20),
-        end: Duration(seconds: 25),
-      ),
-    ];
+  SeekBarSegment(
+    index: 1,
+    start: Duration.zero,
+    end: Duration(seconds: 5),
+  ),
+  SeekBarSegment(
+    index: 2,
+    start: Duration(seconds: 5),
+    end: Duration(seconds: 10),
+  ),
+  SeekBarSegment(
+    index: 3,
+    start: Duration(seconds: 10),
+    end: Duration(seconds: 15),
+  ),
+  SeekBarSegment(
+    index: 4,
+    start: Duration(seconds: 15),
+    end: Duration(seconds: 20),
+  ),
+  SeekBarSegment(
+    index: 5,
+    start: Duration(seconds: 20),
+    end: Duration(seconds: 25),
+  ),
+];
 
 List<SeekBarSegment> _longSurahSegments(int count, Duration total) {
   final totalMs = total.inMilliseconds;
@@ -172,7 +172,10 @@ void main() {
       expect(focus.rect.height, closeTo(kLensMaxHeight, 0.01));
       expect(focus.rect.height, greaterThan(neighbor.rect.height));
       expect(focus.rect.width, greaterThan(distant.rect.width));
-      expect(focus.rect.width, lessThanOrEqualTo(320 * kLensMaxFocusWidthFraction + 1));
+      expect(
+        focus.rect.width,
+        lessThanOrEqualTo(320 * kLensMaxFocusWidthFraction + 1),
+      );
       expect(focus.opacity, closeTo(1, 0.01));
     });
 
@@ -186,7 +189,10 @@ void main() {
         trackHeight: 4,
       );
       final focus = layouts.firstWhere((l) => l.isFocus);
-      expect(focus.rect.width, lessThanOrEqualTo(320 * kLensMaxFocusWidthFraction + 1));
+      expect(
+        focus.rect.width,
+        lessThanOrEqualTo(320 * kLensMaxFocusWidthFraction + 1),
+      );
     });
 
     test('widths plus gaps approximate track width', () {
@@ -254,9 +260,18 @@ void main() {
 
   group('lensFlexForDistance', () {
     test('tiers decrease with distance', () {
-      expect(lensFlexForDistance(0, 0.01), greaterThan(lensFlexForDistance(1, 0.01)));
-      expect(lensFlexForDistance(1, 0.01), greaterThan(lensFlexForDistance(2, 0.01)));
-      expect(lensFlexForDistance(3, 0.01), greaterThan(lensFlexForDistance(10, 0.01)));
+      expect(
+        lensFlexForDistance(0, 0.01),
+        greaterThan(lensFlexForDistance(1, 0.01)),
+      );
+      expect(
+        lensFlexForDistance(1, 0.01),
+        greaterThan(lensFlexForDistance(2, 0.01)),
+      );
+      expect(
+        lensFlexForDistance(3, 0.01),
+        greaterThan(lensFlexForDistance(10, 0.01)),
+      );
     });
   });
 
@@ -331,34 +346,37 @@ void main() {
   });
 
   group('SegmentedSeekBar', () {
-    testWidgets('disabled when duration is zero; semantics reports unavailable',
-        (tester) async {
-      final seeks = <Duration>[];
-      await tester.pumpWidget(
-        _wrap(
-          SegmentedSeekBar(
-            position: Duration.zero,
-            duration: Duration.zero,
-            enabled: false,
-            segments: const [],
-            onSeek: seeks.add,
-            style: _style,
-            segmentLabel: (i) => 'Ayah $i',
-            repeatLabel: (c, t) => 'Repeat $c of $t',
-            unavailableLabel: 'No reciter is available',
+    testWidgets(
+      'disabled when duration is zero; semantics reports unavailable',
+      (tester) async {
+        final seeks = <Duration>[];
+        await tester.pumpWidget(
+          _wrap(
+            SegmentedSeekBar(
+              position: Duration.zero,
+              duration: Duration.zero,
+              enabled: false,
+              segments: const [],
+              onSeek: seeks.add,
+              style: _style,
+              segmentLabel: (i) => 'Ayah $i',
+              repeatLabel: (c, t) => 'Repeat $c of $t',
+              unavailableLabel: 'No reciter is available',
+            ),
           ),
-        ),
-      );
-      await tester.pump();
+        );
+        await tester.pump();
 
-      final node = tester.getSemantics(find.byType(SegmentedSeekBar));
-      expect(node.flagsCollection.isEnabled, Tristate.isFalse);
-      expect(node.value, contains('No reciter is available'));
-      expect(seeks, isEmpty);
-    });
+        final node = tester.getSemantics(find.byType(SegmentedSeekBar));
+        expect(node.flagsCollection.isEnabled, Tristate.isFalse);
+        expect(node.value, contains('No reciter is available'));
+        expect(seeks, isEmpty);
+      },
+    );
 
-    testWidgets('enabled semantics announce snapped ayah + position',
-        (tester) async {
+    testWidgets('enabled semantics announce snapped ayah + position', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           SegmentedSeekBar(
@@ -382,30 +400,35 @@ void main() {
       expect(node.value, contains('0:15'));
     });
 
-    testWidgets('idle timed track uses continuous painter without magnified lens',
-        (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          SegmentedSeekBar(
-            position: const Duration(seconds: 2),
-            duration: const Duration(seconds: 15),
-            segments: _segments(),
-            onSeek: (_) {},
-            style: _style,
-            segmentLabel: (i) => 'Ayah $i',
-            repeatLabel: (c, t) => 'Repeat $c of $t',
-            unavailableLabel: 'Unavailable',
+    testWidgets(
+      'idle timed track uses continuous painter without magnified lens',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            SegmentedSeekBar(
+              position: const Duration(seconds: 2),
+              duration: const Duration(seconds: 15),
+              segments: _segments(),
+              onSeek: (_) {},
+              style: _style,
+              segmentLabel: (i) => 'Ayah $i',
+              repeatLabel: (c, t) => 'Repeat $c of $t',
+              unavailableLabel: 'Unavailable',
+            ),
           ),
-        ),
-      );
-      await tester.pump();
+        );
+        await tester.pump();
 
-      final painter = tester.widget<CustomPaint>(find.byType(CustomPaint));
-      final p = painter.painter! as SegmentedTrackPainter;
-      expect(p.lensLayouts, isEmpty);
-      expect(p.revealStrength, 0);
-      expect(p.segmentRectOnTrack(1, const Size(300, 4))!.width, closeTo(100, 1));
-    });
+        final painter = tester.widget<CustomPaint>(find.byType(CustomPaint));
+        final p = painter.painter! as SegmentedTrackPainter;
+        expect(p.lensLayouts, isEmpty);
+        expect(p.revealStrength, 0);
+        expect(
+          p.segmentRectOnTrack(1, const Size(300, 4))!.width,
+          closeTo(100, 1),
+        );
+      },
+    );
 
     test('segmentIndexForPosition returns containing ayah', () {
       final segments = _segments();
@@ -427,13 +450,16 @@ void main() {
       );
     });
 
-    test('segmentIndexForPosition prefers containing over nearer next start', () {
-      final segments = _segments();
-      expect(
-        segmentIndexForPosition(segments, const Duration(milliseconds: 4900)),
-        1,
-      );
-    });
+    test(
+      'segmentIndexForPosition prefers containing over nearer next start',
+      () {
+        final segments = _segments();
+        expect(
+          segmentIndexForPosition(segments, const Duration(milliseconds: 4900)),
+          1,
+        );
+      },
+    );
 
     test('segmentStartForPosition snaps to ayah start', () {
       final segments = _segments();
@@ -443,8 +469,9 @@ void main() {
       );
     });
 
-    testWidgets('thumb follows parent position; reverts when seek fails',
-        (tester) async {
+    testWidgets('thumb follows parent position; reverts when seek fails', (
+      tester,
+    ) async {
       var position = const Duration(seconds: 2);
       await tester.pumpWidget(
         _wrap(
@@ -541,8 +568,7 @@ void main() {
       final width = barBox.size.width;
       final thumbRadius = _style.thumbRadius;
       const targetValue = 0.6;
-      final targetDx =
-          thumbRadius + targetValue * (width - thumbRadius * 2);
+      final targetDx = thumbRadius + targetValue * (width - thumbRadius * 2);
       final gesture = await tester.startGesture(
         barBox.localToGlobal(Offset(thumbRadius, barBox.size.height / 2)),
       );
@@ -556,8 +582,9 @@ void main() {
       expect(seeks.single.inMilliseconds, 5000);
     });
 
-    testWidgets('buffered ranges render SegmentedTrackPainter segments',
-        (tester) async {
+    testWidgets('buffered ranges render SegmentedTrackPainter segments', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           SegmentedSeekBar(
@@ -584,8 +611,9 @@ void main() {
       expect(p.enabled, isTrue);
     });
 
-    testWidgets('repeat pins thumb and shows badge before final pass',
-        (tester) async {
+    testWidgets('repeat pins thumb and shows badge before final pass', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           SegmentedSeekBar(
@@ -674,7 +702,9 @@ void main() {
       await tester.pump();
     });
 
-    testWidgets('lens reappears after pointer exit and re-enter', (tester) async {
+    testWidgets('lens reappears after pointer exit and re-enter', (
+      tester,
+    ) async {
       final gesture = await tester.createGesture(
         kind: PointerDeviceKind.mouse,
       );
@@ -786,8 +816,7 @@ void main() {
       final barBox = tester.renderObject<RenderBox>(bar);
       final barWidth = barBox.size.width;
       final thumbRadius = _style.thumbRadius;
-      final thumbCenter =
-          thumbRadius + (7 / 15) * (barWidth - thumbRadius * 2);
+      final thumbCenter = thumbRadius + (7 / 15) * (barWidth - thumbRadius * 2);
       final ayah3Center = (12.5 / 15) * barWidth;
       final hoverOffset = Offset(ayah3Center - barWidth / 2, 0);
 
@@ -804,9 +833,11 @@ void main() {
       final tooltipBox = tester.renderObject<RenderBox>(
         find.byKey(const Key('scrub-tooltip-positioned')),
       );
-      final tooltipCenter = tooltipBox.localToGlobal(
-        Offset(tooltipBox.size.width / 2, 0),
-      ).dx;
+      final tooltipCenter = tooltipBox
+          .localToGlobal(
+            Offset(tooltipBox.size.width / 2, 0),
+          )
+          .dx;
 
       expect(tooltipCenter, closeTo(topLeft.dx + ayah3Center, 24));
       expect(
@@ -851,16 +882,19 @@ void main() {
       final tooltipBox = tester.renderObject<RenderBox>(
         find.byKey(const Key('scrub-tooltip-positioned')),
       );
-      final tooltipCenter = tooltipBox.localToGlobal(
-        Offset(tooltipBox.size.width / 2, 0),
-      ).dx;
+      final tooltipCenter = tooltipBox
+          .localToGlobal(
+            Offset(tooltipBox.size.width / 2, 0),
+          )
+          .dx;
 
       final gestureCenter = tester.getCenter(bar) + const Offset(50, 0);
       final dragThumbCenter =
-          thumbRadius + (gestureCenter.dx - topLeft.dx - thumbRadius).clamp(
-                0.0,
-                barWidth - thumbRadius * 2,
-              );
+          thumbRadius +
+          (gestureCenter.dx - topLeft.dx - thumbRadius).clamp(
+            0.0,
+            barWidth - thumbRadius * 2,
+          );
 
       expect(tooltipCenter, closeTo(topLeft.dx + dragThumbCenter, 30));
 
@@ -870,8 +904,9 @@ void main() {
       expect(find.byKey(const Key('scrub-tooltip')), findsNothing);
     });
 
-    testWidgets('scrub tooltip falls back to formatted time without segments',
-        (tester) async {
+    testWidgets('scrub tooltip falls back to formatted time without segments', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           SegmentedSeekBar(
@@ -894,7 +929,10 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('scrub-tooltip')), findsOneWidget);
-      expect(find.textContaining(RegExp(r'^\d+:\d{2}(:\d{2})?$')), findsOneWidget);
+      expect(
+        find.textContaining(RegExp(r'^\d+:\d{2}(:\d{2})?$')),
+        findsOneWidget,
+      );
 
       await gesture.up();
       await tester.pump();

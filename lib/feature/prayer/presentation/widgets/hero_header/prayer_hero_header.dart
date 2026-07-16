@@ -431,7 +431,18 @@ class _HeroStatusPopover extends ConsumerWidget {
     if (!canSetStatus || dayKey == 0) {
       return const SizedBox.shrink();
     }
-    final completionDay = dateFromCalendarDayKey(dayKey);
+    final day = ref.watch(prayerDayProvider).value;
+    // Pre-Fajr Isha is yesterday's slot — log against that completion day.
+    final completionDay =
+        prayer == Prayer.isha &&
+            day != null &&
+            day.now.isBefore(day.timeline.fajrToday)
+        ? DateTime(
+            day.timeline.ishaYesterday.year,
+            day.timeline.ishaYesterday.month,
+            day.timeline.ishaYesterday.day,
+          )
+        : dateFromCalendarDayKey(dayKey);
     final status = ref.watch(completionStatusProvider(prayer, completionDay));
 
     final menuTriggerLabel = PrayerSemantics.statusMenuTrigger(

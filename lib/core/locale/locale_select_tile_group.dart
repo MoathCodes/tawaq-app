@@ -15,6 +15,7 @@ class LocaleSelectTileGroup extends ConsumerWidget {
     final isArabic = ref.watch(localeProvider) == 'ar';
 
     return FSelectTileGroup<bool>(
+      key: ValueKey(isArabic),
       control: FMultiValueControl.managedRadio(
         initial: isArabic,
         onChange: (selected) {

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/desktop_shutdown.dart';
+import 'package:tawaq/core/desktop/desktop_tray_service.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart';
 import 'package:window_manager/window_manager.dart';
@@ -49,8 +50,11 @@ class DesktopWindowController {
 
     final settings = _ref.read(desktopSettingsProvider).value;
     if (settings?.minimizeToTrayOnClose ?? true) {
-      await hideMainWindow();
-      return;
+      if (await _trayAvailable()) {
+        await hideMainWindow();
+        return;
+      }
+      // No tray to restore from — quit instead of trapping a hidden window.
     }
     await quit();
   }
@@ -58,7 +62,7 @@ class DesktopWindowController {
   /// Minimizes or hides to tray depending on settings.
   Future<void> requestMinimize() async {
     final settings = _ref.read(desktopSettingsProvider).value;
-    if (settings?.minimizeToTray ?? false) {
+    if ((settings?.minimizeToTray ?? false) && await _trayAvailable()) {
       await hideMainWindow();
       return;
     }
@@ -66,11 +70,20 @@ class DesktopWindowController {
   }
 
   /// Hides the main window to the system tray.
+  ///
+  /// No-ops when the tray backend is unavailable (no restore path).
   Future<void> hideMainWindow() async {
+    if (!await _trayAvailable()) return;
     await windowManager.hide();
     _ref
         .read(desktopMainWindowVisibleProvider.notifier)
         .setVisible(value: false);
+  }
+
+  Future<bool> _trayAvailable() async {
+    final tray = _ref.read(desktopTrayServiceProvider);
+    await tray.ensureInitialized();
+    return tray.isAvailable;
   }
 
   /// Shows and focuses the main window.

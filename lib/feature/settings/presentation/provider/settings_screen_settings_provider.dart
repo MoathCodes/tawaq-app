@@ -15,6 +15,9 @@ const _defaultTabKey = 'appearance';
 @riverpod
 @JsonPersist()
 class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
+  /// Tab key chosen while hydrate is still in flight.
+  String? _pendingTabKey;
+
   @override
   Future<String> build() async {
     try {
@@ -32,12 +35,21 @@ class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
         stackTrace: stack,
       );
     }
+    final pending = _pendingTabKey;
+    _pendingTabKey = null;
+    if (pending != null) {
+      state = AsyncData(pending);
+      return pending;
+    }
     return state.value ?? _defaultTabKey;
   }
 
   /// Sets the active settings tab.
   void setActiveTabKey(String tabKey) {
-    if (!state.hasValue) return;
+    if (!state.hasValue) {
+      _pendingTabKey = tabKey;
+      return;
+    }
     if (state.value == tabKey) return;
     state = AsyncData(tabKey);
     ref.read(loggerProvider).i('$_logPrefix Settings tab updated');

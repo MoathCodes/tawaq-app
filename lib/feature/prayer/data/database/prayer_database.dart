@@ -26,6 +26,10 @@ PrayerDatabase prayerDatabase(Ref ref) {
 }
 
 /// One-time duplicate repair for legacy prayer completion rows.
+///
+/// Defers until [prayerTimeInputsProvider] has a real prayer location so
+/// grouping keys match completion calendar days. Does not mark repaired when
+/// only a device-local fallback would be available.
 @Riverpod(keepAlive: true)
 Future<void> prayerCompletionsRepair(Ref ref) async {
   await ref.watch(hiveCoreInitProvider.future);
@@ -33,11 +37,12 @@ Future<void> prayerCompletionsRepair(Ref ref) async {
   final alreadyRepaired = (await repairedBox.get(_repairMetaKey) ?? 0) == 1;
   if (alreadyRepaired) return;
 
-  final location =
-      ref.read(prayerTimeInputsProvider)?.location ?? local;
+  final inputs = ref.watch(prayerTimeInputsProvider);
+  if (inputs == null) return;
+
   final removed = await ref
       .read(prayerDatabaseProvider)
-      .repairDuplicates(location);
+      .repairDuplicates(inputs.location);
 
   if (removed > 0) {
     ref.read(loggerProvider).i(

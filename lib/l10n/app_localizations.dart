@@ -2831,8 +2831,20 @@ abstract class AppLocalizations {
   /// No description provided for @quranRecitationOfflineAutoSave.
   ///
   /// In en, this message translates to:
-  /// **'Recitations are saved automatically while you listen.'**
+  /// **'Save while listening'**
   String get quranRecitationOfflineAutoSave;
+
+  /// No description provided for @quranRecitationOfflineAutoSaveOffHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Listening still works online. Use Save for offline for the current surah.'**
+  String get quranRecitationOfflineAutoSaveOffHint;
+
+  /// No description provided for @quranRecitationOfflineAutoSaveOnHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recitations are saved automatically while you listen.'**
+  String get quranRecitationOfflineAutoSaveOnHint;
 
   /// No description provided for @quranRecitationOfflineEmpty.
   ///
@@ -2941,6 +2953,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Repeat selection'**
   String get quranRecitationRepeatScopeSelection;
+
+  /// No description provided for @quranRecitationSaveOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Save for offline'**
+  String get quranRecitationSaveOffline;
+
+  /// No description provided for @quranRecitationSavedOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved offline'**
+  String get quranRecitationSavedOffline;
+
+  /// No description provided for @quranRecitationSavingOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get quranRecitationSavingOffline;
 
   /// No description provided for @quranRecitationSelectionLoopProgress.
   ///

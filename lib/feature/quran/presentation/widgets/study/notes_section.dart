@@ -34,28 +34,6 @@ class NotesSection extends HookConsumerWidget {
     final note = ref.watch(quranNotesProvider(ayahId));
     final controller = useTextEditingController();
     final hasSynced = useRef(false);
-
-    // Sync controller with provider when note loads or ayahId changes
-    useEffect(
-      () {
-        if (note.hasValue && !hasSynced.value) {
-          controller.text = note.value ?? '';
-          hasSynced.value = true;
-        }
-        return null;
-      },
-      [note.value],
-    );
-
-    // Reset sync flag when ayahId changes
-    useEffect(
-      () {
-        hasSynced.value = false;
-        return null;
-      },
-      [ayahId],
-    );
-
     final debounceTimer = useRef<Timer?>(null);
 
     useEffect(
@@ -64,16 +42,49 @@ class NotesSection extends HookConsumerWidget {
       const [],
     );
 
-    void saveNote() {
-      if (ayahId == null) return;
+    // On ayah change: cancel pending save, reset field, then allow re-sync.
+    useEffect(
+      () {
+        debounceTimer.value?.cancel();
+        debounceTimer.value = null;
+        hasSynced.value = false;
+        controller.text = '';
+        // Text assignment notifies listeners; drop any save it scheduled.
+        debounceTimer.value?.cancel();
+        debounceTimer.value = null;
+        return null;
+      },
+      [ayahId],
+    );
+
+    // Sync controller with provider when note loads (after ayah reset).
+    useEffect(
+      () {
+        if (note.hasValue && !hasSynced.value) {
+          controller.text = note.value ?? '';
+          hasSynced.value = true;
+          debounceTimer.value?.cancel();
+          debounceTimer.value = null;
+        }
+        return null;
+      },
+      [ayahId, note],
+    );
+
+    void saveNote(int id) {
       unawaited(
-        ref.read(quranNotesProvider(ayahId).notifier).addNote(controller.text),
+        ref.read(quranNotesProvider(id).notifier).addNote(controller.text),
       );
     }
 
     void scheduleSave() {
+      final id = ayahId;
+      if (id == null) return;
       debounceTimer.value?.cancel();
-      debounceTimer.value = Timer(const Duration(milliseconds: 500), saveNote);
+      debounceTimer.value = Timer(
+        const Duration(milliseconds: 500),
+        () => saveNote(id),
+      );
     }
 
     final noteMinLines = narrowPanel ? 3 : 5;
@@ -115,7 +126,10 @@ class NotesSection extends HookConsumerWidget {
           minLines: noteMinLines,
           maxLines: noteMaxLines,
           hint: l10n.reflectionPlaceholder,
-          onEditingComplete: saveNote,
+          onEditingComplete: () {
+            final id = ayahId;
+            if (id != null) saveNote(id);
+          },
           style: const .delta(
             contentPadding: .value(EdgeInsets.all(AppSpacing.md)),
           ),

@@ -139,7 +139,8 @@ class HadithRepository {
       }
     }
 
-    return response.data.first;
+    // No exact match — never fall back to an unrelated first result.
+    return null;
   }
 
   /// Toggles the bookmarked state of a hadith.

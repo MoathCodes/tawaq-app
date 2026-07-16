@@ -52,8 +52,13 @@ class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier {
   }, 'Fortress favorite chapter');
 
   /// Seeds default bookmarks once for new users.
+  ///
+  /// Existing favorites are preserved; only the seeded flag is set.
   void ensureDefaultBookmarks(List<int> defaultIds) => _commit((s) {
     if (s.defaultBookmarksSeeded) return s;
+    if (s.favoriteChapterIds.isNotEmpty) {
+      return s.copyWith(defaultBookmarksSeeded: true);
+    }
     return s.copyWith(
       favoriteChapterIds: defaultIds,
       defaultBookmarksSeeded: true,

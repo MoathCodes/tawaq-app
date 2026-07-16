@@ -10,7 +10,6 @@ import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 
 part 'prayer_schedule_provider.g.dart';
 
@@ -33,7 +32,7 @@ List<PrayerScheduleRow> prayerSchedule(
   Ref ref, [
   DateTime? forDate,
 ]) {
-  final settings = ref.watch(prayerSettingsProvider).value;
+  final settings = ref.watch(effectivePrayerSettingsProvider);
   if (settings == null) return [];
 
   final formatter = ref.watch(timeFormatterProvider);

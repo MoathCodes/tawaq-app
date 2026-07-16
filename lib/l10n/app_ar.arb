@@ -699,7 +699,9 @@
   "quranRecitationNextAyah": "الآية التالية",
   "quranRecitationNextSurah": "السورة التالية",
   "quranRecitationNoTiming": "تشغيل الآيات منفردة غير متاح لهذا القارئ",
-  "quranRecitationOfflineAutoSave": "تُحفظ التلاوات تلقائيًا أثناء الاستماع.",
+  "quranRecitationOfflineAutoSave": "الحفظ أثناء الاستماع",
+  "quranRecitationOfflineAutoSaveOffHint": "يمكنك الاستماع عبر الإنترنت. استخدم «حفظ دون اتصال» للسورة الحالية.",
+  "quranRecitationOfflineAutoSaveOnHint": "تُحفظ التلاوات تلقائيًا أثناء الاستماع.",
   "quranRecitationOfflineEmpty": "لا توجد تلاوات محفوظة بعد.",
   "quranRecitationOfflineFileCount": "{count} ملفات",
   "@quranRecitationOfflineFileCount": {
@@ -742,6 +744,9 @@
   },
   "quranRecitationRepeatScopeEachAyah": "تكرار كل آية",
   "quranRecitationRepeatScopeSelection": "تكرار المقطع",
+  "quranRecitationSaveOffline": "حفظ دون اتصال",
+  "quranRecitationSavedOffline": "محفوظ دون اتصال",
+  "quranRecitationSavingOffline": "جارٍ الحفظ…",
   "quranRecitationSelectionLoopProgress": "تكرار {current} من {total}",
   "@quranRecitationSelectionLoopProgress": {
     "placeholders": {

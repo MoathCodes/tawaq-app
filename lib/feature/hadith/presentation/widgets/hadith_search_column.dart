@@ -108,13 +108,6 @@ class _QueryField extends HookConsumerWidget {
 
     useRegisterAppSearchFocus(focusSearch, enabled: session.isSearchMode);
 
-    useEffect(() {
-      if (queryController.text != session.query) {
-        queryController.text = session.query;
-      }
-      return null;
-    }, [session.query]);
-
     final theme = context.theme;
     final l10n = context.l10n;
     final activeFilterCount = session.filters.activeCount;
@@ -127,6 +120,17 @@ class _QueryField extends HookConsumerWidget {
       () => commitQuery(queryController.text),
       duration: _queryDebounceDuration,
     );
+
+    useEffect(() {
+      if (queryController.text != session.query) {
+        // Drop any in-flight typing debounce so chip / programmatic syncs
+        // are not overwritten by a stale commit.
+        debouncedCommitQuery.cancel();
+        queryController.text = session.query;
+        debouncedCommitQuery.cancel();
+      }
+      return null;
+    }, [session.query]);
 
     void onQueryChanged(String query) {
       debouncedCommitQuery();

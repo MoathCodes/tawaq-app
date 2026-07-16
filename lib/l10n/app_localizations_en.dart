@@ -1563,7 +1563,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Per-ayah playback isn\'t available for this reciter';
 
   @override
-  String get quranRecitationOfflineAutoSave =>
+  String get quranRecitationOfflineAutoSave => 'Save while listening';
+
+  @override
+  String get quranRecitationOfflineAutoSaveOffHint =>
+      'Listening still works online. Use Save for offline for the current surah.';
+
+  @override
+  String get quranRecitationOfflineAutoSaveOnHint =>
       'Recitations are saved automatically while you listen.';
 
   @override
@@ -1625,6 +1632,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quranRecitationRepeatScopeSelection => 'Repeat selection';
+
+  @override
+  String get quranRecitationSaveOffline => 'Save for offline';
+
+  @override
+  String get quranRecitationSavedOffline => 'Saved offline';
+
+  @override
+  String get quranRecitationSavingOffline => 'Saving…';
 
   @override
   String quranRecitationSelectionLoopProgress(int current, int total) {

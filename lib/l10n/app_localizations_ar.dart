@@ -1594,7 +1594,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'تشغيل الآيات منفردة غير متاح لهذا القارئ';
 
   @override
-  String get quranRecitationOfflineAutoSave =>
+  String get quranRecitationOfflineAutoSave => 'الحفظ أثناء الاستماع';
+
+  @override
+  String get quranRecitationOfflineAutoSaveOffHint =>
+      'يمكنك الاستماع عبر الإنترنت. استخدم «حفظ دون اتصال» للسورة الحالية.';
+
+  @override
+  String get quranRecitationOfflineAutoSaveOnHint =>
       'تُحفظ التلاوات تلقائيًا أثناء الاستماع.';
 
   @override
@@ -1656,6 +1663,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quranRecitationRepeatScopeSelection => 'تكرار المقطع';
+
+  @override
+  String get quranRecitationSaveOffline => 'حفظ دون اتصال';
+
+  @override
+  String get quranRecitationSavedOffline => 'محفوظ دون اتصال';
+
+  @override
+  String get quranRecitationSavingOffline => 'جارٍ الحفظ…';
 
   @override
   String quranRecitationSelectionLoopProgress(int current, int total) {

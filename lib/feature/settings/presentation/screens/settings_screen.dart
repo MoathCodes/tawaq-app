@@ -83,6 +83,29 @@ class SettingsScreen extends HookConsumerWidget {
       [tabKey, showKeyboardShortcuts],
     );
 
+    // When persisted tab hydrates (no route override), sync TabController.
+    useEffect(
+      () {
+        if (tabKey != null || persistedKey == null) {
+          return null;
+        }
+
+        final index = indexForTabKey(
+          persistedKey,
+          showKeyboardShortcuts: showKeyboardShortcuts,
+        ).clamp(0, tabs.length - 1);
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!tabController.indexIsChanging && tabController.index != index) {
+            tabController.animateTo(index);
+          }
+        });
+
+        return null;
+      },
+      [persistedKey, tabKey, showKeyboardShortcuts, tabs.length],
+    );
+
     useEffect(
       () {
         void onTabChanged() {

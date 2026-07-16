@@ -130,6 +130,77 @@ void main() {
       );
     });
 
+    test('concurrent download joins in-flight and yields cached file', () async {
+      final controller = StreamController<List<int>>();
+      final client = _client(
+        (_) => http.StreamedResponse(
+          controller.stream,
+          200,
+          contentLength: 5,
+        ),
+      );
+      final cache = _cache(tempDir, client);
+      final tokenA = CancellationToken();
+      final tokenB = CancellationToken();
+
+      final firstEvents = <DownloadProgress>[];
+      final secondEvents = <DownloadProgress>[];
+      final firstDone = Completer<void>();
+      final secondStarted = Completer<void>();
+
+      final first = cache
+          .downloadAudio(
+            reciterId: 1,
+            moshafId: 1,
+            surah: 1,
+            reciterName: 'Test',
+            riwayahName: 'Hafs',
+            surahName: 'Al-Fatiha',
+            url: 'https://example.com/001.mp3',
+            cancellationToken: tokenA,
+          )
+          .listen(
+            (e) {
+              firstEvents.add(e);
+              if (!secondStarted.isCompleted) secondStarted.complete();
+            },
+            onDone: firstDone.complete,
+          );
+
+      await secondStarted.future.timeout(const Duration(seconds: 2));
+
+      final secondFuture = cache
+          .downloadAudio(
+            reciterId: 1,
+            moshafId: 1,
+            surah: 1,
+            reciterName: 'Test',
+            riwayahName: 'Hafs',
+            surahName: 'Al-Fatiha',
+            url: 'https://example.com/001.mp3',
+            cancellationToken: tokenB,
+          )
+          .toList();
+
+      controller.add(Uint8List.fromList([1, 2, 3, 4, 5]));
+      await controller.close();
+      await firstDone.future.timeout(const Duration(seconds: 2));
+      await first.cancel();
+
+      final second = await secondFuture.timeout(const Duration(seconds: 2));
+      expect(second, isNotEmpty);
+      expect(second.last.receivedBytes, 5);
+      expect(second.last.totalBytes, 5);
+      expect(firstEvents, isNotEmpty);
+
+      final audioDir = Directory('${tempDir.path}/audio');
+      final mp3s = audioDir
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.mp3'));
+      expect(mp3s, hasLength(1));
+    });
+
     test('deletes .part and does not rename on cancellation', () async {
       // A stream that yields one chunk then stays open (controller not closed)
       // so the download hangs until cancellation closes the controller.
@@ -473,6 +544,104 @@ void main() {
               .where((f) => f.path.endsWith('.part'));
           expect(parts, isEmpty, reason: '.part must be deleted on cancel');
         }
+      },
+    );
+
+    test('persist:false returns network uri and writes no files', () async {
+      var requestCount = 0;
+      final client = _client((_) {
+        requestCount++;
+        return _response(chunks: [Uint8List.fromList([1, 2, 3])]);
+      });
+      final repo = _repo(tempDir, client);
+      final reciter = _reciter();
+      final moshaf = reciter.moshaf.first;
+
+      final result = await repo.resolveSurahUri(
+        reciter: reciter,
+        moshaf: moshaf,
+        surah: 1,
+        surahName: 'Al-Fatiha',
+        persist: false,
+      );
+
+      expect(result.uri, kSurah1Url);
+      expect(result.progress, isNull);
+      expect(requestCount, 0, reason: 'must not hit the network to download');
+
+      final audioDir = Directory('${tempDir.path}/audio');
+      expect(
+        audioDir.existsSync() &&
+            audioDir.listSync(recursive: true).whereType<File>().isNotEmpty,
+        isFalse,
+        reason: 'persist:false must not write .mp3 or .part',
+      );
+    });
+
+    test('persist:true still downloads to file://', () async {
+      final client = _client(
+        (_) => _response(chunks: [Uint8List.fromList([1, 2, 3, 4, 5])]),
+      );
+      final repo = _repo(tempDir, client);
+      final reciter = _reciter();
+      final moshaf = reciter.moshaf.first;
+
+      final result = await repo.resolveSurahUri(
+        reciter: reciter,
+        moshaf: moshaf,
+        surah: 1,
+        surahName: 'Al-Fatiha',
+        persist: true,
+      );
+
+      expect(result.uri, startsWith('file://'));
+      expect(result.progress, isNotNull);
+    });
+
+    test(
+      'saveSurahAudio caches; later persist:false resolve returns file://',
+      () async {
+        final client = _client(
+          (_) => _response(chunks: [Uint8List.fromList([9, 8, 7, 6, 5])]),
+        );
+        final repo = _repo(tempDir, client);
+        final reciter = _reciter();
+        final moshaf = reciter.moshaf.first;
+
+        final streamed = await repo.resolveSurahUri(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: 1,
+          surahName: 'Al-Fatiha',
+          persist: false,
+        );
+        expect(streamed.uri, kSurah1Url);
+
+        final events = <DownloadProgress>[];
+        await repo.saveSurahAudio(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: 1,
+          surahName: 'Al-Fatiha',
+          onProgress: events.add,
+        );
+        expect(events, isNotEmpty);
+        expect(await repo.isSurahCached(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: 1,
+          surahName: 'Al-Fatiha',
+        ), isTrue);
+
+        final offline = await repo.resolveSurahUri(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: 1,
+          surahName: 'Al-Fatiha',
+          persist: false,
+        );
+        expect(offline.uri, startsWith('file://'));
+        expect(offline.progress, isNull);
       },
     );
   });

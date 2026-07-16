@@ -20,6 +20,7 @@ import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state
 import 'package:tawaq/feature/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:tawaq/feature/prayer/presentation/screens/prayer_screen.dart';
 import 'package:tawaq/feature/quran/presentation/screens/quran_screen.dart';
+import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/screens/settings_screen.dart';
 import 'package:tawaq/feature/shell/shell_feature_layer.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -269,8 +270,16 @@ GoRouter appRouter(Ref ref) {
       if (!bootstrap.hasValue) return null;
 
       final onOnboarding = state.matchedLocation == onboardingPath;
-      final needed = ref.read(onboardingNeededProvider);
+      final onboarding = ref.read(onboardingStateProvider);
+      final prayer = ref.read(prayerSettingsProvider);
 
+      // Hold until onboarding + prayer settings resolve — don't treat
+      // loading as "not needed" (that flashes /prayer on first run).
+      if (onboarding.isLoading || !prayer.hasValue) {
+        return onOnboarding ? null : onboardingPath;
+      }
+
+      final needed = ref.read(onboardingNeededProvider);
       if (needed && !onOnboarding) return onboardingPath;
       if (!needed && onOnboarding) return const PrayerRoute().location;
       return null;

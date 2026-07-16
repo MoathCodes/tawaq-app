@@ -727,7 +727,9 @@
   "quranRecitationNextAyah": "Next ayah",
   "quranRecitationNextSurah": "Next surah",
   "quranRecitationNoTiming": "Per-ayah playback isn't available for this reciter",
-  "quranRecitationOfflineAutoSave": "Recitations are saved automatically while you listen.",
+  "quranRecitationOfflineAutoSave": "Save while listening",
+  "quranRecitationOfflineAutoSaveOffHint": "Listening still works online. Use Save for offline for the current surah.",
+  "quranRecitationOfflineAutoSaveOnHint": "Recitations are saved automatically while you listen.",
   "quranRecitationOfflineEmpty": "No recitations saved yet.",
   "quranRecitationOfflineFileCount": "{count} files",
   "@quranRecitationOfflineFileCount": {
@@ -770,6 +772,9 @@
   },
   "quranRecitationRepeatScopeEachAyah": "Repeat each ayah",
   "quranRecitationRepeatScopeSelection": "Repeat selection",
+  "quranRecitationSaveOffline": "Save for offline",
+  "quranRecitationSavedOffline": "Saved offline",
+  "quranRecitationSavingOffline": "Saving…",
   "quranRecitationSelectionLoopProgress": "Loop {current} of {total}",
   "@quranRecitationSelectionLoopProgress": {
     "placeholders": {

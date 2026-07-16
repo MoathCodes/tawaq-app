@@ -83,16 +83,17 @@ class HadithSessionController extends _$HadithSessionController {
   }
 
   /// Commits the session search query and triggers a search when in search mode.
+  ///
+  /// Query commits are ignored outside search mode so bookmarks / specific-list
+  /// snapshots are not destroyed by accidental field commits.
   Future<void> setQuery(String query) async {
-    if (query == state.query) {
-      if (state.isSearchMode) {
-        await search();
-      }
+    if (!state.isSearchMode) {
       return;
     }
 
-    if (!state.isSearchMode) {
-      await exitSpecificMode(restoreSearchSnapshot: false);
+    if (query == state.query) {
+      await search();
+      return;
     }
 
     state = state.copyWith(query: query);
@@ -227,8 +228,30 @@ class HadithSessionController extends _$HadithSessionController {
   /// Toggles a hadith between favorite and non-favorite state.
   Future<void> toggleFavorite(HadithBase hadith) async {
     final repository = await ref.read(hadithRepositoryProvider.future);
+    final key = hadithStableKey(hadith);
+    final wasFavorite = await repository.isFavoriteByKey(key);
+
     await repository.toggleFavorite(hadith);
     ref.invalidate(hadithFavoritesProvider);
+
+    if (!wasFavorite || state.mode != HadithViewMode.bookmarks) {
+      return;
+    }
+
+    final selected = state.selectedHadith;
+    if (selected == null || hadithStableKey(selected) != key) {
+      return;
+    }
+
+    final favorites = await ref.read(hadithFavoritesProvider.future);
+    if (state.mode != HadithViewMode.bookmarks) return;
+
+    if (favorites.isEmpty) {
+      clearSelection();
+      return;
+    }
+
+    await selectHadith(favorites.first);
   }
 
   /// Selects a hadith and optionally opens the details tab.

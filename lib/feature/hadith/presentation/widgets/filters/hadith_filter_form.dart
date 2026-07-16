@@ -7,6 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_locale_extensions.dart';
@@ -315,11 +316,14 @@ class HadithFilterForm extends ConsumerWidget {
             },
           ),
           filter: (query) {
-            final lower = query.trim().toLowerCase();
-            if (lower.isEmpty) return SearchZone.values;
-            return SearchZone.values.where(
-              (zone) => zone.getLocaleName(l10n).toLowerCase().contains(lower),
-            );
+            final trimmed = query.trim();
+            if (trimmed.isEmpty) return SearchZone.values;
+            final lower = trimmed.toLowerCase();
+            return SearchZone.values.where((zone) {
+              final name = zone.getLocaleName(l10n);
+              return arabicSearchContains(name, trimmed) ||
+                  name.toLowerCase().contains(lower);
+            });
           },
         ),
         const SizedBox(height: AppSpacing.md),
@@ -355,14 +359,17 @@ class HadithFilterForm extends ConsumerWidget {
             },
           ),
           filter: (query) {
-            final lower = query.trim().toLowerCase();
+            final trimmed = query.trim();
             final values = HadithDegree.values.where(
               (value) => value != HadithDegree.all,
             );
-            if (lower.isEmpty) return values;
-            return values.where(
-              (value) => value.getLocaleName(l10n).toLowerCase().contains(lower),
-            );
+            if (trimmed.isEmpty) return values;
+            final lower = trimmed.toLowerCase();
+            return values.where((value) {
+              final name = value.getLocaleName(l10n);
+              return arabicSearchContains(name, trimmed) ||
+                  name.toLowerCase().contains(lower);
+            });
           },
         ),
         const SizedBox(height: AppSpacing.lg),

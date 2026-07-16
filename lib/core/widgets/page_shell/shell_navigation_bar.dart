@@ -22,7 +22,8 @@ class ShellBottomNavigationBar extends ConsumerWidget {
       container: true,
       explicitChildNodes: true,
       child: FBottomNavigationBar(
-        index: selectedIndex < 0 ? 0 : selectedIndex,
+        // -1 when outside [kMainRoutes] so no main tab is selected.
+        index: selectedIndex,
         onChange: (value) {
           final route = routes[value];
           if (route.navigationEnabled) {

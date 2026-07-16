@@ -48,6 +48,8 @@ class PrayerAlertCoordinator {
   bool _disposed = false;
   Timer? _finishTimer;
   StreamSubscription<PlaybackState>? _playbackSub;
+  /// Iqamah deferred while the same prayer's adhan is still in flight.
+  PrayerAlertEvent? _pendingIqamah;
 
   Future<void> dispatch(PrayerAlertEvent event) {
     if (!event.hasAnyEffect) return Future<void>.value();
@@ -60,6 +62,7 @@ class PrayerAlertCoordinator {
     if (_disposed) return;
     _disposed = true;
     ++_generation;
+    _pendingIqamah = null;
     _finishTimer?.cancel();
     _finishTimer = null;
     await _playbackSub?.cancel();
@@ -88,6 +91,9 @@ class PrayerAlertCoordinator {
           (flight) => flight.kind == PrayerAlertKind.adhan &&
               flight.prayer == prayerKey,
         )) {
+      // Scheduler already deduped this fire key — hold it until adhan ends
+      // so the iqamah is not silently dropped for the rest of the day.
+      _pendingIqamah = event;
       return;
     }
 
@@ -172,6 +178,12 @@ class PrayerAlertCoordinator {
     _inFlight.clear();
     if (_disposed || generation != _generation) return;
     onFinished?.call();
+
+    final pending = _pendingIqamah;
+    _pendingIqamah = null;
+    if (pending != null && !_disposed) {
+      await _deliver(pending);
+    }
   }
 
   Future<void> _teardown() async {
