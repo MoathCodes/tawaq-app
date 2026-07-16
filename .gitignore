@@ -88,3 +88,10 @@ build/
 pics/
 website/
 .kimchi/
+.jj/
+.junie/
+.calude/
+.cursor/
+.zed/
+
+dist/

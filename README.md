@@ -1,6 +1,19 @@
 # Tawaq
 
-A new Flutter project.
+Flutter desktop app for prayer times, Quran, Hadith, and Hisn al-Muslim.
+
+## Clone
+
+Only two packages are git submodules (`adhan_dart`, `dorar_hadith`). Everything else under `packages/` is vendored in this repo.
+
+```bash
+git clone <repo-url>
+cd tawaq
+git submodule update --init -- packages/adhan_dart packages/dorar_hadith
+flutter pub get
+```
+
+`git clone --recurse-submodules` also works now that `.gitmodules` only lists those two paths.
 
 ## Getting Started
 

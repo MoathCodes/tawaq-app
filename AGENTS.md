@@ -63,7 +63,7 @@ When adding a new query, propagate through each layer. Not every feature has a s
 
 Settings notifiers use `@JsonPersist()` (from `riverpod_annotation/experimental/json_persist.dart`) with a shared `SettingsStorage` (Hivez-backed, box `riverpod_persist`). Key notifiers:
 
-- `LocaleNotifier` — sync, stores language code (`"en"` / `"ar"`) — lives in `lib/core/locale/locale_provider.dart`, re-exported via `settings_provider.dart`
+- `LocaleNotifier` — sync, stores language code (`"en"` / `"ar"`) — lives in `lib/core/locale/locale_provider.dart`
 - `PrayerSettingsNotifier` — async, coordinates, timezone, iqamah offsets, 24h toggle
 - `ThemeNotifier` — async, stores `AppPalette` + `ThemeMode` + `**AppTextScale`**
 - **UI state** — screen/session prefs live in each feature (not a shared settings junk drawer):
@@ -72,12 +72,13 @@ Settings notifiers use `@JsonPersist()` (from `riverpod_annotation/experimental/
   - `QuranScreenSettingsNotifier` + `RecitationSettingsNotifier` — `lib/feature/quran/presentation/providers/quran_screen_settings_provider.dart`
   - `HadithScreenSettingsNotifier` — `lib/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart`
   - `FortressScreenSettingsNotifier` — `lib/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart`
-  - `SettingsScreenSettingsNotifier` — active settings tab only (`settings_screen_settings_provider.dart`)
+  - `SettingsScreenSettingsNotifier` — active settings tab key string (`settings_screen_settings_provider.dart`)
 - `FirstPrayerRecordedDate` — ISO date of first recorded prayer (analytics)
+- `PrayerAnalyticsPrefs` — lives under `lib/feature/prayer/data/models/` (owned by prayer analytics)
 
 Common internal pattern: `_commit()` helper that guards against null state, applies a transform, and logs the changed field name. Async notifiers call `persist()` in `build()` after `await .future`; `LocaleNotifier` calls `persist()` synchronously. All use `StorageOptions(cacheTime: unsafe_forever)`. One-time migration: `stateSettingsLegacyMigrationProvider` splits the old monolithic blob.
 
-**Barrel import:** `import '.../settings_provider.dart'` re-exports settings-owned persisted providers only. Feature screen settings import from their feature (`quran_screen_settings_provider.dart`, etc.). Prayer effective settings: `prayer_effective_settings_provider.dart` (re-exported where needed for cross-feature prayer time reads).
+Import concrete settings providers directly (`prayer_settings_provider.dart`, `theme_settings_provider.dart`, `locale_provider.dart`, etc.). Feature screen settings import from their feature (`quran_screen_settings_provider.dart`, etc.). Cross-feature prayer time reads import `prayer_day.dart` directly (`effectivePrayerSettingsProvider` / `prayerDayProvider`).
 
 ## Routing
 
@@ -105,7 +106,7 @@ The entire UI is built with **forui** (see `pubspec.yaml`). Access theme via:
 - `context.theme.colors` → `FColors`
 - `context.theme.isDark` → `bool` (custom extension checking `colors.brightness`)
 - `FTheme.of(context)` → alternative explicit lookup (same as `context.theme`)
-- `selectStyle()` — custom select styles in `lib/theme/select_style.dart`; per-control button styling uses Forui defaults plus `windowControlButtonStyle()` / `closeButtonStyle()` in `lib/theme/button_styles.dart` (full `buttonStyles()` factory is not wired to `FThemeData` yet)
+- `selectStyle()` — custom select styles in `lib/theme/select_style.dart`; per-control button styling uses Forui defaults (`base.buttonStyles`) plus `windowControlButtonStyle()` / `closeButtonStyle()` / `layoutSegmentButtonStyle()` in `lib/theme/button_styles.dart`
 
 ### FColors — key property reference
 
@@ -236,6 +237,17 @@ Sealed catalog: flat `ShortcutDef` list in `app_shortcut.dart` → `ShellShortcu
 | Bootstrap   | `core/bootstrap/app_init_providers.dart`    | `appBootstrapReadyProvider` (Hive + desktop); mushaf/dorar lazy per screen |
 
 
+### Arabic text normalization (`lib/core/text/`)
+
+Two normalizers — do not mix them:
+
+| Function | File | Use for |
+| -------- | ---- | ------- |
+| `normalizeArabicForSearch` | `arabic_search_normalize.dart` | **Search / filter matching** — fold alef variants (أ إ آ ٱ → ا), ta marbuta, alef maksura, strip diacritics and tatweel. Apply to **both** query and candidate text. Helpers: `arabicSearchContains`, `arabicSearchStartsWith`. |
+| `ArabicTextNormalizer.normalize` | `arabic_text_normalizer.dart` | **Display typography** for parsed commentary/tafsir segments (punctuation, honorifics, brackets) — not for search. |
+
+**Rule:** any app-side Arabic search or filter (surah/juz/hizb selectors, tafsir source picker, future in-app filters) must use `normalizeArabicForSearch` on both sides before `contains` / `startsWith`. Package-internal search (`mushaf_reader` ayah index, `dorar_hadith` API queries, `hisn_elmoslem` DB `search` columns) keeps its own pre-normalized data or aligned copies — update those when changing the folding rules here.
+
 ## Reusable widgets & hooks
 
 ### Cards (`lib/core/widgets/custom_cards.dart`)
@@ -279,7 +291,7 @@ Powered by `hisn_elmoslem` package. Chapters, duas, search, commentary, focus re
 
 ### Prayer
 
-**Single source of truth for prayer times:** `prayerDayProvider` (live 1 Hz `PrayerDaySnapshot`) in `prayer_day.dart`; historical bundles via `prayerDayBundleForDateProvider`. All computation goes through `PrayerDayComputer` + `effectivePrayerSettingsProvider` / `prayerTimeInputsProvider` (re-exported via `prayer_effective_settings_provider.dart` for cross-feature reads). Slot logic (current prayer, card decision, schedule highlight) lives in `prayer_slots.dart`. Completions read via `completionStatusProvider(prayer, day)`. Never compute times via ad-hoc `PrayerService` calls.
+**Single source of truth for prayer times:** `prayerDayProvider` (live 1 Hz `PrayerDaySnapshot`) in `prayer_day.dart`; historical bundles via `prayerDayBundleForDateProvider`. All computation goes through `PrayerDayComputer` + `effectivePrayerSettingsProvider` / `prayerTimeInputsProvider` (import `prayer_day.dart` for cross-feature reads). Slot logic (current prayer, card decision, schedule highlight) lives in `prayer_slots.dart`. Completions read via `completionStatusProvider(prayer, day)`. Never compute times via ad-hoc `PrayerService` calls.
 
 `PrayerDay` (`@Riverpod(keepAlive: true)`) emits snapshot every 1s — **all live time UI** should watch this, not local timers. Derived providers (`scheduleCurrentPrayerProvider`, `prayerCardProvider`, `prayerCalendarDayKeyProvider`) minimize rebuilds.
 
@@ -298,11 +310,14 @@ Mushaf via `mushaf_reader`. Study mode uses `StudyModeLayout` with `ResponsiveHo
 
 The `packages/` folder contains in-repo packages (referenced via `path:` in `pubspec.yaml`):
 
-- `mushaf_reader` — Quran rendering with QCF4 fonts. Call `MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq')` before use.
-- `adhan_dart` — Prayer time calculations with timezone support.
-- `dorar_hadith` — Hadith search/browsing from Dorar API.
-- `dorar_hadith_flutter` — Flutter init wrapper; call `DorarHadithFlutter.ensureInitialized()` in `main.dart`.
-- `hisn_elmoslem` — Hisn al-Muslim content (chapters, dhikr, commentary). DB in `packages/hisn_elmoslem/assets/database/`.
+- `adhan_dart` — **git submodule**. Prayer time calculations with timezone support.
+- `dorar_hadith` — **git submodule**. Hadith search/browsing from Dorar API.
+- `dorar_hadith_flutter` — Flutter init wrapper (inside `dorar_hadith`); call `DorarHadithFlutter.ensureInitialized()` in `main.dart`.
+- `mushaf_reader` — vendored in this repo. Quran rendering with QCF4 fonts. Call `MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq')` before use.
+- `hisn_elmoslem` — vendored in this repo. Hisn al-Muslim content (chapters, dhikr, commentary). DB in `packages/hisn_elmoslem/assets/database/`.
+- `desktop_tray` — vendored in this repo.
+
+After clone: `git submodule update --init -- packages/adhan_dart packages/dorar_hadith`
 
 ## Timezone handling
 

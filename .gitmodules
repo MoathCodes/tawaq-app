@@ -5,10 +5,3 @@
 [submodule "packages/dorar_hadith"]
 	path = packages/dorar_hadith
 	url = https://github.com/MoathCodes/dorar_hadith.git
-
-[submodule "packages/mushaf_reader"]
-	path = packages/mushaf_reader
-	url = https://github.com/MoathCodes/mushaf_reader.git
-[submodule "packages/HisnElmoslem_App"]
-	path = packages/HisnElmoslem_App
-	url = https://github.com/muslimpack/HisnElmoslem_App.git
