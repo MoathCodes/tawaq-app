@@ -3,7 +3,7 @@
 import 'dart:convert';
 
 import 'package:sqlite3/sqlite3.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_segment.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_models.dart';
 import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_normalizer.dart';
 import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_segment_tokenizer.dart';
 import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_zone_splitter.dart';
