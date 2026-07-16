@@ -1840,7 +1840,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchForMore => 'Search for more options';
 
   @override
+  String get searchPlaceAction => 'Search';
+
+  @override
   String get searchPlaceLabel => 'Search for a place';
+
+  @override
+  String get searchPlaceQueryHint => 'City, region, or address';
+
+  @override
+  String get searchPlaceSubmitHint => 'Press Enter or tap search';
+
+  @override
+  String get searchingPlace => 'Searching for a place';
 
   @override
   String get searchQuran => 'Search Quran...';

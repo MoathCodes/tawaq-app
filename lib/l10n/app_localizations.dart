@@ -3320,11 +3320,35 @@ abstract class AppLocalizations {
   /// **'Search for more options'**
   String get searchForMore;
 
+  /// No description provided for @searchPlaceAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchPlaceAction;
+
   /// No description provided for @searchPlaceLabel.
   ///
   /// In en, this message translates to:
   /// **'Search for a place'**
   String get searchPlaceLabel;
+
+  /// No description provided for @searchPlaceQueryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'City, region, or address'**
+  String get searchPlaceQueryHint;
+
+  /// No description provided for @searchPlaceSubmitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Press Enter or tap search'**
+  String get searchPlaceSubmitHint;
+
+  /// No description provided for @searchingPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching for a place'**
+  String get searchingPlace;
 
   /// No description provided for @searchQuran.
   ///

@@ -107,6 +107,9 @@ class LocationService {
   }
 
   /// Searches for places matching the given query.
+  ///
+  /// Propagates failures so the UI can show an error toast instead of an
+  /// empty-results state.
   Future<List<FmData>> searchPlaces(String query) async {
     try {
       _log.i('[LocationService] Searching for: $query');
@@ -127,7 +130,7 @@ class LocationService {
         error: e,
         stackTrace: stackTrace,
       );
-      return [];
+      rethrow;
     }
   }
 }

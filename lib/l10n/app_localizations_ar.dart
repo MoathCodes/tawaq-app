@@ -1870,7 +1870,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get searchForMore => 'ابحث للمزيد من الخيارات';
 
   @override
+  String get searchPlaceAction => 'بحث';
+
+  @override
   String get searchPlaceLabel => 'البحث عن موقع';
+
+  @override
+  String get searchPlaceQueryHint => 'مدينة أو منطقة أو عنوان';
+
+  @override
+  String get searchPlaceSubmitHint => 'اضغط Enter أو زر البحث';
+
+  @override
+  String get searchingPlace => 'البحث عن موقع';
 
   @override
   String get searchQuran => 'ابحث في القرآن...';

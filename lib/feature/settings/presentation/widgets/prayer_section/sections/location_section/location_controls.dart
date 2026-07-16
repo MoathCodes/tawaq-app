@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:forui_hooks/forui_hooks.dart';
 import 'package:free_map/free_map.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
@@ -87,7 +88,7 @@ class LocationControlsRow extends ConsumerWidget {
     return const NonSelectable(
       child: ResponsiveFieldRow(
         children: [
-          CitySearchSelect(),
+          PlaceSearchField(),
           TimezoneSelect(),
         ],
       ),
@@ -95,10 +96,13 @@ class LocationControlsRow extends ConsumerWidget {
   }
 }
 
-/// Place search select for manual location.
-class CitySearchSelect extends ConsumerWidget {
-  /// Creates [CitySearchSelect].
-  const CitySearchSelect({super.key});
+/// Nominatim place search that runs only on explicit submit (Enter / Search).
+///
+/// Keystroke autocomplete is forbidden by the Nominatim usage policy; this
+/// field never queries until the user submits.
+class PlaceSearchField extends HookConsumerWidget {
+  /// Creates [PlaceSearchField].
+  const PlaceSearchField({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -107,49 +111,197 @@ class CitySearchSelect extends ConsumerWidget {
       prayerSettingsProvider.select((v) => v.value?.locationName),
     );
     final l10n = context.l10n;
-    final secondaryForeground = context.theme.colors.secondaryForeground;
+    final colors = context.theme.colors;
 
-    return FSelect<FmData>.searchBuilder(
-      enabled: enabled,
-      contentConstraints: selectPopoverPortalConstraints(context),
+    final queryController = useTextEditingController();
+    final focusNode = useFocusNode();
+    final popoverController = useFPopoverController();
+    final searchState = useState<AsyncValue<List<FmData>>?>(null);
+    final requestId = useRef(0);
+    final inFlight = useRef(false);
+
+    useListenable(queryController);
+
+    final isSearching = searchState.value?.isLoading ?? false;
+
+    void invalidateSearch() {
+      requestId.value++;
+      inFlight.value = false;
+      searchState.value = null;
+    }
+
+    Future<void> hideResults() async {
+      invalidateSearch();
+      await popoverController.hide();
+    }
+
+    // Drop open/in-flight results when auto-location locks the controls.
+    useEffect(
+      () {
+        if (enabled) return null;
+        if (searchState.value == null &&
+            popoverController.status == AnimationStatus.dismissed) {
+          return null;
+        }
+        invalidateSearch();
+        unawaited(popoverController.hide());
+        return null;
+      },
+      [enabled],
+    );
+
+    Future<void> submit() async {
+      if (!enabled || inFlight.value) return;
+      final query = queryController.text.trim();
+      if (query.isEmpty) return;
+
+      final id = ++requestId.value;
+      inFlight.value = true;
+      searchState.value = const AsyncLoading();
+      await popoverController.show();
+
+      try {
+        final results = await ref.read(searchPlacesProvider(query).future);
+        if (!context.mounted || id != requestId.value) return;
+        inFlight.value = false;
+        searchState.value = AsyncData(results);
+        // Keep the popover as the user left it — do not reopen after dismiss.
+      } catch (e, st) {
+        if (!context.mounted || id != requestId.value) return;
+        inFlight.value = false;
+        searchState.value = AsyncError(e, st);
+        await popoverController.hide();
+        if (!context.mounted) return;
+        showLocationError(context, l10n.searchingPlace, e);
+      }
+    }
+
+    void onQueryChanged(TextEditingValue value) {
+      if (searchState.value == null && !inFlight.value) return;
+      // Drop stale results when the query changes; do not re-query.
+      unawaited(hideResults());
+    }
+
+    void selectPlace(FmData place) {
+      if (!manualLocationControlsEnabled(ref)) return;
+      invalidateSearch();
+      unawaited(popoverController.hide());
+      queryController.text = place.name;
+      unawaited(
+        ref.read(prayerSettingsProvider.notifier).updateLocation(
+          coordinates: place.coordinates,
+          locationName: place.name,
+        ),
+      );
+    }
+
+    final hint = locationName == null
+        ? l10n.searchPlaceQueryHint
+        : resolveLocationDisplayName(l10n, locationName);
+
+    final canSubmit =
+        enabled && !inFlight.value && queryController.text.trim().isNotEmpty;
+
+    return FPopover(
       control: .managed(
-        onChange: (place) {
-          if (place != null) {
-            unawaited(
-              ref
-                  .read(prayerSettingsProvider.notifier)
-                  .updateLocation(
-                    coordinates: place.coordinates,
-                    locationName: place.name,
-                  ),
-            );
+        controller: popoverController,
+        onChange: (shown) {
+          // User dismissed (outside tap / Escape) while results or loading
+          // were showing — invalidate so a late response cannot reopen.
+          if (!shown && (searchState.value != null || inFlight.value)) {
+            invalidateSearch();
           }
         },
       ),
-      label: Text(l10n.searchPlaceLabel),
-      hint: locationName == null
-          ? l10n.searchForMore
-          : resolveLocationDisplayName(l10n, locationName),
-      format: (s) => s.name,
-      filter: (query) => ref.read(searchPlacesProvider(query).future),
-      prefixBuilder: (_, _, _) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Icon(
-          FLucideIcons.search,
-          color: secondaryForeground,
-        ),
+      constraints: selectPopoverPortalConstraints(context),
+      autofocus: true,
+      popoverBuilder: (context, _) => _PlaceSearchResults(
+        state: searchState.value,
+        onSelect: selectPlace,
       ),
-      contentBuilder: (_, _, data) => [
-        for (final place in data)
-          FSelectItem(
-            title: Text(place.name),
-            subtitle: Text(place.address),
-            value: place,
+      child: FTextField(
+        enabled: enabled,
+        focusNode: focusNode,
+        control: .managed(
+          controller: queryController,
+          onChange: onQueryChanged,
+        ),
+        label: Text(l10n.searchPlaceLabel),
+        hint: hint,
+        description: Text(l10n.searchPlaceSubmitHint),
+        textInputAction: TextInputAction.search,
+        onSubmit: canSubmit ? (_) => unawaited(submit()) : null,
+        clearable: (value) => enabled && value.text.isNotEmpty,
+        prefixBuilder: (_, _, _) => Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Icon(
+            FLucideIcons.search,
+            color: colors.secondaryForeground,
           ),
-      ],
-      contentEmptyBuilder: (_, _) => buildSelectEmptyContent(context),
-      contentLoadingBuilder: (_, _) => const FCircularProgress(),
+        ),
+        suffixBuilder: (_, _, _) {
+          if (isSearching) {
+            return const Padding(
+              padding: EdgeInsets.all(AppSpacing.sm),
+              child: FCircularProgress(),
+            );
+          }
+          return FTooltip(
+            tipBuilder: (_, _) => Text(l10n.searchPlaceAction),
+            child: SettingsSemantics.iconAction(
+              label: l10n.searchPlaceAction,
+              enabled: canSubmit,
+              child: FButton.icon(
+                variant: .ghost,
+                onPress: canSubmit ? () => unawaited(submit()) : null,
+                child: Icon(
+                  FLucideIcons.search,
+                  color: canSubmit
+                      ? colors.primary
+                      : colors.mutedForeground,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
+  }
+}
+
+class _PlaceSearchResults extends StatelessWidget {
+  const _PlaceSearchResults({
+    required this.state,
+    required this.onSelect,
+  });
+
+  final AsyncValue<List<FmData>>? state;
+  final ValueChanged<FmData> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (state) {
+      null => const SizedBox.shrink(),
+      AsyncLoading() => const Padding(
+        padding: EdgeInsets.all(AppSpacing.lg),
+        child: Center(child: FCircularProgress()),
+      ),
+      AsyncError() => const SizedBox.shrink(),
+      AsyncData(:final value) when value.isEmpty => buildSelectEmptyContent(
+        context,
+      ),
+      AsyncData(:final value) => FItemGroup(
+        maxHeight: 280,
+        children: [
+          for (final place in value)
+            FItem(
+              title: Text(place.name),
+              subtitle: Text(place.address),
+              onPress: () => onSelect(place),
+            ),
+        ],
+      ),
+    };
   }
 }
 
