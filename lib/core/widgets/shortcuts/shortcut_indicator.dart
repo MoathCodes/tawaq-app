@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_display.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -11,24 +12,24 @@ class ShortcutIndicator extends StatelessWidget {
     required this.shortcut,
     super.key,
     this.showAliases = false,
-  })  : activators = null,
-        tokens = null;
+  }) : activators = null,
+       tokens = null;
 
   /// Creates a shortcut indicator from raw activators.
   const ShortcutIndicator.activators({
     required this.activators,
     super.key,
     this.showAliases = false,
-  })  : shortcut = null,
-        tokens = null;
+  }) : shortcut = null,
+       tokens = null;
 
   /// Creates a shortcut indicator from preformatted key-cap [tokens].
   const ShortcutIndicator.tokens({
     required this.tokens,
     super.key,
     this.showAliases = false,
-  })  : shortcut = null,
-        activators = null;
+  }) : shortcut = null,
+       activators = null;
 
   /// Catalog shortcut to display.
   final ShortcutDef? shortcut;
@@ -49,6 +50,7 @@ class ShortcutIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final or = context.l10n.or.toUpperCase();
     if (tokens != null && tokens!.isNotEmpty) {
       return _ShortcutCombo(tokens: tokens!);
     }
@@ -72,7 +74,7 @@ class ShortcutIndicator extends StatelessWidget {
         for (var i = 0; i < combos.length; i++) ...[
           if (i > 0)
             Text(
-              'or',
+              or,
               style: context.theme.typography.body.xs.copyWith(
                 color: context.theme.colors.mutedForeground,
               ),

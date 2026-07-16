@@ -11,7 +11,7 @@ import 'package:tawaq/core/widgets/shortcuts/shortcut_hint.dart';
 import 'package:tawaq/core/widgets/theme_mode_button.dart';
 import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
 import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
-import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_section.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_controls.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Compact shell actions (location, date, language, theme) laid out for the
@@ -31,6 +31,7 @@ class ShellAppBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locationName = ref.watch(prayerLocationNameProvider);
+    final theme = context.theme;
 
     final isArabic = context.l10n.localeName == 'ar';
     final showLanguageLabel = isAtLeast(context, FBreakpoint.md);
@@ -82,19 +83,28 @@ class ShellAppBar extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: .spaceBetween,
         children: [
-          Row(
-            spacing: AppSpacing.lg,
+          Column(
+            crossAxisAlignment: .start,
             children: [
               ?locationChip,
-              Consumer(
-                builder: (context, ref, child) {
-                  final hijriDate = ref.watch(hijriClockProvider);
-                  return Text(
-                    hijriDate,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  );
-                },
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal:
+                      theme.buttonStyles.ghost.xs.contentStyle.padding.vertical,
+                ),
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final hijriDate = ref.watch(hijriClockProvider);
+                    return Text(
+                      hijriDate,
+                      maxLines: 1,
+                      style: context.theme.typography.body.xs.copyWith(
+                        color: context.theme.colors.mutedForeground,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  },
+                ),
               ),
             ],
           ),

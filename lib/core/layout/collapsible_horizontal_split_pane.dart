@@ -50,50 +50,6 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
     super.key,
   });
 
-  /// See [PersistedHorizontalSplitPane.sidePanelRatio].
-  final double sidePanelRatio;
-
-  /// See [PersistedHorizontalSplitPane.resolve].
-  final ResolvedHorizontalSplit Function({
-    required double totalWidth,
-    required double sideWidth,
-  })
-  resolve;
-
-  /// See [PersistedHorizontalSplitPane.onSidePanelRatioChanged].
-  final ValueChanged<double> onSidePanelRatioChanged;
-
-  /// Whether the side pane is currently collapsed.
-  final bool collapsed;
-
-  /// Called with the desired collapsed state when the user toggles the handle.
-  final ValueChanged<bool> onCollapsedChanged;
-
-  /// See [PersistedHorizontalSplitPane.sidePane].
-  final Widget sidePane;
-
-  /// See [PersistedHorizontalSplitPane.mainPane].
-  final Widget mainPane;
-
-  /// See [PersistedHorizontalSplitPane.sideRegionIndex].
-  final int sideRegionIndex;
-
-  /// Accessibility label for the expand affordance.
-  final String expandSemanticLabel;
-
-  /// Accessibility label for the collapse affordance.
-  final String collapseSemanticLabel;
-
-  /// Placement of the collapse affordance when the side pane is expanded.
-  final CollapsePlacement collapsePlacement;
-
-  /// See [PersistedHorizontalSplitPane.style].
-  final FResizableDividerStyleDelta? style;
-
-  /// Offsets to edit the position of the floating button when the panel isn't
-  /// collapsed.
-  final ({double top, double left, double right}) floatingButtonOffset;
-
   /// Feature split layout (Hadith, Quran study, Fortress).
   ///
   /// Assumes the container already satisfies [canUseHorizontalSplit].
@@ -145,6 +101,50 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
       mainPane: mainPane,
     );
   }
+
+  /// See [PersistedHorizontalSplitPane.sidePanelRatio].
+  final double sidePanelRatio;
+
+  /// See [PersistedHorizontalSplitPane.resolve].
+  final ResolvedHorizontalSplit Function({
+    required double totalWidth,
+    required double sideWidth,
+  })
+  resolve;
+
+  /// See [PersistedHorizontalSplitPane.onSidePanelRatioChanged].
+  final ValueChanged<double> onSidePanelRatioChanged;
+
+  /// Whether the side pane is currently collapsed.
+  final bool collapsed;
+
+  /// Called with the desired collapsed state when the user toggles the handle.
+  final ValueChanged<bool> onCollapsedChanged;
+
+  /// See [PersistedHorizontalSplitPane.sidePane].
+  final Widget sidePane;
+
+  /// See [PersistedHorizontalSplitPane.mainPane].
+  final Widget mainPane;
+
+  /// See [PersistedHorizontalSplitPane.sideRegionIndex].
+  final int sideRegionIndex;
+
+  /// Accessibility label for the expand affordance.
+  final String expandSemanticLabel;
+
+  /// Accessibility label for the collapse affordance.
+  final String collapseSemanticLabel;
+
+  /// Placement of the collapse affordance when the side pane is expanded.
+  final CollapsePlacement collapsePlacement;
+
+  /// See [PersistedHorizontalSplitPane.style].
+  final FResizableDividerStyleDelta? style;
+
+  /// Offsets to edit the position of the floating button when the panel isn't
+  /// collapsed.
+  final ({double top, double left, double right}) floatingButtonOffset;
 
   /// Whether the side pane sits on the physical left edge.
   bool get _sideOnLeft => sideRegionIndex == 0;

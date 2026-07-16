@@ -1,8 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/utils/hijri_format.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_data_providers.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_effective_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:timezone/timezone.dart';
 
 part 'hijri_provider.g.dart';

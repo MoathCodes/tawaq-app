@@ -7,23 +7,21 @@ import 'package:forui/forui.dart';
 /// [LazyPanelContent.indexed] with an index-controlled control (e.g. Forui
 /// [FTabs]). Once activated, content stays built.
 class LazyPanelContent extends StatefulWidget {
-  /// Defers building until [controller]'s index matches [index].
+  /// Defers building until [_controller]'s index matches [index].
   const LazyPanelContent.tab({
-    required TabController controller,
+    required TabController this._controller,
     required this.index,
     required this.builder,
     super.key,
-  })  : _controller = controller,
-        _selectedIndex = null;
+  })  : _selectedIndex = null;
 
-  /// Defers building until [selectedIndex] matches [index].
+  /// Defers building until [_selectedIndex] matches [index].
   const LazyPanelContent.indexed({
-    required int selectedIndex,
+    required int this._selectedIndex,
     required this.index,
     required this.builder,
     super.key,
-  })  : _controller = null,
-        _selectedIndex = selectedIndex;
+  })  : _controller = null;
 
   final TabController? _controller;
   final int? _selectedIndex;

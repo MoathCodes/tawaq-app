@@ -15,9 +15,9 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return centeredViewportScrollTab(
+    return const CenteredViewportShell.scrollTab(
       maxContentWidth: 560,
-      child: const Padding(
+      child: Padding(
         padding: EdgeInsets.all(AppSpacing.xl),
         child: AboutView(content: aboutContent),
       ),

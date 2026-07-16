@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/settings/presentation/provider/settings_provider.dart';
+import 'package:tawaq/core/locale/locale_provider.dart';
 
 /// English / Arabic language picker for onboarding and settings.
 class LocaleSelectTileGroup extends ConsumerWidget {

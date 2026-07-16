@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tawaq/feature/prayer/presentation/widgets/adhan/adhan_alert_toast_listener.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_drawer.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport.dart';
@@ -26,9 +25,7 @@ class ShellContentWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return RecitationErrorToastListener(
-      child: AdhanAlertToastListener(child: child),
-    );
+    return RecitationErrorToastListener(child: child);
   }
 }
 

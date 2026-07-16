@@ -138,18 +138,5 @@ class _CenteredViewportScrollTab extends StatelessWidget {
   }
 }
 
-/// Scrollable tab pane that keeps [child] centered at [maxContentWidth].
-@Deprecated('Use CenteredViewportShell.scrollTab instead.')
-Widget centeredViewportScrollTab({
-  required double maxContentWidth,
-  required Widget child,
-  AlignmentGeometry alignment = Alignment.topCenter,
-  ScrollController? controller,
-}) {
-  return CenteredViewportShell.scrollTab(
-    maxContentWidth: maxContentWidth,
-    alignment: alignment,
-    controller: controller,
-    child: child,
-  );
-}
+
+

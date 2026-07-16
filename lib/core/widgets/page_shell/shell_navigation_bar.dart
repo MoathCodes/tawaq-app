@@ -12,7 +12,7 @@ class ShellBottomNavigationBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final routes = kMainRoutes;
+    const routes = kMainRoutes;
     final currentLocation = GoRouter.of(context).state.fullPath;
     final selectedIndex = routes.indexWhere(
       (route) => route.containsLocation(currentLocation),
@@ -30,13 +30,13 @@ class ShellBottomNavigationBar extends ConsumerWidget {
           }
         },
         children: [
-        ...routes.map(
-          (route) => _buildButton(
-            route.localizedLabel(context.l10n),
-            route.icon,
-            route.path,
+          ...routes.map(
+            (route) => _buildButton(
+              route.localizedLabel(context.l10n),
+              route.icon,
+              route.path,
+            ),
           ),
-        ),
         ],
       ),
     );

@@ -44,12 +44,7 @@ FThemeData buildAppTheme({
     typography: typography,
     style: base.style,
     icons: base.icons,
-    buttonStyles: buttonStyles(
-      colors: base.colors,
-      typography: typography,
-      style: base.style,
-      touch: touch,
-    ),
+    buttonStyles: base.buttonStyles,
     extensions: extensions,
   );
 }

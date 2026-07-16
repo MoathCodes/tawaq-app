@@ -21,11 +21,11 @@ extension DateTimeDifference on DateTime {
   /// Whether this instant falls on the same calendar day as [other]
   /// in [location].
   bool isSameCalendarDay(DateTime other, Location location) {
-    final local = toLocation(location);
-    final otherLocal = other.toLocation(location);
-    return local.year == otherLocal.year &&
-        local.month == otherLocal.month &&
-        local.day == otherLocal.day;
+    final day = calendarDayIn(location);
+    final otherDay = other.calendarDayIn(location);
+    return day.year == otherDay.year &&
+        day.month == otherDay.month &&
+        day.day == otherDay.day;
   }
 
   /// Midnight on this instant's calendar day in [location] (naive [DateTime]).

@@ -131,7 +131,10 @@ class PrayerRoute extends AppNavigationRoute with $PrayerRoute {
 @immutable
 class QuranRoute extends AppNavigationRoute with $QuranRoute {
   /// Creates the Quran route.
-  const QuranRoute();
+  const QuranRoute({this.page});
+
+ /// Optional Quran page to open; null opens the default page.
+  final int? page;
 
   @override
   /// The Quran route icon.
@@ -145,7 +148,7 @@ class QuranRoute extends AppNavigationRoute with $QuranRoute {
   @override
   /// Builds the Quran screen.
   Widget build(BuildContext context, GoRouterState state) {
-    return const QuranScreen();
+    return QuranScreen(page: page);
   }
 }
 
@@ -237,8 +240,7 @@ class AboutRoute extends AppNavigationRoute with $AboutRoute {
 
   @override
   /// Opens the about dialog instead of navigating to a route.
-  void activate(BuildContext context) =>
-      unawaited(showAboutAppDialog(context));
+  void activate(BuildContext context) => unawaited(showAboutAppDialog(context));
 
   @override
   /// Builds the about screen (fallback for direct `/about` navigation).

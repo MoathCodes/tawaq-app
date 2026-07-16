@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'package:mpv_audio_kit/mpv_audio_kit.dart';
-import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
 import 'package:tawaq/core/desktop/window_snapshot.dart';
@@ -18,12 +17,6 @@ part 'app_init_providers.g.dart';
 Future<void> hiveCoreInit(Ref ref) async {
   await Hive.initFlutter();
   Hive.registerAdapters();
-}
-
-/// Initializes the mushaf reader asset bundle and fonts.
-@Riverpod(keepAlive: true)
-Future<void> mushafLibraryInit(Ref ref) async {
-  await MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq');
 }
 
 /// Initializes the Dorar hadith client.
