@@ -1,4 +1,5 @@
 import 'package:dorar_hadith/dorar_hadith.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 
 /// The available high-level views in the hadith screen.
@@ -25,7 +26,53 @@ class HadithSearchSnapshot {
   final HadithFilters filters;
 }
 
+/// One loaded search page (results + Dorar pagination metadata).
+class HadithSearchPage {
+  /// Creates a search page.
+  const HadithSearchPage({
+    this.page = 1,
+    this.results = const <DetailedHadith>[],
+    this.metadata,
+  });
+
+  /// Empty page used for idle / cleared queries.
+  static const empty = HadithSearchPage();
+
+  /// Current search results page (1-based, Dorar convention).
+  final int page;
+
+  /// Loaded search results for this page.
+  final List<DetailedHadith> results;
+
+  /// Pagination metadata from the last successful response.
+  final SearchMetadata? metadata;
+
+  /// Total pages from metadata (0 when unknown).
+  int get totalPages => metadata?.totalPages ?? 0;
+
+  /// Returns a copy with updated page fields.
+  HadithSearchPage copyWith({
+    int? page,
+    List<DetailedHadith>? results,
+    SearchMetadata? metadata,
+    bool clearMetadata = false,
+  }) {
+    return HadithSearchPage(
+      page: page ?? this.page,
+      results: results ?? this.results,
+      metadata: clearMetadata ? null : metadata ?? this.metadata,
+    );
+  }
+}
+
 /// In-memory session state for the hadith screen.
+///
+/// Search results live in [searchOutcome] as a single [AsyncValue] so loading /
+/// data / error cannot diverge.
+///
+/// **Pagination rule:** `goToPage` failures keep the prior [AsyncData] page
+/// (no error transition — list stays). New-query `search()` failures are hard
+/// [AsyncError]s with no retained list.
 class HadithSessionState {
   /// Creates the session state.
   const HadithSessionState({
@@ -35,12 +82,9 @@ class HadithSessionState {
     this.query = '',
     this.filters = const HadithFilters(),
     this.selectedHadith,
-    this.page = 1,
-    this.isLoading = false,
-    this.isLoadingMore = false,
-    this.error,
-    this.metadata,
-    this.results = const <DetailedHadith>[],
+    this.searchOutcome = const AsyncData(HadithSearchPage.empty),
+    this.isPaginating = false,
+    this.paginationError,
   });
 
   /// The current screen mode.
@@ -61,32 +105,49 @@ class HadithSessionState {
   /// Currently selected hadith for the detail pane.
   final DetailedHadith? selectedHadith;
 
-  /// Current search results page.
-  final int page;
+  /// Async search outcome for the current query.
+  final AsyncValue<HadithSearchPage> searchOutcome;
 
-  /// Whether the initial search request is in flight.
-  final bool isLoading;
+  /// True while a page-change request is in flight (prior page still shown).
+  final bool isPaginating;
 
-  /// Whether a pagination request is in flight.
-  final bool isLoadingMore;
-
-  /// Last search error message, if any.
-  final String? error;
-
-  /// Pagination metadata from the last search response.
-  final SearchMetadata? metadata;
-
-  /// Loaded search results for the current query.
-  final List<DetailedHadith> results;
+  /// Soft pagination failure message (prior page retained). Cleared on success.
+  final String? paginationError;
 
   /// Whether the screen is currently in search mode.
   bool get isSearchMode => mode == HadithViewMode.search;
 
   /// Whether a search or pagination request is in flight.
-  bool get searchBusy => isLoading || isLoadingMore;
+  bool get searchBusy => searchOutcome.isLoading || isPaginating;
 
-  /// Whether another page of results is available.
-  bool get hasNextPage => metadata?.hasNextPage ?? false;
+  /// Alias for [searchBusy] (legacy call sites / tests).
+  bool get isLoading => searchBusy;
+
+  /// Last known page when the outcome still carries a value.
+  HadithSearchPage? get searchPage => searchOutcome.value;
+
+  /// Results from the retained search page, if any.
+  List<DetailedHadith> get results =>
+      searchPage?.results ?? const <DetailedHadith>[];
+
+  /// Current page number (1 when unknown).
+  int get page => searchPage?.page ?? 1;
+
+  /// Total pages from the last retained response (0 when unknown).
+  int get totalPages => searchPage?.totalPages ?? 0;
+
+  /// Metadata from the last retained response.
+  SearchMetadata? get metadata => searchPage?.metadata;
+
+  /// Hard new-query error message (null when a prior page is still retained).
+  String? get hardSearchError {
+    final outcome = searchOutcome;
+    if (!outcome.hasError || outcome.hasValue) return null;
+    return '${outcome.error}';
+  }
+
+  /// Alias for [hardSearchError] (legacy call sites / tests).
+  String? get error => hardSearchError;
 
   /// Whether filter chips and panel controls accept input.
   bool get filterInteractionsEnabled =>
@@ -101,14 +162,10 @@ class HadithSessionState {
     HadithFilters? filters,
     DetailedHadith? selectedHadith,
     bool clearSelectedHadith = false,
-    int? page,
-    bool? isLoading,
-    bool? isLoadingMore,
-    String? error,
-    bool clearError = false,
-    SearchMetadata? metadata,
-    bool clearMetadata = false,
-    List<DetailedHadith>? results,
+    AsyncValue<HadithSearchPage>? searchOutcome,
+    bool? isPaginating,
+    String? paginationError,
+    bool clearPaginationError = false,
     bool clearSnapshot = false,
   }) {
     return HadithSessionState(
@@ -122,12 +179,11 @@ class HadithSessionState {
       selectedHadith: clearSelectedHadith
           ? null
           : selectedHadith ?? this.selectedHadith,
-      page: page ?? this.page,
-      isLoading: isLoading ?? this.isLoading,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-      error: clearError ? null : error ?? this.error,
-      metadata: clearMetadata ? null : metadata ?? this.metadata,
-      results: results ?? this.results,
+      searchOutcome: searchOutcome ?? this.searchOutcome,
+      isPaginating: isPaginating ?? this.isPaginating,
+      paginationError: clearPaginationError
+          ? null
+          : paginationError ?? this.paginationError,
     );
   }
 }

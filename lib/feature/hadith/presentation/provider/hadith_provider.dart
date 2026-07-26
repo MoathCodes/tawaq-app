@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:dorar_hadith/dorar_hadith.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/hadith/data/repository/hadith_repository.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
@@ -11,20 +10,6 @@ import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
 
 part 'hadith_provider.g.dart';
-
-/// Widget-layer helper for the active hadith results list.
-extension HadithVisibleResultsRef on WidgetRef {
-  /// Results list for the active hadith view mode.
-  AsyncValue<List<DetailedHadith>> hadithVisibleResults(
-    HadithSessionState session,
-  ) {
-    return switch (session.mode) {
-      HadithViewMode.search => AsyncData(session.results),
-      HadithViewMode.bookmarks => watch(hadithFavoritesProvider),
-      HadithViewMode.specificList => AsyncData(session.specificHadiths),
-    };
-  }
-}
 
 /// Synchronous visible results when favorites are already resolved.
 List<DetailedHadith>? hadithVisibleResultsList(
@@ -134,31 +119,30 @@ class HadithSessionController extends _$HadithSessionController {
     return setFilters(const HadithFilters(), debounced: false);
   }
 
-  /// Triggers a search using the current query and filters.
-  Future<void> search({bool reset = true}) async {
+  /// Triggers a search using the current query and filters (always page 1).
+  ///
+  /// New-query failures are **hard** [AsyncError]s — prior page data is not
+  /// retained (see [HadithSessionState] pagination rule for `goToPage`).
+  Future<void> search() async {
     final generation = ++_searchGeneration;
     final value = state.query.trim();
 
     if (value.isEmpty) {
       state = state.copyWith(
         query: '',
-        page: 1,
-        results: const <DetailedHadith>[],
-        clearMetadata: true,
-        clearError: true,
-        isLoading: false,
-        isLoadingMore: false,
+        isPaginating: false,
+        clearPaginationError: true,
+        searchOutcome: const AsyncData(HadithSearchPage.empty),
       );
       return;
     }
 
-    final targetPage = reset ? 1 : state.page;
+    // Hard loading: drop any prior page so a failure cannot show a stale list.
     state = state.copyWith(
       query: value,
-      page: targetPage,
-      isLoading: true,
-      isLoadingMore: false,
-      clearError: true,
+      isPaginating: false,
+      clearPaginationError: true,
+      searchOutcome: const AsyncLoading(),
     );
 
     try {
@@ -167,71 +151,127 @@ class HadithSessionController extends _$HadithSessionController {
         _toSearchParams(query: value, page: 1),
       );
 
-      if (generation != _searchGeneration) return;
+      if (!ref.mounted || generation != _searchGeneration) return;
 
       state = state.copyWith(
         query: value,
-        page: 1,
-        results: response.data,
-        metadata: response.metadata,
-        isLoading: false,
-        isLoadingMore: false,
-        clearError: true,
+        searchOutcome: AsyncData(
+          HadithSearchPage(
+            results: response.data,
+            metadata: response.metadata,
+          ),
+        ),
       );
 
       ref.read(hadithRecentSearchesProvider.notifier).prepend(value);
       unawaited(
         ref.read(hadithRecentSearchesProvider.notifier).persistQuery(value),
       );
-    } catch (e) {
-      if (generation != _searchGeneration) return;
+    } catch (e, stackTrace) {
+      if (!ref.mounted || generation != _searchGeneration) return;
       state = state.copyWith(
         query: value,
-        isLoading: false,
-        isLoadingMore: false,
-        error: '$e',
+        searchOutcome: AsyncError(e, stackTrace),
       );
     }
   }
 
-  /// Fetches the next page of search results and appends them.
-  Future<void> loadMore() async {
-    if (state.isLoading || state.isLoadingMore || !state.hasNextPage) {
+  /// Fetches [page] (1-based) and replaces the current results.
+  ///
+  /// **Pagination rule:** on failure, keep the prior [AsyncData] page (no
+  /// error transition). Empty out-of-range pages clamp metadata without
+  /// blanking the list. `isPaginating` drives the in-flight indicator while
+  /// the prior page remains visible.
+  Future<void> goToPage(int page) async {
+    final value = state.query.trim();
+    final totalPages = state.totalPages;
+    if (state.isLoading ||
+        value.isEmpty ||
+        page == state.page ||
+        page < 1 ||
+        (totalPages > 0 && page > totalPages)) {
       return;
     }
 
     final generation = _searchGeneration;
-    final nextPage = state.page + 1;
-    state = state.copyWith(isLoadingMore: true, clearError: true);
+    final previousPage = state.searchPage;
+    state = state.copyWith(isPaginating: true, clearPaginationError: true);
 
     try {
       final repository = await ref.read(hadithRepositoryProvider.future);
       final response = await repository.searchDetailed(
-        _toSearchParams(query: state.query, page: nextPage),
+        _toSearchParams(query: value, page: page),
       );
 
-      if (generation != _searchGeneration) return;
+      if (!ref.mounted || generation != _searchGeneration) return;
+
+      // Past Dorar's served range (or stale inflated totalPages) — don't blank
+      // the list; clamp the pager to the last known good page.
+      if (response.data.isEmpty && page > 1) {
+        if (previousPage == null) {
+          state = state.copyWith(
+            isPaginating: false,
+            searchOutcome: const AsyncData(HadithSearchPage.empty),
+            clearPaginationError: true,
+          );
+          return;
+        }
+        state = state.copyWith(
+          isPaginating: false,
+          clearPaginationError: true,
+          searchOutcome: AsyncData(
+            previousPage.copyWith(
+              metadata: previousPage.metadata?.copyWith(
+                totalPages: previousPage.page,
+                hasNextPage: false,
+                page: previousPage.page,
+              ),
+            ),
+          ),
+        );
+        return;
+      }
+
+      final selected = state.selectedHadith;
+      final keepSelection =
+          selected != null &&
+          response.data.any(
+            (hadith) => hadithStableKey(hadith) == hadithStableKey(selected),
+          );
 
       state = state.copyWith(
-        page: nextPage,
-        results: [...state.results, ...response.data],
-        metadata: response.metadata,
-        isLoadingMore: false,
-        clearError: true,
+        isPaginating: false,
+        clearPaginationError: true,
+        searchOutcome: AsyncData(
+          HadithSearchPage(
+            page: page,
+            results: response.data,
+            metadata: response.metadata,
+          ),
+        ),
+        clearSelectedHadith: !keepSelection,
       );
-    } catch (e) {
-      if (generation != _searchGeneration) return;
-      state = state.copyWith(isLoadingMore: false, error: '$e');
+    } catch (error) {
+      if (!ref.mounted || generation != _searchGeneration) return;
+      // Soft: keep prior AsyncData; surface a recoverable pagination error.
+      state = state.copyWith(
+        isPaginating: false,
+        paginationError: '$error',
+      );
     }
   }
 
   /// Toggles a hadith between favorite and non-favorite state.
+  ///
+  /// Propagates repository failures so callers can surface a toast.
   Future<void> toggleFavorite(HadithBase hadith) async {
     final repository = await ref.read(hadithRepositoryProvider.future);
     final key = hadithStableKey(hadith);
     final wasFavorite = await repository.isFavoriteByKey(key);
+    if (!ref.mounted) return;
 
     await repository.toggleFavorite(hadith);
+    if (!ref.mounted) return;
     ref.invalidate(hadithFavoritesProvider);
 
     if (!wasFavorite || state.mode != HadithViewMode.bookmarks) {
@@ -244,7 +284,7 @@ class HadithSessionController extends _$HadithSessionController {
     }
 
     final favorites = await ref.read(hadithFavoritesProvider.future);
-    if (state.mode != HadithViewMode.bookmarks) return;
+    if (!ref.mounted || state.mode != HadithViewMode.bookmarks) return;
 
     if (favorites.isEmpty) {
       clearSelection();
@@ -304,9 +344,9 @@ class HadithSessionController extends _$HadithSessionController {
   /// Switches to bookmarks mode and selects the first favorite when possible.
   Future<void> openBookmarks() async {
     await _enterSpecificMode(mode: HadithViewMode.bookmarks);
+    if (!ref.mounted) return;
     final favorites = await ref.read(hadithFavoritesProvider.future);
-
-    if (state.mode != HadithViewMode.bookmarks) return;
+    if (!ref.mounted || state.mode != HadithViewMode.bookmarks) return;
 
     if (favorites.isEmpty) {
       clearSelection();
@@ -341,6 +381,7 @@ class HadithSessionController extends _$HadithSessionController {
     );
 
     await search();
+    if (!ref.mounted) return;
 
     if ((snapshot?.query ?? '').trim().isEmpty) {
       clearSelection();
@@ -365,6 +406,7 @@ class HadithSessionController extends _$HadithSessionController {
     );
 
     await search();
+    if (!ref.mounted) return;
     ref
         .read(hadithScreenSettingsProvider.notifier)
         .setActiveTab(HadithPanelTab.details);
@@ -422,7 +464,7 @@ class HadithSessionController extends _$HadithSessionController {
 }
 
 /// Returns the user's persisted recent-search queries.
-@riverpod
+@Riverpod(keepAlive: true)
 class HadithRecentSearches extends _$HadithRecentSearches {
   static const _defaultLimit = 12;
 

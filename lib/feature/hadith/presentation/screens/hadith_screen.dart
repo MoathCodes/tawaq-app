@@ -81,30 +81,15 @@ class _HadithResponsiveBody extends ConsumerWidget {
   }
 }
 
-class _HadithSplitGateBody extends HookConsumerWidget {
+class _HadithSplitGateBody extends ConsumerWidget {
   const _HadithSplitGateBody({required this.useSplitLayout});
 
   final bool useSplitLayout;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    useEffect(
-      () {
-        if (!useSplitLayout) {
-          final settings =
-              ref.read(hadithScreenSettingsProvider).asData?.value ??
-              HadithPersistedSettings.initial();
-          if (!settings.sidePanelCollapsed) {
-            ref
-                .read(hadithScreenSettingsProvider.notifier)
-                .setSidePanelCollapsed(collapsed: true);
-          }
-        }
-        return null;
-      },
-      [useSplitLayout],
-    );
-
+    // Do not persist collapse from viewport shrink alone — that would
+    // permanently hide the side panel after a narrow window.
     return useSplitLayout
         ? _HadithSplitLayout(useSplitLayout: useSplitLayout)
         : _HadithMainColumn(useSplitLayout: useSplitLayout);
@@ -190,27 +175,31 @@ class _HadithSidePanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(hadithSessionControllerProvider);
+    final isSearchMode = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.isSearchMode),
+    );
+    final selectedHadith = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.selectedHadith),
+    );
     final settings =
         ref.watch(hadithScreenSettingsProvider).asData?.value ??
         HadithPersistedSettings.initial();
     final theme = context.theme;
     final l10n = context.l10n;
 
-    var tabIndex = session.isSearchMode
+    var tabIndex = isSearchMode
         ? settings.activeTab.index
         : HadithPanelTab.details.index;
     if (tabIndex < 0) {
       tabIndex = 0;
-    } else if (session.isSearchMode &&
-        tabIndex >= HadithPanelTab.values.length) {
+    } else if (isSearchMode && tabIndex >= HadithPanelTab.values.length) {
       tabIndex = HadithPanelTab.values.length - 1;
     }
 
     final tabs = <FTabEntry>[
       FTabEntry(
         label: Text(l10n.hadithDetailsTab),
-        child: session.selectedHadith == null
+        child: selectedHadith == null
             ? Center(
                 child: Text(
                   l10n.hadithNoDetailsSelected,
@@ -220,9 +209,9 @@ class _HadithSidePanel extends ConsumerWidget {
                   ),
                 ),
               )
-            : HadithSelectedDetailsPane(hadith: session.selectedHadith!),
+            : HadithSelectedDetailsPane(hadith: selectedHadith),
       ),
-      if (session.isSearchMode)
+      if (isSearchMode)
         FTabEntry(
           label: Text(l10n.hadithFilterTab),
           child: LazyPanelContent.indexed(
@@ -233,7 +222,7 @@ class _HadithSidePanel extends ConsumerWidget {
         ),
     ];
 
-    if (!session.isSearchMode) {
+    if (!isSearchMode) {
       tabIndex = HadithPanelTab.details.index;
     } else if (tabIndex >= tabs.length) {
       tabIndex = tabs.length - 1;
@@ -262,7 +251,7 @@ class _HadithSidePanel extends ConsumerWidget {
               control: FTabControl.lifted(
                 index: tabIndex,
                 onChange: (index) {
-                  if (!session.isSearchMode &&
+                  if (!isSearchMode &&
                       index != HadithPanelTab.details.index) {
                     return;
                   }

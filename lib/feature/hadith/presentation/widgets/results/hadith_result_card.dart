@@ -59,24 +59,23 @@ class HadithResultCard extends ConsumerWidget {
     final l10n = context.l10n;
     final hadithKey = hadithStableKey(hadith);
 
-    final isFavoriteValue =
-        isFavorite ??
-        (ref.watch(hadithFavoritesProvider).asData?.value.any(
-              (entry) => hadithStableKey(entry) == hadithKey,
-            ) ??
-            false);
-    final isSelectedValue =
-        isSelected ??
-        ref.watch(
-          hadithSessionControllerProvider.select(
-            (session) {
-              final selected = session.selectedHadith;
-              return selected != null &&
-                  hadithStableKey(selected) == hadithKey;
-            },
-          ),
-        ) ??
-        false;
+    // Select membership for this key only — avoids rebuilding every card on
+    // unrelated favorite list identity changes when this entry is unchanged.
+    final favoriteFromProvider = ref.watch(
+      hadithFavoritesProvider.select((async) {
+        final list = async.asData?.value;
+        if (list == null) return false;
+        return list.any((entry) => hadithStableKey(entry) == hadithKey);
+      }),
+    );
+    final isFavoriteValue = isFavorite ?? favoriteFromProvider;
+    final selectedFromProvider = ref.watch(
+      hadithSessionControllerProvider.select((session) {
+        final selected = session.selectedHadith;
+        return selected != null && hadithStableKey(selected) == hadithKey;
+      }),
+    );
+    final isSelectedValue = isSelected ?? selectedFromProvider;
 
     final onSelectAction =
         onSelect ??
@@ -92,11 +91,7 @@ class HadithResultCard extends ConsumerWidget {
         onToggleFavorite ??
         (showFavoriteAction
             ? () {
-                unawaited(
-                  ref
-                      .read(hadithSessionControllerProvider.notifier)
-                      .toggleFavorite(hadith),
-                );
+                unawaited(_toggleFavorite(context, ref, l10n));
               }
             : null);
 
@@ -184,6 +179,24 @@ class HadithResultCard extends ConsumerWidget {
         );
       },
     );
+  }
+
+  Future<void> _toggleFavorite(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
+    try {
+      await ref
+          .read(hadithSessionControllerProvider.notifier)
+          .toggleFavorite(hadith);
+    } on Object catch (error) {
+      if (!context.mounted) return;
+      showFToast(
+        context: context,
+        title: Text('${l10n.menuAddBookmark}: $error'),
+      );
+    }
   }
 
   void _copyHadith(BuildContext context, AppLocalizations l10n) {

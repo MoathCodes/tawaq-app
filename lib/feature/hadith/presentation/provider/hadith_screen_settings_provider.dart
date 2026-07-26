@@ -16,7 +16,7 @@ class HadithScreenSettingsNotifier extends _$HadithScreenSettingsNotifier {
   @override
   Future<HadithPersistedSettings> build() async {
     await persist(
-      ref.read(settingsStorageProvider),
+      ref.watch(settingsStorageProvider.future),
       options: const StorageOptions(
         cacheTime: StorageCacheTime.unsafe_forever,
       ),

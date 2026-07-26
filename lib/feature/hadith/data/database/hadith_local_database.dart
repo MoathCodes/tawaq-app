@@ -34,13 +34,23 @@ class HadithLocalDatabase {
   });
   static const _maxHiveIntKey = 0xFFFFFFFF;
   static const _maxRecentSearches = 12;
+  static const _savedAtKey = 'savedAt';
+  static const _hadithKey = 'hadith';
+
+  /// Soft cap for persisted favorites (oldest by [savedAt] pruned first).
+  static const maxFavorites = 500;
 
   final Box<String, dynamic> _favoritesBox;
   final Box<int, HadithRecentSearch> _recentsBox;
 
   /// Stores a favorite hadith.
   Future<void> addFavorite(String key, DetailedHadith hadith) async {
-    await _favoritesBox.put(key, jsonEncode(hadith.toJson()));
+    final envelope = <String, dynamic>{
+      _savedAtKey: DateTime.now().toIso8601String(),
+      _hadithKey: hadith.toJson(),
+    };
+    await _favoritesBox.put(key, jsonEncode(envelope));
+    await _pruneFavorites();
   }
 
   /// Stores a recent-search query.
@@ -99,33 +109,145 @@ class HadithLocalDatabase {
     }
   }
 
-  /// Returns every stored favorite hadith.
+  /// Returns every stored favorite hadith (corrupt entries skipped).
   Future<List<DetailedHadith>> getAllFavorites() async {
-    final values = await _favoritesBox.getAllValues();
-    return values
-        .map(_toDetailedHadith)
+    await _pruneFavorites();
+    final entries = await _readFavoriteEntries();
+    return entries
+        .map((entry) => entry.hadith)
         .whereType<DetailedHadith>()
         .toList(growable: false);
   }
 
-  DetailedHadith? _toDetailedHadith(dynamic value) {
-    if (value is String) {
-      return DetailedHadith.fromJson(jsonDecode(value) as Map<String, dynamic>);
+  /// Drops oldest favorites beyond [max] by [savedAt] (oldest first).
+  Future<void> _pruneFavorites({int max = maxFavorites}) async {
+    final entries = await _readFavoriteEntries();
+    if (entries.length <= max) return;
+
+    entries.sort((a, b) => a.savedAt.compareTo(b.savedAt));
+    final overflow = entries.length - max;
+    final keysToDelete = entries.take(overflow).map((e) => e.key).toList();
+    await _favoritesBox.deleteAll(keysToDelete);
+  }
+
+  Future<List<_FavoriteEntry>> _readFavoriteEntries() async {
+    final keys = (await _favoritesBox.getAllKeys()).toList(growable: false);
+    final entries = <_FavoriteEntry>[];
+    final corruptKeys = <String>[];
+
+    for (final key in keys) {
+      final value = await _favoritesBox.get(key);
+      if (value == null) continue;
+
+      final parsed = _parseFavoriteEntry(key, value);
+      if (parsed == null) {
+        corruptKeys.add(key);
+        continue;
+      }
+      entries.add(parsed);
     }
 
-    if (value is Map<String, dynamic>) {
-      return DetailedHadith.fromJson(value);
+    if (corruptKeys.isNotEmpty) {
+      await _favoritesBox.deleteAll(corruptKeys);
+    }
+
+    return entries;
+  }
+
+  _FavoriteEntry? _parseFavoriteEntry(String key, dynamic value) {
+    try {
+      final decoded = _decodeFavoriteValue(value);
+      if (decoded == null) return null;
+
+      final savedAt = decoded.savedAt;
+      final hadith = decoded.hadith;
+      if (hadith == null) return null;
+
+      return _FavoriteEntry(key: key, savedAt: savedAt, hadith: hadith);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  ({DateTime savedAt, DetailedHadith? hadith})? _decodeFavoriteValue(
+    dynamic value,
+  ) {
+    if (value is String) {
+      final decoded = jsonDecode(value);
+      return _decodeFavoriteMap(decoded);
+    }
+
+    if (value is Map) {
+      return _decodeFavoriteMap(Map<String, dynamic>.from(value));
     }
 
     if (value is HadithFavorite) {
-      return DetailedHadith(
-        hadith: value.hadith,
-        rawi: value.rawi,
-        mohdith: value.mohdith,
-        book: value.book,
-        numberOrPage: value.numberOrPage,
-        grade: value.hukm,
-        explainGrade: value.hukm,
+      return (
+        savedAt: value.savedAt,
+        hadith: DetailedHadith(
+          hadith: value.hadith,
+          rawi: value.rawi,
+          mohdith: value.mohdith,
+          book: value.book,
+          numberOrPage: value.numberOrPage,
+          grade: value.hukm,
+          explainGrade: value.hukm,
+        ),
+      );
+    }
+
+    return null;
+  }
+
+  ({DateTime savedAt, DetailedHadith? hadith})? _decodeFavoriteMap(
+    Object? decoded,
+  ) {
+    if (decoded is! Map) return null;
+    final map = Map<String, dynamic>.from(decoded);
+
+    // Envelope: { savedAt, hadith: {...} }
+    if (map[_hadithKey] is Map) {
+      final savedAtRaw = map[_savedAtKey];
+      final savedAt = savedAtRaw is String
+          ? DateTime.tryParse(savedAtRaw) ?? DateTime.fromMillisecondsSinceEpoch(0)
+          : DateTime.fromMillisecondsSinceEpoch(0);
+      final hadith = DetailedHadith.fromJson(
+        Map<String, dynamic>.from(map[_hadithKey] as Map),
+      );
+      return (savedAt: savedAt, hadith: hadith);
+    }
+
+    // Legacy: bare DetailedHadith JSON (no savedAt).
+    if (map.containsKey('hadith') && map[_hadithKey] is String) {
+      final hadith = DetailedHadith.fromJson(map);
+      return (
+        savedAt: DateTime.fromMillisecondsSinceEpoch(0),
+        hadith: hadith,
+      );
+    }
+
+    // Legacy HadithFavorite JSON shape.
+    if (map.containsKey('key') && map.containsKey('hukm')) {
+      final favorite = HadithFavorite.fromJson(map);
+      return (
+        savedAt: favorite.savedAt,
+        hadith: DetailedHadith(
+          hadith: favorite.hadith,
+          rawi: favorite.rawi,
+          mohdith: favorite.mohdith,
+          book: favorite.book,
+          numberOrPage: favorite.numberOrPage,
+          grade: favorite.hukm,
+          explainGrade: favorite.hukm,
+        ),
+      );
+    }
+
+    // Bare DetailedHadith map without envelope.
+    if (map.containsKey('hadith') || map.containsKey('rawi')) {
+      return (
+        savedAt: DateTime.fromMillisecondsSinceEpoch(0),
+        hadith: DetailedHadith.fromJson(map),
       );
     }
 
@@ -159,4 +281,16 @@ class HadithLocalDatabase {
   Future<bool> isFavorite(String key) async {
     return _favoritesBox.containsKey(key);
   }
+}
+
+class _FavoriteEntry {
+  const _FavoriteEntry({
+    required this.key,
+    required this.savedAt,
+    required this.hadith,
+  });
+
+  final String key;
+  final DateTime savedAt;
+  final DetailedHadith hadith;
 }

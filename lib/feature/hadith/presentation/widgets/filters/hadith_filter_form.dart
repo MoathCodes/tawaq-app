@@ -29,8 +29,9 @@ class HadithFilterPanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(hadithSessionControllerProvider);
-    final panelEnabled = !session.searchBusy;
+    final panelEnabled = !ref.watch(
+      hadithSessionControllerProvider.select((s) => s.searchBusy),
+    );
     final l10n = context.l10n;
     final theme = context.theme;
 
@@ -209,9 +210,12 @@ class HadithFilterForm extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(hadithSessionControllerProvider);
-    final panelEnabled = !session.searchBusy;
-    final filters = session.filters;
+    final panelEnabled = !ref.watch(
+      hadithSessionControllerProvider.select((s) => s.searchBusy),
+    );
+    final filters = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.filters),
+    );
     final theme = context.theme;
     final l10n = context.l10n;
 

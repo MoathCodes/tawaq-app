@@ -26,10 +26,8 @@ class HadithSearchColumn extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isBookmarksMode = ref.watch(
-      hadithSessionControllerProvider.select(
-        (session) => session.mode == HadithViewMode.bookmarks,
-      ),
+    final mode = ref.watch(
+      hadithSessionControllerProvider.select((session) => session.mode),
     );
 
     return NonSelectable(
@@ -38,8 +36,10 @@ class HadithSearchColumn extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (isBookmarksMode)
-              const _BookmarksHeader()
+            if (mode == HadithViewMode.bookmarks)
+              const _SpecificModeHeader(mode: HadithViewMode.bookmarks)
+            else if (mode == HadithViewMode.specificList)
+              const _SpecificModeHeader(mode: HadithViewMode.specificList)
             else ...[
               _QueryField(useSplitLayout: useSplitLayout),
               _SearchMeta(useSplitLayout: useSplitLayout),
@@ -51,14 +51,21 @@ class HadithSearchColumn extends ConsumerWidget {
   }
 }
 
-class _BookmarksHeader extends ConsumerWidget {
-  const _BookmarksHeader();
+class _SpecificModeHeader extends ConsumerWidget {
+  const _SpecificModeHeader({required this.mode});
+
+  final HadithViewMode mode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
     final screenController = ref.read(hadithSessionControllerProvider.notifier);
+    final title = switch (mode) {
+      HadithViewMode.bookmarks => l10n.bookmarks,
+      HadithViewMode.specificList => l10n.hadithSimilar,
+      HadithViewMode.search => l10n.hadithBackToSearch,
+    };
 
     return Row(
       spacing: AppSpacing.sm,
@@ -76,7 +83,7 @@ class _BookmarksHeader extends ConsumerWidget {
           ),
         ),
         Text(
-          l10n.bookmarks,
+          title,
           style: theme.typography.body.lg.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -91,12 +98,22 @@ class _QueryField extends HookConsumerWidget {
 
   final bool useSplitLayout;
 
-  static const _queryDebounceDuration = Duration(milliseconds: 420);
   static const _filterPopoverGroupId = 'hadith-filter-popover';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(hadithSessionControllerProvider);
+    final isSearchMode = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.isSearchMode),
+    );
+    final sessionQuery = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.query),
+    );
+    final activeFilterCount = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.filters.activeCount),
+    );
+    final searchBusy = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.searchBusy),
+    );
     final queryController = useTextEditingController();
     useListenable(queryController);
     final screenController = ref.read(hadithSessionControllerProvider.notifier);
@@ -106,39 +123,47 @@ class _QueryField extends HookConsumerWidget {
       [searchFocusNode],
     );
 
-    useRegisterAppSearchFocus(focusSearch, enabled: session.isSearchMode);
+    useRegisterAppSearchFocus(focusSearch, enabled: isSearchMode);
 
-    final theme = context.theme;
     final l10n = context.l10n;
-    final activeFilterCount = session.filters.activeCount;
+    final canSearch = queryController.text.trim().isNotEmpty;
 
     void commitQuery(String query) {
-      unawaited(screenController.setQuery(query));
+      final value = query.trim();
+      if (value.isEmpty) return;
+      unawaited(screenController.setQuery(value));
     }
-
-    final debouncedCommitQuery = useDebouncedCallback(
-      () => commitQuery(queryController.text),
-      duration: _queryDebounceDuration,
-    );
 
     useEffect(() {
-      if (queryController.text != session.query) {
-        // Drop any in-flight typing debounce so chip / programmatic syncs
-        // are not overwritten by a stale commit.
-        debouncedCommitQuery.cancel();
-        queryController.text = session.query;
-        debouncedCommitQuery.cancel();
+      if (queryController.text != sessionQuery) {
+        queryController.text = sessionQuery;
       }
       return null;
-    }, [session.query]);
-
-    void onQueryChanged(String query) {
-      debouncedCommitQuery();
-    }
+    }, [sessionQuery]);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compactActions = constraints.maxWidth < context.theme.breakpoints.md;
+        final compactActions =
+            constraints.maxWidth < context.theme.breakpoints.md;
+
+        final searchButton = FButton.icon(
+          onPress: canSearch
+              ? () => commitQuery(queryController.text)
+              : null,
+          semanticsLabel: compactActions ? l10n.hadithSearchAction : null,
+          child: compactActions
+              ? const HadithDecorExcludeSemantics(
+                  child: Icon(FLucideIcons.search, size: 18),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: AppSpacing.xs,
+                  children: [
+                    const Icon(FLucideIcons.search, size: 16),
+                    Text(l10n.hadithSearchAction),
+                  ],
+                ),
+        );
 
         return Row(
           spacing: AppSpacing.sm,
@@ -146,28 +171,22 @@ class _QueryField extends HookConsumerWidget {
             Expanded(
               child: FTextField(
                 focusNode: searchFocusNode,
-                enabled: !session.searchBusy,
-                control: .managed(
-                  controller: queryController,
-                  onChange: (value) => onQueryChanged(value.text),
-                ),
-                onSubmit: session.searchBusy ? null : commitQuery,
+                // Stay editable while a Dorar request is in flight so the
+                // user can revise the draft and submit a newer query.
+                control: .managed(controller: queryController),
+                onSubmit: commitQuery,
                 hint: l10n.hadithSearchHint,
-                prefixBuilder: (_, _, _) => HadithDecorExcludeSemantics(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    child: Icon(
-                      FLucideIcons.search,
-                      size: 18,
-                      color: theme.colors.mutedForeground,
-                    ),
-                  ),
-                ),
               ),
             ),
-            if (session.isSearchMode)
+            if (compactActions)
+              FTooltip(
+                semanticsLabel: l10n.hadithSearchAction,
+                tipBuilder: (_, _) => Text(l10n.hadithSearchAction),
+                child: searchButton,
+              )
+            else
+              searchButton,
+            if (isSearchMode)
               FButton.icon(
                 onPress: () => unawaited(screenController.openBookmarks()),
                 semanticsLabel: compactActions ? l10n.bookmarks : null,
@@ -184,9 +203,9 @@ class _QueryField extends HookConsumerWidget {
                         ],
                       ),
               ),
-            if (useSplitLayout && session.isSearchMode)
+            if (useSplitLayout && isSearchMode)
               FButton.icon(
-                onPress: session.searchBusy
+                onPress: searchBusy
                     ? null
                     : () {
                         ref
@@ -218,7 +237,7 @@ class _QueryField extends HookConsumerWidget {
                         ],
                       ),
               )
-            else if (session.isSearchMode)
+            else if (isSearchMode)
               FPopover(
                 groupId: _filterPopoverGroupId,
                 popoverAnchor: Alignment.topRight,
@@ -235,7 +254,7 @@ class _QueryField extends HookConsumerWidget {
                   ),
                 ),
                 builder: (_, controller, child) => FButton.icon(
-                  onPress: session.searchBusy ? null : controller.toggle,
+                  onPress: searchBusy ? null : controller.toggle,
                   semanticsLabel: l10n.hadithOpenFilters,
                   child: child,
                 ),
@@ -292,23 +311,30 @@ class _SearchMeta extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(hadithSessionControllerProvider);
-    if (!session.isSearchMode) return const SizedBox.shrink();
+    final isSearchMode = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.isSearchMode),
+    );
+    if (!isSearchMode) return const SizedBox.shrink();
 
-    final visibleResults = ref.hadithVisibleResults(session);
-    final resultsCount = switch (visibleResults) {
-      AsyncData(:final value) => value.length,
-      _ => 0,
-    };
+    final sessionQuery = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.query),
+    );
+    final activeFilterCount = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.filters.activeCount),
+    );
+    final resultsCount = ref.watch(
+      hadithSessionControllerProvider.select(
+        (s) => s.searchOutcome.value?.results.length ?? 0,
+      ),
+    );
     final l10n = context.l10n;
-    final activeFilterCount = session.filters.activeCount;
-    final showRecents = session.query.trim().isEmpty;
+    final showRecents = sessionQuery.trim().isEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: AppSpacing.xs),
-        if (session.query.trim().isNotEmpty || activeFilterCount > 0)
+        if (sessionQuery.trim().isNotEmpty || activeFilterCount > 0)
           Semantics(
             label: l10n.hadithResultsCount(resultsCount),
             child: HadithDecorExcludeSemantics(
@@ -333,10 +359,15 @@ class _ActiveFilterChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(hadithSessionControllerProvider);
+    final filters = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.filters),
+    );
+    final filterInteractionsEnabled = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.filterInteractionsEnabled),
+    );
     final theme = context.theme;
     final l10n = context.l10n;
-    final chips = buildActiveHadithFilterChips(session.filters, l10n);
+    final chips = buildActiveHadithFilterChips(filters, l10n);
 
     if (chips.isEmpty) return const SizedBox.shrink();
 
@@ -376,7 +407,7 @@ class _ActiveFilterChips extends ConsumerWidget {
                       size: FButtonSizeVariant.sm,
                       mainAxisSize: MainAxisSize.min,
                       semanticsLabel: l10n.hadithClearAllFilters,
-                      onPress: session.filterInteractionsEnabled
+                      onPress: filterInteractionsEnabled
                           ? () {
                               unawaited(
                                 ref
@@ -405,7 +436,7 @@ class _ActiveFilterChips extends ConsumerWidget {
                         chip.label,
                         l10n,
                       ),
-                      onPress: session.filterInteractionsEnabled
+                      onPress: filterInteractionsEnabled
                           ? () {
                               unawaited(
                                 ref
@@ -431,7 +462,7 @@ class _ActiveFilterChips extends ConsumerWidget {
                       variant: FButtonVariant.ghost,
                       size: FButtonSizeVariant.sm,
                       semanticsLabel: l10n.hadithClearAllFilters,
-                      onPress: session.filterInteractionsEnabled
+                      onPress: filterInteractionsEnabled
                           ? () {
                               unawaited(
                                 ref
@@ -465,10 +496,10 @@ class _RecentSearchesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final session = ref.watch(hadithSessionControllerProvider);
-    final recentSearches = session.isSearchMode
-        ? ref.watch(hadithRecentSearchesProvider)
-        : const AsyncData<List<String>>(<String>[]);
+    final searchBusy = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.searchBusy),
+    );
+    final recentSearches = ref.watch(hadithRecentSearchesProvider);
 
     return recentSearches.when(
       data: (items) {
@@ -492,7 +523,7 @@ class _RecentSearchesSection extends ConsumerWidget {
                 variant: FButtonVariant.ghost,
                 size: FButtonSizeVariant.sm,
                 mainAxisSize: MainAxisSize.min,
-                onPress: session.searchBusy
+                onPress: searchBusy
                     ? null
                     : () => unawaited(
                         ref
@@ -537,7 +568,9 @@ class _RecentSearchChip extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final session = ref.watch(hadithSessionControllerProvider);
+    final searchBusy = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.searchBusy),
+    );
     final screenController = ref.read(hadithSessionControllerProvider.notifier);
     final (:isHovered, :setHovered) = useHoverState();
     final showRemove = isHovered || !useSplitLayout;
@@ -553,7 +586,7 @@ class _RecentSearchChip extends HookConsumerWidget {
             size: FButtonSizeVariant.sm,
             mainAxisSize: MainAxisSize.min,
             semanticsLabel: hadithRecentSearchChipSemanticsLabel(query, l10n),
-            onPress: session.searchBusy
+            onPress: searchBusy
                 ? null
                 : () {
                     unawaited(screenController.setQuery(query));
@@ -578,7 +611,7 @@ class _RecentSearchChip extends HookConsumerWidget {
               duration: theme.durations.fast,
               curve: Curves.easeOut,
               alignment: AlignmentDirectional.centerStart,
-              child: showRemove && !session.searchBusy
+              child: showRemove && !searchBusy
                   ? FButton.icon(
                       variant: FButtonVariant.ghost,
                       size: FButtonSizeVariant.sm,

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
@@ -18,6 +19,8 @@ import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_
 import 'package:tawaq/theme/theme.dart';
 
 /// List of hadith search results with loading, empty, and pagination states.
+///
+/// Watches search fields only — selection is per-card / side-panel.
 class HadithResultsColumn extends ConsumerWidget {
   const HadithResultsColumn({required this.useSplitLayout, super.key});
 
@@ -25,18 +28,62 @@ class HadithResultsColumn extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final session = ref.watch(hadithSessionControllerProvider);
+    final mode = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.mode),
+    );
+    final query = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.query),
+    );
+    final searchOutcome = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.searchOutcome),
+    );
+    final specificHadiths = mode == HadithViewMode.specificList
+        ? ref.watch(
+            hadithSessionControllerProvider.select((s) => s.specificHadiths),
+          )
+        : const <DetailedHadith>[];
+
     final theme = context.theme;
-    final visibleResults = ref.hadithVisibleResults(session);
+    final l10n = context.l10n;
+    final visibleResults = switch (mode) {
+      HadithViewMode.search => _searchResultsAsync(searchOutcome),
+      HadithViewMode.bookmarks => ref.watch(hadithFavoritesProvider),
+      HadithViewMode.specificList => AsyncData(specificHadiths),
+    };
     final visibleCount = switch (visibleResults) {
       AsyncData(:final value) => value.length,
       _ => 0,
     };
-    final l10n = context.l10n;
+    final hardError = searchOutcome.hasError && !searchOutcome.hasValue
+        ? '${searchOutcome.error}'
+        : null;
+    final isPaginating = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.isPaginating),
+    );
+    final paginationError = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.paginationError),
+    );
+    final isLoading = searchOutcome.isLoading || isPaginating;
+    final results = searchOutcome.value?.results ?? const <DetailedHadith>[];
+    final page = searchOutcome.value?.page ?? 1;
+    final totalPages = searchOutcome.value?.totalPages ?? 0;
 
-    final content = _buildContent(context, ref, session, visibleResults, theme);
+    final content = _buildContent(
+      context: context,
+      ref: ref,
+      mode: mode,
+      query: query,
+      hardError: hardError,
+      paginationError: paginationError,
+      isLoading: isLoading,
+      results: results,
+      page: page,
+      totalPages: totalPages,
+      visibleResults: visibleResults,
+      theme: theme,
+    );
     final showSearchLoadingSemantics =
-        session.mode == HadithViewMode.search && session.isLoading;
+        mode == HadithViewMode.search && isLoading;
     final semanticsContent = showSearchLoadingSemantics
         ? Semantics(
             label: hadithSearchLoadingSemanticsLabel(l10n),
@@ -45,35 +92,30 @@ class HadithResultsColumn extends ConsumerWidget {
         : content;
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 260),
+      duration: const Duration(milliseconds: 200),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (child, animation) {
-        return FadeTransition(
-          opacity: animation,
-          child: ScaleTransition(
-            scale: Tween<double>(begin: 0.98, end: 1).animate(animation),
-            child: child,
-          ),
-        );
+        // Fade only — avoid scale thrash on page / result-list swaps.
+        return FadeTransition(opacity: animation, child: child);
       },
       child: KeyedSubtree(
         key: ValueKey(
-          'results:${session.mode}:${session.query.isEmpty}:'
-          '${session.error != null}:$visibleCount',
+          'results:$mode:${query.isEmpty}:'
+          '${hardError != null}:$visibleCount',
         ),
         child: Stack(
           children: [
             FSkeletonizer.shimmer(
               enabled:
-                  session.mode == HadithViewMode.search &&
-                  session.isLoading &&
-                  session.results.isEmpty,
+                  mode == HadithViewMode.search &&
+                  isLoading &&
+                  results.isEmpty,
               child: semanticsContent,
             ),
-            if (session.mode == HadithViewMode.search &&
-                session.isLoading &&
-                session.results.isNotEmpty)
+            if (mode == HadithViewMode.search &&
+                isLoading &&
+                results.isNotEmpty)
               Positioned(
                 top: 0,
                 left: 0,
@@ -91,16 +133,23 @@ class HadithResultsColumn extends ConsumerWidget {
     );
   }
 
-  Widget _buildContent(
-    BuildContext context,
-    WidgetRef ref,
-    HadithSessionState session,
-    AsyncValue<List<DetailedHadith>> visibleResults,
-    FThemeData theme,
-  ) {
+  Widget _buildContent({
+    required BuildContext context,
+    required WidgetRef ref,
+    required HadithViewMode mode,
+    required String query,
+    required String? hardError,
+    required String? paginationError,
+    required bool isLoading,
+    required List<DetailedHadith> results,
+    required int page,
+    required int totalPages,
+    required AsyncValue<List<DetailedHadith>> visibleResults,
+    required FThemeData theme,
+  }) {
     final l10n = context.l10n;
 
-    if (session.mode != HadithViewMode.search) {
+    if (mode != HadithViewMode.search) {
       return visibleResults.when(
         loading: () => Semantics(
           label: hadithSearchLoadingSemanticsLabel(l10n),
@@ -121,12 +170,12 @@ class HadithResultsColumn extends ConsumerWidget {
         },
         data: (hadithList) {
           if (hadithList.isEmpty) {
-            final emptyMessage = session.mode == HadithViewMode.bookmarks
+            final emptyMessage = mode == HadithViewMode.bookmarks
                 ? l10n.hadithNoBookmarks
                 : l10n.hadithNoMatchingResults;
             return Center(
               child: EmptyStatePanel(
-                icon: session.mode == HadithViewMode.bookmarks
+                icon: mode == HadithViewMode.bookmarks
                     ? FLucideIcons.bookmark
                     : FLucideIcons.searchX,
                 title: emptyMessage,
@@ -135,16 +184,18 @@ class HadithResultsColumn extends ConsumerWidget {
           }
 
           return _ResultListView(
-            session: session,
             hadithList: hadithList,
             useSplitLayout: useSplitLayout,
-            enablePagination: false,
+            showPagination: false,
+            page: page,
+            totalPages: totalPages,
+            isLoading: isLoading,
           );
         },
       );
     }
 
-    if (session.query.isEmpty) {
+    if (query.isEmpty) {
       return Center(
         child: EmptyStatePanel(
           icon: FLucideIcons.search,
@@ -153,17 +204,17 @@ class HadithResultsColumn extends ConsumerWidget {
       );
     }
 
-    if (session.error != null && session.results.isEmpty) {
+    if (hardError != null) {
       return Center(
         child: EmptyStatePanel(
           icon: FLucideIcons.circleAlert,
-          title: session.error!,
+          title: hardError,
         ),
       );
     }
 
-    if (session.results.isEmpty) {
-      if (session.isLoading) return const _ResultsSkeletonList();
+    if (results.isEmpty) {
+      if (isLoading) return const _ResultsSkeletonList();
 
       return Center(
         child: EmptyStatePanel(
@@ -173,71 +224,121 @@ class HadithResultsColumn extends ConsumerWidget {
       );
     }
 
-    return _ResultListView(
-      session: session,
-      hadithList: session.results,
+    final list = _ResultListView(
+      hadithList: results,
       useSplitLayout: useSplitLayout,
-      enablePagination: true,
+      showPagination: totalPages > 1,
+      page: page,
+      totalPages: totalPages,
+      isLoading: isLoading,
+    );
+
+    if (paginationError == null) return list;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          child: FAlert(
+            liveRegion: true,
+            icon: const Icon(FLucideIcons.circleAlert),
+            title: Text(l10n.hadithPageLoadFailed),
+          ),
+        ),
+        Expanded(child: list),
+      ],
     );
   }
 }
 
-class _ResultListView extends ConsumerWidget {
+AsyncValue<List<DetailedHadith>> _searchResultsAsync(
+  AsyncValue<HadithSearchPage> outcome,
+) {
+  if (outcome.hasValue) {
+    return AsyncData(outcome.requireValue.results);
+  }
+  if (outcome.hasError) {
+    return AsyncError(outcome.error!, outcome.stackTrace!);
+  }
+  return const AsyncLoading();
+}
+
+class _ResultListView extends HookConsumerWidget {
   const _ResultListView({
-    required this.session,
     required this.hadithList,
     required this.useSplitLayout,
-    required this.enablePagination,
+    required this.showPagination,
+    required this.page,
+    required this.totalPages,
+    required this.isLoading,
   });
 
-  final HadithSessionState session;
   final List<DetailedHadith> hadithList;
   final bool useSplitLayout;
-  final bool enablePagination;
+  final bool showPagination;
+  final int page;
+  final int totalPages;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final itemCount = hadithList.length + (enablePagination ? 1 : 0);
+    final scrollController = useScrollController();
+    final scrollDuration = context.theme.durations.fast;
 
-    return ListView.separated(
-      itemCount: itemCount,
+    useEffect(() {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!scrollController.hasClients) return;
+        unawaited(
+          scrollController.animateTo(
+            0,
+            duration: scrollDuration,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+      });
+      return null;
+    }, [page]);
+
+    final list = ListView.separated(
+      controller: scrollController,
+      itemCount: hadithList.length,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {
-        if (enablePagination && index == hadithList.length) {
-          if (!session.hasNextPage) {
-            return const SizedBox(height: AppSpacing.lg);
-          }
-
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-              child: FButton(
-                onPress: session.isLoadingMore
-                    ? null
-                    : () {
-                        unawaited(
-                          ref
-                              .read(hadithSessionControllerProvider.notifier)
-                              .loadMore(),
-                        );
-                      },
-                child: session.isLoadingMore
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: FCircularProgress(),
-                      )
-                    : Text(context.l10n.hadithLoadMore),
-              ),
-            ),
-          );
-        }
-
         return _ResultTile(
           hadith: hadithList[index],
           useSplitLayout: useSplitLayout,
         );
       },
+    );
+
+    if (!showPagination || totalPages <= 1) return list;
+
+    final pageIndex = (page - 1).clamp(0, totalPages - 1);
+
+    return Column(
+      children: [
+        Expanded(child: list),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          child: Center(
+            child: FPagination(
+              control: .lifted(
+                page: pageIndex,
+                pages: totalPages,
+                onChange: (index) {
+                  if (isLoading) return;
+                  unawaited(
+                    ref
+                        .read(hadithSessionControllerProvider.notifier)
+                        .goToPage(index + 1),
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

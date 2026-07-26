@@ -45,15 +45,23 @@ class HadithLookupSection extends HookConsumerWidget {
       return const <HadithLookupRef>[];
     }
 
-    return ref.read(hadithLookupProvider(kind, trimmed).future);
+    try {
+      return await ref.read(hadithLookupProvider(kind, trimmed).future);
+    } catch (_) {
+      // Soft-fail: keep the select usable with an empty suggestion list.
+      return const <HadithLookupRef>[];
+    }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final session = ref.watch(hadithSessionControllerProvider);
-    final filters = session.filters;
-    final interactionsEnabled = !session.searchBusy;
+    final filters = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.filters),
+    );
+    final interactionsEnabled = !ref.watch(
+      hadithSessionControllerProvider.select((s) => s.searchBusy),
+    );
     final selected = this.selected(filters);
     final selectedSet = selected.toSet();
     final lookupRequestId = useRef(0);
@@ -88,29 +96,11 @@ class HadithLookupSection extends HookConsumerWidget {
             value: selectedSet,
             onChange: (values) {
               if (!interactionsEnabled) return;
-              values.where((value) => !selectedSet.contains(value)).forEach((
-                item,
-              ) {
-                if (selected.any((entry) => entry.id == item.id)) {
-                  return;
-                }
-                updateFilters(
-                  withSelected(filters, [...selected, item]),
-                );
-              });
-
-              selected.where((value) => !values.contains(value)).forEach((
-                item,
-              ) {
-                updateFilters(
-                  withSelected(
-                    filters,
-                    selected
-                        .where((entry) => entry.id != item.id)
-                        .toList(growable: false),
-                  ),
-                );
-              });
+              // One commit from the final selection set — do not loop
+              // per add/remove against a stale filters closure.
+              updateFilters(
+                withSelected(filters, values.toList(growable: false)),
+              );
             },
           ),
           filter: (query) => _debouncedLookup(ref, query, lookupRequestId),
