@@ -22,11 +22,16 @@ import 'package:tawaq/theme/theme_model.dart';
 
 class _TestQuranScreenSettings extends QuranScreenSettingsNotifier {
   @override
-  Future<QuranScreenState> build() async {
-    return QuranScreenState.initial().copyWith(
-      selectedAyah: await _makeAyah(1),
-    );
-  }
+  Future<QuranScreenState> build() async => QuranScreenState.initial();
+}
+
+class _TestQuranSelectedAyah extends QuranSelectedAyah {
+  _TestQuranSelectedAyah(this._ayah);
+
+  final Ayah _ayah;
+
+  @override
+  Ayah? build() => _ayah;
 }
 
 class _TestQuranNotesNotifier extends QuranNotesNotifier {
@@ -149,8 +154,10 @@ Future<Ayah> _makeAyah(int ayahId) async => Ayah(
 
 void main() {
   late MushafReaderController controller;
+  late Ayah selected;
 
-  setUp(() {
+  setUp(() async {
+    selected = await _makeAyah(1);
     controller = MushafReaderController.withRepository(
       repository: _StudyPanelTestRepo(),
     );
@@ -165,7 +172,7 @@ void main() {
     required Widget child,
   }) {
     final theme = buildAppTheme(
-      palette: AppPalette.zinc,
+      palette: AppPalette.neutral,
       themeMode: ThemeMode.light,
       touch: false,
       textScale: 1,
@@ -174,6 +181,9 @@ void main() {
     return ProviderScope(
       overrides: [
         quranScreenSettingsProvider.overrideWith(_TestQuranScreenSettings.new),
+        quranSelectedAyahProvider.overrideWith(
+          () => _TestQuranSelectedAyah(selected),
+        ),
         quranMushafControllerProvider.overrideWithValue(controller),
         recitationControllerProvider.overrideWithValue(recitationState),
         quranNotesProvider(null).overrideWith(_TestQuranNotesNotifier.new),
@@ -214,7 +224,7 @@ void main() {
   }
 
   testWidgets(
-    'StudyPanel does not treat surah-local currentAyah as global id',
+    'StudyPanel keeps session selection when recitation has surah-local ayah',
     (tester) async {
       await tester.pumpWidget(
         wrap(
@@ -231,14 +241,12 @@ void main() {
 
       final element = tester.element(find.byType(StudyPanel));
       final container = ProviderScope.containerOf(element);
-      final selected = container.read(quranScreenSettingsProvider).value;
-      expect(selected?.selectedAyah?.ayahId, 1);
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      expect(container.read(quranSelectedAyahProvider)?.ayahId, 1);
     },
   );
 
   testWidgets(
-    'StudyPanel does not sync when recitation is inactive',
+    'StudyPanel does not sync selection from inactive recitation',
     (tester) async {
       await tester.pumpWidget(
         wrap(
@@ -253,9 +261,7 @@ void main() {
 
       final element = tester.element(find.byType(StudyPanel));
       final container = ProviderScope.containerOf(element);
-      final selected = container.read(quranScreenSettingsProvider).value;
-      expect(selected?.selectedAyah?.ayahId, 1);
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      expect(container.read(quranSelectedAyahProvider)?.ayahId, 1);
     },
   );
 
@@ -275,9 +281,7 @@ void main() {
 
       final element = tester.element(find.byType(StudyPanel));
       final container = ProviderScope.containerOf(element);
-      final selected = container.read(quranScreenSettingsProvider).value;
-      expect(selected?.selectedAyah?.ayahId, 1);
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      expect(container.read(quranSelectedAyahProvider)?.ayahId, 1);
     },
   );
 }

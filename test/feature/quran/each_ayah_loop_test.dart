@@ -122,8 +122,12 @@ void main() {
       expect(result.state.currentAyah, 2);
       expect(result.state.ayahLoopExiting, isFalse);
       expect(result.state.ayahRepeatsRemaining, 3);
+      expect(result.effects.whereType<SeekAudio>(), hasLength(1));
+      expect(
+        result.effects.whereType<SeekAudio>().first.position,
+        const Duration(milliseconds: 5000),
+      );
       expect(result.effects.whereType<LoadAyahLoop>(), hasLength(1));
-      expect(result.effects.whereType<SeekAudio>(), isEmpty);
       expect(result.effects.whereType<HighlightAyah>(), hasLength(1));
     });
 

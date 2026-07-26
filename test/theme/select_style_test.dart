@@ -9,7 +9,7 @@ void main() {
     late FThemeData theme;
 
     setUp(() {
-      theme = FThemes.zinc.light.desktop;
+      theme = FTheme.neutral.light.desktop;
     });
 
     TextStyle resolvedContentStyle(FSelectStyle style) {

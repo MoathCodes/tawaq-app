@@ -32,7 +32,7 @@ void main() {
     required Widget child,
   }) {
     final theme = buildAppTheme(
-      palette: AppPalette.zinc,
+      palette: AppPalette.neutral,
       themeMode: ThemeMode.light,
       touch: false,
       textScale: 1,

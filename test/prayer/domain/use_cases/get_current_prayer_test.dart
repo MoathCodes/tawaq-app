@@ -60,12 +60,12 @@ void main() {
 
       todaysPrayerTimes = PrayerTimes(
         date: today,
-        coordinates: const Coordinates(24.7136, 46.6753), // Riyadh
+        coordinates: Coordinates(24.7136, 46.6753), // Riyadh
         calculationMethod: const UmmAlQura(),
       );
       yesterdaysPrayerTimes = PrayerTimes(
         date: yesterday,
-        coordinates: const Coordinates(24.7136, 46.6753),
+        coordinates: Coordinates(24.7136, 46.6753),
         calculationMethod: const UmmAlQura(),
       );
       todaysSunnahTimes = SunnahTimes(todaysPrayerTimes);
@@ -241,12 +241,12 @@ void main() {
 
       todaysPrayerTimes = PrayerTimes(
         date: today,
-        coordinates: const Coordinates(24.7136, 46.6753),
+        coordinates: Coordinates(24.7136, 46.6753),
         calculationMethod: const UmmAlQura(),
       );
       yesterdaysPrayerTimes = PrayerTimes(
         date: yesterday,
-        coordinates: const Coordinates(24.7136, 46.6753),
+        coordinates: Coordinates(24.7136, 46.6753),
         calculationMethod: const UmmAlQura(),
       );
       todaysSunnahTimes = SunnahTimes(todaysPrayerTimes);

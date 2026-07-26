@@ -1,3 +1,4 @@
+import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:tawaq/feature/hadith/data/database/hadith_local_database.dart';
@@ -69,6 +70,76 @@ void main() {
       expect(recents, hasLength(12));
       expect(await recentsBox.length, 12);
       expect(recents.first.query, 'legacy-19');
+    });
+
+    test('prunes stored favorites to 500 on write', () async {
+      for (var i = 0; i < 520; i++) {
+        await db.addFavorite(
+          'key-$i',
+          DetailedHadith(
+            hadith: 'hadith-$i',
+            rawi: 'rawi',
+            mohdith: 'mohdith',
+            book: 'book',
+            numberOrPage: '$i',
+            grade: 'صحيح',
+            explainGrade: 'صحيح',
+          ),
+        );
+      }
+
+      expect(await favoritesBox.length, lessThanOrEqualTo(500));
+      expect(await favoritesBox.containsKey('key-0'), isFalse);
+      expect(await favoritesBox.containsKey('key-519'), isTrue);
+    });
+
+    test('prunes favorites by savedAt, not string key order', () async {
+      // Lexicographically first key is "z-old"; newest keys are "a-new-*".
+      // Key-order prune would keep "z-old"; time-order prune must drop it.
+      await favoritesBox.put(
+        'z-old',
+        '{"savedAt":"2020-01-01T00:00:00.000","hadith":{"hadith":"old","rawi":"r","mohdith":"m","book":"b","numberOrPage":"1","grade":"g","explainGrade":"g"}}',
+      );
+
+      for (var i = 0; i < HadithLocalDatabase.maxFavorites; i++) {
+        await db.addFavorite(
+          'a-new-$i',
+          DetailedHadith(
+            hadith: 'new-$i',
+            rawi: 'rawi',
+            mohdith: 'mohdith',
+            book: 'book',
+            numberOrPage: '$i',
+            grade: 'صحيح',
+            explainGrade: 'صحيح',
+          ),
+        );
+      }
+
+      expect(await favoritesBox.length, HadithLocalDatabase.maxFavorites);
+      expect(await favoritesBox.containsKey('z-old'), isFalse);
+      expect(await favoritesBox.containsKey('a-new-0'), isTrue);
+    });
+
+    test('skips corrupt favorite entries without failing the list', () async {
+      await db.addFavorite(
+        'ok',
+        const DetailedHadith(
+          hadith: 'good-hadith',
+          rawi: 'rawi',
+          mohdith: 'mohdith',
+          book: 'book',
+          numberOrPage: '1',
+          grade: 'صحيح',
+          explainGrade: 'صحيح',
+        ),
+      );
+      await favoritesBox.put('bad', '{not-json');
+
+      final favorites = await db.getAllFavorites();
+      expect(favorites, hasLength(1));
+      expect(favorites.single.hadith, 'good-hadith');
+      expect(await favoritesBox.containsKey('bad'), isFalse);
     });
   });
 }

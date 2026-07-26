@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
+import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_url_builder.dart';
 import 'package:tawaq/feature/quran/domain/services/reciter_tags.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
@@ -100,6 +101,15 @@ void main() {
 
     test('returns false for unrecognized names', () {
       expect(isHafsRiwayah('تلاوة خاصة'), isFalse);
+    });
+  });
+
+  group('seekBarShowsUthmaniExcerpt', () {
+    test('enables excerpts only for Hafs moshafs', () {
+      expect(seekBarShowsUthmaniExcerpt('حفص عن عاصم - مرتل'), isTrue);
+      expect(seekBarShowsUthmaniExcerpt('السوسي عن أبي عمرو'), isFalse);
+      expect(seekBarShowsUthmaniExcerpt('ورش عن نافع'), isFalse);
+      expect(seekBarShowsUthmaniExcerpt(null), isFalse);
     });
   });
 

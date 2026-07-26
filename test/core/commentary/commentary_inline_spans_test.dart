@@ -8,7 +8,7 @@ void main() {
   late CommentaryTextStyles styles;
 
   setUp(() {
-    final colors = FThemes.zinc.light.desktop.colors;
+    final colors = FTheme.neutral.light.desktop.colors;
     styles = CommentaryTextStyles.from(
       baseStyle: const TextStyle(fontSize: 14),
       colors: colors,

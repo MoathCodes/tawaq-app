@@ -659,6 +659,41 @@ void main() {
       expect(result.effects.whereType<HighlightAyah>(), hasLength(1));
     });
 
+    test('skips HighlightAyah while loading', () {
+      const state = RecitationState(
+        status: RecitationStatus.loading,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        active: true,
+      );
+      final result = _run(
+        state,
+        const AudioPosition(Duration(milliseconds: 6000)),
+        timeline: timeline,
+      );
+      expect(result.state.currentAyah, 2);
+      expect(result.effects.whereType<HighlightAyah>(), isEmpty);
+    });
+
+    test('skips HighlightAyah while timelinePending', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        timelinePending: true,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        active: true,
+      );
+      final result = _run(
+        state,
+        const AudioPosition(Duration(milliseconds: 6000)),
+        timeline: timeline,
+      );
+      expect(result.state.currentAyah, 2);
+      expect(result.effects.whereType<HighlightAyah>(), isEmpty);
+    });
+
     test('sleep endOfAyah pauses at ayah boundary', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
@@ -893,7 +928,7 @@ void main() {
       expect(result.state.ayahLoopExiting, isFalse);
       expect(result.state.ayahRepeatsRemaining, 3);
       expect(result.effects.whereType<LoadAyahLoop>(), hasLength(1));
-      expect(result.effects.whereType<SeekAudio>(), isEmpty);
+      expect(result.effects.whereType<SeekAudio>(), hasLength(1));
       expect(result.effects.whereType<HighlightAyah>(), hasLength(1));
     });
   });
@@ -906,9 +941,39 @@ void main() {
         moshaf: _moshaf,
         surah: 1,
         active: true,
+        loadGeneration: 3,
       );
       final result = _run(state, const AlertSuspend());
       expect(result.state.isPaused, isTrue);
+      expect(result.state.suspendedSnapshot, isNotNull);
+      expect(result.state.loadGeneration, 4);
+      expect(result.effects, const [PauseAudio(), ReleaseAudioLease()]);
+    });
+
+    test('AlertSuspend yields while buffering', () {
+      const state = RecitationState(
+        status: RecitationStatus.buffering,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        active: true,
+        loadGeneration: 1,
+      );
+      final result = _run(state, const AlertSuspend());
+      expect(result.state.suspendedSnapshot, isNotNull);
+      expect(result.state.loadGeneration, 2);
+      expect(result.effects, const [PauseAudio(), ReleaseAudioLease()]);
+    });
+
+    test('AlertSuspend yields while loading', () {
+      const state = RecitationState(
+        status: RecitationStatus.loading,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        active: true,
+      );
+      final result = _run(state, const AlertSuspend());
       expect(result.state.suspendedSnapshot, isNotNull);
       expect(result.effects, const [PauseAudio(), ReleaseAudioLease()]);
     });
@@ -925,6 +990,48 @@ void main() {
       final result = _run(suspended, const AlertResume());
       expect(result.state.suspendedSnapshot, isNull);
       expect(result.effects.whereType<LoadSurah>(), hasLength(1));
+      expect(result.effects.whereType<PauseAudio>(), isEmpty);
+    });
+
+    test('AlertResume reloads paused sessions then pauses', () {
+      const paused = RecitationState(
+        status: RecitationStatus.paused,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        position: Duration(seconds: 12),
+        active: true,
+      );
+      final suspended = _run(paused, const AlertSuspend()).state;
+      final result = _run(suspended, const AlertResume());
+      expect(result.state.suspendedSnapshot, isNull);
+      expect(result.effects.whereType<LoadSurah>(), hasLength(1));
+      expect(result.effects.whereType<LoadSurah>().first.seekTo, paused.position);
+      expect(result.effects.whereType<PauseAudio>(), hasLength(1));
+    });
+
+    test('AlertResume reloads ranged sessions via LoadRange', () {
+      const playing = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        rangeFrom: AyahReference(surah: 1, ayah: 2),
+        rangeTo: AyahReference(surah: 1, ayah: 5),
+        segmentStartAyah: 2,
+        segmentEndAyah: 5,
+        currentAyah: 3,
+        position: Duration(seconds: 4),
+        active: true,
+      );
+      final suspended = _run(playing, const AlertSuspend()).state;
+      final result = _run(suspended, const AlertResume());
+      expect(result.effects.whereType<LoadRange>(), hasLength(1));
+      expect(result.effects.whereType<LoadSurah>(), isEmpty);
+      final load = result.effects.whereType<LoadRange>().first;
+      expect(load.from, const AyahReference(surah: 1, ayah: 2));
+      expect(load.to, const AyahReference(surah: 1, ayah: 5));
+      expect(load.seekTo, playing.position);
     });
   });
 
@@ -1118,6 +1225,79 @@ void main() {
       final result = _run(state, const SkipSurahPrevious());
       expect(result.state.surah, 2);
       expect(result.effects, isEmpty);
+    });
+
+    test('SkipSurahNext inside range preserves global bounds', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 2,
+        rangeFrom: AyahReference(surah: 2, ayah: 3),
+        rangeTo: AyahReference(surah: 3, ayah: 5),
+        segmentStartAyah: 3,
+        segmentEndAyah: null,
+        active: true,
+      );
+      final result = _run(state, const SkipSurahNext());
+      expect(result.state.surah, 3);
+      expect(result.state.rangeFrom, state.rangeFrom);
+      expect(result.state.rangeTo, state.rangeTo);
+      expect(result.state.segmentStartAyah, 1);
+      expect(result.state.segmentEndAyah, 5);
+      expect(result.effects.whereType<LoadRange>(), hasLength(1));
+      expect(result.effects.whereType<LoadSurah>(), isEmpty);
+    });
+
+    test('SkipSurahPrevious inside range preserves global bounds', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 3,
+        rangeFrom: AyahReference(surah: 2, ayah: 3),
+        rangeTo: AyahReference(surah: 3, ayah: 5),
+        segmentStartAyah: 1,
+        segmentEndAyah: 5,
+        active: true,
+      );
+      final result = transition(
+        state,
+        const SkipSurahPrevious(),
+        timeline: _timeline(),
+        defaultAyahRepeatCount: 1,
+        defaultRangeRepeatCount: 1,
+        surahAyahCount: (surah) => surah == 2 ? 286 : 200,
+      );
+      expect(result.state.surah, 2);
+      expect(result.state.rangeFrom, state.rangeFrom);
+      expect(result.state.rangeTo, state.rangeTo);
+      expect(result.state.segmentStartAyah, 3);
+      expect(result.state.segmentEndAyah, 286);
+      expect(result.effects.whereType<LoadRange>(), hasLength(1));
+      expect(result.effects.whereType<LoadSurah>(), isEmpty);
+    });
+
+    test('PlaySurah clears stale segment fields with the range', () {
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        rangeFrom: AyahReference(surah: 1, ayah: 2),
+        rangeTo: AyahReference(surah: 1, ayah: 5),
+        segmentStartAyah: 2,
+        segmentEndAyah: 5,
+        active: true,
+      );
+      final result = _run(
+        state,
+        const PlaySurah(reciter: _reciter, moshaf: _moshaf, surah: 2),
+      );
+      expect(result.state.rangeFrom, isNull);
+      expect(result.state.rangeTo, isNull);
+      expect(result.state.segmentStartAyah, isNull);
+      expect(result.state.segmentEndAyah, isNull);
     });
   });
 

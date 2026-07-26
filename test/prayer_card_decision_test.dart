@@ -7,7 +7,8 @@ import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 
-PrayerTimeInputs inputsFromSettings(PrayerSettings settings) => PrayerTimeInputs(
+PrayerTimeInputs inputsFromSettings(PrayerSettings settings) =>
+    PrayerTimeInputs(
       method: settings.method,
       coordinates: settings.coordinates,
       location: settings.location,
@@ -24,7 +25,7 @@ void main() {
     setUpAll(() {
       location = getLocation('Asia/Riyadh');
       settings = PrayerSettings.defaultSettings().copyWith(
-        coordinates: const Coordinates(24.7136, 46.6753),
+        coordinates: Coordinates(24.7136, 46.6753),
         location: location,
       );
       inputs = inputsFromSettings(settings);

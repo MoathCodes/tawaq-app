@@ -24,9 +24,9 @@ void main() {
   Widget wrap(Widget child) {
     return FTheme(
       data: FThemeData(
-        colors: FThemes.zinc.light.desktop.colors,
-        typography: FThemes.zinc.light.desktop.typography,
-        icons: FThemes.zinc.light.desktop.icons,
+        colors: FTheme.neutral.light.desktop.colors,
+        typography: FTheme.neutral.light.desktop.typography,
+        icons: FTheme.neutral.light.desktop.icons,
         touch: false,
         extensions: const [AppRadii.standard(), AppDurations.standard()],
       ),

@@ -273,5 +273,43 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(finished, [1]);
     });
+
+    test('onActiveChanged reports prayer then null', () async {
+      final states = StreamController<PlaybackState>.broadcast();
+      final channel = _MockChannel('sound');
+      final active = <Prayer?>[];
+
+      final coordinator = PrayerAlertCoordinator(
+        channels: [channel],
+        playbackStream: states.stream,
+        currentPlayback: () => const PlaybackIdle(),
+        soundSafetyCap: const Duration(minutes: 5),
+        notifyOnlyTimeout: const Duration(milliseconds: 20),
+        onActiveChanged: active.add,
+      );
+      addTearDown(coordinator.dispose);
+
+      when(() => channel.deliver(any())).thenAnswer((_) async {});
+      when(channel.cancel).thenAnswer((_) async {});
+
+      await coordinator.dispatch(
+        PrayerAlertEvent(
+          kind: PrayerAlertKind.adhan,
+          prayer: Prayer.maghrib,
+          scheduledTime: DateTime(2026, 1, 1, 12),
+          playSound: false,
+          showInApp: true,
+          showOsNotification: false,
+          volume: 80,
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(active, [Prayer.maghrib]);
+      expect(coordinator.isActive, isTrue);
+
+      await Future<void>.delayed(const Duration(milliseconds: 40));
+      expect(active, [Prayer.maghrib, null]);
+      expect(coordinator.isActive, isFalse);
+    });
   });
 }

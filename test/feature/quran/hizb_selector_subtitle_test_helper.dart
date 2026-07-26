@@ -15,7 +15,7 @@ Widget hizbSelectorStartAyahSubtitleForTest({
   required String fallbackSurahName,
 }) {
   final appTheme = buildAppTheme(
-    palette: AppPalette.zinc,
+    palette: AppPalette.neutral,
     themeMode: ThemeMode.light,
     touch: false,
     textScale: 1,

@@ -27,10 +27,10 @@ void main() {
         expect(settings.location.name, 'Asia/Riyadh');
       });
 
-      test('default iqamah settings include dhuhr', () {
+      test('default iqamah settings is empty map', () {
         final settings = PrayerSettings.defaultSettings();
 
-        expect(settings.iqamahSettings[Prayer.dhuhr], 20);
+        expect(settings.iqamahSettings, isEmpty);
       });
 
       test('default adhan adjustments is empty', () {
@@ -71,7 +71,7 @@ void main() {
 
       test('updates coordinates', () {
         final original = PrayerSettings.defaultSettings();
-        const newCoords = Coordinates(51.5074, -0.1278); // London
+        final newCoords = Coordinates(51.5074, -0.1278); // London
 
         final updated = original.copyWith(coordinates: newCoords);
 
@@ -189,7 +189,7 @@ void main() {
           adhanAdjustments: {
             Prayer.fajr: -3,
           },
-          coordinates: const Coordinates(21.4225, 39.8262), // Mecca
+          coordinates: Coordinates(21.4225, 39.8262), // Mecca
           locationName: 'Mecca',
           location: getLocation('Asia/Riyadh'),
           autoLocation: true,

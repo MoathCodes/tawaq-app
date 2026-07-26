@@ -8,7 +8,7 @@ import 'package:tawaq/theme/theme_model.dart';
 
 Widget _wrap(Widget child) {
   final theme = buildAppTheme(
-    palette: AppPalette.zinc,
+    palette: AppPalette.neutral,
     themeMode: ThemeMode.light,
     touch: false,
     textScale: 1,

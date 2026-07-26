@@ -10,7 +10,7 @@ import 'package:tawaq/theme/theme_model.dart';
 /// or live audio service.
 Widget _wrap(Widget child) {
   final theme = buildAppTheme(
-    palette: AppPalette.zinc,
+    palette: AppPalette.neutral,
     themeMode: ThemeMode.light,
     touch: false,
     textScale: 1,

@@ -2,8 +2,12 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart';
 
 void main() {
+  setUpAll(tz.initializeTimeZones);
+
   group('adhan time utils', () {
     test('applyAdhanAdjustment adds minutes', () {
       final base = DateTime(2026, 6, 9, 12);
@@ -120,6 +124,19 @@ void main() {
 
     test('calendarDayKeyFromDate is stable per calendar day', () {
       expect(calendarDayKeyFromDate(DateTime(2026, 6, 9)), 20260609);
+    });
+
+    test('completionDayKey uses prayer Location near TZ midnight', () {
+      final auckland = getLocation('Pacific/Auckland');
+      // 2026-06-18 00:30 in Auckland.
+      final local = TZDateTime(auckland, 2026, 6, 18, 0, 30);
+      // Same instant as UTC may still be 2026-06-17.
+      final asUtc = local.toUtc();
+
+      expect(completionDayKey(local, auckland), 20260618);
+      expect(completionDayKey(asUtc, auckland), 20260618);
+      // Naive wall components without location would disagree for UTC.
+      expect(calendarDayKeyFromDate(asUtc), isNot(20260618));
     });
   });
 }

@@ -1,10 +1,10 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
-import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_resolver.dart';
 import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
@@ -21,12 +21,12 @@ PrayerDaySnapshot _buildSnapshot({
 
   final today = PrayerTimes(
     date: todayDate,
-    coordinates: const Coordinates(24.7136, 46.6753),
+    coordinates: Coordinates(24.7136, 46.6753),
     calculationMethod: const UmmAlQura(),
   );
   final yesterday = PrayerTimes(
     date: yesterdayDate,
-    coordinates: const Coordinates(24.7136, 46.6753),
+    coordinates: Coordinates(24.7136, 46.6753),
     calculationMethod: const UmmAlQura(),
   );
   final todaySunnah = SunnahTimes(today);
@@ -118,7 +118,10 @@ void main() {
 
       expect(restored.adhanModes[Prayer.fajr], ScheduleAlertMode.notifyOnly);
       expect(restored.iqamahModes[Prayer.dhuhr], ScheduleAlertMode.sound);
-      expect(restored.sunnahModes[Prayer.sunrise], ScheduleAlertMode.notifyOnly);
+      expect(
+        restored.sunnahModes[Prayer.sunrise],
+        ScheduleAlertMode.notifyOnly,
+      );
     });
   });
 
@@ -142,7 +145,10 @@ void main() {
       final settings = AdhanSettings.defaults();
 
       expect(settings.adhanModes[Prayer.fajr], ScheduleAlertMode.sound);
-      expect(settings.sunnahModes[Prayer.sunrise], ScheduleAlertMode.notifyOnly);
+      expect(
+        settings.sunnahModes[Prayer.sunrise],
+        ScheduleAlertMode.notifyOnly,
+      );
       expect(
         adhanSettingsModeFor(
           settings,
@@ -195,11 +201,10 @@ void main() {
         prayerSettings: prayerSettings,
       );
 
-      final adhanTime = adjustedAdhanTimesForDay(
-        times: snapshot.today,
-        location: location,
-        adjustments: prayerSettings.adhanAdjustments,
-      )[Prayer.dhuhr]!;
+      final adhanTime = snapshot.today.getTimesForPrayer(
+        Prayer.dhuhr,
+        location,
+      );
 
       final iqamahTarget = targets.singleWhere(
         (t) => t.kind == PrayerAlertKind.iqamah && t.prayer == Prayer.dhuhr,
@@ -209,6 +214,29 @@ void main() {
         iqamahTarget.scheduledTime,
         adhanTime.add(const Duration(minutes: 20)),
       );
+    });
+
+    test('iqamah past next adhan drops windowEnd cutoff', () {
+      final location = getLocation('Asia/Riyadh');
+      final now = TZDateTime(location, 2026, 6, 9, 12);
+      final snapshot = _buildSnapshot(now: now, location: location);
+      final maghrib = snapshot.today.getTimesForPrayer(Prayer.maghrib, location);
+      final isha = snapshot.today.getTimesForPrayer(Prayer.isha, location);
+      final gapMinutes = isha.difference(maghrib).inMinutes + 5;
+
+      final targets = scheduledPrayerAlertTargets(
+        snapshot: snapshot,
+        prayerSettings: PrayerSettings.defaultSettings().copyWith(
+          iqamahSettings: {Prayer.maghrib: gapMinutes},
+        ),
+      );
+
+      final iqamahTarget = targets.singleWhere(
+        (t) => t.kind == PrayerAlertKind.iqamah && t.prayer == Prayer.maghrib,
+      );
+
+      expect(iqamahTarget.windowEnd, isNull);
+      expect(iqamahTarget.scheduledTime.isBefore(isha), isFalse);
     });
 
     test('skips iqamah when offset is zero or negative', () {
@@ -324,20 +352,24 @@ void main() {
 
   group('prayerAlertFireDedupeKey', () {
     test('includes kind and prayer', () {
+      final location = getLocation('Asia/Riyadh');
       final key = prayerAlertFireDedupeKey(
-        now: DateTime(2026, 6, 9, 12),
+        now: TZDateTime(location, 2026, 6, 9, 12),
         kind: PrayerAlertKind.iqamah,
         prayer: Prayer.dhuhr,
+        location: location,
       );
 
       expect(key, '20260609-iqamah-dhuhr');
     });
 
     test('adhan dedupe key format', () {
+      final location = getLocation('Asia/Riyadh');
       final key = prayerAlertFireDedupeKey(
-        now: DateTime(2026, 6, 9, 12),
+        now: TZDateTime(location, 2026, 6, 9, 12),
         kind: PrayerAlertKind.adhan,
         prayer: Prayer.fajr,
+        location: location,
       );
 
       expect(key, '20260609-adhan-fajr');

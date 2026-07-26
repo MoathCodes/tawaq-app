@@ -6,10 +6,12 @@ import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 
-PrayerTimeInputs inputsFromSettings(PrayerSettings settings) => PrayerTimeInputs(
+PrayerTimeInputs inputsFromSettings(PrayerSettings settings) =>
+    PrayerTimeInputs(
       method: settings.method,
       coordinates: settings.coordinates,
       location: settings.location,
+      adhanAdjustments: settings.adhanAdjustments,
     );
 
 void main() {
@@ -19,7 +21,7 @@ void main() {
 
   setUp(() {
     jeddahSettings = PrayerSettings.defaultSettings().copyWith(
-      coordinates: const Coordinates(21.575224, 39.210725),
+      coordinates: Coordinates(21.575224, 39.210725),
       location: getLocation('Asia/Riyadh'),
     );
   });
@@ -35,7 +37,7 @@ void main() {
       );
 
       // Location readiness is enforced by [prayerTimeInputsProvider], not here.
-      expect(result, isNotNull);
+      expect(result.fajr, isNotNull);
     });
   });
 
@@ -46,7 +48,7 @@ void main() {
         inputs: inputsFromSettings(settings),
         anchorNow: TZDateTime(getLocation('Asia/Riyadh'), 2026, 6, 18, 12),
       );
-      expect(result, isNotNull);
+      expect(result.today.fajr, isNotNull);
     });
 
     test('produces consistent today times for Jeddah', () {
@@ -56,8 +58,7 @@ void main() {
         anchorNow: anchor,
       );
 
-      expect(bundle, isNotNull);
-      expect(bundle!.today.fajr, isNotNull);
+      expect(bundle.today.fajr, isNotNull);
       expect(bundle.timeline.fajrToday, isNotNull);
       expect(
         bundle.today.fajr.isBefore(bundle.today.dhuhr),
@@ -78,7 +79,7 @@ void main() {
         anchorNow: evening,
       );
 
-      expect(morningBundle!.today.fajr, eveningBundle!.today.fajr);
+      expect(morningBundle.today.fajr, eveningBundle.today.fajr);
     });
 
     test('live anchor matches single-date anchor for same day', () {
@@ -107,7 +108,49 @@ void main() {
         anchor: dateAnchor,
       );
 
-      expect(liveBundle!.today.fajr, dateOnly!.fajr);
+      expect(liveBundle.today.fajr, dateOnly.fajr);
+    });
+
+    test('bakes adhanAdjustments into timeline; sunnah stays raw', () {
+      final location = getLocation('Asia/Riyadh');
+      final anchor = TZDateTime(location, 2026, 6, 18, 12);
+      final raw = computePrayerDayBundle(
+        inputs: inputsFromSettings(jeddahSettings),
+        anchorNow: anchor,
+      );
+      final adjusted = computePrayerDayBundle(
+        inputs: inputsFromSettings(
+          jeddahSettings.copyWith(
+            adhanAdjustments: {
+              Prayer.fajr: 5,
+              Prayer.dhuhr: -3,
+            },
+          ),
+        ),
+        anchorNow: anchor,
+      );
+
+      expect(
+        adjusted.timeline.fajrToday,
+        raw.timeline.fajrToday.add(const Duration(minutes: 5)),
+      );
+      expect(
+        adjusted.timeline.dhuhrToday,
+        raw.timeline.dhuhrToday.subtract(const Duration(minutes: 3)),
+      );
+      expect(
+        adjusted.timeline.fajrToday.isAtSameMomentAs(adjusted.today.fajr),
+        isTrue,
+      );
+      // Sunnah night windows are derived from unadjusted isha/fajr.
+      expect(
+        adjusted.timeline.middleOfNightToday,
+        raw.timeline.middleOfNightToday,
+      );
+      expect(
+        adjusted.timeline.lastThirdToday,
+        raw.timeline.lastThirdToday,
+      );
     });
   });
 }

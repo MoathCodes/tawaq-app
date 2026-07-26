@@ -1,6 +1,5 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
@@ -70,76 +69,59 @@ PrayerDaySnapshot _buildSnapshot({
 void main() {
   setUpAll(tz.initializeTimeZones);
 
-  group('resolveSunnahTime', () {
-    test('before fajr uses yesterday last third for ishaBefore', () {
+  group('resolveNextAdhanGlance', () {
+    test('before fajr returns fajr today', () {
       final location = getLocation('Asia/Riyadh');
       final snapshot = _buildSnapshot(
         now: TZDateTime(location, 2026, 6, 9, 3),
         location: location,
       );
 
-      expect(
-        resolveSunnahTime(
-          prayer: Prayer.ishaBefore,
-          snapshot: snapshot,
-        ),
-        snapshot.timeline.lastThirdYesterday,
-      );
+      final glance = resolveNextAdhanGlance(snapshot);
+      expect(glance, isNotNull);
+      expect(glance!.prayer, Prayer.fajr);
+      expect(glance.adhanTime, snapshot.timeline.fajrToday);
     });
 
-    test('before fajr uses yesterday middle of night for fajrAfter', () {
+    test('after dhuhr returns asr', () {
       final location = getLocation('Asia/Riyadh');
       final snapshot = _buildSnapshot(
-        now: TZDateTime(location, 2026, 6, 9, 3),
+        now: TZDateTime(location, 2026, 6, 9, 13),
         location: location,
       );
 
-      expect(
-        resolveSunnahTime(
-          prayer: Prayer.fajrAfter,
-          snapshot: snapshot,
-        ),
-        snapshot.timeline.middleOfNightYesterday,
-      );
+      final glance = resolveNextAdhanGlance(snapshot);
+      expect(glance, isNotNull);
+      expect(glance!.prayer, Prayer.asr);
+      expect(glance.adhanTime, snapshot.timeline.asrToday);
     });
 
-    test('after fajr uses today last third, not ishaBefore field', () {
+    test('after isha wraps to tomorrow fajr', () {
       final location = getLocation('Asia/Riyadh');
       final snapshot = _buildSnapshot(
-        now: TZDateTime(location, 2026, 6, 9, 12),
+        now: TZDateTime(location, 2026, 6, 9, 23),
         location: location,
       );
 
-      final resolved = resolveSunnahTime(
-        prayer: Prayer.ishaBefore,
-        snapshot: snapshot,
-      );
-
-      expect(resolved, snapshot.timeline.lastThirdToday);
+      final glance = resolveNextAdhanGlance(snapshot);
+      expect(glance, isNotNull);
+      expect(glance!.prayer, Prayer.fajr);
       expect(
-        resolved,
-        isNot(snapshot.today.getTimesForPrayer(Prayer.ishaBefore, location)),
-      );
-      expect(
-        resolved,
-        isNot(snapshot.today.getTimesForPrayer(Prayer.isha, location)),
+        glance.adhanTime,
+        snapshot.timeline.fajrToday.add(const Duration(days: 1)),
       );
     });
+  });
 
-    test('after fajr uses today middle of night for fajrAfter', () {
-      final location = getLocation('Asia/Riyadh');
-      final snapshot = _buildSnapshot(
-        now: TZDateTime(location, 2026, 6, 9, 12),
-        location: location,
-      );
-
+  group('formatTrayRemaining', () {
+    test('formats hours and minutes', () {
       expect(
-        resolveSunnahTime(
-          prayer: Prayer.fajrAfter,
-          snapshot: snapshot,
-        ),
-        snapshot.timeline.middleOfNightToday,
+        formatTrayRemaining(const Duration(hours: 2, minutes: 14)),
+        '2h 14m',
       );
+      expect(formatTrayRemaining(const Duration(hours: 1)), '1h');
+      expect(formatTrayRemaining(const Duration(minutes: 14)), '14m');
+      expect(formatTrayRemaining(const Duration(seconds: 30)), '<1m');
     });
   });
 }

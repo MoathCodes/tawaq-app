@@ -12,8 +12,8 @@ void main() {
       late FColors darkColors;
 
       setUp(() {
-        lightColors = FThemes.zinc.light.desktop.colors;
-        darkColors = FThemes.zinc.dark.desktop.colors;
+        lightColors = FTheme.neutral.light.desktop.colors;
+        darkColors = FTheme.neutral.dark.desktop.colors;
       });
 
       test('jamaah returns primary color', () {

@@ -46,11 +46,21 @@ class _SpyAudioPlayerController extends AudioPlayerController {
   PlaybackState build() => const PlaybackIdle();
 
   @override
-  Future<void> pause() async => calls.add(_AdhanCall.pause);
+  Future<bool> pause() async {
+    calls.add(_AdhanCall.pause);
+    return true;
+  }
+
   @override
-  Future<void> resume() async => calls.add(_AdhanCall.resume);
+  Future<bool> resume() async {
+    calls.add(_AdhanCall.resume);
+    return true;
+  }
   @override
-  Future<void> stop({Duration fadeOut = Duration.zero}) async =>
+  Future<void> stop({
+    Duration fadeOut = Duration.zero,
+    bool force = false,
+  }) async =>
       calls.add(_AdhanCall.stop);
 }
 
@@ -180,7 +190,8 @@ void main() {
       expect(recitation.calls, [_RecitationCall.toggle]);
     });
 
-    test('recitation playPause always toggles', () async {
+    test('recitation playPause follows post-auto-apply playWhenReady',
+        () async {
       final recitation = _SpyRecitationController();
       final adhan = _SpyAudioPlayerController();
       final container = buildContainer(
@@ -194,21 +205,42 @@ void main() {
       await service.acquire(owner: kRecitationLeaseOwner);
       addTearDown(() => service.release(owner: kRecitationLeaseOwner));
 
-      container.read(recitationControllerProvider.notifier).state =
-          const RecitationState(
+      final notifier = container.read(recitationControllerProvider.notifier);
+
+      // Package already paused (playWhenReady=false) → pause path, no toggle.
+      notifier.state = const RecitationState(
         active: true,
         status: RecitationStatus.playing,
         surah: 1,
       );
       setPlayWhenReady(false);
-
       router.dispatch(MediaSessionCommand.playPause);
       await Future<void>.delayed(Duration.zero);
+      expect(recitation.calls, isEmpty);
 
+      // Package already resumed (playWhenReady=true) + paused app → no toggle.
+      notifier.state = const RecitationState(
+        active: true,
+        status: RecitationStatus.paused,
+        surah: 1,
+      );
+      setPlayWhenReady(true);
+      router.dispatch(MediaSessionCommand.playPause);
+      await Future<void>.delayed(Duration.zero);
+      expect(recitation.calls, isEmpty);
+
+      // Package already resumed but app still idle → play path may toggle.
+      notifier.state = const RecitationState(
+        active: true,
+        surah: 1,
+      );
+      setPlayWhenReady(true);
+      router.dispatch(MediaSessionCommand.playPause);
+      await Future<void>.delayed(Duration.zero);
       expect(recitation.calls, [_RecitationCall.toggle]);
     });
 
-    test('recitation lease routes stop/next/previous; SeekTo is mpv no-op',
+    test('recitation lease routes stop/next/previous/SeekTo snap seek',
         () async {
       final recitation = _SpyRecitationController();
       final adhan = _SpyAudioPlayerController();
@@ -235,8 +267,9 @@ void main() {
         _RecitationCall.stop,
         _RecitationCall.next,
         _RecitationCall.previous,
+        _RecitationCall.seekTo,
       ]);
-      expect(recitation.seeks, isEmpty);
+      expect(recitation.seeks, [const Duration(seconds: 5)]);
       expect(adhan.calls, isEmpty);
     });
 

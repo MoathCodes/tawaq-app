@@ -32,7 +32,7 @@ import 'package:tawaq/theme/theme_model.dart';
 /// Riverpod-backed panel content.
 Widget _wrap(Widget child, {TextDirection dir = TextDirection.ltr}) {
   final theme = buildAppTheme(
-    palette: AppPalette.zinc,
+    palette: AppPalette.neutral,
     themeMode: ThemeMode.light,
     touch: false,
     textScale: 1,
@@ -91,7 +91,7 @@ void main() {
       expect(right.label, 'Next');
     });
 
-    test('RTL: left slot mirrors to next (skipForward + skipNext)', () {
+    test('RTL: left slot is next action with left-pointing icon', () {
       final left = leftSkipControl(
         isRtl: true,
         skipPrevious: () async {},
@@ -99,11 +99,11 @@ void main() {
         previousLabel: 'Previous',
         nextLabel: 'Next',
       );
-      expect(left.icon, FLucideIcons.skipForward);
+      expect(left.icon, FLucideIcons.skipBack);
       expect(left.label, 'Next');
     });
 
-    test('RTL: right slot mirrors to previous (skipBack + skipPrevious)', () {
+    test('RTL: right slot is previous action with right-pointing icon', () {
       final right = rightSkipControl(
         isRtl: true,
         skipPrevious: () async {},
@@ -111,8 +111,52 @@ void main() {
         previousLabel: 'Previous',
         nextLabel: 'Next',
       );
-      expect(right.icon, FLucideIcons.skipBack);
+      expect(right.icon, FLucideIcons.skipForward);
       expect(right.label, 'Previous');
+    });
+
+    test('custom icons: ayah uses arrows by side', () {
+      final left = leftSkipControl(
+        isRtl: false,
+        skipPrevious: () async {},
+        skipNext: () async {},
+        previousLabel: 'Previous ayah',
+        nextLabel: 'Next ayah',
+        icon: FLucideIcons.arrowLeft,
+      );
+      final right = rightSkipControl(
+        isRtl: false,
+        skipPrevious: () async {},
+        skipNext: () async {},
+        previousLabel: 'Previous ayah',
+        nextLabel: 'Next ayah',
+        icon: FLucideIcons.arrowRight,
+      );
+      expect(left.icon, FLucideIcons.arrowLeft);
+      expect(right.icon, FLucideIcons.arrowRight);
+    });
+
+    test('RTL: icons stay side-pointing while actions mirror', () {
+      final left = leftSkipControl(
+        isRtl: true,
+        skipPrevious: () async {},
+        skipNext: () async {},
+        previousLabel: 'Previous ayah',
+        nextLabel: 'Next ayah',
+        icon: FLucideIcons.arrowLeft,
+      );
+      final right = rightSkipControl(
+        isRtl: true,
+        skipPrevious: () async {},
+        skipNext: () async {},
+        previousLabel: 'Previous ayah',
+        nextLabel: 'Next ayah',
+        icon: FLucideIcons.arrowRight,
+      );
+      expect(left.icon, FLucideIcons.arrowLeft);
+      expect(left.label, 'Next ayah');
+      expect(right.icon, FLucideIcons.arrowRight);
+      expect(right.label, 'Previous ayah');
     });
 
     test('LTR left + right slots dispatch to distinct actions', () {
@@ -349,7 +393,7 @@ void main() {
 
     Widget scopeWrap(Widget child) {
       final theme = buildAppTheme(
-        palette: AppPalette.zinc,
+        palette: AppPalette.neutral,
         themeMode: ThemeMode.light,
         touch: false,
         textScale: 1,
@@ -379,7 +423,7 @@ void main() {
             )),
           ),
           recitersProvider.overrideWithValue(const AsyncData(<Reciter>[])),
-          localeProvider.overrideWithValue('en'),
+          localeProvider.overrideWith(_TestLocaleNotifier.new),
           tawaqAudioServiceProvider.overrideWithValue(audioService),
         ],
         child: FTheme(
@@ -565,3 +609,8 @@ class _FakeRepo implements IQuranRepository {
 class _FakePlayer extends Mock implements PlayerApi {}
 
 class _FakePlayerStream extends Mock implements PlayerStream {}
+
+class _TestLocaleNotifier extends LocaleNotifier {
+  @override
+  Future<String> build() async => 'en';
+}

@@ -27,7 +27,7 @@ void main() {
   Widget wrap(Widget child) {
     return FTheme(
       data: buildAppTheme(
-        palette: AppPalette.zinc,
+        palette: AppPalette.neutral,
         themeMode: ThemeMode.light,
         touch: false,
         textScale: 1,

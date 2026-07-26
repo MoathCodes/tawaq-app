@@ -112,6 +112,31 @@ void main() {
         expect(harness.mushaf.selectedAyahId, 1002);
       },
     );
+
+    testWidgets(
+      'timed reciter skips out-of-range ayah without throwing',
+      (tester) async {
+        final repo = _GoToRepo(ayahCountBySurah: {2: 5});
+        final harness = await _pumpHarness(
+          tester,
+          repo: repo,
+          playback: const RecitationState(
+            surah: 2,
+            moshaf: _timedMoshaf,
+            currentAyah: 94,
+            active: true,
+          ),
+        );
+
+        await harness.mushaf.ensureReady();
+        await harness.notifier.goToPlaybackInMushaf(harness.context);
+        await tester.pumpAndSettle();
+
+        expect(repo.lastAyahPageLookup, isNull);
+        expect(repo.getAyahBySurahCalls, isEmpty);
+        expect(harness.mushaf.selectedAyahId, isNull);
+      },
+    );
   });
 }
 
@@ -159,6 +184,7 @@ Future<_GoToHarness> _pumpHarness(
           () => _FixedRecitationSettings(resolvedSettings),
         ),
         quranScreenSettingsProvider.overrideWith(_SyncQuranScreenSettings.new),
+        quranSelectedAyahProvider.overrideWith(_SyncQuranSelectedAyah.new),
       ],
       child: Builder(
         builder: (ctx) {
@@ -222,12 +248,11 @@ class _SyncQuranScreenSettings extends QuranScreenSettingsNotifier {
     state = AsyncData(QuranScreenState.initial());
     return QuranScreenState.initial();
   }
+}
 
+class _SyncQuranSelectedAyah extends QuranSelectedAyah {
   @override
-  void selectAyah(Ayah? ayah) {
-    if (!state.hasValue) return;
-    state = AsyncData(state.value!.copyWith(selectedAyah: ayah));
-  }
+  Ayah? build() => null;
 }
 
 class _AlwaysQuranRoute extends QuranRouteActive {
@@ -236,8 +261,12 @@ class _AlwaysQuranRoute extends QuranRouteActive {
 }
 
 class _GoToRepo implements IQuranRepository {
+  _GoToRepo({this.ayahCountBySurah = const {}});
+
+  final Map<int, int> ayahCountBySurah;
   int? lastSurahJump;
   int? lastAyahPageLookup;
+  final List<(int surah, int ayah)> getAyahBySurahCalls = [];
 
   @override
   void dispose() {}
@@ -246,7 +275,7 @@ class _GoToRepo implements IQuranRepository {
   Future<void> ensureReady() async {}
 
   @override
-  Future<List<Surah>> getAllSurahs() async => [];
+  Future<List<Surah>> getAllSurahs() async => getSurahsSync();
 
   @override
   Future<Ayah> getAyah(int ayahId, [bool removeNewLines = true]) async =>
@@ -257,16 +286,22 @@ class _GoToRepo implements IQuranRepository {
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
-  ]) async =>
-      Ayah(
-        ayahId: surah * 1000 + ayahInSurah,
-        juz: 1,
-        page: 50,
-        surahNumber: surah,
-        numberInSurah: ayahInSurah,
-        text: '',
-        textPlain: '$surah:$ayahInSurah',
-      );
+  ]) async {
+    getAyahBySurahCalls.add((surah, ayahInSurah));
+    final count = ayahCountBySurah[surah];
+    if (count != null && (ayahInSurah < 1 || ayahInSurah > count)) {
+      throw ArgumentError('Ayah $surah:$ayahInSurah not found');
+    }
+    return Ayah(
+      ayahId: surah * 1000 + ayahInSurah,
+      juz: 1,
+      page: 50,
+      surahNumber: surah,
+      numberInSurah: ayahInSurah,
+      text: '',
+      textPlain: '$surah:$ayahInSurah',
+    );
+  }
 
   @override
   Future<String> getBasmalah() async => '';
@@ -335,13 +370,39 @@ class _GoToRepo implements IQuranRepository {
   }
 
   @override
-  Future<Surah?> getSurah(int number) async => null;
+  Future<Surah?> getSurah(int number) async {
+    final count = ayahCountBySurah[number];
+    if (count == null) return null;
+    return Surah(
+      number: number,
+      glyph: 'S$number',
+      hasBasmalah: true,
+      ayahCount: count,
+    );
+  }
 
   @override
-  List<Surah> getSurahsSync() => [];
+  List<Surah> getSurahsSync() => [
+        for (final e in ayahCountBySurah.entries)
+          Surah(
+            number: e.key,
+            glyph: 'S${e.key}',
+            hasBasmalah: true,
+            ayahCount: e.value,
+          ),
+      ];
 
   @override
-  Surah? getSurahSync(int number) => null;
+  Surah? getSurahSync(int number) {
+    final count = ayahCountBySurah[number];
+    if (count == null) return null;
+    return Surah(
+      number: number,
+      glyph: 'S$number',
+      hasBasmalah: true,
+      ayahCount: count,
+    );
+  }
 
   @override
   Future<List<Ayah>> searchAyahs(

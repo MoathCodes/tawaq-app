@@ -137,6 +137,24 @@ void main() {
       expect(channel.cancelled, 1);
     });
 
+    test('cancels when playback reaches PlaybackCompleted', () async {
+      await coordinator.dispatch(_event(playSound: true));
+      expect(channel.delivered, 1);
+
+      playback
+        ..add(_playing)
+        ..add(
+          PlaybackCompleted(
+            track: _track,
+            position: const Duration(minutes: 2),
+            duration: const Duration(minutes: 2),
+          ),
+        );
+      await pumpEventQueue();
+
+      expect(channel.cancelled, 1);
+    });
+
     test('cancels when playback errors', () async {
       await coordinator.dispatch(_event(playSound: true));
       playback

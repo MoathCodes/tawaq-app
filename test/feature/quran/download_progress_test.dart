@@ -591,7 +591,6 @@ void main() {
         moshaf: moshaf,
         surah: 1,
         surahName: 'Al-Fatiha',
-        persist: true,
       );
 
       expect(result.uri, startsWith('file://'));

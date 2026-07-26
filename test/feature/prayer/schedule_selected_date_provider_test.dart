@@ -3,8 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/schedule_selected_date_provider.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 void main() {
+  setUpAll(tz.initializeTimeZones);
+
   group('prayer_calendar', () {
     test('dateFromCalendarDayKey round-trips with calendarDayKeyFromDate', () {
       const key = 20260618;
@@ -22,6 +25,7 @@ void main() {
   group('ScheduleSelectedDate', () {
     late ProviderContainer container;
     late NotifierProvider<TestDayKeyNotifier, int> testDayKeyProvider;
+    late ProviderSubscription<DateTime> keepAlive;
 
     setUp(() {
       testDayKeyProvider = NotifierProvider<TestDayKeyNotifier, int>(
@@ -35,15 +39,20 @@ void main() {
           ),
         ],
       );
+      // Seed a valid day key before mounting the autoDispose notifier.
+      container.read(testDayKeyProvider.notifier).setKey(20260618);
+      keepAlive = container.listen(
+        scheduleSelectedDateProvider,
+        (_, _) {},
+      );
     });
 
     tearDown(() {
+      keepAlive.close();
       container.dispose();
     });
 
     test('initializes to today from calendar day key', () {
-      container.read(testDayKeyProvider.notifier).setKey(20260618);
-
       expect(
         container.read(scheduleSelectedDateProvider),
         DateTime(2026, 6, 18),
@@ -51,7 +60,6 @@ void main() {
     });
 
     test('user selection persists when day key is unchanged', () {
-      container.read(testDayKeyProvider.notifier).setKey(20260618);
       final yesterday = DateTime(2026, 6, 17);
 
       container.read(scheduleSelectedDateProvider.notifier).select(yesterday);
@@ -62,7 +70,6 @@ void main() {
     });
 
     test('midnight rollover follows today when viewing today', () {
-      container.read(testDayKeyProvider.notifier).setKey(20260618);
       expect(
         container.read(scheduleSelectedDateProvider),
         DateTime(2026, 6, 18),
@@ -77,7 +84,6 @@ void main() {
     });
 
     test('midnight rollover preserves historical selection', () {
-      container.read(testDayKeyProvider.notifier).setKey(20260618);
       final historical = DateTime(2026, 6, 15);
       container
           .read(scheduleSelectedDateProvider.notifier)

@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart' show RecitationController;
+import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_state_machine.dart';
 
 const _reciter = Reciter(id: 1, name: 'Test', moshaf: [_moshaf]);
 const _moshaf = Moshaf(
@@ -13,12 +15,14 @@ const _moshaf = Moshaf(
   timingReadId: 1,
 );
 
-/// Mirrors the re-arm guard in [RecitationController.resumeAfterAlert].
-bool shouldRearmAyahLoopAfterAlert(RecitationState snapshot) {
-  return snapshot.ayahRepeatCount > 1 &&
-      snapshot.currentAyah != null &&
-      snapshot.moshaf != null &&
-      snapshot.moshaf!.hasTiming;
+RecitationTransition _run(RecitationState state, RecitationEvent event) {
+  return transition(
+    state,
+    event,
+    timeline: const RecitationTimeline(),
+    defaultAyahRepeatCount: 1,
+    defaultRangeRepeatCount: 1,
+  );
 }
 
 /// Mirrors suspend guards on recitation stream handlers during alerts.
@@ -44,40 +48,58 @@ bool shouldDispatchGaplessTrackAdvanced({
 }
 
 void main() {
-  group('resumeAfterAlert eachAyah A-B loop', () {
-    test('re-arms when ayahRepeatCount > 1 with timed moshaf and current ayah',
-        () {
-      const snapshot = RecitationState(
+  group('AlertResume always reloads (no fast-resume path)', () {
+    test('playing timed eachAyah session reloads and re-arms A-B loop', () {
+      const playing = RecitationState(
         reciter: _reciter,
         moshaf: _moshaf,
         surah: 1,
         currentAyah: 3,
         ayahRepeatCount: 3,
         status: RecitationStatus.playing,
+        active: true,
       );
-      expect(shouldRearmAyahLoopAfterAlert(snapshot), isTrue);
+      final suspended = _run(playing, const AlertSuspend()).state;
+      final result = _run(suspended, const AlertResume());
+
+      expect(result.effects.whereType<LoadSurah>(), hasLength(1));
+      expect(result.effects.whereType<LoadAyahLoop>(), hasLength(1));
+      expect(result.effects.whereType<LoadAyahLoop>().first.ayah, 3);
+      expect(result.effects.whereType<PauseAudio>(), isEmpty);
     });
 
-    test('skips re-arm when ayahRepeatCount is 1', () {
-      const snapshot = RecitationState(
+    test('paused session reloads then pauses (no URI shortcut)', () {
+      const paused = RecitationState(
         reciter: _reciter,
         moshaf: _moshaf,
         surah: 1,
-        currentAyah: 3,
-        status: RecitationStatus.playing,
+        currentAyah: 2,
+        ayahRepeatCount: 2,
+        status: RecitationStatus.paused,
+        position: Duration(seconds: 9),
+        active: true,
       );
-      expect(shouldRearmAyahLoopAfterAlert(snapshot), isFalse);
+      final suspended = _run(paused, const AlertSuspend()).state;
+      final result = _run(suspended, const AlertResume());
+
+      expect(result.effects.whereType<LoadSurah>(), hasLength(1));
+      expect(result.effects.whereType<LoadSurah>().first.seekTo, paused.position);
+      expect(result.effects.whereType<LoadAyahLoop>(), hasLength(1));
+      expect(result.effects.whereType<PauseAudio>(), hasLength(1));
     });
 
-    test('skips re-arm when current ayah is null', () {
-      const snapshot = RecitationState(
+    test('loading session reloads via LoadSurah', () {
+      const loading = RecitationState(
         reciter: _reciter,
         moshaf: _moshaf,
         surah: 1,
-        ayahRepeatCount: 3,
-        status: RecitationStatus.playing,
+        status: RecitationStatus.loading,
+        active: true,
       );
-      expect(shouldRearmAyahLoopAfterAlert(snapshot), isFalse);
+      final suspended = _run(loading, const AlertSuspend()).state;
+      final result = _run(suspended, const AlertResume());
+
+      expect(result.effects.whereType<LoadSurah>(), hasLength(1));
     });
   });
 

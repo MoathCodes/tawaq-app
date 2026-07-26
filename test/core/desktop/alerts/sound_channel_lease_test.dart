@@ -56,8 +56,12 @@ void main() {
     setUp(() {
       adhanPlayer = _MockAudioPlayerController();
 
-      when(() => adhanPlayer.stop(fadeOut: any(named: 'fadeOut')))
-          .thenAnswer((_) async {});
+      when(
+        () => adhanPlayer.stop(
+          fadeOut: any(named: 'fadeOut'),
+          force: any(named: 'force'),
+        ),
+      ).thenAnswer((_) async {});
       when(() => adhanPlayer.setVolume(any())).thenAnswer((_) async {});
       when(
         () => adhanPlayer.playTrack(
@@ -159,7 +163,10 @@ void main() {
       await channel.cancel();
 
       verify(
-        () => adhanPlayer.stop(fadeOut: kAudioDefaultFadeOut),
+        () => adhanPlayer.stop(
+          fadeOut: kAudioDefaultFadeOut,
+          force: true,
+        ),
       ).called(1);
     });
 

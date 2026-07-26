@@ -30,15 +30,52 @@ void main() {
       expect(registry.currentOwner, isNull);
     });
 
-    test('same owner is reentrant', () async {
+    test('waiter queue does not miss a release that races the wait loop',
+        () async {
       final registry = AudioLeaseRegistry();
       addTearDown(registry.dispose);
 
-      final l1 = await registry.acquire(owner: 'recitation');
-      final l2 = await registry.acquire(owner: 'recitation');
+      final lease1 = await registry.acquire(owner: 'recitation');
+
+      // Schedule release in the same event-loop turn as the contended acquire
+      // starts waiting — the old broadcast `.first` pattern could miss this.
+      final f2 = registry.acquire(owner: 'adhan');
+      lease1.release();
+
+      final lease2 = await f2.timeout(const Duration(seconds: 2));
+      expect(registry.currentOwner, 'adhan');
+      lease2.release();
+    });
+
+    test('force acquire steals from another owner without waiting', () async {
+      final registry = AudioLeaseRegistry();
+      addTearDown(registry.dispose);
+
+      await registry.acquire(owner: 'recitation');
       expect(registry.currentOwner, 'recitation');
-      l1.release();
-      l2.release();
+
+      final adhanLease =
+          await registry.acquire(owner: 'adhan', force: true);
+      expect(registry.currentOwner, 'adhan');
+
+      adhanLease.release();
+      expect(registry.currentOwner, isNull);
+    });
+
+    test('same-owner acquire renews one token; stale release is a no-op',
+        () async {
+      final registry = AudioLeaseRegistry();
+      addTearDown(registry.dispose);
+
+      final stale = await registry.acquire(owner: 'recitation');
+      final current = await registry.acquire(owner: 'recitation');
+      expect(registry.currentOwner, 'recitation');
+
+      // Stale token must not clear the renewed hold.
+      stale.release();
+      expect(registry.currentOwner, 'recitation');
+
+      current.release();
       expect(registry.currentOwner, isNull);
     });
 
@@ -128,23 +165,27 @@ void main() {
       });
     });
 
-    test('watchdog force-releases an unattended lease', () async {
-      String? releasedOwner;
-      final registry = AudioLeaseRegistry(
-        watchdogTimeout: const Duration(milliseconds: 100),
-        onWatchdogForceRelease: (owner) => releasedOwner = owner,
-      );
-      addTearDown(registry.dispose);
+    test('watchdog force-releases an unattended lease', () {
+      FakeAsync().run((fa) {
+        String? releasedOwner;
+        final registry = AudioLeaseRegistry(
+          watchdogTimeout: const Duration(milliseconds: 100),
+          onWatchdogForceRelease: (owner) => releasedOwner = owner,
+        );
 
-      await registry.acquire(owner: 'recitation');
-      expect(registry.currentOwner, 'recitation');
+        unawaited(registry.acquire(owner: 'recitation'));
+        fa.flushMicrotasks();
+        expect(registry.currentOwner, 'recitation');
 
-      // The watchdog fires ~100ms after acquire; the next leaseStream event
-      // resolves when releaseCurrent emits.
-      await registry.leaseStream.first.timeout(const Duration(seconds: 2));
+        fa
+          ..elapse(const Duration(milliseconds: 110))
+          ..flushMicrotasks();
 
-      expect(releasedOwner, 'recitation');
-      expect(registry.currentOwner, isNull);
+        expect(releasedOwner, 'recitation');
+        expect(registry.currentOwner, isNull);
+
+        unawaited(registry.dispose());
+      });
     });
 
     test('dispose during contended acquire throws rather than deadlocks',
@@ -152,7 +193,7 @@ void main() {
       final registry = AudioLeaseRegistry();
 
       await registry.acquire(owner: 'recitation');
-      // A second acquire for a different owner blocks on the lease stream.
+      // A second acquire for a different owner blocks on the waiter queue.
       Object? thrown;
       // On rejection we need a placeholder lease matching the return type;
       // produce one from a throwaway registry so the test never depends on

@@ -11,7 +11,7 @@ import 'package:tawaq/theme/theme_model.dart';
 
 Widget _wrap(Widget child, {TextDirection dir = TextDirection.ltr}) {
   final theme = buildAppTheme(
-    palette: AppPalette.zinc,
+    palette: AppPalette.neutral,
     themeMode: ThemeMode.light,
     touch: false,
     textScale: 1,
@@ -939,5 +939,450 @@ void main() {
 
       expect(find.byKey(const Key('scrub-tooltip')), findsNothing);
     });
+
+    testWidgets('RTL mirrors thumb center for early progress', (tester) async {
+      const position = Duration(seconds: 3);
+      const duration = Duration(seconds: 15);
+
+      Future<Offset> thumbGlobal(TextDirection dir) async {
+        await tester.pumpWidget(
+          _wrap(
+            SegmentedSeekBar(
+              position: position,
+              duration: duration,
+              segments: _segments(),
+              onSeek: (_) {},
+              style: _style,
+              segmentLabel: (i) => 'Ayah $i',
+              repeatLabel: (c, t) => 'Repeat $c of $t',
+              unavailableLabel: 'Unavailable',
+            ),
+            dir: dir,
+          ),
+        );
+        await tester.pump();
+        await tester.pump(_style.thumbTweenDuration);
+        return tester.getCenter(find.byKey(const Key('seek-thumb')));
+      }
+
+      final ltr = await thumbGlobal(TextDirection.ltr);
+      final rtl = await thumbGlobal(TextDirection.rtl);
+      expect(rtl.dx, greaterThan(ltr.dx + 40));
+
+      final painter = tester.widget<CustomPaint>(find.byType(CustomPaint));
+      final p = painter.painter! as SegmentedTrackPainter;
+      expect(p.isRtl, isTrue);
+    });
+
+    testWidgets('RTL seek snap still targets ayah start', (tester) async {
+      final seeks = <Duration>[];
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: 320,
+            child: SegmentedSeekBar(
+              position: Duration.zero,
+              duration: const Duration(seconds: 15),
+              segments: _segments(),
+              onSeek: seeks.add,
+              style: _style,
+              segmentLabel: (i) => 'Ayah $i',
+              repeatLabel: (c, t) => 'Repeat $c of $t',
+              unavailableLabel: 'Unavailable',
+            ),
+          ),
+          dir: TextDirection.rtl,
+        ),
+      );
+      await tester.pump();
+
+      final bar = find.byType(SegmentedSeekBar);
+      final barBox = tester.renderObject<RenderBox>(bar);
+      final width = barBox.size.width;
+      final thumbRadius = _style.thumbRadius;
+      // Timeline 0.6 maps near ayah 2 start (5s). In RTL that is left of center.
+      const targetValue = 0.6;
+      final targetDx =
+          thumbRadius + (1.0 - targetValue) * (width - thumbRadius * 2);
+      final gesture = await tester.startGesture(
+        barBox.localToGlobal(
+          Offset(width - thumbRadius, barBox.size.height / 2),
+        ),
+      );
+      await gesture.moveTo(
+        barBox.localToGlobal(Offset(targetDx, barBox.size.height / 2)),
+      );
+      await gesture.up();
+      await tester.pump();
+
+      expect(seeks, hasLength(1));
+      expect(seeks.single.inMilliseconds, 5000);
+    });
+
+    testWidgets('thumb fades out at full lens reveal', (tester) async {
+      await tester.pumpWidget(
+        _wrap(
+          SegmentedSeekBar(
+            position: const Duration(seconds: 7),
+            duration: const Duration(seconds: 15),
+            segments: _segments(),
+            onSeek: (_) {},
+            style: _style,
+            segmentLabel: (i) => 'Ayah $i',
+            repeatLabel: (c, t) => 'Repeat $c of $t',
+            unavailableLabel: 'Unavailable',
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(_style.thumbTweenDuration);
+
+      expect(find.byKey(const Key('seek-thumb')), findsOneWidget);
+
+      final center = tester.getCenter(find.byType(SegmentedSeekBar));
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await gesture.addPointer(location: center);
+      await tester.pump();
+      await gesture.moveTo(center);
+      await tester.pump();
+      await tester.pump(_style.revealDuration);
+      await tester.pump(_style.revealDuration);
+
+      final painter = tester.widget<CustomPaint>(find.byType(CustomPaint));
+      final p = painter.painter! as SegmentedTrackPainter;
+      expect(p.revealStrength, greaterThan(0.9));
+      expect(p.lensLayouts, isNotEmpty);
+      expect(find.byKey(const Key('seek-thumb')), findsNothing);
+
+      await gesture.removePointer();
+      await tester.pump();
+    });
+
+    testWidgets('hover near boundary keeps focus until past dead zone', (
+      tester,
+    ) async {
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await tester.pumpWidget(
+        _wrap(
+          SegmentedSeekBar(
+            position: const Duration(seconds: 2),
+            duration: const Duration(seconds: 15),
+            segments: _segments(),
+            onSeek: (_) {},
+            style: _style,
+            segmentLabel: (i) => 'Ayah $i',
+            repeatLabel: (c, t) => 'Repeat $c of $t',
+            unavailableLabel: 'Unavailable',
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final bar = find.byType(SegmentedSeekBar);
+      final barBox = tester.renderObject<RenderBox>(bar);
+      final width = barBox.size.width;
+      final ayah1Center = width * (2.5 / 15);
+      final y = barBox.size.height / 2;
+
+      await gesture.addPointer(
+        location: barBox.localToGlobal(Offset(ayah1Center, y)),
+      );
+      await tester.pump();
+      await gesture.moveTo(barBox.localToGlobal(Offset(ayah1Center, y)));
+      await tester.pump();
+      await tester.pump(_style.revealDuration);
+      await tester.pump(_style.revealDuration);
+
+      var painter = tester.widget<CustomPaint>(find.byType(CustomPaint));
+      var p = painter.painter! as SegmentedTrackPainter;
+      expect(p.lensLayouts, isNotEmpty);
+      final focus1 = p.lensLayouts.firstWhere((l) => l.isFocus);
+      expect(focus1.index, 1);
+      final focusRight = focus1.rect.right;
+
+      // Just past the focus pill edge — still inside 6px dead zone.
+      await gesture.moveTo(
+        barBox.localToGlobal(Offset(focusRight + 2, y)),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+
+      painter = tester.widget<CustomPaint>(find.byType(CustomPaint));
+      p = painter.painter! as SegmentedTrackPainter;
+      expect(p.lensLayouts.firstWhere((l) => l.isFocus).index, 1);
+
+      // Past dead zone AND enough travel budget for one step.
+      await gesture.moveTo(
+        barBox.localToGlobal(Offset(ayah1Center + 40, y)),
+      );
+      await tester.pump();
+      await tester.pump(_style.revealDuration);
+
+      painter = tester.widget<CustomPaint>(find.byType(CustomPaint));
+      p = painter.painter! as SegmentedTrackPainter;
+      expect(p.lensLayouts.firstWhere((l) => l.isFocus).index, 2);
+
+      await gesture.removePointer();
+      await tester.pump();
+    });
+
+    testWidgets('drag start keeps playback focus before movement', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          SegmentedSeekBar(
+            position: const Duration(seconds: 2),
+            duration: const Duration(seconds: 15),
+            segments: _segments(),
+            onSeek: (_) {},
+            style: _style,
+            segmentLabel: (i) => 'Ayah $i',
+            repeatLabel: (c, t) => 'Repeat $c of $t',
+            unavailableLabel: 'Unavailable',
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final bar = find.byType(SegmentedSeekBar);
+      final barBox = tester.renderObject<RenderBox>(bar);
+      final width = barBox.size.width;
+      // Press on ayah 3 region; drag needs a tiny move past touch slop.
+      final ayah3Dx = width * (12.5 / 15);
+      final gesture = await tester.startGesture(
+        barBox.localToGlobal(Offset(ayah3Dx, barBox.size.height / 2)),
+      );
+      // Exceed pan touch slop so drag starts; stay within focus-hold dead zone.
+      await gesture.moveBy(const Offset(20, 0));
+      await tester.pump();
+      await tester.pump(_style.revealDuration);
+      await tester.pump(_style.revealDuration);
+
+      final painter = tester.widget<CustomPaint>(find.byType(CustomPaint));
+      final p = painter.painter! as SegmentedTrackPainter;
+      expect(p.revealStrength, greaterThan(0.9));
+      expect(p.lensLayouts, isNotEmpty);
+      expect(p.lensLayouts.firstWhere((l) => l.isFocus).index, 1);
+
+      await gesture.up();
+      await tester.pump();
+    });
+
+    testWidgets('slow hover advances one ayah per travel step', (tester) async {
+      final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      const total = Duration(seconds: 25);
+      final segments = _fiveSegments();
+      await tester.pumpWidget(
+        _wrap(
+          SegmentedSeekBar(
+            position: const Duration(seconds: 2),
+            duration: total,
+            segments: segments,
+            onSeek: (_) {},
+            style: _style,
+            segmentLabel: (i) => 'Ayah $i',
+            repeatLabel: (c, t) => 'Repeat $c of $t',
+            unavailableLabel: 'Unavailable',
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final bar = find.byType(SegmentedSeekBar);
+      final barBox = tester.renderObject<RenderBox>(bar);
+      final width = barBox.size.width;
+      final y = barBox.size.height / 2;
+
+      // Start on ayah 1.
+      var dx = width * (2.5 / 25);
+      await gesture.addPointer(
+        location: barBox.localToGlobal(Offset(dx, y)),
+      );
+      await tester.pump();
+      await gesture.moveTo(barBox.localToGlobal(Offset(dx, y)));
+      await tester.pump();
+      await tester.pump(_style.revealDuration);
+      await tester.pump(_style.revealDuration);
+
+      var painter = tester.widget<CustomPaint>(find.byType(CustomPaint));
+      var p = painter.painter! as SegmentedTrackPainter;
+      expect(p.lensLayouts.firstWhere((l) => l.isFocus).index, 1);
+
+      // Each ~34px crawl unlocks at most one ayah (never +3 in one small move).
+      var prevFocus = 1;
+      for (var i = 0; i < 6; i++) {
+        dx += 34;
+        if (dx >= width - 8) break;
+        await gesture.moveTo(barBox.localToGlobal(Offset(dx, y)));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 40));
+        painter = tester.widget<CustomPaint>(find.byType(CustomPaint));
+        p = painter.painter! as SegmentedTrackPainter;
+        final focus = p.lensLayouts.firstWhere((l) => l.isFocus).index;
+        expect(
+          focus - prevFocus,
+          lessThanOrEqualTo(1),
+          reason: 'step $i: focus jumped from $prevFocus to $focus',
+        );
+        prevFocus = focus;
+      }
+
+      await gesture.removePointer();
+      await tester.pump();
+    });
+  });
+
+  group('pastFocusHysteresis', () {
+    test('requires travel past current edge into candidate', () {
+      const current = Rect.fromLTRB(0, 0, 100, 10);
+      const candidate = Rect.fromLTRB(100, 0, 200, 10);
+
+      expect(
+        pastFocusHysteresis(
+          dx: 102,
+          currentRect: current,
+          candidateRect: candidate,
+        ),
+        isFalse,
+      );
+      expect(
+        pastFocusHysteresis(
+          dx: 106,
+          currentRect: current,
+          candidateRect: candidate,
+        ),
+        isTrue,
+      );
+      expect(
+        pastFocusHysteresis(
+          dx: 98,
+          currentRect: candidate,
+          candidateRect: current,
+        ),
+        isFalse,
+      );
+      expect(
+        pastFocusHysteresis(
+          dx: 94,
+          currentRect: candidate,
+          candidateRect: current,
+        ),
+        isTrue,
+      );
+    });
+  });
+
+  group('stepLimitedFocusListIndex', () {
+    test('insufficient travel blocks even the first step', () {
+      expect(
+        stepLimitedFocusListIndex(
+          currentListIndex: 49,
+          candidateListIndex: 55,
+          travelPx: 5,
+          pxPerStep: 32,
+        ),
+        49,
+      );
+      expect(
+        stepLimitedFocusListIndex(
+          currentListIndex: 49,
+          candidateListIndex: 50,
+          travelPx: 31,
+          pxPerStep: 32,
+        ),
+        49,
+      );
+    });
+
+    test('one step of travel unlocks adjacent only', () {
+      expect(
+        stepLimitedFocusListIndex(
+          currentListIndex: 49,
+          candidateListIndex: 55,
+          travelPx: 32,
+          pxPerStep: 32,
+        ),
+        50,
+      );
+      expect(
+        stepLimitedFocusListIndex(
+          currentListIndex: 49,
+          candidateListIndex: 40,
+          travelPx: 40,
+          pxPerStep: 32,
+        ),
+        48,
+      );
+    });
+
+    test('large travel unlocks multi-step', () {
+      expect(
+        stepLimitedFocusListIndex(
+          currentListIndex: 49,
+          candidateListIndex: 55,
+          travelPx: 96,
+          pxPerStep: 32,
+        ),
+        52,
+      );
+      expect(
+        stepLimitedFocusListIndex(
+          currentListIndex: 10,
+          candidateListIndex: 20,
+          travelPx: 200,
+          pxPerStep: 32,
+        ),
+        16,
+      );
+    });
+
+    test('zero delta stays put', () {
+      expect(
+        stepLimitedFocusListIndex(
+          currentListIndex: 5,
+          candidateListIndex: 5,
+          travelPx: 0,
+          pxPerStep: 32,
+        ),
+        5,
+      );
+    });
+  });
+
+  group('layoutSeekLens RTL', () {
+    test('mirrors chronological first segment to the right', () {
+      final ltr = layoutSeekLens(
+        segments: _fiveSegments(),
+        trackWidth: 320,
+        focusListIndex: 2,
+        totalDurationMs: 25000,
+        revealStrength: 1,
+        trackHeight: 4,
+      );
+      final rtl = layoutSeekLens(
+        segments: _fiveSegments(),
+        trackWidth: 320,
+        focusListIndex: 2,
+        totalDurationMs: 25000,
+        revealStrength: 1,
+        trackHeight: 4,
+        isRtl: true,
+      );
+
+      final ltrFirst = ltr.firstWhere((l) => l.index == 1);
+      final rtlFirst = rtl.firstWhere((l) => l.index == 1);
+      expect(ltrFirst.rect.left, lessThan(160));
+      expect(rtlFirst.rect.right, greaterThan(160));
+      expect(
+        rtlFirst.rect.left,
+        closeTo(320 - ltrFirst.rect.right, 0.01),
+      );
+      expect(
+        rtl.firstWhere((l) => l.isFocus).rect.width,
+        closeTo(ltr.firstWhere((l) => l.isFocus).rect.width, 0.01),
+      );
+    });
   });
 }
+
