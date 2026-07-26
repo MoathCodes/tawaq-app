@@ -76,58 +76,16 @@ class $AssetsDatabaseGen {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
-  /// File path: assets/images/888-02.png
-  AssetGenImage get a88802 => const AssetGenImage('assets/images/888-02.png');
-
   /// File path: assets/images/app_icon.png
   AssetGenImage get appIcon =>
       const AssetGenImage('assets/images/app_icon.png');
-
-  /// File path: assets/images/asr.webp
-  AssetGenImage get asr => const AssetGenImage('assets/images/asr.webp');
-
-  /// File path: assets/images/duhr.webp
-  AssetGenImage get duhr => const AssetGenImage('assets/images/duhr.webp');
-
-  /// File path: assets/images/fajr.webp
-  AssetGenImage get fajr => const AssetGenImage('assets/images/fajr.webp');
-
-  /// File path: assets/images/isha.webp
-  AssetGenImage get isha => const AssetGenImage('assets/images/isha.webp');
-
-  /// File path: assets/images/lastThirdOfNight.webp
-  AssetGenImage get lastThirdOfNight =>
-      const AssetGenImage('assets/images/lastThirdOfNight.webp');
-
-  /// File path: assets/images/magrib.webp
-  AssetGenImage get magrib => const AssetGenImage('assets/images/magrib.webp');
-
-  /// File path: assets/images/midnight.webp
-  AssetGenImage get midnight =>
-      const AssetGenImage('assets/images/midnight.webp');
-
-  /// File path: assets/images/sunrise.webp
-  AssetGenImage get sunrise =>
-      const AssetGenImage('assets/images/sunrise.webp');
 
   /// File path: assets/images/tray_icon.png
   AssetGenImage get trayIcon =>
       const AssetGenImage('assets/images/tray_icon.png');
 
   /// List of all assets
-  List<AssetGenImage> get values => [
-    a88802,
-    appIcon,
-    asr,
-    duhr,
-    fajr,
-    isha,
-    lastThirdOfNight,
-    magrib,
-    midnight,
-    sunrise,
-    trayIcon,
-  ];
+  List<AssetGenImage> get values => [appIcon, trayIcon];
 }
 
 class $AssetsAudioAdhanGen {
@@ -237,9 +195,7 @@ class $AssetsDatabaseTafseerArGen {
   List<String> get values => [quraanAS, quraanBa, quraanIK, tafseerMouaser];
 }
 
-class Assets {
-  const Assets._();
-
+abstract final class Assets {
   static const $AssetsAudioGen audio = $AssetsAudioGen();
   static const $AssetsDatabaseGen database = $AssetsDatabaseGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
