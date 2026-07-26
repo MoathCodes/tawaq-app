@@ -1,4 +1,6 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mushaf_reader/mushaf_reader.dart'
     show
         AyahTapCallback,
@@ -8,13 +10,26 @@ import 'package:mushaf_reader/mushaf_reader.dart'
         MushafLoading,
         MushafPage,
         MushafReaderController,
+        MushafScale,
         MushafStyle,
+        MushafStyleCustomization,
         MushafTwoPageChangedCallback;
 
 /// A convenient widget for displaying a complete Mushaf reader with navigation.
 ///
 /// Supports single-page (`pagesPerViewport: 1`, default) or two-page spread
 /// (`pagesPerViewport: 2`) layouts.
+///
+/// ## Desktop zoom
+///
+/// When [enablePointerZoom] is true (default):
+/// - **Ctrl/⌘ + scroll** (mouse wheel or trackpad) zooms within
+///   [MushafScale.minReadingBoost]–[MushafScale.maxReadingBoost]
+/// - **Trackpad pinch** (when the platform emits scale pointer signals)
+/// - **Ctrl/⌘ + / − / 0** zoom in, out, and reset session zoom
+///
+/// Zoom never exceeds width-fit (no horizontal scrolling). Larger than
+/// contain-fit enables vertical scroll on the page.
 ///
 /// ## Quick Start
 ///
@@ -95,6 +110,11 @@ class MushafReader extends StatefulWidget {
   /// Scroll physics for the page view.
   final ScrollPhysics? physics;
 
+  /// Enables Ctrl/⌘+scroll, pinch, and Ctrl/⌘+±/0 session zoom.
+  ///
+  /// Defaults to `true`. Disable when the host owns zoom exclusively.
+  final bool enablePointerZoom;
+
   /// Creates a MushafReader widget.
   const MushafReader({
     super.key,
@@ -115,6 +135,7 @@ class MushafReader extends StatefulWidget {
     this.hideHeader = false,
     this.clipBehavior = Clip.hardEdge,
     this.physics,
+    this.enablePointerZoom = true,
   }) : assert(
          pagesPerViewport == 1 || pagesPerViewport == 2,
          'pagesPerViewport must be 1 or 2',
@@ -138,7 +159,12 @@ class _MushafReaderState extends State<MushafReader> {
 
   bool _syncScheduled = false;
 
+  /// Accumulates trackpad [PointerScaleEvent] factors within one gesture.
+  double _pinchBaseBoost = 1;
+
   bool get _isTwoPage => widget.pagesPerViewport == 2;
+
+  MushafScale get _baseScale => (widget.style ?? const MushafStyle()).scale;
 
   /// Keeps only the visible page(s) and immediate neighbors alive in the
   /// [PageView] (current ±1) so scroll-back stays smooth without retaining
@@ -156,34 +182,126 @@ class _MushafReaderState extends State<MushafReader> {
     if (mounted) setState(() {});
   }
 
+  MushafStyle _styleWithSessionBoost() {
+    final base = widget.style ?? const MushafStyle();
+    final boost = _controller.effectiveReadingBoost(scale: base.scale);
+    if (boost == base.scale.readingBoost &&
+        _controller.sessionReadingBoost.value == null) {
+      return base;
+    }
+    return base.modify(scale: base.scale.copyWith(readingBoost: boost));
+  }
+
+  bool get _zoomModifierPressed {
+    final keys = HardwareKeyboard.instance.logicalKeysPressed;
+    return keys.contains(LogicalKeyboardKey.controlLeft) ||
+        keys.contains(LogicalKeyboardKey.controlRight) ||
+        keys.contains(LogicalKeyboardKey.metaLeft) ||
+        keys.contains(LogicalKeyboardKey.metaRight);
+  }
+
+  void _nudgeBoost(double delta) {
+    _controller.nudgeReadingBoost(delta, scale: _baseScale);
+  }
+
+  void _onPointerSignal(PointerSignalEvent event) {
+    if (!widget.enablePointerZoom) return;
+
+    if (event is PointerScaleEvent) {
+      GestureBinding.instance.pointerSignalResolver.register(event, (event) {
+        final scaleEvent = event as PointerScaleEvent;
+        if (scaleEvent.scale == 1.0) {
+          _pinchBaseBoost = _controller.effectiveReadingBoost(
+            scale: _baseScale,
+          );
+        }
+        final next = (_pinchBaseBoost * scaleEvent.scale).clamp(
+          _baseScale.minReadingBoost,
+          _baseScale.maxReadingBoost,
+        );
+        _controller.sessionReadingBoost.value = next;
+      });
+      return;
+    }
+
+    if (event is PointerScrollEvent && _zoomModifierPressed) {
+      GestureBinding.instance.pointerSignalResolver.register(event, (event) {
+        final scroll = event as PointerScrollEvent;
+        final delta = (-scroll.scrollDelta.dy).clamp(-80.0, 80.0) * 0.0015;
+        if (delta != 0) {
+          _nudgeBoost(delta);
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
       return widget.loadingWidget ?? MushafLoading.none;
     }
 
-    return Directionality(
+    Widget child = Directionality(
       textDirection: widget.textDirection,
       child: NotificationListener<ScrollNotification>(
         onNotification: _onScrollNotification,
-        child: PageView.builder(
-          controller: _controller.pageController,
-          reverse: widget.reverse,
-          clipBehavior: widget.clipBehavior,
-          physics: widget.physics,
-          itemCount: _isTwoPage
-              ? MushafConstants.twoPageSpreadCount
-              : MushafConstants.pageCount,
-          onPageChanged: _onPageChanged,
-          itemBuilder: (context, index) {
-            if (_isTwoPage) {
-              return _buildSpread(index);
-            }
-            return _buildSinglePage(index + 1);
+        child: ListenableBuilder(
+          listenable: _controller.sessionReadingBoost,
+          builder: (context, _) {
+            final style = _styleWithSessionBoost();
+            return PageView.builder(
+              controller: _controller.pageController,
+              reverse: widget.reverse,
+              clipBehavior: widget.clipBehavior,
+              physics: widget.physics,
+              itemCount: _isTwoPage
+                  ? MushafConstants.twoPageSpreadCount
+                  : MushafConstants.pageCount,
+              onPageChanged: _onPageChanged,
+              itemBuilder: (context, index) {
+                if (_isTwoPage) {
+                  return _buildSpread(index, style);
+                }
+                return _buildSinglePage(index + 1, style);
+              },
+            );
           },
         ),
       ),
     );
+
+    if (widget.enablePointerZoom) {
+      child = Listener(
+        onPointerSignal: _onPointerSignal,
+        child: CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.equal, control: true):
+                () => _nudgeBoost(0.04),
+            const SingleActivator(LogicalKeyboardKey.equal, meta: true):
+                () => _nudgeBoost(0.04),
+            const SingleActivator(LogicalKeyboardKey.add, control: true):
+                () => _nudgeBoost(0.04),
+            const SingleActivator(LogicalKeyboardKey.add, meta: true):
+                () => _nudgeBoost(0.04),
+            const SingleActivator(LogicalKeyboardKey.minus, control: true):
+                () => _nudgeBoost(-0.04),
+            const SingleActivator(LogicalKeyboardKey.minus, meta: true):
+                () => _nudgeBoost(-0.04),
+            const SingleActivator(LogicalKeyboardKey.digit0, control: true):
+                _controller.resetSessionReadingBoost,
+            const SingleActivator(LogicalKeyboardKey.digit0, meta: true):
+                _controller.resetSessionReadingBoost,
+            const SingleActivator(LogicalKeyboardKey.numpad0, control: true):
+                _controller.resetSessionReadingBoost,
+            const SingleActivator(LogicalKeyboardKey.numpad0, meta: true):
+                _controller.resetSessionReadingBoost,
+          },
+          child: Focus(canRequestFocus: true, child: child),
+        ),
+      );
+    }
+
+    return child;
   }
 
   @override
@@ -195,6 +313,11 @@ class _MushafReaderState extends State<MushafReader> {
       if (_isInitialized) {
         setState(() {});
       }
+    }
+    final oldBoost = oldWidget.style?.scale.readingBoost;
+    final newBoost = widget.style?.scale.readingBoost;
+    if (oldBoost != newBoost) {
+      _controller.resetSessionReadingBoost();
     }
   }
 
@@ -225,14 +348,14 @@ class _MushafReaderState extends State<MushafReader> {
     _initController();
   }
 
-  Widget _buildSinglePage(int page) {
+  Widget _buildSinglePage(int page, MushafStyle style) {
     return RepaintBoundary(
       child: MushafPage(
         key: ValueKey(page),
         page: page,
         controller: _controller,
         keepAlive: _isPageInKeepAliveWindow(page),
-        style: widget.style,
+        style: style,
         loadingWidget: widget.pageLoadingWidget,
         hideHeader: widget.hideHeader,
         onAyahIdTap: widget.onAyahTap != null
@@ -245,16 +368,16 @@ class _MushafReaderState extends State<MushafReader> {
     );
   }
 
-  Widget _buildSpread(int index) {
+  Widget _buildSpread(int index, MushafStyle style) {
     final firstPage = index * 2 + 1;
     final secondPage = firstPage + 1;
 
     return Row(
       children: [
-        Expanded(child: _buildSinglePage(firstPage)),
+        Expanded(child: _buildSinglePage(firstPage, style)),
         Expanded(
           child: secondPage <= MushafConstants.pageCount
-              ? _buildSinglePage(secondPage)
+              ? _buildSinglePage(secondPage, style)
               : const SizedBox.shrink(),
         ),
       ],

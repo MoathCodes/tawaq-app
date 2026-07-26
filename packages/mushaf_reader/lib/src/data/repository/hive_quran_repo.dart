@@ -142,8 +142,8 @@ class HiveQuranRepository implements IQuranRepository {
     if (_refCount <= 0) return;
 
     _refCount--;
-    _pageCache.clear();
 
+    // Keep the page LRU warm while other owners still hold a ref.
     if (_refCount <= 0) {
       _closeAndReset();
     }
@@ -446,12 +446,18 @@ class HiveQuranRepository implements IQuranRepository {
       );
     }
 
-    // Fetch all ayahs for this page
+    // Fetch ayahs in parallel — LazyBox has no batch get API.
+    final ayahIds = <int>{
+      for (final layout in layouts) layout.ayahId,
+    }.toList(growable: false);
+    final ayahResults = await Future.wait(
+      ayahIds.map((id) => _boxManager!.ayahsBox.get(id)),
+    );
     final ayahMap = <int, Ayah>{};
-    for (final layout in layouts) {
-      final ayah = await _boxManager!.ayahsBox.get(layout.ayahId);
+    for (var i = 0; i < ayahIds.length; i++) {
+      final ayah = ayahResults[i];
       if (ayah != null) {
-        ayahMap[layout.ayahId] = ayah;
+        ayahMap[ayahIds[i]] = ayah;
       }
     }
 
@@ -624,6 +630,7 @@ class HiveQuranRepository implements IQuranRepository {
     _boxManager?.dispose();
     _boxManager = null;
     _initCompleter = null;
+    _pageCache.clear();
     _surahCache.clear();
     _juzCache.clear();
     _hizbCache.clear();

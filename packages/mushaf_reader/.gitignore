@@ -42,3 +42,7 @@ devtools_options.yaml
 # Hive lock files (runtime artifacts, not source data)
 assets/hive/*.lock
 example/assets/hive/*.lock
+
+# Local research clones / compiled SVG caches (not for git)
+.research/
+example/.svg_vec_cache/

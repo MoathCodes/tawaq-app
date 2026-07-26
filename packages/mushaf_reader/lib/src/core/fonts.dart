@@ -91,6 +91,7 @@ class MushafFonts {
     fontFamily: basmalahFamily,
     package: packageName,
     fontSize: fontSize,
+    // ~KFQC marker line pitch: median gap/pageHeight ≈ 0.065 → 28×1.6.
     height: 1.6,
     color: const Color(0xFF000000),
   );

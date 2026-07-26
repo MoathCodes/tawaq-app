@@ -334,6 +334,16 @@ See `[example/](example/)` for a demo catalog (`MushafReader`, two-page spread, 
 cd example && flutter pub get && flutter run
 ```
 
+## Visual goldens (KFQC)
+
+Smoke tests compare rendered pages to King Fahd Complex SVG rasters (ink density
++ layout structure — not pixel-identical glyphs). See
+[`test/goldens/README.md`](test/goldens/README.md).
+
+```bash
+flutter test test/goldens
+```
+
 ## API documentation
 
 - [pub.dev API reference](https://pub.dev/documentation/mushaf_reader/latest/)

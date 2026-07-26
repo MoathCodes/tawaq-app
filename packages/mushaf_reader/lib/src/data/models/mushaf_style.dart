@@ -80,7 +80,8 @@ StyleModifier? composeStyleModifiers(
 ///
 /// ## Reading boost
 ///
-/// Apply a comfort multiplier after the page fits the viewport:
+/// Optional larger text after the page contain-fits the pane. Values above
+/// `1.0` lerp toward width-fit (vertical scroll may appear; never horizontal):
 ///
 /// ```dart
 /// MushafScale(readingBoost: 1.08)
@@ -107,10 +108,12 @@ class MushafScale {
   /// Reference width for scale calculations. Defaults to 500.
   final double referenceWidth;
 
-  /// User reading comfort multiplier applied after width/height fit.
+  /// User reading comfort factor relative to contain-fit.
   ///
-  /// Defaults to `1.0`. Typical range: `0.9` (compact) to `1.12` (extra large).
-  /// Ignored when [ayahFontSize] is set (fixed-size mode).
+  /// `1.0` (default) keeps the full page visible with no scroll. Values above
+  /// `1.0` grow toward width-fit (vertical scroll OK; never past pane width).
+  /// Values below `1.0` shrink from contain-fit. Ignored when [ayahFontSize]
+  /// is set (fixed-size mode). Typical range: `0.9`–`1.12`.
   final double readingBoost;
 
   /// Minimum allowed [readingBoost]. Defaults to `0.85`.
@@ -154,6 +157,33 @@ class MushafScale {
   double scaleForWidth(double availableWidth) {
     if (factor != null) return factor!.clamp(minScale, maxScale);
     return (availableWidth / referenceWidth).clamp(minScale, maxScale);
+  }
+
+  /// Copy with selected fields replaced.
+  MushafScale copyWith({
+    double? factor,
+    double? ayahFontSize,
+    double? basmalahFontSize,
+    double? pageNumberFontSize,
+    double? minScale,
+    double? maxScale,
+    double? referenceWidth,
+    double? readingBoost,
+    double? minReadingBoost,
+    double? maxReadingBoost,
+  }) {
+    return MushafScale(
+      factor: factor ?? this.factor,
+      ayahFontSize: ayahFontSize ?? this.ayahFontSize,
+      basmalahFontSize: basmalahFontSize ?? this.basmalahFontSize,
+      pageNumberFontSize: pageNumberFontSize ?? this.pageNumberFontSize,
+      minScale: minScale ?? this.minScale,
+      maxScale: maxScale ?? this.maxScale,
+      referenceWidth: referenceWidth ?? this.referenceWidth,
+      readingBoost: readingBoost ?? this.readingBoost,
+      minReadingBoost: minReadingBoost ?? this.minReadingBoost,
+      maxReadingBoost: maxReadingBoost ?? this.maxReadingBoost,
+    );
   }
 }
 

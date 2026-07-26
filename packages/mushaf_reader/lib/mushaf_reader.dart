@@ -45,6 +45,7 @@ export 'src/core/extensions.dart';
 export 'src/core/fonts.dart'
     show MushafFonts, MushafBaseFontSizes, MushafTextStyleMerger;
 export 'src/core/mushaf_constants.dart';
+export 'src/core/kfqc_page_geometry.dart';
 export 'src/core/mushaf_layout.dart' show mushafReferencePageHeight;
 export 'src/core/mushaf_page_range_layout.dart';
 // Data layer

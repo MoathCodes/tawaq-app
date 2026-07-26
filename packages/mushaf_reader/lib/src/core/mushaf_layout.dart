@@ -1,12 +1,17 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
-import 'package:mushaf_reader/src/core/fonts.dart';
+import 'package:mushaf_reader/src/core/kfqc_page_geometry.dart';
 import 'package:mushaf_reader/src/data/models/mushaf_style.dart';
 import 'package:mushaf_reader/src/data/models/quran_page.dart';
 
 /// Logical pixel height of a Mushaf page at the reference layout (width 500).
 ///
-/// Used by [MushafScale] auto-fit to clamp vertical scaling in [MushafPage].
-const double mushafReferencePageHeight = 850;
+/// Matches the KFQC Hafs page aspect (`345×550`) via
+/// [KfqcPageGeometry.flutterReferenceHeight] (~797.1). Used by [MushafScale]
+/// auto-fit to clamp vertical scaling in [MushafPage].
+const double mushafReferencePageHeight =
+    KfqcPageGeometry.flutterReferenceHeight;
 
 /// Snaps [logicalSize] to the nearest physical pixel for crisp QCF rendering.
 double snapToDevicePixel(BuildContext context, double logicalSize) {
@@ -15,21 +20,43 @@ double snapToDevicePixel(BuildContext context, double logicalSize) {
   return (logicalSize * dpr).round() / dpr;
 }
 
-/// Width/height fit without [MushafScale.readingBoost].
-double resolveBaseFitScale({
+/// Scale so the full design page ([referenceWidth] × [mushafReferencePageHeight])
+/// fits in the pane with no scrolling.
+double resolveContainScale({
   required MushafScale scale,
   required double availableWidth,
   required double availableHeight,
 }) {
-  var fitScale = scale.scaleForWidth(availableWidth);
-
-  if (availableHeight.isFinite) {
-    final heightScale = availableHeight / mushafReferencePageHeight;
-    fitScale = fitScale.clamp(scale.minScale, heightScale);
-  }
-
-  return fitScale;
+  final widthFit = resolveWidthFitScale(
+    scale: scale,
+    availableWidth: availableWidth,
+  );
+  if (!availableHeight.isFinite) return widthFit;
+  final heightFit = availableHeight / mushafReferencePageHeight;
+  return math.min(widthFit, heightFit).clamp(scale.minScale, scale.maxScale);
 }
+
+/// Largest uniform scale that never exceeds [availableWidth] (no horizontal scroll).
+double resolveWidthFitScale({
+  required MushafScale scale,
+  required double availableWidth,
+}) {
+  return (availableWidth / scale.referenceWidth).clamp(
+    scale.minScale,
+    scale.maxScale,
+  );
+}
+
+/// Width/height contain fit without [MushafScale.readingBoost].
+double resolveBaseFitScale({
+  required MushafScale scale,
+  required double availableWidth,
+  required double availableHeight,
+}) => resolveContainScale(
+  scale: scale,
+  availableWidth: availableWidth,
+  availableHeight: availableHeight,
+);
 
 /// Clamped user reading boost from [MushafScale].
 double resolveReadingBoost(MushafScale scale) {
@@ -40,194 +67,58 @@ double resolveReadingBoost(MushafScale scale) {
   );
 }
 
-/// Whether [glyphText] fits at [scale] within [maxAyahHeight].
-bool glyphFitsAtScale({
-  required BuildContext context,
-  required MushafScale scaleConfig,
-  required QuranPage page,
-  required double scale,
-  required double maxAyahHeight,
-  required double contentWidth,
-  required int pageNumber,
-  MushafStyle? style,
-}) {
-  if (!maxAyahHeight.isFinite || maxAyahHeight <= 0) return true;
-
-  final mushafStyle = style ?? const MushafStyle();
-  final ayahFontSize = snapToDevicePixel(
-    context,
-    scaleConfig.getAyahFontSize(scale),
-  );
-  final textStyle = MushafTextStyleMerger.mergeAyahStyle(
-    userStyle: mushafStyle.ayahStyle,
-    modifier: mushafStyle.ayahStyleModifier,
-    pageNumber: pageNumber,
-    baseSize: ayahFontSize,
-  );
-
-  final painter = TextPainter(
-    text: TextSpan(text: page.glyphText, style: textStyle),
-    textDirection: TextDirection.rtl,
-    textAlign: TextAlign.center,
-    locale: const Locale('ar'),
-    maxLines: null,
-  )..layout(maxWidth: contentWidth);
-
-  return painter.height <= maxAyahHeight;
-}
-
-/// Largest reading boost so [baseFit] × boost still fits [maxAyahHeight].
-double findMaxReadingBoostForPage({
-  required BuildContext context,
-  required MushafScale scaleConfig,
-  required QuranPage page,
-  required double baseFit,
-  required double maxAyahHeight,
-  required double contentWidth,
-  required int pageNumber,
-  MushafStyle? style,
-}) {
-  var low = scaleConfig.minReadingBoost;
-  var high = scaleConfig.maxReadingBoost;
-
-  if (glyphFitsAtScale(
-    context: context,
-    scaleConfig: scaleConfig,
-    page: page,
-    scale: baseFit * high,
-    maxAyahHeight: maxAyahHeight,
-    contentWidth: contentWidth,
-    pageNumber: pageNumber,
-    style: style,
-  )) {
-    return high;
-  }
-
-  for (var i = 0; i < 12; i++) {
-    final mid = (low + high) / 2;
-    if (glyphFitsAtScale(
-      context: context,
-      scaleConfig: scaleConfig,
-      page: page,
-      scale: baseFit * mid,
-      maxAyahHeight: maxAyahHeight,
-      contentWidth: contentWidth,
-      pageNumber: pageNumber,
-      style: style,
-    )) {
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-
-  return low;
-}
-
-/// Lowers [baseFit] until [glyphText] fits at boost 1.0.
-double clampBaseFitForGlyphHeight({
-  required BuildContext context,
-  required MushafScale scaleConfig,
-  required QuranPage page,
-  required double baseFit,
-  required double maxAyahHeight,
-  required double contentWidth,
-  required int pageNumber,
-  MushafStyle? style,
-}) {
-  if (!maxAyahHeight.isFinite || maxAyahHeight <= 0) {
-    return baseFit;
-  }
-
-  var effective = baseFit;
-  final minScale = scaleConfig.minScale;
-
-  while (effective > minScale) {
-    if (glyphFitsAtScale(
-      context: context,
-      scaleConfig: scaleConfig,
-      page: page,
-      scale: effective,
-      maxAyahHeight: maxAyahHeight,
-      contentWidth: contentWidth,
-      pageNumber: pageNumber,
-      style: style,
-    )) {
-      return effective;
-    }
-
-    effective *= 0.96;
-    if (effective <= minScale) {
-      return minScale;
-    }
-  }
-
-  return minScale;
-}
-
-/// Resolves final page scale: fit → clamp at 1.0 → apply reading boost (monotonic).
+/// Maps [readingBoost] onto \[containScale, widthFitScale\].
+///
+/// - boost ≤ 1 → `containScale * boost` (fit page, optionally smaller)
+/// - boost > 1 → lerp toward [widthFitScale] (optional larger text; vertical
+///   scroll may appear; never above width fit → no horizontal scroll)
 double resolvePageScale({
-  required BuildContext context,
   required MushafScale scaleConfig,
-  required QuranPage page,
   required double availableWidth,
   required double availableHeight,
-  required bool hideHeader,
-  required int pageNumber,
+  BuildContext? context,
+  QuranPage? page,
+  bool hideHeader = false,
+  int pageNumber = 1,
   MushafStyle? style,
 }) {
+  if (scaleConfig.factor != null) {
+    final widthFit = resolveWidthFitScale(
+      scale: scaleConfig,
+      availableWidth: availableWidth,
+    );
+    return scaleConfig.factor!.clamp(scaleConfig.minScale, widthFit);
+  }
+
   if (scaleConfig.ayahFontSize != null) {
-    return resolveBaseFitScale(
+    return resolveContainScale(
       scale: scaleConfig,
       availableWidth: availableWidth,
       availableHeight: availableHeight,
     );
   }
 
-  var baseFit = resolveBaseFitScale(
+  final widthFit = resolveWidthFitScale(
+    scale: scaleConfig,
+    availableWidth: availableWidth,
+  );
+  final contain = resolveContainScale(
     scale: scaleConfig,
     availableWidth: availableWidth,
     availableHeight: availableHeight,
   );
 
-  if (!availableHeight.isFinite) {
-    return baseFit * resolveReadingBoost(scaleConfig);
+  final boost = resolveReadingBoost(scaleConfig);
+  late final double scale;
+  if (boost <= 1) {
+    scale = contain * boost;
+  } else {
+    final maxB = scaleConfig.maxReadingBoost;
+    final t = maxB <= 1 ? 1.0 : ((boost - 1) / (maxB - 1)).clamp(0.0, 1.0);
+    scale = contain + (widthFit - contain) * t;
   }
 
-  final chromeHeight = estimatePageChromeHeight(
-    page: page,
-    scale: baseFit,
-    hideHeader: hideHeader,
-  );
-  final maxAyahHeight = availableHeight - chromeHeight;
-  var contentWidth = scaleConfig.referenceWidth * baseFit;
-
-  baseFit = clampBaseFitForGlyphHeight(
-    context: context,
-    scaleConfig: scaleConfig,
-    page: page,
-    baseFit: baseFit,
-    maxAyahHeight: maxAyahHeight,
-    contentWidth: contentWidth,
-    pageNumber: pageNumber,
-    style: style,
-  );
-
-  contentWidth = scaleConfig.referenceWidth * baseFit;
-
-  final userBoost = resolveReadingBoost(scaleConfig);
-  final maxBoost = findMaxReadingBoostForPage(
-    context: context,
-    scaleConfig: scaleConfig,
-    page: page,
-    baseFit: baseFit,
-    maxAyahHeight: maxAyahHeight,
-    contentWidth: contentWidth,
-    pageNumber: pageNumber,
-    style: style,
-  );
-
-  return baseFit * (userBoost < maxBoost ? userBoost : maxBoost);
+  return scale.clamp(scaleConfig.minScale, widthFit);
 }
 
 /// Memoizes [resolvePageScale] for repeated builds with the same inputs.
@@ -283,11 +174,11 @@ final class PageScaleCache {
     }
 
     final scale = resolvePageScale(
-      context: context,
       scaleConfig: scaleConfig,
-      page: page,
       availableWidth: availableWidth,
       availableHeight: availableHeight,
+      context: context,
+      page: page,
       hideHeader: hideHeader,
       pageNumber: pageNumber,
       style: style,
@@ -339,39 +230,25 @@ double estimatePageChromeHeight({
   return reserved;
 }
 
-// Deprecated: use [resolveBaseFitScale] + [resolvePageScale].
+/// Whether the painted page at [scale] exceeds [availableHeight] (needs
+/// vertical scroll). Always false when height is unbounded.
+bool pageNeedsVerticalScroll({
+  required double scale,
+  required double availableHeight,
+  required MushafScale scaleConfig,
+}) {
+  if (!availableHeight.isFinite) return false;
+  final paintedHeight = mushafReferencePageHeight * scale;
+  return paintedHeight > availableHeight + 0.5;
+}
+
 @Deprecated('Use resolvePageScale')
 double resolveFitScale({
   required MushafScale scale,
   required double availableWidth,
   required double availableHeight,
-}) {
-  var fitScale = resolveBaseFitScale(
-    scale: scale,
-    availableWidth: availableWidth,
-    availableHeight: availableHeight,
-  );
-  return fitScale * resolveReadingBoost(scale);
-}
-
-// Deprecated: use clampBaseFitForGlyphHeight
-@Deprecated('Use clampBaseFitForGlyphHeight')
-double clampScaleForGlyphHeight({
-  required BuildContext context,
-  required MushafScale scaleConfig,
-  required QuranPage page,
-  required double effectiveScale,
-  required double maxAyahHeight,
-  required double contentWidth,
-  required int pageNumber,
-  MushafStyle? style,
-}) => clampBaseFitForGlyphHeight(
-  context: context,
-  scaleConfig: scaleConfig,
-  page: page,
-  baseFit: effectiveScale,
-  maxAyahHeight: maxAyahHeight,
-  contentWidth: contentWidth,
-  pageNumber: pageNumber,
-  style: style,
+}) => resolvePageScale(
+  scaleConfig: scale,
+  availableWidth: availableWidth,
+  availableHeight: availableHeight,
 );

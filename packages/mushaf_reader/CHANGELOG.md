@@ -1,3 +1,27 @@
+## 0.3.3
+
+* Kept Fontello QCF4 page OTFs (`assets/otf_fonts/QCF4_NNN.otf`) and the
+  existing V1-style PUA glyphs (no QCF V2 / per-line stretch migration).
+* Patched `QCF4_379.otf` glyph `U+FB6F` (start of An-Naml 27:25): clamped
+  only the sajdah overline contours to the existing advance so they no
+  longer fill the ayah-24 marker crown (`U+FB6E`). Letterforms (full
+  **أَلَّا**) and advance width are unchanged — no contour deletion and no
+  extra gap before يسجدوا.
+* Page layout: contain-fit by default (full page, no scroll); optional
+  `readingBoost` lerps only up to width-fit (vertical scroll OK, never
+  horizontal). Uniform page scale only — no per-line `FittedBox` stretching.
+* Desktop zoom on `MushafReader`: Ctrl/⌘+scroll, trackpad pinch, and
+  Ctrl/⌘+±/0 adjust session `readingBoost` via
+  `MushafReaderController.sessionReadingBoost` / `nudgeReadingBoost` /
+  `resetSessionReadingBoost` (capped at width-fit).
+* Reference page box now matches KFQC Hafs aspect (`345×550` → ~500×797)
+  via `KfqcPageGeometry` / `mushafReferencePageHeight`. Ayah content is
+  top-aligned with the page number pinned to the bottom.
+* Added KFQC visual golden suite (`test/goldens/`): smoke pages compare
+  `MushafPage` renders to SVG rasters with ink-density + structure checks.
+  Tools: `tool/analyze_kfqc_geometry.dart`, `tool/rasterize_kfqc_svg.dart`.
+  Full 604-page run: `MUSHAF_KFQC_FULL_GOLDENS=1`.
+
 ## 0.3.2
 
 * Added `Ayah.uthmaniText` (Uthmanic Hafs from `quran.json` `text` key).

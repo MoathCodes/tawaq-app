@@ -55,7 +55,19 @@ class MushafReaderController implements Listenable {
   /// Page navigation and metadata notifications.
   final MushafPageNotifier page = MushafPageNotifier();
 
-  late final Listenable _merged = MergedListenable([selection, page]);
+  /// Session reading-boost override for desktop zoom (Ctrl/⌘+scroll, pinch).
+  ///
+  /// `null` means use [MushafStyle.scale.readingBoost] from the widget style.
+  /// Clamped to the active [MushafScale] min/max when nudged.
+  final ValueNotifier<double?> sessionReadingBoost = ValueNotifier<double?>(
+    null,
+  );
+
+  late final Listenable _merged = MergedListenable([
+    selection,
+    page,
+    sessionReadingBoost,
+  ]);
 
   /// Whether the controller is initialized and [ensureReady] has completed.
   bool _isInitialized = false;
@@ -318,6 +330,33 @@ class MushafReaderController implements Listenable {
     _cachedBasmalah = null;
     selection.dispose();
     page.dispose();
+    sessionReadingBoost.dispose();
+  }
+
+  /// Effective reading boost: session override or style [MushafScale.readingBoost].
+  double effectiveReadingBoost({required MushafScale scale}) {
+    if (scale.ayahFontSize != null) return 1;
+    final boost = sessionReadingBoost.value ?? scale.readingBoost;
+    return boost.clamp(scale.minReadingBoost, scale.maxReadingBoost);
+  }
+
+  /// Nudges session zoom (desktop scroll-wheel / keyboard). Positive = larger.
+  void nudgeReadingBoost(
+    double delta, {
+    required MushafScale scale,
+  }) {
+    if (_disposed) return;
+    final current = effectiveReadingBoost(scale: scale);
+    sessionReadingBoost.value = (current + delta).clamp(
+      scale.minReadingBoost,
+      scale.maxReadingBoost,
+    );
+  }
+
+  /// Clears session zoom so the widget [MushafStyle] boost applies again.
+  void resetSessionReadingBoost() {
+    if (_disposed) return;
+    sessionReadingBoost.value = null;
   }
 
   /// Gets all Surahs.

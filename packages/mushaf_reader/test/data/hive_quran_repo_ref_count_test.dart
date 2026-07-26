@@ -98,6 +98,23 @@ void main() {
       expect(HiveBoxManager.refCount, before);
       expect(basmalah, isNotEmpty);
     });
+
+    test('page cache survives intermediate dispose while refs remain', () async {
+      final first = HiveQuranRepository.acquire();
+      await first.ensureReady();
+      await first.getPage(1);
+      expect(first.peekCachedPage(1), isNotNull);
+
+      final second = HiveQuranRepository.acquire();
+      expect(HiveQuranRepository.refCount, 2);
+
+      first.dispose();
+      expect(HiveQuranRepository.refCount, 1);
+      expect(second.peekCachedPage(1), isNotNull);
+
+      second.dispose();
+      expect(HiveQuranRepository.refCount, 0);
+    });
   });
 
   group('HiveBoxManager ref count', () {
