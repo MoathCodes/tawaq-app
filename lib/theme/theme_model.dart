@@ -18,22 +18,24 @@ final Map<String, List<FPlatformThemeData>> _palettesData = {
     ManuscriptTheme.darkManuscript,
     ManuscriptTheme.lightManuscript,
   ],
-  'Blue': [FThemes.blue.dark, FThemes.blue.light],
-  'Orange': [FThemes.orange.dark, FThemes.orange.light],
-  // 'Neutral': [FThemes.neutral.dark, FThemes.neutral.light],
-  'Red': [FThemes.red.dark, FThemes.red.light],
-  'Green': [FThemes.green.dark, FThemes.green.light],
-  'Rose': [FThemes.rose.dark, FThemes.rose.light],
-  'Slate': [FThemes.slate.dark, FThemes.slate.light],
-  // 'Stone': [FThemes.stone.dark, FThemes.stone.light],
-  'Violet': [FThemes.violet.dark, FThemes.violet.light],
-  'Yellow': [FThemes.yellow.dark, FThemes.yellow.light],
-  'Zinc': [FThemes.zinc.dark, FThemes.zinc.light],
+  'Neutral': [FTheme.neutral.dark, FTheme.neutral.light],
 };
+
+/// Parses a persisted palette name; unknown legacy values map to Manuscript.
+AppPalette appPaletteFromJson(Object? json) {
+  if (json is! String) return AppPalette.manuscript;
+  for (final palette in AppPalette.values) {
+    if (palette.name == json || palette.key == json) return palette;
+  }
+  return AppPalette.manuscript;
+}
+
+/// Serializes [palette] for JSON persistence.
+String appPaletteToJson(AppPalette palette) => palette.name;
 
 /// Returns the [FPlatformThemeData] matching [palette] and [themeMode].
 ///
-/// Falls back to the zinc palette when the mapping is missing or malformed,
+/// Falls back to Neutral when the mapping is missing or malformed,
 /// logging a warning for easier troubleshooting.
 FPlatformThemeData resolvePlatformColorScheme(
   AppPalette palette,
@@ -45,9 +47,9 @@ FPlatformThemeData resolvePlatformColorScheme(
   if (schemesList == null || schemesList.length != 2) {
     debugPrint(
       'Warning: Theme data for $paletteKey not found or incomplete. '
-      'Falling back to Zinc.',
+      'Falling back to Neutral.',
     );
-    final defaultSchemes = _palettesData[AppPalette.zinc.key]!;
+    final defaultSchemes = _palettesData[AppPalette.neutral.key]!;
     return themeMode == ThemeMode.dark ? defaultSchemes[0] : defaultSchemes[1];
   }
   return themeMode == ThemeMode.dark ? schemesList[0] : schemesList[1];
@@ -68,33 +70,8 @@ enum AppPalette {
   /// Rich parchment-inspired palette.
   manuscript('Manuscript'),
 
-  /// Vibrant blue palette derived from Forui presets.
-  blue('Blue'),
-
-  /// Bright orange palette for high-contrast UI.
-  orange('Orange'),
-
-  /// Calming green palette.
-  green('Green'),
-  // neutral("Neutral"),
-  /// Warm red palette.
-  red('Red'),
-
-  /// Soft rose palette.
-  rose('Rose'),
-
-  /// Subtle slate palette.
-  slate('Slate'),
-  // stone("Stone"),
-  /// Deep violet palette.
-  violet('Violet'),
-
-  /// Energetic yellow palette.
-  yellow('Yellow'),
-
-  /// Default zinc palette.
-  zinc('Zinc')
-  ;
+  /// Forui neutral (shadcn) palette.
+  neutral('Neutral');
 
   const AppPalette(this.key);
 
@@ -117,31 +94,9 @@ abstract class ThemeSettings with _$ThemeSettings {
 extension AppPaletteLocale on AppPalette {
   /// Returns the localized display name for this palette.
   String getLocaleName(AppLocalizations locale) {
-    switch (this) {
-      case AppPalette.blue:
-        return locale.blue;
-      case AppPalette.orange:
-        return locale.orange;
-      case AppPalette.green:
-        return locale.green;
-      // case AppPalette.neutral:
-      //   return locale.neutral;
-      case AppPalette.red:
-        return locale.red;
-      case AppPalette.rose:
-        return locale.rose;
-      case AppPalette.slate:
-        return locale.slate;
-      // case AppPalette.stone:
-      //   return locale.stone;
-      case AppPalette.violet:
-        return locale.violet;
-      case AppPalette.yellow:
-        return locale.yellow;
-      case AppPalette.zinc:
-        return locale.zinc;
-      case AppPalette.manuscript:
-        return locale.islamicTheme;
-    }
+    return switch (this) {
+      AppPalette.manuscript => locale.islamicTheme,
+      AppPalette.neutral => locale.neutral,
+    };
   }
 }
