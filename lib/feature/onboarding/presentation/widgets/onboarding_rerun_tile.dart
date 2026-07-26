@@ -20,8 +20,10 @@ class OnboardingRerunTile extends ConsumerWidget {
       subtitle: Text(l10n.onboardingRerunSubtitle),
       suffix: const Icon(FLucideIcons.chevronRight),
       onPress: () async {
-        await ref.read(onboardingStateProvider.notifier).reset();
-        if (!context.mounted) return;
+        final cleared = await ref
+            .read(onboardingStateProvider.notifier)
+            .reset();
+        if (!cleared || !context.mounted) return;
         const OnboardingRoute().go(context);
       },
     );

@@ -18,47 +18,51 @@ class OnboardingFinishStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final theme = context.theme;
-    final dayAsync = ref.watch(prayerDayProvider);
+    // Day-key / inputs only — do not watch the 1 Hz prayerDayProvider stream.
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final bundle = ref.watch(prayerDayBundleForDateProvider(today));
     final formatter = ref.watch(timeFormatterProvider);
 
-    return dayAsync.when(
-      loading: () => const Center(child: FCircularProgress.loader()),
-      error: (_, _) => FAlert(
+    if (bundle == null) {
+      final loading = ref.watch(prayerDayIsLoadingProvider);
+      if (loading) {
+        return const Center(child: FCircularProgress.loader());
+      }
+      return FAlert(
+        liveRegion: true,
         icon: const Icon(FLucideIcons.triangleAlert),
         title: Text(l10n.onboardingFinishPreviewUnavailable),
-      ),
-      data: (snapshot) {
-        final prayers = <Prayer>[
-          Prayer.fajr,
-          Prayer.dhuhr,
-          Prayer.asr,
-          Prayer.maghrib,
-          Prayer.isha,
-        ];
+      );
+    }
 
-        return StaticCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: AppSpacing.sm,
-            children: [
-              Text(
-                l10n.todaysSchedule,
-                style: theme.typography.body.sm.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colors.mutedForeground,
-                ),
-              ),
-              for (final prayer in prayers)
-                _PrayerPreviewRow(
-                  label: prayer.getLocaleName(l10n),
-                  time: formatter.format(
-                    snapshot.today.timeForPrayer(prayer),
-                  ),
-                ),
-            ],
+    final prayers = <Prayer>[
+      Prayer.fajr,
+      Prayer.dhuhr,
+      Prayer.asr,
+      Prayer.maghrib,
+      Prayer.isha,
+    ];
+
+    return StaticCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.sm,
+        children: [
+          Text(
+            l10n.todaysSchedule,
+            style: theme.typography.body.sm.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colors.mutedForeground,
+            ),
           ),
-        );
-      },
+          for (final prayer in prayers)
+            _PrayerPreviewRow(
+              label: prayer.getLocaleName(l10n),
+              time: formatter.format(bundle.today.timeForPrayer(prayer)),
+            ),
+        ],
+      ),
     );
   }
 }

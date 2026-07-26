@@ -25,21 +25,31 @@ class OnboardingScreen extends ConsumerWidget {
     final appName = l10n.appName;
     final stepDef = onboardingStepDefFor(step, l10n);
 
+    // Keep iqamah draft alive across steps so Continue/Back does not drop edits.
+    ref.watch(iqamahDraftProvider);
+
     Future<void> dismissOnboarding() async {
-      await ref.read(onboardingStateProvider.notifier).finish();
-      if (!context.mounted) return;
+      final finished = await ref
+          .read(onboardingStateProvider.notifier)
+          .finish();
+      if (!finished || !context.mounted) return;
       const PrayerRoute().go(context);
     }
 
     Future<void> completeOnboarding() async {
       // Draft buffers iqamah text fields; commit without settings toasts.
       ref.read(iqamahDraftProvider.notifier).commitPending();
-      await ref.read(onboardingStateProvider.notifier).finish();
-      if (!context.mounted) return;
+      final finished = await ref
+          .read(onboardingStateProvider.notifier)
+          .finish();
+      if (!finished || !context.mounted) return;
       const PrayerRoute().go(context);
     }
 
     void handleContinue() {
+      if (step == OnboardingStep.iqamah) {
+        ref.read(iqamahDraftProvider.notifier).commitPending();
+      }
       if (step.isLast) {
         unawaited(completeOnboarding());
         return;
