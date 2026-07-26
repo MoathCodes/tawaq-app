@@ -118,8 +118,13 @@ class DesktopTray {
   }
 
   /// Remove the tray icon and release native resources.
+  ///
+  /// Also clears Dart-side [_listeners] and [_menu] so destroyed trays do not
+  /// retain callbacks or menu graphs.
   Future<void> destroy() async {
     await _channel.invokeMethod<void>('destroy');
+    _listeners.clear();
+    _menu = null;
   }
 
   // ──────────────────── Method-channel handler ────────────────────
