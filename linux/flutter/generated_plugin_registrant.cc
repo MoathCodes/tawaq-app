@@ -7,6 +7,7 @@
 #include "generated_plugin_registrant.h"
 
 #include <desktop_tray/desktop_tray_plugin.h>
+#include <flutter_alone/flutter_alone_plugin.h>
 #include <flutter_timezone/flutter_timezone_plugin.h>
 #include <local_notifier/local_notifier_plugin.h>
 #include <mpv_audio_kit/mpv_audio_kit_plugin.h>
@@ -18,6 +19,9 @@ void fl_register_plugins(FlPluginRegistry* registry) {
   g_autoptr(FlPluginRegistrar) desktop_tray_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "DesktopTrayPlugin");
   desktop_tray_plugin_register_with_registrar(desktop_tray_registrar);
+  g_autoptr(FlPluginRegistrar) flutter_alone_registrar =
+      fl_plugin_registry_get_registrar_for_plugin(registry, "FlutterAlonePlugin");
+  flutter_alone_plugin_register_with_registrar(flutter_alone_registrar);
   g_autoptr(FlPluginRegistrar) flutter_timezone_registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry, "FlutterTimezonePlugin");
   flutter_timezone_plugin_register_with_registrar(flutter_timezone_registrar);

@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_tray
+  flutter_alone
   flutter_timezone
   geolocator_windows
   local_notifier

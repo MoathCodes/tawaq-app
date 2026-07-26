@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_tray
+  flutter_alone
   flutter_timezone
   local_notifier
   mpv_audio_kit

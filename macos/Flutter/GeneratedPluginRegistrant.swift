@@ -6,6 +6,7 @@ import FlutterMacOS
 import Foundation
 
 import desktop_tray
+import flutter_alone
 import flutter_timezone
 import geolocator_apple
 import local_notifier
@@ -18,6 +19,7 @@ import window_manager
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   DesktopTrayPlugin.register(with: registry.registrar(forPlugin: "DesktopTrayPlugin"))
+  FlutterAlonePlugin.register(with: registry.registrar(forPlugin: "FlutterAlonePlugin"))
   FlutterTimezonePlugin.register(with: registry.registrar(forPlugin: "FlutterTimezonePlugin"))
   GeolocatorPlugin.register(with: registry.registrar(forPlugin: "GeolocatorPlugin"))
   LocalNotifierPlugin.register(with: registry.registrar(forPlugin: "LocalNotifierPlugin"))

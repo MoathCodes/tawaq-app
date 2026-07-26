@@ -7,6 +7,7 @@
 #include "generated_plugin_registrant.h"
 
 #include <desktop_tray/desktop_tray_plugin.h>
+#include <flutter_alone/flutter_alone_plugin_c_api.h>
 #include <flutter_timezone/flutter_timezone_plugin_c_api.h>
 #include <geolocator_windows/geolocator_windows.h>
 #include <local_notifier/local_notifier_plugin.h>
@@ -18,6 +19,8 @@
 void RegisterPlugins(flutter::PluginRegistry* registry) {
   DesktopTrayPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("DesktopTrayPlugin"));
+  FlutterAlonePluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("FlutterAlonePluginCApi"));
   FlutterTimezonePluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FlutterTimezonePluginCApi"));
   GeolocatorWindowsRegisterWithRegistrar(
