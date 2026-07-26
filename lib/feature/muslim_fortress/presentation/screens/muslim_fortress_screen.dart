@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/layout/collapsible_horizontal_split_pane.dart';
 import 'package:tawaq/core/layout/responsive_horizontal_split.dart';
 import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
@@ -21,7 +23,7 @@ import 'package:tawaq/feature/muslim_fortress/presentation/widgets/search/fortre
 import 'package:tawaq/theme/theme.dart';
 
 /// Muslim Fortress screen — sidebar browse, welcome home, and focus reading.
-class MuslimFortressScreen extends HookConsumerWidget {
+class MuslimFortressScreen extends ConsumerWidget {
   /// Creates a Muslim Fortress screen.
   const MuslimFortressScreen({super.key});
 
@@ -30,24 +32,9 @@ class MuslimFortressScreen extends HookConsumerWidget {
     final theme = context.theme;
     final l10n = context.l10n;
     final repositoryAsync = ref.watch(fortressRepositoryProvider);
-    final flow = ref.watch(fortressScreenControllerProvider);
-    final selectedCategory = flow.selectedCategory;
-    final isFocusMode = flow.isFocusMode;
-    final globalSearchQuery = ref.watch(
-      fortressScreenControllerProvider.select((s) => s.query),
+    final isFocusMode = ref.watch(
+      fortressScreenControllerProvider.select((s) => s.isFocusMode),
     );
-    final isGlobalSearch =
-        globalSearchQuery.length >= fortressSearchMinQueryLength;
-
-    useEffect(() {
-      final repository = repositoryAsync.asData?.value;
-      if (repository == null) return null;
-
-      ref
-          .read(fortressScreenSettingsProvider.notifier)
-          .ensureDefaultBookmarks(repository.defaultBookmarkChapterIds());
-      return null;
-    }, [repositoryAsync.hasValue]);
 
     final allCategories = repositoryAsync.when(
       data: (repository) => repository.loadChapters(),
@@ -55,7 +42,7 @@ class MuslimFortressScreen extends HookConsumerWidget {
       error: (_, _) => const <FortressCategory>[],
     );
 
-    if (isFocusMode && selectedCategory != null) {
+    if (isFocusMode) {
       return const Directionality(
         textDirection: TextDirection.rtl,
         child: FortressFocusReadingView(),
@@ -85,7 +72,7 @@ class MuslimFortressScreen extends HookConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '$repositoryAsync.error',
+                  '${repositoryAsync.error}',
                   style: theme.typography.body.sm.copyWith(
                     color: theme.colors.mutedForeground,
                   ),
@@ -100,25 +87,6 @@ class MuslimFortressScreen extends HookConsumerWidget {
             ),
           ),
         ),
-      );
-    }
-
-    Widget buildSidebar() {
-      return FortressBrowseSidebar(categories: allCategories);
-    }
-
-    Widget buildMainPane() {
-      return AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: isGlobalSearch
-            ? FortressSearchResultsPane(
-                key: ValueKey(globalSearchQuery),
-              )
-            : selectedCategory == null
-            ? const MuslimFortressWelcomePane(key: ValueKey('welcome'))
-            : FortressCategoryDetailView(
-                key: ValueKey(selectedCategory.chapterId),
-              ),
       );
     }
 
@@ -154,20 +122,24 @@ class MuslimFortressScreen extends HookConsumerWidget {
                     height: contentHeight,
                     child: useSplit
                         ? _FortressDesktopSplitLayout(
-                            mainPane: buildMainPane(),
-                            sidebar: buildSidebar(),
+                            mainPane: const _FortressBrowseMainPane(),
+                            sidebar: FortressBrowseSidebar(
+                              categories: allCategories,
+                            ),
                           )
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Expanded(
                                 flex: 2,
-                                child: buildSidebar(),
+                                child: FortressBrowseSidebar(
+                                  categories: allCategories,
+                                ),
                               ),
                               const SizedBox(height: AppSpacing.md),
-                              Expanded(
+                              const Expanded(
                                 flex: 3,
-                                child: buildMainPane(),
+                                child: _FortressBrowseMainPane(),
                               ),
                             ],
                           ),
@@ -178,6 +150,95 @@ class MuslimFortressScreen extends HookConsumerWidget {
           );
         },
       ),
+    );
+  }
+}
+
+/// Owns selection/global-search watches so the screen only tracks focus + repo.
+class _FortressBrowseMainPane extends HookConsumerWidget {
+  const _FortressBrowseMainPane();
+
+  static const _globalSearchDebounce = Duration(milliseconds: 300);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final l10n = context.l10n;
+    final selectedCategory = ref.watch(
+      fortressScreenControllerProvider.select((s) => s.selectedCategory),
+    );
+    final committedQuery = ref.watch(
+      fortressScreenControllerProvider.select((s) => s.query),
+    );
+    final isGlobalSearch =
+        committedQuery.length >= fortressSearchMinQueryLength;
+
+    final searchController = useTextEditingController(text: committedQuery);
+    useListenable(searchController);
+    useEffect(() {
+      if (searchController.text != committedQuery) {
+        searchController.text = committedQuery;
+      }
+      return null;
+    }, [committedQuery]);
+
+    final debouncedCommit = useDebouncedCallback(
+      () => ref
+          .read(fortressScreenControllerProvider.notifier)
+          .setQuery(searchController.text),
+      duration: _globalSearchDebounce,
+    );
+    useEffect(() {
+      debouncedCommit();
+      return null;
+    }, [searchController.text]);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        NonSelectable(
+          child: Row(
+            spacing: AppSpacing.sm,
+            children: [
+              Expanded(
+                child: FTextField(
+                  hint: l10n.fortressSearchHint,
+                  control: FTextFieldControl.managed(
+                    controller: searchController,
+                  ),
+                  prefixBuilder: (context, style, variants) =>
+                      const Icon(FLucideIcons.search),
+                ),
+              ),
+              if (committedQuery.isNotEmpty)
+                FButton.icon(
+                  variant: FButtonVariant.ghost,
+                  onPress: () {
+                    debouncedCommit.cancel();
+                    searchController.clear();
+                    ref
+                        .read(fortressScreenControllerProvider.notifier)
+                        .clearGlobalSearch();
+                  },
+                  child: const Icon(FLucideIcons.x, size: 16),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: theme.durations.normal,
+            child: isGlobalSearch
+                ? const FortressSearchResultsPane()
+                : selectedCategory == null
+                ? const MuslimFortressWelcomePane(key: ValueKey('welcome'))
+                : FortressCategoryDetailView(
+                    key: ValueKey(selectedCategory.chapterId),
+                  ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 /// A Hisn al-Muslim title (chapter) for browse and category cards.
+@immutable
 class FortressCategory {
   /// Creates a category row.
   const FortressCategory({
@@ -26,6 +28,14 @@ class FortressCategory {
 
   /// Whether this title is in the Hisn featured set.
   final bool featured;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is FortressCategory && other.chapterId == chapterId;
+
+  @override
+  int get hashCode => chapterId.hashCode;
 }
 
 /// Parsed commentary segment (intro prose or a numbered list item).

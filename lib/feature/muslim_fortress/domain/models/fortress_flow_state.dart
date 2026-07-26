@@ -11,6 +11,7 @@ abstract class FortressFlowState with _$FortressFlowState {
     FortressCategory? selectedCategory,
     @Default(false) bool isFocusMode,
     @Default(0) int focusStartIndex,
+    /// Global Hisn search query (main pane). Sidebar chapter filter is local.
     @Default('') String query,
   }) = _FortressFlowState;
 }

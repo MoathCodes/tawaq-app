@@ -122,6 +122,10 @@ class FortressRepository {
   Map<int, String>? _titleNamesById;
   Set<int>? _featuredTitleIds;
 
+  List<FortressCategory>? _chaptersCache;
+  final Map<int, List<FortressDuaItem>> _duasByChapterId = {};
+  final Map<int, HisnCommentary?> _commentaryByContentId = {};
+
   void _ensureChapterCaches() {
     if (_countsByTitleId != null &&
         _titleNamesById != null &&
@@ -137,12 +141,17 @@ class FortressRepository {
   }
 
   /// All titles as sidebar/browse categories.
+  ///
+  /// Cached for the lifetime of this repository (client reopen invalidates).
   List<FortressCategory> loadChapters() {
+    final cached = _chaptersCache;
+    if (cached != null) return cached;
+
     _ensureChapterCaches();
     final counts = _countsByTitleId!;
     final featuredIds = _featuredTitleIds!;
 
-    return [
+    return _chaptersCache = [
       for (final title in _client.titles.all())
         FortressCategory(
           chapterId: title.id,
@@ -155,7 +164,12 @@ class FortressRepository {
   }
 
   /// Dhikr items for a Hisn title id.
+  ///
+  /// Cached per [chapterId] until the repository/client is reopened.
   List<FortressDuaItem> loadDuas(int chapterId) {
+    final cached = _duasByChapterId[chapterId];
+    if (cached != null) return cached;
+
     _ensureChapterCaches();
     final categoryTitle = _titleNamesById![chapterId] ?? '';
     final items = _client.contents.byTitleId(chapterId);
@@ -163,7 +177,7 @@ class FortressRepository {
       for (final item in items) item.id,
     });
 
-    return [
+    return _duasByChapterId[chapterId] = [
       for (final item in items)
         _mapContent(
           item,
@@ -234,8 +248,15 @@ class FortressRepository {
   }
 
   /// Full commentary for a content id (load on demand for study sheets).
+  ///
+  /// Cached by [contentId] via existing Hisn commentary `byContentId`.
   HisnCommentary? loadCommentaryForContent(int contentId) {
-    return _client.commentary.byContentId(contentId);
+    if (_commentaryByContentId.containsKey(contentId)) {
+      return _commentaryByContentId[contentId];
+    }
+    final commentary = _client.commentary.byContentId(contentId);
+    _commentaryByContentId[contentId] = commentary;
+    return commentary;
   }
 
   /// Resolves default bookmark chapter ids from

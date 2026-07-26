@@ -33,4 +33,18 @@ abstract class FortressScreenState with _$FortressScreenState {
   factory FortressScreenState.initial() => const FortressScreenState();
 
   const FortressScreenState._();
+
+  /// Seeds default bookmarks once for new users.
+  ///
+  /// Existing favorites are preserved; only the seeded flag is set.
+  FortressScreenState seedDefaultBookmarks(List<int> defaultIds) {
+    if (defaultBookmarksSeeded) return this;
+    if (favoriteChapterIds.isNotEmpty) {
+      return copyWith(defaultBookmarksSeeded: true);
+    }
+    return copyWith(
+      favoriteChapterIds: defaultIds,
+      defaultBookmarksSeeded: true,
+    );
+  }
 }

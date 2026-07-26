@@ -21,18 +21,28 @@ class FortressScreenController extends _$FortressScreenController {
       return;
     }
 
+    _openCategory(category);
+  }
+
+  /// Force-selects a chapter (no toggle). Used by search result open paths.
+  void _openCategory(FortressCategory category) {
     state = state.copyWith(
       selectedCategory: category,
       isFocusMode: false,
+      // Opening a chapter exits global search so the detail pane shows.
+      query: '',
     );
   }
 
   /// Enters focus-reading mode for the selected chapter.
+  ///
+  /// Callers must ensure the chapter has content; empty focus still exposes
+  /// Finish chrome as a safety net.
   void startFocusReading({int initialIndex = 0}) {
     if (state.selectedCategory == null) return;
     state = state.copyWith(
       isFocusMode: true,
-      focusStartIndex: initialIndex,
+      focusStartIndex: initialIndex < 0 ? 0 : initialIndex,
     );
   }
 
@@ -42,7 +52,9 @@ class FortressScreenController extends _$FortressScreenController {
     state = state.copyWith(isFocusMode: false);
   }
 
-  /// Updates the active search query (trimmed).
+  /// Updates the active **global** Hisn search query (trimmed).
+  ///
+  /// Sidebar chapter filtering is local and must not call this.
   void setQuery(String query) {
     final trimmed = query.trim();
     if (state.query == trimmed) return;
@@ -55,29 +67,43 @@ class FortressScreenController extends _$FortressScreenController {
     state = state.copyWith(query: '');
   }
 
-  /// Opens a title search result in the main pane.
+  /// Opens a title search result in the main pane (force-select, no toggle).
   void selectSearchTitle(FortressCategory category) {
-    clearGlobalSearch();
-    selectCategory(category);
+    _openCategory(category);
   }
 
-  /// Opens a content search result in focus-reading mode.
+  /// Opens a content search result in focus-reading mode (force-select).
   Future<void> selectSearchContent(FortressSearchContentHit hit) async {
-    clearGlobalSearch();
-
     final repository = await ref.read(fortressRepositoryProvider.future);
+    if (!ref.mounted) return;
+
     final category = repository
         .loadChapters()
         .where((chapter) => chapter.chapterId == hit.chapterId)
         .firstOrNull;
     if (category == null) return;
 
-    selectCategory(category);
+    _openCategory(category);
 
     final duas = repository.loadDuas(hit.chapterId);
+    if (duas.isEmpty) return;
+
     final index = duas.indexWhere((dua) => dua.contentId == hit.item.contentId);
     startFocusReading(initialIndex: index >= 0 ? index : 0);
   }
+}
+
+/// Async global Hisn search for [query] (avoids sync SQLite work during build).
+@riverpod
+Future<FortressSearchResults> fortressSearchResults(
+  Ref ref,
+  String query,
+) async {
+  final repository = await ref.watch(fortressRepositoryProvider.future);
+  // Yield so the search is not executed synchronously inside build.
+  await Future<void>.delayed(Duration.zero);
+  if (!ref.mounted) return FortressSearchResults.empty;
+  return repository.search(query);
 }
 
 /// Time-based recommended fortress categories for the welcome pane.

@@ -5,7 +5,6 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
-import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
@@ -25,22 +24,20 @@ class FortressSearchResultsPane extends ConsumerWidget {
     final query = ref.watch(
       fortressScreenControllerProvider.select((s) => s.query),
     );
-    final repositoryAsync = ref.watch(fortressRepositoryProvider);
-
+    final searchAsync = ref.watch(fortressSearchResultsProvider(query));
     final l10n = context.l10n;
 
-    return repositoryAsync.when(
-      data: (repository) => _FortressSearchResultsBody(
-        results: repository.search(query),
+    return searchAsync.when(
+      data: (results) => _FortressSearchResultsBody(
+        results: results,
         query: query,
       ),
       loading: () => const Center(child: FCircularProgress.loader()),
-      error: (error, _) => Center(
+      error: (_, _) => Center(
         child: ErrorStatePanel(
           message: l10n.fortressLoadError,
-          detail: '$error',
           retryLabel: l10n.fortressRetry,
-          onRetry: () => ref.invalidate(fortressRepositoryProvider),
+          onRetry: () => ref.invalidate(fortressSearchResultsProvider(query)),
         ),
       ),
     );

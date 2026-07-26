@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
+import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
@@ -20,7 +20,10 @@ import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_cate
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_favorite_toggle.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Sidebar browse panel: filter, favorites tab, and chapter list.
+/// Sidebar browse panel: chapter filter, favorites tab, and chapter list.
+///
+/// The filter field is **local only** — it never writes the session global
+/// search query (which lives in the main pane).
 class FortressBrowseSidebar extends HookConsumerWidget {
   /// Creates the fortress browse sidebar.
   const FortressBrowseSidebar({
@@ -35,33 +38,14 @@ class FortressBrowseSidebar extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final committedQuery = ref.watch(
-      fortressScreenControllerProvider.select((s) => s.query),
-    );
-    final searchController = useTextEditingController(text: committedQuery);
-    useListenable(searchController);
+    final filterController = useTextEditingController();
+    useListenable(filterController);
     final searchFocusNode = useFocusNode();
     final focusSearch = useCallback(
       searchFocusNode.requestFocus,
       [searchFocusNode],
     );
     useRegisterAppSearchFocus(focusSearch);
-    useEffect(() {
-      if (searchController.text != committedQuery) {
-        searchController.text = committedQuery;
-      }
-      return null;
-    }, [committedQuery]);
-    final debouncedCommit = useDebouncedCallback(
-      () => ref
-          .read(fortressScreenControllerProvider.notifier)
-          .setQuery(searchController.text),
-      duration: const Duration(milliseconds: 300),
-    );
-    useEffect(() {
-      debouncedCommit();
-      return null;
-    }, [searchController.text]);
     final animatedSidebarChapterIds = useRef(<int>{});
     final favoriteChapterIds = ref.watch(
       fortressScreenSettingsProvider.select(
@@ -76,20 +60,25 @@ class FortressBrowseSidebar extends HookConsumerWidget {
       ),
     );
 
-    final sidebarQuery = searchController.text.toLowerCase();
+    final sidebarQuery = filterController.text.trim();
+    final categoriesById = {
+      for (final category in categories) category.chapterId: category,
+    };
+    // Favorites tab follows persisted order (most recent first), not catalog order.
     final sourceCategories = isFavoritesTab
-        ? categories
-              .where((c) => favoriteChapterIds.contains(c.chapterId))
-              .toList()
+        ? [
+            for (final id in favoriteChapterIds)
+              if (categoriesById[id] != null) categoriesById[id]!,
+          ]
         : categories;
 
     final filteredCategories = sourceCategories.where((category) {
       if (sidebarQuery.isEmpty) return true;
-      return category.title.toLowerCase().contains(sidebarQuery) ||
-          fortressRecurrenceLabel(
-            category.recurrence,
-            l10n,
-          ).toLowerCase().contains(sidebarQuery);
+      return arabicSearchContains(category.title, sidebarQuery) ||
+          arabicSearchContains(
+            fortressRecurrenceLabel(category.recurrence, l10n),
+            sidebarQuery,
+          );
     }).toList();
 
     return LayoutBuilder(
@@ -120,12 +109,12 @@ class FortressBrowseSidebar extends HookConsumerWidget {
                 children: [
                   FTextField(
                     focusNode: searchFocusNode,
-                    hint: l10n.fortressSearchHint,
+                    hint: l10n.fortressFilterChaptersHint,
                     control: FTextFieldControl.managed(
-                      controller: searchController,
+                      controller: filterController,
                     ),
                     prefixBuilder: (context, style, variants) =>
-                        const Icon(FLucideIcons.search),
+                        const Icon(FLucideIcons.filter),
                   ),
                   SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
                   FTabs(
@@ -269,7 +258,7 @@ class FortressEmptySidePanelState extends StatelessWidget {
   /// Creates an empty sidebar placeholder.
   const FortressEmptySidePanelState({required this.isFavoritesTab, super.key});
 
-  /// Whether the favorites tab is active (vs local search filter).
+  /// Whether the favorites tab is active (vs local chapter filter).
   final bool isFavoritesTab;
 
   @override

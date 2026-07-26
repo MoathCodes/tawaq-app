@@ -53,11 +53,10 @@ class FortressFocusReadingView extends HookConsumerWidget {
         initialIndex: initialIndex,
         isLoading: true,
       ),
-      error: (error, _) => Scaffold(
+      error: (_, _) => Scaffold(
         body: Center(
           child: ErrorStatePanel(
             message: l10n.fortressLoadError,
-            detail: '$error',
             retryLabel: l10n.fortressRetry,
             onRetry: () => ref.invalidate(fortressRepositoryProvider),
           ),
@@ -89,11 +88,39 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
 
     if (duas.isEmpty && !isLoading) {
       return Scaffold(
-        body: Center(
-          child: Text(
-            l10n.fortressNoAdhkarInChapter,
-            style: theme.typography.body.md,
-          ),
+        backgroundColor: theme.colors.background,
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            NonSelectable(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                ),
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: FortressLabeledNavButton(
+                    label: l10n.fortressFinish,
+                    enabled: true,
+                    onPress: onExit,
+                    prefix: const Icon(FLucideIcons.x, size: 18),
+                    child: Text(l10n.fortressFinish),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Center(
+                child: EmptyStatePanel(
+                  icon: FLucideIcons.bookOpen,
+                  title: l10n.fortressNoAdhkarInChapter,
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -145,6 +172,7 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
 
     final session = _useFortressFocusSession(
       context: context,
+      chapterId: category.chapterId,
       duas: duas,
       initialIndex: initialIndex,
     );
@@ -258,18 +286,22 @@ typedef _FortressFocusSession = ({
 
 _FortressFocusSession _useFortressFocusSession({
   required BuildContext context,
+  required int chapterId,
   required List<FortressDuaItem> duas,
   required int initialIndex,
 }) {
+  final duasIdentity = Object.hashAll(
+    duas.map((d) => Object.hash(d.contentId, d.targetCount)),
+  );
   final currentIndex = useMemoized(
     () => ValueNotifier(
       initialIndex.clamp(0, duas.isEmpty ? 0 : duas.length - 1),
     ),
-    [duas, initialIndex],
+    [chapterId, initialIndex, duasIdentity],
   );
   final remainingCounts = useMemoized(
     () => ValueNotifier(duas.map((d) => d.targetCount).toList(growable: false)),
-    [duas],
+    [chapterId, initialIndex, duasIdentity],
   );
   useListenable(currentIndex);
   useListenable(remainingCounts);

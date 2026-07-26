@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
 import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
 
@@ -16,12 +17,28 @@ class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier {
   @override
   Future<FortressScreenState> build() async {
     await persist(
-      ref.read(settingsStorageProvider),
+      ref.watch(settingsStorageProvider.future),
       options: const StorageOptions(
         cacheTime: StorageCacheTime.unsafe_forever,
       ),
     ).future;
-    return state.value ?? FortressScreenState.initial();
+    final hydrated = state.value ?? FortressScreenState.initial();
+
+    // Seed only when both hydrate and the Hisn repo are ready. Watching the
+    // AsyncValue (not `.future`) lets settings resolve first, then rebuild and
+    // seed once the repo loads — without a discarded in-flight await race.
+    final repository = ref.watch(fortressRepositoryProvider).asData?.value;
+    if (repository == null) return hydrated;
+
+    final seeded = hydrated.seedDefaultBookmarks(
+      repository.defaultBookmarkChapterIds(),
+    );
+    if (seeded != hydrated) {
+      ref
+          .read(loggerProvider)
+          .i('$_logPrefix Fortress default bookmarks updated');
+    }
+    return seeded;
   }
 
   void _commit(
@@ -50,20 +67,6 @@ class FortressScreenSettingsNotifier extends _$FortressScreenSettingsNotifier {
     }
     return s.copyWith(favoriteChapterIds: ids);
   }, 'Fortress favorite chapter');
-
-  /// Seeds default bookmarks once for new users.
-  ///
-  /// Existing favorites are preserved; only the seeded flag is set.
-  void ensureDefaultBookmarks(List<int> defaultIds) => _commit((s) {
-    if (s.defaultBookmarksSeeded) return s;
-    if (s.favoriteChapterIds.isNotEmpty) {
-      return s.copyWith(defaultBookmarksSeeded: true);
-    }
-    return s.copyWith(
-      favoriteChapterIds: defaultIds,
-      defaultBookmarksSeeded: true,
-    );
-  }, 'Fortress default bookmarks');
 
   /// Sets the side panel width ratio (0..1).
   void setSidePanelRatio(double ratio) =>

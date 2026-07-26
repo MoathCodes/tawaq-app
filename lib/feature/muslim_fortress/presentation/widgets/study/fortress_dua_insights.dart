@@ -8,6 +8,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_nav_controls.dart';
@@ -53,24 +54,25 @@ Future<void> showFortressStudySheet(
       );
 
       return FDialog(
-      style: style,
-      animation: animation,
-      title: Text(_fortressStudyLabel(dua, l10n, forDialog: true)),
-      body: ConstrainedBox(
+        style: style,
+        animation: animation,
         constraints: constraints,
-        child: DesktopSelectionArea(
-          child: SingleChildScrollView(
-            child: FortressDuaStudyContent(dua: dua),
+        builder: (context, dialogStyle) => ForuiDialogLayout(
+          style: dialogStyle,
+          title: Text(_fortressStudyLabel(dua, l10n, forDialog: true)),
+          body: DesktopSelectionArea(
+            child: SingleChildScrollView(
+              child: FortressDuaStudyContent(dua: dua),
+            ),
           ),
+          actions: [
+            FButton(
+              onPress: () => Navigator.of(dialogContext).pop(),
+              child: Text(l10n.cancel),
+            ),
+          ],
         ),
-      ),
-      actions: [
-        FButton(
-          onPress: () => Navigator.of(dialogContext).pop(),
-          child: Text(l10n.cancel),
-        ),
-      ],
-    );
+      );
     },
   );
 }

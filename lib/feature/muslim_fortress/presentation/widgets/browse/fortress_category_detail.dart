@@ -46,10 +46,9 @@ class FortressCategoryDetailView extends ConsumerWidget {
         duas: const [],
         isLoading: true,
       ),
-      error: (error, _) => Center(
+      error: (_, _) => Center(
         child: ErrorStatePanel(
           message: l10n.fortressLoadError,
-          detail: '$error',
           retryLabel: l10n.fortressRetry,
           onRetry: () => ref.invalidate(fortressRepositoryProvider),
         ),
@@ -128,7 +127,9 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
             Row(
               children: [
                 FButton(
-                  onPress: controller.startFocusReading,
+                  onPress: duas.isEmpty && !isLoading
+                      ? null
+                      : controller.startFocusReading,
                   prefix: const Icon(FLucideIcons.bookOpen),
                   child: Text(l10n.fortressStartReading),
                 ),
