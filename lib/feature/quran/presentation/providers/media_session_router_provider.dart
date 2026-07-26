@@ -23,8 +23,8 @@ const _seekLogName = 'tawaq.recitation.seek';
 /// adhan transport). Commands with no active lease owner are ignored.
 ///
 /// mpv auto-applies play/pause for OS transport buttons. Recitation play/pause
-/// handlers consult [TawaqAudioService.playWhenReady] so the app never
-/// double-toggles mpv; [RecitationController] state syncs via
+/// /playPause handlers consult [TawaqAudioService.playWhenReady] so the app
+/// never double-toggles mpv; [RecitationController] state syncs via
 /// [TawaqAudioService.stateStream] when native intent already matches.
 @Riverpod(keepAlive: true)
 class MediaSessionCommandRouter extends _$MediaSessionCommandRouter {
@@ -71,7 +71,13 @@ class MediaSessionCommandRouter extends _$MediaSessionCommandRouter {
       case MediaSessionCommandPause():
         unawaited(_recitationPause(controller, service));
       case MediaSessionCommandPlayPause():
-        unawaited(controller.togglePlayPause());
+        // mpv_audio_kit already toggled via playWhenReady before emitting.
+        // Route to play/pause sync paths — never blind-toggle (that resumes).
+        if (service.playWhenReady) {
+          unawaited(_recitationPlay(controller, service));
+        } else {
+          unawaited(_recitationPause(controller, service));
+        }
       case MediaSessionCommandStop():
         unawaited(controller.stop());
       case MediaSessionCommandNext():
@@ -79,13 +85,14 @@ class MediaSessionCommandRouter extends _$MediaSessionCommandRouter {
       case MediaSessionCommandPrevious():
         unawaited(controller.skipPrevious());
       case MediaSessionCommandSeekTo(:final position):
-        // mpv auto-applies OS SeekTo before emitting the command; position
-        // syncs via positionStream — do not re-seek from the app.
+        // mpv may auto-apply the scrub; still route through app seek so
+        // ayah snap / pending-seek / highlight stay on one path.
         developer.log(
-          'OS SeekTo autoAppliedByMpv=true appReapply=false '
+          'OS SeekTo appSnapSeek=true '
           'targetMs=${position.inMilliseconds}',
           name: _seekLogName,
         );
+        unawaited(controller.seekTo(position));
       case MediaSessionCommandSeekBy(:final offset):
         // Recitation seeks by ayah, not absolute scrubbing — fall through to
         // skip next/previous on a coarse relative seek.

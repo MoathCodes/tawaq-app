@@ -25,7 +25,7 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
   @override
   Future<QuranScreenState> build() async {
     await persist(
-      ref.read(settingsStorageProvider),
+      ref.watch(settingsStorageProvider.future),
       options: const StorageOptions(
         cacheTime: StorageCacheTime.unsafe_forever,
       ),
@@ -65,10 +65,6 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
   void setTextScale(QuranTextScale scale) =>
       _commit((s) => s.copyWith(quranTextScale: scale), 'Quran text scale');
 
-  /// Sets the selected ayah.
-  void selectAyah(Ayah? ayah) =>
-      _commit((s) => s.copyWith(selectedAyah: ayah), 'Selected ayah');
-
   /// Sets the side panel width ratio (0..1).
   void setSidePanelRatio(double ratio) =>
       _commit((s) => s.copyWith(sidePanelRatio: ratio), 'Side panel ratio');
@@ -102,19 +98,27 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
   );
 }
 
+/// Ephemeral ayah selection for the Quran screen (not JsonPersist).
+@Riverpod(keepAlive: true)
+class QuranSelectedAyah extends _$QuranSelectedAyah {
+  @override
+  Ayah? build() => null;
+
+  /// Updates the in-session selection. Same [Ayah.ayahId] is a no-op.
+  void select(Ayah? ayah) {
+    if (state?.ayahId == ayah?.ayahId) return;
+    state = ayah;
+  }
+}
+
 /// Persisted Quran recitation preferences.
 @riverpod
 @JsonPersist()
 class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
-  double? _volumePreview;
-
-  /// Ephemeral volume while dragging a slider (not persisted).
-  double? get volumePreview => _volumePreview;
-
   @override
   Future<RecitationSettings> build() async {
     await persist(
-      ref.read(settingsStorageProvider),
+      ref.watch(settingsStorageProvider.future),
       options: const StorageOptions(
         cacheTime: StorageCacheTime.unsafe_forever,
       ),
@@ -167,16 +171,8 @@ class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
   }
 
   /// Persists the output volume (0-100).
-  void setVolume(double volume) {
-    _volumePreview = null;
-    _commit((s) => s.copyWith(volume: volume), 'Volume');
-  }
-
-  /// Updates volume in memory during slider drag without persisting.
-  void setVolumePreview(double volume) {
-    if (!state.hasValue) return;
-    _volumePreview = volume.clamp(0, 100);
-  }
+  void setVolume(double volume) =>
+      _commit((s) => s.copyWith(volume: volume), 'Volume');
 
   /// Persists the final volume after the user releases the slider.
   void commitVolume(double volume) => setVolume(volume);

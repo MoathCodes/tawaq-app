@@ -27,9 +27,7 @@ class AyahSelectionActionsBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final durations = theme.durations;
-    final selectedAyah = ref.watch(
-      quranScreenSettingsProvider.select((v) => v.value?.selectedAyah),
-    );
+    final selectedAyah = ref.watch(quranSelectedAyahProvider);
 
     return AnimatedSwitcher(
       duration: durations.normal,

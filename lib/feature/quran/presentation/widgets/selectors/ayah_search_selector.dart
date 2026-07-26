@@ -55,6 +55,7 @@ class AyahSearchSelector extends HookConsumerWidget {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     final autocompleteController = useMemoized(FAutocompleteController.new);
+    useEffect(() => autocompleteController.dispose, [autocompleteController]);
     final localFocusNode = useFocusNode();
     final effectiveFocusNode = focusNode ?? localFocusNode;
     final warmedSearchIndex = useRef(false);

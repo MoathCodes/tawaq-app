@@ -8,6 +8,7 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
+import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/models/ayah_share_include.dart';
@@ -253,35 +254,37 @@ class AyahShareDialog extends HookConsumerWidget {
     return FDialog(
       style: style,
       animation: animation,
-      direction: .horizontal,
-      title: Row(
-        mainAxisAlignment: .spaceBetween,
-        children: [
-          Text(l10n.shareVerses),
-          FButton.icon(
-            onPress: () => Navigator.of(context).pop(),
-            variant: .ghost,
-            child: const Icon(FLucideIcons.x),
+      constraints: dialogSize,
+      builder: (context, dialogStyle) => ForuiDialogLayout(
+        style: dialogStyle,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(l10n.shareVerses),
+            FButton.icon(
+              onPress: () => Navigator.of(context).pop(),
+              variant: .ghost,
+              child: const Icon(FLucideIcons.x),
+            ),
+          ],
+        ),
+        body: buildDialogBody(),
+        actions: [
+          FButton(
+            variant: .secondary,
+            onPress: isCapturing.value
+                ? null
+                : () => unawaited(exportImage(copyToClipboard: false)),
+            child: Text(l10n.shareSaveImage),
+          ),
+          FButton(
+            onPress: isCapturing.value
+                ? null
+                : () => unawaited(exportImage(copyToClipboard: true)),
+            child: Text(l10n.shareCopyImage),
           ),
         ],
       ),
-      constraints: dialogSize,
-      body: buildDialogBody(),
-      actions: [
-        FButton(
-          variant: .secondary,
-          onPress: isCapturing.value
-              ? null
-              : () => unawaited(exportImage(copyToClipboard: false)),
-          child: Text(l10n.shareSaveImage),
-        ),
-        FButton(
-          onPress: isCapturing.value
-              ? null
-              : () => unawaited(exportImage(copyToClipboard: true)),
-          child: Text(l10n.shareCopyImage),
-        ),
-      ],
     );
   }
 }

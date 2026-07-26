@@ -1,6 +1,33 @@
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
+import 'package:tawaq/feature/quran/domain/services/reciter_tags.dart';
+
+/// Returns the Hafs mushaf ayah for [surah]/[ayah], or null if out of range.
+///
+/// Prefer this over [MushafReaderController.getAyahBySurah] when the ayah may
+/// come from non-Hafs timing (extra verses) or an untrusted hover/scrub index.
+Future<Ayah?> mushafAyahOrNull(
+  MushafReaderController mushaf,
+  int surah,
+  int ayah,
+) async {
+  if (surah < 1 || surah > 114 || ayah < 1) return null;
+  final count = mushaf.getSurahSync(surah)?.ayahCount;
+  if (count != null && ayah > count) return null;
+  try {
+    return await mushaf.getAyahBySurah(surah, ayah);
+  } on ArgumentError {
+    return null;
+  }
+}
+
+/// Whether the seek-bar tooltip may load Hafs Uthmani excerpts.
+///
+/// Non-Hafs timings can include ayah numbers absent from the Hafs mushaf;
+/// showing Hafs text there would be false. Numbers-only tooltips stay safe.
+bool seekBarShowsUthmaniExcerpt(String? moshafName) =>
+    moshafName != null && isHafsRiwayah(moshafName);
 
 /// Maps global endpoints to the first surah-local segment to load.
 ///

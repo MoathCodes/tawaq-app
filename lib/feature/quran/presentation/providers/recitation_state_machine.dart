@@ -29,6 +29,13 @@ RecitationTransition transition(
   required int defaultRangeRepeatCount,
   bool trackLoaded = false,
   bool? nativePlayWhenReady,
+
+  /// Optional ayah-count lookup for range-preserving surah skip.
+  ///
+  /// When null, middle-surah segments use a null local end (full file from
+  /// ayah 1). Prefer passing this from the controller so partial first-surah
+  /// segments seek correctly.
+  int Function(int surah)? surahAyahCount,
 }) {
   final ayahCount = defaultAyahRepeatCount.clamp(1, 99);
   final rangeCount = defaultRangeRepeatCount.clamp(1, 99);
@@ -73,6 +80,7 @@ RecitationTransition transition(
         timeline: timeline,
         ayahRepeatCount: ayahCount,
         rangeRepeatCount: rangeCount,
+        surahAyahCount: surahAyahCount,
       );
     case SkipSurahPrevious():
       return _skipSurahPrevious(
@@ -80,6 +88,7 @@ RecitationTransition transition(
         timeline: timeline,
         ayahRepeatCount: ayahCount,
         rangeRepeatCount: rangeCount,
+        surahAyahCount: surahAyahCount,
       );
     case SetSleep():
       return _setSleep(state, event);
@@ -672,6 +681,8 @@ RecitationTransition _playSurah(
     surah: event.surah,
     rangeFrom: null,
     rangeTo: null,
+    segmentStartAyah: null,
+    segmentEndAyah: null,
     currentAyah: firstAyah,
     position: event.resumeFrom ?? Duration.zero,
     duration: Duration.zero,
@@ -1090,6 +1101,7 @@ RecitationTransition _skipSurahNext(
   required RecitationTimeline timeline,
   required int ayahRepeatCount,
   required int rangeRepeatCount,
+  int Function(int surah)? surahAyahCount,
 }) {
   final reciter = state.reciter;
   final moshaf = state.moshaf;
@@ -1109,6 +1121,23 @@ RecitationTransition _skipSurahNext(
   if (nextSurah > 114 || !moshaf.hasSurah(nextSurah)) {
     return (state: state, effects: const []);
   }
+
+  final rangeFrom = state.rangeFrom;
+  if (rangeFrom != null) {
+    return _playRangeSegmentInGlobalBounds(
+      state,
+      reciter: reciter,
+      moshaf: moshaf,
+      targetSurah: nextSurah,
+      globalFrom: rangeFrom,
+      globalTo: rangeTo,
+      timeline: timeline,
+      ayahRepeatCount: ayahRepeatCount,
+      rangeRepeatCount: rangeRepeatCount,
+      surahAyahCount: surahAyahCount,
+    );
+  }
+
   return _playSurah(
     state,
     PlaySurah(reciter: reciter, moshaf: moshaf, surah: nextSurah),
@@ -1123,6 +1152,7 @@ RecitationTransition _skipSurahPrevious(
   required RecitationTimeline timeline,
   required int ayahRepeatCount,
   required int rangeRepeatCount,
+  int Function(int surah)? surahAyahCount,
 }) {
   final reciter = state.reciter;
   final moshaf = state.moshaf;
@@ -1142,9 +1172,67 @@ RecitationTransition _skipSurahPrevious(
   if (prevSurah < 1 || !moshaf.hasSurah(prevSurah)) {
     return (state: state, effects: const []);
   }
+
+  if (rangeFrom != null) {
+    return _playRangeSegmentInGlobalBounds(
+      state,
+      reciter: reciter,
+      moshaf: moshaf,
+      targetSurah: prevSurah,
+      globalFrom: rangeFrom,
+      globalTo: state.rangeTo,
+      timeline: timeline,
+      ayahRepeatCount: ayahRepeatCount,
+      rangeRepeatCount: rangeRepeatCount,
+      surahAyahCount: surahAyahCount,
+    );
+  }
+
   return _playSurah(
     state,
     PlaySurah(reciter: reciter, moshaf: moshaf, surah: prevSurah),
+    timeline: timeline,
+    ayahRepeatCount: ayahRepeatCount,
+    rangeRepeatCount: rangeRepeatCount,
+  );
+}
+
+/// Plays the surah-local segment of [targetSurah] inside a preserved global range.
+///
+/// Endpoint surahs clamp to [globalFrom]/[globalTo]. Middle surahs use the full
+/// surah when [surahAyahCount] is provided; otherwise a null local end loads the
+/// full file (correct when the segment starts at ayah 1).
+RecitationTransition _playRangeSegmentInGlobalBounds(
+  RecitationState state, {
+  required Reciter reciter,
+  required Moshaf moshaf,
+  required int targetSurah,
+  required AyahReference globalFrom,
+  required AyahReference? globalTo,
+  required RecitationTimeline timeline,
+  required int ayahRepeatCount,
+  required int rangeRepeatCount,
+  int Function(int surah)? surahAyahCount,
+}) {
+  final startAyah = targetSurah == globalFrom.surah ? globalFrom.ayah : 1;
+  final int? endAyah;
+  if (globalTo != null && targetSurah == globalTo.surah) {
+    endAyah = globalTo.ayah;
+  } else {
+    endAyah = surahAyahCount?.call(targetSurah);
+  }
+  return _playRange(
+    state,
+    PlayRange(
+      reciter: reciter,
+      moshaf: moshaf,
+      from: AyahReference(surah: targetSurah, ayah: startAyah),
+      to: endAyah != null
+          ? AyahReference(surah: targetSurah, ayah: endAyah)
+          : null,
+      globalFrom: globalFrom,
+      globalTo: globalTo,
+    ),
     timeline: timeline,
     ayahRepeatCount: ayahRepeatCount,
     rangeRepeatCount: rangeRepeatCount,
@@ -1236,7 +1324,12 @@ RecitationTransition _onAudioPosition(
     currentAyah: currentAyah,
   );
 
-  if (currentAyah != null && currentAyah != state.currentAyah) {
+  // Skip highlight while a load/timeline swap is in flight — stale timing
+  // from the previous moshaf must not drive mushaf lookups.
+  if (!state.isLoading &&
+      !state.timelinePending &&
+      currentAyah != null &&
+      currentAyah != state.currentAyah) {
     final surah = state.surah;
     if (surah != null) {
       effects.add(HighlightAyah(surah: surah, ayah: currentAyah));
@@ -1448,8 +1541,10 @@ RecitationTransition _advanceAfterAyahLoop(
       ayahRepeatsRemaining: state.ayahRepeatCount,
       ayahLoopExiting: false,
       position: nextStart,
+      pendingSeekTarget: nextStart,
     ),
     effects: [
+      SeekAudio(nextStart),
       LoadAyahLoop(
         reciter: reciter,
         moshaf: moshaf,
@@ -1566,6 +1661,8 @@ RecitationTransition _handleSelectionEnd(
     surah: nextSurah,
     rangeFrom: null,
     rangeTo: null,
+    segmentStartAyah: null,
+    segmentEndAyah: null,
     currentAyah: null,
     position: Duration.zero,
     status: RecitationStatus.loading,
@@ -1649,12 +1746,17 @@ RecitationTransition _onAudioCompleted(
 }
 
 RecitationTransition _alertSuspend(RecitationState state) {
-  if (!state.isPlaying && !state.isPaused) {
+  if (!state.isPlaying &&
+      !state.isPaused &&
+      !state.isBuffering &&
+      !state.isLoading) {
     return (state: state, effects: const []);
   }
   return (
     state: state.copyWith(
       status: RecitationStatus.paused,
+      // Invalidate in-flight loads so they cannot re-acquire after release.
+      loadGeneration: state.loadGeneration + 1,
       suspendedSnapshot: state.copyWith(),
     ),
     effects: const [PauseAudio(), ReleaseAudioLease()],
@@ -1666,10 +1768,15 @@ RecitationTransition _alertResume(RecitationState state) {
   if (snapshot == null) return (state: state, effects: const []);
 
   final effects = <RecitationEffect>[];
-  if (snapshot.isPlaying &&
-      snapshot.reciter != null &&
+  final resumable = snapshot.reciter != null &&
       snapshot.moshaf != null &&
-      snapshot.surah != null) {
+      snapshot.surah != null &&
+      (snapshot.isPlaying ||
+          snapshot.isPaused ||
+          snapshot.isBuffering ||
+          snapshot.isLoading);
+
+  if (resumable) {
     if (snapshot.isRange && snapshot.currentSegmentRefs != null) {
       final seg = snapshot.currentSegmentRefs!;
       effects.add(
@@ -1690,6 +1797,25 @@ RecitationTransition _alertResume(RecitationState state) {
           seekTo: snapshot.position,
         ),
       );
+    }
+
+    // Re-arm per-ayah A-B after load (covers mid-ayah resume).
+    if (snapshot.ayahRepeatCount > 1 &&
+        snapshot.currentAyah != null &&
+        snapshot.moshaf!.hasTiming) {
+      effects.add(
+        LoadAyahLoop(
+          reciter: snapshot.reciter!,
+          moshaf: snapshot.moshaf!,
+          surah: snapshot.surah!,
+          ayah: snapshot.currentAyah!,
+        ),
+      );
+    }
+
+    // openAndSeekTo starts playback; restore paused sessions after load.
+    if (snapshot.isPaused) {
+      effects.add(const PauseAudio());
     }
   }
 

@@ -20,18 +20,13 @@ class StudyPanelHeader extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(quranMushafControllerProvider);
-    final selectedAyah = ref.watch(
+    final selectedAyah = ref.watch(quranSelectedAyahProvider);
+    final pageSurah = ref.watch(
       quranScreenSettingsProvider.select(
-        (value) => value.value?.selectedAyah,
+        (value) => value.value?.pageInfo.primarySurahNumber,
       ),
     );
-    final surahNumber = ref.watch(
-      quranScreenSettingsProvider.select(
-        (value) =>
-            value.value?.selectedAyah?.surahNumber ??
-            value.value?.pageInfo.primarySurahNumber,
-      ),
-    );
+    final surahNumber = selectedAyah?.surahNumber ?? pageSurah;
     final navigation = useStudyAyahNavigation(ref);
     final ayahNumber = selectedAyah?.numberInSurah;
 

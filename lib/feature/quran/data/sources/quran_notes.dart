@@ -6,7 +6,7 @@ import 'package:tawaq/core/logging/logger_provider.dart';
 part 'quran_notes.g.dart';
 
 /// Provides a [QuranNotes] data source for storing ayah notes.
-@riverpod
+@Riverpod(keepAlive: true)
 QuranNotes quranNotesSource(Ref ref) {
   final box = Box<int, String>('quran_notes');
   final log = ref.read(loggerProvider);

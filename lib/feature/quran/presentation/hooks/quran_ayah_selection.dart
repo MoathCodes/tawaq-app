@@ -21,15 +21,18 @@ int? nextStudyAyahId({
   return newAyahId;
 }
 
-/// Keeps [MushafReaderController] highlight aligned with persisted selection.
+/// Keeps [MushafReaderController] highlight aligned with session selection.
 void useQuranAyahSelectionSync(WidgetRef ref, {int? page}) {
   final controller = ref.watch(quranMushafControllerProvider);
   final selectedAyahId = ref.watch(
-    quranScreenSettingsProvider.select(
-      (v) => v.value?.selectedAyah?.ayahId,
-    ),
+    quranSelectedAyahProvider.select((ayah) => ayah?.ayahId),
   );
-  if (page != null) controller.jumpToPage(page);
+
+  // Jump only when [page] changes — not on every rebuild.
+  useEffect(() {
+    if (page != null) controller.jumpToPage(page);
+    return null;
+  }, [page, controller]);
 
   useEffect(() {
     if (controller.selectedAyahId == selectedAyahId) return null;
@@ -39,33 +42,25 @@ void useQuranAyahSelectionSync(WidgetRef ref, {int? page}) {
       controller.selectAyah(selectedAyahId);
     }
     return null;
-  }, [selectedAyahId]);
+  }, [selectedAyahId, controller]);
 }
 
-/// Updates mushaf highlight and persisted ayah selection together.
+/// Updates session ayah selection (mushaf follows via [useQuranAyahSelectionSync]).
 void setQuranSelectedAyah(WidgetRef ref, Ayah? ayah) {
-  final controller = ref.read(quranMushafControllerProvider);
-  ref.read(quranScreenSettingsProvider.notifier).selectAyah(ayah);
-  if (ayah == null) {
-    controller.clearSelection();
-  } else {
-    controller.selectAyah(ayah.ayahId);
-  }
+  ref.read(quranSelectedAyahProvider.notifier).select(ayah);
 }
 
-/// Jumps to an ayah and selects it in both mushaf and persisted state.
+/// Jumps to an ayah and selects it in session + mushaf.
 Future<void> jumpToQuranAyah(WidgetRef ref, Ayah ayah) async {
   final controller = ref.read(quranMushafControllerProvider);
-  ref.read(quranScreenSettingsProvider.notifier).selectAyah(ayah);
+  ref.read(quranSelectedAyahProvider.notifier).select(ayah);
   await controller.jumpToAyah(ayah.ayahId, select: true);
 }
 
-/// Toggles selection for the tapped ayah across mushaf and persisted state.
+/// Toggles selection for the tapped ayah across mushaf and session state.
 void toggleQuranAyahSelection(WidgetRef ref, Ayah ayah) {
   final previousId = ref.read(
-    quranScreenSettingsProvider.select(
-      (v) => v.value?.selectedAyah?.ayahId,
-    ),
+    quranSelectedAyahProvider.select((ayah) => ayah?.ayahId),
   );
   if (previousId == ayah.ayahId) {
     setQuranSelectedAyah(ref, null);
@@ -110,9 +105,7 @@ Future<void> navigateStudyAyah({
 })
 useStudyAyahNavigation(WidgetRef ref) {
   final currentAyahId = ref.watch(
-    quranScreenSettingsProvider.select(
-      (v) => v.value?.selectedAyah?.ayahId,
-    ),
+    quranSelectedAyahProvider.select((ayah) => ayah?.ayahId),
   );
 
   return (

@@ -12,6 +12,8 @@ import 'package:tawaq/theme/theme.dart';
 class QuranScreen extends HookConsumerWidget {
   /// Creates a [QuranScreen] instance.
   const QuranScreen({this.page, super.key});
+
+  /// Optional mushaf page to open; null opens the default/persisted page.
   final int? page;
 
   @override

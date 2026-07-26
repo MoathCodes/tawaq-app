@@ -130,3 +130,36 @@ RecitationTimeline timelineFor(RecitationState state, SurahTiming? timing) {
     rangeEndAyah: segment?.endAyah,
   );
 }
+
+/// Pure bookkeeping for post-EOF gapless surah continuation.
+///
+/// Used by [RecitationController._openGaplessContinuation] so URI / timeline /
+/// playlist-index seeding stay in one place (and can be unit-tested without
+/// mirroring controller internals).
+///
+/// [seededTrackIndex] is set below [openAtIndex] so a missing `currentIndex`
+/// tick after `openAll` still allows an explicit GaplessTrackAdvanced.
+({
+  String lastResolvedUri,
+  RecitationTimeline timeline,
+  int seededTrackIndex,
+  int openAtIndex,
+}) gaplessContinuationBookkeeping({
+  required String nextUri,
+  required RecitationState stateForTimeline,
+  SurahTiming? nextTiming,
+}) {
+  return (
+    lastResolvedUri: nextUri,
+    timeline: timelineFor(stateForTimeline, nextTiming),
+    seededTrackIndex: 0,
+    openAtIndex: 1,
+  );
+}
+
+/// Whether openAll left the seeded index untouched (no currentIndex tick).
+bool shouldExplicitGaplessAdvance({
+  required int? trackIndexAfterOpen,
+  required int seededTrackIndex,
+}) =>
+    trackIndexAfterOpen == seededTrackIndex;

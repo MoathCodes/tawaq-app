@@ -26,7 +26,9 @@ class QuranNotesNotifier extends _$QuranNotesNotifier {
     }
 
     _log.d('$logPrefix Loading note for ayahId: $ayahId');
-    return ref.read(quranNotesSourceProvider).getNote(ayahId);
+    final note = await ref.read(quranNotesSourceProvider).getNote(ayahId);
+    if (!ref.mounted) return null;
+    return note;
   }
 
   /// Adds or updates a note for the current ayah.
@@ -42,9 +44,11 @@ class QuranNotesNotifier extends _$QuranNotesNotifier {
     try {
       _log.d('$logPrefix Adding note for ayahId: $ayahId');
       await ref.read(quranNotesSourceProvider).addNote(ayahId, note);
+      if (!ref.mounted) return;
       state = AsyncData(note);
       _log.d('$logPrefix Note added successfully');
     } catch (e, stackTrace) {
+      if (!ref.mounted) return;
       _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
       state = AsyncError(e, stackTrace);
     }
@@ -63,9 +67,11 @@ class QuranNotesNotifier extends _$QuranNotesNotifier {
     try {
       _log.d('$logPrefix Deleting note for ayahId: $ayahId');
       await ref.read(quranNotesSourceProvider).deleteNote(ayahId);
+      if (!ref.mounted) return;
       state = const AsyncData(null);
       _log.d('$logPrefix Note deleted successfully');
     } catch (e, stackTrace) {
+      if (!ref.mounted) return;
       _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
       state = AsyncError(e, stackTrace);
     }

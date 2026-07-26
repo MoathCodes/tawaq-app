@@ -69,7 +69,8 @@ class SurahNameText extends StatelessWidget {
   }
 }
 
-/// Surah name in Uthmanic Hafs plus a trailing suffix (ayah number, range, etc.).
+/// Surah name in Uthmanic Hafs plus a trailing 
+/// suffix (ayah number, range, etc.).
 class SurahNameWithSuffix extends StatelessWidget {
   /// Creates a [SurahNameWithSuffix].
   const SurahNameWithSuffix({

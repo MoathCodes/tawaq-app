@@ -29,10 +29,6 @@ abstract class QuranScreenState with _$QuranScreenState {
     /// Current reading layout mode.
     @Default(QuranReadingLayout.studyMode) QuranReadingLayout layout,
 
-    /// Currently selected ayah for highlighting and search sync.
-    /// Not persisted to JSON (ephemeral state).
-    @JsonKey(includeFromJson: false, includeToJson: false) Ayah? selectedAyah,
-
     /// Whether the tafsir accordion section is expanded.
     @Default(true) bool tafsirEnabled,
 

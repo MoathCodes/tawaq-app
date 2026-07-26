@@ -72,91 +72,100 @@ class _RangeRepeatDialog extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final colors = context.theme.colors;
-    final playback = ref.watch(recitationControllerProvider);
-    final settings = ref.watch(recitationSettingsProvider).value;
-    final selectedReciter =
-        ref.watch(selectedRecitationProvider).value?.reciter;
     final mushaf = ref.read(quranMushafControllerProvider);
 
-    final seedSurah =
-        initial?.surah ??
-        playback.surah ??
-        ref
-            .watch(quranScreenSettingsProvider)
-            .value
-            ?.selectedAyah
-            ?.surahNumber ??
-        1;
-    final seedAyah =
-        initial?.startAyah ??
-        playback.rangeFrom?.ayah ??
-        playback.currentAyah ??
-        ref
-            .watch(quranScreenSettingsProvider)
-            .value
-            ?.selectedAyah
-            ?.numberInSurah ??
-        1;
+    // Seed dialog fields once at open — do not live-track playback/selection.
+    final seed = useMemoized(() {
+      final playback = ref.read(recitationControllerProvider);
+      final settings = ref.read(recitationSettingsProvider).value;
+      final selectedReciter =
+          ref.read(selectedRecitationProvider).value?.reciter;
+      final selectedAyah = ref.read(quranSelectedAyahProvider);
 
-    final reciter = useState(
-      initial?.reciter ?? playback.reciter ?? selectedReciter,
+      final seedSurah =
+          initial?.surah ??
+          playback.surah ??
+          selectedAyah?.surahNumber ??
+          1;
+      final seedAyah =
+          initial?.startAyah ??
+          playback.rangeFrom?.ayah ??
+          playback.currentAyah ??
+          selectedAyah?.numberInSurah ??
+          1;
+      final hasSeedContext = initial != null || playback.active;
+      final savedPreset = settings?.lastRangePreset;
+      final initialPreset =
+          savedPreset ??
+          (hasSeedContext
+              ? RangeScopePreset.thisAyah
+              : RangeScopePreset.custom);
+
+      return (
+        seedSurah: seedSurah,
+        seedAyah: seedAyah,
+        hasSeedContext: hasSeedContext,
+        initialPreset: initialPreset,
+        reciter: initial?.reciter ?? playback.reciter ?? selectedReciter,
+        moshafId:
+            initial?.moshaf.id ?? playback.moshaf?.id ?? settings?.moshafId,
+        initialMoshaf: initial?.moshaf ?? playback.moshaf,
+        ayahRepeat: settings?.ayahRepeatCount ?? 1,
+        rangeRepeat: settings?.rangeRepeatCount ?? 1,
+        fromSurah:
+            selectedAyah?.surahNumber ??
+            settings?.lastRangeFromSurah ??
+            playback.rangeFrom?.surah ??
+            initial?.surah ??
+            playback.surah ??
+            seedSurah,
+        fromAyah:
+            selectedAyah?.numberInSurah ??
+            settings?.lastRangeFromAyah ??
+            playback.rangeFrom?.ayah ??
+            initial?.startAyah ??
+            playback.currentAyah ??
+            seedAyah,
+        toSurah:
+            selectedAyah?.surahNumber ??
+            settings?.lastRangeToSurah ??
+            playback.rangeTo?.surah ??
+            initial?.surah ??
+            playback.surah ??
+            seedSurah,
+        toAyah:
+            selectedAyah?.numberInSurah ??
+            settings?.lastRangeToAyah ??
+            playback.rangeTo?.ayah ??
+            initial?.startAyah ??
+            playback.currentAyah ??
+            seedAyah,
+      );
+    }, [initial]);
+
+    final reciter = useState(seed.reciter);
+    final moshafState = useState(
+      seed.initialMoshaf ?? reciter.value?.resolveMoshaf(seed.moshafId),
     );
-    final savedMoshafId =
-        initial?.moshaf.id ?? playback.moshaf?.id ?? settings?.moshafId;
-    final moshafState = useState(reciter.value?.resolveMoshaf(savedMoshafId));
     final hasTiming = moshafState.value?.hasTiming ?? false;
-    final hasSeedContext = initial != null || playback.active;
-
-    final savedPreset = settings?.lastRangePreset;
-    final initialPreset =
-        savedPreset ??
-        (hasSeedContext ? RangeScopePreset.thisAyah : RangeScopePreset.custom);
-
-    final viewedAyah = initial == null
-        ? ref.watch(quranScreenSettingsProvider).value?.selectedAyah
-        : null;
 
     final range = _useRangePresetResolver(
       context: context,
       ref: ref,
-      seedSurah: seedSurah,
-      seedAyah: seedAyah,
-      initialPreset: initialPreset,
-      initialFromSurah:
-          viewedAyah?.surahNumber ??
-          settings?.lastRangeFromSurah ??
-          playback.rangeFrom?.surah ??
-          initial?.surah ??
-          playback.surah ??
-          seedSurah,
-      initialFromAyah:
-          viewedAyah?.numberInSurah ??
-          settings?.lastRangeFromAyah ??
-          playback.rangeFrom?.ayah ??
-          initial?.startAyah ??
-          playback.currentAyah ??
-          seedAyah,
-      initialToSurah:
-          viewedAyah?.surahNumber ??
-          settings?.lastRangeToSurah ??
-          playback.rangeTo?.surah ??
-          initial?.surah ??
-          playback.surah ??
-          seedSurah,
-      initialToAyah:
-          viewedAyah?.numberInSurah ??
-          settings?.lastRangeToAyah ??
-          playback.rangeTo?.ayah ??
-          initial?.startAyah ??
-          playback.currentAyah ??
-          seedAyah,
+      seedSurah: seed.seedSurah,
+      seedAyah: seed.seedAyah,
+      initialPreset: seed.initialPreset,
+      initialFromSurah: seed.fromSurah,
+      initialFromAyah: seed.fromAyah,
+      initialToSurah: seed.toSurah,
+      initialToAyah: seed.toAyah,
     );
 
-    final ayahRepeat = useState(settings?.ayahRepeatCount ?? 1);
-    final rangeRepeat = useState(settings?.rangeRepeatCount ?? 1);
+    final ayahRepeat = useState(seed.ayahRepeat);
+    final rangeRepeat = useState(seed.rangeRepeat);
 
     bool presetEnabled(RangeScopePreset p) {
-      if (p == RangeScopePreset.thisSurah) return hasSeedContext;
+      if (p == RangeScopePreset.thisSurah) return seed.hasSeedContext;
       return true;
     }
 

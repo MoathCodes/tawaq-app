@@ -141,6 +141,70 @@ double lensOpacityForDistance(int distance) {
   };
 }
 
+/// Mirrors lens rects so chronological start sits on the reading-direction end.
+@visibleForTesting
+List<LensSegmentLayout> mirrorLensLayouts(
+  List<LensSegmentLayout> layouts,
+  double trackWidth,
+) {
+  if (layouts.isEmpty || trackWidth <= 0) return layouts;
+  return [
+    for (final layout in layouts)
+      LensSegmentLayout(
+        index: layout.index,
+        rect: Rect.fromLTRB(
+          trackWidth - layout.rect.right,
+          layout.rect.top,
+          trackWidth - layout.rect.left,
+          layout.rect.bottom,
+        ),
+        startFrac: layout.startFrac,
+        endFrac: layout.endFrac,
+        isFocus: layout.isFocus,
+        listDistance: layout.listDistance,
+        opacity: layout.opacity,
+      ),
+  ];
+}
+
+/// Whether [dx] has moved far enough past the current focus edge into
+/// [candidateRect] to allow a focus switch (boundary dead-zone).
+@visibleForTesting
+bool pastFocusHysteresis({
+  required double dx,
+  required Rect currentRect,
+  required Rect candidateRect,
+  double hysteresisPx = 6,
+}) {
+  final candidateIsRight = candidateRect.center.dx >= currentRect.center.dx;
+  if (candidateIsRight) {
+    return dx >= currentRect.right + hysteresisPx;
+  }
+  return dx <= currentRect.left - hysteresisPx;
+}
+
+/// Caps how many list-index steps focus may jump given pointer [travelPx].
+///
+/// Travel gates **every** step (including the first). Otherwise each hover
+/// event can still advance +1 after a tiny edge cross, and raising
+/// [pxPerStep] has no effect on that cascade.
+@visibleForTesting
+int stepLimitedFocusListIndex({
+  required int currentListIndex,
+  required int candidateListIndex,
+  required double travelPx,
+  double pxPerStep = 32,
+}) {
+  final delta = candidateListIndex - currentListIndex;
+  if (delta == 0) return currentListIndex;
+
+  final maxSteps = (travelPx / pxPerStep).floor();
+  if (maxSteps <= 0) return currentListIndex;
+
+  final stepped = delta.clamp(-maxSteps, maxSteps);
+  return currentListIndex + stepped;
+}
+
 /// Timeline-anchored fisheye lens redistributing segment widths/heights.
 @visibleForTesting
 List<LensSegmentLayout> layoutSeekLens({
@@ -150,6 +214,7 @@ List<LensSegmentLayout> layoutSeekLens({
   required int totalDurationMs,
   required double revealStrength,
   required double trackHeight,
+  bool isRtl = false,
 }) {
   if (segments.isEmpty ||
       trackWidth <= 0 ||
@@ -168,9 +233,7 @@ List<LensSegmentLayout> layoutSeekLens({
   final idealGap = kLensGap * strength;
   // Shrink gaps when many segments would consume the whole track.
   final maxGapBudget = trackWidth * 0.2;
-  final gap = gapCount == 0
-      ? 0.0
-      : min(idealGap, maxGapBudget / gapCount);
+  final gap = gapCount == 0 ? 0.0 : min(idealGap, maxGapBudget / gapCount);
   final totalGaps = gap * gapCount;
   final availableWidth = max(0, trackWidth - totalGaps);
 
@@ -229,12 +292,13 @@ List<LensSegmentLayout> layoutSeekLens({
     x += width + gap;
   }
 
-  return _capFocusWidth(
+  final capped = _capFocusWidth(
     layouts: layouts,
     trackWidth: trackWidth,
     gap: gap,
     centerY: centerY,
   );
+  return isRtl ? mirrorLensLayouts(capped, trackWidth) : capped;
 }
 
 List<LensSegmentLayout> _capFocusWidth({
@@ -254,8 +318,7 @@ List<LensSegmentLayout> _capFocusWidth({
 
   final overflow = widths[focusI] - maxFocusWidth;
   widths[focusI] = maxFocusWidth;
-  final otherSum =
-      widths.fold<double>(0, (sum, w) => sum + w) - maxFocusWidth;
+  final otherSum = widths.fold<double>(0, (sum, w) => sum + w) - maxFocusWidth;
   if (otherSum > 0) {
     final scale = (otherSum + overflow) / otherSum;
     for (var i = 0; i < widths.length; i++) {
@@ -560,6 +623,10 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
   bool _dragging = false;
   bool _dragMoved = false;
   double _dragValue = 0;
+  double? _dragStartDx;
+
+  /// Pointer dx when focus last changed (travel budget anchor).
+  double? _focusAnchorDx;
   int? _hoverSegmentIndex;
   double? _hoverCenterX;
   int _focusedSegmentIndex = 0;
@@ -570,6 +637,17 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
   List<LensSegmentLayout> _lastTargetLayouts = const [];
   int? _prevFocusListIndex;
   final Map<int, String?> _uthmaniExcerptCache = {};
+
+  /// Cached text direction — updated every build.
+  bool _isRtl = false;
+
+  /// Minimum dx movement before switching hovered segment (hysteresis).
+  static const _kHoverHysteresisPx = 6.0;
+
+  /// Pointer travel (px) required per focus list-index step — including the
+  /// first. Must be large enough that successive hover events after a lens
+  /// expand cannot cascade +1/+1/+1 without real movement.
+  static const _kFocusPxPerStep = 14.0;
 
   late AnimationController _pulseController;
   late AnimationController _snapController;
@@ -624,7 +702,8 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
 
   double _thumbCenterForValue(double value, double width) {
     final thumbRadius = widget.style.thumbRadius;
-    return thumbRadius + value * (width - thumbRadius * 2);
+    final effective = _isRtl ? 1.0 - value : value;
+    return thumbRadius + effective * (width - thumbRadius * 2);
   }
 
   @override
@@ -700,7 +779,8 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
   }
 
   void _setRevealing(bool revealing) {
-    final duration = widget.style.revealDuration ?? widget.style.thumbTweenDuration;
+    final duration =
+        widget.style.revealDuration ?? widget.style.thumbTweenDuration;
     if (revealing) {
       if (_revealController.value < 1.0) {
         unawaited(
@@ -748,8 +828,10 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
   }
 
   double get _currentValue =>
-      (_dragging ? _dragValue : _progressFromPosition(_displayPosition))
-          .clamp(0.0, 1.0);
+      (_dragging ? _dragValue : _progressFromPosition(_displayPosition)).clamp(
+        0.0,
+        1.0,
+      );
 
   Duration get _displayPosition {
     final repeat = widget.repeat;
@@ -806,7 +888,8 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
     final thumbRadius = widget.style.thumbRadius;
     final maxThumbCenter = width - thumbRadius * 2;
     if (maxThumbCenter <= 0) return 0;
-    return ((dx - thumbRadius) / maxThumbCenter).clamp(0.0, 1.0);
+    final raw = ((dx - thumbRadius) / maxThumbCenter).clamp(0.0, 1.0);
+    return _isRtl ? 1.0 - raw : raw;
   }
 
   int? _segmentIndexFromLocalDx(
@@ -862,23 +945,115 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
   }) {
     if (revealStrength < 0.05 || focusSegmentIndex == null) return null;
 
-    var layouts = _trackLensLayouts(
+    final layouts = _trackLensLayouts(
       width: width,
       trackHeight: widget.style.trackHeight,
       focusSegmentIndex: focusSegmentIndex,
       revealStrength: revealStrength,
     );
-    var hit = segmentIndexAtLensDx(dx, layouts);
+    final hit = segmentIndexAtLensDx(dx, layouts);
     if (hit != null && hit != focusSegmentIndex) {
-      layouts = _trackLensLayouts(
-        width: width,
-        trackHeight: widget.style.trackHeight,
-        focusSegmentIndex: hit,
-        revealStrength: revealStrength,
-      );
-      hit = segmentIndexAtLensDx(dx, layouts);
+      LensSegmentLayout? current;
+      LensSegmentLayout? candidate;
+      for (final layout in layouts) {
+        if (layout.index == focusSegmentIndex) current = layout;
+        if (layout.index == hit) candidate = layout;
+      }
+      if (current != null &&
+          candidate != null &&
+          !pastFocusHysteresis(
+            dx: dx,
+            currentRect: current.rect,
+            candidateRect: candidate.rect,
+          )) {
+        return focusSegmentIndex;
+      }
+      // Accept the first hit — do not re-layout and re-sample under the new
+      // focus (that cascades past the pointer when the fisheye expands).
     }
     return hit;
+  }
+
+  /// Applies boundary dead-zone + travel-budgeted list-index stepping.
+  int? _focusWithHysteresis({
+    required int? candidate,
+    required int? currentFocus,
+    required double dx,
+    required double width,
+    required double revealStrength,
+  }) {
+    if (candidate == null ||
+        currentFocus == null ||
+        candidate == currentFocus) {
+      return candidate;
+    }
+
+    Rect? currentRect;
+    Rect? candidateRect;
+
+    if (revealStrength >= 0.05) {
+      final layouts = _trackLensLayouts(
+        width: width,
+        trackHeight: widget.style.trackHeight,
+        focusSegmentIndex: currentFocus,
+        revealStrength: max(revealStrength, 0.05),
+      );
+      for (final layout in layouts) {
+        if (layout.index == currentFocus) currentRect = layout.rect;
+        if (layout.index == candidate) candidateRect = layout.rect;
+      }
+    }
+
+    if (currentRect == null || candidateRect == null) {
+      final durationMs = widget.duration.inMilliseconds;
+      if (durationMs <= 0) return candidate;
+      final currentSeg = _segmentByIndex(currentFocus);
+      final candidateSeg = _segmentByIndex(candidate);
+      if (currentSeg == null || candidateSeg == null) return candidate;
+      currentRect = _timelineSegmentRect(currentSeg, width, durationMs);
+      candidateRect = _timelineSegmentRect(candidateSeg, width, durationMs);
+    }
+
+    if (!pastFocusHysteresis(
+      dx: dx,
+      currentRect: currentRect,
+      candidateRect: candidateRect,
+    )) {
+      return currentFocus;
+    }
+
+    final currentList = listIndexForSegment(widget.segments, currentFocus);
+    final candidateList = listIndexForSegment(widget.segments, candidate);
+    if (currentList == null || candidateList == null) return candidate;
+
+    // No free first step: travel since last focus change must unlock steps.
+    // (When anchor is null, treat as zero travel so we stay sticky until set.)
+    final travelPx = _focusAnchorDx == null
+        ? 0.0
+        : (dx - _focusAnchorDx!).abs();
+    final steppedList = stepLimitedFocusListIndex(
+      currentListIndex: currentList,
+      candidateListIndex: candidateList,
+      travelPx: travelPx,
+      pxPerStep: _kFocusPxPerStep,
+    );
+    if (steppedList == currentList) return currentFocus;
+
+    final sorted = _sortedSegments(widget.segments);
+    if (steppedList < 0 || steppedList >= sorted.length) return currentFocus;
+    return sorted[steppedList].index;
+  }
+
+  Rect _timelineSegmentRect(
+    SeekBarSegment seg,
+    double width,
+    int durationMs,
+  ) {
+    final startFrac = seg.start.inMilliseconds / durationMs;
+    final endFrac = seg.end.inMilliseconds / durationMs;
+    final x1 = _isRtl ? width * (1.0 - startFrac) : width * startFrac;
+    final x2 = _isRtl ? width * (1.0 - endFrac) : width * endFrac;
+    return Rect.fromLTRB(min(x1, x2), 0, max(x1, x2), widget.style.trackHeight);
   }
 
   List<LensSegmentLayout> _displayLensLayouts({
@@ -907,7 +1082,9 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
 
     _lastTargetLayouts = target;
 
-    final focusT = Curves.easeOutCubic.transform(_focusTransitionController.value);
+    final focusT = Curves.easeOutCubic.transform(
+      _focusTransitionController.value,
+    );
     if (focusT < 1 &&
         _fromFocusLayouts.isNotEmpty &&
         target.isNotEmpty &&
@@ -938,6 +1115,7 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
       totalDurationMs: widget.duration.inMilliseconds,
       revealStrength: revealStrength,
       trackHeight: trackHeight,
+      isRtl: _isRtl,
     );
   }
 
@@ -983,19 +1161,19 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
     _dragMoved = false;
     final width = _lastTrackWidth;
     final clamped = value.clamp(0.0, 1.0);
-    final revealStrength = max(_revealController.value, 0.01);
     final thumbX = _thumbCenterForValue(clamped, width);
-    final snap = _segmentIndexFromLocalDx(
-      thumbX,
-      width,
-      revealStrength: revealStrength,
-    ) ?? segmentIndexForPosition(
-      widget.segments,
-      _positionFromValue(clamped),
-    );
+    // Seed focus from current playback/thumb segment — do not jump on press.
+    final snap =
+        _segmentIndexAt(_displayPosition) ??
+        segmentIndexForPosition(
+          widget.segments,
+          _positionFromValue(clamped),
+        );
     setState(() {
       _dragging = true;
       _dragValue = clamped;
+      _dragStartDx = thumbX;
+      _focusAnchorDx = thumbX;
       _revealSnapIndex = snap;
       _revealCenterX = thumbX;
     });
@@ -1008,19 +1186,42 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
     final clamped = value.clamp(0.0, 1.0);
     final revealStrength = max(_revealController.value, 0.01);
     final thumbX = _thumbCenterForValue(clamped, width);
-    final snap = _segmentIndexFromLocalDx(
-      thumbX,
-      width,
-      focusHint: _revealSnapIndex,
+    final startDx = _dragStartDx;
+    // Hold seeded focus until the pointer has actually scrubbed a bit,
+    // so pressing far from the thumb does not instantly jump the lens.
+    if (startDx != null && (thumbX - startDx).abs() < _kHoverHysteresisPx) {
+      setState(() {
+        _dragValue = clamped;
+        _revealCenterX = thumbX;
+      });
+      return;
+    }
+    final rawSnap =
+        _segmentIndexFromLocalDx(
+          thumbX,
+          width,
+          focusHint: _revealSnapIndex,
+          revealStrength: revealStrength,
+        ) ??
+        segmentIndexForPosition(
+          widget.segments,
+          _positionFromValue(clamped),
+        );
+    final previousSnap = _revealSnapIndex;
+    final snap = _focusWithHysteresis(
+      candidate: rawSnap,
+      currentFocus: _revealSnapIndex,
+      dx: thumbX,
+      width: width,
       revealStrength: revealStrength,
-    ) ?? segmentIndexForPosition(
-      widget.segments,
-      _positionFromValue(clamped),
     );
     setState(() {
       _dragValue = clamped;
       _revealSnapIndex = snap;
       _revealCenterX = thumbX;
+      if (snap != previousSnap && snap != null) {
+        _focusAnchorDx = thumbX;
+      }
     });
   }
 
@@ -1033,10 +1234,14 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
     final seg = index != null ? _segmentByIndex(index) : null;
     final target = seg?.start ?? _positionFromValue(_dragValue);
     setState(() => _dragging = false);
+    _dragStartDx = null;
+    _focusAnchorDx = null;
     _beginRevealCollapse();
-    unawaited(_snapController.forward(from: 0).then((_) {
-      if (mounted) unawaited(_snapController.reverse());
-    }));
+    unawaited(
+      _snapController.forward(from: 0).then((_) {
+        if (mounted) unawaited(_snapController.reverse());
+      }),
+    );
     _commitSeek(target);
   }
 
@@ -1080,14 +1285,33 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
     var focusIdx = indices.indexOf(_focusedSegmentIndex);
     if (focusIdx < 0) focusIdx = 0;
 
+    // In RTL, left arrow means "next" (higher index) and right means "previous".
+    final leftIsPrev = !_isRtl;
+
     switch (event.logicalKey) {
       case LogicalKeyboardKey.arrowLeft:
+        if (leftIsPrev) {
+          focusIdx = max(0, focusIdx - 1);
+        } else {
+          focusIdx = min(indices.length - 1, focusIdx + 1);
+        }
+        setState(() => _focusedSegmentIndex = indices[focusIdx]);
+        _seekToSegment(indices[focusIdx]);
+        return KeyEventResult.handled;
+      case LogicalKeyboardKey.arrowRight:
+        if (leftIsPrev) {
+          focusIdx = min(indices.length - 1, focusIdx + 1);
+        } else {
+          focusIdx = max(0, focusIdx - 1);
+        }
+        setState(() => _focusedSegmentIndex = indices[focusIdx]);
+        _seekToSegment(indices[focusIdx]);
+        return KeyEventResult.handled;
       case LogicalKeyboardKey.arrowDown:
         focusIdx = max(0, focusIdx - 1);
         setState(() => _focusedSegmentIndex = indices[focusIdx]);
         _seekToSegment(indices[focusIdx]);
         return KeyEventResult.handled;
-      case LogicalKeyboardKey.arrowRight:
       case LogicalKeyboardKey.arrowUp:
         focusIdx = min(indices.length - 1, focusIdx + 1);
         setState(() => _focusedSegmentIndex = indices[focusIdx]);
@@ -1108,6 +1332,7 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
 
   @override
   Widget build(BuildContext context) {
+    _isRtl = Directionality.of(context) == TextDirection.rtl;
     final style = widget.style;
     final enabled = widget.enabled && widget.duration.inMilliseconds > 0;
     final value = _currentValue;
@@ -1130,8 +1355,9 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
             if (activeSegmentIndex != null) {
               parts.add(widget.segmentLabel(activeSegmentIndex));
             }
-            final timePosition =
-                _dragging ? _snappedPosition() : _displayPosition;
+            final timePosition = _dragging
+                ? _snappedPosition()
+                : _displayPosition;
             parts.add(
               '${formatPlaybackDuration(timePosition)} / ${formatPlaybackDuration(widget.duration)}',
             );
@@ -1154,8 +1380,7 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
             final width = constraints.maxWidth;
             _lastTrackWidth = width;
             final thumbRadius = style.thumbRadius;
-            final maxThumbCenter = width - thumbRadius * 2;
-            final thumbCenter = thumbRadius + value * maxThumbCenter;
+            final thumbCenter = _thumbCenterForValue(value, width);
             final buffered = _bufferedFractions();
             final segmentFractions = _segmentFractions();
             final pulseSegment = repeat != null && !repeat.isFinalPass
@@ -1164,24 +1389,22 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
             final scrubLabel = _dragging
                 ? _scrubLabelForValue(value)
                 : _hoverSegmentIndex != null
-                    ? widget.segmentLabel(_hoverSegmentIndex!)
-                    : '';
+                ? widget.segmentLabel(_hoverSegmentIndex!)
+                : '';
 
             final revealCenterX = _dragging
                 ? thumbCenter
                 : (_hoverCenterX ?? thumbCenter);
-            final snapIndex = _dragging
-                ? segmentIndexForPosition(
-                    widget.segments,
-                    _positionFromValue(value),
-                  )
-                : _hoverSegmentIndex;
+            // During drag, focus is owned by drag handlers (seeded + hysteresis).
+            // During hover, focus follows the pointer segment.
+            final snapIndex = _dragging ? _revealSnapIndex : _hoverSegmentIndex;
             if (liveRevealing && snapIndex != null) {
               _revealSnapIndex = snapIndex;
               _revealCenterX = revealCenterX;
             }
-            final effectiveSnapIndex =
-                liveRevealing ? snapIndex : _revealSnapIndex;
+            final effectiveSnapIndex = liveRevealing
+                ? snapIndex
+                : _revealSnapIndex;
 
             final trackAnimations = Listenable.merge([
               _pulseController,
@@ -1193,27 +1416,41 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
             return MouseRegion(
               onHover: enabled
                   ? (event) {
+                      final dx = event.localPosition.dx;
                       final revealStrength = _revealController.value;
-                      final index = _hoverSegmentIndexFromDx(
-                        event.localPosition.dx,
+                      final rawIndex = _hoverSegmentIndexFromDx(
+                        dx,
                         width,
                         focusHint: _hoverSegmentIndex ?? _revealSnapIndex,
                         revealStrength: revealStrength,
                       );
-                      if (index != _hoverSegmentIndex ||
-                          _hoverCenterX != event.localPosition.dx) {
+                      final index = _focusWithHysteresis(
+                        candidate: rawIndex,
+                        currentFocus: _hoverSegmentIndex,
+                        dx: dx,
+                        width: width,
+                        revealStrength: revealStrength,
+                      );
+
+                      if (index != _hoverSegmentIndex || _hoverCenterX != dx) {
                         final previousIndex = _hoverSegmentIndex;
                         if (index == null && previousIndex != null) {
                           _revealSnapIndex = previousIndex;
                           _revealCenterX = _hoverCenterX;
                         }
+                        final focusChanged = index != previousIndex;
                         setState(() {
                           _hoverSegmentIndex = index;
-                          _hoverCenterX = event.localPosition.dx;
+                          _hoverCenterX = dx;
+                          if (focusChanged) {
+                            _focusAnchorDx = index == null ? null : dx;
+                          } else if (index != null && _focusAnchorDx == null) {
+                            _focusAnchorDx = dx;
+                          }
                         });
                         if (index != null) {
                           _revealSnapIndex = index;
-                          _revealCenterX = event.localPosition.dx;
+                          _revealCenterX = dx;
                           _setRevealing(true);
                         } else if (previousIndex != null ||
                             _revealController.value > 0) {
@@ -1225,12 +1462,15 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
               onExit: (_) {
                 final snap = _hoverSegmentIndex;
                 final center = _hoverCenterX;
-                if (snap != null || center != null || _revealController.value > 0) {
+                if (snap != null ||
+                    center != null ||
+                    _revealController.value > 0) {
                   _revealSnapIndex = snap ?? _revealSnapIndex;
                   _revealCenterX = center ?? _revealCenterX;
                   setState(() {
                     _hoverSegmentIndex = null;
                     _hoverCenterX = null;
+                    _focusAnchorDx = null;
                   });
                   if (!_dragging) _beginRevealCollapse();
                 }
@@ -1239,13 +1479,13 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
                 behavior: HitTestBehavior.translucent,
                 onHorizontalDragStart: enabled
                     ? (details) => _onDragStart(
-                          _valueFromLocalDx(details.localPosition.dx, width),
-                        )
+                        _valueFromLocalDx(details.localPosition.dx, width),
+                      )
                     : null,
                 onHorizontalDragUpdate: enabled
                     ? (details) => _onDragUpdate(
-                          _valueFromLocalDx(details.localPosition.dx, width),
-                        )
+                        _valueFromLocalDx(details.localPosition.dx, width),
+                      )
                     : null,
                 onHorizontalDragEnd: enabled ? (_) => _onDragEnd() : null,
                 onHorizontalDragCancel: enabled ? _onDragEnd : null,
@@ -1272,7 +1512,9 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
                   },
                   child: Stack(
                     clipBehavior: Clip.none,
-                    alignment: Alignment.centerLeft,
+                    alignment: _isRtl
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     children: [
                       Center(
                         child: AnimatedBuilder(
@@ -1310,8 +1552,7 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
                                 enabled: enabled,
                                 pulseSegmentIndex: pulseSegment,
                                 segments: widget.segments,
-                                totalDurationMs:
-                                    widget.duration.inMilliseconds,
+                                totalDurationMs: widget.duration.inMilliseconds,
                                 pulsePhase: _pulseController.value,
                                 currentAyahIndex: _shouldShowAyahGlow
                                     ? activeSegmentIndex
@@ -1320,6 +1561,7 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
                                 revealStrength: revealStrength,
                                 lensLayouts: lensLayouts,
                                 segmentNumberLabel: _segmentNumberLabel,
+                                isRtl: _isRtl,
                               ),
                             );
                           },
@@ -1337,6 +1579,7 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
                           segment: _segmentByIndex(pulseSegment),
                           duration: widget.duration,
                           width: width,
+                          isRtl: _isRtl,
                         ),
                       TweenAnimationBuilder<double>(
                         tween: Tween(end: thumbCenter),
@@ -1345,37 +1588,55 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
                             : style.thumbTweenDuration,
                         curve: Curves.easeOutCubic,
                         builder: (context, animatedCenter, child) {
-                          return Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              if (showScrubTip && scrubLabel.isNotEmpty)
-                                _ScrubTooltip(
-                                  style: style,
-                                  segmentIndex: _scrubTooltipSegmentIndex,
-                                  heading: scrubLabel,
-                                  loadExcerpt: widget.segmentUthmaniExcerpt == null
-                                      ? null
-                                      : _cachedUthmaniExcerpt,
-                                  anchorCenterX: _dragging
-                                      ? animatedCenter
-                                      : (_hoverCenterX ?? thumbCenter),
-                                  trackWidth: width,
-                                ),
-                              Positioned(
-                                left: animatedCenter - thumbRadius,
-                                top: 0,
-                                bottom: 0,
-                                child: Center(
-                                  child: ScaleTransition(
-                                    scale: _snapScale,
-                                    child: child,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          return AnimatedBuilder(
+                            animation: _revealController,
+                            builder: (context, _) {
+                              // Fade thumb out when lens segments are revealed
+                              // so it doesn't punch through the fisheye pills.
+                              final revealStrength = _revealController.value;
+                              final thumbOpacity =
+                                  1.0 -
+                                  Curves.easeOut.transform(revealStrength);
+                              return Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  if (showScrubTip && scrubLabel.isNotEmpty)
+                                    _ScrubTooltip(
+                                      style: style,
+                                      segmentIndex: _scrubTooltipSegmentIndex,
+                                      heading: scrubLabel,
+                                      loadExcerpt:
+                                          widget.segmentUthmaniExcerpt == null
+                                          ? null
+                                          : _cachedUthmaniExcerpt,
+                                      anchorCenterX: _dragging
+                                          ? animatedCenter
+                                          : (_hoverCenterX ?? thumbCenter),
+                                      trackWidth: width,
+                                    ),
+                                  if (thumbOpacity > 0)
+                                    Positioned(
+                                      left: animatedCenter - thumbRadius,
+                                      top: 0,
+                                      bottom: 0,
+                                      child: Center(
+                                        child: Opacity(
+                                          opacity: thumbOpacity,
+                                          child: ScaleTransition(
+                                            scale: _snapScale,
+                                            child: child,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              );
+                            },
+                            child: child,
                           );
                         },
                         child: Container(
+                          key: const Key('seek-thumb'),
                           width: thumbRadius * 2,
                           height: thumbRadius * 2,
                           decoration: BoxDecoration(
@@ -1481,7 +1742,7 @@ class _ScrubTooltipState extends State<_ScrubTooltip> {
         text: widget.heading,
         style: widget.style.tooltipTextStyle,
       ),
-      textDirection: TextDirection.ltr,
+      textDirection: Directionality.of(context),
       maxLines: 1,
     )..layout(maxWidth: _ScrubTooltip._maxWidth);
     final estimatedWidth = max(
@@ -1489,8 +1750,10 @@ class _ScrubTooltipState extends State<_ScrubTooltip> {
       headingPainter.width + _ScrubTooltip._horizontalPadding * 2,
     );
     final half = estimatedWidth / 2;
-    final left = (widget.anchorCenterX - half)
-        .clamp(0.0, widget.trackWidth - estimatedWidth);
+    final left = (widget.anchorCenterX - half).clamp(
+      0.0,
+      widget.trackWidth - estimatedWidth,
+    );
     final tooltipHeight = hasExcerpt ? 52.0 : 26.0;
 
     final uthmaniStyle = widget.style.tooltipTextStyle.copyWith(
@@ -1573,6 +1836,7 @@ class _RepeatBadge extends StatelessWidget {
     required this.segment,
     required this.duration,
     required this.width,
+    this.isRtl = false,
   });
 
   final SegmentedSeekBarStyle style;
@@ -1580,6 +1844,7 @@ class _RepeatBadge extends StatelessWidget {
   final SeekBarSegment? segment;
   final Duration duration;
   final double width;
+  final bool isRtl;
 
   @override
   Widget build(BuildContext context) {
@@ -1589,7 +1854,8 @@ class _RepeatBadge extends StatelessWidget {
 
     final startFrac = seg.start.inMilliseconds / durationMs;
     final endFrac = seg.end.inMilliseconds / durationMs;
-    final centerX = width * (startFrac + endFrac) / 2;
+    final midFrac = (startFrac + endFrac) / 2;
+    final centerX = isRtl ? width * (1.0 - midFrac) : width * midFrac;
 
     return Positioned(
       left: centerX - 24,
@@ -1630,7 +1896,9 @@ class SegmentedTrackPainter extends CustomPainter {
     required this.enabled,
     required this.segments,
     required this.totalDurationMs,
-    required this.segmentNumberLabel, this.pulseSegmentIndex,
+    required this.segmentNumberLabel,
+    this.isRtl = false,
+    this.pulseSegmentIndex,
     this.pulsePhase = 0,
     this.currentAyahIndex,
     this.glowPhase = 0,
@@ -1657,6 +1925,13 @@ class SegmentedTrackPainter extends CustomPainter {
   final double revealStrength;
   final List<LensSegmentLayout> lensLayouts;
   final String Function(int segmentIndex) segmentNumberLabel;
+  final bool isRtl;
+
+  /// Converts a timeline fraction to a pixel x coordinate,
+  /// accounting for RTL layout.
+  double _fracToX(double frac, double trackWidth) {
+    return isRtl ? trackWidth * (1.0 - frac) : trackWidth * frac;
+  }
 
   /// True-timeline rect for one ayah on the continuous track.
   @visibleForTesting
@@ -1664,8 +1939,16 @@ class SegmentedTrackPainter extends CustomPainter {
     if (totalDurationMs <= 0) return null;
     for (final s in segments) {
       if (s.index != index) continue;
-      final left = s.start.inMilliseconds / totalDurationMs * size.width;
-      final right = s.end.inMilliseconds / totalDurationMs * size.width;
+      final x1 = _fracToX(
+        s.start.inMilliseconds / totalDurationMs,
+        size.width,
+      );
+      final x2 = _fracToX(
+        s.end.inMilliseconds / totalDurationMs,
+        size.width,
+      );
+      final left = min(x1, x2);
+      final right = max(x1, x2);
       return Rect.fromLTRB(left, 0, right, size.height);
     }
     return null;
@@ -1763,18 +2046,32 @@ class SegmentedTrackPainter extends CustomPainter {
     if (enabled && bufferedRanges.isNotEmpty) {
       line.color = bufferedColor;
       for (final (start, end) in bufferedRanges) {
+        final x1 = _fracToX(start, size.width);
+        final x2 = _fracToX(end, size.width);
         canvas.drawLine(
-          Offset(start * size.width, centerY),
-          Offset(end * size.width, centerY),
+          Offset(min(x1, x2), centerY),
+          Offset(max(x1, x2), centerY),
           line,
         );
       }
     }
 
-    final activeWidth = size.width * progressFrac;
-    if (activeWidth > 0) {
+    if (progressFrac > 0) {
       line.color = activePaint.color;
-      canvas.drawLine(Offset(0, centerY), Offset(activeWidth, centerY), line);
+      final activeX = _fracToX(progressFrac, size.width);
+      if (isRtl) {
+        canvas.drawLine(
+          Offset(activeX, centerY),
+          Offset(size.width, centerY),
+          line,
+        );
+      } else {
+        canvas.drawLine(
+          Offset(0, centerY),
+          Offset(activeX, centerY),
+          line,
+        );
+      }
     }
   }
 
@@ -1799,11 +2096,16 @@ class SegmentedTrackPainter extends CustomPainter {
 
     if (enabled && bufferedRanges.isNotEmpty) {
       for (final (start, end) in bufferedRanges) {
-        final left = start * size.width;
-        final right = end * size.width;
+        final x1 = _fracToX(start, size.width);
+        final x2 = _fracToX(end, size.width);
         canvas.drawRRect(
           RRect.fromRectAndRadius(
-            Rect.fromLTRB(left, spineRect.top, right, spineRect.bottom),
+            Rect.fromLTRB(
+              min(x1, x2),
+              spineRect.top,
+              max(x1, x2),
+              spineRect.bottom,
+            ),
             radius,
           ),
           Paint()..color = bufferedColor,
@@ -1811,13 +2113,13 @@ class SegmentedTrackPainter extends CustomPainter {
       }
     }
 
-    final activeWidth = size.width * progressFrac;
-    if (activeWidth > 0) {
+    if (progressFrac > 0) {
+      final activeX = _fracToX(progressFrac, size.width);
+      final activeRect = isRtl
+          ? Rect.fromLTRB(activeX, spineRect.top, size.width, spineRect.bottom)
+          : Rect.fromLTRB(0, spineRect.top, activeX, spineRect.bottom);
       canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTRB(0, spineRect.top, activeWidth, spineRect.bottom),
-          radius,
-        ),
+        RRect.fromRectAndRadius(activeRect, radius),
         activePaint,
       );
     }
@@ -1834,15 +2136,40 @@ class SegmentedTrackPainter extends CustomPainter {
       final fade = opacity < 1.0;
       final pillRadius = Radius.circular(layout.rect.height / 2);
       final pillRect = layout.rect;
+      final pillRRect = RRect.fromRectAndRadius(pillRect, pillRadius);
 
-      Color withFade(Color color) => fade
-          ? color.withValues(alpha: color.a * opacity)
-          : color;
+      Color withFade(Color color) =>
+          fade ? color.withValues(alpha: color.a * opacity) : color;
+
+      // Soft depth: shadow under focus and near neighbors.
+      if (layout.listDistance <= 1 && opacity > 0.5) {
+        final shadowAlpha = layout.isFocus ? 0.22 : 0.12;
+        canvas.drawRRect(
+          pillRRect.shift(const Offset(0, 1)),
+          Paint()
+            ..color = withFade(Colors.black.withValues(alpha: shadowAlpha))
+            ..maskFilter = MaskFilter.blur(
+              BlurStyle.normal,
+              layout.isFocus ? 3 : 2,
+            ),
+        );
+      }
 
       canvas.drawRRect(
-        RRect.fromRectAndRadius(pillRect, pillRadius),
+        pillRRect,
         Paint()..color = withFade(inactivePaint.color),
       );
+
+      // Thin border on inactive / distant pills for definition.
+      if (!layout.isFocus) {
+        canvas.drawRRect(
+          pillRRect,
+          Paint()
+            ..color = withFade(labelColor.withValues(alpha: 0.18))
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.75,
+        );
+      }
 
       if (enabled && bufferedRanges.isNotEmpty) {
         for (final (bufStart, bufEnd) in bufferedRanges) {
@@ -1851,16 +2178,23 @@ class SegmentedTrackPainter extends CustomPainter {
           if (overlapEnd <= overlapStart) continue;
           final span = layout.endFrac - layout.startFrac;
           if (span <= 0) continue;
-          final localStart = pillRect.left +
-              (overlapStart - layout.startFrac) / span * pillRect.width;
-          final localEnd = pillRect.left +
-              (overlapEnd - layout.startFrac) / span * pillRect.width;
+          final tStart = (overlapStart - layout.startFrac) / span;
+          final tEnd = (overlapEnd - layout.startFrac) / span;
+          late final double localStart;
+          late final double localEnd;
+          if (isRtl) {
+            localStart = pillRect.right - tEnd * pillRect.width;
+            localEnd = pillRect.right - tStart * pillRect.width;
+          } else {
+            localStart = pillRect.left + tStart * pillRect.width;
+            localEnd = pillRect.left + tEnd * pillRect.width;
+          }
           canvas.drawRRect(
             RRect.fromRectAndRadius(
               Rect.fromLTRB(
-                localStart,
+                min(localStart, localEnd),
                 pillRect.top,
-                localEnd,
+                max(localStart, localEnd),
                 pillRect.bottom,
               ),
               pillRadius,
@@ -1874,32 +2208,60 @@ class SegmentedTrackPainter extends CustomPainter {
         final activeEndFrac = min(progressFrac, layout.endFrac);
         final span = layout.endFrac - layout.startFrac;
         if (span > 0) {
-          final activeWidth =
-              (activeEndFrac - layout.startFrac) / span * pillRect.width;
+          final activeFraction = (activeEndFrac - layout.startFrac) / span;
+          final activeWidth = activeFraction * pillRect.width;
           if (activeWidth > 0) {
+            // Chronological start is at the reading-direction end after
+            // mirror: fill from right in RTL, left in LTR.
+            final activeRect = isRtl
+                ? Rect.fromLTRB(
+                    pillRect.right - activeWidth,
+                    pillRect.top,
+                    pillRect.right,
+                    pillRect.bottom,
+                  )
+                : Rect.fromLTWH(
+                    pillRect.left,
+                    pillRect.top,
+                    activeWidth,
+                    pillRect.height,
+                  );
+            final base = withFade(activePaint.color);
+            final top = Color.lerp(
+              base,
+              Colors.white,
+              0.18,
+            )!.withValues(alpha: base.a);
             canvas.drawRRect(
-              RRect.fromRectAndRadius(
-                Rect.fromLTWH(
-                  pillRect.left,
-                  pillRect.top,
-                  activeWidth,
-                  pillRect.height,
-                ),
-                pillRadius,
-              ),
-              Paint()..color = withFade(activePaint.color),
+              RRect.fromRectAndRadius(activeRect, pillRadius),
+              Paint()
+                ..shader = LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [top, base],
+                ).createShader(activeRect),
             );
           }
         }
       }
 
+      // Focus segment: stronger border + subtle inner glow.
       if (layout.isFocus && opacity > 0.75) {
         canvas.drawRRect(
-          RRect.fromRectAndRadius(pillRect, pillRadius),
+          pillRRect,
           Paint()
-            ..color = withFade(activePaint.color.withValues(alpha: 0.45))
+            ..color = withFade(activePaint.color.withValues(alpha: 0.6))
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 1,
+            ..strokeWidth = 1.5,
+        );
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            pillRect.deflate(1),
+            Radius.circular(max(0, pillRect.height / 2 - 1)),
+          ),
+          Paint()
+            ..color = withFade(activePaint.color.withValues(alpha: 0.12))
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
         );
       }
 
@@ -1994,6 +2356,7 @@ class SegmentedTrackPainter extends CustomPainter {
         old.labelColor != labelColor ||
         old.ayahGlowColor != ayahGlowColor ||
         old.enabled != enabled ||
+        old.isRtl != isRtl ||
         old.pulsePhase != pulsePhase ||
         old.pulseSegmentIndex != pulseSegmentIndex ||
         old.currentAyahIndex != currentAyahIndex ||

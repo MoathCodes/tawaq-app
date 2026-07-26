@@ -20,7 +20,6 @@ import 'package:tawaq/theme/theme.dart';
 
 const _kSearchMinWidth = 280.0;
 const _kSurahSelectMaxWidth = 200.0;
-const _kJuzHizbSelectMaxWidth = 140.0;
 
 const _kInlineNavSelect = SurahSelector(inlineLabel: true);
 const _kInlineJuzSelect = JuzSelector(inlineLabel: true);
@@ -107,7 +106,7 @@ class QuranHeaderWidget extends HookConsumerWidget {
                       ),
                     ),
                     const _HeaderDivider(),
-                    navigation,
+                    Expanded(child: navigation),
                   ],
                 );
               }
@@ -186,22 +185,12 @@ class _QuranLocationRail extends StatelessWidget {
           ),
         ),
         const _RailHairline(axis: Axis.vertical),
-        Flexible(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: _kJuzHizbSelectMaxWidth,
-            ),
-            child: _kInlineJuzSelect,
-          ),
+        const Flexible(
+          child: _kInlineJuzSelect,
         ),
         const _RailHairline(axis: Axis.vertical),
-        Flexible(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: _kJuzHizbSelectMaxWidth,
-            ),
-            child: _kInlineHizbSelect,
-          ),
+        const Flexible(
+          child: _kInlineHizbSelect,
         ),
       ],
     );

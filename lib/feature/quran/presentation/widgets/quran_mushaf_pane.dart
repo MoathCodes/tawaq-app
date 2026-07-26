@@ -113,6 +113,9 @@ class QuranMushafPane extends HookConsumerWidget {
             AppShortcut.quranPageNext,
             AppShortcut.quranPagePrev,
             AppShortcut.quranPageNextSpace,
+            AppShortcut.quranZoomIn,
+            AppShortcut.quranZoomOut,
+            AppShortcut.quranZoomReset,
           },
           handlers: {
             AppShortcut.quranPageNext: () => unawaited(
@@ -124,14 +127,25 @@ class QuranMushafPane extends HookConsumerWidget {
             AppShortcut.quranPageNextSpace: () => unawaited(
               controller.animateToPage(controller.currentPage + 1),
             ),
+            AppShortcut.quranZoomIn: () => controller.nudgeReadingBoost(
+              0.04,
+              scale: style.scale,
+            ),
+            AppShortcut.quranZoomOut: () => controller.nudgeReadingBoost(
+              -0.04,
+              scale: style.scale,
+            ),
+            AppShortcut.quranZoomReset: controller.resetSessionReadingBoost,
           },
           child: MediaQuery(
             data: MediaQuery.of(context).copyWith(
               textScaler: TextScaler.noScaling,
             ),
+            // Only the a11y label needs page notifies — keep the reader stack
+            // as ListenableBuilder.child so page changes do not rebuild it.
             child: ListenableBuilder(
               listenable: controller.page,
-              builder: (context, _) {
+              builder: (context, child) {
                 final info = controller.currentPageInfo;
                 final pageNumber = info?.pageNumber ?? fallbackPage;
                 final juzNumber = info?.juzNumber ?? fallbackJuz;
@@ -140,31 +154,32 @@ class QuranMushafPane extends HookConsumerWidget {
 
                 return QuranSemantics.mushafReadingRegion(
                   label: label,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    clipBehavior: Clip.none,
-                    children: [
-                      NonSelectable(child: reader),
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: AppSpacing.lg,
-                        child: Align(
-                          alignment: _ayahActionsAlignment(context, layout),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: layout == QuranReadingLayout.studyMode
-                                  ? AppSpacing.lg
-                                  : 0,
-                            ),
-                            child: const AyahSelectionActionsBar(),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  child: child!,
                 );
               },
+              child: Stack(
+                fit: StackFit.expand,
+                clipBehavior: Clip.none,
+                children: [
+                  NonSelectable(child: reader),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: AppSpacing.lg,
+                    child: Align(
+                      alignment: _ayahActionsAlignment(context, layout),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: layout == QuranReadingLayout.studyMode
+                              ? AppSpacing.lg
+                              : 0,
+                        ),
+                        child: const AyahSelectionActionsBar(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

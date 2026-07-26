@@ -26,11 +26,7 @@ class StudyPanel extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedAyah = ref.watch(
-      quranScreenSettingsProvider.select(
-        (value) => value.value?.selectedAyah,
-      ),
-    );
+    final selectedAyah = ref.watch(quranSelectedAyahProvider);
     final ayaId = selectedAyah?.ayahId;
     final navigation = useStudyAyahNavigation(ref);
 
@@ -74,7 +70,10 @@ class StudyPanel extends HookConsumerWidget {
                     child: DirectionalContentSwitcher(
                       currentKey: ayaId,
                       slideDirection: slideDirection.value,
-                      child: _StudyPanelBody(narrowPanel: narrowPanel),
+                      child: _StudyPanelBody(
+                        ayahId: ayaId,
+                        narrowPanel: narrowPanel,
+                      ),
                     ),
                   );
                 },
@@ -101,8 +100,12 @@ class StudyPanel extends HookConsumerWidget {
 }
 
 class _StudyPanelBody extends StatelessWidget {
-  const _StudyPanelBody({required this.narrowPanel});
+  const _StudyPanelBody({
+    required this.ayahId,
+    required this.narrowPanel,
+  });
 
+  final int? ayahId;
   final bool narrowPanel;
 
   @override
@@ -112,7 +115,11 @@ class _StudyPanelBody extends StatelessWidget {
       children: [
         _StudyContentAccordion(narrowPanel: narrowPanel),
         const SizedBox(height: AppSpacing.xl),
-        NotesSection(narrowPanel: narrowPanel),
+        NotesSection(
+          key: ValueKey(ayahId ?? 'no-ayah'),
+          ayahId: ayahId,
+          narrowPanel: narrowPanel,
+        ),
       ],
     );
   }
@@ -131,9 +138,7 @@ class _StudyContentAccordion extends ConsumerWidget {
     final typography = theme.typography;
     final l10n = context.l10n;
 
-    final selectedAyah = ref.watch(
-      quranScreenSettingsProvider.select((v) => v.value?.selectedAyah),
-    );
+    final selectedAyah = ref.watch(quranSelectedAyahProvider);
     final hasSelectedAyah = selectedAyah != null;
     final sura = selectedAyah?.surahNumber ?? 1;
     final aya = selectedAyah?.numberInSurah ?? 1;

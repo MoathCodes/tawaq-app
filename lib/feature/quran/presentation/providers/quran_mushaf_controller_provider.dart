@@ -8,12 +8,6 @@ part 'quran_mushaf_controller_provider.g.dart';
 ///
 /// Reused across header selectors, mushaf panes, and study panel instead of
 /// passing the controller through multiple widget layers.
-///
-/// Does not watch [mushafLibraryInitProvider]: that async provider completes
-/// after the first build and would dispose/recreate this controller while
-/// in-flight page-info loads are still running (used-after-dispose on
-/// [MushafPageNotifier]). Mushaf init is gated on the Quran route via
-/// [QuranMushafInitGate]; [main] also calls ensureInitialized for early use.
 @Riverpod(keepAlive: true)
 MushafReaderController quranMushafController(Ref ref) {
   final settingsAsync = ref.read(quranScreenSettingsProvider);

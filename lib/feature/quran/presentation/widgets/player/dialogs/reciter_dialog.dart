@@ -30,7 +30,7 @@ Future<ReciterPick?> showReciterDialog(
 }) => showFDialog<ReciterPick>(
   context: context,
   useRootNavigator: true,
-  builder: (context, style, animation) => FDialog.raw(
+  builder: (context, style, animation) => FDialog(
     style: style,
     animation: animation,
     constraints: dialogConstraints(
@@ -475,6 +475,7 @@ class _ReciterMetaIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FTooltip(
+      semanticsLabel: message,
       tipBuilder: (_, _) => Text(message),
       child: Semantics(
         label: message,

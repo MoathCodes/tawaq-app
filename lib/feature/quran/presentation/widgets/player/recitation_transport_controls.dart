@@ -38,6 +38,7 @@ class RecitationTransportIcon extends StatelessWidget {
     };
 
     return FTooltip(
+      semanticsLabel: tooltip,
       tipBuilder: (_, _) => Text(tooltip),
       child: MouseClick(
         onClick: () => unawaited(onPress()),
@@ -125,44 +126,55 @@ typedef SkipControl = ({
 });
 
 /// Returns the left skip-control slot for the current text direction.
+///
+/// Slots are visual positions — callers must lay out transport rows in LTR
+/// so RTL mirroring is not cancelled by [Row]'s directionality.
+///
+/// [icon] is always the left-pointing glyph for this slot; only the action and
+/// label mirror in RTL (left = next).
 SkipControl leftSkipControl({
   required bool isRtl,
   required SkipAction skipPrevious,
   required SkipAction skipNext,
   required String previousLabel,
   required String nextLabel,
+  IconData icon = FLucideIcons.skipBack,
 }) {
   if (isRtl) {
     return (
-      icon: FLucideIcons.skipForward,
+      icon: icon,
       label: nextLabel,
       onPress: skipNext,
     );
   }
   return (
-    icon: FLucideIcons.skipBack,
+    icon: icon,
     label: previousLabel,
     onPress: skipPrevious,
   );
 }
 
 /// Returns the right skip-control slot for the current text direction.
+///
+/// See [leftSkipControl] — [icon] stays right-pointing; RTL swaps action/label
+/// only (right = previous).
 SkipControl rightSkipControl({
   required bool isRtl,
   required SkipAction skipPrevious,
   required SkipAction skipNext,
   required String previousLabel,
   required String nextLabel,
+  IconData icon = FLucideIcons.skipForward,
 }) {
   if (isRtl) {
     return (
-      icon:  FLucideIcons.skipBack,
+      icon: icon,
       label: previousLabel,
       onPress: skipPrevious,
     );
   }
   return (
-    icon:  FLucideIcons.skipForward,
+    icon: icon,
     label: nextLabel,
     onPress: skipNext,
   );
@@ -193,50 +205,55 @@ class RecitationDrawerTransportControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (ayahLeftSlot != null) ...[
+    // Keep visual left/right stable; [leftSkipControl]/[rightSkipControl]
+    // already swap actions/icons for RTL.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (ayahLeftSlot != null) ...[
+            RecitationTransportIcon(
+              icon: ayahLeftSlot!.icon,
+              tooltip: ayahLeftSlot!.label,
+              onPress: ayahLeftSlot!.onPress,
+              density: RecitationTransportDensity.expanded,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+          ],
           RecitationTransportIcon(
-            icon: ayahLeftSlot!.icon,
-            tooltip: ayahLeftSlot!.label,
-            onPress: ayahLeftSlot!.onPress,
+            icon: surahLeftSlot.icon,
+            tooltip: surahLeftSlot.label,
+            onPress: surahLeftSlot.onPress,
             density: RecitationTransportDensity.expanded,
           ),
-          const SizedBox(width: AppSpacing.sm),
-        ],
-        RecitationTransportIcon(
-          icon: surahLeftSlot.icon,
-          tooltip: surahLeftSlot.label,
-          onPress: surahLeftSlot.onPress,
-          density: RecitationTransportDensity.expanded,
-        ),
-        const SizedBox(width: AppSpacing.lg),
-        RecitationPlayButton(
-          isPlaying: isPlaying,
-          isLoading: isLoading,
-          isEnded: isEnded,
-          onPress: onPlayPause,
-          density: RecitationTransportDensity.expanded,
-        ),
-        const SizedBox(width: AppSpacing.lg),
-        RecitationTransportIcon(
-          icon: surahRightSlot.icon,
-          tooltip: surahRightSlot.label,
-          onPress: surahRightSlot.onPress,
-          density: RecitationTransportDensity.expanded,
-        ),
-        if (ayahRightSlot != null) ...[
-          const SizedBox(width: AppSpacing.sm),
-          RecitationTransportIcon(
-            icon: ayahRightSlot!.icon,
-            tooltip: ayahRightSlot!.label,
-            onPress: ayahRightSlot!.onPress,
+          const SizedBox(width: AppSpacing.lg),
+          RecitationPlayButton(
+            isPlaying: isPlaying,
+            isLoading: isLoading,
+            isEnded: isEnded,
+            onPress: onPlayPause,
             density: RecitationTransportDensity.expanded,
           ),
+          const SizedBox(width: AppSpacing.lg),
+          RecitationTransportIcon(
+            icon: surahRightSlot.icon,
+            tooltip: surahRightSlot.label,
+            onPress: surahRightSlot.onPress,
+            density: RecitationTransportDensity.expanded,
+          ),
+          if (ayahRightSlot != null) ...[
+            const SizedBox(width: AppSpacing.sm),
+            RecitationTransportIcon(
+              icon: ayahRightSlot!.icon,
+              tooltip: ayahRightSlot!.label,
+              onPress: ayahRightSlot!.onPress,
+              density: RecitationTransportDensity.expanded,
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
@@ -271,36 +288,41 @@ class RecitationTransportControls extends StatelessWidget {
       RecitationTransportDensity.expanded => AppSpacing.lg,
     };
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (showSkip) ...[
-          RecitationTransportIcon(
-            icon: leftSlot.icon,
-            tooltip: leftSlot.label,
-            onPress: leftSlot.onPress,
+    // Keep visual left/right stable; [leftSkipControl]/[rightSkipControl]
+    // already swap actions/icons for RTL.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (showSkip) ...[
+            RecitationTransportIcon(
+              icon: leftSlot.icon,
+              tooltip: rightSlot.label,
+              onPress: rightSlot.onPress,
+              density: density,
+            ),
+            SizedBox(width: gap),
+          ],
+          RecitationPlayButton(
+            isPlaying: isPlaying,
+            isLoading: isLoading,
+            isEnded: isEnded,
+            onPress: onPlayPause,
             density: density,
           ),
-          SizedBox(width: gap),
+          if (showSkip) ...[
+            SizedBox(width: gap),
+            RecitationTransportIcon(
+              icon: rightSlot.icon,
+              tooltip: leftSlot.label,
+              onPress: leftSlot.onPress,
+              density: density,
+            ),
+          ],
         ],
-        RecitationPlayButton(
-          isPlaying: isPlaying,
-          isLoading: isLoading,
-          isEnded: isEnded,
-          onPress: onPlayPause,
-          density: density,
-        ),
-        if (showSkip) ...[
-          SizedBox(width: gap),
-          RecitationTransportIcon(
-            icon: rightSlot.icon,
-            tooltip: rightSlot.label,
-            onPress: rightSlot.onPress,
-            density: density,
-          ),
-        ],
-      ],
+      ),
     );
   }
 }

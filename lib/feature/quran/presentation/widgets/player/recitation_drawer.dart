@@ -17,6 +17,7 @@ import 'package:tawaq/core/widgets/volume_slider.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
+import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
 import 'package:tawaq/feature/quran/domain/services/reciter_tags.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
@@ -185,7 +186,18 @@ class _DrawerPanel extends HookConsumerWidget {
     final l10n = context.l10n;
     final isRtl = Directionality.of(context) == TextDirection.rtl;
 
-    final playback = ref.watch(recitationControllerProvider);
+    // Drawer chrome — exclude position so seek ticks do not rebuild the panel.
+    final meta = ref.watch(
+      recitationControllerProvider.select(
+        (p) => (
+          surah: p.surah,
+          rangeFrom: p.rangeFrom,
+          rangeTo: p.rangeTo,
+          reciter: p.reciter,
+          moshaf: p.moshaf,
+        ),
+      ),
+    );
     final controller = ref.read(recitationControllerProvider.notifier);
     final hasAyahTiming = controller.hasAyahTiming;
 
@@ -210,6 +222,7 @@ class _DrawerPanel extends HookConsumerWidget {
             skipNext: controller.skipAyahNext,
             previousLabel: l10n.quranRecitationPreviousAyah,
             nextLabel: l10n.quranRecitationNextAyah,
+            icon: FLucideIcons.arrowLeft,
           )
         : null;
     final ayahRightSlot = hasAyahTiming
@@ -219,25 +232,26 @@ class _DrawerPanel extends HookConsumerWidget {
             skipNext: controller.skipAyahNext,
             previousLabel: l10n.quranRecitationPreviousAyah,
             nextLabel: l10n.quranRecitationNextAyah,
+            icon: FLucideIcons.arrowRight,
           )
         : null;
     final settings = ref.watch(recitationSettingsProvider).value;
     final mushaf = ref.read(quranMushafControllerProvider);
 
-    final surah = playback.surah;
+    final surah = meta.surah;
     final surahName = surah == null
         ? ''
         : mushaf.getSurahSync(surah)?.displayName ??
               l10n.quranSurahLabel('$surah');
-    final reciterName = playback.reciter?.name ?? '';
-    final riwayah = playback.moshaf?.name ?? '';
+    final reciterName = meta.reciter?.name ?? '';
+    final riwayah = meta.moshaf?.name ?? '';
 
-    final rangeLabel = playback.rangeFrom != null
+    final rangeLabel = meta.rangeFrom != null
         ? formatAyahRangeLabel(
             mushaf: mushaf,
             l10n: l10n,
-            from: playback.rangeFrom!,
-            to: playback.rangeTo,
+            from: meta.rangeFrom!,
+            to: meta.rangeTo,
           )
         : surahName;
 
