@@ -162,7 +162,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adhanMuezzinSuhaibKhatba => 'Suhaib Khatba';
 
   @override
-  String get adhanOsNotificationBody => 'Adhan is playing — tap to focus';
+  String get adhanOsNotificationBody => 'It\'s time to pray.';
 
   @override
   String adhanPlayingTitle(String prayer) {
@@ -302,7 +302,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get colorTheme => 'Color Theme';
 
   @override
-  String get colorThemeSubtitle => 'Change the apps color themes.';
+  String get colorThemeSubtitle => 'Choose Manuscript or Neutral.';
 
   @override
   String get completed => 'Completed •';
@@ -486,6 +486,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fortressFilterAuthenticity => 'Filter by grading';
+
+  @override
+  String get fortressFilterChaptersHint => 'Filter chapters...';
 
   @override
   String get fortressFinish => 'Finish';
@@ -735,6 +738,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithOpenFilters => 'Filters';
 
   @override
+  String get hadithPageLoadFailed =>
+      'Couldn\'t load that page. Showing previous results.';
+
+  @override
   String get hadithRecentSearches => 'Recent Searches';
 
   @override
@@ -763,6 +770,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hadithScope => 'Scope';
+
+  @override
+  String get hadithSearchAction => 'Search';
 
   @override
   String get hadithSearchHint => 'Search hadith...';
@@ -819,7 +829,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only return hadiths that include takhrij in their metadata';
 
   @override
-  String get hadithStartSearchPrompt => 'Start searching to see results';
+  String get hadithStartSearchPrompt => 'Press Enter or Search to see results';
 
   @override
   String get hadithTakhrij => 'Takhrij';
@@ -889,7 +899,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get iqamahMuezzinYasserAlDossari => 'Yasser Al-Dossari';
 
   @override
-  String get iqamahOsNotificationBody => 'Iqamah time — tap to focus';
+  String get iqamahOsNotificationBody => 'Iqamah time has arrived.';
 
   @override
   String iqamahPlayingTitle(String prayer) {
@@ -2070,6 +2080,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shortcutQuranPagePrevLabel => 'Previous page';
 
   @override
+  String get shortcutQuranZoomInDescription =>
+      'Zoom the mushaf page larger (Ctrl/⌘ + scroll also works). Vertical scroll only when needed.';
+
+  @override
+  String get shortcutQuranZoomInLabel => 'Zoom in';
+
+  @override
+  String get shortcutQuranZoomOutDescription => 'Zoom the mushaf page smaller.';
+
+  @override
+  String get shortcutQuranZoomOutLabel => 'Zoom out';
+
+  @override
+  String get shortcutQuranZoomResetDescription =>
+      'Reset mushaf zoom to the saved text-size preference.';
+
+  @override
+  String get shortcutQuranZoomResetLabel => 'Reset zoom';
+
+  @override
   String get shortcutToggleLocaleDescription =>
       'Switch between English and Arabic.';
 
@@ -2118,7 +2148,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get sunnahOsNotificationBody => 'Sunnah time — tap to focus';
+  String get sunnahOsNotificationBody => 'Sunnah prayer time has arrived.';
 
   @override
   String get sunnahTimes => 'Sunnah Times';
@@ -2181,11 +2211,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trayHideApp => 'Hide Tawaq';
 
   @override
-  String get trayMuteAdhan => 'Mute adhan';
-
-  @override
-  String trayNextPrayer(String prayer) {
-    return 'Next: $prayer';
+  String trayNextPrayerStatus(String prayer, String time, String remaining) {
+    return 'Next: $prayer · $time · in $remaining';
   }
 
   @override
@@ -2193,6 +2220,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trayShowApp => 'Show Tawaq';
+
+  @override
+  String get trayStopAdhan => 'Stop adhan';
 
   @override
   String get tryDifferentSearchTerm => 'Try a different search term';

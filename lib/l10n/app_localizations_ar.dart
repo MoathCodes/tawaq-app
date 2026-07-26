@@ -182,7 +182,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adhanMuezzinSuhaibKhatba => 'صهيب خطاب';
 
   @override
-  String get adhanOsNotificationBody => 'الأذان يعمل ';
+  String get adhanOsNotificationBody => 'حان وقت الصلاة.';
 
   @override
   String adhanPlayingTitle(String prayer) {
@@ -321,7 +321,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get colorTheme => 'نمط الألوان';
 
   @override
-  String get colorThemeSubtitle => 'تغيير نمط الألوان في التطبيق.';
+  String get colorThemeSubtitle => 'اختر المخطوطة أو المحايد.';
 
   @override
   String get completed => 'مكتملة •';
@@ -503,6 +503,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fortressFilterAuthenticity => 'تصفية حسب الحكم';
+
+  @override
+  String get fortressFilterChaptersHint => 'تصفية الأبواب...';
 
   @override
   String get fortressFinish => 'إنهاء';
@@ -764,6 +767,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithOpenFilters => 'التصفية';
 
   @override
+  String get hadithPageLoadFailed =>
+      'تعذر تحميل هذه الصفحة. يتم عرض النتائج السابقة.';
+
+  @override
   String get hadithRecentSearches => 'عمليات البحث الأخيرة';
 
   @override
@@ -795,6 +802,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hadithScope => 'نطاق البحث';
+
+  @override
+  String get hadithSearchAction => 'بحث';
 
   @override
   String get hadithSearchHint => 'ابحث في الدرر السنية...';
@@ -851,7 +861,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'إرجاع الأحاديث التي تتضمّن التخريج في بياناتها فقط';
 
   @override
-  String get hadithStartSearchPrompt => 'ابدأ البحث لعرض النتائج';
+  String get hadithStartSearchPrompt => 'اضغط Enter أو بحث لعرض النتائج';
 
   @override
   String get hadithTakhrij => 'التخريج';
@@ -921,7 +931,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get iqamahMuezzinYasserAlDossari => 'ياسر الدوسري';
 
   @override
-  String get iqamahOsNotificationBody => 'وقت الإقامة ';
+  String get iqamahOsNotificationBody => 'حان وقت الإقامة.';
 
   @override
   String iqamahPlayingTitle(String prayer) {
@@ -2101,6 +2111,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shortcutQuranPagePrevLabel => 'الصفحة السابقة';
 
   @override
+  String get shortcutQuranZoomInDescription =>
+      'تكبير صفحة المصحف (يعمل أيضاً Ctrl/⌘ مع التمرير). التمرير العمودي فقط عند الحاجة.';
+
+  @override
+  String get shortcutQuranZoomInLabel => 'تكبير';
+
+  @override
+  String get shortcutQuranZoomOutDescription => 'تصغير صفحة المصحف.';
+
+  @override
+  String get shortcutQuranZoomOutLabel => 'تصغير';
+
+  @override
+  String get shortcutQuranZoomResetDescription =>
+      'إعادة تكبير المصحف إلى حجم النص المحفوظ.';
+
+  @override
+  String get shortcutQuranZoomResetLabel => 'إعادة التكبير';
+
+  @override
   String get shortcutToggleLocaleDescription =>
       'التبديل بين الإنجليزية والعربية.';
 
@@ -2159,7 +2189,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get sunnahOsNotificationBody => 'وقت السنة ';
+  String get sunnahOsNotificationBody => 'حان وقت صلاة السنة.';
 
   @override
   String get sunnahTimes => 'أوقات السنن';
@@ -2221,11 +2251,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trayHideApp => 'إخفاء تواق';
 
   @override
-  String get trayMuteAdhan => 'كتم الأذان';
-
-  @override
-  String trayNextPrayer(String prayer) {
-    return 'التالي: $prayer';
+  String trayNextPrayerStatus(String prayer, String time, String remaining) {
+    return 'التالي: $prayer · $time · بعد $remaining';
   }
 
   @override
@@ -2233,6 +2260,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trayShowApp => 'إظهار تواق';
+
+  @override
+  String get trayStopAdhan => 'إيقاف الأذان';
 
   @override
   String get tryDifferentSearchTerm => 'جرب مصطلح بحث مختلف';

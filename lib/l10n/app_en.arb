@@ -99,7 +99,7 @@
   "adhanMuezzinMohammadRefat": "Mohammad Refat",
   "adhanMuezzinNasserAlQatami": "Nasser Al-Qatami",
   "adhanMuezzinSuhaibKhatba": "Suhaib Khatba",
-  "adhanOsNotificationBody": "Adhan is playing — tap to focus",
+  "adhanOsNotificationBody": "It's time to pray.",
   "adhanPlayingTitle": "Adhan — {prayer}",
   "@adhanPlayingTitle": {
     "placeholders": {
@@ -157,7 +157,7 @@
   "collapse": "Collapse",
   "collapsePanel": "Collapse panel",
   "colorTheme": "Color Theme",
-  "colorThemeSubtitle": "Change the apps color themes.",
+  "colorThemeSubtitle": "Choose Manuscript or Neutral.",
   "completed": "Completed •",
   "completionStatus": "Completion Status",
   "coordinates": "Coordinates",
@@ -221,6 +221,7 @@
   "fortressFakeHadithIntro": "Reference list from Hisn al-Muslim of hadiths scholars warn against.",
   "fortressFavorites": "Favorites",
   "fortressFilterAuthenticity": "Filter by grading",
+  "fortressFilterChaptersHint": "Filter chapters...",
   "fortressFinish": "Finish",
   "fortressHideDetails": "Hide details",
   "fortressLoadError": "Failed to load adhkar",
@@ -331,6 +332,7 @@
   "hadithNoMatchingResults": "No matching results found",
   "hadithNoRecentSearches": "No recent searches yet",
   "hadithOpenFilters": "Filters",
+  "hadithPageLoadFailed": "Couldn't load that page. Showing previous results.",
   "hadithRecentSearches": "Recent Searches",
   "hadithRelatedLinks": "Related Links",
   "hadithResetFilters": "Reset filters",
@@ -345,6 +347,7 @@
   "hadithRetry": "Retry",
   "hadithScholars": "Scholars",
   "hadithScope": "Scope",
+  "hadithSearchAction": "Search",
   "hadithSearchHint": "Search hadith...",
   "hadithSearchMethod": "Search method",
   "hadithSearchMethodAllWords": "All words",
@@ -378,7 +381,7 @@
   "@hadithSpecialistHint": {
     "description": "Explains that enabling this filter limits results to hadiths with takhrij populated in result metadata."
   },
-  "hadithStartSearchPrompt": "Start searching to see results",
+  "hadithStartSearchPrompt": "Press Enter or Search to see results",
   "hadithTakhrij": "Takhrij",
   "hadithTypeToSearch": "Type to search...",
   "hadithUsulHadith": "Usul al-Hadith",
@@ -423,7 +426,7 @@
   },
   "iqamahMuezzinMadinah": "Madinah",
   "iqamahMuezzinYasserAlDossari": "Yasser Al-Dossari",
-  "iqamahOsNotificationBody": "Iqamah time — tap to focus",
+  "iqamahOsNotificationBody": "Iqamah time has arrived.",
   "iqamahPlayingTitle": "Iqamah — {prayer}",
   "@iqamahPlayingTitle": {
     "placeholders": {
@@ -1036,6 +1039,12 @@
   "shortcutQuranPageNextSpaceLabel": "Next page (Space)",
   "shortcutQuranPagePrevDescription": "Go to the previous mushaf page.",
   "shortcutQuranPagePrevLabel": "Previous page",
+  "shortcutQuranZoomInDescription": "Zoom the mushaf page larger (Ctrl/⌘ + scroll also works). Vertical scroll only when needed.",
+  "shortcutQuranZoomInLabel": "Zoom in",
+  "shortcutQuranZoomOutDescription": "Zoom the mushaf page smaller.",
+  "shortcutQuranZoomOutLabel": "Zoom out",
+  "shortcutQuranZoomResetDescription": "Reset mushaf zoom to the saved text-size preference.",
+  "shortcutQuranZoomResetLabel": "Reset zoom",
   "shortcutToggleLocaleDescription": "Switch between English and Arabic.",
   "shortcutToggleLocaleLabel": "Toggle language",
   "shortcutToggleThemeDescription": "Switch between light and dark mode.",
@@ -1064,7 +1073,7 @@
       }
     }
   },
-  "sunnahOsNotificationBody": "Sunnah time — tap to focus",
+  "sunnahOsNotificationBody": "Sunnah prayer time has arrived.",
   "sunnahTimes": "Sunnah Times",
   "sunrise": "Sunrise",
   "surahAyahInfo": "{surahName} • Ayah {ayahNumber}",
@@ -1100,17 +1109,23 @@
   "total": "Total",
   "translation": "Translation",
   "trayHideApp": "Hide Tawaq",
-  "trayMuteAdhan": "Mute adhan",
-  "trayNextPrayer": "Next: {prayer}",
-  "@trayNextPrayer": {
+  "trayNextPrayerStatus": "Next: {prayer} · {time} · in {remaining}",
+  "@trayNextPrayerStatus": {
     "placeholders": {
       "prayer": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      },
+      "remaining": {
         "type": "String"
       }
     }
   },
   "trayQuit": "Quit",
   "trayShowApp": "Show Tawaq",
+  "trayStopAdhan": "Stop adhan",
   "tryDifferentSearchTerm": "Try a different search term",
   "turkiye": "Turkey (Diyanet)",
   "typographySectionSubtitle": "Adjust UI text size and Quran reading size separately.",

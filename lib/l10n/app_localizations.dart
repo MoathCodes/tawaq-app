@@ -335,7 +335,7 @@ abstract class AppLocalizations {
   /// No description provided for @adhanOsNotificationBody.
   ///
   /// In en, this message translates to:
-  /// **'Adhan is playing — tap to focus'**
+  /// **'It\'s time to pray.'**
   String get adhanOsNotificationBody;
 
   /// No description provided for @adhanPlayingTitle.
@@ -599,7 +599,7 @@ abstract class AppLocalizations {
   /// No description provided for @colorThemeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Change the apps color themes.'**
+  /// **'Choose Manuscript or Neutral.'**
   String get colorThemeSubtitle;
 
   /// No description provided for @completed.
@@ -937,6 +937,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Filter by grading'**
   String get fortressFilterAuthenticity;
+
+  /// No description provided for @fortressFilterChaptersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter chapters...'**
+  String get fortressFilterChaptersHint;
 
   /// No description provided for @fortressFinish.
   ///
@@ -1346,6 +1352,12 @@ abstract class AppLocalizations {
   /// **'Filters'**
   String get hadithOpenFilters;
 
+  /// No description provided for @hadithPageLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load that page. Showing previous results.'**
+  String get hadithPageLoadFailed;
+
   /// No description provided for @hadithRecentSearches.
   ///
   /// In en, this message translates to:
@@ -1387,6 +1399,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Scope'**
   String get hadithScope;
+
+  /// No description provided for @hadithSearchAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get hadithSearchAction;
 
   /// No description provided for @hadithSearchHint.
   ///
@@ -1493,7 +1511,7 @@ abstract class AppLocalizations {
   /// No description provided for @hadithStartSearchPrompt.
   ///
   /// In en, this message translates to:
-  /// **'Start searching to see results'**
+  /// **'Press Enter or Search to see results'**
   String get hadithStartSearchPrompt;
 
   /// No description provided for @hadithTakhrij.
@@ -1619,7 +1637,7 @@ abstract class AppLocalizations {
   /// No description provided for @iqamahOsNotificationBody.
   ///
   /// In en, this message translates to:
-  /// **'Iqamah time — tap to focus'**
+  /// **'Iqamah time has arrived.'**
   String get iqamahOsNotificationBody;
 
   /// No description provided for @iqamahPlayingTitle.
@@ -3702,6 +3720,42 @@ abstract class AppLocalizations {
   /// **'Previous page'**
   String get shortcutQuranPagePrevLabel;
 
+  /// No description provided for @shortcutQuranZoomInDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom the mushaf page larger (Ctrl/⌘ + scroll also works). Vertical scroll only when needed.'**
+  String get shortcutQuranZoomInDescription;
+
+  /// No description provided for @shortcutQuranZoomInLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom in'**
+  String get shortcutQuranZoomInLabel;
+
+  /// No description provided for @shortcutQuranZoomOutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom the mushaf page smaller.'**
+  String get shortcutQuranZoomOutDescription;
+
+  /// No description provided for @shortcutQuranZoomOutLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Zoom out'**
+  String get shortcutQuranZoomOutLabel;
+
+  /// No description provided for @shortcutQuranZoomResetDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset mushaf zoom to the saved text-size preference.'**
+  String get shortcutQuranZoomResetDescription;
+
+  /// No description provided for @shortcutQuranZoomResetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset zoom'**
+  String get shortcutQuranZoomResetLabel;
+
   /// No description provided for @shortcutToggleLocaleDescription.
   ///
   /// In en, this message translates to:
@@ -3789,7 +3843,7 @@ abstract class AppLocalizations {
   /// No description provided for @sunnahOsNotificationBody.
   ///
   /// In en, this message translates to:
-  /// **'Sunnah time — tap to focus'**
+  /// **'Sunnah prayer time has arrived.'**
   String get sunnahOsNotificationBody;
 
   /// No description provided for @sunnahTimes.
@@ -3900,17 +3954,11 @@ abstract class AppLocalizations {
   /// **'Hide Tawaq'**
   String get trayHideApp;
 
-  /// No description provided for @trayMuteAdhan.
+  /// No description provided for @trayNextPrayerStatus.
   ///
   /// In en, this message translates to:
-  /// **'Mute adhan'**
-  String get trayMuteAdhan;
-
-  /// No description provided for @trayNextPrayer.
-  ///
-  /// In en, this message translates to:
-  /// **'Next: {prayer}'**
-  String trayNextPrayer(String prayer);
+  /// **'Next: {prayer} · {time} · in {remaining}'**
+  String trayNextPrayerStatus(String prayer, String time, String remaining);
 
   /// No description provided for @trayQuit.
   ///
@@ -3923,6 +3971,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show Tawaq'**
   String get trayShowApp;
+
+  /// No description provided for @trayStopAdhan.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop adhan'**
+  String get trayStopAdhan;
 
   /// No description provided for @tryDifferentSearchTerm.
   ///
