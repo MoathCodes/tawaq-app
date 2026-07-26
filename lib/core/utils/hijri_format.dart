@@ -6,9 +6,13 @@ import 'package:hijri_date/hijri.dart';
 /// for presentation only.
 abstract final class HijriFormat {
   /// Resolves a Hijri date for the given Gregorian [date].
+  ///
+  /// Uses [date]'s year/month/day wall components as-is. Do not call
+  /// [DateTime.toLocal] first — when [date] is a prayer-TZ [TZDateTime], that
+  /// would remap to the device timezone and can shift the calendar day.
   static HijriDate fromGregorian(DateTime date, String languageCode) {
     HijriDate.setLocal(_resolveLocale(languageCode));
-    return HijriDate.fromDate(date.toLocal());
+    return HijriDate.fromDate(DateTime(date.year, date.month, date.day));
   }
 
   /// Formats [date] using hijri_date pattern tokens (`dd`, `MMMM`, `DD`, …).

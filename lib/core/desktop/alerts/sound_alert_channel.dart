@@ -6,9 +6,9 @@ import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 
 /// Plays the bundled adhan/iqamah recording with a gentle fade in and out.
 ///
-/// Routes adhan playback through [AudioPlayerController] (the single adhan
-/// entry path). Suspends any active recitation before the alert and restores
-/// volume + resumes once the alert ends.
+/// Routes adhan playback through [AudioPlayerController]. Captures a recitation
+/// snapshot via [_onSuspend] for later resume; force-steal inside the audio
+/// service stops any prior session when [playTrack] runs.
 class SoundAlertChannel implements PrayerAlertChannel {
   /// Creates a [SoundAlertChannel] over [_adhanPlayer].
   SoundAlertChannel({
@@ -26,6 +26,7 @@ class SoundAlertChannel implements PrayerAlertChannel {
   final Future<void> Function() _onResume;
 
   double? _capturedVolume;
+  bool _armed = false;
 
   @override
   String get debugName => 'sound';
@@ -35,29 +36,30 @@ class SoundAlertChannel implements PrayerAlertChannel {
     final assetPath = event.soundAssetPath;
     if (!event.playSound || assetPath == null) return;
 
-    try {
-      _capturedVolume = await _onCaptureRecitationVolume();
-      await _onSuspend();
+    _capturedVolume = await _onCaptureRecitationVolume();
+    await _onSuspend();
+    _armed = true;
 
-      await _adhanPlayer.setVolume(event.volume);
-      await _adhanPlayer.playTrack(
-        AudioTrack.asset(
-          id: event.slug,
-          title: event.soundTitle ?? event.soundSubtitle ?? 'Tawaq',
-          assetPath: assetPath,
-          subtitle: event.soundSubtitle,
-        ),
-      );
-    } on Object catch (error, stack) {
-      rethrow;
-    }
+    await _adhanPlayer.setVolume(event.volume);
+    await _adhanPlayer.playTrack(
+      AudioTrack.asset(
+        id: event.slug,
+        title: event.soundTitle ?? event.soundSubtitle ?? 'Tawaq',
+        assetPath: assetPath,
+        subtitle: event.soundSubtitle,
+      ),
+    );
   }
 
   @override
   Future<void> cancel() async {
-    await _adhanPlayer.stop(fadeOut: kAudioDefaultFadeOut);
+    if (!_armed) return;
+    _armed = false;
+
+    await _adhanPlayer.stop(fadeOut: kAudioDefaultFadeOut, force: true);
 
     final capturedVolume = _capturedVolume;
+    _capturedVolume = null;
     if (capturedVolume != null) {
       await _onRestoreRecitationVolume(capturedVolume);
     }

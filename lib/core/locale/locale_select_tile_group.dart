@@ -12,7 +12,7 @@ class LocaleSelectTileGroup extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final isArabic = ref.watch(localeProvider) == 'ar';
+    final isArabic = ref.watch(localeProvider).value == 'ar';
 
     return FSelectTileGroup<bool>(
       key: ValueKey(isArabic),

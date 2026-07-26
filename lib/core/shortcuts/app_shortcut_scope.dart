@@ -40,6 +40,7 @@ class AppShortcutScope extends StatefulWidget {
 class _AppShortcutScopeState extends State<AppShortcutScope> {
   Map<ShortcutActivator, VoidCallback>? _bindings;
   Set<ShortcutDef>? _boundShortcuts;
+  Map<ShortcutDef, VoidCallback>? _boundHandlers;
 
   @override
   Widget build(BuildContext context) {
@@ -64,11 +65,14 @@ class _AppShortcutScopeState extends State<AppShortcutScope> {
   }
 
   void _ensureBindings() {
-    if (_bindings != null && _setEquals(_boundShortcuts, widget.shortcuts)) {
+    if (_bindings != null &&
+        _setEquals(_boundShortcuts, widget.shortcuts) &&
+        identical(_boundHandlers, widget.handlers)) {
       return;
     }
 
     _boundShortcuts = Set<ShortcutDef>.from(widget.shortcuts);
+    _boundHandlers = widget.handlers;
     _bindings = buildAppShortcutBindings(
       shortcuts: widget.shortcuts,
       handlers: widget.handlers,

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:forui/forui.dart';
 
-/// Total time for [AnimationEntry]'s fade, move, and scale effects after [delay].
+/// Total duration of [AnimationEntry] entrance effects after [delay].
 const Duration kAnimationEntryEffectDuration = Duration(milliseconds: 620);
 
 /// A widget that applies a staggered fade-in and
@@ -9,6 +10,9 @@ const Duration kAnimationEntryEffectDuration = Duration(milliseconds: 620);
 ///
 /// This widget is useful for creating a visually appealing entrance animation
 /// for a list of items.
+///
+/// Honors [FAccessibility.motion] (and skips motion when reduced/disabled)
+/// unless [forceAnimation] is true.
 class AnimationEntry extends StatefulWidget {
   /// Creates an animation entry.
   const AnimationEntry({
@@ -20,14 +24,13 @@ class AnimationEntry extends StatefulWidget {
     this.onEntranceComplete,
   });
 
-  /// The widget to animate.
+  /// The widget below this widget in the tree.
   final Widget child;
 
   /// The delay before the animation starts.
   final Duration delay;
 
-  /// Whether to force the animation to play even if animations are disabled
-  /// on the device.
+  /// Whether to force the animation to play even if motion is reduced/disabled.
   final bool forceAnimation;
 
   /// When true, the entrance animation runs only once for this [State] object.
@@ -67,9 +70,9 @@ class _AnimationEntryState extends State<AnimationEntry> {
       return widget.child;
     }
 
-    final disableAnimation =
-        widget.forceAnimation && MediaQuery.of(context).disableAnimations;
-    return disableAnimation
+    final skipMotion = !widget.forceAnimation &&
+        context.accessibility.motion != FAccessibilityMotion.all;
+    return skipMotion
         ? widget.child
         : RepaintBoundary(
             child: widget.child

@@ -1,7 +1,7 @@
 import 'package:desktop_tray/desktop_tray.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/desktop/desktop_window_controller.dart';
-import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 /// One row in the tray context menu.
@@ -52,33 +52,21 @@ final class TrayMenuShow extends TrayMenuEntry {
   }
 }
 
-/// Toggles mute-all adhan playback.
-final class TrayMenuMute extends TrayMenuEntry {
-  /// Creates [TrayMenuMute].
-  const TrayMenuMute();
+/// Stops the in-flight prayer alert (sound, overlay, OS notification).
+final class TrayMenuStop extends TrayMenuEntry {
+  /// Creates [TrayMenuStop].
+  const TrayMenuStop();
 
   @override
-  String get key => 'mute';
-
-  /// Builds the native tray checkbox item for [l10n].
-  TrayMenuItem toTrayMenuItemWithMute(
-    AppLocalizations l10n, {
-    required bool muteChecked,
-  }) => TrayMenuItem.checkbox(
-    key: key,
-    label: l10n.trayMuteAdhan,
-    checked: muteChecked,
-  );
+  String get key => 'stop';
 
   @override
   TrayMenuItem toTrayMenuItem(AppLocalizations l10n) =>
-      toTrayMenuItemWithMute(l10n, muteChecked: false);
+      TrayMenuItem(key: key, label: l10n.trayStopAdhan);
 
   @override
   Future<void> handle(Ref ref) async {
-    final notifier = ref.read(adhanSettingsProvider.notifier);
-    final current = ref.read(adhanSettingsProvider).value?.muteAll ?? false;
-    notifier.setMuteAll(value: !current);
+    await ref.read(prayerAlertDispatcherProvider.notifier).dismiss();
   }
 }
 
@@ -117,10 +105,9 @@ final class TrayMenuQuit extends TrayMenuEntry {
   }
 }
 
-/// Ordered tray context menu rows.
+/// Ordered tray context menu rows (Stop is inserted dynamically when active).
 const trayMenuRegistry = <TrayMenuEntry>[
   TrayMenuShow(),
-  TrayMenuMute(),
   TrayMenuSeparator(),
   TrayMenuQuit(),
 ];
@@ -128,6 +115,7 @@ const trayMenuRegistry = <TrayMenuEntry>[
 /// Lookup from native menu item key to [TrayMenuEntry].
 final Map<String, TrayMenuEntry> trayMenuEntryByKey = {
   for (final entry in trayMenuRegistry) ?entry.key: entry,
+  'stop': const TrayMenuStop(),
 };
 
 /// Builds the native tray context menu for [l10n].
@@ -135,10 +123,12 @@ final Map<String, TrayMenuEntry> trayMenuEntryByKey = {
 /// When [headerLabel] is non-empty, a disabled header row (e.g. the next
 /// prayer) is shown at the top, followed by a separator. This is the only way
 /// to surface prayer state on Linux, where the tray has no tooltip API.
+///
+/// When [alertActive] is true, a Stop row is inserted above Show.
 TrayMenu buildTrayMenu({
   required AppLocalizations l10n,
-  required bool muteChecked,
   required bool windowVisible,
+  required bool alertActive,
   String? headerLabel,
 }) => TrayMenu(
   items: [
@@ -146,15 +136,12 @@ TrayMenu buildTrayMenu({
       TrayMenuItem(label: headerLabel, disabled: true),
       TrayMenuItem.separator(),
     ],
+    if (alertActive) const TrayMenuStop().toTrayMenuItem(l10n),
     for (final entry in trayMenuRegistry)
       switch (entry) {
         TrayMenuShow() => entry.toTrayMenuItemWithVisibility(
           l10n,
           windowVisible: windowVisible,
-        ),
-        TrayMenuMute() => entry.toTrayMenuItemWithMute(
-          l10n,
-          muteChecked: muteChecked,
         ),
         _ => entry.toTrayMenuItem(l10n),
       },

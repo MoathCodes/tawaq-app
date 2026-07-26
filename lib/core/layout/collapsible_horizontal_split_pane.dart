@@ -282,6 +282,7 @@ class _CollapseHandle extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     return FTooltip(
+      semanticsLabel: semanticLabel,
       tipBuilder: (_, _) => Text(semanticLabel),
       childAnchor: sideOnLeft ? Alignment.centerRight : Alignment.centerLeft,
       tipAnchor: sideOnLeft ? Alignment.centerLeft : Alignment.centerRight,
@@ -332,6 +333,7 @@ class _PeekTab extends StatelessWidget {
       width: _kPeekTabWidth,
       child: Align(
         child: FTooltip(
+          semanticsLabel: semanticLabel,
           tipBuilder: (_, _) => Text(semanticLabel),
           childAnchor: innerOnLeft
               ? Alignment.centerLeft
@@ -339,6 +341,7 @@ class _PeekTab extends StatelessWidget {
           tipAnchor: innerOnLeft ? Alignment.centerRight : Alignment.centerLeft,
           child: FTappable(
             semanticsLabel: semanticLabel,
+            semanticsExpanded: false,
             onPress: onPress,
             builder: (context, variants, _) {
               final active =

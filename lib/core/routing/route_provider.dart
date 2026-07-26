@@ -251,7 +251,7 @@ class AboutRoute extends AppNavigationRoute with $AboutRoute {
 }
 
 /// Configures the root [GoRouter] used by the application shell.
-@riverpod
+@Riverpod(keepAlive: true)
 GoRouter appRouter(Ref ref) {
   final refresh = ValueNotifier(0);
   ref
@@ -273,10 +273,10 @@ GoRouter appRouter(Ref ref) {
       final onboarding = ref.read(onboardingStateProvider);
       final prayer = ref.read(prayerSettingsProvider);
 
-      // Hold until onboarding + prayer settings resolve — don't treat
-      // loading as "not needed" (that flashes /prayer on first run).
+      // Stay put until gate state hydrates. Do not send returning users to
+      // /onboarding during the loading gap (hot restart / cold start).
       if (onboarding.isLoading || !prayer.hasValue) {
-        return onOnboarding ? null : onboardingPath;
+        return null;
       }
 
       final needed = ref.read(onboardingNeededProvider);

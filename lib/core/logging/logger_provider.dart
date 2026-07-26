@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -46,8 +47,9 @@ Future<void> initFileLogging() async {
     logger = Logger(
       // ProductionFilter emits regardless of build mode (gated by [level]),
       // so the file captures logs in release where DevelopmentFilter would not.
+      // Keep verbose debug only in kDebugMode; release stays at info+.
       filter: ProductionFilter(),
-      level: Level.debug,
+      level: kDebugMode ? Level.debug : Level.info,
       printer: _printer(),
       output: MultiOutput([
         ConsoleOutput(),

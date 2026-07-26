@@ -38,20 +38,18 @@ class DirectionalContentSwitcher extends StatelessWidget {
         }
 
         final dir = slideDirection.toDouble();
-        final slide = Tween<Offset>(
-          begin: Offset(dir * 0.18, 0),
-          end: Offset.zero,
-        ).animate(
-          CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          ),
+        final slide = animation.drive(
+          Tween<Offset>(
+            begin: Offset(dir * 0.18, 0),
+            end: Offset.zero,
+          ).chain(CurveTween(curve: Curves.easeOutCubic)),
         );
 
-        final opacity = Tween<double>(begin: 0, end: 1).animate(
-          CurvedAnimation(
-            parent: animation,
-            curve: const Interval(0.15, 1, curve: Curves.easeOut),
+        final opacity = animation.drive(
+          Tween<double>(begin: 0, end: 1).chain(
+            CurveTween(
+              curve: const Interval(0.15, 1, curve: Curves.easeOut),
+            ),
           ),
         );
 

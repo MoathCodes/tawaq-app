@@ -6,6 +6,7 @@ import 'package:tawaq/core/desktop/desktop_tray_service.dart';
 import 'package:tawaq/core/desktop/desktop_tray_sync_provider.dart';
 import 'package:tawaq/core/desktop/desktop_window_controller.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
+import 'package:tawaq/core/desktop/single_instance.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_alert_scheduler_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/media_session_router_provider.dart';
@@ -27,6 +28,8 @@ class DesktopShell extends ConsumerStatefulWidget {
 
 class _DesktopShellState extends ConsumerState<DesktopShell>
     with WindowListener {
+  StreamSubscription<void>? _activateSub;
+
   @override
   void initState() {
     super.initState();
@@ -69,6 +72,14 @@ class _DesktopShellState extends ConsumerState<DesktopShell>
           .read(desktopMainWindowVisibleProvider.notifier)
           .setVisible(value: true);
     }
+
+    // Linux: second-launch wake → same restore path as tray "Show".
+    _activateSub ??= desktopActivateRequests.listen((_) {
+      unawaited(ref.read(desktopWindowControllerProvider).showMainWindow());
+    });
+    if (takePendingDesktopActivate()) {
+      unawaited(ref.read(desktopWindowControllerProvider).showMainWindow());
+    }
   }
 
   @override
@@ -82,6 +93,8 @@ class _DesktopShellState extends ConsumerState<DesktopShell>
   void dispose() {
     if (isDesktopPlatform) {
       windowManager.removeListener(this);
+      unawaited(_activateSub?.cancel());
+      _activateSub = null;
     }
     super.dispose();
   }
@@ -102,4 +115,3 @@ class _DesktopShellState extends ConsumerState<DesktopShell>
     return widget.child;
   }
 }
-

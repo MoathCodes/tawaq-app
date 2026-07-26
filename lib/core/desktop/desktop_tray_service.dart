@@ -75,11 +75,27 @@ class DesktopTrayService with DesktopTrayListener {
   }
 
   @override
+  Future<void> onTrayIconMouseDown() async {
+    // Intentionally empty: hide-on-down + show-on-up caused a visible flicker
+    // on Windows/macOS. Toggle happens once on mouse up instead.
+  }
+
+  @override
   void onTrayIconMouseUp() {
     // Linux (AppIndicator) opens the menu natively; only Windows/macOS need a
-    // manual response. Left-click restores the main window.
+    // manual response. Left-click toggles the main window.
     if (Platform.isLinux) return;
-    unawaited(_ref.read(desktopWindowControllerProvider).showMainWindow());
+    unawaited(_toggleMainWindow());
+  }
+
+  Future<void> _toggleMainWindow() async {
+    final visible = _ref.read(desktopMainWindowVisibleProvider);
+    final controller = _ref.read(desktopWindowControllerProvider);
+    if (visible) {
+      await controller.hideMainWindow();
+    } else {
+      await controller.showMainWindow();
+    }
   }
 
   @override

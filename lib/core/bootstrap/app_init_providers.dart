@@ -5,6 +5,7 @@ import 'package:local_notifier/local_notifier.dart';
 import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
+import 'package:tawaq/core/desktop/single_instance.dart';
 import 'package:tawaq/core/desktop/window_snapshot.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
@@ -40,10 +41,14 @@ Future<void> desktopShellInit(Ref ref) async {
       backgroundColor: Color(0x00000000),
       skipTaskbar: false,
       titleBarStyle: TitleBarStyle.hidden,
+      title: kDesktopWindowTitle,
       minimumSize: kDesktopMinimumWindowSize,
     ),
   );
   await windowManager.setMinimumSize(kDesktopMinimumWindowSize);
+  // Pin a locale-independent title so flutter_alone can find the window
+  // (Windows HWND lookup; Linux uses the activate socket for tray restore).
+  await windowManager.setTitle(kDesktopWindowTitle);
 }
 
 /// Gate for showing the real app after Hive and core settings can hydrate.

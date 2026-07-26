@@ -8,10 +8,16 @@ class LruMap<K, V> {
 
   final _map = <K, V>{};
 
+  /// Current number of retained entries.
+  int get length => _map.length;
+
   /// Returns the value for [key], refreshing its recency, or `null` if absent.
+  ///
+  /// Distinguishes a missing key from a present `null` value when [V] is
+  /// nullable — use [containsKey] when that distinction matters.
   V? operator [](K key) {
-    final value = _map.remove(key);
-    if (value == null) return null;
+    if (!_map.containsKey(key)) return null;
+    final value = _map.remove(key) as V;
     _map[key] = value;
     return value;
   }

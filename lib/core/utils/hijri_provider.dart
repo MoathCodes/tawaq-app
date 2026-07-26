@@ -14,7 +14,7 @@ String hijriClock(Ref ref) {
   // Day key + locale are the only reactive inputs; the instant is read
   // non-reactively so this does not recompute on every 1 Hz clock tick.
   ref.watch(prayerCalendarDayKeyProvider);
-  final langCode = ref.watch(localeProvider);
+  final langCode = ref.watch(localeProvider).value ?? 'en';
   final settings = ref.read(effectivePrayerSettingsProvider);
   if (settings == null) return '';
   return HijriFormat.formatDate(

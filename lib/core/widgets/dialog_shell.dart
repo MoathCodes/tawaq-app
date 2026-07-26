@@ -197,3 +197,77 @@ class TawaqDialogShell extends StatelessWidget {
 
 /// @deprecated Use [TawaqDialogShell] instead.
 typedef PlayerDialogShell = TawaqDialogShell;
+
+/// Standard Forui 0.24+ dialog body: title, body, trailing action row.
+///
+/// Use inside [FDialog.builder] after the built-in content layout was removed.
+class ForuiDialogLayout extends StatelessWidget {
+  /// Creates a [ForuiDialogLayout].
+  const ForuiDialogLayout({
+    required this.style,
+    required this.title,
+    required this.body,
+    required this.actions,
+    this.expandActions = false,
+    super.key,
+  });
+
+  /// Resolved dialog style from [FDialog.builder].
+  final FDialogStyle style;
+
+  /// Dialog title (styled with [FDialogStyle.titleTextStyle]).
+  final Widget title;
+
+  /// Dialog body (styled with [FDialogStyle.bodyTextStyle]).
+  final Widget body;
+
+  /// Action buttons shown in a trailing row.
+  final List<Widget> actions;
+
+  /// When true, each action is [Expanded] (touch-friendly full-width row).
+  final bool expandActions;
+
+  @override
+  Widget build(BuildContext context) {
+    final touch = context.platformVariant.touch;
+    final titleBottom = touch ? 9.0 : 5.0;
+    final bodyBottom = touch ? 20.0 : 16.0;
+    final actionSpacing = touch ? 10.0 : 8.0;
+
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: touch ? 18 : 14,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(bottom: titleBottom),
+            child: DefaultTextStyle.merge(
+              style: style.titleTextStyle,
+              child: title,
+            ),
+          ),
+          Flexible(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: bodyBottom),
+              child: DefaultTextStyle.merge(
+                style: style.bodyTextStyle,
+                child: body,
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            spacing: actionSpacing,
+            children: expandActions || touch
+                ? [for (final action in actions) Expanded(child: action)]
+                : actions,
+          ),
+        ],
+      ),
+    );
+  }
+}

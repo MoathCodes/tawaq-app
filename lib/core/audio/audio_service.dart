@@ -74,18 +74,27 @@ const _leaseKeepAliveThrottle = Duration(seconds: 10);
 class TawaqAudioService {
   /// Creates a [TawaqAudioService].
   ///
-  /// [leaseRegistry] is for tests that need a short watchdog timeout.
+  /// [leaseRegistry] is for tests that need a custom registry. Prefer
+  /// [watchdogTimeout] when you only need a short unattended deadline — that
+  /// path keeps the production watchdog→engine-clear hook.
   TawaqAudioService({
     PlayerApi? player,
     AudioLeaseRegistry? leaseRegistry,
-  })  : _leases = leaseRegistry ??
-            AudioLeaseRegistry(
-              onWatchdogForceRelease: (owner) => developer.log(
-                'Watchdog force-releasing lease for $owner',
-                name: 'tawaq.audio',
-              ),
-            ),
-        _player = player ?? Player(configuration: kTawaqPlayerConfiguration) {
+    Duration watchdogTimeout = const Duration(seconds: 30),
+  }) : _player = player ?? Player(configuration: kTawaqPlayerConfiguration) {
+    // Watchdog must stop the engine — releasing ownership alone leaves an
+    // orphaned loaded track that fights the next owner.
+    _leases = leaseRegistry ??
+        AudioLeaseRegistry(
+          watchdogTimeout: watchdogTimeout,
+          onWatchdogForceRelease: (owner) {
+            developer.log(
+              'Watchdog force-releasing lease for $owner',
+              name: 'tawaq.audio',
+            );
+            unawaited(_clearEngineAfterWatchdog());
+          },
+        );
     // autoPlay defaults to false: open(play: false) never starts playback
     // until play() is called explicitly, so seeks complete before audio.
     // Identify the audio client once; it never changes for the lifetime of
@@ -180,25 +189,28 @@ class TawaqAudioService {
   MediaSessionPublishMetadata? _publishedMetadata;
   CoverArt? _appIconArtwork;
   bool _trackCompleted = false;
+  bool _disposed = false;
 
   /// Desired output volume (0-100) used as the fade target.
   double _targetVolume = 100;
-  Timer? _fadeTimer;
+
+  /// Last volume applied to the player (may differ from [_targetVolume] mid-fade).
+  double _actualVolume = 100;
+
+  /// Owned in-flight fade; cancel always settles [_ActiveFade.done].
+  _ActiveFade? _activeFade;
 
   final _volumeController = StreamController<double>.broadcast();
 
   // ---- Lease state ----------------------------------------------------------
   // Pure, mpv-free ownership coordination is delegated to AudioLeaseRegistry
   // so the lease logic stays unit-testable without native player init.
-  final AudioLeaseRegistry _leases;
+  late final AudioLeaseRegistry _leases;
   Duration? _lastKeepAlivePosition;
   Timer? _leaseKeepAliveTimer;
 
   /// Current lease owner, or null when idle.
   String? get currentLeaseOwner => _leases.currentOwner;
-
-  /// Stream that fires on every lease acquire/release (for contended callers).
-  Stream<void> get leaseStream => _leases.leaseStream;
 
   PlaybackState get state => _state;
 
@@ -514,10 +526,11 @@ class TawaqAudioService {
     AudioTrack track, {
     Duration fadeIn = kAudioDefaultFadeIn,
     String? owner,
+    bool force = false,
   }) async {
     final effectiveOwner = owner ?? _leases.currentOwner ?? 'unknown';
     if (!_leases.hasValidLease(effectiveOwner)) {
-      await acquire(owner: effectiveOwner);
+      await acquire(owner: effectiveOwner, force: force);
     }
     _cancelFade();
     _trackCompleted = false;
@@ -702,38 +715,50 @@ class TawaqAudioService {
     }
   }
 
-  Future<void> pause() async {
+  /// Pauses playback when [owner] holds the lease (or [force] is true).
+  ///
+  /// Returns `false` when [owner] is omitted/wrong and [force] is false.
+  Future<bool> pause({String? owner, bool force = false}) async {
+    if (!_mayControlTransport(owner: owner, force: force)) return false;
     await _player.pause();
     _emitState();
+    return true;
   }
 
-  Future<void> resume() async {
+  /// Resumes playback when [owner] holds the lease (or [force] is true).
+  ///
+  /// Returns `false` when [owner] is omitted/wrong and [force] is false.
+  Future<bool> resume({String? owner, bool force = false}) async {
+    if (!_mayControlTransport(owner: owner, force: force)) return false;
     await _player.play();
     _trackCompleted = false;
     _emitState();
+    return true;
   }
 
-  Future<void> stop({Duration fadeOut = Duration.zero, String? owner}) async {
-    final effectiveOwner = owner ?? _leases.currentOwner;
-    if (effectiveOwner != null && !_leases.hasValidLease(effectiveOwner)) {
+  /// True when [owner]/[force] may drive pause/resume/stop transport.
+  ///
+  /// Fail closed: an omitted [owner] never impersonates the current holder.
+  /// Only [force] or a matching lease owner may control transport.
+  bool _mayControlTransport({String? owner, bool force = false}) {
+    if (force) return true;
+    if (owner == null) return false;
+    return _leases.hasValidLease(owner);
+  }
+
+  Future<void> stop({
+    Duration fadeOut = Duration.zero,
+    String? owner,
+    bool force = false,
+  }) async {
+    if (!_mayControlTransport(owner: owner, force: force)) {
       return; // ignore stop from non-owner
     }
     _cancelFade();
     if (fadeOut > Duration.zero && _activeTrack != null) {
-      await _fadeVolume(from: _targetVolume, to: 0, duration: fadeOut);
+      await _fadeVolume(from: _actualVolume, to: 0, duration: fadeOut);
     }
-    _activeTrack = null;
-    _trackCompleted = false;
-    _publishedMetadata = null;
-    _stopLeaseKeepAliveTimer();
-    await _clearWatchLater();
-    await clearAbLoop();
-    await resetPlaybackModes();
-    await _player.stop();
-    await _player.setMediaSession(null);
-    await _player.setVolume(_targetVolume);
-    _emit(const PlaybackIdle());
-    _leases.releaseCurrent();
+    await _unloadEngine(releaseLease: true);
   }
 
   /// Current target output volume (0-100).
@@ -747,43 +772,62 @@ class TawaqAudioService {
     _volumeController.add(_targetVolume);
     // While a ramp is in flight it owns the volume; it will land on the new
     // target on completion.
-    if (_fadeTimer == null) {
+    if (_activeFade == null) {
+      _actualVolume = _targetVolume;
       await _player.setVolume(_targetVolume);
     }
   }
 
   /// Ramps the player volume from [from] to [to] over [duration].
+  ///
+  /// Cancel always settles the returned Future (via [_cancelFade]) so callers
+  /// that `await` a fade never hang when a superseding play/stop/error cancels.
   Future<void> _fadeVolume({
     required double from,
     required double to,
     required Duration duration,
   }) async {
     _cancelFade();
-    await _player.setVolume(from.clamp(0, 100).toDouble());
-    if (duration <= Duration.zero || from == to) {
-      await _player.setVolume(to.clamp(0, 100).toDouble());
+    final start = from.clamp(0, 100).toDouble();
+    final end = to.clamp(0, 100).toDouble();
+    _actualVolume = start;
+    await _player.setVolume(start);
+    if (duration <= Duration.zero || start == end) {
+      _actualVolume = end;
+      await _player.setVolume(end);
       return;
     }
     final steps = (duration.inMilliseconds / _fadeStep.inMilliseconds).ceil();
-    final delta = (to - from) / steps;
-    final completer = Completer<void>();
+    final delta = (end - start) / steps;
+    final done = Completer<void>();
     var i = 0;
-    _fadeTimer = Timer.periodic(_fadeStep, (timer) {
+    final timer = Timer.periodic(_fadeStep, (timer) {
       i++;
-      final value = i >= steps ? to : from + delta * i;
-      unawaited(_player.setVolume(value.clamp(0, 100).toDouble()));
+      final value = i >= steps ? end : start + delta * i;
+      _actualVolume = value.clamp(0, 100).toDouble();
+      unawaited(_player.setVolume(_actualVolume));
       if (i >= steps) {
         timer.cancel();
-        _fadeTimer = null;
-        if (!completer.isCompleted) completer.complete();
+        final active = _activeFade;
+        _activeFade = null;
+        if (active != null && !active.done.isCompleted) {
+          active.done.complete();
+        }
       }
     });
-    await completer.future;
+    _activeFade = _ActiveFade(timer: timer, done: done);
+    await done.future;
   }
 
+  /// Cancels any in-flight fade and always settles its Completer.
   void _cancelFade() {
-    _fadeTimer?.cancel();
-    _fadeTimer = null;
+    final active = _activeFade;
+    if (active == null) return;
+    _activeFade = null;
+    active.timer.cancel();
+    if (!active.done.isCompleted) {
+      active.done.complete();
+    }
   }
 
   // ---- A-B loop & native loop -----------------------------------------------
@@ -845,8 +889,10 @@ class TawaqAudioService {
     _leases.releaseCurrent();
   }
 
-  /// Releases native handles. Called on app shutdown.
+  /// Releases native handles. Called on app shutdown. Idempotent.
   Future<void> dispose() async {
+    if (_disposed) return;
+    _disposed = true;
     _cancelFade();
     _stopLeaseKeepAliveTimer();
     await _leases.dispose();
@@ -865,9 +911,70 @@ class TawaqAudioService {
   ///
   /// Returns a lease token that must be released when done. If another owner
   /// holds the lease, the call waits until it is released or the watchdog
-  /// forces a release.
-  Future<AudioLease> acquire({required String owner}) =>
-      _leases.acquire(owner: owner);
+  /// forces a release. Pass [force] to steal immediately: the prior session is
+  /// stopped (no fade) then ownership transfers — callers need not race a
+  /// separate suspend ritual for correctness.
+  Future<AudioLease> acquire({required String owner, bool force = false}) async {
+    if (force) {
+      final holder = _leases.currentOwner;
+      if (holder != null && holder != owner) {
+        await _unloadEngine(releaseLease: true);
+      }
+    }
+    return _leases.acquire(owner: owner, force: force);
+  }
+
+  /// Unloads the loaded track and optionally releases the lease.
+  Future<void> _unloadEngine({required bool releaseLease}) async {
+    _cancelFade();
+    _activeTrack = null;
+    _trackCompleted = false;
+    _publishedMetadata = null;
+    _stopLeaseKeepAliveTimer();
+    await _clearWatchLater();
+    await clearAbLoop();
+    await resetPlaybackModes();
+    await _player.stop();
+    await _player.setMediaSession(null);
+    _actualVolume = _targetVolume;
+    await _player.setVolume(_targetVolume);
+    _emit(const PlaybackIdle());
+    if (releaseLease) {
+      _leases.releaseCurrent();
+    }
+  }
+
+  /// Watchdog path: clear engine state after the registry already released.
+  Future<void> _clearEngineAfterWatchdog() async {
+    _cancelFade();
+    _activeTrack = null;
+    _trackCompleted = false;
+    _publishedMetadata = null;
+    _stopLeaseKeepAliveTimer();
+    try {
+      await _clearWatchLater();
+      await clearAbLoop();
+      await resetPlaybackModes();
+      await _player.stop();
+      await _player.setMediaSession(null);
+      _actualVolume = _targetVolume;
+      await _player.setVolume(_targetVolume);
+    } on Object catch (error) {
+      developer.log(
+        'Watchdog engine clear failed: $error',
+        name: 'tawaq.audio',
+      );
+    }
+    _emit(const PlaybackIdle());
+  }
+}
+
+/// In-flight volume ramp. Cancel must always complete [done].
+final class _ActiveFade {
+  _ActiveFade({required this.timer, required this.done});
+
+  final Timer timer;
+  final Completer<void> done;
 }
 
 /// Interval between volume steps while fading.

@@ -50,8 +50,11 @@ class PageShell extends ConsumerWidget {
     // direction: macOS on the left, Windows/Linux on the right. The title bar
     // is forced LTR below, so changing language never mirrors their position
     // or button order.
-    final desktopSettings = ref.watch(desktopSettingsProvider).value;
-    final forceMacStyle = desktopSettings?.forceMacStyleWindowControls ?? false;
+    final forceMacStyle = ref.watch(
+      desktopSettingsProvider.select(
+        (s) => s.value?.forceMacStyleWindowControls ?? false,
+      ),
+    );
     final controlsOnLeft = Platform.isMacOS || forceMacStyle;
     const dragArea = TitleBarDragArea();
     final controls = WindowControls(forceMacStyle: forceMacStyle);

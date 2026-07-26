@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/routing/route_provider.dart';
 
 /// The bottom navigation bar for the main shell.
-class ShellBottomNavigationBar extends ConsumerWidget {
+class ShellBottomNavigationBar extends HookConsumerWidget {
   /// Creates a new instance of [ShellBottomNavigationBar].
   const ShellBottomNavigationBar({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const routes = kMainRoutes;
-    final currentLocation = GoRouter.of(context).state.fullPath;
+    final router = GoRouter.of(context);
+    // go_router 17: rebuild when routeInformationProvider notifies (sidebar).
+    useListenable(router.routeInformationProvider);
+    final currentLocation = router.state.fullPath;
     final selectedIndex = routes.indexWhere(
       (route) => route.containsLocation(currentLocation),
     );

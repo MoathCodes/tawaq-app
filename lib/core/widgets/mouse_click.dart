@@ -57,6 +57,7 @@ class MouseClick extends StatelessWidget {
       ),
       excludeSemantics: semanticsLabel != null,
       semanticsLabel: semanticsLabel,
+      semanticsButton: true,
       onHoverChange: onHoverChange,
       onPress: isDisabled ? null : onClick,
       child: content,

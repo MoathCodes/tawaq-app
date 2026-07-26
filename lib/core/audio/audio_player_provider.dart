@@ -33,7 +33,8 @@ class AudioPlayerController extends _$AudioPlayerController {
 
   /// Plays a single [track], optionally ramping the volume up over [fadeIn].
   ///
-  /// Acquires the adhan lease via [TawaqAudioService.play] when needed.
+  /// Acquires the adhan lease via [TawaqAudioService.play], stealing any other
+  /// owner (force-steal stops the prior session inside the service).
   Future<void> playTrack(
     AudioTrack track, {
     Duration fadeIn = kAudioDefaultFadeIn,
@@ -42,18 +43,29 @@ class AudioPlayerController extends _$AudioPlayerController {
       track,
       fadeIn: fadeIn,
       owner: kAdhanLeaseOwner,
+      force: true,
     );
   }
 
-  /// Pauses the active track.
-  Future<void> pause() => _service.pause();
+  /// Pauses the active track when this controller holds the adhan lease.
+  Future<bool> pause() => _service.pause(owner: kAdhanLeaseOwner);
 
-  /// Resumes the active track.
-  Future<void> resume() => _service.resume();
+  /// Resumes the active track when this controller holds the adhan lease.
+  Future<bool> resume() => _service.resume(owner: kAdhanLeaseOwner);
 
   /// Stops playback, optionally ramping the volume down over [fadeOut].
-  Future<void> stop({Duration fadeOut = Duration.zero}) async {
-    await _service.stop(fadeOut: fadeOut, owner: kAdhanLeaseOwner);
+  ///
+  /// Pass [force] to stop even when another owner holds the lease (armed
+  /// alert teardown must always reclaim the engine).
+  Future<void> stop({
+    Duration fadeOut = Duration.zero,
+    bool force = false,
+  }) async {
+    await _service.stop(
+      fadeOut: fadeOut,
+      owner: kAdhanLeaseOwner,
+      force: force,
+    );
   }
 
   /// Sets output volume from 0 to 100.

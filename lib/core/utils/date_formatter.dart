@@ -13,7 +13,7 @@ part 'date_formatter.g.dart';
 /// in the correct format.
 @riverpod
 DateFormat timeFormatter(Ref ref) {
-  final langCode = ref.watch(localeProvider);
+  final langCode = ref.watch(localeProvider).value ?? 'en';
   final is24Hours = ref.watch(
     prayerSettingsProvider.select((s) => s.value?.is24Hours),
   );

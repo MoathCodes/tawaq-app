@@ -13,15 +13,18 @@ class LruAyahCache<T> {
   final int maxSize;
 
   late final LruMap<String, T?> _cache = LruMap<String, T?>(maxSize);
-  final _filled = <String>{};
 
+  /// Number of retained entries (always ≤ [maxSize]).
+  int get length => _cache.length;
+
+  /// Builds the cache key for [sourceName]/[sura]/[aya].
   static String key(String sourceName, int sura, int aya) =>
       '$sourceName-$sura-$aya';
 
   /// Returns a cache hit for [sourceName]/[sura]/[aya], including cached `null`.
   ({bool hit, T? value}) lookup(String sourceName, int sura, int aya) {
     final cacheKey = key(sourceName, sura, aya);
-    if (!_filled.contains(cacheKey)) {
+    if (!_cache.containsKey(cacheKey)) {
       return (hit: false, value: null);
     }
     return (hit: true, value: _cache[cacheKey]);
@@ -29,8 +32,6 @@ class LruAyahCache<T> {
 
   /// Stores [value] for [sourceName]/[sura]/[aya].
   void store(String sourceName, int sura, int aya, T? value) {
-    final cacheKey = key(sourceName, sura, aya);
-    _filled.add(cacheKey);
-    _cache[cacheKey] = value;
+    _cache[key(sourceName, sura, aya)] = value;
   }
 }

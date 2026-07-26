@@ -140,6 +140,33 @@ abstract final class AppShortcut {
     activators: [plainShortcut(LogicalKeyboardKey.space)],
   );
 
+  static final quranZoomIn = ShortcutDef(
+    id: 'quranZoomIn',
+    category: AppShortcutCategory.quran,
+    scope: ShortcutScope.route,
+    routePath: '/quran',
+    activators: [
+      ...desktopModShortcut(LogicalKeyboardKey.equal),
+      ...desktopModShortcut(LogicalKeyboardKey.add),
+    ],
+  );
+
+  static final quranZoomOut = ShortcutDef(
+    id: 'quranZoomOut',
+    category: AppShortcutCategory.quran,
+    scope: ShortcutScope.route,
+    routePath: '/quran',
+    activators: desktopModShortcut(LogicalKeyboardKey.minus),
+  );
+
+  static final quranZoomReset = ShortcutDef(
+    id: 'quranZoomReset',
+    category: AppShortcutCategory.quran,
+    scope: ShortcutScope.route,
+    routePath: '/quran',
+    activators: desktopModShortcut(LogicalKeyboardKey.digit0),
+  );
+
   static final quranAyahNext = ShortcutDef(
     id: 'quranAyahNext',
     category: AppShortcutCategory.quran,
@@ -226,6 +253,9 @@ abstract final class AppShortcut {
     quranPageNext,
     quranPagePrev,
     quranPageNextSpace,
+    quranZoomIn,
+    quranZoomOut,
+    quranZoomReset,
     quranAyahNext,
     quranAyahPrev,
     fortressCount,

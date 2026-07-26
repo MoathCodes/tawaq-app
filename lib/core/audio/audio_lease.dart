@@ -8,26 +8,28 @@ const kAdhanLeaseOwner = 'adhan';
 
 /// Lightweight ownership token returned by [AudioLeaseRegistry.acquire].
 ///
-/// The token is a thin callback handle: calling [release] releases the lease
-/// that produced it. Safe to call multiple times.
+/// Same-owner re-acquire renews a single generation: only the latest token
+/// can release. Stale tokens from earlier same-owner acquires are no-ops.
 final class AudioLease {
-  AudioLease._(this.owner, this._release);
+  AudioLease._(this.owner, this._generation, this._releaseIfCurrent);
 
   /// Logical owner identifier (e.g. 'recitation', 'adhan').
   final String owner;
 
-  final void Function() _release;
+  final int _generation;
+  final void Function(int generation) _releaseIfCurrent;
 
-  /// Releases the lease. Safe to call multiple times.
-  void release() => _release();
+  /// Releases the lease when this token is still the active generation.
+  /// Safe to call multiple times; stale tokens are no-ops.
+  void release() => _releaseIfCurrent(_generation);
 }
 
-/// Pure async-coordination ownership lease over a broadcast stream.
+/// Pure async-coordination ownership lease.
 ///
-/// Has no mpv dependency — unit-testable in isolation. [acquire] blocks while
-/// another owner holds the lease and unblocks when it is released or the
-/// watchdog force-releases it. The audio service composes one instance to
-/// keep its playback ownership logic decoupled from the native player.
+/// Has no mpv dependency — unit-testable in isolation. Contended [acquire]
+/// waits on an explicit Completer queue (not a broadcast stream) so a release
+/// that races the wait-loop check cannot be missed. The audio service
+/// composes one instance to keep playback ownership decoupled from mpv.
 class AudioLeaseRegistry {
   /// Creates a registry.
   ///
@@ -48,13 +50,11 @@ class AudioLeaseRegistry {
   /// notification is emitted.
   final void Function(String owner)? onWatchdogForceRelease;
 
-  final _controller = StreamController<void>.broadcast();
+  final _waiters = <Completer<void>>[];
   Timer? _watchdog;
   String? _owner;
+  int _generation = 0;
   bool _disposed = false;
-
-  /// Stream that fires on every acquire/release (for contended callers).
-  Stream<void> get leaseStream => _controller.stream;
 
   /// Current lease owner, or null when idle.
   String? get currentOwner => _owner;
@@ -68,6 +68,60 @@ class AudioLeaseRegistry {
   /// force-released by the unattended-lease watchdog.
   void keepAlive({required String owner}) {
     if (_disposed || _owner != owner) return;
+    _armWatchdog(owner);
+  }
+
+  /// Acquires exclusive ownership of the lease.
+  ///
+  /// If another owner currently holds the lease, this call waits on a Completer
+  /// queue until it is released or the watchdog force-releases it. When
+  /// [force] is true, any other owner is released immediately so the caller
+  /// never blocks (used by prayer alerts that must not hang the coordinator
+  /// queue).
+  ///
+  /// Same-owner re-acquire renews one token generation (re-arms the watchdog)
+  /// without stacking dual-release handles — only the latest token releases.
+  ///
+  /// Returns a lease token whose [AudioLease.release] releases the registry
+  /// when it is still the active generation.
+  Future<AudioLease> acquire({
+    required String owner,
+    bool force = false,
+  }) async {
+    if (force && _owner != null && _owner != owner) {
+      releaseCurrent();
+    }
+
+    while (!_disposed && _owner != null && _owner != owner) {
+      final waiter = Completer<void>();
+      _waiters.add(waiter);
+      await waiter.future;
+    }
+
+    if (_disposed) {
+      throw StateError('AudioLeaseRegistry disposed during acquire');
+    }
+
+    if (_owner == owner) {
+      // Renew one token: bump generation so prior tokens no-op. Do not restart
+      // the watchdog — that preserves the original unattended deadline; callers
+      // that need extension use [keepAlive].
+      _generation++;
+      return AudioLease._(owner, _generation, _releaseIfCurrent);
+    }
+
+    _generation++;
+    _owner = owner;
+    _armWatchdog(owner);
+    return AudioLease._(owner, _generation, _releaseIfCurrent);
+  }
+
+  void _releaseIfCurrent(int generation) {
+    if (_disposed || _generation != generation || _owner == null) return;
+    releaseCurrent();
+  }
+
+  void _armWatchdog(String owner) {
     _watchdog?.cancel();
     _watchdog = Timer(watchdogTimeout, () {
       if (_owner == owner) {
@@ -77,55 +131,32 @@ class AudioLeaseRegistry {
     });
   }
 
-  /// Acquires exclusive ownership of the lease.
-  ///
-  /// If another owner currently holds the lease, this call waits (blocking on
-  /// [leaseStream]) until it is released or the watchdog force-releases it.
-  /// Reentrant acquires for the *same* owner return immediately with a new
-  /// [AudioLease] token WITHOUT restarting the watchdog — this preserves the
-  /// original deadline for the in-flight owner.
-  ///
-  /// Returns a lease token whose [AudioLease.release] releases the registry.
-  Future<AudioLease> acquire({required String owner}) async {
-    // Wait while another owner holds the lease. Guard against disposal mid-wait
-    // so a contended acquire never deadlocks or throws on a closed stream.
-    while (!_disposed && _owner != null && _owner != owner) {
-      await _controller.stream.first;
-    }
-    if (_disposed) {
-      throw StateError('AudioLeaseRegistry disposed during acquire');
-    }
-    if (_owner != owner) {
-      // Fresh acquire (idle or different owner): (re)arm the watchdog.
-      _watchdog?.cancel();
-      _owner = owner;
-      _controller.add(null);
-      _watchdog = Timer(watchdogTimeout, () {
-        if (_owner == owner) {
-          onWatchdogForceRelease?.call(owner);
-          releaseCurrent();
-        }
-      });
-    }
-    return AudioLease._(owner, releaseCurrent);
-  }
-
   /// Releases the current lease. Idempotent: safe to call when idle or after a
-  /// prior release. Cancels the watchdog, clears the owner, and emits.
+  /// prior release. Cancels the watchdog, clears the owner, and wakes waiters.
   void releaseCurrent() {
     _watchdog?.cancel();
     _watchdog = null;
     _owner = null;
-    _controller.add(null);
+    _wakeWaiters();
   }
 
-  /// Cancels the watchdog, clears the owner, and closes the lease stream.
+  void _wakeWaiters() {
+    if (_waiters.isEmpty) return;
+    final pending = List<Completer<void>>.of(_waiters);
+    _waiters.clear();
+    for (final waiter in pending) {
+      if (!waiter.isCompleted) waiter.complete();
+    }
+  }
+
+  /// Cancels the watchdog, clears the owner, wakes waiters, and marks disposed.
   /// Idempotent.
   Future<void> dispose() async {
+    if (_disposed) return;
     _disposed = true;
     _watchdog?.cancel();
     _watchdog = null;
     _owner = null;
-    await _controller.close();
+    _wakeWaiters();
   }
 }
