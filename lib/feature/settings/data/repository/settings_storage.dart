@@ -4,8 +4,28 @@ import 'dart:convert';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 
 part 'settings_storage.g.dart';
+
+/// Long-lived prefs use forever cache (no expireAt cleanup).
+const StorageOptions kSettingsPersistForever = StorageOptions(
+  cacheTime: StorageCacheTime.unsafe_forever,
+);
+
+/// Awaits a durable write of [value] under [key].
+///
+/// Use at kill boundaries (e.g. onboarding finish). Prefer this over
+/// `await persist().future`, which only waits for hydrate decode — not a
+/// mutation flush. [value] must be JSON-encodable (primitives or `toJson()`).
+Future<void> flushPersistedValue(
+  Storage<String, String> storage,
+  String key,
+  Object? value, {
+  StorageOptions options = kSettingsPersistForever,
+}) async {
+  await storage.write(key, jsonEncode(value), options);
+}
 
 /// Hivez-backed storage for Riverpod offline persistence.
 ///
@@ -105,9 +125,12 @@ final class SettingsStorage extends Storage<String, String> {
   }
 }
 
-/// Provides the shared [SettingsStorage] instance for Riverpod persistence.
+/// Shared Riverpod offline [Storage], gated on Hive core init.
 ///
-/// Keep-alive so the storage is opened once and shared across all persisted
-/// providers.
+/// Typed as [Storage] (not [SettingsStorage]) so tests can override with
+/// [Storage.inMemory]. Production always returns [SettingsStorage.create].
 @Riverpod(keepAlive: true)
-SettingsStorage settingsStorage(Ref ref) => SettingsStorage.create();
+Future<Storage<String, String>> settingsStorage(Ref ref) async {
+  await ref.watch(hiveCoreInitProvider.future);
+  return SettingsStorage.create();
+}

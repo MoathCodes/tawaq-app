@@ -105,6 +105,7 @@ class PrayerIqamahSettings extends HookConsumerWidget {
     final saveButton = showSaveButton
         ? NonSelectable(
             child: FTooltip(
+              semanticsLabel: l10n.save,
               tipBuilder: (ctx, ctrl) => Text(l10n.save),
               child: FButton(
                 variant: unsavedPrayers.isEmpty ? .outline : .primary,

@@ -100,7 +100,9 @@ Widget _prayerTimesBody(AppLocalizations l10n) => const Column(
   ],
 );
 
-Widget _locationBody(AppLocalizations l10n) => const PrayerLocationSettings();
+Widget _locationBody(AppLocalizations l10n) => const PrayerLocationSettings(
+  gateMapToSettingsTab: true,
+);
 
 Widget _keyboardShortcutsBody(AppLocalizations l10n) =>
     const KeyboardShortcutsSection();

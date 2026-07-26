@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
@@ -18,14 +19,24 @@ import 'package:tawaq/theme/theme.dart';
 /// Map preview with coordinates summary and drag tip.
 class LocationMapSection extends HookConsumerWidget {
   /// Creates [LocationMapSection].
-  const LocationMapSection({this.compact = false, super.key});
+  const LocationMapSection({
+    this.compact = false,
+    this.mapActive = true,
+    super.key,
+  });
 
   /// When true, uses a shorter map height (onboarding).
   final bool compact;
 
+  /// When false, unmounts [FmMap] to release tiles/controllers (settings tab).
+  final bool mapActive;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final enabled = manualLocationControlsEnabled(ref);
+    final autoLocation = ref.watch(
+      prayerSettingsProvider.select((v) => v.value?.autoLocation ?? false),
+    );
     final coordinates = ref.watch(
       prayerSettingsProvider.select((v) => v.value?.coordinates),
     );
@@ -49,7 +60,13 @@ class LocationMapSection extends HookConsumerWidget {
               name: mapLabel,
               enabled: enabled,
               excludeChild: true,
-              child: LocationMapContainer(compact: compact),
+              child: LocationMapContainer(
+                compact: compact,
+                mapActive: mapActive,
+                enabled: enabled,
+                autoLocation: autoLocation,
+                coordinates: coordinates,
+              ),
             ),
             SettingsSemantics.readOnlyValue(
               name: '${l10n.latitude}, ${l10n.longitude}',
@@ -75,10 +92,29 @@ class LocationMapSection extends HookConsumerWidget {
 /// Interactive map for picking coordinates.
 class LocationMapContainer extends HookConsumerWidget {
   /// Creates [LocationMapContainer].
-  const LocationMapContainer({this.compact = false, super.key});
+  const LocationMapContainer({
+    required this.enabled,
+    required this.autoLocation,
+    required this.coordinates,
+    this.compact = false,
+    this.mapActive = true,
+    super.key,
+  });
 
   /// When true, uses a shorter map height (onboarding).
   final bool compact;
+
+  /// When false, keeps the map shell but does not build [FmMap].
+  final bool mapActive;
+
+  /// Whether manual map interaction is enabled.
+  final bool enabled;
+
+  /// Whether auto-location overlay should be shown.
+  final bool autoLocation;
+
+  /// Persisted coordinates (single watch owned by [LocationMapSection]).
+  final Coordinates? coordinates;
 
   static const double _aspectRatio = 16 / 9;
   static const _maxHeight = 280.0;
@@ -86,20 +122,57 @@ class LocationMapContainer extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final enabled = manualLocationControlsEnabled(ref);
-    final autoLocation = ref.watch(
-      prayerSettingsProvider.select((v) => v.value?.autoLocation ?? false),
-    );
-    final coordinates = ref.watch(
-      prayerSettingsProvider.select((v) => v.value?.coordinates),
-    );
     final colors = context.theme.colors;
     final l10n = context.l10n;
     final mapController = useMapController();
     final optimisticCenter = useState<LatLng?>(null);
     final isLocating = useState(false);
+    final pendingTap = useRef<LatLng?>(null);
     final displayCenter =
         optimisticCenter.value ?? coordinates?.latLng ?? kDefaultCenter;
+
+    // Capture while mounted — never touch WidgetRef in dispose/cleanup.
+    final settingsNotifierRef = useRef(
+      ref.read(prayerSettingsProvider.notifier),
+    );
+    settingsNotifierRef.value = ref.read(prayerSettingsProvider.notifier);
+
+    void flushPending() {
+      final latlng = pendingTap.value;
+      if (latlng == null) return;
+      pendingTap.value = null;
+      final errorAction = l10n.changingTimezone;
+      unawaited(() async {
+        try {
+          await settingsNotifierRef.value.applyLocationBundle(
+            coordinates: latlng.coordinates,
+          );
+        } catch (e) {
+          if (context.mounted) showLocationError(context, errorAction, e);
+        }
+      }());
+    }
+
+    final debouncedPersist = useDebouncedCallback(flushPending);
+    final cancelPersistRef = useRef(debouncedPersist.cancel);
+    final flushPendingRef = useRef(flushPending);
+    cancelPersistRef.value = debouncedPersist.cancel;
+    flushPendingRef.value = flushPending;
+
+    // Prefer flushing when the settings tab deactivates the map.
+    useEffect(() {
+      if (mapActive) return null;
+      cancelPersistRef.value();
+      flushPendingRef.value();
+      return null;
+    }, [mapActive]);
+
+    useEffect(() {
+      return () {
+        cancelPersistRef.value();
+        flushPendingRef.value();
+      };
+    }, const []);
 
     useEffect(() {
       final optimistic = optimisticCenter.value;
@@ -114,23 +187,24 @@ class LocationMapContainer extends HookConsumerWidget {
     }, [coordinates, optimisticCenter.value]);
 
     useEffect(() {
-      if (coordinates == null || isLocating.value) return null;
+      final coords = coordinates;
+      if (!mapActive || coords == null || isLocating.value) return null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           try {
-            mapController.move(coordinates.latLng, 16);
+            mapController.move(coords.latLng, 16);
           } catch (_) {}
         }
       });
       return null;
-    }, [coordinates, isLocating.value]);
+    }, [mapActive, coordinates, isLocating.value]);
 
     Future<void> handleLocate() async {
       if (isLocating.value) return;
       isLocating.value = true;
       final errorAction = l10n.gettingLocation;
       try {
-        await ref.read(prayerSettingsProvider.notifier).useCurrentLocation();
+        await settingsNotifierRef.value.applyCurrentDeviceLocation();
       } catch (e) {
         if (context.mounted) showLocationError(context, errorAction, e);
       } finally {
@@ -141,18 +215,15 @@ class LocationMapContainer extends HookConsumerWidget {
     void handleTap(LatLng latlng) {
       optimisticCenter.value = latlng;
       mapController.move(latlng, 16);
-      unawaited(
-        ref.read(prayerSettingsProvider.notifier).updateLocation(
-          coordinates: latlng.coordinates,
-        ),
-      );
+      pendingTap.value = latlng;
+      debouncedPersist();
     }
 
     final mapInteractive = enabled && !isLocating.value;
     final maxHeight = compact ? _compactMaxHeight : _maxHeight;
 
     return AbsorbPointer(
-      absorbing: !mapInteractive,
+      absorbing: !mapInteractive || !mapActive,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final height = responsiveValueForWidth<double>(
@@ -175,43 +246,47 @@ class LocationMapContainer extends HookConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: Stack(
                     children: [
-                      SettingsSemantics.decorative(
-                        FmMap(
-                          mapController: mapController,
-                          mapOptions: MapOptions(
-                            initialCenter: displayCenter,
-                            initialZoom: 16,
-                            minZoom: 2,
-                            maxZoom: 18,
-                            onTap: mapInteractive
-                                ? (_, latlng) => handleTap(latlng)
-                                : null,
-                            interactionOptions: InteractionOptions(
-                              flags:
-                                  InteractiveFlag.all & ~InteractiveFlag.rotate,
-                              cursorKeyboardRotationOptions:
-                                  CursorKeyboardRotationOptions.disabled(),
-                            ),
-                          ),
-                          markers: [
-                            Marker(
-                              point: displayCenter,
-                              width: 40,
-                              height: 40,
-                              child: Icon(
-                                Icons.location_on,
-                                size: 40,
-                                color: colors.destructive,
+                      if (mapActive)
+                        SettingsSemantics.decorative(
+                          FmMap(
+                            mapController: mapController,
+                            mapOptions: MapOptions(
+                              initialCenter: displayCenter,
+                              initialZoom: 16,
+                              minZoom: 2,
+                              maxZoom: 18,
+                              onTap: mapInteractive
+                                  ? (_, latlng) => handleTap(latlng)
+                                  : null,
+                              interactionOptions: InteractionOptions(
+                                flags: InteractiveFlag.all &
+                                    ~InteractiveFlag.rotate,
+                                cursorKeyboardRotationOptions:
+                                    CursorKeyboardRotationOptions.disabled(),
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      if (enabled && !isLocating.value)
+                            markers: [
+                              Marker(
+                                point: displayCenter,
+                                width: 40,
+                                height: 40,
+                                child: Icon(
+                                  Icons.location_on,
+                                  size: 40,
+                                  color: colors.destructive,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        ColoredBox(color: colors.secondary),
+                      if (mapActive && enabled && !isLocating.value)
                         Positioned(
                           top: 12,
                           left: 12,
                           child: FTooltip(
+                            semanticsLabel: l10n.useMyLocation,
                             tipBuilder: (_, _) => Text(l10n.useMyLocation),
                             child: SettingsSemantics.iconAction(
                               label: SettingsSemantics.useMyLocationAction(
@@ -225,7 +300,7 @@ class LocationMapContainer extends HookConsumerWidget {
                             ),
                           ),
                         ),
-                      if (autoLocation || isLocating.value)
+                      if (mapActive && (autoLocation || isLocating.value))
                         LocationMapCenterOverlay(autoLocation: autoLocation),
                     ],
                   ),

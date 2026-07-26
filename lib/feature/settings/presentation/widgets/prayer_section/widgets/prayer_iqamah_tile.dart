@@ -268,6 +268,7 @@ class _IqamahStepper extends ConsumerWidget {
               ),
               _StepperDivider(color: colors.border),
               FTooltip(
+                semanticsLabel: l10n.resetToDefaults,
                 tipBuilder: (context, controller) =>
                     Text(l10n.resetToDefaults),
                 child: _StepperIconButton(

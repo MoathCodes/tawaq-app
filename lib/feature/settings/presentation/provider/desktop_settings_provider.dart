@@ -15,16 +15,30 @@ const _logPrefix = '[DesktopSettingsNotifier]';
 @Riverpod(keepAlive: true)
 @JsonPersist()
 class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
+  DesktopSettings _lastGood = DesktopSettings.defaults();
+
   @override
   Future<DesktopSettings> build() async {
-    await persist(
-      ref.read(settingsStorageProvider),
-      options: const StorageOptions(
-        cacheTime: StorageCacheTime.unsafe_forever,
-      ),
-    ).future;
-    if (!ref.mounted) return DesktopSettings.defaults();
-    return state.value ?? DesktopSettings.defaults();
+    listenSelf((_, next) {
+      final value = next.value;
+      if (value != null) _lastGood = value;
+    });
+    try {
+      await persist(
+        ref.watch(settingsStorageProvider.future),
+        options: kSettingsPersistForever,
+      ).future;
+    } on Object catch (error, stack) {
+      ref
+          .read(loggerProvider)
+          .e(
+            '$_logPrefix hydrate failed; keeping last-good settings',
+            error: error,
+            stackTrace: stack,
+          );
+    }
+    if (!ref.mounted) return _lastGood;
+    return state.value ?? _lastGood;
   }
 
   void _commit(DesktopSettings Function(DesktopSettings) fn, String field) {
@@ -51,6 +65,9 @@ class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
 
   /// Sets whether the app starts automatically at login.
   ///
+  /// Applies the OS change first, then commits the preference so Hive/UI
+  /// cannot show enabled while registration failed.
+  ///
   /// Returns `true` when the one-time tray hint should be shown.
   Future<bool> setLaunchAtLogin({required bool value}) async {
     if (!state.hasValue) return false;
@@ -68,12 +85,20 @@ class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
 
     if (next == current) return false;
 
-    _commit((_) => next, 'Launch at login');
-
     if (isDesktopPlatform) {
-      await LaunchAtLoginService.setEnabled(value: value);
+      try {
+        await LaunchAtLoginService.setEnabled(value: value);
+      } on Object catch (error, stack) {
+        ref.read(loggerProvider).e(
+          '$_logPrefix launch-at-login OS update failed; not committing',
+          error: error,
+          stackTrace: stack,
+        );
+        rethrow;
+      }
     }
 
+    _commit((_) => next, 'Launch at login');
     return showHint;
   }
 

@@ -18,10 +18,8 @@ const _logPrefix = '[AdhanSettingsNotifier]';
 class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
   AdhanSettings _lastGood = AdhanSettings.defaults();
 
-  double? _volumePreview;
-
-  /// Ephemeral volume while dragging a slider (not persisted).
-  double? get volumePreview => _volumePreview;
+  /// Last successfully hydrated / committed settings (defaults until first load).
+  AdhanSettings get lastGood => _lastGood;
 
   @override
   Future<AdhanSettings> build() async {
@@ -31,7 +29,7 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
     });
     try {
       await persist(
-        ref.read(settingsStorageProvider),
+        ref.watch(settingsStorageProvider.future),
         options: const StorageOptions(
           cacheTime: StorageCacheTime.unsafe_forever,
         ),
@@ -79,19 +77,8 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
       _commit((s) => s.copyWith(iqamahSound: sound), 'Iqamah sound');
 
   /// Sets playback volume (0–100) and persists immediately.
-  void setVolume(double volume) {
-    _volumePreview = null;
-    _commit((s) => s.copyWith(volume: volume.clamp(0, 100)), 'Volume');
-  }
-
-  /// Updates volume in memory during slider drag without persisting.
-  void setVolumePreview(double volume) {
-    if (!state.hasValue) return;
-    _volumePreview = volume.clamp(0, 100);
-  }
-
-  /// Persists the final volume after the user releases the slider.
-  void commitVolume(double volume) => setVolume(volume);
+  void setVolume(double volume) =>
+      _commit((s) => s.copyWith(volume: volume.clamp(0, 100)), 'Volume');
 
   /// Sets whether the in-app alert overlay is shown.
   void setShowAdhanAlert({required bool value}) =>

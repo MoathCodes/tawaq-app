@@ -48,9 +48,9 @@ class IqamahDraft extends _$IqamahDraft {
       prayerSettingsProvider.select(
         (s) => s.value?.iqamahSettings,
       ),
-      (_, next) {
+      (previous, next) {
         if (next != null) {
-          _syncFromProvider(next);
+          _syncFromProvider(previous, next);
         }
       },
     );
@@ -181,17 +181,25 @@ class IqamahDraft extends _$IqamahDraft {
     state = IqamahDraftState(unsavedPrayers: next);
   }
 
-  void _syncFromProvider(Map<Prayer, int> values) {
+  void _syncFromProvider(
+    Map<Prayer, int>? previous,
+    Map<Prayer, int> next,
+  ) {
     for (final prayer in kIqamahDraftPrayers) {
-      final newValue = (values[prayer] ?? 0).toString();
+      if (state.unsavedPrayers.contains(prayer)) continue;
+
+      final newMinutes = next[prayer] ?? 0;
+      if (previous != null && (previous[prayer] ?? 0) == newMinutes) {
+        continue;
+      }
+
+      final newValue = newMinutes.toString();
       final controller = _controllers[prayer]!;
+      // Update baseline before text so the controller listener does not
+      // treat the sync as a user edit.
+      _initialValues[prayer] = newValue;
       if (controller.text != newValue) {
         controller.text = newValue;
-      }
-      _initialValues[prayer] = newValue;
-      if (state.unsavedPrayers.contains(prayer) &&
-          controller.text.trim() == newValue) {
-        _setUnsaved(prayer, unsaved: false);
       }
     }
   }

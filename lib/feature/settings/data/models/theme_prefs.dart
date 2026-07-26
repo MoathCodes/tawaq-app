@@ -17,6 +17,7 @@ abstract class ThemePrefs with _$ThemePrefs {
   /// Creates a [ThemePrefs] instance.
   const factory ThemePrefs({
     /// The selected color palette.
+    @JsonKey(fromJson: appPaletteFromJson, toJson: appPaletteToJson)
     required AppPalette appPalette,
 
     /// The selected theme brightness mode.

@@ -5,7 +5,6 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
 import 'package:tawaq/feature/settings/data/location_constants.dart';
@@ -31,7 +30,6 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
 
   @override
   Future<PrayerSettings> build() async {
-    await ref.watch(hiveCoreInitProvider.future);
     ref.read(loggerProvider).i('$_prayerLogPrefix Building...');
     listenSelf((_, next) {
       final value = next.value;
@@ -39,10 +37,8 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     });
     try {
       await persist(
-        ref.read(settingsStorageProvider),
-        options: const StorageOptions(
-          cacheTime: StorageCacheTime.unsafe_forever,
-        ),
+        ref.watch(settingsStorageProvider.future),
+        options: kSettingsPersistForever,
       ).future;
     } on Object catch (error, stack) {
       ref
@@ -64,29 +60,22 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     ref.read(loggerProvider).i('$_prayerLogPrefix $field updated');
   }
 
+  /// Awaits a durable disk write of the current settings (kill-boundary safe).
+  Future<void> flush() async {
+    final value = state.value;
+    if (value == null) return;
+    final storage = await ref.read(settingsStorageProvider.future);
+    if (!ref.mounted) return;
+    await flushPersistedValue(storage, key, value);
+  }
+
   /// Sets whether to use 24-hour time format.
   void set24HourFormat({required bool value}) =>
       _commit((s) => s.copyWith(is24Hours: value), '24h format');
 
-  /// Sets the coordinates for prayer time calculations.
-  void setCoordinates(Coordinates c) =>
-      _commit((s) => s.copyWith(coordinates: c), 'Coordinates');
-
   /// Sets the iqamah times for prayers.
   void setIqamahTimes(Map<Prayer, int> t) =>
       _commit((s) => s.copyWith(iqamahSettings: t), 'Iqamah times');
-
-  /// Sets the timezone location for prayer time calculations.
-  void setLocation(Location l) =>
-      _commit((s) => s.copyWith(location: l), 'Location');
-
-  /// Sets whether to use automatic location detection.
-  void setAutoLocation({required bool value}) =>
-      _commit((s) => s.copyWith(autoLocation: value), 'Auto location');
-
-  /// Sets the display name for the current location.
-  void setLocationName(String n) =>
-      _commit((s) => s.copyWith(locationName: n), 'Location name');
 
   /// Sets the complete prayer settings object.
   void setPrayerSettings(PrayerSettings s) =>
@@ -114,49 +103,83 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     );
   }
 
-  /// Atomically updates location fields in a single persist write.
-  Future<void> updateLocation({
+  /// Resolves IANA timezone for [coordinates], falling back to device TZ.
+  ///
+  /// Throws when neither offline lookup nor device TZ succeeds — callers must
+  /// not commit coords without a matching timezone (no stale-pair writes).
+  Future<Location> _resolveTimezone(Coordinates coordinates) async {
+    try {
+      final resolved = ref
+          .read(locationServiceProvider)
+          .getLocationFromCoordinatesOffline(coordinates);
+      if (resolved != null) return resolved;
+    } on Object catch (error, stack) {
+      ref.read(loggerProvider).w(
+        '$_prayerLogPrefix coord TZ lookup failed; trying device TZ',
+        error: error,
+        stackTrace: stack,
+      );
+    }
+    final tz = await FlutterTimezone.getLocalTimezone();
+    return getLocation(tz.identifier);
+  }
+
+  /// Atomically applies location fields in a single persist write.
+  ///
+  /// When [coordinates] change without an explicit [location], timezone is
+  /// resolved from coords (device TZ only if offline lookup fails). On resolve
+  /// failure the previous coords+tz pair is left untouched and the error
+  /// propagates.
+  Future<void> applyLocationBundle({
     Coordinates? coordinates,
     String? locationName,
     Location? location,
+    bool? autoLocation,
   }) async {
     if (state.value == null) return;
+    final s = state.value!;
+
     var loc = location;
     if (coordinates != null && loc == null) {
-      try {
-        loc = ref
-            .read(locationServiceProvider)
-            .getLocationFromCoordinatesOffline(coordinates);
-      } catch (_) {}
+      loc = await _resolveTimezone(coordinates);
     }
-    final s = state.value!;
+
     _commit(
       (_) => s.copyWith(
         coordinates: coordinates ?? s.coordinates,
         locationName: locationName ?? s.locationName,
         location: loc ?? s.location,
+        autoLocation: autoLocation ?? s.autoLocation,
       ),
-      'Location',
+      'Location bundle',
     );
   }
 
-  /// Fetches and sets the current device location.
-  Future<void> useCurrentLocation() async {
+  /// Fetches GPS + place details and applies via [applyLocationBundle].
+  ///
+  /// Pass [autoLocation] to set the flag in the same commit (e.g. `true` when
+  /// enabling auto-location). Omitting it leaves the flag unchanged.
+  Future<void> applyCurrentDeviceLocation({bool? autoLocation}) async {
     final svc = ref.read(locationServiceProvider);
     final pos = await svc.getCurrentPosition();
     final details = await svc.getPlaceDetails(pos.coordinates);
-    await updateLocation(
+    await applyLocationBundle(
       coordinates: pos.coordinates,
       locationName: details.name.isNotEmpty
           ? details.name
           : LocationConstants.unknownLocationName,
+      autoLocation: autoLocation,
     );
   }
 
-  /// Sets the timezone from the system's current timezone.
+  /// Sets timezone from [loc], or from the device when [loc] is null.
   Future<void> setSystemTimezone([Location? loc]) async {
+    if (loc != null) {
+      await applyLocationBundle(location: loc);
+      return;
+    }
     final tz = await FlutterTimezone.getLocalTimezone();
-    setLocation(loc ?? getLocation(tz.identifier));
+    await applyLocationBundle(location: getLocation(tz.identifier));
   }
 
   /// Updates the iqamah time for a specific prayer.

@@ -22,15 +22,23 @@ class DesktopSettingsSection extends ConsumerWidget {
     bool value,
   ) async {
     final l10n = context.l10n;
-    final showHint = await ref
-        .read(desktopSettingsProvider.notifier)
-        .setLaunchAtLogin(value: value);
-    if (!context.mounted || !showHint) return;
+    try {
+      final showHint = await ref
+          .read(desktopSettingsProvider.notifier)
+          .setLaunchAtLogin(value: value);
+      if (!context.mounted || !showHint) return;
 
-    showFToast(
-      context: context,
-      title: Text(l10n.desktopLaunchAtLoginHint),
-    );
+      showFToast(
+        context: context,
+        title: Text(l10n.desktopLaunchAtLoginHint),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      showFToast(
+        context: context,
+        title: Text(l10n.errorOccurredWhile(l10n.desktopLaunchAtLogin)),
+      );
+    }
   }
 
   @override
@@ -38,8 +46,26 @@ class DesktopSettingsSection extends ConsumerWidget {
     if (!isDesktopPlatform) return const SizedBox.shrink();
 
     final l10n = context.l10n;
-    final settings = ref.watch(desktopSettingsProvider).value;
-    final ready = settings != null;
+    final ready = ref.watch(desktopSettingsProvider.select((s) => s.hasValue));
+    final forceMacStyleWindowControls = ref.watch(
+      desktopSettingsProvider.select(
+        (s) => s.value?.forceMacStyleWindowControls ?? false,
+      ),
+    );
+    final launchAtLogin = ref.watch(
+      desktopSettingsProvider.select((s) => s.value?.launchAtLogin ?? false),
+    );
+    final minimizeToTrayOnClose = ref.watch(
+      desktopSettingsProvider.select(
+        (s) => s.value?.minimizeToTrayOnClose ?? true,
+      ),
+    );
+    final minimizeToTray = ref.watch(
+      desktopSettingsProvider.select((s) => s.value?.minimizeToTray ?? false),
+    );
+    final launchToTray = ref.watch(
+      desktopSettingsProvider.select((s) => s.value?.launchToTray ?? false),
+    );
 
     return SettingsSection(
       title: l10n.desktopSectionTitle,
@@ -51,7 +77,7 @@ class DesktopSettingsSection extends ConsumerWidget {
             NonSelectable(
               child: FSwitch(
                 enabled: ready,
-                value: settings?.forceMacStyleWindowControls ?? false,
+                value: forceMacStyleWindowControls,
                 onChange: (value) => ref
                     .read(desktopSettingsProvider.notifier)
                     .setForceMacStyleWindowControls(value: value),
@@ -61,7 +87,7 @@ class DesktopSettingsSection extends ConsumerWidget {
           NonSelectable(
             child: FSwitch(
               enabled: ready,
-              value: settings?.launchAtLogin ?? false,
+              value: launchAtLogin,
               onChange: (value) => unawaited(
                 _handleLaunchAtLoginChange(context, ref, value),
               ),
@@ -71,7 +97,7 @@ class DesktopSettingsSection extends ConsumerWidget {
           NonSelectable(
             child: FSwitch(
               enabled: ready,
-              value: settings?.minimizeToTrayOnClose ?? true,
+              value: minimizeToTrayOnClose,
               onChange: (value) => ref
                   .read(desktopSettingsProvider.notifier)
                   .setMinimizeToTrayOnClose(value: value),
@@ -81,7 +107,7 @@ class DesktopSettingsSection extends ConsumerWidget {
           NonSelectable(
             child: FSwitch(
               enabled: ready,
-              value: settings?.minimizeToTray ?? false,
+              value: minimizeToTray,
               onChange: (value) => ref
                   .read(desktopSettingsProvider.notifier)
                   .setMinimizeToTray(value: value),
@@ -91,7 +117,7 @@ class DesktopSettingsSection extends ConsumerWidget {
           NonSelectable(
             child: FSwitch(
               enabled: ready,
-              value: settings?.launchToTray ?? false,
+              value: launchToTray,
               onChange: (value) => ref
                   .read(desktopSettingsProvider.notifier)
                   .setLaunchToTray(value: value),

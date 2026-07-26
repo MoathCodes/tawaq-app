@@ -29,10 +29,8 @@ class ThemeNotifier extends _$ThemeNotifier {
     });
     try {
       await persist(
-        ref.read(settingsStorageProvider),
-        options: const StorageOptions(
-          cacheTime: StorageCacheTime.unsafe_forever,
-        ),
+        ref.watch(settingsStorageProvider.future),
+        options: kSettingsPersistForever,
       ).future;
     } on Object catch (error, stack) {
       ref.read(loggerProvider).e(
@@ -42,6 +40,15 @@ class ThemeNotifier extends _$ThemeNotifier {
       );
     }
     return state.value ?? _lastGoodThemePrefs;
+  }
+
+  /// Awaits a durable disk write of the current prefs (kill-boundary safe).
+  Future<void> flush() async {
+    final value = state.value;
+    if (value == null) return;
+    final storage = await ref.read(settingsStorageProvider.future);
+    if (!ref.mounted) return;
+    await flushPersistedValue(storage, key, value);
   }
 
   void _commit(ThemePrefs Function(ThemePrefs) fn, String field) {

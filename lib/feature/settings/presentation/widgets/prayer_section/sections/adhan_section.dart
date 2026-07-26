@@ -13,7 +13,7 @@ import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dar
 import 'package:tawaq/theme/theme.dart';
 
 /// Adhan notification and sound controls with optional settings chrome.
-class PrayerAdhanSettings extends HookConsumerWidget {
+class PrayerAdhanSettings extends ConsumerWidget {
   /// Creates [PrayerAdhanSettings].
   const PrayerAdhanSettings({this.chrome = SettingsChrome.none, super.key});
 
@@ -23,8 +23,31 @@ class PrayerAdhanSettings extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final settings = ref.watch(adhanSettingsProvider).value;
-    final ready = settings != null;
+    final ready = ref.watch(adhanSettingsProvider.select((s) => s.hasValue));
+    final sound = ref.watch(
+      adhanSettingsProvider.select(
+        (s) => s.value?.sound ?? AdhanSound.misharyAlafasi,
+      ),
+    );
+    final iqamahSound = ref.watch(
+      adhanSettingsProvider.select(
+        (s) => s.value?.iqamahSound ?? IqamahSound.misharyAlafasi,
+      ),
+    );
+    final volume = ref.watch(
+      adhanSettingsProvider.select((s) => s.value?.volume ?? 80),
+    );
+    final showAdhanAlert = ref.watch(
+      adhanSettingsProvider.select((s) => s.value?.showAdhanAlert ?? true),
+    );
+    final showOsNotification = ref.watch(
+      adhanSettingsProvider.select((s) => s.value?.showOsNotification ?? true),
+    );
+    final alertPosition = ref.watch(
+      adhanSettingsProvider.select(
+        (s) => s.value?.alertPosition ?? AdhanAlertPosition.topEnd,
+      ),
+    );
 
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -36,7 +59,7 @@ class PrayerAdhanSettings extends HookConsumerWidget {
             enabled: ready,
             contentConstraints: selectPopoverPortalConstraints(context),
             control: .lifted(
-              value: settings?.sound ?? AdhanSound.misharyAlafasi,
+              value: sound,
               onChange: (value) {
                 if (value == null) return;
                 ref.read(adhanSettingsProvider.notifier).setSound(value);
@@ -55,7 +78,7 @@ class PrayerAdhanSettings extends HookConsumerWidget {
             enabled: ready,
             contentConstraints: selectPopoverPortalConstraints(context),
             control: .lifted(
-              value: settings?.iqamahSound ?? IqamahSound.misharyAlafasi,
+              value: iqamahSound,
               onChange: (value) {
                 if (value == null) return;
                 ref.read(adhanSettingsProvider.notifier).setIqamahSound(value);
@@ -72,11 +95,10 @@ class PrayerAdhanSettings extends HookConsumerWidget {
           title: l10n.adhanVolumeLabel,
           child: PersistedVolumeSlider(
             enabled: ready,
-            persistedVolume: settings?.volume ?? 80,
-            onPreview: (v) =>
-                ref.read(adhanSettingsProvider.notifier).setVolumePreview(v),
+            persistedVolume: volume,
+            onPreview: (_) {},
             onCommit: (v) =>
-                ref.read(adhanSettingsProvider.notifier).commitVolume(v),
+                ref.read(adhanSettingsProvider.notifier).setVolume(v),
           ),
         ),
         const FDivider(),
@@ -86,7 +108,7 @@ class PrayerAdhanSettings extends HookConsumerWidget {
             NonSelectable(
               child: FSwitch(
                 enabled: ready,
-                value: settings?.showAdhanAlert ?? true,
+                value: showAdhanAlert,
                 onChange: (value) => ref
                     .read(adhanSettingsProvider.notifier)
                     .setShowAdhanAlert(value: value),
@@ -96,7 +118,7 @@ class PrayerAdhanSettings extends HookConsumerWidget {
             NonSelectable(
               child: FSwitch(
                 enabled: ready,
-                value: settings?.showOsNotification ?? true,
+                value: showOsNotification,
                 onChange: (value) => ref
                     .read(adhanSettingsProvider.notifier)
                     .setShowOsNotification(value: value),
@@ -112,7 +134,7 @@ class PrayerAdhanSettings extends HookConsumerWidget {
             enabled: ready,
             contentConstraints: selectPopoverPortalConstraints(context),
             control: .lifted(
-              value: settings?.alertPosition ?? AdhanAlertPosition.topEnd,
+              value: alertPosition,
               onChange: (value) {
                 if (value == null) return;
                 ref

@@ -31,11 +31,9 @@ const kDefaultCenter = LatLng(21.4362544, 39.6817387);
 String resolveLocationDisplayName(AppLocalizations l10n, String locationName) {
   return switch (locationName) {
     LocationConstants.defaultLocationName ||
-    LocationConstants.legacyDefaultLocationName =>
-      l10n.defaultLocation,
+    LocationConstants.legacyDefaultLocationName => l10n.defaultLocation,
     LocationConstants.unknownLocationName ||
-    LocationConstants.legacyUnknownLocationName =>
-      l10n.unknownLocation,
+    LocationConstants.legacyUnknownLocationName => l10n.unknownLocation,
     _ => locationName,
   };
 }
@@ -51,8 +49,9 @@ String localizeLocationFailure(AppLocalizations l10n, Object error) {
       l10n.locationPermissionDeniedForever,
     LocationFailureCode.coordinatesLookupFailed =>
       l10n.locationCoordinatesLookupFailed,
-    LocationFailureCode.noPlaceFound =>
-      l10n.locationNoPlaceFound(error.detail ?? ''),
+    LocationFailureCode.noPlaceFound => l10n.locationNoPlaceFound(
+      error.detail ?? '',
+    ),
   };
 }
 
@@ -187,12 +186,17 @@ class PlaceSearchField extends HookConsumerWidget {
       invalidateSearch();
       unawaited(popoverController.hide());
       queryController.text = place.name;
-      unawaited(
-        ref.read(prayerSettingsProvider.notifier).updateLocation(
-          coordinates: place.coordinates,
-          locationName: place.name,
-        ),
-      );
+      final errorAction = l10n.changingTimezone;
+      unawaited(() async {
+        try {
+          await ref.read(prayerSettingsProvider.notifier).applyLocationBundle(
+            coordinates: place.coordinates,
+            locationName: place.name,
+          );
+        } catch (e) {
+          if (context.mounted) showLocationError(context, errorAction, e);
+        }
+      }());
     }
 
     final hint = locationName == null
@@ -228,7 +232,13 @@ class PlaceSearchField extends HookConsumerWidget {
         ),
         label: Text(l10n.searchPlaceLabel),
         hint: hint,
-        description: Text(l10n.searchPlaceSubmitHint),
+        // description: Text(
+        //   l10n.searchPlaceSubmitHint,
+        //   style: context.theme.textFieldStyles.sm.descriptionTextStyle.base
+        //       .copyWith(
+        //         fontSize: 12,
+        //       ),
+        // ),
         textInputAction: TextInputAction.search,
         onSubmit: canSubmit ? (_) => unawaited(submit()) : null,
         clearable: (value) => enabled && value.text.isNotEmpty,
@@ -247,18 +257,20 @@ class PlaceSearchField extends HookConsumerWidget {
             );
           }
           return FTooltip(
+            semanticsLabel: l10n.searchPlaceAction,
             tipBuilder: (_, _) => Text(l10n.searchPlaceAction),
             child: SettingsSemantics.iconAction(
               label: l10n.searchPlaceAction,
               enabled: canSubmit,
-              child: FButton.icon(
-                variant: .ghost,
-                onPress: canSubmit ? () => unawaited(submit()) : null,
-                child: Icon(
-                  FLucideIcons.search,
-                  color: canSubmit
-                      ? colors.primary
-                      : colors.mutedForeground,
+              child: Padding(
+                padding: const EdgeInsets.all(1),
+                child: FButton.icon(
+                  variant: .ghost,
+                  onPress: canSubmit ? () => unawaited(submit()) : null,
+                  child: Icon(
+                    FLucideIcons.search,
+                    color: canSubmit ? colors.primary : colors.mutedForeground,
+                  ),
                 ),
               ),
             ),
@@ -333,6 +345,7 @@ class TimezoneSelect extends ConsumerWidget {
     final colors = context.theme.colors;
 
     final locateButton = FTooltip(
+      semanticsLabel: l10n.useSystemTimezone,
       tipBuilder: (_, _) => Text(l10n.useSystemTimezone),
       child: SettingsSemantics.iconAction(
         label: SettingsSemantics.useSystemTimezoneAction(l10n),
@@ -485,11 +498,22 @@ class _CoordinateField extends HookConsumerWidget {
               newCoords.longitude == coords.longitude) {
             return;
           }
-          unawaited(
-            ref.read(prayerSettingsProvider.notifier).updateLocation(
-              coordinates: newCoords,
-            ),
-          );
+          unawaited(() async {
+            try {
+              await ref
+                  .read(prayerSettingsProvider.notifier)
+                  .applyLocationBundle(coordinates: newCoords);
+            } catch (e) {
+              controller.text = value;
+              if (context.mounted) {
+                showLocationError(
+                  context,
+                  context.l10n.changingTimezone,
+                  e,
+                );
+              }
+            }
+          }());
         }
 
         focusNode.addListener(onFocusChanged);

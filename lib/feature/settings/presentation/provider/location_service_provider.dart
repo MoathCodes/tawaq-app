@@ -10,7 +10,7 @@ part 'location_service_provider.g.dart';
 @riverpod
 LocationService locationService(Ref ref) {
   final log = ref.read(loggerProvider);
-  final lang = ref.watch(localeProvider);
+  final lang = ref.watch(localeProvider).value ?? 'en';
   final service = FmService()
     ..setData(userAgent: 'Tawaq/1.0 (contact: moathaltamimidev@gmail.com)');
   return LocationService(log, service, lang);

@@ -2,10 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:free_map/fm_map.dart' show FmMap;
+import 'package:free_map/free_map.dart' show FmMap;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
 import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/settings/presentation/provider/settings_screen_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_controls.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_map_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
@@ -18,6 +22,7 @@ class PrayerLocationSettings extends ConsumerWidget {
   const PrayerLocationSettings({
     this.chrome = SettingsChrome.section,
     this.compactMap = false,
+    this.gateMapToSettingsTab = false,
     super.key,
   });
 
@@ -27,8 +32,22 @@ class PrayerLocationSettings extends ConsumerWidget {
   /// When true, uses a shorter map height (onboarding).
   final bool compactMap;
 
+  /// When true, builds [FmMap] only while the Settings Location tab is active.
+  ///
+  /// Avoids keeping the map (and its tile/controller retention) alive after
+  /// the settings tab panel has activated once. Onboarding leaves this false
+  /// so the map stays mounted for the location step.
+  final bool gateMapToSettingsTab;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final mapActive = !gateMapToSettingsTab ||
+        ref.watch(
+          settingsScreenSettingsProvider.select(
+            (s) => s.value == kSettingsLocationTabKey,
+          ),
+        );
+
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.lg,
@@ -37,7 +56,7 @@ class PrayerLocationSettings extends ConsumerWidget {
         const FDivider(),
         const LocationControlsRow(),
         const FDivider(),
-        LocationMapSection(compact: compactMap),
+        LocationMapSection(compact: compactMap, mapActive: mapActive),
         const FDivider(),
         const CoordinatesRow(),
       ],
@@ -64,14 +83,17 @@ class _UseLocationTile extends ConsumerWidget {
     WidgetRef ref,
     bool value,
   ) async {
-    final notifier = ref.read(prayerSettingsProvider.notifier)
-      ..setAutoLocation(value: value);
-    if (!value) return;
-
+    final notifier = ref.read(prayerSettingsProvider.notifier);
     final errorAction = context.l10n.gettingLocation;
+
+    if (!value) {
+      await notifier.applyLocationBundle(autoLocation: false);
+      return;
+    }
+
+    // Commit autoLocation only after GPS (+ TZ) succeeds — one bundle write.
     try {
-      await notifier.useCurrentLocation();
-      await notifier.setSystemTimezone();
+      await notifier.applyCurrentDeviceLocation(autoLocation: true);
     } catch (e) {
       if (context.mounted) showLocationError(context, errorAction, e);
     }

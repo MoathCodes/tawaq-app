@@ -51,47 +51,50 @@ class SettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
     return FCard(
-      image: leading,
       style: .delta(
         decoration: .boxDelta(
           color: Colors.transparent,
           border: .all(color: Colors.transparent),
         ),
-        // contentStyle: .delta(
-        //   padding: .value(EdgeInsets.zero),
-        // ),
-      ),
-      title: Row(
-        children: [
-          Expanded(
-            child: SettingsSemantics.sectionHeader(
-              label: title,
-              child: Text(
-                title,
-                style: theme.typography.body.md.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          ?suffix,
-        ],
-      ),
-      subtitle: Semantics(
-        label: subtitle,
-        child: Text(
-          subtitle,
-          style: theme.typography.body.sm.copyWith(
+        padding: const .value(EdgeInsets.zero),
+        titleTextStyle: .value(
+          theme.typography.body.md.copyWith(fontWeight: FontWeight.w600),
+        ),
+        subtitleTextStyle: .value(
+          theme.typography.body.sm.copyWith(
             color: theme.colors.mutedForeground,
           ),
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.only(top: AppSpacing.md),
-        child: crossAxisAlignment == CrossAxisAlignment.center
-            ? Center(child: child)
-            : child,
-      ),
+      builder: (context, style, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ?leading,
+            Row(
+              children: [
+                Expanded(
+                  child: SettingsSemantics.sectionHeader(
+                    label: title,
+                    child: Text(title, style: style.titleTextStyle),
+                  ),
+                ),
+                ?suffix,
+              ],
+            ),
+            Semantics(
+              label: subtitle,
+              child: Text(subtitle, style: style.subtitleTextStyle),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.md),
+              child: crossAxisAlignment == CrossAxisAlignment.center
+                  ? Center(child: child)
+                  : child,
+            ),
+          ],
+        );
+      },
     );
   }
 }

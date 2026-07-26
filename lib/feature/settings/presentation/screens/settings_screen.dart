@@ -146,7 +146,7 @@ class SettingsScreen extends HookConsumerWidget {
                 tabs: [
                   for (final tab in tabs)
                     Tab(
-                      height: tabsStyle.height,
+                      height: tabsStyle.minHeight,
                       child: IconLabel(
                         label: tab.label(l10n),
                         icon: tab.icon,

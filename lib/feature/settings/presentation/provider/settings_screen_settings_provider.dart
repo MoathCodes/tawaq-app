@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:riverpod_annotation/experimental/json_persist.dart';
@@ -12,7 +13,7 @@ const _logPrefix = '[SettingsScreenSettingsNotifier]';
 const _defaultTabKey = 'appearance';
 
 /// Persisted settings screen tab selection (`activeTabKey` string).
-@riverpod
+@Riverpod(keepAlive: true)
 @JsonPersist()
 class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
   /// Tab key chosen while hydrate is still in flight.
@@ -22,10 +23,8 @@ class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
   Future<String> build() async {
     try {
       await persist(
-        ref.read(settingsStorageProvider),
-        options: const StorageOptions(
-          cacheTime: StorageCacheTime.unsafe_forever,
-        ),
+        ref.watch(settingsStorageProvider.future),
+        options: kSettingsPersistForever,
         decode: _decodeActiveTabKey,
       ).future;
     } on Object catch (error, stack) {
@@ -39,9 +38,19 @@ class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
     _pendingTabKey = null;
     if (pending != null) {
       state = AsyncData(pending);
+      unawaited(flush());
       return pending;
     }
     return state.value ?? _defaultTabKey;
+  }
+
+  /// Awaits a durable disk write of the active tab key.
+  Future<void> flush() async {
+    final value = state.value;
+    if (value == null) return;
+    final storage = await ref.read(settingsStorageProvider.future);
+    if (!ref.mounted) return;
+    await flushPersistedValue(storage, key, value);
   }
 
   /// Sets the active settings tab.
@@ -53,6 +62,7 @@ class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
     if (state.value == tabKey) return;
     state = AsyncData(tabKey);
     ref.read(loggerProvider).i('$_logPrefix Settings tab updated');
+    unawaited(flush());
   }
 }
 

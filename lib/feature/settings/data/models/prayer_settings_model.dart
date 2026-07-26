@@ -11,11 +11,10 @@ part 'prayer_settings_model.freezed.dart';
 part 'prayer_settings_model.g.dart';
 
 /// Converts a JSON map to a map of [Prayer] to [int] adjustments.
+///
+/// Unknown prayer keys and non-int values are skipped (partial recover).
 Map<Prayer, int> adhanAdjustmentsFromJson(Map<String, dynamic> json) {
-  return json.map(
-    (key, value) =>
-        MapEntry(Prayer.values.firstWhere((e) => e.name == key), value as int),
-  );
+  return _prayerIntMapFromJson(json);
 }
 
 /// Converts a map of [Prayer] to [int] adjustments to a JSON map.
@@ -24,11 +23,25 @@ Map<String, int> adhanAdjustmentsToJson(Map<Prayer, int> settings) {
 }
 
 /// Converts a JSON map to a map of [Prayer] to [int] iqamah settings.
+///
+/// Unknown prayer keys and non-int values are skipped (partial recover).
 Map<Prayer, int> iqamahSettingsFromJson(Map<String, dynamic> json) {
-  return json.map(
-    (key, value) =>
-        MapEntry(Prayer.values.firstWhere((e) => e.name == key), value as int),
-  );
+  return _prayerIntMapFromJson(json);
+}
+
+Map<Prayer, int> _prayerIntMapFromJson(Map<String, dynamic> json) {
+  final out = <Prayer, int>{};
+  for (final entry in json.entries) {
+    final prayer = Prayer.values.where((e) => e.name == entry.key).firstOrNull;
+    if (prayer == null) continue;
+    final value = entry.value;
+    if (value is int) {
+      out[prayer] = value;
+    } else if (value is num) {
+      out[prayer] = value.toInt();
+    }
+  }
+  return out;
 }
 
 /// Converts a map of [Prayer] to [int] iqamah settings to a JSON map.
@@ -37,8 +50,15 @@ Map<String, int> iqamahSettingsToJson(Map<Prayer, int> settings) {
 }
 
 /// Converts a string to a [Location].
+///
+/// Invalid IANA names fall back to Asia/Riyadh so one bad field does not wipe
+/// the entire [PrayerSettings] hydrate.
 Location locationFromJson(String location) {
-  return getLocation(location);
+  try {
+    return getLocation(location);
+  } on Object {
+    return tz.getLocation('Asia/Riyadh');
+  }
 }
 
 /// Converts a [Location] to a string.
@@ -118,7 +138,7 @@ abstract class PrayerSettings with _$PrayerSettings {
       is24Hours: false,
       iqamahSettings: {},
       adhanAdjustments: {},
-      coordinates: const Coordinates(0, 0),
+      coordinates: Coordinates(0, 0),
       locationName: LocationConstants.defaultLocationName,
       location: tz.getLocation('Asia/Riyadh'),
     );
