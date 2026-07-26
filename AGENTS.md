@@ -76,7 +76,7 @@ Settings notifiers use `@JsonPersist()` (from `riverpod_annotation/experimental/
 - `FirstPrayerRecordedDate` — ISO date of first recorded prayer (analytics)
 - `PrayerAnalyticsPrefs` — lives under `lib/feature/prayer/data/models/` (owned by prayer analytics)
 
-Common internal pattern: `_commit()` helper that guards against null state, applies a transform, and logs the changed field name. Async notifiers call `persist()` in `build()` after `await .future`; `LocaleNotifier` calls `persist()` synchronously. All use `StorageOptions(cacheTime: unsafe_forever)`. One-time migration: `stateSettingsLegacyMigrationProvider` splits the old monolithic blob.
+Common internal pattern: `_commit()` helper that guards against null state, applies a transform, and logs the changed field name. Async notifiers call `persist()` in `build()` after `await .future`. All use `StorageOptions(cacheTime: unsafe_forever)`.
 
 Import concrete settings providers directly (`prayer_settings_provider.dart`, `theme_settings_provider.dart`, `locale_provider.dart`, etc.). Feature screen settings import from their feature (`quran_screen_settings_provider.dart`, etc.). Cross-feature prayer time reads import `prayer_day.dart` directly (`effectivePrayerSettingsProvider` / `prayerDayProvider`).
 
@@ -116,22 +116,16 @@ Utility methods: `hover(Color)` derives a hover variant, `disable(Color)` derive
 
 ### Theme palette system
 
-The app supports 10 palettes, each with light + dark variants:
+The app supports 2 palettes, each with light + dark variants:
 
 
 | `AppPalette` | Source                                                                   |
 | ------------ | ------------------------------------------------------------------------ |
 | `manuscript` | Custom `ManuscriptTheme` in `lib/theme/custom_themes.dart` **(default)** |
-| `blue`       | `FThemes.blue`                                                           |
-| `orange`     | `FThemes.orange`                                                         |
-| `green`      | `FThemes.green`                                                          |
-| `red`        | `FThemes.red`                                                            |
-| `rose`       | `FThemes.rose`                                                           |
-| `slate`      | `FThemes.slate`                                                          |
-| `violet`     | `FThemes.violet`                                                         |
-| `yellow`     | `FThemes.yellow`                                                         |
-| `zinc`       | `FThemes.zinc` (error fallback only)                                     |
+| `neutral`    | `FTheme.neutral` (Forui built-in)                                        |
 
+
+Legacy persisted palette names (blue, zinc, …) map to `manuscript` via `appPaletteFromJson`.
 
 Resolution: `resolveColorScheme(AppPalette, ThemeMode, {touch})` → `_palettesData` map → `FThemeData`. Then `**buildAppTheme()`** in `lib/theme/app_theme_builder.dart` injects `AppRadii`, `AppDurations`, `AppTextScale`, and `IBMPlexSansArabic` as the app-wide font. Touch vs desktop density chosen via `_isTouchThemePlatform` in `main.dart`. Dual theme tree: `MaterialApp.theme` (scrollbars/Material bridge) + `FTheme` wrapper in builder.
 
@@ -234,7 +228,7 @@ Sealed catalog: flat `ShortcutDef` list in `app_shortcut.dart` → `ShellShortcu
 | Commentary  | `core/commentary/`, `core/text/`            | Shared Arabic normalization + rich text rendering  |
 | Platform    | `core/utils/platform.dart`                  | `isDesktopPlatform` (Linux/Windows/macOS, not web) |
 | Hijri clock | `core/utils/hijri_provider.dart`            | Live Hijri date for prayer hero header and schedule UI         |
-| Bootstrap   | `core/bootstrap/app_init_providers.dart`    | `appBootstrapReadyProvider` (Hive + desktop); mushaf/dorar lazy per screen |
+| Bootstrap   | `core/bootstrap/app_init_providers.dart`    | `appBootstrapReadyProvider` (Hive + desktop); Dorar lazy on Hadith open |
 
 
 ### Arabic text normalization (`lib/core/text/`)
@@ -312,8 +306,8 @@ The `packages/` folder contains in-repo packages (referenced via `path:` in `pub
 
 - `adhan_dart` — **git submodule**. Prayer time calculations with timezone support.
 - `dorar_hadith` — **git submodule**. Hadith search/browsing from Dorar API.
-- `dorar_hadith_flutter` — Flutter init wrapper (inside `dorar_hadith`); call `DorarHadithFlutter.ensureInitialized()` in `main.dart`.
-- `mushaf_reader` — vendored in this repo. Quran rendering with QCF4 fonts. Call `MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq')` before use.
+- `dorar_hadith_flutter` — Flutter init wrapper (inside `dorar_hadith`); lazy via `dorarInitProvider` (not `main`).
+- `mushaf_reader` — vendored in this repo. Quran rendering with QCF4 fonts. Initialized in `main` via `MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq')`.
 - `hisn_elmoslem` — vendored in this repo. Hisn al-Muslim content (chapters, dhikr, commentary). DB in `packages/hisn_elmoslem/assets/database/`.
 - `desktop_tray` — vendored in this repo.
 
