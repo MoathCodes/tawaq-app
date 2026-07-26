@@ -7,9 +7,10 @@ part 'schedule_selected_date_provider.g.dart';
 
 /// Calendar day selected in the prayer schedule list (defaults to today).
 ///
-/// User picks persist via [select]; midnight rollover follows only when the
-/// user was already viewing "today".
-@Riverpod(keepAlive: true)
+/// Auto-disposes with the schedule UI. User picks persist via [select] while
+/// mounted; midnight rollover follows only when the user was already viewing
+/// "today".
+@riverpod
 class ScheduleSelectedDate extends _$ScheduleSelectedDate {
   @override
   DateTime build() {

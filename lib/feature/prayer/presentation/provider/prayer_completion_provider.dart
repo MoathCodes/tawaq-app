@@ -3,7 +3,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/settings/presentation/provider/first_prayer_recorded_provider.dart';
@@ -21,6 +23,9 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
       ref.read(prayerTimeInputsProvider)?.location;
 
   /// Sets or clears the completion status for [prayer] on [completionDay].
+  ///
+  /// [completionDay] should carry the intended calendar wall components (from
+  /// a day key or [completionCalendarDay]); storage uses location midnight.
   Future<void> setPrayerStatus({
     required Prayer prayer,
     required DateTime completionDay,
@@ -31,30 +36,36 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
     if (location == null) return;
 
     final repo = ref.read(prayerRepoProvider);
-    final normalizedDay = normalizeCompletionDay(completionDay);
+    final dayKey = calendarDayKeyFromDate(completionDay);
+    final dayInstant = calendarDayFromKey(dayKey, location);
 
     if (status == CompletionStatus.none) {
       await repo.deleteCompletionForPrayerOnDate(
         prayer,
-        normalizedDay,
+        dayInstant,
         location,
       );
     } else {
-      final existing = await _loadCanonical(prayer, normalizedDay);
+      final existing = await _loadCanonical(prayer, dayKey);
       final completion = PrayerCompletion(
         id: existing?.id,
         prayer: prayer,
-        completionTime: existing?.completionTime ?? normalizedDay,
+        completionTime: existing?.completionTime ?? dayInstant,
         status: status,
       );
-      ref
-          .read(firstPrayerRecordedDateProvider.notifier)
-          .setIfNull(completion.completionTime);
       await repo.addOrUpdateCompletion(completion, location);
+      // Only stamp first-prayer after a successful write.
+      if (ref.mounted) {
+        ref
+            .read(firstPrayerRecordedDateProvider.notifier)
+            .setIfNull(completion.completionTime);
+      }
     }
 
     if (!ref.mounted) return;
-    invalidatePrayerCompletionsForDate(ref, normalizedDay);
+    invalidatePrayerCompletionsForDayKey(ref, dayKey);
+    // Past-day edits must refresh trend/period analytics, not only "today".
+    ref.invalidate(prayerAnalysisSectionProvider);
   }
 
   /// Cycles [prayer]'s completion on today's calendar day.
@@ -66,10 +77,11 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
   }) async {
     if (!ref.mounted) return;
 
+    final location = _location;
     final now = ref.read(prayerDayProvider).value?.now;
-    if (now == null) return;
+    if (location == null || now == null) return;
 
-    final completionDay = normalizeCompletionDay(now);
+    final completionDay = completionCalendarDay(now, location);
     final nextStatus = currentStatus.trackerCycleNext;
 
     await setPrayerStatus(
@@ -81,19 +93,19 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
 
   Future<PrayerCompletion?> _loadCanonical(
     Prayer prayer,
-    DateTime day,
+    int dayKey,
   ) async {
     final location = _location;
     if (location == null) return null;
 
     final completions = await ref.read(
-      prayerCompletionsForDateProvider(day).future,
+      prayerCompletionsForDateProvider(dayKey).future,
     );
     return pickCanonical(
       completions,
       prayer: prayer,
       location: location,
-      day: day,
+      day: calendarDayFromKey(dayKey, location),
     );
   }
 }

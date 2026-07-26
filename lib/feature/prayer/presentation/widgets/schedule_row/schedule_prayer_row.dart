@@ -9,6 +9,7 @@ import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
@@ -26,7 +27,7 @@ String? _computePrayerRelativeTime({
   required DateTime prayerTime,
   required DateTime now,
   required bool isCurrentPrayer,
-  required CompletionStatus status,
+  required CompletionStatus? status,
   required AppLocalizations l10n,
 }) {
   if (isCurrentPrayer) {
@@ -38,7 +39,7 @@ String? _computePrayerRelativeTime({
   final hours = difference.inHours;
   final totalMinutes = difference.inMinutes;
 
-  if (status != CompletionStatus.none) {
+  if (status != null && status != CompletionStatus.none) {
     if (isFuture) {
       return l10n.completed;
     }
@@ -91,7 +92,10 @@ class SchedulePrayerRow extends ConsumerWidget {
           row.prayerTime.day,
         );
     final completionStatus = ref.watch(
-      completionStatusProvider(row.prayer, completionDay),
+      completionStatusProvider(
+        row.prayer,
+        calendarDayKeyFromDate(completionDay),
+      ),
     );
     final isActive =
         currentPrayer != null &&
@@ -180,7 +184,7 @@ class _WideScheduleRow extends StatelessWidget {
   final Widget icon;
   final PrayerScheduleRow row;
   final bool isActive;
-  final CompletionStatus completionStatus;
+  final CompletionStatus? completionStatus;
   final bool isToday;
   final Widget statusChips;
   final Widget timeRail;
@@ -223,7 +227,7 @@ class _NarrowScheduleRow extends StatelessWidget {
   final Widget icon;
   final PrayerScheduleRow row;
   final bool isActive;
-  final CompletionStatus completionStatus;
+  final CompletionStatus? completionStatus;
   final bool isToday;
   final Widget statusChips;
   final Widget timeRail;
@@ -310,7 +314,7 @@ class _IdentityColumn extends StatelessWidget {
   final PrayerScheduleRow row;
   final bool isActive;
   final bool showStatus;
-  final CompletionStatus completionStatus;
+  final CompletionStatus? completionStatus;
   final bool isToday;
   final Widget statusChips;
 
@@ -356,7 +360,7 @@ class _RelativeTimeSubtitle extends ConsumerWidget {
   });
 
   final DateTime prayerTime;
-  final CompletionStatus status;
+  final CompletionStatus? status;
   final bool isCurrentPrayer;
   final bool isToday;
 

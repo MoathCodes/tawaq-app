@@ -306,3 +306,41 @@ Prayer? scheduleNextPrayer(Prayer currentPrayer) {
   }
   return kObligatoryPrayers[currentIdx + 1];
 }
+
+/// Next upcoming obligatory adhan after [snapshot.now].
+///
+/// After Isha, wraps to tomorrow's Fajr (today's Fajr plus one day).
+({Prayer prayer, DateTime adhanTime})? resolveNextAdhanGlance(
+  PrayerDaySnapshot snapshot,
+) {
+  final now = snapshot.now;
+  final timeline = snapshot.timeline;
+  final candidates = <({Prayer prayer, DateTime adhanTime})>[
+    (prayer: Prayer.fajr, adhanTime: timeline.fajrToday),
+    (prayer: Prayer.dhuhr, adhanTime: timeline.dhuhrToday),
+    (prayer: Prayer.asr, adhanTime: timeline.asrToday),
+    (prayer: Prayer.maghrib, adhanTime: timeline.maghribToday),
+    (prayer: Prayer.isha, adhanTime: timeline.ishaToday),
+    (
+      prayer: Prayer.fajr,
+      adhanTime: timeline.fajrToday.add(const Duration(days: 1)),
+    ),
+  ];
+
+  for (final candidate in candidates) {
+    if (candidate.adhanTime.isAfter(now)) return candidate;
+  }
+  return null;
+}
+
+/// Compact remaining label for tray status (e.g. `2h 14m`, `14m`, `<1m`).
+String formatTrayRemaining(Duration remaining) {
+  final totalMinutes = remaining.inMinutes;
+  if (totalMinutes < 1) return '<1m';
+  final hours = totalMinutes ~/ 60;
+  final minutes = totalMinutes % 60;
+  if (hours > 0) {
+    return minutes > 0 ? '${hours}h ${minutes}m' : '${hours}h';
+  }
+  return '${minutes}m';
+}

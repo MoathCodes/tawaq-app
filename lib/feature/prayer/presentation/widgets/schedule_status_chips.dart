@@ -7,6 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
@@ -31,8 +32,9 @@ class ScheduleStatusChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final dayKey = calendarDayKeyFromDate(completionDay);
     final completionStatus = ref.watch(
-      completionStatusProvider(prayer, completionDay),
+      completionStatusProvider(prayer, dayKey),
     );
 
     return Wrap(
@@ -46,7 +48,8 @@ class ScheduleStatusChips extends ConsumerWidget {
               completionDay: completionDay,
               prayerTime: prayerTime,
               status: status,
-              isSelected: status == completionStatus,
+              isSelected:
+                  completionStatus != null && status == completionStatus,
             ),
           )
           .toList(),
@@ -73,12 +76,9 @@ class _ScheduleStatusChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final colors = theme.colors;
-    final enable = ref.watch(
-      prayerDayProvider.select((asyncDay) {
-        final now = asyncDay.value?.now;
-        return now != null && prayerTime.isBefore(now);
-      }),
-    );
+    ref.watch(currentMinuteBucketProvider);
+    final now = ref.read(prayerDayProvider).value?.now;
+    final enable = now != null && prayerTime.isBefore(now);
     final accent = status.getBadgeColor(colors);
     final icon = status.getIcon();
     final l10n = context.l10n;

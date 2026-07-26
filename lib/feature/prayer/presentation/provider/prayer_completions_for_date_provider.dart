@@ -3,54 +3,54 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
+import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 
 part 'prayer_completions_for_date_provider.g.dart';
 
-/// Normalizes [day] to a naive calendar date.
-DateTime normalizeCompletionDay(DateTime day) {
-  return DateTime(day.year, day.month, day.day);
-}
-
-/// Deduped completion rows for a calendar day in the prayer timezone.
+/// Deduped completion rows for a calendar day (`yyyymmdd` [dayKey]).
 @riverpod
 Future<List<PrayerCompletion>> prayerCompletionsForDate(
   Ref ref,
-  DateTime day,
+  int dayKey,
 ) {
-  final normalized = normalizeCompletionDay(day);
   final location = ref.watch(prayerTimeInputsProvider)?.location;
   if (location == null) return Future.value(const []);
 
   return ref
       .read(prayerRepoProvider)
-      .getPrayerCompletionForDate(normalized, location);
+      .getPrayerCompletionForDate(
+        calendarDayFromKey(dayKey, location),
+        location,
+      );
 }
 
-/// Canonical completion status for [prayer] on [completionDay].
+/// Canonical completion status for [prayer] on [dayKey].
+///
+/// Returns `null` while completions are loading/unknown so UI does not treat
+/// loading as [CompletionStatus.none].
 @riverpod
-CompletionStatus completionStatus(
+CompletionStatus? completionStatus(
   Ref ref,
   Prayer prayer,
-  DateTime completionDay,
+  int dayKey,
 ) {
-  final normalized = normalizeCompletionDay(completionDay);
   final location = ref.watch(prayerTimeInputsProvider)?.location;
-  if (location == null) return CompletionStatus.none;
+  if (location == null) return null;
 
   final completionsAsync = ref.watch(
-    prayerCompletionsForDateProvider(normalized),
+    prayerCompletionsForDateProvider(dayKey),
   );
-  if (!completionsAsync.hasValue) return CompletionStatus.none;
+  if (!completionsAsync.hasValue) return null;
   return mapPrayerStatuses(
-        completionsAsync.value!,
+        completionsAsync.requireValue,
         location,
-        normalized,
+        calendarDayFromKey(dayKey, location),
       )[prayer] ??
       CompletionStatus.none;
 }
 
-/// Invalidates cached completions for [day].
-void invalidatePrayerCompletionsForDate(Ref ref, DateTime day) {
-  ref.invalidate(prayerCompletionsForDateProvider(normalizeCompletionDay(day)));
+/// Invalidates cached completions for [dayKey].
+void invalidatePrayerCompletionsForDayKey(Ref ref, int dayKey) {
+  ref.invalidate(prayerCompletionsForDateProvider(dayKey));
 }

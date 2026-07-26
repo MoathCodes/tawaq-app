@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:adhan_dart/adhan_dart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/date_formatter.dart';
-import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
@@ -51,6 +51,7 @@ PrayerTimeInputs? prayerTimeInputs(Ref ref) {
     method: settings.method,
     coordinates: settings.coordinates,
     location: settings.location,
+    adhanAdjustments: settings.adhanAdjustments,
   );
 }
 
@@ -68,7 +69,6 @@ class PrayerDay extends _$PrayerDay {
   @override
   Stream<PrayerDaySnapshot> build() async* {
     ref.watch(prayerTimeInputsProvider);
-    final repo = ref.watch(prayerRepoProvider);
     final log = ref.read(loggerProvider);
 
     final inputs = ref.read(prayerTimeInputsProvider);
@@ -81,8 +81,7 @@ class PrayerDay extends _$PrayerDay {
       if (inputs == null) return null;
 
       final now = TZDateTime.now(inputs.location);
-      final bundle = _ensureCache(inputs, now, repo, log);
-      if (bundle == null) return null;
+      final bundle = _ensureCache(inputs, now, log);
 
       return PrayerDaySnapshot(
         now: now,
@@ -105,15 +104,15 @@ class PrayerDay extends _$PrayerDay {
 
     while (true) {
       await Future<void>.delayed(_tickInterval);
+      if (!ref.mounted) return;
       final next = safeSnapshot();
       if (next != null) yield next;
     }
   }
 
-  PrayerDayBundle? _ensureCache(
+  PrayerDayBundle _ensureCache(
     PrayerTimeInputs inputs,
     TZDateTime now,
-    PrayerRepo repo,
     Logger log,
   ) {
     final anchorDate = TZDateTime(
@@ -128,19 +127,18 @@ class PrayerDay extends _$PrayerDay {
         _cachedInputs != inputs ||
         _cachedAnchorDate != anchorDate;
 
-    if (!needsRefresh) return _cache;
+    if (!needsRefresh) return _cache!;
 
     final bundle = computePrayerDayBundle(
       inputs: inputs,
       anchorNow: now,
       log: log,
     );
-    if (bundle == null) return _cache;
 
     _cache = bundle;
     _cachedInputs = inputs;
     _cachedAnchorDate = anchorDate;
-    return _cache;
+    return bundle;
   }
 }
 
@@ -176,7 +174,11 @@ PrayerDayBundle? prayerDayBundleForDate(Ref ref, DateTime date) {
 /// changes without rebuilding on every 1 Hz tick.
 @riverpod
 int prayerCalendarDayKey(Ref ref) {
-  return ref.watch(prayerDayProvider).value?.calendarDayKey ?? 0;
+  return ref.watch(
+    prayerDayProvider.select(
+      (asyncDay) => asyncDay.value?.calendarDayKey ?? 0,
+    ),
+  );
 }
 
 /// Minute-bucket signal from the live prayer-day stream.
@@ -185,8 +187,12 @@ int prayerCalendarDayKey(Ref ref) {
 /// so they recompute at most once per minute.
 @riverpod
 int currentMinuteBucket(Ref ref) {
-  final now = ref.watch(prayerDayProvider).value?.now;
-  return (now?.millisecondsSinceEpoch ?? 0) ~/ 60000;
+  return ref.watch(
+    prayerDayProvider.select(
+      (asyncDay) =>
+          (asyncDay.value?.now.millisecondsSinceEpoch ?? 0) ~/ 60000,
+    ),
+  );
 }
 
 /// Whether the live prayer-day stream has yet to produce its first snapshot.
@@ -194,8 +200,9 @@ int currentMinuteBucket(Ref ref) {
 bool prayerDayIsLoading(Ref ref) {
   final inputs = ref.watch(prayerTimeInputsProvider);
   if (inputs != null) {
-    final day = ref.watch(prayerDayProvider);
-    return day.isLoading || !day.hasValue;
+    return ref.watch(
+      prayerDayProvider.select((day) => day.isLoading || !day.hasValue),
+    );
   }
   return ref.watch(prayerSettingsProvider).isLoading;
 }

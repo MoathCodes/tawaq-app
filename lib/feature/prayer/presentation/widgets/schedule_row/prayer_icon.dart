@@ -12,7 +12,7 @@ class PrayerIcon extends StatelessWidget {
     required this.prayer,
     required this.isActive,
     required this.colors,
-    this.status = CompletionStatus.none,
+    this.status,
     super.key,
   });
 
@@ -25,16 +25,16 @@ class PrayerIcon extends StatelessWidget {
   /// Theme colors for styling.
   final FColors colors;
 
-  /// Logged completion status, if any.
-  final CompletionStatus status;
+  /// Logged completion status, if any. `null` means still loading.
+  final CompletionStatus? status;
 
   static const _size = 36.0;
 
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    final statusColor = status != CompletionStatus.none
-        ? status.getBadgeColor(colors)
+    final statusColor = status != null && status != CompletionStatus.none
+        ? status!.getBadgeColor(colors)
         : null;
 
     return ExcludeSemantics(

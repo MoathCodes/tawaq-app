@@ -91,7 +91,6 @@ class _HeroBody extends ConsumerWidget {
     final card = ref.watch(prayerCardStaticProvider);
     final prayer = card.prayer;
     final showIqamah = card.showIqamah;
-    final countdown = ref.watch(prayerCardCountdownProvider);
     final (gradientStart, gradientEnd) = PrayerHeroHeader.getPrayerGradient(
       prayer,
     );
@@ -192,14 +191,7 @@ class _HeroBody extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      '${l10n.nextPrayer}: $countdown',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.typography.body.lg.copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
+                    const _HeroCountdownLabel(),
                     const SizedBox(height: AppSpacing.lg),
                     if (stackBottomRow)
                       Column(
@@ -278,6 +270,26 @@ class _HeroBody extends ConsumerWidget {
       return _HeroTimeSquareDensity.ultraCompact;
     }
     return _HeroTimeSquareDensity.ultraCompact;
+  }
+}
+
+/// Isolates the 1 Hz countdown so gradient/chrome do not rebuild each tick.
+class _HeroCountdownLabel extends ConsumerWidget {
+  const _HeroCountdownLabel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final l10n = context.l10n;
+    final countdown = ref.watch(prayerCardCountdownProvider);
+    return Text(
+      '${l10n.nextPrayer}: $countdown',
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.typography.body.lg.copyWith(
+        color: Colors.white.withValues(alpha: 0.9),
+      ),
+    );
   }
 }
 
@@ -431,19 +443,27 @@ class _HeroStatusPopover extends ConsumerWidget {
     if (!canSetStatus || dayKey == 0) {
       return const SizedBox.shrink();
     }
-    final day = ref.watch(prayerDayProvider).value;
     // Pre-Fajr Isha is yesterday's slot — log against that completion day.
-    final completionDay =
-        prayer == Prayer.isha &&
-            day != null &&
-            day.now.isBefore(day.timeline.fajrToday)
-        ? DateTime(
-            day.timeline.ishaYesterday.year,
-            day.timeline.ishaYesterday.month,
-            day.timeline.ishaYesterday.day,
-          )
+    // Select so 1 Hz ticks do not rebuild until fajr/day boundary.
+    final ishaPreFajrDay = ref.watch(
+      prayerDayProvider.select((asyncDay) {
+        final day = asyncDay.value;
+        if (day == null || !day.now.isBefore(day.timeline.fajrToday)) {
+          return null;
+        }
+        final y = day.timeline.ishaYesterday;
+        return DateTime(y.year, y.month, y.day);
+      }),
+    );
+    final completionDay = prayer == Prayer.isha && ishaPreFajrDay != null
+        ? ishaPreFajrDay
         : dateFromCalendarDayKey(dayKey);
-    final status = ref.watch(completionStatusProvider(prayer, completionDay));
+    final status = ref.watch(
+      completionStatusProvider(
+        prayer,
+        calendarDayKeyFromDate(completionDay),
+      ),
+    );
 
     final menuTriggerLabel = PrayerSemantics.statusMenuTrigger(
       l10n: l10n,
@@ -477,7 +497,8 @@ class _HeroStatusPopover extends ConsumerWidget {
         ),
       ],
       builder: (context, controller, _) {
-        final isSet = status != CompletionStatus.none;
+        final logged = status;
+        final isSet = logged != null && logged != CompletionStatus.none;
         return MouseClick(
           semanticsLabel: menuTriggerLabel,
           onClick: controller.toggle,
@@ -503,14 +524,14 @@ class _HeroStatusPopover extends ConsumerWidget {
               children: [
                 if (isSet) ...[
                   Icon(
-                    status.getIcon(),
+                    logged.getIcon(),
                     color: theme.colors.secondaryForeground,
                     size: theme.typography.body.md.fontSize,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Flexible(
                     child: Text(
-                      status.getLocaleName(l10n),
+                      logged.getLocaleName(l10n),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.typography.body.sm.copyWith(

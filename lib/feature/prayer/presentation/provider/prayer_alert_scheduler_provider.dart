@@ -45,10 +45,14 @@ void prayerAlertScheduler(Ref ref) {
   PrayerSettings? cachedSettings;
   var cachedTargets = <PrayerAlertTarget>[];
 
-  
   ref.listen(prayerDayProvider, (previous, next) {
-    final snapshot = next.value;
-    if (snapshot == null) return;
+    // Use asData so AsyncLoading/AsyncError (which may still expose a previous
+    // `.value`) count as a gap and force re-bootstrap — no stale catch-up.
+    final snapshot = next.asData?.value;
+    if (snapshot == null) {
+      bootstrapped = false;
+      return;
+    }
 
     final now = snapshot.now;
     final dayKey = snapshot.calendarDayKey;
@@ -58,11 +62,18 @@ void prayerAlertScheduler(Ref ref) {
       firedKeys.clear();
     }
 
-    // Advance the tick reference on every tick, before any early return below.
-    // A frozen `previousNow` (e.g. while muted, or during a transient null
-    // settings tick) would corrupt the catch-up window — it could drop a
-    // genuinely-due alert or, on unmute, fire a crossing that happened while
-    // muted. `lastNow` keeps the real previous tick for the crossing check.
+    final prayerSettings = ref.read(effectivePrayerSettingsProvider);
+    final adhanSettings = ref.read(adhanSettingsProvider).value;
+
+    // Not ready to evaluate — freeze previousNow and clear bootstrap so the
+    // first ready tick is a no-fire anchor (same gap pattern as null prayerDay).
+    if (prayerSettings == null || adhanSettings == null) {
+      bootstrapped = false;
+      return;
+    }
+
+    // Advance the tick reference only on evaluable ticks. Mute still advances
+    // so unmute does not fire crossings that happened while muted.
     final lastNow = previousNow;
     previousNow = now;
 
@@ -71,9 +82,6 @@ void prayerAlertScheduler(Ref ref) {
       return;
     }
 
-    final prayerSettings = ref.read(effectivePrayerSettingsProvider);
-    final adhanSettings = ref.read(adhanSettingsProvider).value;
-    if (prayerSettings == null || adhanSettings == null) return;
     if (adhanSettings.muteAll) return;
 
     assert(() {
@@ -141,6 +149,7 @@ void prayerAlertScheduler(Ref ref) {
         now: now,
         kind: target.kind,
         prayer: target.prayer,
+        location: snapshot.location,
       );
       if (!firedKeys.add(fireKey)) continue;
 
@@ -163,7 +172,9 @@ void prayerAlertScheduler(Ref ref) {
         target: target,
         delivery: delivery,
         settings: adhanSettings,
-        l10n: lookupAppLocalizations(Locale(ref.read(localeProvider))),
+        l10n: lookupAppLocalizations(
+          Locale(ref.read(localeProvider).value ?? 'en'),
+        ),
       );
 
       // The dispatcher serializes deliveries, so firing several crossings in
@@ -197,5 +208,6 @@ PrayerAlertEvent _buildPrayerAlertEvent({
     soundSubtitle: prayerName,
     osTitle: prayerAlertTitle(l10n, target.kind, prayerName),
     osBody: prayerAlertOsBody(l10n, target.kind),
+    osActionLabel: delivery.playSound ? l10n.adhanStop : null,
   );
 }

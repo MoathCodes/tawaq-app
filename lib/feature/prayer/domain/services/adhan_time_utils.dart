@@ -1,9 +1,9 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:tawaq/core/utils/prayer_extensions.dart';
-import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
-import 'package:timezone/timezone.dart';
 
 /// Applies per-prayer adhan minute adjustments from settings.
+///
+/// Used only when baking adjustments into the shared day timeline in
+/// `computePrayerDayBundle`. Call sites must not re-apply at the edge.
 DateTime applyAdhanAdjustment({
   required DateTime prayerTime,
   required Prayer prayer,
@@ -12,22 +12,6 @@ DateTime applyAdhanAdjustment({
   final minutes = adjustments[prayer] ?? 0;
   if (minutes == 0) return prayerTime;
   return prayerTime.add(Duration(minutes: minutes));
-}
-
-/// Builds adjusted adhan [DateTime]s for [date]'s obligatory prayers.
-Map<Prayer, DateTime> adjustedAdhanTimesForDay({
-  required PrayerTimes times,
-  required Location location,
-  required Map<Prayer, int> adjustments,
-}) {
-  return {
-    for (final prayer in obligatoryAdhanPrayers)
-      prayer: applyAdhanAdjustment(
-        prayerTime: times.getTimesForPrayer(prayer, location),
-        prayer: prayer,
-        adjustments: adjustments,
-      ),
-  };
 }
 
 /// Returns true when [now] crossed [target] since [previous] and the crossing
@@ -41,7 +25,8 @@ Map<Prayer, DateTime> adjustedAdhanTimesForDay({
 /// [cutoff] caps the catch-up at the onset of the next prayer: once [now]
 /// reaches it the alert is stale and is dropped, so a slept-through maghrib is
 /// never announced once isha has begun — even where the two are less than
-/// [window] apart. Null disables the cap (the last prayer of the day, sunnah).
+/// [window] apart. Null disables the cap (the last prayer of the day, sunnah,
+/// or iqamah past the next obligatory onset).
 bool didCrossPrayerTime({
   required DateTime previous,
   required DateTime now,

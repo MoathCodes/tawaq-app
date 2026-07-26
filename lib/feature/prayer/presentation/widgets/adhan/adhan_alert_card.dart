@@ -7,6 +7,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:tawaq/core/audio/audio_lease.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/desktop/adhan_alert_controller.dart';
@@ -45,17 +46,23 @@ class AdhanAlertCard extends HookConsumerWidget {
     final timeLabel = DateFormat.Hm().format(scheduledTime);
     final title = prayerAlertTitle(l10n, kind, prayerName);
     final playbackState = ref.watch(audioPlayerControllerProvider);
+    final audioService = ref.watch(tawaqAudioServiceProvider);
+    // Only mirror progress while adhan owns the shared player — otherwise the
+    // bar reads stale recitation position/duration (often near EOF → full).
+    final adhanOwnsPlayer =
+        audioService.currentLeaseOwner == kAdhanLeaseOwner;
     final showPlayback =
         alert.playsSound &&
+        adhanOwnsPlayer &&
         playbackState is! PlaybackIdle &&
         playbackState is! PlaybackError;
     final position = useStream(
-      ref.watch(tawaqAudioServiceProvider).positionStream,
+      audioService.positionStream,
     );
     final duration = useStream(
-      ref.watch(tawaqAudioServiceProvider).durationStream,
+      audioService.durationStream,
     );
-    final maxMs = duration.data?.inMilliseconds ?? 1;
+    final maxMs = duration.data?.inMilliseconds ?? 0;
     final progress = maxMs <= 0
         ? 0.0
         : ((position.data?.inMilliseconds ?? 0) / maxMs).clamp(0.0, 1.0);

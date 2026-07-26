@@ -1,12 +1,13 @@
 import 'package:adhan_dart/adhan_dart.dart';
+import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
 import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
-import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
 import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
+import 'package:timezone/timezone.dart';
 
 /// A schedulable prayer alert event.
 class PrayerAlertTarget {
@@ -30,7 +31,8 @@ class PrayerAlertTarget {
   /// Onset of the next obligatory prayer, past which a late catch-up of this
   /// alert is stale and must be dropped (so maghrib is never announced once
   /// isha has begun). Null when there is no near boundary — the day's last
-  /// prayer (isha) and sunnah alerts — leaving only the flat catch-up window.
+  /// prayer (isha), sunnah alerts, or iqamah scheduled at/after the next
+  /// obligatory onset — leaving only the flat catch-up window.
   final DateTime? windowEnd;
 }
 
@@ -61,45 +63,52 @@ class PrayerAlertDelivery {
 }
 
 /// Builds all watchable alert targets for [snapshot] and [prayerSettings].
+///
+/// Adhan times come from the already-adjusted day bundle/timeline; do not
+/// re-apply adhan adjustments here.
 List<PrayerAlertTarget> scheduledPrayerAlertTargets({
   required PrayerDaySnapshot snapshot,
   required PrayerSettings prayerSettings,
 }) {
   final targets = <PrayerAlertTarget>[];
   final location = snapshot.location;
-  final adhanTimes = adjustedAdhanTimesForDay(
-    times: snapshot.today,
-    location: location,
-    adjustments: prayerSettings.adhanAdjustments,
-  );
+
+  DateTime adhanTime(Prayer prayer) =>
+      snapshot.today.getTimesForPrayer(prayer, location);
 
   for (var i = 0; i < obligatoryAlertPrayers.length; i++) {
     final prayer = obligatoryAlertPrayers[i];
+    final scheduled = adhanTime(prayer);
     // Cap the catch-up at the next obligatory prayer's onset; isha (the last)
     // has no same-day boundary, so it relies on the flat window only.
-    final windowEnd = i + 1 < obligatoryAlertPrayers.length
-        ? adhanTimes[obligatoryAlertPrayers[i + 1]]
+    final nextAdhan = i + 1 < obligatoryAlertPrayers.length
+        ? adhanTime(obligatoryAlertPrayers[i + 1])
         : null;
 
     targets.add(
       PrayerAlertTarget(
         kind: PrayerAlertKind.adhan,
         prayer: prayer,
-        scheduledTime: adhanTimes[prayer]!,
-        windowEnd: windowEnd,
+        scheduledTime: scheduled,
+        windowEnd: nextAdhan,
       ),
     );
 
     final iqamahMinutes = prayerSettings.iqamahSettings[prayer] ?? 0;
     if (iqamahMinutes > 0) {
+      final iqamahTime = scheduled.add(Duration(minutes: iqamahMinutes));
+      // If iqamah falls at/after the next obligatory onset, drop the next-adhan
+      // cutoff so the flat catch-up window can still deliver it.
+      final iqamahWindowEnd =
+          nextAdhan != null && iqamahTime.isBefore(nextAdhan)
+          ? nextAdhan
+          : null;
       targets.add(
         PrayerAlertTarget(
           kind: PrayerAlertKind.iqamah,
           prayer: prayer,
-          scheduledTime: adhanTimes[prayer]!.add(
-            Duration(minutes: iqamahMinutes),
-          ),
-          windowEnd: windowEnd,
+          scheduledTime: iqamahTime,
+          windowEnd: iqamahWindowEnd,
         ),
       );
     }
@@ -154,11 +163,12 @@ PrayerAlertDelivery resolvePrayerAlertDelivery({
   );
 }
 
-/// Dedupe key for a fired alert.
+/// Dedupe key for a fired alert on [now]'s calendar day in [location].
 String prayerAlertFireDedupeKey({
   required DateTime now,
   required PrayerAlertKind kind,
   required Prayer prayer,
+  required Location location,
 }) {
-  return '${calendarDayKeyFromDate(now)}-${kind.name}-${prayer.name}';
+  return '${completionDayKey(now, location)}-${kind.name}-${prayer.name}';
 }

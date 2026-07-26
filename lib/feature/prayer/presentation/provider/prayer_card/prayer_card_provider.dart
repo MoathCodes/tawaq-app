@@ -2,6 +2,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/date_formatter.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
@@ -38,7 +39,12 @@ PrayerCardStaticInfo prayerCardStatic(Ref ref) {
       iqamahSettings: iqamahSettings,
       formatter: formatter,
     );
-  } catch (_) {
+  } on Object catch (error, stack) {
+    ref.read(loggerProvider).e(
+      'prayerCardStatic failed',
+      error: error,
+      stackTrace: stack,
+    );
     return _emptyPrayerCardStatic;
   }
 }
@@ -50,7 +56,7 @@ String prayerCardCountdown(Ref ref) {
   if (day == null) return '00:00:00';
 
   final static = ref.read(prayerCardStaticProvider);
-  final isArabic = ref.watch(localeProvider) == 'ar';
+  final isArabic = ref.watch(localeProvider).value == 'ar';
 
   return _formatCountdown(
     day: day,

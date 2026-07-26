@@ -56,7 +56,7 @@ class PrayerDaySnapshot {
   PrayerDayTimeline get timeline => bundle.timeline;
 
   /// Stable key for providers that only care about the calendar day.
-  int get calendarDayKey => calendarDayKeyFromDate(now);
+  int get calendarDayKey => completionDayKey(now, location);
 
   /// Whether [date] falls on the same local calendar day as [now].
   bool isSameCalendarDay(DateTime date) =>

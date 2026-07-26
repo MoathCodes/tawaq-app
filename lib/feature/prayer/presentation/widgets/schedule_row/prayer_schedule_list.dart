@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/hijri_format.dart';
+import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
@@ -25,21 +26,24 @@ class PrayerScheduleList extends ConsumerWidget {
     final l10n = context.l10n;
     final selectedDate = ref.watch(scheduleSelectedDateProvider);
     final todayKey = ref.watch(prayerCalendarDayKeyProvider);
-    final todayDate = todayKey != 0
-        ? dateFromCalendarDayKey(todayKey)
-        : (ref.watch(prayerDayProvider).value?.now ??
-              DateTime(
-                selectedDate.year,
-                selectedDate.month,
-                selectedDate.day,
-              ));
+    // Wait for a stable calendar day — do not subscribe to the 1 Hz clock.
+    if (todayKey == 0) {
+      return Semantics(
+        label: l10n.loadingSchedule,
+        child: const FSkeletonizer(
+          child: SizedBox(height: 240, width: double.infinity),
+        ),
+      );
+    }
+
+    final todayDate = dateFromCalendarDayKey(todayKey);
     final selectedKey = calendarDayKeyFromDate(selectedDate);
 
     final scheduleRows = ref.watch(
-      prayerScheduleProvider(selectedDate),
+      prayerScheduleProvider(selectedKey),
     );
 
-    final isToday = todayKey != 0 && selectedKey == todayKey;
+    final isToday = selectedKey == todayKey;
     final currentPrayer = isToday
         ? ref.watch(scheduleCurrentPrayerProvider)
         : null;
@@ -105,7 +109,7 @@ class PrayerScheduleList extends ConsumerWidget {
               final stackHeader = !isContainerAtLeast(
                 context,
                 constraints,
-                FBreakpoint.lg,
+                FBreakpoint.md,
               );
 
               if (stackHeader) {
@@ -122,7 +126,7 @@ class PrayerScheduleList extends ConsumerWidget {
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(flex: 2, child: titleColumn),
+                  Expanded(child: titleColumn),
                   Expanded(child: calendar),
                 ],
               );

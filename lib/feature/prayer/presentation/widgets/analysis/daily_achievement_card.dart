@@ -501,8 +501,12 @@ class _TrackerStatusChip extends HookConsumerWidget {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
+    final todayKey = ref.watch(prayerCalendarDayKeyProvider);
+    if (todayKey == 0) {
+      return const SizedBox.shrink();
+    }
     final prayerTime = ref.watch(
-      prayerScheduleProvider().select(
+      prayerScheduleProvider(todayKey).select(
         (rows) => rows
             .where((row) => row.prayer == prayer)
             .firstOrNull

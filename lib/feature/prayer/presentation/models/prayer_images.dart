@@ -33,17 +33,5 @@ extension PrayerImageExtension on Prayer {
     };
   }
 
-  /// Returns the asset path for the background image of this prayer.
-  String get imagePath {
-    return switch (this) {
-      Prayer.fajr => Assets.images.fajr.path,
-      Prayer.sunrise => Assets.images.sunrise.path,
-      Prayer.dhuhr => Assets.images.duhr.path,
-      Prayer.asr => Assets.images.asr.path,
-      Prayer.maghrib => Assets.images.magrib.path,
-      Prayer.isha => Assets.images.isha.path,
-      Prayer.ishaBefore => Assets.images.lastThirdOfNight.path,
-      Prayer.fajrAfter => Assets.images.midnight.path,
-    };
-  }
+  
 }

@@ -6,8 +6,6 @@ import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
-import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 
@@ -26,26 +24,20 @@ Prayer? scheduleCurrentPrayer(Ref ref) {
   );
 }
 
-/// Pre-built schedule rows for obligatory prayers on a day.
+/// Pre-built schedule rows for obligatory prayers on [dayKey] (`yyyymmdd`).
+///
+/// Call sites resolve “today” via [prayerCalendarDayKeyProvider] — there is no
+/// null/today dual cache on this family.
 @riverpod
 List<PrayerScheduleRow> prayerSchedule(
-  Ref ref, [
-  DateTime? forDate,
-]) {
+  Ref ref,
+  int dayKey,
+) {
   final settings = ref.watch(effectivePrayerSettingsProvider);
   if (settings == null) return [];
 
   final formatter = ref.watch(timeFormatterProvider);
-
-  final todayKey = ref.watch(prayerCalendarDayKeyProvider);
-  final targetDate = forDate != null
-      ? DateTime(forDate.year, forDate.month, forDate.day)
-      : todayKey != 0
-      ? dateFromCalendarDayKey(todayKey)
-      : null;
-  if (targetDate == null) return [];
-
-  final completionDay = normalizeCompletionDay(forDate ?? targetDate);
+  final targetDate = dateFromCalendarDayKey(dayKey);
   final times = ref.watch(prayerDayBundleForDateProvider(targetDate))?.today;
   if (times == null) return [];
 
@@ -54,7 +46,6 @@ List<PrayerScheduleRow> prayerSchedule(
     times: times,
     targetDate: targetDate,
     settings: settings,
-    completionDay: completionDay,
   );
 }
 
@@ -63,7 +54,6 @@ List<PrayerScheduleRow> _buildRows({
   required PrayerTimes times,
   required DateTime targetDate,
   required PrayerSettings settings,
-  required DateTime completionDay,
 }) {
   final location = settings.location;
   final completionDate = DateTime(
@@ -74,11 +64,8 @@ List<PrayerScheduleRow> _buildRows({
 
   final rows = <PrayerScheduleRow>[];
   for (final prayer in kObligatoryPrayers) {
-    final prayerTime = applyAdhanAdjustment(
-      prayerTime: times.getTimesForPrayer(prayer, location),
-      prayer: prayer,
-      adjustments: settings.adhanAdjustments,
-    );
+    // Bundle times are already adjustment-baked by computePrayerDayBundle.
+    final prayerTime = times.getTimesForPrayer(prayer, location);
     rows.add(
       PrayerScheduleRow(
         prayer: prayer,

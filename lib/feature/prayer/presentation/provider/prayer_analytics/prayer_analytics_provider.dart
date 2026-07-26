@@ -40,8 +40,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       },
     );
     if (dayKey != 0) {
-      final today = dateFromCalendarDayKey(dayKey);
-      ref.listen(prayerCompletionsForDateProvider(today), (_, _) {
+      ref.listen(prayerCompletionsForDateProvider(dayKey), (_, _) {
         unawaited(_refresh());
       });
     }
@@ -82,6 +81,9 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
             error: e,
             stackTrace: stackTrace,
           );
+      if (ref.mounted) {
+        state = AsyncError(e, stackTrace);
+      }
     }
   }
 
@@ -93,109 +95,102 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
     }
 
     final calendarDayKey = ref.read(prayerCalendarDayKeyProvider);
-    final log = ref.read(loggerProvider);
-    try {
-      final repo = ref.read(prayerRepoProvider);
-      final settings = ref.read(effectivePrayerSettingsProvider);
-      if (settings == null) {
-        return PrayerAnalysisSectionData.empty(period);
-      }
-
-      final location = settings.location;
-      final now = ref.read(prayerDayProvider).value?.now ??
-        TZDateTime.now(location);
-      final todayStart = DateTime(now.year, now.month, now.day);
-      final todayEnd = todayStart
-          .add(const Duration(days: 1))
-          .subtract(const Duration(milliseconds: 1));
-
-      final todayCompletions = await ref.watch(
-        prayerCompletionsForDateProvider(todayStart).future,
-      );
-      final todayCounts = countDedupedStatuses(todayCompletions, location);
-      final todayPrayerStatuses = mapPrayerStatuses(
-        todayCompletions,
-        location,
-        todayStart,
-      );
-      final performanceScore =
-          PrayerAnalyticsCalculator.calculatePerformanceScore(todayCounts);
-
-      final streaks = await repo.computeStreaks(location);
-      final periodCounts = await repo.countAllStatusesOnPeriod(
-        period,
-        location,
-        now,
-      );
-      final firstRecordedDate = await _resolveFirstRecordedDate();
-      final expectedPrayers =
-          PrayerAnalyticsCalculator.calculateExpectedPrayers(
-        period: period,
-        firstRecordedDate: firstRecordedDate,
-        now: now,
-      );
-      final periodAnalytics = PrayerAnalyticsCalculator.calculateAnalytics(
-        period: period,
-        statusCounts: periodCounts,
-        expectedPrayers: expectedPrayers,
-        currentStreak: streaks.current,
-        bestStreak: streaks.best,
-      );
-
-      final rangeEndDayKey = calendarDayKeyFromDate(todayEnd);
-      final trendKey = (period, rangeEndDayKey);
-      final needsFullTrendRefresh =
-          _cachedTrendKey != trendKey ||
-          _cachedTrendBuckets == null ||
-          calendarDayKey != rangeEndDayKey;
-
-      final rangeStart = PrayerAnalyticsCalculator.periodCalendarRange(
-        period,
-        todayStart,
-      ).start;
-
-      if (needsFullTrendRefresh) {
-        _cachedTrendBuckets = await _loadTrendBuckets(
-          repo: repo,
-          period: period,
-          location: location,
-          rangeStart: rangeStart,
-          rangeEnd: todayEnd,
-        );
-        _cachedTrendKey = trendKey;
-      } else if (period == PrayerAnalyticsPeriod.weekly) {
-        _cachedTrendBuckets = PrayerAnalyticsCalculator.updateTrendBucketForDate(
-          buckets: _cachedTrendBuckets!,
-          date: todayStart,
-          completions: todayCompletions,
-          location: location,
-        );
-      } else {
-        _cachedTrendBuckets = await _loadTrendBuckets(
-          repo: repo,
-          period: period,
-          location: location,
-          rangeStart: rangeStart,
-          rangeEnd: todayEnd,
-        );
-      }
-
-      return PrayerAnalysisSectionData(
-        period: period,
-        todayStatusCounts: todayCounts,
-        todayPrayerStatuses: todayPrayerStatuses,
-        todayPerformanceScore: performanceScore,
-        periodAnalytics: periodAnalytics,
-        trendBuckets: _cachedTrendBuckets ?? const [],
-      );
-    } catch (e, stackTrace) {
-      log.e(
-        '[PrayerAnalysisSectionNotifier] Error computing section data',
-        error: e,
-        stackTrace: stackTrace,
-      );
+    final repo = ref.read(prayerRepoProvider);
+    final settings = ref.read(effectivePrayerSettingsProvider);
+    if (settings == null) {
       return PrayerAnalysisSectionData.empty(period);
     }
+
+    final location = settings.location;
+    final now = ref.read(prayerDayProvider).value?.now ??
+        TZDateTime.now(location);
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final todayEnd = todayStart
+        .add(const Duration(days: 1))
+        .subtract(const Duration(milliseconds: 1));
+    final todayDayKey = calendarDayKey != 0
+        ? calendarDayKey
+        : calendarDayKeyFromDate(todayStart);
+
+    final todayCompletions = await ref.read(
+      prayerCompletionsForDateProvider(todayDayKey).future,
+    );
+    final todayCounts = countDedupedStatuses(todayCompletions, location);
+    final todayPrayerStatuses = mapPrayerStatuses(
+      todayCompletions,
+      location,
+      todayStart,
+    );
+    final performanceScore =
+        PrayerAnalyticsCalculator.calculatePerformanceScore(todayCounts);
+
+    final streaks = await repo.computeStreaks(location);
+    final periodCounts = await repo.countAllStatusesOnPeriod(
+      period,
+      location,
+      now,
+    );
+    final firstRecordedDate = await _resolveFirstRecordedDate();
+    final expectedPrayers =
+        PrayerAnalyticsCalculator.calculateExpectedPrayers(
+      period: period,
+      firstRecordedDate: firstRecordedDate,
+      now: now,
+    );
+    final periodAnalytics = PrayerAnalyticsCalculator.calculateAnalytics(
+      period: period,
+      statusCounts: periodCounts,
+      expectedPrayers: expectedPrayers,
+      currentStreak: streaks.current,
+      bestStreak: streaks.best,
+    );
+
+    final rangeEndDayKey = calendarDayKeyFromDate(todayEnd);
+    final trendKey = (period, rangeEndDayKey);
+    final needsFullTrendRefresh =
+        _cachedTrendKey != trendKey ||
+        _cachedTrendBuckets == null ||
+        calendarDayKey != rangeEndDayKey;
+
+    final rangeStart = PrayerAnalyticsCalculator.periodCalendarRange(
+      period,
+      todayStart,
+    ).start;
+
+    if (needsFullTrendRefresh) {
+      _cachedTrendBuckets = await _loadTrendBuckets(
+        repo: repo,
+        period: period,
+        location: location,
+        rangeStart: rangeStart,
+        rangeEnd: todayEnd,
+      );
+      _cachedTrendKey = trendKey;
+    } else if (period == PrayerAnalyticsPeriod.weekly) {
+      _cachedTrendBuckets = PrayerAnalyticsCalculator.updateTrendBucketForDate(
+        buckets: _cachedTrendBuckets!,
+        date: todayStart,
+        completions: todayCompletions,
+        location: location,
+      );
+    } else {
+      _cachedTrendBuckets = await _loadTrendBuckets(
+        repo: repo,
+        period: period,
+        location: location,
+        rangeStart: rangeStart,
+        rangeEnd: todayEnd,
+      );
+    }
+
+    return PrayerAnalysisSectionData(
+      period: period,
+      todayStatusCounts: todayCounts,
+      todayPrayerStatuses: todayPrayerStatuses,
+      todayPerformanceScore: performanceScore,
+      periodAnalytics: periodAnalytics,
+      trendBuckets: _cachedTrendBuckets ?? const [],
+    );
   }
 
   Future<List<PrayerTrendBucket>> _loadTrendBuckets({
@@ -220,12 +215,13 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
   }
 
   Future<DateTime?> _resolveFirstRecordedDate() async {
-    final raw = ref.read(firstPrayerRecordedDateProvider);
+    final raw = await ref.read(firstPrayerRecordedDateProvider.future);
     final persisted =
         (raw == null || raw.isEmpty) ? null : DateTime.tryParse(raw);
     if (persisted != null) return persisted;
 
-    final earliest = await ref.read(prayerDatabaseProvider).getEarliestCompletionTime();
+    final earliest =
+        await ref.read(prayerDatabaseProvider).getEarliestCompletionTime();
     if (earliest == null) return null;
 
     final location = ref.read(effectivePrayerSettingsProvider)?.location;

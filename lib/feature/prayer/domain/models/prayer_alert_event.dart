@@ -21,6 +21,7 @@ class PrayerAlertEvent {
     this.soundSubtitle,
     this.osTitle,
     this.osBody,
+    this.osActionLabel,
   });
 
   /// Alert category.
@@ -58,6 +59,11 @@ class PrayerAlertEvent {
 
   /// OS notification body.
   final String? osBody;
+
+  /// Label for the OS notification Stop action when sound is playing.
+  ///
+  /// Null when no action button should be shown (notify-only alerts).
+  final String? osActionLabel;
 
   /// Whether any channel is active for this event.
   bool get hasAnyEffect => playSound || showInApp || showOsNotification;
