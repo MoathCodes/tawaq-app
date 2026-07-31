@@ -28,6 +28,19 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
+## Testing builds (macOS / Windows)
+
+Desktop bundles are built by the [Build desktop](.github/workflows/build-desktop.yml) workflow. It runs on demand (Actions tab → Build desktop → Run workflow) and on every `v*` tag, which also publishes a GitHub Release with plain download links (workflow artifacts require a GitHub login; release assets do not).
+
+The builds are unsigned, so the OS will warn on first launch:
+
+- **macOS** (Apple Silicon): unzip, move `Tawaq.app` to Applications, then remove the quarantine flag:
+  ```bash
+  xattr -dr com.apple.quarantine /Applications/Tawaq.app
+  ```
+  (Right-click → Open twice also works.)
+- **Windows**: unzip the whole folder and run `tawaq.exe` from inside it — the DLLs and `data/` folder must stay beside the exe. SmartScreen will say "unknown publisher" → **More info → Run anyway**.
+
 ## References
 
 Attributions and sources (expand as more bundled content is documented):

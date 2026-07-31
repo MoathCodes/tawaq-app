@@ -1,0 +1,115 @@
+name: Build desktop
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint & test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # adhan_dart is pinned at a commit on refactor/prayer_times, but
+          # .gitmodules has no branch key, so checkout restores the exact
+          # recorded SHA regardless of branch name. Both submodule repos
+          # must stay public; if they go private, add a PAT via `token:`.
+          submodules: recursive
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.2'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter test
+
+  macos:
+    name: macOS
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.2'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter build macos --release --build-number ${{ github.run_number }}
+
+      # Ad-hoc sign so the sandboxed bundle launches after download.
+      - name: Ad-hoc sign
+        run: codesign --force --deep --sign - build/macos/Build/Products/Release/Tawaq.app
+
+      # zip -r breaks .app bundles (symlinks, libmpv dylibs); ditto preserves them.
+      - name: Archive app bundle
+        run: |
+          ditto -c -k --sequesterRsrc --keepParent \
+            build/macos/Build/Products/Release/Tawaq.app \
+            tawaq-macos.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tawaq-macos
+          path: tawaq-macos.zip
+          retention-days: 7
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.2'
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+      - run: dart run build_runner build --delete-conflicting-outputs
+      - run: flutter build windows --release --build-number ${{ github.run_number }}
+
+      # Zip the whole Release folder; the exe needs its DLLs and data/ beside it.
+      - name: Archive release
+        shell: pwsh
+        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath tawaq-windows-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tawaq-windows-x64
+          path: tawaq-windows-x64.zip
+          retention-days: 7
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [macos, windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: '*.zip'
+          prerelease: true
