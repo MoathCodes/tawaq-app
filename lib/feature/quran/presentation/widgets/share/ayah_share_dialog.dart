@@ -9,7 +9,7 @@ import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/models/ayah_share_include.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
@@ -103,12 +103,12 @@ class AyahShareDialog extends HookConsumerWidget {
     final l10n = context.l10n;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final boundaryKey = useMemoized(GlobalKey.new);
-    final textScale = ref.watch(
+    final mushafZoom = ref.watch(
       quranScreenSettingsProvider.select(
-        (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
+        (v) => v.value?.mushafZoom ?? kMushafZoomDefault,
       ),
     );
-    final mushafStyle = buildQuranMushafStyle(theme, textScale);
+    final mushafStyle = buildQuranMushafStyle(theme, zoom: mushafZoom);
 
     final pageSnapshot = useFuture(
       useMemoized(() => controller.getPage(ayah.page), [ayah.page]),

@@ -54,7 +54,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get about => 'عن التطبيق';
 
   @override
-  String get addReflection => 'أضف تأملاً...';
+  String get addReflection => 'أضف خاطرة...';
+
+  @override
+  String get deleteReflection => 'حذف الخاطرة';
+
+  @override
+  String get deleteReflectionConfirm =>
+      'حذف هذه الخاطرة؟ لا يمكن التراجع عن ذلك.';
 
   @override
   String get adhan => 'الأذان';
@@ -585,6 +592,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fortressSearchHint => 'ابحث في الأذكار والأبواب...';
+
+  @override
+  String get fortressSearchOpen => 'البحث في الأذكار';
 
   @override
   String get fortressSearchTitles => 'الأبواب';
@@ -1446,6 +1456,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranRangeChooseSyncedReciter => 'اختر قارئًا متزامنًا';
 
   @override
+  String get quranRangeFirstAyah => 'الآية الأولى';
+
+  @override
   String get quranRangeFrom => 'من — السورة والآية';
 
   @override
@@ -1468,6 +1481,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quranRangeJuzNotFound => 'تعذّر تحديد الجزء لهذه الآية';
+
+  @override
+  String get quranRangeLastAyah => 'الآية الأخيرة';
 
   @override
   String get quranRangeModeLabel => 'نهاية التشغيل';
@@ -1766,17 +1782,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranTextSize => 'حجم نص القرآن';
 
   @override
-  String get quranTextSizeExtraLarge => 'كبير جداً';
-
-  @override
   String get quranTextSizeIndependentNote =>
       'حجم قراءة القرآن مستقل عن تحجيم التطبيق والنظام.';
-
-  @override
-  String get quranTextSizeLarge => 'كبير';
-
-  @override
-  String get quranTextSizeMedium => 'متوسط';
 
   @override
   String get quranTextSizePreview => 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ';
@@ -1785,10 +1792,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranTextSizePreviewLabel => 'معاينة';
 
   @override
-  String get quranTextSizeShortExtraLarge => 'أكبر';
+  String get quranZoomFitPage => 'ملاءمة';
 
   @override
-  String get quranTextSizeSmall => 'صغير';
+  String get quranZoomFillWidth => 'ملء';
+
+  @override
+  String get quranZoomFillWidthHint =>
+      'بعد الملاءمة قد تحتاج الصفحة إلى التمرير عمودياً لتكبير أكبر.';
+
+  @override
+  String quranZoomPercent(int percent) {
+    return '$percent٪';
+  }
+
+  @override
+  String get quranZoomReset => 'إعادة إلى الملاءمة';
 
   @override
   String quranTranslationQuoted(String translation) {
@@ -1799,7 +1818,131 @@ class AppLocalizationsAr extends AppLocalizations {
   String get red => 'أحمر';
 
   @override
-  String get reflectionPlaceholder => 'اكتب أفكارك حول هذه الآية...';
+  String get noReflectionsMatchSearch => 'لا توجد خواطر تطابق بحثك';
+
+  @override
+  String get noReflectionsYet => 'لا خواطر بعد — اكتب خاطرة على آية لتظهر هنا';
+
+  @override
+  String noteTimeDaysAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count يوماً',
+      few: 'منذ $count أيام',
+      two: 'منذ يومين',
+      one: 'منذ يوم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteTimeMonthsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count شهراً',
+      few: 'منذ $count أشهر',
+      two: 'منذ شهرين',
+      one: 'الشهر الماضي',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noteTimeToday => 'اليوم';
+
+  @override
+  String noteTimeWeeksAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count أسبوعاً',
+      few: 'منذ $count أسابيع',
+      two: 'منذ أسبوعين',
+      one: 'منذ أسبوع',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String noteTimeYearsAgo(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'منذ $count عاماً',
+      few: 'منذ $count أعوام',
+      two: 'منذ عامين',
+      one: 'العام الماضي',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get noteTimeYesterday => 'أمس';
+
+  @override
+  String get reflectionPlaceholder => 'اكتب خاطرتك حول هذه الآية...';
+
+  @override
+  String reflectionsSummary(int noteCount, int surahCount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      surahCount,
+      locale: localeName,
+      other: '$surahCount سورة',
+      many: '$surahCount سورة',
+      few: '$surahCount سور',
+      two: 'سورتين',
+      one: 'سورة واحدة',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      surahCount,
+      locale: localeName,
+      other: '$surahCount سورة',
+      many: '$surahCount سورة',
+      few: '$surahCount سور',
+      two: 'سورتين',
+      one: 'سورة واحدة',
+    );
+    String _temp2 = intl.Intl.pluralLogic(
+      surahCount,
+      locale: localeName,
+      other: '$surahCount سورة',
+      many: '$surahCount سورة',
+      few: '$surahCount سور',
+      two: 'سورتين',
+      one: 'سورة واحدة',
+    );
+    String _temp3 = intl.Intl.pluralLogic(
+      surahCount,
+      locale: localeName,
+      other: '$surahCount سورة',
+      many: '$surahCount سورة',
+      few: '$surahCount سور',
+      two: 'سورتين',
+      one: 'سورة واحدة',
+    );
+    String _temp4 = intl.Intl.pluralLogic(
+      surahCount,
+      locale: localeName,
+      other: '$surahCount سورة',
+      many: '$surahCount سورة',
+      few: '$surahCount سور',
+      two: 'سورتين',
+      one: 'سورة واحدة',
+    );
+    String _temp5 = intl.Intl.pluralLogic(
+      noteCount,
+      locale: localeName,
+      other: '$noteCount خاطرة في $_temp0',
+      many: '$noteCount خاطرة في $_temp1',
+      few: '$noteCount خواطر في $_temp2',
+      two: 'خاطرتان في $_temp3',
+      one: 'خاطرة واحدة في $_temp4',
+      zero: 'لا خواطر',
+    );
+    return '$_temp5';
+  }
 
   @override
   String get remembrance => 'الأذكار';
@@ -1821,10 +1964,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get save => 'حفظ';
 
   @override
-  String get saveNote => 'حفظ الملاحظة';
+  String get saveParameters => 'حفظ الإعدادات';
 
   @override
-  String get saveParameters => 'حفظ الإعدادات';
+  String get searchYourReflections => 'ابحث في خواطرك';
 
   @override
   String scheduleAlertEventAdhan(String prayer) {
@@ -1901,7 +2044,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get selectAyahToSeeContent => 'اختر آية لعرض المحتوى.';
 
   @override
-  String get selectVerseToAddReflection => 'يرجى اختيار آية لإضافة تأمل';
+  String get selectVerseToAddReflection => 'يرجى اختيار آية لإضافة خاطرة';
+
+  @override
+  String get studyTabCurrentAyah => 'الآية الحالية';
+
+  @override
+  String get studyTabMyReflections => 'خواطري';
 
   @override
   String get settings => 'الإعدادات';

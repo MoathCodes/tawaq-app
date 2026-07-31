@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/feature/quran/data/models/quran_note.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
@@ -36,7 +37,7 @@ class _TestQuranSelectedAyah extends QuranSelectedAyah {
 
 class _TestQuranNotesNotifier extends QuranNotesNotifier {
   @override
-  Future<String?> build(int? ayahId) async => null;
+  Future<QuranNote?> build(int? ayahId) async => null;
 }
 
 class _StudyPanelTestRepo implements IQuranRepository {
@@ -189,6 +190,7 @@ void main() {
         quranNotesProvider(null).overrideWith(_TestQuranNotesNotifier.new),
         quranNotesProvider(1).overrideWith(_TestQuranNotesNotifier.new),
         quranNotesProvider(7).overrideWith(_TestQuranNotesNotifier.new),
+        quranAllNotesProvider.overrideWith((ref) async => const []),
         ayahTranslationRowProvider(kDefaultTranslationId, 1, 1)
             .overrideWithValue(
           const AsyncData<Translation?>(null),

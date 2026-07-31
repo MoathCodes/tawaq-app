@@ -35,6 +35,8 @@
   "a11yWindowRestore": "Restore window",
   "about": "About",
   "addReflection": "Add a reflection...",
+  "deleteReflection": "Delete reflection",
+  "deleteReflectionConfirm": "Delete this reflection? This cannot be undone.",
   "adhan": "Adhan",
   "adhanAdjustments": "Adhan adjustments (minutes)",
   "adhanAlertPositionCenter": "Center",
@@ -255,6 +257,7 @@
   "fortressRetry": "Retry",
   "fortressSearchContents": "Adhkar",
   "fortressSearchHint": "Search chapters and adhkar...",
+  "fortressSearchOpen": "Search adhkar",
   "fortressSearchTitles": "Chapters",
   "fortressSharh": "Explanation",
   "fortressShowDetails": "Show details",
@@ -667,6 +670,7 @@
   "quranPlaySelection": "Play selection",
   "quranPlaySurah": "Play this surah",
   "quranRangeChooseSyncedReciter": "Choose synced reciter",
+  "quranRangeFirstAyah": "First ayah",
   "quranRangeFrom": "From — surah & ayah",
   "quranRangeFromAyah": "From — ayah",
   "quranRangeFromShort": "From",
@@ -675,6 +679,7 @@
   "quranRangeHizbNotFound": "Could not find the hizb for this ayah",
   "quranRangeJuzBoundsNotFound": "Could not load juz boundaries",
   "quranRangeJuzNotFound": "Could not find the juz for this ayah",
+  "quranRangeLastAyah": "Last ayah",
   "quranRangeModeLabel": "End behavior",
   "quranRangePlay": "Play selection",
   "quranRangePresetAyah": "This ayah",
@@ -842,14 +847,21 @@
     }
   },
   "quranTextSize": "Quran text size",
-  "quranTextSizeExtraLarge": "Extra large",
   "quranTextSizeIndependentNote": "Quran reading size is independent of app and system text scaling.",
-  "quranTextSizeLarge": "Large",
-  "quranTextSizeMedium": "Medium",
   "quranTextSizePreview": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
   "quranTextSizePreviewLabel": "Preview",
-  "quranTextSizeShortExtraLarge": "XL",
-  "quranTextSizeSmall": "Small",
+  "quranZoomFitPage": "Fit",
+  "quranZoomFillWidth": "Fill",
+  "quranZoomFillWidthHint": "Past Fit, the page may scroll vertically for larger text.",
+  "quranZoomPercent": "{percent}%",
+  "@quranZoomPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "quranZoomReset": "Reset to Fit",
   "quranTranslationQuoted": "\"{translation}\"",
   "@quranTranslationQuoted": {
     "placeholders": {
@@ -859,15 +871,62 @@
     }
   },
   "red": "Red",
-  "reflectionPlaceholder": "Write your thoughts about this verse...",
+  "noReflectionsMatchSearch": "No reflections match your search",
+  "noReflectionsYet": "No reflections yet — write one on an ayah to see it here",
+  "noteTimeDaysAgo": "{count, plural, one{a day ago} other{{count} days ago}}",
+  "@noteTimeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeMonthsAgo": "{count, plural, one{last month} other{{count} months ago}}",
+  "@noteTimeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeToday": "Today",
+  "noteTimeWeeksAgo": "{count, plural, one{a week ago} other{{count} weeks ago}}",
+  "@noteTimeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeYearsAgo": "{count, plural, one{a year ago} other{{count} years ago}}",
+  "@noteTimeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeYesterday": "Yesterday",
+  "reflectionPlaceholder": "Write your reflection about this verse...",
+  "reflectionsSummary": "{noteCount, plural, =0{No reflections} =1{1 reflection in {surahCount, plural, =1{1 surah} other{{surahCount} surahs}}} other{{noteCount} reflections in {surahCount, plural, =1{1 surah} other{{surahCount} surahs}}}}",
+  "@reflectionsSummary": {
+    "placeholders": {
+      "noteCount": {
+        "type": "int"
+      },
+      "surahCount": {
+        "type": "int"
+      }
+    }
+  },
   "remembrance": "Remembrance",
   "resetCompleteDescription": "Parameters have been reset to default values.",
   "resetCompleteTitle": "Reset Complete",
   "resetToDefaults": "Reset to Defaults",
   "rose": "Rose",
   "save": "Save",
-  "saveNote": "Save Note",
   "saveParameters": "Save Parameters",
+  "searchYourReflections": "Search your reflections",
   "scheduleAlertEventAdhan": "{prayer} adhan",
   "@scheduleAlertEventAdhan": {
     "placeholders": {
@@ -919,6 +978,8 @@
   "searchQuran": "Search Quran...",
   "selectAyahToSeeContent": "Select an ayah to see the content.",
   "selectVerseToAddReflection": "Please select a verse to add a reflection",
+  "studyTabCurrentAyah": "Current ayah",
+  "studyTabMyReflections": "My reflections",
   "settings": "Settings",
   "setupPrayerSettingsSubtitle": "We'll guide you through a few quick steps. You can change these later in Settings.",
   "setupPrayerSettingsTitle": "Let's set up your prayer settings.",

@@ -8,11 +8,13 @@ import 'package:tawaq/core/layout/responsive_horizontal_split.dart';
 import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_browse_sidebar.dart';
@@ -193,39 +195,79 @@ class _FortressBrowseMainPane extends HookConsumerWidget {
       return null;
     }, [searchController.text]);
 
+    // The field stays hidden behind an icon button so the pane shows only one
+    // search affordance at rest (the sidebar's chapter filter).
+    final searchFocusNode = useFocusNode();
+    final expanded = useState(committedQuery.isNotEmpty);
+    final openSearch = useCallback(() {
+      expanded.value = true;
+      searchFocusNode.requestFocus();
+    }, [searchFocusNode]);
+    useRegisterAppSearchFocus(openSearch);
+    useEffect(() {
+      void collapseWhenEmpty() {
+        if (!searchFocusNode.hasFocus && searchController.text.isEmpty) {
+          expanded.value = false;
+        }
+      }
+
+      searchFocusNode.addListener(collapseWhenEmpty);
+      return () => searchFocusNode.removeListener(collapseWhenEmpty);
+    }, [searchFocusNode]);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        NonSelectable(
-          child: Row(
-            spacing: AppSpacing.sm,
-            children: [
-              Expanded(
-                child: FTextField(
-                  hint: l10n.fortressSearchHint,
-                  control: FTextFieldControl.managed(
-                    controller: searchController,
-                  ),
-                  prefixBuilder: (context, style, variants) =>
-                      const Icon(FLucideIcons.search),
-                ),
+        // Matches the results column width below so the field never spans the
+        // full pane on wide desktops.
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: kFortressReadingMaxWidth,
+            ),
+            child: NonSelectable(
+              child: AnimatedSize(
+                duration: theme.durations.fast,
+                alignment: AlignmentDirectional.topStart,
+                child: expanded.value
+                    ? FTextField(
+                        focusNode: searchFocusNode,
+                        hint: l10n.fortressSearchHint,
+                        textInputAction: TextInputAction.search,
+                        control: FTextFieldControl.managed(
+                          controller: searchController,
+                        ),
+                        clearable: (value) => value.text.isNotEmpty,
+                        prefixBuilder: (context, style, variants) => Padding(
+                          padding: const EdgeInsets.all(AppSpacing.sm),
+                          child: Icon(
+                            FLucideIcons.search,
+                            color: theme.colors.mutedForeground,
+                          ),
+                        ),
+                      )
+                    : Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: FTooltip(
+                          semanticsLabel: l10n.fortressSearchOpen,
+                          tipBuilder: (context, _) =>
+                              Text(l10n.fortressSearchOpen),
+                          // Sits at the very top of the pane, so the default
+                          // above-anchored tip lands under the title bar.
+                          childAnchor: Alignment.bottomCenter,
+                          tipAnchor: Alignment.topCenter,
+                          child: FButton.icon(
+                            variant: FButtonVariant.ghost,
+                            onPress: openSearch,
+                            child: const Icon(FLucideIcons.search),
+                          ),
+                        ),
+                      ),
               ),
-              if (committedQuery.isNotEmpty)
-                FButton.icon(
-                  variant: FButtonVariant.ghost,
-                  onPress: () {
-                    debouncedCommit.cancel();
-                    searchController.clear();
-                    ref
-                        .read(fortressScreenControllerProvider.notifier)
-                        .clearGlobalSearch();
-                  },
-                  child: const Icon(FLucideIcons.x, size: 16),
-                ),
-            ],
+            ),
           ),
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.lg),
         Expanded(
           child: AnimatedSwitcher(
             duration: theme.durations.normal,

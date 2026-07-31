@@ -36,7 +36,7 @@ class NotesSection extends HookConsumerWidget {
 
     final enabled = ayahId != null;
     final note = ref.watch(quranNotesProvider(ayahId));
-    final initialText = note.hasValue ? (note.value ?? '') : '';
+    final initialText = note.hasValue ? (note.value?.text ?? '') : '';
     final controller = useTextEditingController(text: initialText);
     final hasSynced = useRef(note.hasValue);
     final lastPersistedText = useRef(initialText);
@@ -68,7 +68,7 @@ class NotesSection extends HookConsumerWidget {
     useEffect(
       () {
         if (note.hasValue && !hasSynced.value) {
-          final text = note.value ?? '';
+          final text = note.value?.text ?? '';
           controller.text = text;
           lastPersistedText.value = text;
           hasSynced.value = true;
@@ -100,6 +100,7 @@ class NotesSection extends HookConsumerWidget {
 
     final noteMinLines = narrowPanel ? 3 : 5;
     final noteMaxLines = narrowPanel ? 6 : 10;
+    final persistedText = note.value?.text ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,7 +128,7 @@ class NotesSection extends HookConsumerWidget {
           control: FTextFieldControl.managed(
             controller: controller,
             onChange: (value) {
-              if (note.value != value.text) {
+              if (persistedText != value.text) {
                 scheduleSave();
               }
             },

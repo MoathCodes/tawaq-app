@@ -4,8 +4,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/semantics_scale_step_picker.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/scale/quran_zoom_control.dart';
 import 'package:tawaq/feature/settings/data/models/app_text_scale.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
@@ -26,13 +27,10 @@ class TypographySettingsSection extends ConsumerWidget {
       themeProvider.select((t) => t.value?.appTextScale ?? AppTextScale.normal),
     );
     final themeReady = ref.watch(themeProvider.select((t) => t.hasValue));
-    final quranTextScale = ref.watch(
+    final mushafZoom = ref.watch(
       quranScreenSettingsProvider.select(
-        (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
+        (v) => v.value?.mushafZoom ?? kMushafZoomDefault,
       ),
-    );
-    final quranStateReady = ref.watch(
-      quranScreenSettingsProvider.select((s) => s.hasValue),
     );
 
     return Column(
@@ -63,22 +61,7 @@ class TypographySettingsSection extends ConsumerWidget {
             ),
             SettingsGroup(
               title: l10n.quranTextSize,
-              child: SemanticsScaleStepPicker(
-                groupLabel: l10n.quranTextSize,
-                enabled: quranStateReady,
-                previewSizes:
-                    QuranTextScale.values.map((s) => 14 * s.boost).toList(),
-                labels: [
-                  l10n.quranTextSizeSmall,
-                  l10n.quranTextSizeMedium,
-                  l10n.quranTextSizeLarge,
-                  l10n.quranTextSizeShortExtraLarge,
-                ],
-                selectedIndex: quranTextScale.index,
-                onChanged: (i) => ref
-                    .read(quranScreenSettingsProvider.notifier)
-                    .setTextScale(QuranTextScale.values[i]),
-              ),
+              child: const QuranZoomControl(),
             ),
           ],
         ),
@@ -103,7 +86,7 @@ class TypographySettingsSection extends ConsumerWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: FontFamily.uthmanicHafs,
-              fontSize: quranTextScale.previewFontSize,
+              fontSize: mushafZoomPreviewFontSize(mushafZoom),
               color: theme.colors.foreground,
               height: 1.8,
             ),

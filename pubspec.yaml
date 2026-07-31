@@ -92,6 +92,7 @@ dev_dependencies:
   custom_lint: ^0.8.0
   flutter_gen_runner: ^5.10.0
   flutter_lints: ^6.0.0
+  forui_cli: ^0.24.0
   flutter_test:
     sdk: flutter
   freezed: ^3.0.6
@@ -104,10 +105,6 @@ dev_dependencies:
   riverpod_lint: ^3.0.3
   very_good_analysis: ^10.0.0
   vector_graphics_compiler: ^1.2.5
-
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
-# The following section is specific to Flutter packages.
 flutter:
   generate: true
   # The following line ensures that the Material Icons font is

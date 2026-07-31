@@ -17,16 +17,13 @@ bool _isTouchThemePlatform() =>
         defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.fuchsia);
 
-/// Builds the root [FThemeData] with palette, density, text scale, and app font.
+/// Builds the root [FThemeData] with palette, density, text scale, app font,
+/// and the app's tab styles.
 FThemeData buildAppTheme({
   required AppPalette palette,
   required ThemeMode themeMode,
   required bool touch,
   required double textScale,
-  List<ThemeExtension<dynamic>> extensions = const [
-    AppRadii.standard(),
-    AppDurations.standard(),
-  ],
 }) {
   final base = resolveColorScheme(palette, themeMode, touch: touch);
   final typeface = FTypeface.inherit(
@@ -38,13 +35,28 @@ FThemeData buildAppTheme({
     display: typeface,
     body: typeface,
   ).scale(sizeScalar: textScale);
+  final style = FStyle.inherit(
+    colors: base.colors,
+    typography: typography,
+    touch: touch,
+  );
+
+  const radii = AppRadii.standard();
+  final tabs = AppTabsStyles.inherit(
+    colors: base.colors,
+    typography: typography,
+    style: style,
+    radii: radii,
+  );
 
   return FThemeData(
     colors: base.colors,
     touch: touch,
     typography: typography,
+    style: style,
     icons: base.icons,
-    extensions: extensions,
+    tabsStyle: tabs.standard,
+    extensions: [radii, const AppDurations.standard(), tabs],
   );
 }
 
@@ -68,21 +80,19 @@ FThemeData appThemeData(Ref ref) {
 /// Applies persisted app text scale on top of [appThemeDataProvider].
 @Riverpod(keepAlive: true)
 FThemeData appThemeWithTextScale(Ref ref) {
-  final base = ref.watch(appThemeDataProvider);
   final scale = ref.watch(
     themeProvider.select(
       (t) => (t.value ?? ThemePrefs.defaults()).appTextScale.scalar,
     ),
   );
   return buildAppTheme(
-    palette: ref.read(
+    palette: ref.watch(
       themeProvider.select((t) => t.value?.appPalette ?? AppPalette.manuscript),
     ),
-    themeMode: ref.read(
+    themeMode: ref.watch(
       themeProvider.select((t) => t.value?.themeMode ?? ThemeMode.light),
     ),
     touch: _isTouchThemePlatform(),
     textScale: scale,
-    extensions: List<ThemeExtension<dynamic>>.from(base.extensions),
   );
 }

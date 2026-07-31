@@ -1,7 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:tawaq/gen/assets.gen.dart';
 
 /// Extension on [Prayer] to provide UI-related assets and properties.
 extension PrayerImageExtension on Prayer {

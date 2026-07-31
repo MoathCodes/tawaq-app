@@ -4,7 +4,6 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
@@ -40,12 +39,9 @@ class FortressBrowseSidebar extends HookConsumerWidget {
     final l10n = context.l10n;
     final filterController = useTextEditingController();
     useListenable(filterController);
+    // Ctrl+K is owned by the main pane's global search; this field is a local
+    // chapter filter and is reached by click or tab.
     final searchFocusNode = useFocusNode();
-    final focusSearch = useCallback(
-      searchFocusNode.requestFocus,
-      [searchFocusNode],
-    );
-    useRegisterAppSearchFocus(focusSearch);
     final animatedSidebarChapterIds = useRef(<int>{});
     final favoriteChapterIds = ref.watch(
       fortressScreenSettingsProvider.select(
@@ -113,8 +109,14 @@ class FortressBrowseSidebar extends HookConsumerWidget {
                     control: FTextFieldControl.managed(
                       controller: filterController,
                     ),
-                    prefixBuilder: (context, style, variants) =>
-                        const Icon(FLucideIcons.filter),
+                    clearable: (value) => value.text.isNotEmpty,
+                    prefixBuilder: (context, style, variants) => Padding(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      child: Icon(
+                        FLucideIcons.listFilter,
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
                   ),
                   SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
                   FTabs(

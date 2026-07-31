@@ -129,6 +129,12 @@ void main() {
       );
       expect(result.effects.whereType<LoadAyahLoop>(), hasLength(1));
       expect(result.effects.whereType<HighlightAyah>(), hasLength(1));
+      // Machine path must match session Seek → A-B → Highlight order so the
+      // controller does not highlight/scroll before seek+loop land.
+      expect(
+        result.effects.map((e) => e.runtimeType).toList(),
+        [SeekAudio, LoadAyahLoop, HighlightAyah],
+      );
     });
 
     test('final ayah end triggers selection end', () {

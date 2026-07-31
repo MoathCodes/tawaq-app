@@ -73,8 +73,7 @@ class AyahInSurahSelect extends HookConsumerWidget {
     AppLocalizations l10n,
     String surahName,
     int ayahNumber,
-  ) =>
-      l10n.surahAyahInfo(surahName, ayahNumber);
+  ) => l10n.surahAyahInfo(surahName, ayahNumber);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -128,6 +127,14 @@ class AyahInSurahSelect extends HookConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             NumericStepButton(
+              icon: FLucideIcons.chevronsLeft,
+              enabled: enabled && ayah > 1,
+              onPress: () => setAyah(1),
+              semanticsLabel: l10n.quranRangeFirstAyah,
+              tooltip: l10n.quranRangeFirstAyah,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            NumericStepButton(
               icon: FLucideIcons.minus,
               enabled: enabled && ayah > 1,
               onPress: () => setAyah(ayah - 1),
@@ -157,6 +164,14 @@ class AyahInSurahSelect extends HookConsumerWidget {
               onPress: () => setAyah(ayah + 1),
               semanticsLabel: l10n.next,
               tooltip: l10n.next,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            NumericStepButton(
+              icon: FLucideIcons.chevronsRight,
+              enabled: enabled && ayah < ayahCount,
+              onPress: () => setAyah(ayahCount),
+              semanticsLabel: l10n.quranRangeLastAyah,
+              tooltip: l10n.quranRangeLastAyah,
             ),
           ],
         ),

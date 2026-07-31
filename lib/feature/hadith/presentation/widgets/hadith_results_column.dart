@@ -241,7 +241,6 @@ class HadithResultsColumn extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: AppSpacing.sm),
           child: FAlert(
-            liveRegion: true,
             icon: const Icon(FLucideIcons.circleAlert),
             title: Text(l10n.hadithPageLoadFailed),
           ),
@@ -302,6 +301,7 @@ class _ResultListView extends HookConsumerWidget {
 
     final list = ListView.separated(
       controller: scrollController,
+      padding: hoverCardListPadding(),
       itemCount: hadithList.length,
       separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
       itemBuilder: (context, index) {

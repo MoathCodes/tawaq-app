@@ -128,7 +128,7 @@ void main() {
       expect(result.effects.whereType<LoadGaplessContinuation>(), isEmpty);
     });
 
-    test('missing next surah on open-ended emits error', () {
+    test('missing next surah on open-ended ends cleanly', () {
       const moshaf = Moshaf(
         id: 1,
         name: 'Hafs',
@@ -154,8 +154,11 @@ void main() {
         timeline: _timeline(),
       );
 
-      expect(result.state.status, RecitationStatus.error);
-      expect(result.state.error, isNotNull);
+      expect(result.state.status, RecitationStatus.ended);
+      expect(result.state.error, isNull);
+      expect(result.state.position, const Duration(milliseconds: 15000));
+      expect(result.effects.whereType<PauseAtEof>(), hasLength(1));
+      expect(result.effects.whereType<SetNativeLoop>(), hasLength(1));
       expect(result.effects.whereType<LoadGaplessContinuation>(), isEmpty);
     });
 

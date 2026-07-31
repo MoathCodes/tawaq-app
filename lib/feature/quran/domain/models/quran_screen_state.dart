@@ -2,7 +2,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_content_source_converter.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
@@ -13,7 +12,7 @@ part 'quran_screen_state.g.dart';
 /// State model for the Quran screen.
 ///
 /// Contains all reactive state for the Quran reader including page info,
-/// font size, layout mode, and currently selected ayah.
+/// mushaf zoom, layout mode, and currently selected ayah.
 @freezed
 abstract class QuranScreenState with _$QuranScreenState {
   /// Creates a [QuranScreenState] instance.
@@ -21,10 +20,13 @@ abstract class QuranScreenState with _$QuranScreenState {
     /// Current page info from MushafReader.
     required MushafPageInfo pageInfo,
 
-    /// Mushaf ayah text size (independent of app UI scale).
-    @QuranTextScaleConverter()
-    @Default(QuranTextScale.medium)
-    QuranTextScale quranTextScale,
+    /// Continuous mushaf reading zoom (`readingBoost`).
+    ///
+    /// Kept under the legacy JSON key `quranTextScale` so existing installs
+    /// migrate via [mushafZoomFromJson] instead of resetting.
+    @JsonKey(name: 'quranTextScale', fromJson: mushafZoomFromJson)
+    @Default(kMushafZoomDefault)
+    double mushafZoom,
 
     /// Current reading layout mode.
     @Default(QuranReadingLayout.studyMode) QuranReadingLayout layout,
@@ -50,6 +52,9 @@ abstract class QuranScreenState with _$QuranScreenState {
 
     /// Whether the study side panel is collapsed.
     @Default(SidePanelDefaults.collapsed) bool sidePanelCollapsed,
+
+    /// Active tab inside the study side panel.
+    @Default(StudyPanelTab.currentAyah) StudyPanelTab activeStudyTab,
   }) = _QuranScreenState;
   const QuranScreenState._();
 

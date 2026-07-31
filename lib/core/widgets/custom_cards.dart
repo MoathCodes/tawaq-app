@@ -8,6 +8,34 @@ import 'package:tawaq/theme/theme.dart';
 const _kBorderOpacity = 100;
 const _kAnimDuration = Duration(milliseconds: 260);
 
+/// Space a [HoverCard]'s hover glow needs outside its own box.
+///
+/// The glow is painted by the card's [BoxDecoration], so it falls outside the
+/// card's layout bounds. When cards fill the width of a scroll viewport the
+/// viewport's clip cuts the glow off flush with the card edge. Reserve this
+/// much room around cards inside any clipping ancestor — use
+/// [hoverCardListPadding] for scrollables.
+///
+/// A [BoxShadow] reaches `spreadRadius + blurRadius` past its box, so this must
+/// stay >= the largest reach in [HoverCard]'s shadows (currently `0 + 14` to
+/// the sides and `4 + 14` downwards). Keep them in sync when tuning the glow.
+const double kHoverCardGlowGutter = 18;
+
+/// Scrollable padding that leaves room for [HoverCard] hover glows.
+///
+/// Pass to `ListView.padding` (or an equivalent sliver padding) when the list
+/// renders [HoverCard]s, so the glow is not clipped by the viewport.
+EdgeInsets hoverCardListPadding({
+  double horizontal = kHoverCardGlowGutter,
+  double top = 0,
+  double bottom = 0,
+}) => EdgeInsets.only(
+  left: horizontal,
+  right: horizontal,
+  top: top + kHoverCardGlowGutter,
+  bottom: bottom + kHoverCardGlowGutter,
+);
+
 /// A card that displays a hover effect when hovered.
 class HoverCard extends HookWidget {
   /// Creates a hover card.
@@ -83,24 +111,25 @@ class HoverCard extends HookWidget {
                 : borderColor ??
                       colors.secondaryForeground.withAlpha(_kBorderOpacity),
           ),
+          // Reach is kept within [kHoverCardGlowGutter] so ancestor clips
+          // (scroll viewports, stacks) do not slice the glow off.
           boxShadow: hovered
               ? [
                   BoxShadow(
-                    color: colors.primary.withValues(alpha: 0.18),
-                    blurRadius: 28,
-                    spreadRadius: 1,
-                    offset: const Offset(0, 10),
+                    color: colors.primary.withValues(alpha: 0.22),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
                   ),
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 10,
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ]
               : [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 12,
+                    blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
                 ],

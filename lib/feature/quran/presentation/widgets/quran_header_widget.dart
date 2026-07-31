@@ -10,7 +10,6 @@ import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/scale/quran_text_scale_popover.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_search_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_selector.dart';
@@ -292,83 +291,70 @@ class _LayoutSegment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colors = theme.colors;
     final l10n = context.l10n;
 
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: colors.muted.withValues(alpha: 0.45),
-        shape: RoundedSuperellipseBorder(
-          side: BorderSide(color: colors.border.withValues(alpha: 0.8)),
-          borderRadius: theme.radii.md,
+    // The mushaf itself is a sibling of the header, so the entries carry no
+    // content; only the bar is rendered. `IntrinsicWidth` sizes the bar to
+    // twice its widest label, since the surrounding `Row` offers unbounded
+    // width and the tabs divide whatever they are given.
+    return IntrinsicWidth(
+      child: FTabs(
+        style: context.theme.tabs.compact,
+        control: FTabControl.lifted(
+          index: layout.index,
+          onChange: onLayoutChanged,
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 2,
-          children: [
-            for (final mode in QuranReadingLayout.values)
-              _LayoutOption(
+        children: [
+          for (final mode in QuranReadingLayout.values)
+            FTabEntry(
+              label: _LayoutTabLabel(
                 mode: mode,
                 label: mode.getLocaleName(l10n),
-                selected: layout == mode,
+                selected: mode == layout,
                 showLabel: showLabels,
-                onPress: () => onLayoutChanged(mode.index),
               ),
-          ],
-        ),
+              child: const SizedBox.shrink(),
+            ),
+        ],
       ),
     );
   }
 }
 
-class _LayoutOption extends StatelessWidget {
-  const _LayoutOption({
+class _LayoutTabLabel extends StatelessWidget {
+  const _LayoutTabLabel({
     required this.mode,
     required this.label,
     required this.selected,
     required this.showLabel,
-    required this.onPress,
   });
 
   final QuranReadingLayout mode;
   final String label;
   final bool selected;
   final bool showLabel;
-  final VoidCallback onPress;
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
-    final buttonStyle = layoutSegmentButtonStyle(
-      colors: theme.colors,
-      typography: theme.typography,
-      style: theme.style,
-      borderRadius: theme.radii.sm,
-      compact: !showLabel,
+    final colors = context.theme.colors;
+    final icon = Icon(
+      mode.icon,
+      size: 16,
+      color: selected ? colors.primary : colors.mutedForeground,
     );
 
-    return QuranSemantics.mergedChip(
-      child: showLabel
-          ? FButton(
-              mainAxisSize: MainAxisSize.min,
-              selected: selected,
-              semanticsLabel: label,
-              onPress: onPress,
-              style: buttonStyle,
-              prefix: Icon(mode.icon),
-              child: Text(label),
-            )
-          : FButton.icon(
-              selected: selected,
-              semanticsLabel: label,
-              onPress: onPress,
-              style: buttonStyle,
-              child: Icon(mode.icon),
-            ),
+    if (!showLabel) {
+      return FTooltip(
+        semanticsLabel: label,
+        tipBuilder: (_, _) => Text(label),
+        child: icon,
+      );
+    }
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: AppSpacing.xs,
+      children: [icon, Text(label)],
     );
   }
 }

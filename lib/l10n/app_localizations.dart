@@ -182,6 +182,18 @@ abstract class AppLocalizations {
   /// **'Add a reflection...'**
   String get addReflection;
 
+  /// No description provided for @deleteReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete reflection'**
+  String get deleteReflection;
+
+  /// No description provided for @deleteReflectionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this reflection? This cannot be undone.'**
+  String get deleteReflectionConfirm;
+
   /// No description provided for @adhan.
   ///
   /// In en, this message translates to:
@@ -1057,6 +1069,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search chapters and adhkar...'**
   String get fortressSearchHint;
+
+  /// No description provided for @fortressSearchOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Search adhkar'**
+  String get fortressSearchOpen;
 
   /// No description provided for @fortressSearchTitles.
   ///
@@ -2552,6 +2570,12 @@ abstract class AppLocalizations {
   /// **'Choose synced reciter'**
   String get quranRangeChooseSyncedReciter;
 
+  /// No description provided for @quranRangeFirstAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'First ayah'**
+  String get quranRangeFirstAyah;
+
   /// No description provided for @quranRangeFrom.
   ///
   /// In en, this message translates to:
@@ -2599,6 +2623,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not find the juz for this ayah'**
   String get quranRangeJuzNotFound;
+
+  /// No description provided for @quranRangeLastAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'Last ayah'**
+  String get quranRangeLastAyah;
 
   /// No description provided for @quranRangeModeLabel.
   ///
@@ -3134,29 +3164,11 @@ abstract class AppLocalizations {
   /// **'Quran text size'**
   String get quranTextSize;
 
-  /// No description provided for @quranTextSizeExtraLarge.
-  ///
-  /// In en, this message translates to:
-  /// **'Extra large'**
-  String get quranTextSizeExtraLarge;
-
   /// No description provided for @quranTextSizeIndependentNote.
   ///
   /// In en, this message translates to:
   /// **'Quran reading size is independent of app and system text scaling.'**
   String get quranTextSizeIndependentNote;
-
-  /// No description provided for @quranTextSizeLarge.
-  ///
-  /// In en, this message translates to:
-  /// **'Large'**
-  String get quranTextSizeLarge;
-
-  /// No description provided for @quranTextSizeMedium.
-  ///
-  /// In en, this message translates to:
-  /// **'Medium'**
-  String get quranTextSizeMedium;
 
   /// No description provided for @quranTextSizePreview.
   ///
@@ -3170,17 +3182,35 @@ abstract class AppLocalizations {
   /// **'Preview'**
   String get quranTextSizePreviewLabel;
 
-  /// No description provided for @quranTextSizeShortExtraLarge.
+  /// No description provided for @quranZoomFitPage.
   ///
   /// In en, this message translates to:
-  /// **'XL'**
-  String get quranTextSizeShortExtraLarge;
+  /// **'Fit'**
+  String get quranZoomFitPage;
 
-  /// No description provided for @quranTextSizeSmall.
+  /// No description provided for @quranZoomFillWidth.
   ///
   /// In en, this message translates to:
-  /// **'Small'**
-  String get quranTextSizeSmall;
+  /// **'Fill'**
+  String get quranZoomFillWidth;
+
+  /// No description provided for @quranZoomFillWidthHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Past Fit, the page may scroll vertically for larger text.'**
+  String get quranZoomFillWidthHint;
+
+  /// No description provided for @quranZoomPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String quranZoomPercent(int percent);
+
+  /// No description provided for @quranZoomReset.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to Fit'**
+  String get quranZoomReset;
 
   /// No description provided for @quranTranslationQuoted.
   ///
@@ -3194,11 +3224,65 @@ abstract class AppLocalizations {
   /// **'Red'**
   String get red;
 
+  /// No description provided for @noReflectionsMatchSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No reflections match your search'**
+  String get noReflectionsMatchSearch;
+
+  /// No description provided for @noReflectionsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No reflections yet — write one on an ayah to see it here'**
+  String get noReflectionsYet;
+
+  /// No description provided for @noteTimeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{a day ago} other{{count} days ago}}'**
+  String noteTimeDaysAgo(int count);
+
+  /// No description provided for @noteTimeMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{last month} other{{count} months ago}}'**
+  String noteTimeMonthsAgo(int count);
+
+  /// No description provided for @noteTimeToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get noteTimeToday;
+
+  /// No description provided for @noteTimeWeeksAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{a week ago} other{{count} weeks ago}}'**
+  String noteTimeWeeksAgo(int count);
+
+  /// No description provided for @noteTimeYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{a year ago} other{{count} years ago}}'**
+  String noteTimeYearsAgo(int count);
+
+  /// No description provided for @noteTimeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get noteTimeYesterday;
+
   /// No description provided for @reflectionPlaceholder.
   ///
   /// In en, this message translates to:
-  /// **'Write your thoughts about this verse...'**
+  /// **'Write your reflection about this verse...'**
   String get reflectionPlaceholder;
+
+  /// No description provided for @reflectionsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{noteCount, plural, =0{No reflections} =1{1 reflection in {surahCount, plural, =1{1 surah} other{{surahCount} surahs}}} other{{noteCount} reflections in {surahCount, plural, =1{1 surah} other{{surahCount} surahs}}}}'**
+  String reflectionsSummary(int noteCount, int surahCount);
 
   /// No description provided for @remembrance.
   ///
@@ -3236,17 +3320,17 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get save;
 
-  /// No description provided for @saveNote.
-  ///
-  /// In en, this message translates to:
-  /// **'Save Note'**
-  String get saveNote;
-
   /// No description provided for @saveParameters.
   ///
   /// In en, this message translates to:
   /// **'Save Parameters'**
   String get saveParameters;
+
+  /// No description provided for @searchYourReflections.
+  ///
+  /// In en, this message translates to:
+  /// **'Search your reflections'**
+  String get searchYourReflections;
 
   /// No description provided for @scheduleAlertEventAdhan.
   ///
@@ -3385,6 +3469,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please select a verse to add a reflection'**
   String get selectVerseToAddReflection;
+
+  /// No description provided for @studyTabCurrentAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'Current ayah'**
+  String get studyTabCurrentAyah;
+
+  /// No description provided for @studyTabMyReflections.
+  ///
+  /// In en, this message translates to:
+  /// **'My reflections'**
+  String get studyTabMyReflections;
 
   /// No description provided for @settings.
   ///

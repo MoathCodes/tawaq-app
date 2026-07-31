@@ -106,7 +106,7 @@ The entire UI is built with **forui** (see `pubspec.yaml`). Access theme via:
 - `context.theme.colors` → `FColors`
 - `context.theme.isDark` → `bool` (custom extension checking `colors.brightness`)
 - `FTheme.of(context)` → alternative explicit lookup (same as `context.theme`)
-- `selectStyle()` — custom select styles in `lib/theme/select_style.dart`; per-control button styling uses Forui defaults (`base.buttonStyles`) plus `windowControlButtonStyle()` / `closeButtonStyle()` / `layoutSegmentButtonStyle()` in `lib/theme/button_styles.dart`
+- `selectStyle()` — custom select styles in `lib/theme/select_style.dart`; per-control button styling uses Forui defaults (`base.buttonStyles`) plus `windowControlButtonStyle()` / `closeButtonStyle()` in `lib/theme/button_styles.dart`
 
 ### FColors — key property reference
 
@@ -127,7 +127,7 @@ The app supports 2 palettes, each with light + dark variants:
 
 Legacy persisted palette names (blue, zinc, …) map to `manuscript` via `appPaletteFromJson`.
 
-Resolution: `resolveColorScheme(AppPalette, ThemeMode, {touch})` → `_palettesData` map → `FThemeData`. Then `**buildAppTheme()`** in `lib/theme/app_theme_builder.dart` injects `AppRadii`, `AppDurations`, `AppTextScale`, and `IBMPlexSansArabic` as the app-wide font. Touch vs desktop density chosen via `_isTouchThemePlatform` in `main.dart`. Dual theme tree: `MaterialApp.theme` (scrollbars/Material bridge) + `FTheme` wrapper in builder.
+Resolution: `resolveColorScheme(AppPalette, ThemeMode, {touch})` → `_palettesData` map → `FThemeData`. Then `**buildAppTheme()`** in `lib/theme/app_theme_builder.dart` injects `AppRadii`, `AppDurations`, `AppTabsStyles`, `AppTextScale`, and `IBMPlexSansArabic` as the app-wide font. Touch vs desktop density chosen via `_isTouchThemePlatform` in `main.dart`. Dual theme tree: `MaterialApp.theme` (scrollbars/Material bridge) + `FTheme` wrapper in builder.
 
 ### Custom extensions on FThemeData
 
@@ -135,6 +135,29 @@ Defined in `lib/theme/theme_extensions.dart`:
 
 - `context.theme.radii` → `AppRadii` (xs, sm, md, lg, xl, full)
 - `context.theme.durations` → `AppDurations` (instant, fast, normal, slow, slower)
+- `context.theme.tabs` → `AppTabsStyles` (standard, compact, primary)
+
+### Tabs
+
+All tab UI goes through Forui `FTabs`. Three themed variants live in `lib/theme/tabs_styles.dart` (generated with `dart run forui style create tabs`, then split into variants):
+
+| Variant | Look | Use for |
+| ------- | ---- | ------- |
+| `standard` | Muted track, raised `background` indicator. Installed as `FThemeData.tabsStyle`, so a bare `FTabs` gets it | Page/card-level tabs (hadith side panel, hadith filter form, prayer trend analysis, fortress browse sidebar, settings) |
+| `primary` | Recessed `background` track, indicator tinted `primary` @18% with a `primary` @55% border | Tabs on a `secondary` surface, where the default track would sit within one lightness step of the card (Quran study panel) |
+| `compact` | `primary`'s exact colours at a smaller scale — `body.xs`, 28px min height, 2px padding, `spacing: 0` | Tab bars acting as controls, where the content renders elsewhere and labels may be icon-only (Quran header mushaf layout, fortress dua insights, range repeat dialog) |
+
+`compact` and `primary` share one decoration pair, so a colour change to one applies to both; only density differs. All variants round the track and indicator with `radii.md`.
+
+Opt into a non-default variant by passing the style directly — `FTabsStyle` is itself an `FTabsStyleDelta`:
+
+```dart
+FTabs(style: context.theme.tabs.primary, children: [...]);
+```
+
+**Never hand-roll a segmented control** from `FButton` rows. If the bar controls state rendered elsewhere, give each `FTabEntry` a `SizedBox.shrink()` child; `compact` sets `spacing: 0` so no gap is left behind. When such a bar sits in a `Row` (unbounded width), wrap it in `IntrinsicWidth` — the tabs then size to twice their widest label, giving equal-width segments.
+
+`SettingsScreen` still drives a Material `TabBar`/`TabBarView` pair directly, because `CenteredViewportShell` needs the bar and the content in separate slots. It reads `context.theme.tabsStyle`, so it tracks `standard` automatically.
 
 ### Spacing & responsive layout
 
@@ -270,7 +293,7 @@ Two normalizers — do not mix them:
 
 ### Barrel exports
 
-- `import 'package:tawaq/theme/theme.dart'` → all theme tokens (`AppSpacing`, `AppRadii`, `AppDurations`, extensions, button/select styles)
+- `import 'package:tawaq/theme/theme.dart'` → all theme tokens (`AppSpacing`, `AppRadii`, `AppDurations`, `AppTabsStyles`, extensions, button/select styles)
 - `import 'package:tawaq/core/hooks/hooks.dart'` → all custom hooks
 
 ## Feature highlights

@@ -39,7 +39,7 @@ void main() {
         final bundle = computePrayerDayBundle(
           inputs: inputs,
           anchorNow: testTime,
-        )!;
+        );
 
         final decision = computePrayerCardDecisionFromParts(
           currentTime: testTime,
@@ -57,7 +57,7 @@ void main() {
       final bundle = computePrayerDayBundle(
         inputs: inputs,
         anchorNow: testTime,
-      )!;
+      );
 
       final decision = computePrayerCardDecisionFromParts(
         currentTime: testTime,

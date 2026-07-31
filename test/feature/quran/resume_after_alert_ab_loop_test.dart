@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
@@ -163,6 +162,26 @@ void main() {
           previousIndex: null,
         ),
         isTrue,
+      );
+    });
+
+    test('AlertSuspend clears pendingSeek so queued seeks cannot land', () {
+      const seeking = RecitationState(
+        reciter: _reciter,
+        moshaf: _moshaf,
+        surah: 1,
+        status: RecitationStatus.playing,
+        active: true,
+        pendingSeekTarget: Duration(seconds: 12),
+        position: Duration(seconds: 12),
+      );
+      final result = _run(seeking, const AlertSuspend());
+      expect(result.state.pendingSeekTarget, isNull);
+      expect(result.state.suspendedSnapshot, isNotNull);
+      // Snapshot keeps pre-suspend position for AlertResume reload.
+      expect(
+        result.state.suspendedSnapshot!.position,
+        const Duration(seconds: 12),
       );
     });
   });

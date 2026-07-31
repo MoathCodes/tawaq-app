@@ -3,6 +3,7 @@ import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:tawaq/feature/hadith/data/models/hadith_favorite.dart';
 import 'package:tawaq/feature/hadith/data/models/hadith_recent_search.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/quran/data/models/quran_note.dart';
 
 part 'hive_adapters.g.dart';
 
@@ -14,6 +15,7 @@ part 'hive_adapters.g.dart';
     AdapterSpec<CompletionStatus>(),
     AdapterSpec<HadithFavorite>(),
     AdapterSpec<HadithRecentSearch>(),
+    AdapterSpec<QuranNote>(),
   ],
 )
 class HiveAdapters {}

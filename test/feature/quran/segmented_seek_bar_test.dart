@@ -1280,7 +1280,6 @@ void main() {
           currentListIndex: 49,
           candidateListIndex: 55,
           travelPx: 5,
-          pxPerStep: 32,
         ),
         49,
       );
@@ -1289,7 +1288,6 @@ void main() {
           currentListIndex: 49,
           candidateListIndex: 50,
           travelPx: 31,
-          pxPerStep: 32,
         ),
         49,
       );
@@ -1301,7 +1299,6 @@ void main() {
           currentListIndex: 49,
           candidateListIndex: 55,
           travelPx: 32,
-          pxPerStep: 32,
         ),
         50,
       );
@@ -1310,7 +1307,6 @@ void main() {
           currentListIndex: 49,
           candidateListIndex: 40,
           travelPx: 40,
-          pxPerStep: 32,
         ),
         48,
       );
@@ -1322,7 +1318,6 @@ void main() {
           currentListIndex: 49,
           candidateListIndex: 55,
           travelPx: 96,
-          pxPerStep: 32,
         ),
         52,
       );
@@ -1331,7 +1326,6 @@ void main() {
           currentListIndex: 10,
           candidateListIndex: 20,
           travelPx: 200,
-          pxPerStep: 32,
         ),
         16,
       );
@@ -1343,7 +1337,6 @@ void main() {
           currentListIndex: 5,
           candidateListIndex: 5,
           travelPx: 0,
-          pxPerStep: 32,
         ),
         5,
       );

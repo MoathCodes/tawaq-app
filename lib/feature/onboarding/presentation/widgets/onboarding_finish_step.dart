@@ -30,7 +30,6 @@ class OnboardingFinishStep extends ConsumerWidget {
         return const Center(child: FCircularProgress.loader());
       }
       return FAlert(
-        liveRegion: true,
         icon: const Icon(FLucideIcons.triangleAlert),
         title: Text(l10n.onboardingFinishPreviewUnavailable),
       );

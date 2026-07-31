@@ -37,7 +37,6 @@ class AnalysisSection extends ConsumerWidget {
       },
       error: (e, _) => StaticCard(
         child: FAlert(
-          liveRegion: true,
           title: Text(
             context.l10n.errorOccurredWhile(context.l10n.loadingAnalytics),
           ),

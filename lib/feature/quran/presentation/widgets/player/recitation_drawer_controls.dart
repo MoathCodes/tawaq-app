@@ -421,7 +421,9 @@ class _RecitationSegmentedSeekBar extends ConsumerWidget {
 
     // Non-Hafs: numbers only — Hafs Uthmani would be missing/wrong for extra
     // timing verses. Keep full timing segments so scrub still matches audio.
-    final showUthmaniExcerpt = seekBarShowsUthmaniExcerpt(playback.moshaf?.name);
+    final showUthmaniExcerpt = seekBarShowsUthmaniExcerpt(
+      playback.moshaf?.name,
+    );
 
     return SegmentedSeekBar(
       position: playback.pendingSeekTarget ?? playback.position,
@@ -587,34 +589,34 @@ class _DrawerActionsSection extends ConsumerWidget {
     final rangeConfigSubtitle = configParts.join(' · ');
 
     final saveSnapshot = ref.watch(recitationOfflineSaveProgressProvider);
-    final playDownloadProgress = ref.watch(recitationDownloadProgressProvider);
-    final cached =
-        ref.watch(cachedRecitationsSnapshotProvider).value?.files ?? const [];
-    final optimisticSaved = ref.watch(optimisticOfflineSavedProvider);
+    // final playDownloadProgress = ref.watch(recitationDownloadProgressProvider);
+    // final cached =
+    //     ref.watch(cachedRecitationsSnapshotProvider).value?.files ?? const [];
+    // final optimisticSaved = ref.watch(optimisticOfflineSavedProvider);
     final reciter = actions.reciter;
     final moshaf = actions.moshaf;
     final surah = actions.surah;
-    final isCached =
-        reciter != null &&
-        moshaf != null &&
-        surah != null &&
-        cached.any(
-          (f) =>
-              f.reciterId == reciter.id &&
-              f.moshafId == moshaf.id &&
-              f.surah == surah,
-        );
-    final isOptimisticSaved =
-        reciter != null &&
-        moshaf != null &&
-        surah != null &&
-        optimisticSaved.any(
-          (k) =>
-              k.reciterId == reciter.id &&
-              k.moshafId == moshaf.id &&
-              k.surah == surah,
-        );
-    final isSaved = isCached || isOptimisticSaved;
+    // final isCached =
+    //     reciter != null &&
+    //     moshaf != null &&
+    //     surah != null &&
+    //     cached.any(
+    //       (f) =>
+    //           f.reciterId == reciter.id &&
+    //           f.moshafId == moshaf.id &&
+    //           f.surah == surah,
+    //     );
+    // final isOptimisticSaved =
+    //     reciter != null &&
+    //     moshaf != null &&
+    //     surah != null &&
+    //     optimisticSaved.any(
+    //       (k) =>
+    //           k.reciterId == reciter.id &&
+    //           k.moshafId == moshaf.id &&
+    //           k.surah == surah,
+    //     );
+    // final isSaved = isCached || isOptimisticSaved;
     final isExplicitSaving =
         saveSnapshot != null &&
         reciter != null &&
@@ -627,13 +629,13 @@ class _DrawerActionsSection extends ConsumerWidget {
         );
     // Play-download progress lives only in the transport section to avoid a
     // duplicate progress row; still reflect auto-save on the tile subtitle.
-    final isPlayDownloading = actions.isLoading && playDownloadProgress != null;
-    final isSaving = isExplicitSaving || isPlayDownloading;
-    final saveSubtitle = isSaving
-        ? l10n.quranRecitationSavingOffline
-        : isSaved
-        ? l10n.quranRecitationSavedOffline
-        : null;
+    // final isPlayDownloading = actions.isLoading && playDownloadProgress != null;
+    // final isSaving = isExplicitSaving || isPlayDownloading;
+    // final saveSubtitle = isSaving
+    //     ? l10n.quranRecitationSavingOffline
+    //     : isSaved
+    //     ? l10n.quranRecitationSavedOffline
+    //     : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

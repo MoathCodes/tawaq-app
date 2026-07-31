@@ -4,7 +4,6 @@ import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
 import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
@@ -61,9 +60,12 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
   void setLayout(QuranReadingLayout layout) =>
       _commit((s) => s.copyWith(layout: layout), 'Layout');
 
-  /// Sets the mushaf text scale (independent of app UI scale).
-  void setTextScale(QuranTextScale scale) =>
-      _commit((s) => s.copyWith(quranTextScale: scale), 'Quran text scale');
+  /// Sets continuous mushaf zoom, clamped to `[kMushafZoomMin, kMushafZoomMax]`.
+  void setMushafZoom(double zoom) => _commit((s) {
+    final next = clampMushafZoom(zoom);
+    if (s.mushafZoom == next) return s;
+    return s.copyWith(mushafZoom: next);
+  }, 'Mushaf zoom');
 
   /// Sets the side panel width ratio (0..1).
   void setSidePanelRatio(double ratio) =>
@@ -96,6 +98,10 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
     (s) => s.copyWith(selectedTafsir: source),
     'Tafsir source',
   );
+
+  /// Sets the active study panel tab.
+  void setActiveStudyTab(StudyPanelTab tab) =>
+      _commit((s) => s.copyWith(activeStudyTab: tab), 'Active study tab');
 }
 
 /// Ephemeral ayah selection for the Quran screen (not JsonPersist).

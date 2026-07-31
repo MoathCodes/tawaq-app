@@ -12,4 +12,5 @@ export 'durations.dart';
 export 'radii.dart';
 export 'select_style.dart';
 export 'spacing.dart';
+export 'tabs_styles.dart';
 export 'theme_extensions.dart';

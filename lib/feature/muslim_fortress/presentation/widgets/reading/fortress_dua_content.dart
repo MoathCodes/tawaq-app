@@ -8,7 +8,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
@@ -160,12 +160,12 @@ class _FortressThikrBody extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mushafController = useMushafController();
-    final quranTextScale = ref.watch(
+    final mushafZoom = ref.watch(
       quranScreenSettingsProvider.select(
-        (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
+        (v) => v.value?.mushafZoom ?? kMushafZoomDefault,
       ),
     );
-    final ayahFontSize = _kFortressAyahBaseFontSize * quranTextScale.boost;
+    final ayahFontSize = _kFortressAyahBaseFontSize * mushafZoom;
     final theme = context.theme;
     final colors = theme.colors;
 
@@ -258,9 +258,9 @@ class _FortressMushafPages extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
-    final quranTextScale = ref.watch(
+    final mushafZoom = ref.watch(
       quranScreenSettingsProvider.select(
-        (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
+        (v) => v.value?.mushafZoom ?? kMushafZoomDefault,
       ),
     );
 
@@ -289,7 +289,7 @@ class _FortressMushafPages extends ConsumerWidget {
                       hideHeader: true,
                       enableAyahHighlight: false,
                       loadingWidget: loadingWidget,
-                      style: buildQuranMushafStyle(theme, quranTextScale),
+                      style: buildQuranMushafStyle(theme, zoom: mushafZoom),
                     ),
                   ),
                 ),

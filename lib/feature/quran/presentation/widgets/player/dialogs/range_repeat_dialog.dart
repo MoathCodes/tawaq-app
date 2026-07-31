@@ -78,19 +78,19 @@ class _RangeRepeatDialog extends HookConsumerWidget {
     final seed = useMemoized(() {
       final playback = ref.read(recitationControllerProvider);
       final settings = ref.read(recitationSettingsProvider).value;
-      final selectedReciter =
-          ref.read(selectedRecitationProvider).value?.reciter;
+      final selectedReciter = ref
+          .read(selectedRecitationProvider)
+          .value
+          ?.reciter;
       final selectedAyah = ref.read(quranSelectedAyahProvider);
 
       final seedSurah =
-          initial?.surah ??
-          playback.surah ??
-          selectedAyah?.surahNumber ??
-          1;
+          initial?.surah ?? playback.surah ?? selectedAyah?.surahNumber ?? 1;
+      // Prefer the ayah actually being recited over the range start.
       final seedAyah =
           initial?.startAyah ??
-          playback.rangeFrom?.ayah ??
           playback.currentAyah ??
+          playback.rangeFrom?.ayah ??
           selectedAyah?.numberInSurah ??
           1;
       final hasSeedContext = initial != null || playback.active;
@@ -104,7 +104,6 @@ class _RangeRepeatDialog extends HookConsumerWidget {
       return (
         seedSurah: seedSurah,
         seedAyah: seedAyah,
-        hasSeedContext: hasSeedContext,
         initialPreset: initialPreset,
         reciter: initial?.reciter ?? playback.reciter ?? selectedReciter,
         moshafId:
@@ -112,31 +111,33 @@ class _RangeRepeatDialog extends HookConsumerWidget {
         initialMoshaf: initial?.moshaf ?? playback.moshaf,
         ayahRepeat: settings?.ayahRepeatCount ?? 1,
         rangeRepeat: settings?.rangeRepeatCount ?? 1,
+        // Prefer persisted / active range over the viewed ayah so reopening
+        // restores multi-surah and full-surah selections correctly.
         fromSurah:
-            selectedAyah?.surahNumber ??
             settings?.lastRangeFromSurah ??
             playback.rangeFrom?.surah ??
+            selectedAyah?.surahNumber ??
             initial?.surah ??
             playback.surah ??
             seedSurah,
         fromAyah:
-            selectedAyah?.numberInSurah ??
             settings?.lastRangeFromAyah ??
             playback.rangeFrom?.ayah ??
+            selectedAyah?.numberInSurah ??
             initial?.startAyah ??
             playback.currentAyah ??
             seedAyah,
         toSurah:
-            selectedAyah?.surahNumber ??
             settings?.lastRangeToSurah ??
             playback.rangeTo?.surah ??
+            selectedAyah?.surahNumber ??
             initial?.surah ??
             playback.surah ??
             seedSurah,
         toAyah:
-            selectedAyah?.numberInSurah ??
             settings?.lastRangeToAyah ??
             playback.rangeTo?.ayah ??
+            selectedAyah?.numberInSurah ??
             initial?.startAyah ??
             playback.currentAyah ??
             seedAyah,
@@ -163,11 +164,6 @@ class _RangeRepeatDialog extends HookConsumerWidget {
 
     final ayahRepeat = useState(seed.ayahRepeat);
     final rangeRepeat = useState(seed.rangeRepeat);
-
-    bool presetEnabled(RangeScopePreset p) {
-      if (p == RangeScopePreset.thisSurah) return seed.hasSeedContext;
-      return true;
-    }
 
     final isOpenEnded = range.preset.value == RangeScopePreset.continueFromHere;
 
@@ -301,7 +297,6 @@ class _RangeRepeatDialog extends HookConsumerWidget {
                   _RangeRepeatPresetList(
                     presetIndex: presetIndex,
                     isResolving: range.isResolving.value,
-                    presetEnabled: presetEnabled,
                     presetLabel: presetLabel,
                     onPresetSelected: range.applyPreset,
                   )
@@ -311,15 +306,10 @@ class _RangeRepeatDialog extends HookConsumerWidget {
                       index: presetIndex,
                       onChange: (index) {
                         if (range.isResolving.value) return;
-                        final p = _presetTabOrder[index];
-                        if (!presetEnabled(p)) return;
-                        range.applyPreset(p);
+                        range.applyPreset(_presetTabOrder[index]);
                       },
                     ),
-                    style: const .delta(
-                      padding: .value(EdgeInsets.all(2)),
-                      indicatorSize: FTabBarIndicatorSize.tab,
-                    ),
+                    style: context.theme.tabs.compact,
                     children: [
                       for (final p in _presetTabOrder)
                         FTabEntry(
@@ -485,6 +475,9 @@ _useRangePresetResolver({
   final toAyah = useState(initialToAyah);
   final isResolving = useState(false);
   final presetGeneration = useRef(0);
+  // Mutable anchor so presets follow the user's chosen "from" endpoint.
+  final anchorSurah = useRef(seedSurah);
+  final anchorAyah = useRef(seedAyah);
 
   void showPresetError(String message) {
     showFToast(
@@ -572,46 +565,6 @@ _useRangePresetResolver({
     );
   }
 
-  void applyPreset(RangeScopePreset p) {
-    final previousPreset = preset.value;
-    preset.value = p;
-    switch (p) {
-      case RangeScopePreset.thisAyah:
-        presetGeneration.value++;
-        isResolving.value = false;
-        fromSurah.value = seedSurah;
-        fromAyah.value = seedAyah;
-        toSurah.value = seedSurah;
-        toAyah.value = seedAyah;
-      case RangeScopePreset.thisSurah:
-        presetGeneration.value++;
-        isResolving.value = false;
-        final count = mushaf.getSurahSync(seedSurah)?.ayahCount ?? seedAyah;
-        fromSurah.value = seedSurah;
-        fromAyah.value = 1;
-        toSurah.value = seedSurah;
-        toAyah.value = count;
-      case RangeScopePreset.thisJuz:
-        final generation = ++presetGeneration.value;
-        isResolving.value = true;
-        unawaited(resolveJuzPreset(generation, previousPreset));
-      case RangeScopePreset.thisHizb:
-        final generation = ++presetGeneration.value;
-        isResolving.value = true;
-        unawaited(resolveHizbPreset(generation, previousPreset));
-      case RangeScopePreset.continueFromHere:
-        presetGeneration.value++;
-        isResolving.value = false;
-        if (previousPreset != RangeScopePreset.continueFromHere) {
-          fromSurah.value = seedSurah;
-          fromAyah.value = seedAyah;
-        }
-      case RangeScopePreset.custom:
-        presetGeneration.value++;
-        isResolving.value = false;
-    }
-  }
-
   int surahAyahCount(int surah) => mushaf.getSurahSync(surah)?.ayahCount ?? 1;
 
   void clampFromAyahToSurah() {
@@ -670,30 +623,77 @@ _useRangePresetResolver({
     }
   }
 
+  void updateAnchorFromFrom() {
+    anchorSurah.value = fromSurah.value;
+    anchorAyah.value = fromAyah.value;
+  }
+
+  void applyPreset(RangeScopePreset p) {
+    final previousPreset = preset.value;
+    preset.value = p;
+    switch (p) {
+      case RangeScopePreset.thisAyah:
+        presetGeneration.value++;
+        isResolving.value = false;
+        fromSurah.value = anchorSurah.value;
+        fromAyah.value = anchorAyah.value;
+        toSurah.value = anchorSurah.value;
+        toAyah.value = anchorAyah.value;
+      case RangeScopePreset.thisSurah:
+        presetGeneration.value++;
+        isResolving.value = false;
+        final count = mushaf.getSurahSync(anchorSurah.value)?.ayahCount ?? 1;
+        fromSurah.value = anchorSurah.value;
+        fromAyah.value = 1;
+        toSurah.value = anchorSurah.value;
+        toAyah.value = count;
+      case RangeScopePreset.thisJuz:
+        final generation = ++presetGeneration.value;
+        isResolving.value = true;
+        unawaited(resolveJuzPreset(generation, previousPreset));
+      case RangeScopePreset.thisHizb:
+        final generation = ++presetGeneration.value;
+        isResolving.value = true;
+        unawaited(resolveHizbPreset(generation, previousPreset));
+      case RangeScopePreset.continueFromHere:
+        presetGeneration.value++;
+        isResolving.value = false;
+        if (previousPreset != RangeScopePreset.continueFromHere) {
+          fromSurah.value = anchorSurah.value;
+          fromAyah.value = anchorAyah.value;
+        }
+      case RangeScopePreset.custom:
+        presetGeneration.value++;
+        isResolving.value = false;
+        ensureFromBeforeTo();
+    }
+  }
+
   void editFromSurah(int surah) {
     presetGeneration.value++;
     isResolving.value = false;
     switch (preset.value) {
       case RangeScopePreset.custom:
         fromSurah.value = surah;
-        clampFromAyahToSurah();
+        fromAyah.value = 1;
         ensureFromBeforeTo();
       case RangeScopePreset.continueFromHere:
         fromSurah.value = surah;
-        clampFromAyahToSurah();
+        fromAyah.value = 1;
       case RangeScopePreset.thisAyah:
-        snapToSingleAyah(surah, fromAyah.value);
+        snapToSingleAyah(surah, 1);
       case RangeScopePreset.thisSurah:
         snapToSurah(surah);
       case RangeScopePreset.thisJuz:
         fromSurah.value = surah;
-        clampFromAyahToSurah();
+        fromAyah.value = 1;
         resolveDivisionFromFrom(RangeScopePreset.thisJuz);
       case RangeScopePreset.thisHizb:
         fromSurah.value = surah;
-        clampFromAyahToSurah();
+        fromAyah.value = 1;
         resolveDivisionFromFrom(RangeScopePreset.thisHizb);
     }
+    updateAnchorFromFrom();
   }
 
   void editFromAyah(int ayah) {
@@ -723,6 +723,7 @@ _useRangePresetResolver({
         fromAyah.value = ayah.clamp(1, surahAyahCount(fromSurah.value));
         resolveDivisionFromFrom(RangeScopePreset.thisHizb);
     }
+    updateAnchorFromFrom();
   }
 
   void editToSurah(int surah) {
@@ -732,7 +733,8 @@ _useRangePresetResolver({
       preset.value = RangeScopePreset.custom;
     }
     toSurah.value = surah;
-    clampToAyahToSurah();
+    // Selecting a "to" surah usually means "through the end of that surah".
+    toAyah.value = surahAyahCount(surah);
     ensureToAfterFrom();
   }
 
@@ -795,14 +797,12 @@ class _RangeRepeatPresetList extends StatelessWidget {
   const _RangeRepeatPresetList({
     required this.presetIndex,
     required this.isResolving,
-    required this.presetEnabled,
     required this.presetLabel,
     required this.onPresetSelected,
   });
 
   final int presetIndex;
   final bool isResolving;
-  final bool Function(RangeScopePreset) presetEnabled;
   final String Function(RangeScopePreset) presetLabel;
   final ValueChanged<RangeScopePreset> onPresetSelected;
 
@@ -820,9 +820,7 @@ class _RangeRepeatPresetList extends StatelessWidget {
               variant: presetIndex == index
                   ? FButtonVariant.primary
                   : FButtonVariant.outline,
-              onPress: isResolving || !presetEnabled(p)
-                  ? null
-                  : () => onPresetSelected(p),
+              onPress: isResolving ? null : () => onPresetSelected(p),
               child: Text(presetLabel(p)),
             ),
           ),

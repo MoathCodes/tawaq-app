@@ -363,10 +363,7 @@ class _FortressSecondaryInsights extends HookWidget {
                 index: tabIndex.value,
                 onChange: (index) => tabIndex.value = index,
               ),
-              style: const .delta(
-                padding: .value(EdgeInsets.all(2)),
-                indicatorSize: FTabBarIndicatorSize.tab,
-              ),
+              style: theme.tabs.compact,
               children: [
                 .entry(
                   label: Text(l10n.fortressBenefit),

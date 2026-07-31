@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/notes_section.dart' show NotesSection;
 
 /// Mirrors [NotesSection] dispose flush: cancel debounce, persist when the
 /// editor text diverges from the last persisted value.

@@ -3,14 +3,14 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/widgets/semantics_scale_step_picker.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_text_scale.dart';
+import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/scale/quran_zoom_control.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Compact Quran text scale control for the Quran screen header.
+/// Compact Quran mushaf zoom control for the Quran screen header.
 class QuranTextScalePopover extends ConsumerWidget {
   /// Creates a [QuranTextScalePopover].
   const QuranTextScalePopover({super.key});
@@ -20,70 +20,74 @@ class QuranTextScalePopover extends ConsumerWidget {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
-    final quranTextScale = ref.watch(
+    final mushafZoom = ref.watch(
       quranScreenSettingsProvider.select(
-        (v) => v.value?.quranTextScale ?? QuranTextScale.medium,
+        (v) => v.value?.mushafZoom ?? kMushafZoomDefault,
       ),
-    );
-    final quranStateReady = ref.watch(
-      quranScreenSettingsProvider.select((s) => s.hasValue),
     );
 
     return FPopover(
       popoverBuilder: (context, _) {
         final popoverConstraints = dialogConstraints(
           context,
-          preferredWidth: 360,
-          minWidth: 300,
+          preferredWidth: 420,
+          minWidth: 360,
         );
 
-        return Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: ConstrainedBox(
-            constraints: popoverConstraints,
+        return ConstrainedBox(
+          constraints: popoverConstraints,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.md,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              spacing: AppSpacing.md,
               children: [
-                Text(
-                  l10n.quranTextSize,
-                  style: theme.typography.body.sm.copyWith(
-                    fontWeight: FontWeight.w600,
+                const QuranZoomControl(showHeader: true),
+                const SizedBox(height: AppSpacing.lg),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.secondary,
+                    borderRadius: theme.radii.md,
+                    border: Border.all(
+                      color: colors.border.withValues(alpha: 0.6),
+                    ),
                   ),
-                ),
-                SemanticsScaleStepPicker(
-                  groupLabel: l10n.quranTextSize,
-                  enabled: quranStateReady,
-                  previewSizes:
-                      QuranTextScale.values.map((s) => 14 * s.boost).toList(),
-                  labels: [
-                    l10n.quranTextSizeSmall,
-                    l10n.quranTextSizeMedium,
-                    l10n.quranTextSizeLarge,
-                    l10n.quranTextSizeShortExtraLarge,
-                  ],
-                  selectedIndex: quranTextScale.index,
-                  onChanged: (i) => ref
-                      .read(quranScreenSettingsProvider.notifier)
-                      .setTextScale(QuranTextScale.values[i]),
-                ),
-                Text(
-                  l10n.quranTextSizePreviewLabel,
-                  style: theme.typography.body.xs.copyWith(
-                    color: colors.mutedForeground,
-                  ),
-                ),
-                QuranSemantics.decorative(
-                  Text(
-                    l10n.quranTextSizePreview,
-                    textDirection: TextDirection.rtl,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: FontFamily.uthmanicHafs,
-                      fontSize: quranTextScale.previewFontSize,
-                      color: colors.foreground,
-                      height: 1.6,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.md,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      spacing: AppSpacing.sm,
+                      children: [
+                        Text(
+                          l10n.quranTextSizePreviewLabel,
+                          style: theme.typography.body.xs.copyWith(
+                            color: colors.mutedForeground,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        QuranSemantics.decorative(
+                          Text(
+                            l10n.quranTextSizePreview,
+                            textDirection: TextDirection.rtl,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: FontFamily.uthmanicHafs,
+                              fontSize: mushafZoomPreviewFontSize(mushafZoom),
+                              color: colors.foreground,
+                              height: 1.7,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

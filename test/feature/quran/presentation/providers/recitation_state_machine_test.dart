@@ -66,11 +66,39 @@ void main() {
       expect(result.state.isLoading, isTrue);
       expect(result.state.active, isTrue);
       expect(result.effects.whereType<CancelSleepTimer>(), hasLength(1));
-      expect(result.effects.whereType<ResetNativePlaybackModes>(), hasLength(1));
+      expect(
+        result.effects.whereType<ResetNativePlaybackModes>(),
+        hasLength(1),
+      );
       expect(result.effects.whereType<ClearNativeAbLoop>(), hasLength(1));
       expect(result.effects.whereType<SetNativeLoop>(), hasLength(1));
       expect(result.effects.whereType<LoadSurah>(), hasLength(1));
       expect(result.effects.whereType<PersistPlaybackState>(), hasLength(1));
+      final persist = result.effects.whereType<PersistPlaybackState>().single;
+      expect(persist.surah, 1);
+      expect(persist.rangeFromSurah, isNull);
+      expect(persist.rangeToSurah, isNull);
+    });
+
+    test('PlaySurah with persistRange keeps full-surah endpoints', () {
+      const state = RecitationState();
+      final result = _run(
+        state,
+        const PlaySurah(
+          reciter: _reciter,
+          moshaf: _moshaf,
+          surah: 1,
+          persistRangeFrom: AyahReference(surah: 1, ayah: 1),
+          persistRangeTo: AyahReference(surah: 1, ayah: 7),
+        ),
+      );
+
+      final persist = result.effects.whereType<PersistPlaybackState>().single;
+      expect(persist.surah, 1);
+      expect(persist.rangeFromSurah, 1);
+      expect(persist.rangeFromAyah, 1);
+      expect(persist.rangeToSurah, 1);
+      expect(persist.rangeToAyah, 7);
     });
 
     test('PlayRange sets range and emits LoadRange + Persist', () {
@@ -90,6 +118,26 @@ void main() {
       expect(result.state.currentAyah, 2);
       expect(result.effects.whereType<LoadRange>(), hasLength(1));
       expect(result.effects.whereType<PersistPlaybackState>(), hasLength(1));
+    });
+
+    test('PlayRange openEnded keeps rangeTo null despite segment end', () {
+      const state = RecitationState();
+      final result = _run(
+        state,
+        const PlayRange(
+          reciter: _reciter,
+          moshaf: _moshaf,
+          from: AyahReference(surah: 1, ayah: 1),
+          to: AyahReference(surah: 1, ayah: 7),
+          globalFrom: AyahReference(surah: 1, ayah: 1),
+          openEnded: true,
+        ),
+      );
+
+      expect(result.state.rangeFrom, const AyahReference(surah: 1, ayah: 1));
+      expect(result.state.rangeTo, isNull);
+      expect(result.state.segmentEndAyah, 7);
+      expect(result.state.isRange, isTrue);
     });
 
     test('PlaySurah with resumeFrom reloads at the preserved position', () {
@@ -303,7 +351,10 @@ void main() {
         const Duration(milliseconds: 5000),
       );
       expect(result.state.currentAyah, 2);
-      expect(result.state.pendingSeekTarget, const Duration(milliseconds: 5000));
+      expect(
+        result.state.pendingSeekTarget,
+        const Duration(milliseconds: 5000),
+      );
       final seek = result.effects.whereType<SeekAudio>().firstOrNull;
       expect(seek, isNotNull);
       expect(seek!.position, const Duration(milliseconds: 5000));
@@ -522,7 +573,10 @@ void main() {
         timeline: const RecitationTimeline(),
       );
       expect(result.state.position, const Duration(milliseconds: 5000));
-      expect(result.state.pendingSeekTarget, const Duration(milliseconds: 5000));
+      expect(
+        result.state.pendingSeekTarget,
+        const Duration(milliseconds: 5000),
+      );
       expect(
         result.effects.whereType<SeekAudio>().single.position,
         const Duration(milliseconds: 5000),
@@ -608,7 +662,10 @@ void main() {
       expect(result.state.ayahLoopExiting, isFalse);
       expect(result.effects.whereType<StopAudio>(), hasLength(1));
       expect(result.effects.whereType<ClearPlaybackPosition>(), hasLength(1));
-      expect(result.effects.whereType<ResetNativePlaybackModes>(), hasLength(1));
+      expect(
+        result.effects.whereType<ResetNativePlaybackModes>(),
+        hasLength(1),
+      );
       expect(result.effects.whereType<ClearNativeAbLoop>(), hasLength(1));
     });
   });
@@ -804,13 +861,73 @@ void main() {
       );
       expect(result.state.surah, 2);
       expect(result.state.isLoading, isTrue);
+      expect(
+        result.state.rangeFrom,
+        const AyahReference(surah: 1, ayah: 5),
+      );
+      expect(result.state.rangeTo, isNull);
+      expect(result.state.segmentStartAyah, isNull);
+      expect(result.state.segmentEndAyah, isNull);
       expect(result.effects.whereType<LoadGaplessContinuation>(), hasLength(1));
       final effect = result.effects.whereType<LoadGaplessContinuation>().first;
       expect(effect.fromSurah, 1);
       expect(effect.toSurah, 2);
+
+      // Second hop keeps the open-ended session and chains further.
+      final hop2 = _run(
+        result.state.copyWith(
+          status: RecitationStatus.playing,
+          duration: const Duration(milliseconds: 10000),
+        ),
+        const AudioCompleted(),
+        timeline: timeline,
+      );
+      expect(hop2.state.surah, 3);
+      expect(
+        hop2.state.rangeFrom,
+        const AyahReference(surah: 1, ayah: 5),
+      );
+      expect(hop2.effects.whereType<LoadGaplessContinuation>(), hasLength(1));
+      expect(
+        hop2.effects.whereType<LoadGaplessContinuation>().first.toSurah,
+        3,
+      );
     });
 
-    test('open-ended with no next surah emits error', () {
+    test('open-ended skips unpublished surahs in moshaf surahList', () {
+      const sparseMoshaf = Moshaf(
+        id: 1,
+        name: 'Hafs',
+        server: 'https://example.com/',
+        surahList: [1, 3],
+        surahTotal: 2,
+      );
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: Reciter(id: 1, name: 'Test', moshaf: [sparseMoshaf]),
+        moshaf: sparseMoshaf,
+        surah: 1,
+        rangeFrom: AyahReference(surah: 1, ayah: 1),
+        duration: Duration(milliseconds: 10000),
+        active: true,
+      );
+      final result = _run(
+        state,
+        const AudioCompleted(),
+        timeline: timeline,
+      );
+      expect(result.state.surah, 3);
+      expect(result.state.isLoading, isTrue);
+      expect(
+        result.state.rangeFrom,
+        const AyahReference(surah: 1, ayah: 1),
+      );
+      final effect = result.effects.whereType<LoadGaplessContinuation>().single;
+      expect(effect.fromSurah, 1);
+      expect(effect.toSurah, 3);
+    });
+
+    test('open-ended with no next surah ends cleanly', () {
       const state = RecitationState(
         status: RecitationStatus.playing,
         reciter: _reciter,
@@ -825,10 +942,43 @@ void main() {
         const AudioPosition(Duration(milliseconds: 10000)),
         timeline: timeline,
       );
-      expect(result.state.isError, isTrue);
+      expect(result.state.isEnded, isTrue);
+      expect(result.state.isError, isFalse);
       expect(result.state.surah, 3);
-      expect(result.effects.whereType<PauseAudio>(), isEmpty);
+      expect(result.state.position, const Duration(milliseconds: 10000));
+      expect(result.effects.whereType<PauseAtEof>(), hasLength(1));
+      expect(result.effects.whereType<SetNativeLoop>(), hasLength(1));
       expect(result.effects.whereType<LoadSurah>(), isEmpty);
+      expect(result.effects.whereType<LoadGaplessContinuation>(), isEmpty);
+    });
+
+    test('open-ended finishing surah 114 ends cleanly', () {
+      const lastMoshaf = Moshaf(
+        id: 1,
+        name: 'Hafs',
+        server: 'https://example.com/',
+        surahList: [113, 114],
+        surahTotal: 2,
+      );
+      const state = RecitationState(
+        status: RecitationStatus.playing,
+        reciter: Reciter(id: 1, name: 'Test', moshaf: [lastMoshaf]),
+        moshaf: lastMoshaf,
+        surah: 114,
+        rangeFrom: AyahReference(surah: 113, ayah: 1),
+        duration: Duration(milliseconds: 10000),
+        active: true,
+      );
+      final result = _run(
+        state,
+        const AudioCompleted(),
+        timeline: timeline,
+      );
+      expect(result.state.isEnded, isTrue);
+      expect(result.state.isError, isFalse);
+      expect(result.state.error, isNull);
+      expect(result.effects.whereType<PauseAtEof>(), hasLength(1));
+      expect(result.effects.whereType<LoadGaplessContinuation>(), isEmpty);
     });
 
     test('bounded range ends at range boundary with pause-at-EOF', () {
@@ -942,11 +1092,13 @@ void main() {
         surah: 1,
         active: true,
         loadGeneration: 3,
+        pendingSeekTarget: Duration(seconds: 4),
       );
       final result = _run(state, const AlertSuspend());
       expect(result.state.isPaused, isTrue);
       expect(result.state.suspendedSnapshot, isNotNull);
       expect(result.state.loadGeneration, 4);
+      expect(result.state.pendingSeekTarget, isNull);
       expect(result.effects, const [PauseAudio(), ReleaseAudioLease()]);
     });
 
@@ -1006,7 +1158,10 @@ void main() {
       final result = _run(suspended, const AlertResume());
       expect(result.state.suspendedSnapshot, isNull);
       expect(result.effects.whereType<LoadSurah>(), hasLength(1));
-      expect(result.effects.whereType<LoadSurah>().first.seekTo, paused.position);
+      expect(
+        result.effects.whereType<LoadSurah>().first.seekTo,
+        paused.position,
+      );
       expect(result.effects.whereType<PauseAudio>(), hasLength(1));
     });
 
@@ -1236,7 +1391,6 @@ void main() {
         rangeFrom: AyahReference(surah: 2, ayah: 3),
         rangeTo: AyahReference(surah: 3, ayah: 5),
         segmentStartAyah: 3,
-        segmentEndAyah: null,
         active: true,
       );
       final result = _run(state, const SkipSurahNext());
@@ -1314,25 +1468,33 @@ void main() {
       expect(result, isA<PlayWholeSurahIntent>());
     });
 
-    test('continueFromHere from ayah 1 produces PlayWholeSurahIntent', () {
-      final result = playbackIntentForPreset(
-        preset: RangeScopePreset.continueFromHere,
-        reciter: _reciter,
-        moshaf: _moshaf,
-        from: const AyahReference(surah: 8, ayah: 1),
-        mushafReader: _intentMushaf,
-      );
-      expect(result, isA<PlayWholeSurahIntent>());
-    });
+    test(
+      'continueFromHere from ayah 1 produces open-ended PlayAyahRangeIntent',
+      () {
+        final result =
+            playbackIntentForPreset(
+                  preset: RangeScopePreset.continueFromHere,
+                  reciter: _reciter,
+                  moshaf: _moshaf,
+                  from: const AyahReference(surah: 8, ayah: 1),
+                  mushafReader: _intentMushaf,
+                )
+                as PlayAyahRangeIntent;
+        expect(result.from, const AyahReference(surah: 8, ayah: 1));
+        expect(result.to, isNull);
+      },
+    );
 
     test('continueFromHere from ayah > 1 produces PlayAyahRangeIntent', () {
-      final result = playbackIntentForPreset(
-        preset: RangeScopePreset.continueFromHere,
-        reciter: _reciter,
-        moshaf: _moshaf,
-        from: const AyahReference(surah: 8, ayah: 5),
-        mushafReader: _intentMushaf,
-      ) as PlayAyahRangeIntent;
+      final result =
+          playbackIntentForPreset(
+                preset: RangeScopePreset.continueFromHere,
+                reciter: _reciter,
+                moshaf: _moshaf,
+                from: const AyahReference(surah: 8, ayah: 5),
+                mushafReader: _intentMushaf,
+              )
+              as PlayAyahRangeIntent;
       expect(result.from, const AyahReference(surah: 8, ayah: 5));
       expect(result.to, isNull);
     });
@@ -1361,18 +1523,20 @@ void main() {
       expect(result, isA<PlayAyahRangeIntent>());
     });
 
-    test('custom full-surah endpoints same surah produce PlayWholeSurahIntent',
-        () {
-      final result = playbackIntentForPreset(
-        preset: RangeScopePreset.custom,
-        reciter: _reciter,
-        moshaf: _moshaf,
-        from: const AyahReference(surah: 8, ayah: 1),
-        to: const AyahReference(surah: 8, ayah: 75),
-        mushafReader: _intentMushaf,
-      );
-      expect(result, isA<PlayWholeSurahIntent>());
-    });
+    test(
+      'custom full-surah endpoints same surah produce PlayWholeSurahIntent',
+      () {
+        final result = playbackIntentForPreset(
+          preset: RangeScopePreset.custom,
+          reciter: _reciter,
+          moshaf: _moshaf,
+          from: const AyahReference(surah: 8, ayah: 1),
+          to: const AyahReference(surah: 8, ayah: 75),
+          mushafReader: _intentMushaf,
+        );
+        expect(result, isA<PlayWholeSurahIntent>());
+      },
+    );
 
     test('custom cross-surah full endpoints produce PlayAyahRangeIntent', () {
       final result = playbackIntentForPreset(
@@ -1436,7 +1600,10 @@ void main() {
       expect(result.state.repeatsRemaining, 3);
       expect(result.state.ayahRepeatsRemaining, 2);
       expect(result.state.ayahRepeatCount, 2);
-      expect(result.effects.whereType<ResetNativePlaybackModes>(), hasLength(1));
+      expect(
+        result.effects.whereType<ResetNativePlaybackModes>(),
+        hasLength(1),
+      );
       expect(result.effects.whereType<SetNativeLoop>(), hasLength(1));
       expect(result.effects.whereType<LoadAyahLoop>(), hasLength(1));
       expect(result.effects.whereType<RefreshAbLoop>(), hasLength(1));
@@ -1725,8 +1892,7 @@ class _IntentMushafRepo implements IQuranRepository {
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
-  ]) =>
-      throw UnimplementedError();
+  ]) => throw UnimplementedError();
 
   @override
   Future<String> getBasmalah() async => '';
@@ -1804,8 +1970,7 @@ class _IntentMushafRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}

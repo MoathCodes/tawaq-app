@@ -82,6 +82,19 @@ bool isWholeSurahEndpoints(
   return toCount != null && to.ayah == toCount;
 }
 
+/// Whether an untimed moshaf can still play [from]/[to] as whole-file audio.
+///
+/// True for full-surah endpoint spans, or open-ended ranges that start at
+/// ayah 1 (continue-from-here from the top of a surah).
+bool rangePlayableWithoutTiming(
+  AyahReference from,
+  AyahReference? to,
+  MushafReaderController mushaf,
+) {
+  return isWholeSurahEndpoints(from, to, mushaf) ||
+      (to == null && from.ayah == 1);
+}
+
 /// Whether a surah-local segment covers the full surah file.
 bool isFullSurahSegment({
   required int surah,
@@ -295,11 +308,13 @@ final class PlayAyahRangeIntent extends RecitationPlaybackIntent {
 
 /// Maps a [RangeScopePreset] and resolved range endpoints to playback intent.
 ///
-/// - Whole-surah selections (preset, `from.ayah == 1`, or full-surah endpoints)
-///   map to [PlayWholeSurahIntent] when [from] and [to] share a surah.
-/// - Cross-surah full-surah endpoint spans use [PlayAyahRangeIntent] so playback
-///   can chain consecutive whole-surah files without timings.
-/// - Partial ranges and open-ended continue require ayah timing.
+/// - [RangeScopePreset.continueFromHere] always maps to an open-ended
+///   [PlayAyahRangeIntent] (`to: null`) so playback continues across surahs.
+/// - Whole-surah selections (preset or full-surah endpoints) map to
+///   [PlayWholeSurahIntent] when [from] and [to] share a surah.
+/// - Cross-surah full-surah endpoint spans use [PlayAyahRangeIntent] so
+///   playback can chain consecutive whole-surah files without timings.
+/// - Partial ranges require ayah timing.
 RecitationPlaybackIntent playbackIntentForPreset({
   required RangeScopePreset preset,
   required Reciter reciter,
@@ -308,6 +323,16 @@ RecitationPlaybackIntent playbackIntentForPreset({
   required MushafReaderController mushafReader,
   AyahReference? to,
 }) {
+  // Continue-from-here is always open-ended, even when starting at ayah 1
+  // (which would otherwise collapse to whole-surah via the no-timing shortcut).
+  if (preset == RangeScopePreset.continueFromHere) {
+    return PlayAyahRangeIntent(
+      reciter: reciter,
+      moshaf: moshaf,
+      from: from,
+    );
+  }
+
   if (!rangeNeedsAyahTiming(
     preset: preset,
     from: from,
@@ -321,15 +346,6 @@ RecitationPlaybackIntent playbackIntentForPreset({
         surah: from.surah,
       );
     }
-    return PlayAyahRangeIntent(
-      reciter: reciter,
-      moshaf: moshaf,
-      from: from,
-      to: to,
-    );
-  }
-
-  if (preset == RangeScopePreset.continueFromHere) {
     return PlayAyahRangeIntent(
       reciter: reciter,
       moshaf: moshaf,

@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
@@ -79,6 +80,31 @@ class QuranMushafPane extends HookConsumerWidget {
       };
     }, const []);
 
+    // Bridge package session zoom (pinch / Ctrl+scroll / Ctrl+±) into the
+    // persisted mushafZoom. Null means "cleared to style boost" — ignore so
+    // didUpdateWidget resets after persist do not loop.
+    final pendingZoom = useRef<double?>(null);
+    final debouncedZoomCommit = useDebouncedCallback(() {
+      final zoom = pendingZoom.value;
+      if (zoom == null) return;
+      pendingZoom.value = null;
+      ref.read(quranScreenSettingsProvider.notifier).setMushafZoom(zoom);
+    });
+    useEffect(() {
+      void onSessionZoomChanged() {
+        final boost = controller.sessionReadingBoost.value;
+        if (boost == null) return;
+        pendingZoom.value = boost;
+        debouncedZoomCommit();
+      }
+
+      controller.sessionReadingBoost.addListener(onSessionZoomChanged);
+      return () {
+        controller.sessionReadingBoost.removeListener(onSessionZoomChanged);
+        debouncedZoomCommit.cancel();
+      };
+    }, [controller]);
+
     void onAyahTapped(Ayah info) {
       toggleQuranAyahSelection(ref, info);
     }
@@ -127,6 +153,8 @@ class QuranMushafPane extends HookConsumerWidget {
             AppShortcut.quranPageNextSpace: () => unawaited(
               controller.animateToPage(controller.currentPage + 1),
             ),
+            // Package CallbackShortcuts usually win when the reader is focused;
+            // these handlers keep the cheatsheet live and cover edge cases.
             AppShortcut.quranZoomIn: () => controller.nudgeReadingBoost(
               0.04,
               scale: style.scale,
@@ -135,7 +163,14 @@ class QuranMushafPane extends HookConsumerWidget {
               -0.04,
               scale: style.scale,
             ),
-            AppShortcut.quranZoomReset: controller.resetSessionReadingBoost,
+            AppShortcut.quranZoomReset: () {
+              debouncedZoomCommit.cancel();
+              pendingZoom.value = null;
+              ref
+                  .read(quranScreenSettingsProvider.notifier)
+                  .setMushafZoom(kMushafZoomFitPage);
+              controller.resetSessionReadingBoost();
+            },
           },
           child: MediaQuery(
             data: MediaQuery.of(context).copyWith(

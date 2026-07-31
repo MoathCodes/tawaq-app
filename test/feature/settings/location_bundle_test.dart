@@ -73,7 +73,7 @@ void main() {
     test('keeps previous pair when GPS enable fails (no auto flag)', () async {
       final storage = Storage<String, String>.inMemory();
       final mock = _MockLocationService();
-      when(() => mock.getCurrentPosition()).thenThrow(
+      when(mock.getCurrentPosition).thenThrow(
         const LocationException(LocationFailureCode.permissionDenied),
       );
 
