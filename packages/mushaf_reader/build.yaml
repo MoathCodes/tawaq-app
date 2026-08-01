@@ -1,0 +1,9 @@
+targets:
+  $default:
+    # `flutter pub get` also resolves example/, which materializes
+    # example/*/flutter/ephemeral/.plugin_symlinks. Those symlinked sources
+    # fail annotation resolution, so keep codegen to the package itself.
+    sources:
+      - lib/**
+      - pubspec.yaml
+      - $package$
