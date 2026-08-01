@@ -10,10 +10,12 @@ Only two packages are git submodules (`adhan_dart`, `dorar_hadith`). Everything 
 git clone <repo-url>
 cd tawaq
 git submodule update --init -- packages/adhan_dart packages/dorar_hadith
-flutter pub get
+bash tool/codegen.sh
 ```
 
 `git clone --recurse-submodules` also works now that `.gitmodules` only lists those two paths.
+
+`tool/codegen.sh` runs `build_runner` in `packages/mushaf_reader` and `packages/dorar_hadith` before the app — path-package generated sources are not available from a fresh clone otherwise (root `.gitignore` ignores `*.g.dart` / `*.freezed.dart`).
 
 ## Getting Started
 

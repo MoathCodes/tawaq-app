@@ -29,8 +29,8 @@ jobs:
           channel: stable
           cache: true
 
-      - run: flutter pub get
-      - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Codegen (packages then app)
+        run: bash tool/codegen.sh
       - run: flutter analyze --no-fatal-infos --no-fatal-warnings
       - run: flutter test
 
@@ -48,8 +48,8 @@ jobs:
           channel: stable
           cache: true
 
-      - run: flutter pub get
-      - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Codegen (packages then app)
+        run: bash tool/codegen.sh
       - run: flutter build macos --release --build-number ${{ github.run_number }}
 
       # Ad-hoc sign so the sandboxed bundle launches after download.
@@ -83,8 +83,9 @@ jobs:
           channel: stable
           cache: true
 
-      - run: flutter pub get
-      - run: dart run build_runner build --delete-conflicting-outputs
+      - name: Codegen (packages then app)
+        shell: bash
+        run: bash tool/codegen.sh
       - run: flutter build windows --release --build-number ${{ github.run_number }}
 
       # Zip the whole Release folder; the exe needs its DLLs and data/ beside it.
