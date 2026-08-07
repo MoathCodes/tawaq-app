@@ -344,7 +344,9 @@ jobs:
               fastforge publish \
                 --path "$file" \
                 --targets github \
-                --publish-options "{\"repo\":\"$REPO\",\"tag_name\":\"$TAG\",\"prerelease\":$PRERELEASE}"
+                --github-repo "$REPO" \
+                --github-release-title "$TAG" \
+                --github-release-prerelease "$PRERELEASE"
             fi
           done
         env:
