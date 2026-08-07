@@ -85,7 +85,7 @@ jobs:
         if: >-
           github.event_name == 'push' ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
-        run: shorebird release macos -- --build-number ${{ github.run_number }}
+        run: shorebird release macos --build-number ${{ github.run_number }}
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
@@ -171,7 +171,7 @@ jobs:
         if: >-
           github.event_name == 'push' ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
-        run: shorebird release windows -- --build-number ${{ github.run_number }}
+        run: shorebird release windows --build-number ${{ github.run_number }}
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
@@ -257,7 +257,7 @@ jobs:
         if: >-
           github.event_name == 'push' ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
-        run: shorebird release linux -- --build-number ${{ github.run_number }}
+        run: shorebird release linux --build-number ${{ github.run_number }}
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
