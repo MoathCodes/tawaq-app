@@ -202,11 +202,10 @@ class LocationMapContainer extends HookConsumerWidget {
     Future<void> handleLocate() async {
       if (isLocating.value) return;
       isLocating.value = true;
-      final errorAction = l10n.gettingLocation;
       try {
         await settingsNotifierRef.value.applyCurrentDeviceLocation();
       } catch (e) {
-        if (context.mounted) showLocationError(context, errorAction, e);
+        if (context.mounted) showLocationError(context, l10n.gettingLocation, e);
       } finally {
         if (context.mounted) isLocating.value = false;
       }

@@ -1,10 +1,29 @@
 name: Build desktop
 
 on:
-  workflow_dispatch:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - patch
+          - build
+      platforms:
+        description: 'Target platforms (comma-separated: macos,windows,linux)'
+        required: false
+        default: 'macos,windows,linux'
+        type: string
+      release_version:
+        description: 'Shorebird patch target release version (e.g. 1.0.0+1). Leave blank for latest.'
+        required: false
+        type: string
 
 concurrency:
   group: desktop-${{ github.ref }}
@@ -17,10 +36,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # adhan_dart is pinned at a commit on refactor/prayer_times, but
-          # .gitmodules has no branch key, so checkout restores the exact
-          # recorded SHA regardless of branch name. Both submodule repos
-          # must stay public; if they go private, add a PAT via `token:`.
           submodules: recursive
 
       - uses: subosito/flutter-action@v2
@@ -37,6 +52,9 @@ jobs:
   macos:
     name: macOS
     runs-on: macos-15
+    if: >-
+      github.event_name == 'push' ||
+      contains(github.event.inputs.platforms || 'macos,windows,linux', 'macos')
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,30 +66,80 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Setup Shorebird
+        if: >-
+          github.event_name == 'push' ||
+          github.event.inputs.action == 'release' ||
+          github.event.inputs.action == 'patch'
+        uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: true
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
       - name: Codegen (packages then app)
         run: bash tool/codegen.sh
-      - run: flutter build macos --release --build-number ${{ github.run_number }}
 
-      # Ad-hoc sign so the sandboxed bundle launches after download.
+      # Shorebird Release (Tag push or manual 'release')
+      - name: Shorebird release
+        if: >-
+          github.event_name == 'push' ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
+        run: shorebird release macos -- --build-number ${{ github.run_number }}
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      # Shorebird Patch (Manual 'patch')
+      - name: Shorebird patch
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
+        run: |
+          shorebird patch macos \
+            ${{ inputs.release_version != '' && format('--release-version {0}', inputs.release_version) || '' }}
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      # Flutter Build (Manual 'build')
+      - name: Flutter build (no Shorebird)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
+        run: flutter build macos --release --build-number ${{ github.run_number }}
+
+      # Packaging (.dmg) - Only for release or build (not patch)
       - name: Ad-hoc sign
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         run: codesign --force --deep --sign - build/macos/Build/Products/Release/Tawaq.app
 
-      # zip -r breaks .app bundles (symlinks, libmpv dylibs); ditto preserves them.
-      - name: Archive app bundle
+      - name: Install create-dmg
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
+        run: brew install create-dmg
+
+      - name: Package DMG
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         run: |
-          ditto -c -k --sequesterRsrc --keepParent \
-            build/macos/Build/Products/Release/Tawaq.app \
-            tawaq-macos.zip
+          create-dmg \
+            --volname "Tawaq" \
+            --window-pos 200 120 \
+            --window-size 660 400 \
+            --icon-size 128 \
+            --icon "Tawaq.app" 180 170 \
+            --app-drop-link 480 170 \
+            --hide-extension "Tawaq.app" \
+            "tawaq-macos.dmg" \
+            "build/macos/Build/Products/Release/Tawaq.app" \
+          || test $? -eq 2
 
       - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         with:
           name: tawaq-macos
-          path: tawaq-macos.zip
+          path: tawaq-macos.dmg
           retention-days: 7
 
   windows:
     name: Windows
     runs-on: windows-latest
+    if: >-
+      github.event_name == 'push' ||
+      contains(github.event.inputs.platforms || 'macos,windows,linux', 'windows')
     steps:
       - uses: actions/checkout@v4
         with:
@@ -83,34 +151,201 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Setup Shorebird
+        if: >-
+          github.event_name == 'push' ||
+          github.event.inputs.action == 'release' ||
+          github.event.inputs.action == 'patch'
+        uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: true
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
       - name: Codegen (packages then app)
         shell: bash
         run: bash tool/codegen.sh
-      - run: flutter build windows --release --build-number ${{ github.run_number }}
 
-      # Zip the whole Release folder; the exe needs its DLLs and data/ beside it.
-      - name: Archive release
+      # Shorebird Release (Tag push or manual 'release')
+      - name: Shorebird release
+        if: >-
+          github.event_name == 'push' ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
+        run: shorebird release windows -- --build-number ${{ github.run_number }}
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      # Shorebird Patch (Manual 'patch')
+      - name: Shorebird patch
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
+        run: |
+          shorebird patch windows \
+            ${{ inputs.release_version != '' && format('--release-version {0}', inputs.release_version) || '' }}
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      # Flutter Build (Manual 'build')
+      - name: Flutter build (no Shorebird)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
+        run: flutter build windows --release --build-number ${{ github.run_number }}
+
+      # Packaging (Inno Setup EXE) - Only for release or build (not patch)
+      - name: Install Inno Setup
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         shell: pwsh
-        run: Compress-Archive -Path build/windows/x64/runner/Release/* -DestinationPath tawaq-windows-x64.zip
+        run: choco install innosetup -y --no-progress
+
+      - name: Package EXE installer
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
+        shell: pwsh
+        run: |
+          $version = (Select-String -Path pubspec.yaml -Pattern '^version: (.+)\+').Matches[0].Groups[1].Value
+          iscc /DAppVersion="$version" /DBuildNumber="${{ github.run_number }}" tool/packaging/inno-setup.iss
 
       - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         with:
-          name: tawaq-windows-x64
-          path: tawaq-windows-x64.zip
+          name: tawaq-windows
+          path: dist/tawaq-*-setup.exe
+          retention-days: 7
+
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'push' ||
+      contains(github.event.inputs.platforms || 'macos,windows,linux', 'linux')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.2'
+          channel: stable
+          cache: true
+
+      - name: Install Linux build & packaging dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            libnotify-dev \
+            libmpv-dev \
+            rpm \
+            zstd \
+            dpkg
+
+      - name: Setup Shorebird
+        if: >-
+          github.event_name == 'push' ||
+          github.event.inputs.action == 'release' ||
+          github.event.inputs.action == 'patch'
+        uses: shorebirdtech/setup-shorebird@v1
+        with:
+          cache: true
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      - name: Codegen (packages then app)
+        run: bash tool/codegen.sh
+
+      # Shorebird Release (Tag push or manual 'release')
+      - name: Shorebird release
+        if: >-
+          github.event_name == 'push' ||
+          (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
+        run: shorebird release linux -- --build-number ${{ github.run_number }}
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      # Shorebird Patch (Manual 'patch')
+      - name: Shorebird patch
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
+        run: |
+          shorebird patch linux \
+            ${{ inputs.release_version != '' && format('--release-version {0}', inputs.release_version) || '' }}
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+
+      # Flutter Build (Manual 'build')
+      - name: Flutter build (no Shorebird)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
+        run: flutter build linux --release --build-number ${{ github.run_number }}
+
+      # Packaging (.deb, .rpm, .pkg.tar.zst) - Only for release or build (not patch)
+      - name: Package Linux installers (.deb, .rpm, .pkg.tar.zst)
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
+        run: |
+          export BUILD_NUMBER="${{ github.run_number }}"
+          bash tool/packaging/build-deb.sh
+          bash tool/packaging/build-rpm.sh
+          bash tool/packaging/build-arch.sh
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
+        with:
+          name: tawaq-linux
+          path: |
+            dist/*.deb
+            dist/*.rpm
+            dist/*.pkg.tar.zst
           retention-days: 7
 
   release:
     name: Publish release
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: [macos, windows]
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
+    needs: [checks, macos, windows, linux]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Install Fastforge
+        run: dart pub global activate fastforge
+
       - uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: '*.zip'
-          prerelease: true
+
+      - name: Detect prerelease & tag
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            TAG="${GITHUB_REF_NAME}"
+          else
+            VERSION=$(grep '^version:' pubspec.yaml | head -n1 | sed 's/version: //' | sed 's/+.*//' | tr -d '"' | tr -d "'")
+            TAG="v${VERSION}"
+          fi
+
+          if [[ "$TAG" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Publish installers via Fastforge
+        run: |
+          REPO="MoathCodes/tawaq-app"
+          TAG="${{ steps.meta.outputs.tag }}"
+          PRERELEASE="${{ steps.meta.outputs.prerelease }}"
+
+          for file in tawaq-macos.dmg tawaq-*-windows-x64-setup.exe *.deb *.rpm *.pkg.tar.zst; do
+            if [ -f "$file" ]; then
+              echo "==> Publishing $file to $REPO ($TAG, prerelease=$PRERELEASE)"
+              fastforge publish \
+                --path "$file" \
+                --targets github \
+                --publish-options "{\"repo\":\"$REPO\",\"tag_name\":\"$TAG\",\"prerelease\":$PRERELEASE}"
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
-
-/// Whether the app is running on a desktop platform (Linux, Windows, macOS).
+/// Whether the app is running on a supported desktop OS (Linux, Windows, macOS).
+///
+/// Tawaq targets desktop only; other platforms are out of scope.
 bool get isDesktopPlatform =>
-    !kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS);
+    Platform.isWindows || Platform.isLinux || Platform.isMacOS;

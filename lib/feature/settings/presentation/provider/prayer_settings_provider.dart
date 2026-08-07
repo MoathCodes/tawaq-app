@@ -162,7 +162,9 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
   Future<void> applyCurrentDeviceLocation({bool? autoLocation}) async {
     final svc = ref.read(locationServiceProvider);
     final pos = await svc.getCurrentPosition();
+    logger.i('$_prayerLogPrefix GPS coords: ${pos.coordinates}');
     final details = await svc.getPlaceDetails(pos.coordinates);
+    logger.i('$_prayerLogPrefix Place details: ${details.name}');
     await applyLocationBundle(
       coordinates: pos.coordinates,
       locationName: details.name.isNotEmpty

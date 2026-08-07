@@ -1,6 +1,7 @@
 /// The entry point of the application.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +13,6 @@ import 'package:tawaq/core/desktop/single_instance.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/routing/route_provider.dart';
-import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/tawaq_scroll_behavior.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/adhan/adhan_alert_host.dart';
@@ -46,6 +46,11 @@ class AppBootstrap extends ConsumerWidget {
     final prayer = ref.watch(prayerSettingsProvider);
     final themeapp = ref.watch(appThemeDataProvider);
     final materialTheme = themeapp.toApproximateMaterialTheme();
+    final isDesktopPlatform = [
+      TargetPlatform.windows,
+      TargetPlatform.linux,
+      TargetPlatform.macOS,
+    ].contains(defaultTargetPlatform);
 
     // Forui 0.24 widgets (FScaffold, FCircularProgress, …) read
     // FAccessibilityScope via FTheme — wrap splash/error shells too.
@@ -179,11 +184,13 @@ class _AutoLocationLifecycleState
           .read(prayerSettingsProvider.notifier)
           .applyCurrentDeviceLocation();
     } on Object catch (error, stack) {
-      ref.read(loggerProvider).w(
-        '[AutoLocationLifecycle] resume refresh failed',
-        error: error,
-        stackTrace: stack,
-      );
+      ref
+          .read(loggerProvider)
+          .w(
+            '[AutoLocationLifecycle] resume refresh failed',
+            error: error,
+            stackTrace: stack,
+          );
     } finally {
       _refreshing = false;
     }

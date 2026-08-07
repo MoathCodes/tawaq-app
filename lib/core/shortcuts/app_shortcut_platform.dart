@@ -9,8 +9,7 @@ import 'package:tawaq/core/utils/platform.dart';
 bool get supportsKeyboardShortcuts => isDesktopPlatform;
 
 /// Whether the current desktop OS uses the Meta (⌘) modifier in UI labels.
-bool get usesMetaModifier =>
-    !kIsWeb && Platform.isMacOS;
+bool get usesMetaModifier => Platform.isMacOS;
 
 /// Returns desktop-friendly modifier+key activators (Control on Linux/Windows,
 /// Meta on macOS).
