@@ -94,7 +94,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
         run: |
           shorebird patch macos \
-            ${{ inputs.release_version != '' && format('--release-version {0}', inputs.release_version) || '' }}
+            ${{ github.event.inputs.release_version != '' && format('--release-version {0}', github.event.inputs.release_version) || '' }}
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
@@ -180,7 +180,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
         run: |
           shorebird patch windows \
-            ${{ inputs.release_version != '' && format('--release-version {0}', inputs.release_version) || '' }}
+            ${{ github.event.inputs.release_version != '' && format('--release-version {0}', github.event.inputs.release_version) || '' }}
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
@@ -266,7 +266,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
         run: |
           shorebird patch linux \
-            ${{ inputs.release_version != '' && format('--release-version {0}', inputs.release_version) || '' }}
+            ${{ github.event.inputs.release_version != '' && format('--release-version {0}', github.event.inputs.release_version) || '' }}
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
@@ -297,8 +297,9 @@ jobs:
   release:
     name: Publish release
     if: >-
-      startsWith(github.ref, 'refs/tags/v') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
+      !failed() && !cancelled() &&
+      (startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release'))
     needs: [checks, macos, windows, linux]
     runs-on: ubuntu-latest
     permissions:
