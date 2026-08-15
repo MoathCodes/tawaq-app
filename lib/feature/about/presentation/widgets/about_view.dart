@@ -1,12 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/feature/about/domain/models/about_content.dart';
-import 'package:tawaq/feature/about/presentation/about_link_launcher.dart';
 import 'package:tawaq/feature/about/presentation/about_strings.dart';
-import 'package:tawaq/feature/about/presentation/widgets/about_header.dart';
+import 'package:tawaq/gen/assets.gen.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// The scrollable content of the about dialog.
@@ -26,7 +26,7 @@ class AboutView extends StatelessWidget {
     final colors = theme.colors;
 
     final sections = <Widget>[
-      AboutHeader(content: content),
+      _AboutHeader(content: content),
       Text(
         content.description.resolve(context),
         textAlign: TextAlign.center,
@@ -72,7 +72,9 @@ class AboutView extends StatelessWidget {
         Text(
           content.legal!.resolve(context),
           textAlign: TextAlign.center,
-          style: theme.typography.body.xs.copyWith(color: colors.mutedForeground),
+          style: theme.typography.body.xs.copyWith(
+            color: colors.mutedForeground,
+          ),
         ),
       const SizedBox(height: AppSpacing.xs),
     ];
@@ -91,44 +93,120 @@ class AboutView extends StatelessWidget {
   }
 
   FTile _linkTile(BuildContext context, AboutLink link) => FTile(
-        prefix: Icon(link.icon),
-        title: Text(link.label.resolve(context)),
-        subtitle: link.description == null
-            ? null
-            : Text(link.description!.resolve(context)),
-        suffix: const Icon(FLucideIcons.arrowUpRight),
-        onPress: () => unawaited(openAboutLink(context, link.url)),
-      );
+    prefix: Icon(link.icon),
+    title: Text(link.label.resolve(context)),
+    subtitle: link.description == null
+        ? null
+        : Text(link.description!.resolve(context)),
+    suffix: const Icon(FLucideIcons.arrowUpRight),
+    onPress: () => unawaited(_openAboutLink(context, link.url)),
+  );
 
   FTile _creditTile(BuildContext context, AboutCredit credit) => FTile(
-        prefix: Icon(credit.icon),
-        title: Text(credit.name.resolve(context)),
-        subtitle:
-            credit.role == null ? null : Text(credit.role!.resolve(context)),
-        suffix: credit.url == null
-            ? null
-            : const Icon(FLucideIcons.arrowUpRight),
-        onPress: credit.url == null
-            ? null
-            : () => unawaited(openAboutLink(context, credit.url!)),
-      );
+    prefix: Icon(credit.icon),
+    title: Text(credit.name.resolve(context)),
+    subtitle: credit.role == null ? null : Text(credit.role!.resolve(context)),
+    suffix: credit.url == null ? null : const Icon(FLucideIcons.arrowUpRight),
+    onPress: credit.url == null
+        ? null
+        : () => unawaited(_openAboutLink(context, credit.url!)),
+  );
 
   FTile _acknowledgementTile(
     BuildContext context,
     AboutAcknowledgement ack,
-  ) =>
-      FTile(
-        prefix: const Icon(FLucideIcons.layers),
-        title: Text(ack.name),
-        subtitle: ack.description == null
-            ? null
-            : Text(ack.description!.resolve(context)),
-        suffix:
-            ack.url == null ? null : const Icon(FLucideIcons.arrowUpRight),
-        onPress: ack.url == null
-            ? null
-            : () => unawaited(openAboutLink(context, ack.url!)),
-      );
+  ) => FTile(
+    prefix: const Icon(FLucideIcons.layers),
+    title: Text(ack.name),
+    subtitle: ack.description == null
+        ? null
+        : Text(ack.description!.resolve(context)),
+    suffix: ack.url == null ? null : const Icon(FLucideIcons.arrowUpRight),
+    onPress: ack.url == null
+        ? null
+        : () => unawaited(_openAboutLink(context, ack.url!)),
+  );
+}
+
+const _kLogoSize = 84.0;
+
+class _AboutHeader extends StatelessWidget {
+  const _AboutHeader({required this.content});
+
+  final AboutContent content;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final colors = theme.colors;
+    final typography = theme.typography;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: theme.radii.xl,
+            border: Border.all(color: colors.border),
+            boxShadow: [
+              BoxShadow(
+                color: colors.primary.withValues(alpha: 0.18),
+                blurRadius: 28,
+                spreadRadius: 1,
+                offset: const Offset(0, 12),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: theme.radii.xl,
+            child: Assets.images.appIcon.image(
+              width: _kLogoSize,
+              height: _kLogoSize,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Text(
+          content.appName,
+          textAlign: TextAlign.center,
+          style: typography.body.xl2.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          content.latinName,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: typography.body.sm.copyWith(
+            color: colors.mutedForeground,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 4,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        FBadge(
+          variant: FBadgeVariant.secondary,
+          child: Text(content.version),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          content.tagline.resolve(context),
+          textAlign: TextAlign.center,
+          style: typography.body.sm.copyWith(color: colors.mutedForeground),
+        ),
+      ],
+    );
+  }
+}
+
+Future<void> _openAboutLink(BuildContext context, String url) async {
+  await Clipboard.setData(ClipboardData(text: url));
+  if (!context.mounted) return;
+  showFToast(
+    context: context,
+    title: Text(AboutStrings.linkCopied.resolve(context)),
+  );
 }
 
 /// A labelled section: a small icon + heading above arbitrary [child] content.
@@ -223,7 +301,9 @@ class _FactChip extends StatelessWidget {
             ),
             Text(
               fact.value.resolve(context),
-              style: theme.typography.body.xs.copyWith(fontWeight: FontWeight.w700),
+              style: theme.typography.body.xs.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         ),

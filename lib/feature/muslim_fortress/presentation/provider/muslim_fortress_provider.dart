@@ -1,13 +1,28 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/utils/app_clock_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
-import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_flow_state.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 
+part 'muslim_fortress_provider.freezed.dart';
 part 'muslim_fortress_provider.g.dart';
+
+/// Mutable session state for the Muslim Fortress screen.
+@freezed
+abstract class FortressFlowState with _$FortressFlowState {
+  /// Creates the flow state.
+  const factory FortressFlowState({
+    int? selectedChapterId,
+    @Default(false) bool isFocusMode,
+    @Default(0) int focusStartIndex,
+
+    /// Global Hisn search query (main pane). Sidebar chapter filter is local.
+    @Default('') String query,
+  }) = _FortressFlowState;
+}
 
 /// Coordinates fortress screen session state and navigation actions.
 @riverpod
