@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Minimum window size enforced on desktop bootstrap.
@@ -80,33 +79,4 @@ class AlertWindowFlags {
   Future<void> restore() async {
     await windowManager.setAlwaysOnTop(isAlwaysOnTop);
   }
-}
-
-/// Compact alert card size when morphing from tray.
-const Size kAdhanAlertCompactSize = Size(400, 104);
-
-/// Screen edge inset for compact alert placement.
-const double kAdhanAlertScreenInset = 16;
-
-/// Resolves the top-left origin for a compact morphed adhan alert window.
-Offset resolveAdhanAlertCompactOrigin({
-  required Rect screen,
-  required AdhanAlertPosition alertPosition,
-}) {
-  const size = kAdhanAlertCompactSize;
-  const inset = kAdhanAlertScreenInset;
-  return switch (alertPosition) {
-    AdhanAlertPosition.center => Offset(
-      screen.left + (screen.width - size.width) / 2,
-      screen.top + (screen.height - size.height) / 2,
-    ),
-    AdhanAlertPosition.topEnd => Offset(
-      screen.right - size.width - inset,
-      screen.top + inset,
-    ),
-    AdhanAlertPosition.topStart => Offset(
-      screen.left + inset,
-      screen.top + inset,
-    ),
-  };
 }

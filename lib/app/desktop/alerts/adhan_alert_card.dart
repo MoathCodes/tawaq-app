@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:tawaq/core/audio/audio_lease.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
-import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
+import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/presentation/prayer_alert_copy.dart';

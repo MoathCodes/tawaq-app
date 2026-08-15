@@ -75,9 +75,7 @@ class ShellSidebar extends HookConsumerWidget {
     );
 
     useEffect(() {
-      isCollapsed
-          ? controller.reverse()
-          : controller.forward();
+      isCollapsed ? controller.reverse() : controller.forward();
       return null;
     }, [isCollapsed]);
 

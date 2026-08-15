@@ -4,7 +4,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
-import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
+import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
@@ -224,31 +224,34 @@ void main() {
       expect(channel.isActive, isFalse);
     });
 
-    test('dispose during queued dispatch does not deliver queued work', () async {
-      final blocking = _BlockingChannel('block', log);
-      final localCoordinator = PrayerAlertCoordinator(
-        channels: [blocking],
-        playbackStream: playback.stream,
-        notifyOnlyTimeout: const Duration(milliseconds: 20),
-        soundSafetyCap: const Duration(seconds: 5),
-      );
+    test(
+      'dispose during queued dispatch does not deliver queued work',
+      () async {
+        final blocking = _BlockingChannel('block', log);
+        final localCoordinator = PrayerAlertCoordinator(
+          channels: [blocking],
+          playbackStream: playback.stream,
+          notifyOnlyTimeout: const Duration(milliseconds: 20),
+          soundSafetyCap: const Duration(seconds: 5),
+        );
 
-      unawaited(localCoordinator.dispatch(_event(playSound: false)));
-      await pumpEventQueue();
-      expect(blocking.delivered, 1);
+        unawaited(localCoordinator.dispatch(_event(playSound: false)));
+        await pumpEventQueue();
+        expect(blocking.delivered, 1);
 
-      unawaited(localCoordinator.dispatch(_event(playSound: false)));
-      await localCoordinator.dispose();
+        unawaited(localCoordinator.dispatch(_event(playSound: false)));
+        await localCoordinator.dispose();
 
-      blocking.release();
-      await pumpEventQueue();
+        blocking.release();
+        await pumpEventQueue();
 
-      await Future<void>.delayed(const Duration(milliseconds: 40));
-      await pumpEventQueue();
+        await Future<void>.delayed(const Duration(milliseconds: 40));
+        await pumpEventQueue();
 
-      expect(blocking.delivered, 1);
-      expect(blocking.cancelled, greaterThanOrEqualTo(1));
-    });
+        expect(blocking.delivered, 1);
+        expect(blocking.cancelled, greaterThanOrEqualTo(1));
+      },
+    );
 
     test('dispose does not re-arm finish timers', () async {
       await coordinator.dispatch(_event(playSound: false));

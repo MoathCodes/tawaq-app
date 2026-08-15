@@ -9,8 +9,8 @@ import 'package:tawaq/app/shell/shell_shortcut_scope.dart';
 import 'package:tawaq/app/shell/shell_sidebar.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/core/widgets/page_shell/title_bar_drag_area.dart';
-import 'package:tawaq/core/widgets/window_controls.dart';
+import 'package:tawaq/app/desktop/widgets/title_bar_drag_area.dart';
+import 'package:tawaq/app/desktop/widgets/window_controls.dart';
 import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart';
 
 /// The main shell of the application.

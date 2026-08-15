@@ -4,7 +4,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/audio_service.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
-import 'package:tawaq/core/desktop/alerts/sound_alert_channel.dart';
+import 'package:tawaq/app/desktop/alerts/sound_alert_channel.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 

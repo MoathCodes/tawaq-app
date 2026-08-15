@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tawaq/core/audio/audio_track.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
-import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
+import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
@@ -35,10 +35,10 @@ PrayerAlertEvent _event({
 }
 
 AudioTrack get _track => AudioTrack.asset(
-      id: 'a',
-      title: 'A',
-      assetPath: 'a',
-    );
+  id: 'a',
+  title: 'A',
+  assetPath: 'a',
+);
 
 void main() {
   setUpAll(() {

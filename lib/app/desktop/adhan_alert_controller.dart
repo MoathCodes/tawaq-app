@@ -3,7 +3,7 @@ import 'dart:ui';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:screen_retriever/screen_retriever.dart';
-import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
+import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/desktop/window_snapshot.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
@@ -13,6 +13,30 @@ import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provid
 import 'package:window_manager/window_manager.dart';
 
 part 'adhan_alert_controller.g.dart';
+
+const double _adhanAlertScreenInset = 16;
+
+Offset _resolveAdhanAlertCompactOrigin({
+  required Rect screen,
+  required AdhanAlertPosition alertPosition,
+}) {
+  const size = kAdhanAlertCompactSize;
+  const inset = _adhanAlertScreenInset;
+  return switch (alertPosition) {
+    AdhanAlertPosition.center => Offset(
+      screen.left + (screen.width - size.width) / 2,
+      screen.top + (screen.height - size.height) / 2,
+    ),
+    AdhanAlertPosition.topEnd => Offset(
+      screen.right - size.width - inset,
+      screen.top + inset,
+    ),
+    AdhanAlertPosition.topStart => Offset(
+      screen.left + inset,
+      screen.top + inset,
+    ),
+  };
+}
 
 /// In-app prayer alert channel.
 ///
@@ -87,7 +111,7 @@ class AdhanAlertController extends _$AdhanAlertController
 
   Future<void> _morphToCompact(AdhanSettings settings) async {
     final screen = await _primaryDisplayBounds();
-    final position = resolveAdhanAlertCompactOrigin(
+    final position = _resolveAdhanAlertCompactOrigin(
       screen: screen,
       alertPosition: settings.alertPosition,
     );

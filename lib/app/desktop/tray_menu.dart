@@ -1,7 +1,7 @@
 import 'package:desktop_tray/desktop_tray.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
-import 'package:tawaq/core/desktop/desktop_window_controller.dart';
+import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
+import 'package:tawaq/app/desktop/desktop_window_controller.dart';
 import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 

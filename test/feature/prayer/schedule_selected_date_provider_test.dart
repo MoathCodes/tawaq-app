@@ -85,9 +85,7 @@ void main() {
 
     test('midnight rollover preserves historical selection', () {
       final historical = DateTime(2026, 6, 15);
-      container
-          .read(scheduleSelectedDateProvider.notifier)
-          .select(historical);
+      container.read(scheduleSelectedDateProvider.notifier).select(historical);
 
       container.read(testDayKeyProvider.notifier).setKey(20260619);
 

@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
-import 'package:tawaq/core/desktop/adhan_alert_controller.dart';
-import 'package:tawaq/core/desktop/alerts/os_notification_channel.dart';
-import 'package:tawaq/core/desktop/alerts/sound_alert_channel.dart';
+import 'package:tawaq/app/desktop/adhan_alert_controller.dart';
+import 'package:tawaq/app/desktop/alerts/os_notification_channel.dart';
+import 'package:tawaq/app/desktop/alerts/sound_alert_channel.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
@@ -17,6 +18,9 @@ import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provid
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 
 part 'prayer_alert_dispatcher.g.dart';
+
+/// Compact alert card size when morphing from the tray.
+const Size kAdhanAlertCompactSize = Size(400, 104);
 
 /// Reports a non-fatal error from the alert pipeline.
 typedef AlertErrorSink =

@@ -17,7 +17,7 @@ import 'package:tawaq/feature/about/presentation/screens/about_screen.dart';
 import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
-import 'package:tawaq/feature/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:tawaq/app/onboarding/onboarding_screen.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/screens/prayer_screen.dart';
 import 'package:tawaq/feature/quran/presentation/screens/quran_screen.dart';

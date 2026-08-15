@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:tawaq/core/desktop/desktop_shutdown.dart';
-import 'package:tawaq/core/desktop/desktop_tray_service.dart';
+import 'package:tawaq/app/desktop/desktop_shutdown.dart';
+import 'package:tawaq/app/desktop/desktop_tray_service.dart';
 import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart';

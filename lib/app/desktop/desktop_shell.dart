@@ -2,14 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/desktop/desktop_tray_service.dart';
-import 'package:tawaq/core/desktop/desktop_tray_sync_provider.dart';
-import 'package:tawaq/core/desktop/desktop_window_controller.dart';
+import 'package:tawaq/app/desktop/desktop_tray_service.dart';
+import 'package:tawaq/app/desktop/desktop_tray_sync_provider.dart';
+import 'package:tawaq/app/desktop/desktop_window_controller.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
 import 'package:tawaq/core/desktop/single_instance.dart';
 import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_alert_scheduler_provider.dart';
+import 'package:tawaq/app/desktop/alerts/prayer_alert_scheduler_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/media_session_router_provider.dart';
 import 'package:tawaq/feature/settings/data/models/desktop_settings.dart';
 import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart';

@@ -1,6 +1,6 @@
 import 'package:desktop_tray/desktop_tray.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tawaq/core/desktop/tray_menu.dart';
+import 'package:tawaq/app/desktop/tray_menu.dart';
 import 'package:tawaq/l10n/app_localizations_en.dart';
 
 void main() {
