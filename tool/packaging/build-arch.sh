@@ -8,7 +8,9 @@ VERSION=$(grep '^version:' "$ROOT/pubspec.yaml" | head -n1 | sed 's/version: //'
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
 PKG_NAME="tawaq"
 ARCH="x86_64"
-PKG_FULL_NAME="${PKG_NAME}-${VERSION}-${BUILD_NUMBER}-${ARCH}.pkg.tar.zst"
+# Arch reserves '-' for the pkgver/pkgrel separator.
+ARCH_VERSION="${VERSION//-/.}"
+PKG_FULL_NAME="${PKG_NAME}-${ARCH_VERSION}-${BUILD_NUMBER}-${ARCH}.pkg.tar.zst"
 
 STAGING="$ROOT/dist/arch-staging"
 rm -rf "$STAGING"
@@ -59,7 +61,7 @@ BUILD_DATE=$(date -u +%s)
 # .PKGINFO metadata file
 cat > "$STAGING/.PKGINFO" <<EOF
 pkgname = $PKG_NAME
-pkgver = ${VERSION}-${BUILD_NUMBER}
+pkgver = ${ARCH_VERSION}-${BUILD_NUMBER}
 pkgdesc = Tawaq — Prayer times, Quran, Hadith, and Athkar
 url = https://github.com/MoathCodes/tawaq-app
 builddate = $BUILD_DATE

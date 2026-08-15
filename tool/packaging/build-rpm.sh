@@ -8,7 +8,10 @@ VERSION=$(grep '^version:' "$ROOT/pubspec.yaml" | head -n1 | sed 's/version: //'
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
 PKG_NAME="tawaq"
 ARCH="x86_64"
-RPM_NAME="${PKG_NAME}-${VERSION}-${BUILD_NUMBER}.${ARCH}.rpm"
+# RPM does not allow '-' in Version. A tilde is the conventional prerelease
+# separator and keeps prereleases ordered before the corresponding stable build.
+RPM_VERSION="${VERSION/-/\~}"
+RPM_NAME="${PKG_NAME}-${RPM_VERSION}-${BUILD_NUMBER}.${ARCH}.rpm"
 
 RPM_TOPDIR="$ROOT/dist/rpmbuild"
 rm -rf "$RPM_TOPDIR"
@@ -18,7 +21,7 @@ SPEC_FILE="$RPM_TOPDIR/SPECS/tawaq.spec"
 
 cat > "$SPEC_FILE" <<EOF
 Name:           $PKG_NAME
-Version:        $VERSION
+Version:        $RPM_VERSION
 Release:        $BUILD_NUMBER
 Summary:        Tawaq — Prayer times, Quran, Hadith, and Athkar
 License:        MIT
