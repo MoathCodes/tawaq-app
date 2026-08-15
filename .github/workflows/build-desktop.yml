@@ -66,6 +66,10 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Set version from release tag
+        if: github.event_name == 'push'
+        run: dart tool/set_pubspec_version.dart "${GITHUB_REF_NAME#v}+${{ github.run_number }}"
+
       - name: Setup Shorebird
         if: >-
           github.event_name == 'push' ||
@@ -158,6 +162,11 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Set version from release tag
+        if: github.event_name == 'push'
+        shell: bash
+        run: dart tool/set_pubspec_version.dart "${GITHUB_REF_NAME#v}+${{ github.run_number }}"
+
       - name: Setup Shorebird
         if: >-
           github.event_name == 'push' ||
@@ -241,6 +250,10 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Set version from release tag
+        if: github.event_name == 'push'
+        run: dart tool/set_pubspec_version.dart "${GITHUB_REF_NAME#v}+${{ github.run_number }}"
+
       - name: Install Linux build & packaging dependencies
         run: |
           sudo apt-get update -qq
@@ -278,9 +291,6 @@ jobs:
             BUILD_NAME="${GITHUB_REF_NAME#v}"
           fi
           shorebird release linux \
-            --build-name "$BUILD_NAME" \
-            --build-number "${{ github.run_number }}" \
-            -- \
             --build-name "$BUILD_NAME" \
             --build-number "${{ github.run_number }}"
         env:
