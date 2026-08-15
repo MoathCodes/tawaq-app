@@ -8,10 +8,12 @@ class _DrawerHeader extends ConsumerWidget {
   const _DrawerHeader({
     required this.reciterName,
     required this.riwayah,
+    required this.onGoToQuran,
   });
 
   final String reciterName;
   final String riwayah;
+  final VoidCallback? onGoToQuran;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -95,16 +97,20 @@ class _DrawerHeader extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.md),
           FTooltip(
-            semanticsLabel: l10n.quranRecitationGoToQuran,
             tipBuilder: (_, _) => Text(l10n.quranRecitationGoToQuran),
             child: FButton.icon(
               variant: .ghost,
               onPress: surah == null
                   ? null
                   : () => unawaited(
-                      ref
-                          .read(recitationControllerProvider.notifier)
-                          .goToPlaybackInMushaf(context),
+                      Future<void>(() {
+                        onGoToQuran?.call();
+                      }).then((_) {
+                        ref
+                            .read(recitationControllerProvider.notifier)
+                            .goToPlaybackInMushaf();
+                        if (context.mounted) Navigator.of(context).pop();
+                      }),
                     ),
               child: const Icon(FLucideIcons.book),
             ),
@@ -228,36 +234,18 @@ class _DrawerTransportSection extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Status/chrome only — position ticks rebuild seek/time below.
     final chrome = ref.watch(
-      recitationControllerProvider.select(
-        (p) => (
-          isLoading: p.isLoading,
-          isEnded: p.isEnded,
+      recitationViewProvider.select(
+        (view) => (
+          isLoading: view.isLoading,
+          isEnded: view.isEnded,
+          isPlaying: view.isPlaying,
+          bufferedRanges: view.bufferedRanges,
         ),
       ),
     );
     final controller = ref.read(recitationControllerProvider.notifier);
     final downloadProgress = ref.watch(recitationDownloadProgressProvider);
     final showDownload = chrome.isLoading && downloadProgress != null;
-
-    final audioService = ref.watch(tawaqAudioServiceProvider);
-    final playWhenReady =
-        useStream(
-          useMemoized(
-            () => audioService.playWhenReadyStream,
-            [audioService],
-          ),
-        ).data ??
-        audioService.playWhenReady;
-    final bufferedRanges =
-        useStream(
-          useMemoized(
-            () => audioService.player.stream.demuxerCacheState.map(
-              (s) => s.seekableRanges,
-            ),
-            [audioService],
-          ),
-        ).data ??
-        const <CacheRange>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -270,7 +258,7 @@ class _DrawerTransportSection extends HookConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
         ],
         RecitationDrawerTransportControls(
-          isPlaying: playWhenReady,
+          isPlaying: chrome.isPlaying,
           isLoading: chrome.isLoading,
           isEnded: chrome.isEnded,
           onPlayPause: controller.togglePlayPause,
@@ -281,7 +269,7 @@ class _DrawerTransportSection extends HookConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
         _DrawerSeekAndTime(
-          bufferedRanges: bufferedRanges,
+          bufferedRanges: chrome.bufferedRanges,
           onSeek: controller.seekTo,
         ),
       ],
@@ -297,13 +285,14 @@ class _DrawerSeekAndTime extends ConsumerWidget {
     required this.onSeek,
   });
 
-  final List<CacheRange> bufferedRanges;
+  final List<PlaybackBufferRange> bufferedRanges;
   final ValueChanged<Duration> onSeek;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final playback = ref.watch(recitationControllerProvider);
+    final view = ref.watch(recitationViewProvider);
+    final playback = view.session;
     final controller = ref.read(recitationControllerProvider.notifier);
     final timing = controller.currentTiming;
     final timeline = timing != null ? timelineFor(playback, timing) : null;
@@ -313,6 +302,8 @@ class _DrawerSeekAndTime extends ConsumerWidget {
       children: [
         _RecitationSegmentedSeekBar(
           playback: playback,
+          position: playback.pendingSeekTarget ?? view.position,
+          duration: view.duration,
           timeline: timeline,
           bufferedRanges: bufferedRanges,
           isLoading: playback.isLoading,
@@ -326,11 +317,11 @@ class _DrawerSeekAndTime extends ConsumerWidget {
               playback.isEnded
                   ? l10n.quranRecitationEnded
                   : playback.currentAyah != null
-                  ? '${formatPlaybackDuration(playback.position)} · '
+                  ? '${formatPlaybackDuration(view.position)} · '
                         '${l10n.ayahLabel} ${playback.currentAyah}'
-                  : formatPlaybackDuration(playback.position),
+                  : formatPlaybackDuration(view.position),
             ),
-            _DrawerTimeLabel(formatPlaybackDuration(playback.duration)),
+            _DrawerTimeLabel(formatPlaybackDuration(view.duration)),
           ],
         ),
       ],
@@ -342,6 +333,8 @@ class _DrawerSeekAndTime extends ConsumerWidget {
 class _RecitationSegmentedSeekBar extends ConsumerWidget {
   const _RecitationSegmentedSeekBar({
     required this.playback,
+    required this.position,
+    required this.duration,
     required this.timeline,
     required this.bufferedRanges,
     required this.onSeek,
@@ -349,8 +342,10 @@ class _RecitationSegmentedSeekBar extends ConsumerWidget {
   });
 
   final RecitationState playback;
+  final Duration position;
+  final Duration duration;
   final RecitationTimeline? timeline;
-  final List<CacheRange> bufferedRanges;
+  final List<PlaybackBufferRange> bufferedRanges;
   final ValueChanged<Duration> onSeek;
   final bool isLoading;
 
@@ -388,7 +383,7 @@ class _RecitationSegmentedSeekBar extends ConsumerWidget {
     RepeatStatus? repeat;
     if (playback.ayahRepeatCount > 1 && playback.currentAyah != null) {
       repeat = RepeatStatus(
-        current: playback.ayahRepeatCount - playback.ayahRepeatsRemaining + 1,
+        remaining: playback.ayahRepeatsRemaining,
         total: playback.ayahRepeatCount,
         segmentIndex: playback.currentAyah!,
       );
@@ -409,10 +404,10 @@ class _RecitationSegmentedSeekBar extends ConsumerWidget {
       ),
       tooltipBackgroundColor: colors.card,
       tooltipBorderColor: colors.border,
-      segmentGapColor: colors.card,
       ayahGlowColor: colors.primary,
       thumbRadius: 8,
       trackHeight: 4,
+      previewRadius: theme.radii.md,
       thumbTweenDuration: durations.fast,
       snapScaleDuration: durations.instant,
       pulseDuration: durations.slow,
@@ -426,9 +421,9 @@ class _RecitationSegmentedSeekBar extends ConsumerWidget {
     );
 
     return SegmentedSeekBar(
-      position: playback.pendingSeekTarget ?? playback.position,
-      duration: playback.duration,
-      enabled: playback.duration.inMilliseconds > 0 && !isLoading,
+      position: position,
+      duration: duration,
+      enabled: duration.inMilliseconds > 0 && !isLoading,
       segments: segments,
       bufferedRanges: buffered,
       repeat: repeat,
@@ -436,6 +431,7 @@ class _RecitationSegmentedSeekBar extends ConsumerWidget {
       style: style,
       segmentLabel: (index) => '${l10n.ayahLabel} ${formatAyahNumber(index)}',
       segmentNumberLabel: formatAyahNumber,
+      segmentContentKey: (surah: surah, moshaf: playback.moshaf?.id),
       segmentUthmaniExcerpt: !showUthmaniExcerpt || surah == null
           ? null
           : (index) async {
@@ -445,6 +441,8 @@ class _RecitationSegmentedSeekBar extends ConsumerWidget {
               return preview.isEmpty ? null : preview;
             },
       repeatLabel: l10n.quranRecitationRepeatProgress,
+      remainingLabel: l10n.quranRecitationPlaysRemaining,
+      semanticsLabel: l10n.quranRecitationSeekBarLabel,
       unavailableLabel: l10n.quranRecitationUnavailable,
     );
   }
@@ -489,7 +487,6 @@ class _DrawerDownloadProgress extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.md),
         FTooltip(
-          semanticsLabel: l10n.quranRecitationCancel,
           tipBuilder: (_, _) => Text(l10n.quranRecitationCancel),
           child: MouseClick(
             onClick: () => unawaited(onCancel()),
@@ -588,35 +585,19 @@ class _DrawerActionsSection extends ConsumerWidget {
     }
     final rangeConfigSubtitle = configParts.join(' · ');
 
-    final saveSnapshot = ref.watch(recitationOfflineSaveProgressProvider);
-    // final playDownloadProgress = ref.watch(recitationDownloadProgressProvider);
-    // final cached =
-    //     ref.watch(cachedRecitationsSnapshotProvider).value?.files ?? const [];
-    // final optimisticSaved = ref.watch(optimisticOfflineSavedProvider);
+    final offline = ref.watch(
+      recitationOfflineStoreProvider.select(
+        (state) => (
+          totalBytes: state.value?.totalBytes ?? 0,
+          saveProgress: state.value?.saveProgress,
+          error: state.value?.error,
+        ),
+      ),
+    );
+    final saveSnapshot = offline.saveProgress;
     final reciter = actions.reciter;
     final moshaf = actions.moshaf;
     final surah = actions.surah;
-    // final isCached =
-    //     reciter != null &&
-    //     moshaf != null &&
-    //     surah != null &&
-    //     cached.any(
-    //       (f) =>
-    //           f.reciterId == reciter.id &&
-    //           f.moshafId == moshaf.id &&
-    //           f.surah == surah,
-    //     );
-    // final isOptimisticSaved =
-    //     reciter != null &&
-    //     moshaf != null &&
-    //     surah != null &&
-    //     optimisticSaved.any(
-    //       (k) =>
-    //           k.reciterId == reciter.id &&
-    //           k.moshafId == moshaf.id &&
-    //           k.surah == surah,
-    //     );
-    // final isSaved = isCached || isOptimisticSaved;
     final isExplicitSaving =
         saveSnapshot != null &&
         reciter != null &&
@@ -627,16 +608,6 @@ class _DrawerActionsSection extends ConsumerWidget {
           moshafId: moshaf.id,
           surah: surah,
         );
-    // Play-download progress lives only in the transport section to avoid a
-    // duplicate progress row; still reflect auto-save on the tile subtitle.
-    // final isPlayDownloading = actions.isLoading && playDownloadProgress != null;
-    // final isSaving = isExplicitSaving || isPlayDownloading;
-    // final saveSubtitle = isSaving
-    //     ? l10n.quranRecitationSavingOffline
-    //     : isSaved
-    //     ? l10n.quranRecitationSavedOffline
-    //     : null;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -648,21 +619,6 @@ class _DrawerActionsSection extends ConsumerWidget {
               subtitle: Text(rangeConfigSubtitle),
               onPress: () => showRangeRepeatDialog(context),
             ),
-            // if (surah != null)
-            //   FTile(
-            //     prefix: Icon(
-            //       isSaved ? FLucideIcons.circleCheck : FLucideIcons.download,
-            //     ),
-            //     title: Text(l10n.quranRecitationSaveOffline),
-            //     subtitle: saveSubtitle == null ? null : Text(saveSubtitle),
-            //     onPress: isSaved || isSaving
-            //         ? null
-            //         : () => unawaited(
-            //             ref
-            //                 .read(recitationControllerProvider.notifier)
-            //                 .saveCurrentSurahOffline(),
-            //           ),
-            //   ),
             FTile(
               prefix: const Icon(FLucideIcons.moon),
               title: Text(l10n.quranRecitationSleepTimer),
@@ -673,12 +629,7 @@ class _DrawerActionsSection extends ConsumerWidget {
               prefix: const Icon(FLucideIcons.folder),
               title: Text(l10n.quranRecitationOfflineFiles),
               subtitle: _DrawerCacheSizeSubtitle(
-                bytes:
-                    ref
-                        .watch(cachedRecitationsSnapshotProvider)
-                        .value
-                        ?.totalBytes ??
-                    0,
+                bytes: offline.totalBytes,
               ),
               onPress: () => showOfflineFilesDialog(context),
             ),
@@ -692,6 +643,17 @@ class _DrawerActionsSection extends ConsumerWidget {
             onCancel: ref
                 .read(recitationControllerProvider.notifier)
                 .cancelOfflineSave,
+          ),
+        ],
+        if (offline.error case final error?) ...[
+          const SizedBox(height: AppSpacing.sm),
+          FAlert(
+            variant: .destructive,
+            icon: const Icon(FLucideIcons.triangleAlert),
+            title: Text(
+              l10n.errorOccurredWhile(l10n.quranRecitationSaveOffline),
+            ),
+            subtitle: Text(error),
           ),
         ],
       ],
@@ -734,6 +696,7 @@ class _DrawerSettingsSection extends ConsumerWidget {
     final nonHafs = moshaf != null && !isHafsRiwayah(moshaf.name);
     final highlightOn = settings?.highlightAyah ?? true;
     final showHighlightWarning = nonHafs && highlightOn;
+    final hasAyahTiming = controller.hasAyahTiming;
 
     final volumeSlider = PersistedVolumeSlider(
       persistedVolume: persistedVolume,
@@ -742,7 +705,6 @@ class _DrawerSettingsSection extends ConsumerWidget {
     );
 
     final autoScrollToggle = FTooltip(
-      semanticsLabel: l10n.quranRecitationAutoScrollDesc,
       tipBuilder: (_, _) => Text(l10n.quranRecitationAutoScrollDesc),
       child: FSwitch(
         leadingLabel: true,
@@ -758,10 +720,11 @@ class _DrawerSettingsSection extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         FTooltip(
-          semanticsLabel: l10n.quranRecitationHighlightDesc,
           tipBuilder: (_, _) => Text(l10n.quranRecitationHighlightDesc),
           child: FSwitch(
+            semanticsLabel: l10n.quranRecitationHighlightDesc,
             leadingLabel: true,
+            enabled: hasAyahTiming,
             label: Text(l10n.quranRecitationHighlight),
             value: highlightOn,
             onChange: (v) => ref
@@ -772,11 +735,11 @@ class _DrawerSettingsSection extends ConsumerWidget {
         if (nonHafs) ...[
           const SizedBox(width: AppSpacing.xs),
           FTooltip(
-            semanticsLabel: l10n.quranRecitationHighlightNonHafsWarning,
             tipBuilder: (_, _) =>
                 Text(l10n.quranRecitationHighlightNonHafsWarning),
-            child: const Icon(
+            child: Icon(
               FLucideIcons.triangleAlert,
+              semanticLabel: l10n.quranRecitationHighlightNonHafsWarning,
               size: 16,
               // color: colors.destructive,
             ),

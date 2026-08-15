@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import 'package:flutter/widgets.dart';
 
@@ -62,7 +61,7 @@ class _RecitationEqualizerState extends State<RecitationEqualizer>
   void _syncAnimation() {
     if (widget.animating) {
       if (!_controller.isAnimating) {
-        unawaited(_controller.repeat(reverse: true));
+        _controller.repeat(reverse: true);
       }
     } else {
       _controller.stop();

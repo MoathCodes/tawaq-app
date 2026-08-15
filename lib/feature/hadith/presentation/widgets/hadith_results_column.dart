@@ -288,13 +288,13 @@ class _ResultListView extends HookConsumerWidget {
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!scrollController.hasClients) return;
-        unawaited(
+
           scrollController.animateTo(
             0,
             duration: scrollDuration,
             curve: Curves.easeOutCubic,
-          ),
-        );
+          )
+        ;
       });
       return null;
     }, [page]);

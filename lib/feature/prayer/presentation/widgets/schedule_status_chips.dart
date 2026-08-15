@@ -6,7 +6,7 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
@@ -87,11 +87,13 @@ class _ScheduleStatusChip extends ConsumerWidget {
       disabled: !enable,
       onClick: enable
           ? () => unawaited(
-              ref.read(prayerCompletionActionsProvider.notifier).setPrayerStatus(
-                prayer: prayer,
-                completionDay: completionDay,
-                status: status,
-              ),
+              ref
+                  .read(prayerCompletionActionsProvider.notifier)
+                  .setPrayerStatus(
+                    prayer: prayer,
+                    completionDay: completionDay,
+                    status: status,
+                  ),
             )
           : null,
       semanticsLabel: PrayerSemantics.statusOption(

@@ -10,25 +10,47 @@ Only two packages are git submodules (`adhan_dart`, `dorar_hadith`). Everything 
 git clone <repo-url>
 cd tawaq
 git submodule update --init -- packages/adhan_dart packages/dorar_hadith
-bash tool/codegen.sh
+fvm install
+fvm exec bash tool/codegen.sh
 ```
 
 `git clone --recurse-submodules` also works now that `.gitmodules` only lists those two paths.
 
-`tool/codegen.sh` runs `build_runner` in `packages/mushaf_reader` and `packages/dorar_hadith` before the app — path-package generated sources are not available from a fresh clone otherwise (root `.gitignore` ignores `*.g.dart` / `*.freezed.dart`).
+`tool/codegen.sh` runs `build_runner` in `packages/mushaf_reader` before the app — path-package generated sources are not available from a fresh clone otherwise (root `.gitignore` ignores `*.g.dart` / `*.freezed.dart`). Run it through `fvm exec` so its internal `flutter` and `dart` commands use the project SDK.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Install [FVM](https://fvm.app/documentation/getting-started/installation), then run `fvm install` from the repository root. FVM reads the exact official stable Flutter version from the tracked `.fvmrc`; CI reads the same file.
 
-A few resources to get you started if this is your first Flutter project:
+Use FVM for daily Flutter and Dart commands:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+fvm flutter run
+fvm flutter analyze
+fvm flutter test
+fvm dart run build_runner build
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+FVM normally configures VS Code's `dart.flutterSdkPath` automatically. Because `.vscode/` and `.fvm/` are local and ignored here, reload the VS Code window if the selected SDK does not update immediately.
+
+## Upgrading Flutter
+
+Change the project and CI to a new exact Flutter release with one command:
+
+```bash
+fvm use <new-exact-version>
+fvm exec bash tool/codegen.sh
+fvm flutter analyze
+fvm flutter test
+```
+
+`fvm use` downloads the SDK, updates `.fvmrc`, refreshes the local SDK link, and resolves dependencies. Review and commit `.fvmrc` together with any intentional `pubspec.lock` changes; the workflows automatically follow the new pin. Do not use `flutter upgrade` for this exact-version workflow.
+
+To test another Flutter release without changing the project pin, run:
+
+```bash
+fvm spawn <version> flutter test
+```
 
 ## Testing builds (macOS / Windows)
 

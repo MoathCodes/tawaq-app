@@ -3,7 +3,7 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 
 part 'locale_provider.g.dart';
 
@@ -24,11 +24,13 @@ class LocaleNotifier extends _$LocaleNotifier {
         options: kSettingsPersistForever,
       ).future;
     } on Object catch (error, stack) {
-      ref.read(loggerProvider).e(
-        '$_localeLogPrefix hydrate failed; using default locale',
-        error: error,
-        stackTrace: stack,
-      );
+      ref
+          .read(loggerProvider)
+          .e(
+            '$_localeLogPrefix hydrate failed; using default locale',
+            error: error,
+            stackTrace: stack,
+          );
     }
     return state.value ?? 'en';
   }

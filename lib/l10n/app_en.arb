@@ -35,8 +35,6 @@
   "a11yWindowRestore": "Restore window",
   "about": "About",
   "addReflection": "Add a reflection...",
-  "deleteReflection": "Delete reflection",
-  "deleteReflectionConfirm": "Delete this reflection? This cannot be undone.",
   "adhan": "Adhan",
   "adhanAdjustments": "Adhan adjustments (minutes)",
   "adhanAlertPositionCenter": "Center",
@@ -160,7 +158,7 @@
   "collapsePanel": "Collapse panel",
   "colorTheme": "Color Theme",
   "colorThemeSubtitle": "Choose Manuscript or Neutral.",
-  "completed": "Completed •",
+  "completed": "Completed",
   "completionStatus": "Completion Status",
   "coordinates": "Coordinates",
   "currentPrayer": "Current Prayer",
@@ -173,6 +171,8 @@
   "decimalPlaceholder": "0.0",
   "defaultLocation": "Default location",
   "defaultSurahName": "Al-Fatihah",
+  "deleteReflection": "Delete reflection",
+  "deleteReflectionConfirm": "Delete this reflection? This cannot be undone.",
   "desktopForceMacStyleWindowControls": "Use macOS-style window controls",
   "desktopLaunchAtLogin": "Start at login",
   "desktopLaunchAtLoginHint": "Start hidden in tray was also enabled so adhan alerts work after login.",
@@ -511,13 +511,6 @@
   "madhabLabel": "Madhab",
   "maghrib": "Maghrib",
   "maghribAngleLabel": "Maghrib Angle (°)",
-  "menuAddBookmark": "Add bookmark",
-  "menuAddFavorite": "Add to favorites",
-  "menuCopyText": "Copy text",
-  "menuOpen": "Open",
-  "menuRemoveBookmark": "Remove bookmark",
-  "menuRemoveFavorite": "Remove from favorites",
-  "midnight": "Midnight",
   "mediaSessionAppName": "Tawaq",
   "mediaSessionAudioBy": "Audio by {source}",
   "@mediaSessionAudioBy": {
@@ -527,6 +520,13 @@
       }
     }
   },
+  "menuAddBookmark": "Add bookmark",
+  "menuAddFavorite": "Add to favorites",
+  "menuCopyText": "Copy text",
+  "menuOpen": "Open",
+  "menuRemoveBookmark": "Remove bookmark",
+  "menuRemoveFavorite": "Remove from favorites",
+  "midnight": "Midnight",
   "minute": "minute",
   "missed": "Missed",
   "missedRate": "Missed Rate",
@@ -539,10 +539,46 @@
   "next": "Next",
   "nextPrayer": "Next Prayer",
   "noDataAvailable": "No data available",
+  "noReflectionsMatchSearch": "No reflections match your search",
+  "noReflectionsYet": "No reflections yet — write one on an ayah to see it here",
   "noResults": "No results found.",
   "noResultsFound": "No results found",
   "northAmerica": "North America (ISNA)",
   "noTafsirAvailable": "No tafsir available for this ayah",
+  "noteTimeDaysAgo": "{count, plural, one{a day ago} other{{count} days ago}}",
+  "@noteTimeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeMonthsAgo": "{count, plural, one{last month} other{{count} months ago}}",
+  "@noteTimeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeToday": "Today",
+  "noteTimeWeeksAgo": "{count, plural, one{a week ago} other{{count} weeks ago}}",
+  "@noteTimeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeYearsAgo": "{count, plural, one{a year ago} other{{count} years ago}}",
+  "@noteTimeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeYesterday": "Yesterday",
   "noTranslationAvailable": "No translation available for this ayah",
   "nowActive": "Now Active",
   "onboardingFinishAction": "Get started",
@@ -610,6 +646,7 @@
   "openFolder": "Open folder",
   "openFolderFailed": "Could not open folder",
   "optionalHint": "Optional",
+  "or": "or",
   "orange": "Orange",
   "other": "Other",
   "pageJuzInfo": "Page {page} • Juz {juz}",
@@ -767,6 +804,14 @@
   "quranRecitationPreviousAyah": "Previous ayah",
   "quranRecitationPreviousSurah": "Previous surah",
   "quranRecitationRangeRepeat": "Range & repeat",
+  "quranRecitationPlaysRemaining": "{remaining, plural, =1{1 play remaining} other{{remaining} plays remaining}}",
+  "@quranRecitationPlaysRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "quranRecitationRepeatProgress": "{current} of {total}",
   "@quranRecitationRepeatProgress": {
     "placeholders": {
@@ -780,8 +825,9 @@
   },
   "quranRecitationRepeatScopeEachAyah": "Repeat each ayah",
   "quranRecitationRepeatScopeSelection": "Repeat selection",
-  "quranRecitationSaveOffline": "Save for offline",
+  "quranRecitationSeekBarLabel": "Recitation position",
   "quranRecitationSavedOffline": "Saved offline",
+  "quranRecitationSaveOffline": "Save for offline",
   "quranRecitationSavingOffline": "Saving…",
   "quranRecitationSelectionLoopProgress": "Loop {current} of {total}",
   "@quranRecitationSelectionLoopProgress": {
@@ -850,9 +896,17 @@
   "quranTextSizeIndependentNote": "Quran reading size is independent of app and system text scaling.",
   "quranTextSizePreview": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
   "quranTextSizePreviewLabel": "Preview",
-  "quranZoomFitPage": "Fit",
+  "quranTranslationQuoted": "\"{translation}\"",
+  "@quranTranslationQuoted": {
+    "placeholders": {
+      "translation": {
+        "type": "String"
+      }
+    }
+  },
   "quranZoomFillWidth": "Fill",
   "quranZoomFillWidthHint": "Past Fit, the page may scroll vertically for larger text.",
+  "quranZoomFitPage": "Fit",
   "quranZoomPercent": "{percent}%",
   "@quranZoomPercent": {
     "placeholders": {
@@ -862,51 +916,7 @@
     }
   },
   "quranZoomReset": "Reset to Fit",
-  "quranTranslationQuoted": "\"{translation}\"",
-  "@quranTranslationQuoted": {
-    "placeholders": {
-      "translation": {
-        "type": "String"
-      }
-    }
-  },
   "red": "Red",
-  "noReflectionsMatchSearch": "No reflections match your search",
-  "noReflectionsYet": "No reflections yet — write one on an ayah to see it here",
-  "noteTimeDaysAgo": "{count, plural, one{a day ago} other{{count} days ago}}",
-  "@noteTimeDaysAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "noteTimeMonthsAgo": "{count, plural, one{last month} other{{count} months ago}}",
-  "@noteTimeMonthsAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "noteTimeToday": "Today",
-  "noteTimeWeeksAgo": "{count, plural, one{a week ago} other{{count} weeks ago}}",
-  "@noteTimeWeeksAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "noteTimeYearsAgo": "{count, plural, one{a year ago} other{{count} years ago}}",
-  "@noteTimeYearsAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "noteTimeYesterday": "Yesterday",
   "reflectionPlaceholder": "Write your reflection about this verse...",
   "reflectionsSummary": "{noteCount, plural, =0{No reflections} =1{1 reflection in {surahCount, plural, =1{1 surah} other{{surahCount} surahs}}} other{{noteCount} reflections in {surahCount, plural, =1{1 surah} other{{surahCount} surahs}}}}",
   "@reflectionsSummary": {
@@ -926,7 +936,6 @@
   "rose": "Rose",
   "save": "Save",
   "saveParameters": "Save Parameters",
-  "searchYourReflections": "Search your reflections",
   "scheduleAlertEventAdhan": "{prayer} adhan",
   "@scheduleAlertEventAdhan": {
     "placeholders": {
@@ -942,8 +951,7 @@
         "type": "String"
       }
     }
-  }, 
-  "or": "or",
+  },
   "scheduleAlertEventSunnah": "{prayer}",
   "@scheduleAlertEventSunnah": {
     "placeholders": {
@@ -970,16 +978,15 @@
   "scheduleAlertSoundHint": "Play adhan when the time arrives",
   "scrollMoreHint": "More below",
   "searchForMore": "Search for more options",
+  "searchingPlace": "Searching for a place",
   "searchPlaceAction": "Search",
   "searchPlaceLabel": "Search for a place",
   "searchPlaceQueryHint": "City, region, or address",
   "searchPlaceSubmitHint": "Press Enter or tap search",
-  "searchingPlace": "Searching for a place",
   "searchQuran": "Search Quran...",
+  "searchYourReflections": "Search your reflections",
   "selectAyahToSeeContent": "Select an ayah to see the content.",
   "selectVerseToAddReflection": "Please select a verse to add a reflection",
-  "studyTabCurrentAyah": "Current ayah",
-  "studyTabMyReflections": "My reflections",
   "settings": "Settings",
   "setupPrayerSettingsSubtitle": "We'll guide you through a few quick steps. You can change these later in Settings.",
   "setupPrayerSettingsTitle": "Let's set up your prayer settings.",
@@ -1126,6 +1133,8 @@
     }
   },
   "studyMode": "Study Mode",
+  "studyTabCurrentAyah": "Current ayah",
+  "studyTabMyReflections": "My reflections",
   "sunnahAlertTitle": "{prayer}",
   "@sunnahAlertTitle": {
     "placeholders": {

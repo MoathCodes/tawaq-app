@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:tawaq/core/utils/platform.dart';
@@ -29,8 +28,7 @@ List<SingleActivator> desktopModShortcut(
 }
 
 /// Plain activator without modifiers.
-SingleActivator plainShortcut(LogicalKeyboardKey key) =>
-    SingleActivator(key);
+SingleActivator plainShortcut(LogicalKeyboardKey key) => SingleActivator(key);
 
 /// Stable string key for duplicate detection in debug/tests.
 String activatorKey(SingleActivator activator) {

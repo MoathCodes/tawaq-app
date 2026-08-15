@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/desktop/adhan_alert_controller.dart';
-import 'package:tawaq/core/desktop/adhan_alert_state.dart';
+import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/desktop/window_snapshot.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/adhan/adhan_alert_card.dart';
@@ -28,9 +27,9 @@ class _AdhanAlertHostState extends ConsumerState<AdhanAlertHost> {
   var _showing = false;
   var _compact = false;
 
-  void _syncAlertState(AdhanAlertState alert) {
-    final showing = alert.isShowing;
-    final compact = showing && alert.isCompactMorph;
+  void _syncAlertState(PrayerAlertSession? alert) {
+    final showing = alert != null;
+    final compact = alert?.isCompactMorph ?? false;
     if (showing == _showing && compact == _compact) return;
 
     setState(() {
@@ -50,13 +49,16 @@ class _AdhanAlertHostState extends ConsumerState<AdhanAlertHost> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _syncAlertState(ref.read(adhanAlertControllerProvider));
+      _syncAlertState(ref.read(prayerAlertSessionStateProvider));
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(adhanAlertControllerProvider, (_, next) => _syncAlertState(next));
+    ref.listen(
+      prayerAlertSessionStateProvider,
+      (_, next) => _syncAlertState(next),
+    );
 
     final wrappedChild = _compact
         ? Offstage(child: widget.child)
@@ -75,8 +77,8 @@ class _AdhanAlertOverlay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final alert = ref.watch(adhanAlertControllerProvider);
-    if (!alert.isShowing) return const SizedBox.shrink();
+    final alert = ref.watch(prayerAlertSessionStateProvider);
+    if (alert == null) return const SizedBox.shrink();
 
     final compact = alert.isCompactMorph;
     final colors = context.theme.colors;

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
+import 'package:tawaq/feature/quran/domain/services/recitation_state_machine.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_state_machine.dart';
 
 const _reciter = Reciter(id: 1, name: 'Test', moshaf: [_moshaf]);
 const _moshaf = Moshaf(
@@ -82,7 +82,10 @@ void main() {
       final result = _run(suspended, const AlertResume());
 
       expect(result.effects.whereType<LoadSurah>(), hasLength(1));
-      expect(result.effects.whereType<LoadSurah>().first.seekTo, paused.position);
+      expect(
+        result.effects.whereType<LoadSurah>().first.seekTo,
+        paused.position,
+      );
       expect(result.effects.whereType<LoadAyahLoop>(), hasLength(1));
       expect(result.effects.whereType<PauseAudio>(), hasLength(1));
     });

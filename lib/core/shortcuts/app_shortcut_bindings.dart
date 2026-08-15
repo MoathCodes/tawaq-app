@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut.dart';
-import 'package:tawaq/core/shortcuts/app_shortcut_global_handlers.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_invocation.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 
@@ -9,6 +8,7 @@ import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 Map<ShortcutActivator, VoidCallback> buildGlobalShortcutBindings({
   required Iterable<ShortcutDef> shortcuts,
   required AppShortcutInvocation Function() invocationFor,
+  required void Function(ShortcutDef, AppShortcutInvocation) onInvoke,
   bool Function(ShortcutDef shortcut)? shouldSuppress,
 }) {
   final bindings = <ShortcutActivator, VoidCallback>{};
@@ -30,7 +30,7 @@ Map<ShortcutActivator, VoidCallback> buildGlobalShortcutBindings({
         if (shouldSuppress != null && shouldSuppress(shortcut)) {
           return;
         }
-        invokeGlobalShortcut(shortcut, invocationFor());
+        onInvoke(shortcut, invocationFor());
       };
     }
   }

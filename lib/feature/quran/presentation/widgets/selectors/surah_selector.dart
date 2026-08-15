@@ -8,7 +8,6 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_search_select.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
@@ -185,18 +184,11 @@ class SurahSelector extends HookConsumerWidget {
     final allSurahs = useFuture(
       useMemoized(controller.getAllSurahs),
     );
-    final fallbackSurahNumber = ref.watch(
-      quranScreenSettingsProvider.select(
-        (v) => v.value?.pageInfo.primarySurahNumber,
-      ),
-    );
-
     return ListenableBuilder(
       listenable: controller.page,
       builder: (context, _) {
         final currentSurahNumber =
-            controller.currentPageInfo?.primarySurahNumber ??
-            fallbackSurahNumber;
+            controller.currentPageInfo?.primarySurahNumber;
         final selectedSurah = allSurahs.hasData && currentSurahNumber != null
             ? allSurahs.data?.firstWhere(
                 (e) => e.number == currentSurahNumber,

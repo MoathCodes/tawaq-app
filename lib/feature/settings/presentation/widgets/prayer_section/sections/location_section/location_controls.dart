@@ -14,11 +14,11 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/select_empty_content.dart';
-import 'package:tawaq/feature/settings/data/location_constants.dart';
-import 'package:tawaq/feature/settings/domain/models/location_failure.dart';
+import 'package:tawaq/feature/prayer/domain/models/location_constants.dart';
+import 'package:tawaq/feature/prayer/domain/models/location_failure.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/domain/services/timezone_catalog.dart';
 import 'package:tawaq/feature/settings/presentation/provider/location_provider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -189,10 +189,12 @@ class PlaceSearchField extends HookConsumerWidget {
       final errorAction = l10n.changingTimezone;
       unawaited(() async {
         try {
-          await ref.read(prayerSettingsProvider.notifier).applyLocationBundle(
-            coordinates: place.coordinates,
-            locationName: place.name,
-          );
+          await ref
+              .read(prayerSettingsProvider.notifier)
+              .applyLocationBundle(
+                coordinates: place.coordinates,
+                locationName: place.name,
+              );
         } catch (e) {
           if (context.mounted) showLocationError(context, errorAction, e);
         }
@@ -257,7 +259,6 @@ class PlaceSearchField extends HookConsumerWidget {
             );
           }
           return FTooltip(
-            semanticsLabel: l10n.searchPlaceAction,
             tipBuilder: (_, _) => Text(l10n.searchPlaceAction),
             child: SettingsSemantics.iconAction(
               label: l10n.searchPlaceAction,
@@ -265,6 +266,7 @@ class PlaceSearchField extends HookConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.all(1),
                 child: FButton.icon(
+                  semanticsTooltip: l10n.searchPlaceAction,
                   variant: .ghost,
                   onPress: canSubmit ? () => unawaited(submit()) : null,
                   child: Icon(
@@ -345,12 +347,12 @@ class TimezoneSelect extends ConsumerWidget {
     final colors = context.theme.colors;
 
     final locateButton = FTooltip(
-      semanticsLabel: l10n.useSystemTimezone,
       tipBuilder: (_, _) => Text(l10n.useSystemTimezone),
       child: SettingsSemantics.iconAction(
         label: SettingsSemantics.useSystemTimezoneAction(l10n),
         enabled: enabled,
         child: FButton.icon(
+          semanticsTooltip: l10n.useSystemTimezone,
           variant: .ghost,
           onPress: enabled ? () => unawaited(_setTimezone(context, ref)) : null,
           child: const Icon(FLucideIcons.locate),

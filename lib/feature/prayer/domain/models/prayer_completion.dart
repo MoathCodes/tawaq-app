@@ -19,7 +19,7 @@ enum CompletionStatus {
   missed,
 
   /// The prayer has not been performed yet.
-  none;
+  none,
 }
 
 /// A prayer completion.

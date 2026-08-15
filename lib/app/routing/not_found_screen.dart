@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// A screen that is displayed when a route is not found.

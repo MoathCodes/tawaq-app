@@ -3,13 +3,13 @@ import 'dart:ui';
 
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:screen_retriever/screen_retriever.dart';
-import 'package:tawaq/core/desktop/adhan_alert_state.dart';
+import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/desktop/window_snapshot.dart';
 import 'package:tawaq/core/utils/platform.dart';
+import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
-import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
-import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 part 'adhan_alert_controller.g.dart';
@@ -17,7 +17,7 @@ part 'adhan_alert_controller.g.dart';
 /// In-app prayer alert channel.
 ///
 /// Owns the alert overlay, the window morph/restore, and the
-/// [AdhanAlertState] the UI watches. It is intentionally visuals-only: sound
+/// native presentation adapter. It is intentionally visuals-only: sound
 /// and OS notifications are separate channels, and preemption/completion are
 /// coordinated by the dispatcher.
 @Riverpod(keepAlive: true)
@@ -27,7 +27,7 @@ class AdhanAlertController extends _$AdhanAlertController
   AlertWindowFlags? _overlayFlags;
 
   @override
-  AdhanAlertState build() => const AdhanAlertState.idle();
+  void build() {}
 
   @override
   String get debugName => 'in-app';
@@ -53,13 +53,9 @@ class AdhanAlertController extends _$AdhanAlertController
     await windowManager.focus();
     await windowManager.setAlwaysOnTop(true);
 
-    state = AdhanAlertState(
-      kind: event.kind,
-      prayer: event.prayer,
-      scheduledTime: event.scheduledTime,
-      isCompactMorph: compactMorph,
-      playsSound: event.playSound,
-    );
+    ref
+        .read(prayerAlertSessionStateProvider.notifier)
+        .setCompactMorph(value: compactMorph);
   }
 
   @override
@@ -67,7 +63,6 @@ class AdhanAlertController extends _$AdhanAlertController
     // Restore even when `!isShowing`: a partial `deliver` may have captured
     // snapshot/flags and morphed the window before state was assigned.
     await _restoreWindowArtifacts();
-    state = const AdhanAlertState.idle();
   }
 
   /// Brings the app and active alert to the foreground.
@@ -75,7 +70,7 @@ class AdhanAlertController extends _$AdhanAlertController
     if (!isDesktopPlatform) return;
     await windowManager.show();
     await windowManager.focus();
-    if (state.isShowing) {
+    if (ref.read(prayerAlertSessionStateProvider) != null) {
       await windowManager.setAlwaysOnTop(true);
     }
   }

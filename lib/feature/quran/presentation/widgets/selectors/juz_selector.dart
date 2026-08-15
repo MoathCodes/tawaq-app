@@ -6,7 +6,6 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_ordinals.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_search_select.dart';
@@ -136,17 +135,10 @@ class JuzSelector extends HookConsumerWidget {
       useMemoized(controller.getJuzs),
     );
 
-    final fallbackJuzNumber = ref.watch(
-      quranScreenSettingsProvider.select(
-        (v) => v.value?.pageInfo.juzNumber,
-      ),
-    );
-
     return ListenableBuilder(
       listenable: controller.page,
       builder: (context, _) {
-        final currentJuzNumber =
-            controller.currentPageInfo?.juzNumber ?? fallbackJuzNumber;
+        final currentJuzNumber = controller.currentPageInfo?.juzNumber;
         final selectedJuz = allJuzs.hasData && currentJuzNumber != null
             ? allJuzs.data?.firstWhere(
                 (e) => e.number == currentJuzNumber,

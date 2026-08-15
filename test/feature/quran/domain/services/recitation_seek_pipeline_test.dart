@@ -25,13 +25,14 @@ void main() {
           seeks.add(position);
           return true;
         },
-        onSeekFailed: ({
-          required Duration revertTo,
-          required Duration failedTarget,
-        }) {
-          failed.add((revertTo: revertTo, failedTarget: failedTarget));
-        },
-        onTimeout: ({required Duration revertTo}) {
+        onSeekFailed:
+            ({
+              required revertTo,
+              required failedTarget,
+            }) {
+              failed.add((revertTo: revertTo, failedTarget: failedTarget));
+            },
+        onTimeout: ({required revertTo}) {
           timedOut.add(revertTo);
           hasPending = false;
         },
@@ -83,13 +84,14 @@ void main() {
       pipeline = SeekPipeline(
         log: (_) {},
         seek: (_) async => false,
-        onSeekFailed: ({
-          required Duration revertTo,
-          required Duration failedTarget,
-        }) {
-          failed.add((revertTo: revertTo, failedTarget: failedTarget));
-        },
-        onTimeout: ({required Duration revertTo}) {
+        onSeekFailed:
+            ({
+              required revertTo,
+              required failedTarget,
+            }) {
+              failed.add((revertTo: revertTo, failedTarget: failedTarget));
+            },
+        onTimeout: ({required revertTo}) {
           timedOut.add(revertTo);
         },
         lastAcceptedPosition: () => const Duration(seconds: 2),
@@ -189,13 +191,14 @@ void main() {
         pipeline = SeekPipeline(
           log: (_) {},
           seek: (_) => completer.future,
-          onSeekFailed: ({
-            required Duration revertTo,
-            required Duration failedTarget,
-          }) {
-            failed.add((revertTo: revertTo, failedTarget: failedTarget));
-          },
-          onTimeout: ({required Duration revertTo}) {},
+          onSeekFailed:
+              ({
+                required revertTo,
+                required failedTarget,
+              }) {
+                failed.add((revertTo: revertTo, failedTarget: failedTarget));
+              },
+          onTimeout: ({required revertTo}) {},
           lastAcceptedPosition: () => Duration.zero,
           hasPendingSeek: () => true,
         );
@@ -228,20 +231,21 @@ void main() {
             }
             return true;
           },
-          onSeekFailed: ({
-            required Duration revertTo,
-            required Duration failedTarget,
-          }) {
-            if (!shouldRevertPendingSeek(
-              currentPending: pending,
-              failedTarget: failedTarget,
-            )) {
-              return;
-            }
-            reverted.add(failedTarget);
-            pending = Duration.zero; // cleared
-          },
-          onTimeout: ({required Duration revertTo}) {},
+          onSeekFailed:
+              ({
+                required revertTo,
+                required failedTarget,
+              }) {
+                if (!shouldRevertPendingSeek(
+                  currentPending: pending,
+                  failedTarget: failedTarget,
+                )) {
+                  return;
+                }
+                reverted.add(failedTarget);
+                pending = Duration.zero; // cleared
+              },
+          onTimeout: ({required revertTo}) {},
           lastAcceptedPosition: () => Duration.zero,
           hasPendingSeek: () => pending > Duration.zero,
         );
@@ -338,7 +342,7 @@ void main() {
             order.add('seekSkipped');
             return;
           }
-          engineSeeks.add(pending!);
+          engineSeeks.add(pending);
           order.add('seekDone');
         });
 
@@ -357,7 +361,7 @@ void main() {
             order.add('lateSeekSkipped');
             return;
           }
-          engineSeeks.add(pending!);
+          engineSeeks.add(pending);
           order.add('lateSeekDone');
         });
 
@@ -387,7 +391,9 @@ void main() {
           'PersistPlaybackState',
         ];
         final local = effects
-            .where((e) => e == 'PersistPlaybackState' || e == 'CancelSleepTimer')
+            .where(
+              (e) => e == 'PersistPlaybackState' || e == 'CancelSleepTimer',
+            )
             .toList();
         final io = effects.where((e) => !local.contains(e)).toList();
 
@@ -405,7 +411,10 @@ void main() {
           'io:LoadAyahLoop',
           'io:HighlightAyah',
         ]);
-        expect(io.indexOf('HighlightAyah'), greaterThan(io.indexOf('SeekAudio')));
+        expect(
+          io.indexOf('HighlightAyah'),
+          greaterThan(io.indexOf('SeekAudio')),
+        );
         expect(
           io.indexOf('HighlightAyah'),
           greaterThan(io.indexOf('LoadAyahLoop')),

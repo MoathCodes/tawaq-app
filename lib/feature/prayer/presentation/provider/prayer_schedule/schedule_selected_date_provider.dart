@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/utils/app_clock_provider.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
-import 'package:timezone/timezone.dart';
 
 part 'schedule_selected_date_provider.g.dart';
 
@@ -36,13 +36,10 @@ class ScheduleSelectedDate extends _$ScheduleSelectedDate {
       return DateTime(now.year, now.month, now.day);
     }
 
-    final settings = ref.read(effectivePrayerSettingsProvider);
-    if (settings != null) {
-      final tzNow = TZDateTime.now(settings.location);
-      return DateTime(tzNow.year, tzNow.month, tzNow.day);
-    }
+    final appNow = ref.read(appClockProvider).value;
+    if (appNow != null) return DateTime(appNow.year, appNow.month, appNow.day);
 
-    return DateTime.now();
+    return DateTime.utc(1970);
   }
 
   /// Updates the schedule list to [date] (date component only).

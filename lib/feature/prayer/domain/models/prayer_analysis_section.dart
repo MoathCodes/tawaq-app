@@ -1,10 +1,11 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 
-export 'package:tawaq/feature/prayer/domain/prayer_slots.dart' show kObligatoryPrayers;
+export 'package:tawaq/feature/prayer/domain/prayer_slots.dart'
+    show kObligatoryPrayers;
 
 /// Trend bucket containing aggregated prayer status counts.
 class PrayerTrendBucket {

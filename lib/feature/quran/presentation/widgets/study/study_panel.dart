@@ -10,9 +10,9 @@ import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/directional_content_switcher.dart';
 import 'package:tawaq/core/widgets/reading_swipe_viewport.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_notes_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
@@ -30,7 +30,7 @@ class StudyPanel extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedAyah = ref.watch(quranSelectedAyahProvider);
+    final selectedAyah = ref.watch(quranSelectedAyahProvider).value;
     final ayaId = selectedAyah?.ayahId;
     final navigation = useStudyAyahNavigation(ref);
     final activeTab = ref.watch(
@@ -225,7 +225,7 @@ class _StudyContentAccordion extends ConsumerWidget {
     final typography = theme.typography;
     final l10n = context.l10n;
 
-    final selectedAyah = ref.watch(quranSelectedAyahProvider);
+    final selectedAyah = ref.watch(quranSelectedAyahProvider).value;
     final hasSelectedAyah = selectedAyah != null;
     final sura = selectedAyah?.surahNumber ?? 1;
     final aya = selectedAyah?.numberInSurah ?? 1;

@@ -1,6 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
+import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:tawaq/gen/assets.gen.dart';
 
 void main() {

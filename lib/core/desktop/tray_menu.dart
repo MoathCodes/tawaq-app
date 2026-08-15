@@ -2,6 +2,7 @@ import 'package:desktop_tray/desktop_tray.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/desktop/desktop_window_controller.dart';
+import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 /// One row in the tray context menu.
@@ -43,7 +44,7 @@ final class TrayMenuShow extends TrayMenuEntry {
   @override
   Future<void> handle(Ref ref) async {
     final controller = ref.read(desktopWindowControllerProvider);
-    final visible = ref.read(desktopMainWindowVisibleProvider);
+    final visible = ref.read(nativeWindowStateProvider).value?.visible ?? true;
     if (visible) {
       await controller.hideMainWindow();
     } else {

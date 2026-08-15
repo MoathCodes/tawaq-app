@@ -1,12 +1,12 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_models.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
-import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/timezone.dart';
 
 /// A schedulable prayer alert event.

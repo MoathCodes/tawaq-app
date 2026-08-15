@@ -6,7 +6,7 @@ import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 
 /// Plays the bundled adhan/iqamah recording with a gentle fade in and out.
 ///
-/// Routes adhan playback through [AudioPlayerController]. Captures a recitation
+/// Routes adhan playback through [AdhanAudioController]. Captures a recitation
 /// snapshot via [_onSuspend] for later resume; force-steal inside the audio
 /// service stops any prior session when [playTrack] runs.
 class SoundAlertChannel implements PrayerAlertChannel {
@@ -19,7 +19,7 @@ class SoundAlertChannel implements PrayerAlertChannel {
     required this._onResume,
   });
 
-  final AudioPlayerController _adhanPlayer;
+  final AdhanAudioController _adhanPlayer;
   final Future<double> Function() _onCaptureRecitationVolume;
   final Future<void> Function() _onSuspend;
   final Future<void> Function(double volume) _onRestoreRecitationVolume;

@@ -1,4 +1,4 @@
-import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
+import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 /// Localized labels for [AdhanSound] muezzin variants.

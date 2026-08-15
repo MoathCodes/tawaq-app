@@ -6,13 +6,13 @@ import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/schedule_alert_picker.dart';
-import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
-import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Compact grouped strip for Sunnah-related times above the daily schedule.

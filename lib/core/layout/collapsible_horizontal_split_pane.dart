@@ -69,8 +69,11 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
     double? sideMaxPixels,
     double spacer = 0,
     CollapsePlacement collapsePlacement = CollapsePlacement.overlay,
-    ({double top, double left, double right}) floatingButtonOffset =
-        const (top: 0, left: 0, right: 0),
+    ({double top, double left, double right}) floatingButtonOffset = const (
+      top: 0,
+      left: 0,
+      right: 0,
+    ),
     FResizableDividerStyleDelta? style,
     Key? key,
   }) {
@@ -149,7 +152,8 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
   /// Whether the side pane sits on the physical left edge.
   bool get _sideOnLeft => sideRegionIndex == 0;
 
-  bool get _showOverlayCollapse => collapsePlacement == CollapsePlacement.overlay;
+  bool get _showOverlayCollapse =>
+      collapsePlacement == CollapsePlacement.overlay;
 
   Widget _wrapSidePane(Widget side) {
     if (!_showOverlayCollapse) return side;
@@ -282,7 +286,6 @@ class _CollapseHandle extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     return FTooltip(
-      semanticsLabel: semanticLabel,
       tipBuilder: (_, _) => Text(semanticLabel),
       childAnchor: sideOnLeft ? Alignment.centerRight : Alignment.centerLeft,
       tipAnchor: sideOnLeft ? Alignment.centerLeft : Alignment.centerRight,
@@ -294,6 +297,7 @@ class _CollapseHandle extends StatelessWidget {
         child: FButton.icon(
           variant: .ghost,
           size: .sm,
+          semanticsTooltip: semanticLabel,
           semanticsLabel: semanticLabel,
           onPress: onPress,
           child: Icon(icon, size: 18),
@@ -333,7 +337,6 @@ class _PeekTab extends StatelessWidget {
       width: _kPeekTabWidth,
       child: Align(
         child: FTooltip(
-          semanticsLabel: semanticLabel,
           tipBuilder: (_, _) => Text(semanticLabel),
           childAnchor: innerOnLeft
               ? Alignment.centerLeft
@@ -341,6 +344,7 @@ class _PeekTab extends StatelessWidget {
           tipAnchor: innerOnLeft ? Alignment.centerRight : Alignment.centerLeft,
           child: FTappable(
             semanticsLabel: semanticLabel,
+            semanticsTooltip: semanticLabel,
             semanticsExpanded: false,
             onPress: onPress,
             builder: (context, variants, _) {

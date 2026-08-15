@@ -1,17 +1,17 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
-import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
-import 'package:tawaq/core/utils/hijri_provider.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_hint.dart';
-import 'package:tawaq/core/widgets/theme_mode_button.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/hijri_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_controls.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/theme_mode_button.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Compact shell actions (location, date, language, theme) laid out for the
@@ -44,7 +44,7 @@ class ShellAppBar extends ConsumerWidget {
             variant: .ghost,
             size: FButtonSizeVariant.xs,
             onPress: () => const SettingsRoute(
-              $extra: kSettingsLocationTabKey,
+              tab: kSettingsLocationTabKey,
             ).go(context),
             prefix: Icon(
               FLucideIcons.mapPin,

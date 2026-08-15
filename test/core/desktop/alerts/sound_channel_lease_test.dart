@@ -1,4 +1,3 @@
-
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -9,7 +8,7 @@ import 'package:tawaq/core/desktop/alerts/sound_alert_channel.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 
-class _MockAudioPlayerController extends Mock implements AudioPlayerController {}
+class _MockAudioPlayerController extends Mock implements AdhanAudioController {}
 
 PrayerAlertEvent _event({
   PrayerAlertKind kind = PrayerAlertKind.adhan,
@@ -79,11 +78,9 @@ void main() {
     }) {
       return SoundAlertChannel(
         adhanPlayer: adhanPlayer,
-        onCaptureRecitationVolume:
-            onCaptureRecitationVolume ?? () async => 70,
+        onCaptureRecitationVolume: onCaptureRecitationVolume ?? () async => 70,
         onSuspend: onSuspend ?? () async {},
-        onRestoreRecitationVolume:
-            onRestoreRecitationVolume ?? (_) async {},
+        onRestoreRecitationVolume: onRestoreRecitationVolume ?? (_) async {},
         onResume: onResume ?? () async {},
       );
     }

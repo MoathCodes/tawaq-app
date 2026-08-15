@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tawaq/app/shortcuts/app_shortcut_global_handlers.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
 
 /// Global keyboard shortcuts for the application shell.
@@ -31,6 +32,7 @@ class _ShellShortcutScopeState extends ConsumerState<ShellShortcutScope> {
       buildGlobalShortcutBindings(
         shortcuts: ShellShortcutScope.globalShortcuts,
         invocationFor: () => AppShortcutInvocation(ref: ref, context: context),
+        onInvoke: invokeGlobalShortcut,
         shouldSuppress: shouldSuppressForTextFieldFocus,
       );
 

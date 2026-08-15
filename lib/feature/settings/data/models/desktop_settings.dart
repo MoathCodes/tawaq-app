@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart' show DesktopSettingsNotifier;
 
 part 'desktop_settings.freezed.dart';
 part 'desktop_settings.g.dart';
@@ -20,7 +19,7 @@ abstract class DesktopSettings with _$DesktopSettings {
   /// Default desktop settings.
   factory DesktopSettings.defaults() => const DesktopSettings();
 
-  /// Parses JSON persisted by [DesktopSettingsNotifier].
+  /// Parses persisted JSON.
   factory DesktopSettings.fromJson(Map<String, dynamic> json) =>
       _$DesktopSettingsFromJson(json);
 }

@@ -13,8 +13,8 @@ import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
 
 part 'prayer_alert_dispatcher.g.dart';
 
@@ -22,19 +22,34 @@ part 'prayer_alert_dispatcher.g.dart';
 typedef AlertErrorSink =
     void Function(String message, Object error, StackTrace stack);
 
-typedef _AlertFlight = ({PrayerAlertKind kind, String prayer});
+/// One active prayer-alert session shared by tray, UI, sound, and actions.
+class PrayerAlertSession {
+  const PrayerAlertSession({required this.event, this.isCompactMorph = false});
 
-/// Active prayer for an in-flight desktop alert, or `null` when idle.
-///
-/// Used by the tray Stop row and “happening now” status text.
+  final PrayerAlertEvent event;
+  final bool isCompactMorph;
+
+  PrayerAlertSession copyWith({bool? isCompactMorph}) => PrayerAlertSession(
+    event: event,
+    isCompactMorph: isCompactMorph ?? this.isCompactMorph,
+  );
+}
+
+/// Canonical lifecycle authority for the active prayer alert.
 @Riverpod(keepAlive: true)
-class PrayerAlertActive extends _$PrayerAlertActive {
+class PrayerAlertSessionState extends _$PrayerAlertSessionState {
   @override
-  Prayer? build() => null;
+  PrayerAlertSession? build() => null;
 
-  /// Sets the active alert prayer, or clears it with `null`.
-  // ignore: use_setters_to_change_properties
-  void setActive(Prayer? prayer) => state = prayer;
+  void start(PrayerAlertEvent event) =>
+      state = PrayerAlertSession(event: event);
+
+  void setCompactMorph({required bool value}) {
+    final current = state;
+    if (current != null) state = current.copyWith(isCompactMorph: value);
+  }
+
+  void clear() => state = null;
 }
 
 /// Coordinates prayer alert delivery across a set of [PrayerAlertChannel]s.
@@ -46,6 +61,7 @@ class PrayerAlertCoordinator {
     this._currentPlayback,
     this._onError,
     this.onFinished,
+    this.onSessionChanged,
     this.onActiveChanged,
     this.notifyOnlyTimeout = const Duration(seconds: 30),
   });
@@ -55,14 +71,17 @@ class PrayerAlertCoordinator {
   final PlaybackState Function()? _currentPlayback;
   final AlertErrorSink? _onError;
   final void Function()? onFinished;
-  /// Fired with the active prayer when an alert starts, or `null` when idle.
+
+  final void Function(PrayerAlertEvent? event)? onSessionChanged;
+
+  /// Compatibility notification derived from [onSessionChanged].
   final void Function(Prayer? prayer)? onActiveChanged;
   final Duration notifyOnlyTimeout;
   Duration _soundSafetyCap;
-  final Set<_AlertFlight> _inFlight = {};
+  PrayerAlertEvent? _activeEvent;
 
   /// Whether an alert is currently in flight.
-  bool get isActive => _inFlight.isNotEmpty;
+  bool get isActive => _activeEvent != null;
 
   /// Updates the in-flight sound safety timeout without rebuilding the
   /// coordinator.
@@ -74,12 +93,14 @@ class PrayerAlertCoordinator {
   bool _disposed = false;
   Timer? _finishTimer;
   StreamSubscription<PlaybackState>? _playbackSub;
+
   /// Iqamah deferred while the same prayer's adhan is still in flight.
   PrayerAlertEvent? _pendingIqamah;
 
-  void _emitActive(Prayer? prayer) {
+  void _emitActive(PrayerAlertEvent? event) {
     if (_disposed) return;
-    onActiveChanged?.call(prayer);
+    onSessionChanged?.call(event);
+    onActiveChanged?.call(event?.prayer);
   }
 
   Future<void> dispatch(PrayerAlertEvent event) {
@@ -99,22 +120,25 @@ class PrayerAlertCoordinator {
     await _playbackSub?.cancel();
     _playbackSub = null;
     await _teardown();
-    _inFlight.clear();
+    _activeEvent = null;
+    onSessionChanged?.call(null);
     onActiveChanged?.call(null);
     _queue = Future<void>.value();
   }
 
   Future<void> _enqueue(Future<void> Function() action) {
     if (_disposed) return Future<void>.value();
-    return _queue = _queue.then((_) {
-      if (_disposed) return Future<void>.value();
-      return action();
-    }).catchError((Object error, StackTrace stack) async {
-      _onError?.call('Prayer alert pipeline error', error, stack);
-      // Fail closed: tear down the in-flight alert so a broken channel cannot
-      // leave the dialog / sound armed indefinitely.
-      await _failClosed();
-    });
+    return _queue = _queue
+        .then((_) {
+          if (_disposed) return Future<void>.value();
+          return action();
+        })
+        .catchError((Object error, StackTrace stack) async {
+          _onError?.call('Prayer alert pipeline error', error, stack);
+          // Fail closed: tear down the in-flight alert so a broken channel cannot
+          // leave the dialog / sound armed indefinitely.
+          await _failClosed();
+        });
   }
 
   Future<void> _failClosed() async {
@@ -122,7 +146,7 @@ class PrayerAlertCoordinator {
     ++_generation;
     _pendingIqamah = null;
     await _teardown();
-    _inFlight.clear();
+    _activeEvent = null;
     _emitActive(null);
   }
 
@@ -131,10 +155,8 @@ class PrayerAlertCoordinator {
 
     final prayerKey = event.prayer.name;
     if (event.kind == PrayerAlertKind.iqamah &&
-        _inFlight.any(
-          (flight) => flight.kind == PrayerAlertKind.adhan &&
-              flight.prayer == prayerKey,
-        )) {
+        _activeEvent?.kind == PrayerAlertKind.adhan &&
+        _activeEvent?.prayer.name == prayerKey) {
       // Scheduler already deduped this fire key — hold it until adhan ends
       // so the iqamah is not silently dropped for the rest of the day.
       _pendingIqamah = event;
@@ -143,11 +165,11 @@ class PrayerAlertCoordinator {
 
     final generation = ++_generation;
     await _teardown();
-    _inFlight.clear();
+    _activeEvent = null;
     if (_disposed || generation != _generation) return;
 
-    _inFlight.add((kind: event.kind, prayer: prayerKey));
-    _emitActive(event.prayer);
+    _activeEvent = event;
+    _emitActive(event);
 
     for (final channel in _channels) {
       if (_disposed || generation != _generation) {
@@ -224,7 +246,7 @@ class PrayerAlertCoordinator {
   Future<void> _finish(int generation) async {
     if (_disposed || generation != _generation) return;
     await _teardown();
-    _inFlight.clear();
+    _activeEvent = null;
     _emitActive(null);
     if (_disposed || generation != _generation) return;
     onFinished?.call();
@@ -267,7 +289,7 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
     final recitation = ref.read(recitationControllerProvider.notifier);
     final service = ref.read(tawaqAudioServiceProvider);
     final sound = SoundAlertChannel(
-      adhanPlayer: ref.read(audioPlayerControllerProvider.notifier),
+      adhanPlayer: ref.read(adhanAudioControllerProvider.notifier),
       onCaptureRecitationVolume: () async => service.volume,
       onSuspend: recitation.suspendForAlert,
       onRestoreRecitationVolume: service.setVolume,
@@ -290,8 +312,13 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
       onError: (message, error, stack) =>
           log.e(message, error: error, stackTrace: stack),
       soundSafetyCap: soundSafetyCap,
-      onActiveChanged: (prayer) {
-        ref.read(prayerAlertActiveProvider.notifier).setActive(prayer);
+      onSessionChanged: (event) {
+        final notifier = ref.read(prayerAlertSessionStateProvider.notifier);
+        if (event == null) {
+          notifier.clear();
+        } else {
+          notifier.start(event);
+        }
       },
     );
 

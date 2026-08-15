@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
+import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:window_manager/window_manager.dart';
 
 /// Minimum window size enforced on desktop bootstrap.

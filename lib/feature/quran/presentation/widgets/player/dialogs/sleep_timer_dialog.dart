@@ -43,7 +43,7 @@ class _SleepTimerDialog extends ConsumerWidget {
       selected: mode == current,
       onPress: () {
         controller.setSleep(mode);
-        unawaited(Navigator.of(context).maybePop());
+        Navigator.of(context).maybePop();
       },
     );
 
@@ -60,7 +60,7 @@ class _SleepTimerDialog extends ConsumerWidget {
       RecitationSleep.after30,
     ];
 
-    return PlayerDialogShell(
+    return TawaqDialogShell(
       title: l10n.quranRecitationSleepTimer,
       icon: FLucideIcons.moon,
       width: 440,

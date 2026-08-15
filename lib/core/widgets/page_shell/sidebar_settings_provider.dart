@@ -2,7 +2,7 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 
 part 'sidebar_settings_provider.g.dart';
 

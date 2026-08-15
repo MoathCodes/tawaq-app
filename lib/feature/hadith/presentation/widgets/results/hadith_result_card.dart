@@ -71,8 +71,7 @@ class HadithResultCard extends ConsumerWidget {
     final isFavoriteValue = isFavorite ?? favoriteFromProvider;
     final selectedFromProvider = ref.watch(
       hadithSessionControllerProvider.select((session) {
-        final selected = session.selectedHadith;
-        return selected != null && hadithStableKey(selected) == hadithKey;
+        return session.selectedHadithKey == hadithKey;
       }),
     );
     final isSelectedValue = isSelected ?? selectedFromProvider;

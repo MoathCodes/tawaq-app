@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_route_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 
@@ -41,8 +40,9 @@ const _surah1Timing = SurahTiming(
 
 void main() {
   group('goToPlaybackInMushaf', () {
-    testWidgets('untimed reciter jumps to surah start and clears selection',
-        (tester) async {
+    testWidgets('untimed reciter jumps to surah start and clears selection', (
+      tester,
+    ) async {
       final repo = _GoToRepo();
       final harness = await _pumpHarness(
         tester,
@@ -54,7 +54,7 @@ void main() {
         ),
       );
 
-      await harness.notifier.goToPlaybackInMushaf(harness.context);
+      await harness.notifier.goToPlaybackInMushaf();
       await tester.pumpAndSettle();
 
       expect(repo.lastSurahJump, 2);
@@ -79,7 +79,7 @@ void main() {
           settings: RecitationSettings.initial().copyWith(highlightAyah: false),
         );
 
-        await harness.notifier.goToPlaybackInMushaf(harness.context);
+        await harness.notifier.goToPlaybackInMushaf();
         await tester.pumpAndSettle();
 
         expect(repo.lastSurahJump, isNull);
@@ -105,7 +105,7 @@ void main() {
           timeline: const RecitationTimeline(timing: _surah1Timing),
         );
 
-        await harness.notifier.goToPlaybackInMushaf(harness.context);
+        await harness.notifier.goToPlaybackInMushaf();
         await tester.pumpAndSettle();
 
         expect(repo.lastAyahPageLookup, 1002);
@@ -129,7 +129,7 @@ void main() {
         );
 
         await harness.mushaf.ensureReady();
-        await harness.notifier.goToPlaybackInMushaf(harness.context);
+        await harness.notifier.goToPlaybackInMushaf();
         await tester.pumpAndSettle();
 
         expect(repo.lastAyahPageLookup, isNull);
@@ -179,12 +179,11 @@ Future<_GoToHarness> _pumpHarness(
         recitationControllerProvider.overrideWith(
           () => _FixedRecitationController(playback, timeline),
         ),
-        quranRouteActiveProvider.overrideWith(_AlwaysQuranRoute.new),
         recitationSettingsProvider.overrideWith(
           () => _FixedRecitationSettings(resolvedSettings),
         ),
         quranScreenSettingsProvider.overrideWith(_SyncQuranScreenSettings.new),
-        quranSelectedAyahProvider.overrideWith(_SyncQuranSelectedAyah.new),
+        quranSelectedAyahIdProvider.overrideWith(_SyncQuranSelectedAyahId.new),
       ],
       child: Builder(
         builder: (ctx) {
@@ -250,14 +249,9 @@ class _SyncQuranScreenSettings extends QuranScreenSettingsNotifier {
   }
 }
 
-class _SyncQuranSelectedAyah extends QuranSelectedAyah {
+class _SyncQuranSelectedAyahId extends QuranSelectedAyahId {
   @override
-  Ayah? build() => null;
-}
-
-class _AlwaysQuranRoute extends QuranRouteActive {
-  @override
-  bool build() => true;
+  int? build() => null;
 }
 
 class _GoToRepo implements IQuranRepository {
@@ -347,12 +341,12 @@ class _GoToRepo implements IQuranRepository {
 
   @override
   Future<QuranPage> getPage(int page) async => QuranPage(
-        pageNumber: page,
-        glyphText: '',
-        lines: const [],
-        surahs: const [],
-        juzNumber: 1,
-      );
+    pageNumber: page,
+    glyphText: '',
+    lines: const [],
+    surahs: const [],
+    juzNumber: 1,
+  );
 
   @override
   QuranPage? peekCachedPage(int page) => null;
@@ -383,14 +377,14 @@ class _GoToRepo implements IQuranRepository {
 
   @override
   List<Surah> getSurahsSync() => [
-        for (final e in ayahCountBySurah.entries)
-          Surah(
-            number: e.key,
-            glyph: 'S${e.key}',
-            hasBasmalah: true,
-            ayahCount: e.value,
-          ),
-      ];
+    for (final e in ayahCountBySurah.entries)
+      Surah(
+        number: e.key,
+        glyph: 'S${e.key}',
+        hasBasmalah: true,
+        ayahCount: e.value,
+      ),
+  ];
 
   @override
   Surah? getSurahSync(int number) {
@@ -409,14 +403,10 @@ class _GoToRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}
-
-  @override
-  bool isReady() => true;
 }
 
 Ayah _ayahFromId(int ayahId) {

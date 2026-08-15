@@ -15,40 +15,48 @@ import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/core/utils/cancellation_token.dart';
 import 'package:tawaq/feature/quran/data/repository/recitation_repository.dart';
 import 'package:tawaq/feature/quran/data/sources/mp3quran_api.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_playback_policy.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_seek_pipeline.dart';
+import 'package:tawaq/feature/quran/domain/services/recitation_state_machine.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_route_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_state_machine.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 part 'recitation_provider.g.dart';
 
+@Riverpod(keepAlive: true)
+http.Client recitationHttpClient(Ref ref) {
+  final client = http.Client();
+  ref.onDispose(client.close);
+  return client;
+}
+
+@Riverpod(keepAlive: true)
+RecitationCache recitationCache(Ref ref) => RecitationCache(
+  client: ref.watch(recitationHttpClientProvider),
+  logger: ref.watch(loggerProvider),
+);
+
 /// Recitation repository (API + on-disk cache).
 @Riverpod(keepAlive: true)
 RecitationRepository recitationRepository(Ref ref) {
-  final client = http.Client();
-  ref.onDispose(client.close);
+  final client = ref.watch(recitationHttpClientProvider);
   return RecitationRepository(
     api: Mp3QuranApi(
       client: client,
       logger: ref.watch(loggerProvider),
     ),
-    cache: RecitationCache(
-      client: client,
-      logger: ref.watch(loggerProvider),
-    ),
+    cache: ref.watch(recitationCacheProvider),
     logger: ref.watch(loggerProvider),
   );
 }
@@ -64,13 +72,106 @@ typedef CachedRecitationsSnapshot = ({
   int totalBytes,
 });
 
-/// The recitation audio files currently cached on disk, with total bytes.
-@Riverpod(keepAlive: true)
-Future<CachedRecitationsSnapshot> cachedRecitationsSnapshot(Ref ref) async {
-  final files = await ref.watch(recitationRepositoryProvider).listCached();
-  final totalBytes = files.fold<int>(0, (sum, f) => sum + f.sizeBytes);
-  return (files: files, totalBytes: totalBytes);
+/// Runtime state owned by [RecitationOfflineStore].
+class RecitationOfflineState {
+  const RecitationOfflineState({
+    this.files = const [],
+    this.totalBytes = 0,
+    this.saveProgress,
+    this.error,
+  });
+
+  final List<CachedRecitation> files;
+  final int totalBytes;
+  final OfflineSaveSnapshot? saveProgress;
+  final String? error;
+
+  RecitationOfflineState copyWith({
+    List<CachedRecitation>? files,
+    int? totalBytes,
+    OfflineSaveSnapshot? saveProgress,
+    bool clearProgress = false,
+    String? error,
+    bool clearError = false,
+  }) => RecitationOfflineState(
+    files: files ?? this.files,
+    totalBytes: totalBytes ?? this.totalBytes,
+    saveProgress: clearProgress ? null : saveProgress ?? this.saveProgress,
+    error: clearError ? null : error ?? this.error,
+  );
 }
+
+/// The only writable authority for cached files and offline operation state.
+@Riverpod(keepAlive: true)
+class RecitationOfflineStore extends _$RecitationOfflineStore {
+  @override
+  Future<RecitationOfflineState> build() => _scan();
+
+  Future<RecitationOfflineState> _scan() async {
+    final files = await ref.read(recitationCacheProvider).listCached();
+    return RecitationOfflineState(
+      files: List.unmodifiable(files),
+      totalBytes: files.fold<int>(0, (sum, file) => sum + file.sizeBytes),
+    );
+  }
+
+  Future<void> refresh() async {
+    final scanned = await _scan();
+    if (!ref.mounted) return;
+    state = AsyncData(
+      scanned.copyWith(
+        saveProgress: state.value?.saveProgress,
+        error: state.value?.error,
+      ),
+    );
+  }
+
+  Future<void> delete(String path) async {
+    await ref.read(recitationCacheProvider).deleteCached(path);
+    await refresh();
+  }
+
+  void setProgress(OfflineSaveSnapshot progress) {
+    final current = state.value;
+    if (current != null)
+      state = AsyncData(current.copyWith(saveProgress: progress));
+  }
+
+  void clearProgress() {
+    final current = state.value;
+    if (current != null)
+      state = AsyncData(current.copyWith(clearProgress: true));
+  }
+
+  void setError(String error) {
+    final current = state.value;
+    if (current != null) state = AsyncData(current.copyWith(error: error));
+  }
+
+  void clearError() {
+    final current = state.value;
+    if (current != null) state = AsyncData(current.copyWith(clearError: true));
+  }
+}
+
+/// Disk-file projection retained for dialogs and reciter availability views.
+@riverpod
+Future<CachedRecitationsSnapshot> cachedRecitationsSnapshot(Ref ref) async {
+  final offline = await ref.watch(recitationOfflineStoreProvider.future);
+  return (files: offline.files, totalBytes: offline.totalBytes);
+}
+
+/// Progress for the active explicit offline save.
+@riverpod
+OfflineSaveSnapshot? recitationOfflineSaveProgress(Ref ref) => ref.watch(
+  recitationOfflineStoreProvider.select((state) => state.value?.saveProgress),
+);
+
+/// Latest explicit offline-save error.
+@riverpod
+String? recitationOfflineSaveError(Ref ref) => ref.watch(
+  recitationOfflineStoreProvider.select((state) => state.value?.error),
+);
 
 /// Live download progress for the in-flight recitation surah download, or
 /// null when no download is active (cached, finished, cancelled, or idle).
@@ -88,64 +189,6 @@ class RecitationDownloadProgress extends _$RecitationDownloadProgress {
   set progress(DownloadProgress value) => state = value;
 
   /// Clears the progress (download finished/cancelled/failed).
-  void clear() => state = null;
-}
-
-/// Live progress for an explicit "Save for offline" download, or null when
-/// idle. Scoped to the surah identity being saved.
-@riverpod
-class RecitationOfflineSaveProgress extends _$RecitationOfflineSaveProgress {
-  @override
-  OfflineSaveSnapshot? build() => null;
-
-  /// Updates the latest scoped progress snapshot.
-  // ignore: avoid_setters_without_getters
-  set snapshot(OfflineSaveSnapshot value) => state = value;
-
-  /// Clears the progress (save finished/cancelled/failed).
-  void clear() => state = null;
-}
-
-/// Surah identities treated as offline-saved until
-/// [cachedRecitationsSnapshotProvider] refreshes after a successful download.
-@Riverpod(keepAlive: true)
-class OptimisticOfflineSaved extends _$OptimisticOfflineSaved {
-  @override
-  Set<({int reciterId, int moshafId, int surah})> build() {
-    ref.listen(cachedRecitationsSnapshotProvider, (previous, next) {
-      // Any fresh listing is source of truth — drop optimistic entries.
-      if (next is AsyncData && state.isNotEmpty) {
-        state = {};
-      }
-    });
-    return {};
-  }
-
-  /// Marks [reciterId]/[moshafId]/[surah] as saved until the cache list
-  /// catches up.
-  void mark({
-    required int reciterId,
-    required int moshafId,
-    required int surah,
-  }) {
-    state = {
-      ...state,
-      (reciterId: reciterId, moshafId: moshafId, surah: surah),
-    };
-  }
-}
-
-/// Latest offline-save failure message for toast UI, or null when idle.
-@riverpod
-class RecitationOfflineSaveError extends _$RecitationOfflineSaveError {
-  @override
-  String? build() => null;
-
-  /// Surfaces [message] to listeners (drawer toast).
-  // ignore: avoid_setters_without_getters
-  set message(String value) => state = value;
-
-  /// Clears the surfaced error after it has been shown.
   void clear() => state = null;
 }
 
@@ -167,6 +210,58 @@ class RecitationDrawer extends _$RecitationDrawer {
 
 /// Resolved reciter + moshaf from persisted settings (with catalog fallbacks).
 typedef SelectedRecitation = ({Reciter reciter, Moshaf moshaf});
+
+/// Read-only composition of recitation session, preferences, and transport.
+class RecitationViewState {
+  const RecitationViewState({
+    required this.session,
+    required this.preferences,
+    required this.audio,
+  });
+
+  final RecitationSessionState session;
+  final RecitationSettings preferences;
+  final AudioSessionSnapshot audio;
+
+  /// Whether the native transport currently belongs to recitation.
+  bool get ownsAudio => audio.owner == kRecitationLeaseOwner;
+
+  /// Native play intent for the recitation lease only.
+  bool get isPlaying => ownsAudio && audio.playIntent;
+
+  /// Loading state composed from session preparation and native transport.
+  bool get isLoading =>
+      session.timelinePending ||
+      session.isLoading ||
+      (ownsAudio && audio.lifecycle == AudioSessionLifecycle.loading);
+
+  /// Whether the current selection has completed.
+  bool get isEnded =>
+      session.isEnded ||
+      (ownsAudio && audio.lifecycle == AudioSessionLifecycle.completed);
+
+  /// Canonical live position, or the frozen session position while preempted.
+  Duration get position => ownsAudio ? audio.position : session.position;
+
+  /// Timing-aware duration composed without writing another transport field.
+  Duration get duration => ownsAudio && audio.duration > session.duration
+      ? audio.duration
+      : session.duration;
+
+  /// Seekable ranges for the active recitation lease.
+  List<PlaybackBufferRange> get bufferedRanges =>
+      ownsAudio ? audio.bufferedRanges : const [];
+}
+
+/// Canonical transport view; no field in this provider is writable.
+@riverpod
+RecitationViewState recitationView(Ref ref) => RecitationViewState(
+  session: ref.watch(recitationControllerProvider),
+  preferences:
+      ref.watch(recitationSettingsProvider).value ??
+      RecitationSettings.initial(),
+  audio: ref.watch(audioSessionProvider),
+);
 
 /// The currently selected reciter and moshaf, falling back to the first timed
 /// reciter when no persisted id matches.
@@ -209,32 +304,19 @@ class RecitationErrorToastListener extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref
-      ..listen(
-        recitationControllerProvider.select((p) => p.error),
-        (previous, next) {
-          if (next == null || next == previous) return;
-          showFToast(
-            context: context,
-            variant: .destructive,
-            icon: const Icon(FLucideIcons.triangleAlert),
-            title: Text(context.l10n.quranRecitationPlaybackFailed(next)),
-          );
-          ref.read(recitationControllerProvider.notifier).clearError();
-        },
-      )
-      ..listen(recitationOfflineSaveErrorProvider, (previous, next) {
+    ref..listen(
+      recitationControllerProvider.select((p) => p.error),
+      (previous, next) {
         if (next == null || next == previous) return;
-        final l10n = context.l10n;
         showFToast(
           context: context,
           variant: .destructive,
           icon: const Icon(FLucideIcons.triangleAlert),
-          title: Text(l10n.errorOccurredWhile(l10n.quranRecitationSaveOffline)),
-          description: Text(next),
+          title: Text(context.l10n.quranRecitationPlaybackFailed(next)),
         );
-        ref.read(recitationOfflineSaveErrorProvider.notifier).clear();
-      });
+        ref.read(recitationControllerProvider.notifier).clearError();
+      },
+    );
     return child;
   }
 }
@@ -267,18 +349,9 @@ void showRecitationHighlightAutoChangeToast(
 class RecitationController extends _$RecitationController {
   static const _seekLogPrefix = 'tawaq.recitation.seek';
 
-  StreamSubscription<Duration>? _positionSub;
-  StreamSubscription<Duration>? _durationSub;
-  StreamSubscription<PlaybackState>? _stateSub;
-  StreamSubscription<void>? _completionSub;
-  StreamSubscription<bool>? _playWhenReadySub;
-  StreamSubscription<int?>? _abLoopSub;
-  StreamSubscription<int?>? _trackIndexSub;
-
   RecitationTimeline _timeline = const RecitationTimeline();
   Timer? _sleepTimer;
   bool _sessionBootstrapped = false;
-  String? _lastResolvedUri;
   CancellationToken? _downloadToken;
   CancellationToken? _offlineSaveToken;
   int? _lastAbLoopRemaining;
@@ -305,38 +378,13 @@ class RecitationController extends _$RecitationController {
 
   @override
   RecitationState build() {
-    final service = ref.read(tawaqAudioServiceProvider);
-    unawaited(_positionSub?.cancel());
-    unawaited(_durationSub?.cancel());
-    unawaited(_stateSub?.cancel());
-    unawaited(_completionSub?.cancel());
-    unawaited(_playWhenReadySub?.cancel());
-    unawaited(_abLoopSub?.cancel());
-    unawaited(_trackIndexSub?.cancel());
-    _positionSub = service.positionStream.listen(_onPosition);
-    _durationSub = service.durationStream.listen(_onDuration);
-    _stateSub = service.stateStream.listen(_onServiceState);
-    _completionSub = service.completionStream.listen(
-      (_) => _onNaturalCompletion(),
-    );
-    _playWhenReadySub = service.playWhenReadyStream.listen(
-      _onPlayWhenReadyChanged,
-    );
-    _abLoopSub = service.remainingAbLoopsStream.listen(_onAbLoopRemaining);
-    _trackIndexSub = service.currentIndexStream.listen(_onTrackIndexChanged);
     ref
       ..onDispose(() {
         _persistPlaybackCheckpoint();
-        unawaited(_positionSub?.cancel());
-        unawaited(_durationSub?.cancel());
-        unawaited(_stateSub?.cancel());
-        unawaited(_completionSub?.cancel());
-        unawaited(_playWhenReadySub?.cancel());
-        unawaited(_abLoopSub?.cancel());
-        unawaited(_trackIndexSub?.cancel());
         _sleepTimer?.cancel();
         _seekPipeline.dispose();
       })
+      ..listen(audioSessionProvider, _onAudioSessionChanged)
       ..listen(
         recitationSettingsProvider.select(
           (s) => (
@@ -421,7 +469,7 @@ class RecitationController extends _$RecitationController {
     _offlineSaveToken?.cancel();
     final token = CancellationToken();
     _offlineSaveToken = token;
-    ref.read(recitationOfflineSaveProgressProvider.notifier).clear();
+    ref.read(recitationOfflineStoreProvider.notifier).clearProgress();
 
     var failed = false;
     Object? failure;
@@ -434,13 +482,15 @@ class RecitationController extends _$RecitationController {
         cancellationToken: token,
         onProgress: (p) {
           ref
-              .read(recitationOfflineSaveProgressProvider.notifier)
-              .snapshot = OfflineSaveSnapshot(
-            reciterId: reciter.id,
-            moshafId: moshaf.id,
-            surah: surah,
-            progress: p,
-          );
+              .read(recitationOfflineStoreProvider.notifier)
+              .setProgress(
+                OfflineSaveSnapshot(
+                  reciterId: reciter.id,
+                  moshafId: moshaf.id,
+                  surah: surah,
+                  progress: p,
+                ),
+              );
         },
       );
     } on Object catch (error, stack) {
@@ -456,7 +506,7 @@ class RecitationController extends _$RecitationController {
     } finally {
       if (identical(_offlineSaveToken, token)) {
         _offlineSaveToken = null;
-        ref.read(recitationOfflineSaveProgressProvider.notifier).clear();
+        ref.read(recitationOfflineStoreProvider.notifier).clearProgress();
       }
     }
 
@@ -468,35 +518,15 @@ class RecitationController extends _$RecitationController {
         surahName: surahName,
       );
       if (saved) {
-        _markOptimisticSaved(
-          reciterId: reciter.id,
-          moshafId: moshaf.id,
-          surah: surah,
-        );
-        _invalidateCachedRecitations();
+        await ref.read(recitationOfflineStoreProvider.notifier).refresh();
       }
     } else if (failed && !token.isCancelled) {
-      ref.read(recitationOfflineSaveErrorProvider.notifier).message =
-          '$failure';
+      ref.read(recitationOfflineStoreProvider.notifier).setError('$failure');
     }
   }
 
   void _invalidateCachedRecitations() {
-    ref.invalidate(cachedRecitationsSnapshotProvider);
-  }
-
-  void _markOptimisticSaved({
-    required int reciterId,
-    required int moshafId,
-    required int surah,
-  }) {
-    ref
-        .read(optimisticOfflineSavedProvider.notifier)
-        .mark(
-          reciterId: reciterId,
-          moshafId: moshafId,
-          surah: surah,
-        );
+    unawaited(ref.read(recitationOfflineStoreProvider.notifier).refresh());
   }
 
   /// Invalidates cache listings when a resolve just downloaded a local file.
@@ -508,11 +538,6 @@ class RecitationController extends _$RecitationController {
     required int surah,
   }) {
     if (progress != null && uri.startsWith('file://')) {
-      _markOptimisticSaved(
-        reciterId: reciter.id,
-        moshafId: moshaf.id,
-        surah: surah,
-      );
       _invalidateCachedRecitations();
     }
   }
@@ -727,18 +752,14 @@ class RecitationController extends _$RecitationController {
     }
   }
 
-  /// Navigates the mushaf to the current playback location.
+  /// Moves the mushaf to the current playback location.
   ///
   /// Untimed reciters open the playing surah's start page. Timed reciters jump
   /// to the current ayah and select it, ignoring highlight/auto-scroll toggles.
-  Future<void> goToPlaybackInMushaf(BuildContext context) async {
+  Future<void> goToPlaybackInMushaf() async {
     final s = state;
     final surah = s.surah;
     if (surah == null) return;
-
-    if (!ref.read(quranRouteActiveProvider)) {
-      const QuranRoute().go(context);
-    }
 
     if (s.moshaf?.hasTiming == true) {
       final ayahNumber = s.currentAyah ?? _timeline.ayahAt(s.position);
@@ -746,7 +767,7 @@ class RecitationController extends _$RecitationController {
         try {
           final ayah = await mushafAyahOrNull(_mushaf, surah, ayahNumber);
           if (ayah == null) return;
-          ref.read(quranSelectedAyahProvider.notifier).select(ayah);
+          ref.read(quranSelectedAyahIdProvider.notifier).select(ayah.ayahId);
           await _scrollToAyah(ayah.ayahId, select: true);
         } on Object catch (error, stack) {
           ref
@@ -761,7 +782,7 @@ class RecitationController extends _$RecitationController {
       }
     }
 
-    ref.read(quranSelectedAyahProvider.notifier).select(null);
+    ref.read(quranSelectedAyahIdProvider.notifier).select(null);
     _mushaf.clearSelection();
     await _scrollToSurahWhenReady(surah);
   }
@@ -1122,9 +1143,6 @@ class RecitationController extends _$RecitationController {
       if (needsAbLoop) {
         await _setAyahLoop(targetAyah, ayahRepeatCount);
       }
-      if (surah != null) {
-        unawaited(_applyHighlight(surah, targetAyah));
-      }
     });
   }
 
@@ -1268,7 +1286,8 @@ class RecitationController extends _$RecitationController {
           await _setAyahLoop(ayah, repeatCount);
         // Runs on the I/O path after SeekAudio / LoadAyahLoop in the same batch.
         case HighlightAyah():
-          unawaited(_applyHighlight(effect.surah, effect.ayah));
+          // QuranScreen projects playback highlights while it is mounted.
+          break;
         // Peeled off in [_applyLocalSideEffects] before I/O runs.
         case CancelSleepTimer():
         case PersistPlaybackState():
@@ -1386,7 +1405,6 @@ class RecitationController extends _$RecitationController {
     );
     _finishDownload(token);
     if (newGen != state.loadGeneration) return;
-    _lastResolvedUri = resolved.uri;
     _invalidateIfDownloaded(
       uri: resolved.uri,
       progress: resolved.progress,
@@ -1616,7 +1634,6 @@ class RecitationController extends _$RecitationController {
       stateForTimeline: state,
       nextTiming: timing,
     );
-    _lastResolvedUri = bookkeeping.lastResolvedUri;
     if (timing != null) {
       _timeline = bookkeeping.timeline;
       if (newGen == state.loadGeneration && state.timelinePending) {
@@ -1739,9 +1756,18 @@ class RecitationController extends _$RecitationController {
         (state.isPlaying || state.isBuffering);
   }
 
-  void _onNaturalCompletion() {
+  void _onNaturalCompletion({bool authoritativeLifecycle = false}) {
     if (!_ownsAudioEngine) return;
-    if (!_shouldDispatchAudioCompleted()) return;
+    if (authoritativeLifecycle) {
+      if (!state.active ||
+          state.userStopped ||
+          state.timelinePending ||
+          state.isEnded) {
+        return;
+      }
+    } else if (!_shouldDispatchAudioCompleted()) {
+      return;
+    }
     _dispatch(const AudioCompleted());
   }
 
@@ -1754,39 +1780,56 @@ class RecitationController extends _$RecitationController {
       return;
     }
     if (state.userStopped || state.isEnded || state.isLoading) return;
-    if (_service.state is PlaybackCompleted) return;
+    if (ref.read(audioSessionProvider).lifecycle ==
+        AudioSessionLifecycle.completed) {
+      return;
+    }
     if (state.isPlaying || state.isBuffering) {
       _applyStatus(RecitationStatus.paused);
     }
   }
 
-  void _onServiceState(PlaybackState playback) {
-    if (!_ownsAudioEngine) return;
-    switch (playback) {
-      case PlaybackLoading():
+  void _onAudioSessionChanged(
+    AudioSessionSnapshot? previous,
+    AudioSessionSnapshot next,
+  ) {
+    if (next.owner != kRecitationLeaseOwner) return;
+
+    final wasRecitation = previous?.owner == kRecitationLeaseOwner;
+    if (!wasRecitation || previous?.position != next.position) {
+      _onPosition(next.position);
+    }
+    if (!wasRecitation || previous?.duration != next.duration) {
+      _onDuration(next.duration);
+    }
+    if (!wasRecitation || previous?.playIntent != next.playIntent) {
+      _onPlayWhenReadyChanged(next.playIntent);
+    }
+    if (!wasRecitation || previous?.remainingAbLoops != next.remainingAbLoops) {
+      _onAbLoopRemaining(next.remainingAbLoops);
+    }
+    if (!wasRecitation || previous?.playlistIndex != next.playlistIndex) {
+      _onTrackIndexChanged(next.playlistIndex);
+    }
+    if (wasRecitation && previous?.lifecycle == next.lifecycle) return;
+
+    switch (next.lifecycle) {
+      case AudioSessionLifecycle.loading:
         _applyStatus(RecitationStatus.loading);
-      case PlaybackPlaying(:final duration):
-        if (duration > Duration.zero) {
-          _applyReportedDuration(duration);
-        }
-      case PlaybackPaused(:final duration):
-        if (duration > Duration.zero) {
-          _applyReportedDuration(duration);
-        }
+      case AudioSessionLifecycle.playing:
+        _applyStatus(RecitationStatus.playing);
+      case AudioSessionLifecycle.paused:
+        _applyStatus(RecitationStatus.paused);
         _persistPlaybackCheckpoint();
-      case PlaybackCompleted(:final duration):
-        if (duration > Duration.zero) {
-          _applyReportedDuration(duration);
-        }
-      // Natural EOF is handled exclusively via [completionStream]
-      // (_onNaturalCompletion). This branch only mirrors duration for
-      // programmatic [TawaqAudioService.pauseAtEof] after the machine has
-      // already processed [AudioCompleted].
-      case PlaybackError(:final message):
-        _applyAudioError(message);
-      case PlaybackIdle():
+      case AudioSessionLifecycle.completed:
+        // The native lifecycle is authoritative even when its play-intent
+        // stream reached `false` first and temporarily projected `paused`.
+        _onNaturalCompletion(authoritativeLifecycle: true);
+      case AudioSessionLifecycle.error:
+        _applyAudioError(next.error ?? 'Audio playback failed');
+      case AudioSessionLifecycle.idle:
         break;
-      case PlaybackBuffering():
+      case AudioSessionLifecycle.buffering:
         _applyStatus(RecitationStatus.buffering);
     }
   }
@@ -1817,31 +1860,6 @@ class RecitationController extends _$RecitationController {
       pendingSeekTarget: null,
     );
     _seekPipeline.clear();
-  }
-
-  Future<void> _applyHighlight(int surah, int ayahNumber) async {
-    final settings = ref.read(recitationSettingsProvider).value;
-    final highlight = settings?.highlightAyah ?? true;
-    final autoScroll = settings?.autoScroll ?? true;
-    if (!highlight && !autoScroll) return;
-
-    try {
-      final ayah = await mushafAyahOrNull(_mushaf, surah, ayahNumber);
-      if (ayah == null) return;
-      if (highlight) {
-        // Session selection only — mushaf follows via useQuranAyahSelectionSync.
-        ref.read(quranSelectedAyahProvider.notifier).select(ayah);
-      }
-
-      final onQuranRoute = ref.read(quranRouteActiveProvider);
-      if (autoScroll && onQuranRoute) {
-        await _scrollToAyah(ayah.ayahId, select: highlight);
-      }
-    } on Object catch (error, stack) {
-      ref
-          .read(loggerProvider)
-          .w('Highlight failed', error: error, stackTrace: stack);
-    }
   }
 
   static const _maxScrollReadyAttempts = 30;

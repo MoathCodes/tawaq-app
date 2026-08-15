@@ -1,17 +1,16 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:free_map/free_map.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
-import 'package:tawaq/feature/settings/data/location_constants.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
-import 'package:tawaq/feature/settings/domain/models/location_failure.dart';
-import 'package:tawaq/feature/settings/domain/services/location_service.dart';
-import 'package:tawaq/feature/settings/presentation/provider/location_service_provider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
+import 'package:tawaq/feature/prayer/domain/models/location_constants.dart';
+import 'package:tawaq/feature/prayer/domain/models/location_failure.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
+import 'package:tawaq/feature/prayer/domain/services/location_service.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/location_service_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -107,10 +106,12 @@ void main() {
       addTearDown(container.dispose);
 
       await container.read(prayerSettingsProvider.future);
-      await container.read(prayerSettingsProvider.notifier).applyLocationBundle(
-        coordinates: Coordinates(40.7128, -74.006),
-        locationName: 'New York',
-      );
+      await container
+          .read(prayerSettingsProvider.notifier)
+          .applyLocationBundle(
+            coordinates: Coordinates(40.7128, -74.006),
+            locationName: 'New York',
+          );
 
       final after = container.read(prayerSettingsProvider).requireValue;
       expect(after.location.name, 'America/New_York');

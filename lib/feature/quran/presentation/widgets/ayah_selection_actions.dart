@@ -27,7 +27,7 @@ class AyahSelectionActionsBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final durations = theme.durations;
-    final selectedAyah = ref.watch(quranSelectedAyahProvider);
+    final selectedAyah = ref.watch(quranSelectedAyahProvider).value;
 
     return AnimatedSwitcher(
       duration: durations.normal,
@@ -126,45 +126,45 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
               );
 
         return Row(
-          spacing: AppSpacing.sm,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FPopoverMenu(
-              menu: [
-                FItemGroup(
-                  children: [
-                    FItem(
-                      prefix: const Icon(FLucideIcons.play),
-                      title: Text(l10n.quranPlayAyah),
-                      onPress: () =>
-                          unawaited(_playAyahAction(context, ref, ayah)),
-                    ),
-                    FItem(
-                      prefix: const Icon(FLucideIcons.bookOpen),
-                      title: Text(l10n.quranPlaySurah),
-                      onPress: () =>
-                          unawaited(_playSurahAction(context, ref, ayah)),
-                    ),
-                    FItem(
-                      prefix: const Icon(FLucideIcons.repeat),
-                      title: Text(l10n.quranPlayRange),
-                      onPress: () =>
-                          unawaited(_playRangeAction(context, ref, ayah)),
+              spacing: AppSpacing.sm,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FPopoverMenu(
+                  menu: [
+                    FItemGroup(
+                      children: [
+                        FItem(
+                          prefix: const Icon(FLucideIcons.play),
+                          title: Text(l10n.quranPlayAyah),
+                          onPress: () =>
+                              unawaited(_playAyahAction(context, ref, ayah)),
+                        ),
+                        FItem(
+                          prefix: const Icon(FLucideIcons.bookOpen),
+                          title: Text(l10n.quranPlaySurah),
+                          onPress: () =>
+                              unawaited(_playSurahAction(context, ref, ayah)),
+                        ),
+                        FItem(
+                          prefix: const Icon(FLucideIcons.repeat),
+                          title: Text(l10n.quranPlayRange),
+                          onPress: () =>
+                              unawaited(_playRangeAction(context, ref, ayah)),
+                        ),
+                      ],
                     ),
                   ],
+                  builder: (context, controller, _) =>
+                      playTrigger(controller.toggle),
+                ),
+                shareButton,
+                copyButton,
+                FButton.icon(
+                  onPress: () => setQuranSelectedAyah(ref, null),
+                  child: const Icon(FLucideIcons.x, size: 18),
                 ),
               ],
-              builder: (context, controller, _) =>
-                  playTrigger(controller.toggle),
-            ),
-            shareButton,
-            copyButton,
-            FButton.icon(
-              onPress: () => setQuranSelectedAyah(ref, null),
-              child: const Icon(FLucideIcons.x, size: 18),
-            ),
-          ],
-        )
+            )
             .animate()
             .fadeIn(duration: durations.fast, curve: Curves.easeOut)
             .scale(
@@ -250,11 +250,13 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
       if (context.mounted) _showRecitationUnavailableToast(context);
       return;
     }
-    await ref.read(recitationControllerProvider.notifier).playSurah(
-      reciter: pick.reciter,
-      moshaf: pick.moshaf,
-      surah: ayah.surahNumber,
-    );
+    await ref
+        .read(recitationControllerProvider.notifier)
+        .playSurah(
+          reciter: pick.reciter,
+          moshaf: pick.moshaf,
+          surah: ayah.surahNumber,
+        );
   }
 
   Future<void> _playRangeAction(

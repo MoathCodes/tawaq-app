@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/utils/date_formatter.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/date_formatter.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -18,10 +18,8 @@ class OnboardingFinishStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final theme = context.theme;
-    // Day-key / inputs only — do not watch the 1 Hz prayerDayProvider stream.
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final bundle = ref.watch(prayerDayBundleForDateProvider(today));
+    final day = ref.watch(prayerDayProvider).value;
+    final bundle = day?.bundle;
     final formatter = ref.watch(timeFormatterProvider);
 
     if (bundle == null) {
@@ -57,7 +55,7 @@ class OnboardingFinishStep extends ConsumerWidget {
           ),
           for (final prayer in prayers)
             _PrayerPreviewRow(
-              label: prayer.getLocaleName(l10n),
+              label: prayer.getLocaleName(l10n, date: day?.now),
               time: formatter.format(bundle.today.timeForPrayer(prayer)),
             ),
         ],

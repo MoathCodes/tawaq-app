@@ -10,16 +10,14 @@ import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/ayah_selection_actions.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
-
-const _kPagePersistDebounce = Duration(milliseconds: 400);
 
 /// Stable mushaf subtree shared across reading layouts.
 ///
@@ -27,7 +25,10 @@ const _kPagePersistDebounce = Duration(milliseconds: 400);
 /// changes instead of tearing down shortcuts, semantics, and ayah actions.
 class QuranMushafPane extends HookConsumerWidget {
   /// Creates a [QuranMushafPane] instance.
-  const QuranMushafPane({super.key});
+  const QuranMushafPane({this.onPageChanged, super.key});
+
+  /// Reports the settled page/spread anchor to the route owner.
+  final ValueChanged<int>? onPageChanged;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,46 +40,26 @@ class QuranMushafPane extends HookConsumerWidget {
     );
     final wantsDoubleSpread = layout == QuranReadingLayout.doublePage;
     final l10n = context.l10n;
-    final fallbackPage = ref.watch(
-      quranScreenSettingsProvider.select(
-        (v) => v.value?.pageInfo.pageNumber ?? 1,
-      ),
-    );
-    final fallbackJuz = ref.watch(
-      quranScreenSettingsProvider.select(
-        (v) => v.value?.pageInfo.juzNumber ?? 1,
-      ),
-    );
+    final pendingPage = useRef<int?>(null);
 
-    final pendingPageInfo = useRef<MushafPageInfo?>(null);
-    final persistTimer = useRef<Timer?>(null);
-
-    void flushPagePersist() {
-      persistTimer.value?.cancel();
-      persistTimer.value = null;
-      final info = pendingPageInfo.value;
-      if (info == null) return;
-      pendingPageInfo.value = null;
-      ref.read(quranScreenSettingsProvider.notifier).commitSlimPageInfo(info);
+    void publishPendingPage() {
+      final page = pendingPage.value;
+      if (page == null) return;
+      pendingPage.value = null;
+      onPageChanged?.call(page);
     }
 
-    void schedulePagePersist(MushafPageInfo info) {
-      pendingPageInfo.value = info;
-      persistTimer.value?.cancel();
-      persistTimer.value = Timer(_kPagePersistDebounce, flushPagePersist);
-    }
-
-    useEffect(() {
-      return () {
-        persistTimer.value?.cancel();
-        final info = pendingPageInfo.value;
-        if (info != null) {
-          ref
-              .read(quranScreenSettingsProvider.notifier)
-              .commitSlimPageInfo(info);
+    void queuePage(int page) {
+      pendingPage.value = page;
+      // Programmatic jumpToPage can complete without a user drag. Defer one
+      // frame so PageController has updated its scrolling flag first.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted || !controller.pageController.hasClients) return;
+        if (!controller.pageController.position.isScrollingNotifier.value) {
+          publishPendingPage();
         }
-      };
-    }, const []);
+      });
+    }
 
     // Bridge package session zoom (pinch / Ctrl+scroll / Ctrl+±) into the
     // persisted mushafZoom. Null means "cleared to style boost" — ignore so
@@ -127,9 +108,11 @@ class QuranMushafPane extends HookConsumerWidget {
           pageLoadingWidget: const FCircularProgress.loader(),
           style: style,
           onAyahTap: onAyahTapped,
-          onPageChanged: pagesPerViewport == 2 ? null : schedulePagePersist,
+          onPageChanged: pagesPerViewport == 2
+              ? null
+              : (info) => queuePage(info.pageNumber),
           onSpreadChanged: pagesPerViewport == 2
-              ? (info) => schedulePagePersist(info.$1)
+              ? (info) => queuePage(info.$1.pageNumber)
               : null,
         );
 
@@ -182,8 +165,8 @@ class QuranMushafPane extends HookConsumerWidget {
               listenable: controller.page,
               builder: (context, child) {
                 final info = controller.currentPageInfo;
-                final pageNumber = info?.pageNumber ?? fallbackPage;
-                final juzNumber = info?.juzNumber ?? fallbackJuz;
+                final pageNumber = info?.pageNumber ?? controller.currentPage;
+                final juzNumber = info?.juzNumber ?? 1;
                 final label =
                     '${l10n.quran}, ${l10n.pageJuzInfo(pageNumber, juzNumber)}';
 
@@ -196,7 +179,13 @@ class QuranMushafPane extends HookConsumerWidget {
                 fit: StackFit.expand,
                 clipBehavior: Clip.none,
                 children: [
-                  NonSelectable(child: reader),
+                  NotificationListener<ScrollEndNotification>(
+                    onNotification: (_) {
+                      publishPendingPage();
+                      return false;
+                    },
+                    child: NonSelectable(child: reader),
+                  ),
                   Positioned(
                     left: 0,
                     right: 0,

@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 
@@ -17,7 +17,6 @@ MushafStyle buildQuranMushafStyle(
 }) => MushafStyle(
   scale: MushafScale(
     readingBoost: clampMushafZoom(zoom),
-    maxReadingBoost: kMushafZoomMax,
   ),
   ayahStyleModifier: (s) => s.copyWith(color: theme.colors.foreground),
   juzStyleModifier: (s) => s.copyWith(color: theme.colors.mutedForeground),

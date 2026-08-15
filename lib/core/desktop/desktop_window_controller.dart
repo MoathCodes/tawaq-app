@@ -3,30 +3,12 @@ import 'dart:io';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/desktop_shutdown.dart';
 import 'package:tawaq/core/desktop/desktop_tray_service.dart';
+import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart';
 import 'package:window_manager/window_manager.dart';
 
 part 'desktop_window_controller.g.dart';
-
-/// Whether the main window is currently visible (not hidden to tray).
-@Riverpod(keepAlive: true)
-class DesktopMainWindowVisible extends _$DesktopMainWindowVisible {
-  @override
-  bool build() => true;
-
-  /// Updates the cached visibility flag.
-  void setVisible({required bool value}) {
-    if (state == value) return;
-    state = value;
-  }
-
-  /// Re-reads visibility from the native window manager.
-  Future<void> refreshFromWindow() async {
-    if (!isDesktopPlatform) return;
-    setVisible(value: await windowManager.isVisible());
-  }
-}
 
 /// Desktop window close / show / quit helpers shared by title bar and tray.
 @Riverpod(keepAlive: true)
@@ -75,9 +57,7 @@ class DesktopWindowController {
   Future<void> hideMainWindow() async {
     if (!await _trayAvailable()) return;
     await windowManager.hide();
-    _ref
-        .read(desktopMainWindowVisibleProvider.notifier)
-        .setVisible(value: false);
+    await _ref.read(nativeWindowStateProvider.notifier).refresh();
   }
 
   Future<bool> _trayAvailable() async {
@@ -94,9 +74,7 @@ class DesktopWindowController {
     }
     await windowManager.show();
     await windowManager.focus();
-    _ref
-        .read(desktopMainWindowVisibleProvider.notifier)
-        .setVisible(value: true);
+    await _ref.read(nativeWindowStateProvider.notifier).refresh();
   }
 
   /// Fully exits the application.

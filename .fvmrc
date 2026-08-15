@@ -1,4 +1,3 @@
 {
-  "flutter": "master",
-  "flutterUrl": "https://github.com/join-the-flock/flock.git"
+  "flutter": "3.44.8"
 }

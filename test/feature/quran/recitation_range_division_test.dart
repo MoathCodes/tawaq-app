@@ -312,8 +312,6 @@ void main() {
     test(
       'isGlobalRangeComplete is false until end of Quran for open-ended',
       () {
-        const from = AyahReference(surah: 8, ayah: 41);
-
         expect(
           isGlobalRangeComplete(
             to: null,

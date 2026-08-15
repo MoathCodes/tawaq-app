@@ -3,16 +3,14 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/feature/settings/data/models/app_text_scale.dart';
 import 'package:tawaq/feature/settings/data/models/theme_prefs.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
 part 'theme_settings_provider.g.dart';
 
 const String _themeLogPrefix = '[ThemeNotifier]';
-
-ThemePrefs _lastGoodThemePrefs = ThemePrefs.defaults();
 
 /// Notifier for theme settings.
 ///
@@ -23,23 +21,21 @@ class ThemeNotifier extends _$ThemeNotifier {
   @override
   Future<ThemePrefs> build() async {
     ref.read(loggerProvider).i('$_themeLogPrefix Building...');
-    listenSelf((_, next) {
-      final value = next.value;
-      if (value != null) _lastGoodThemePrefs = value;
-    });
     try {
       await persist(
         ref.watch(settingsStorageProvider.future),
         options: kSettingsPersistForever,
       ).future;
     } on Object catch (error, stack) {
-      ref.read(loggerProvider).e(
-        '$_themeLogPrefix hydrate failed; keeping last-good prefs',
-        error: error,
-        stackTrace: stack,
-      );
+      ref
+          .read(loggerProvider)
+          .e(
+            '$_themeLogPrefix hydrate failed; using current/default prefs',
+            error: error,
+            stackTrace: stack,
+          );
     }
-    return state.value ?? _lastGoodThemePrefs;
+    return state.value ?? ThemePrefs.defaults();
   }
 
   /// Awaits a durable disk write of the current prefs (kill-boundary safe).

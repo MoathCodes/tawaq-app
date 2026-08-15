@@ -6,19 +6,19 @@ import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_icon.dart'
     show PrayerIcon;
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/schedule_alert_picker.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/schedule_status_chips.dart';
-import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
-import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -85,7 +85,8 @@ class SchedulePrayerRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final colors = theme.colors;
-    final completionDay = row.completionDate ??
+    final completionDay =
+        row.completionDate ??
         DateTime(
           row.prayerTime.year,
           row.prayerTime.month,

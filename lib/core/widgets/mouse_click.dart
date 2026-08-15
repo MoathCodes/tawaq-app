@@ -7,12 +7,14 @@ import 'package:tawaq/core/widgets/desktop_selection.dart';
 class MouseClick extends StatelessWidget {
   /// Creates a mouse click detector.
   const MouseClick({
-    required this.child,
+    this.child = const SizedBox.shrink(),
     super.key,
     this.onClick,
+    this.builder,
     this.onHoverChange,
     this.disabled,
     this.semanticsLabel,
+    this.semanticsTooltip,
   });
 
   /// The widget below this widget in the tree.
@@ -29,6 +31,17 @@ class MouseClick extends StatelessWidget {
 
   /// Merged accessibility label when this control should be announced.
   final String? semanticsLabel;
+
+  /// Merged accessibility tooltip when this control should be announced.
+  final String? semanticsTooltip;
+
+  /// Optional builder for customizing the child widget based on the current state of the mouse click.
+  final Widget Function(
+    BuildContext context,
+    Set<FTappableVariant> states,
+    Widget? child,
+  )?
+  builder;
 
   @override
   Widget build(BuildContext context) {
@@ -51,12 +64,15 @@ class MouseClick extends StatelessWidget {
               SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
             }
           : null,
-      builder: (context, states, child) => FFocusedOutline(
-        focused: states.contains(FTappableVariant.primaryFocused),
-        child: child,
-      ),
+      builder:
+          builder ??
+          (context, states, child) => FFocusedOutline(
+            focused: states.contains(FTappableVariant.primaryFocused),
+            child: child,
+          ),
       excludeSemantics: semanticsLabel != null,
       semanticsLabel: semanticsLabel,
+      semanticsTooltip: semanticsTooltip,
       onHoverChange: onHoverChange,
       onPress: isDisabled ? null : onClick,
       child: content,

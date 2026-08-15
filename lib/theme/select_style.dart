@@ -89,7 +89,7 @@ FSelectStyle selectStyle({
   final resolvedTouch = touch ?? _useTouchVariant();
   final inherited = FSelectStyle.inherit(
     colors: colors,
-    icons: FIcons.lucide(),
+    icons: const FIcons.lucide(),
     typography: typography,
     style: style,
     touch: resolvedTouch,

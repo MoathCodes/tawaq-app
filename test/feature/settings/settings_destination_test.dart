@@ -25,7 +25,7 @@ void main() {
       expect(tabs, hasLength(3));
       expect(
         tabs.map((t) => t.key),
-        isNot(contains('keyboardShortcutsTabTitle')),
+        isNot(contains(SettingsTabId.keyboardShortcuts.wireValue)),
       );
     });
 
@@ -33,7 +33,7 @@ void main() {
       final tabs = visibleTabs(showKeyboardShortcuts: true);
 
       expect(tabs, hasLength(4));
-      expect(tabs.last.key, 'keyboardShortcutsTabTitle');
+      expect(tabs.last.key, SettingsTabId.keyboardShortcuts.wireValue);
     });
   });
 
@@ -77,6 +77,50 @@ void main() {
           showKeyboardShortcuts: false,
         ),
         -1,
+      );
+    });
+  });
+
+  group('resolveSettingsRouteTab', () {
+    test('invalid URL restores persisted checkpoint', () {
+      expect(
+        resolveSettingsRouteTab(
+          routeKey: 'removed-tab',
+          persistedKey: SettingsTabId.location.wireValue,
+          showKeyboardShortcuts: true,
+        ),
+        SettingsTabId.location.wireValue,
+      );
+    });
+
+    test('platform-inapplicable URL restores persisted checkpoint', () {
+      expect(
+        resolveSettingsRouteTab(
+          routeKey: SettingsTabId.keyboardShortcuts.wireValue,
+          persistedKey: SettingsTabId.prayerTimes.wireValue,
+          showKeyboardShortcuts: false,
+        ),
+        SettingsTabId.prayerTimes.wireValue,
+      );
+    });
+  });
+
+  group('settingsTabIsSettled', () {
+    test('rejects midpoint swipe and tap animation states', () {
+      expect(
+        settingsTabIsSettled(indexIsChanging: false, offset: -0.5),
+        isFalse,
+      );
+      expect(
+        settingsTabIsSettled(indexIsChanging: true, offset: 0),
+        isFalse,
+      );
+    });
+
+    test('accepts a fully settled tab', () {
+      expect(
+        settingsTabIsSettled(indexIsChanging: false, offset: 0),
+        isTrue,
       );
     });
   });

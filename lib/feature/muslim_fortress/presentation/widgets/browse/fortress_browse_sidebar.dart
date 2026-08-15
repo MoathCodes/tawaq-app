@@ -91,12 +91,13 @@ class FortressBrowseSidebar extends HookConsumerWidget {
           children: [
             Text(
               l10n.muslimFortress,
-              style: (compact
-                      ? theme.typography.body.lg
-                      : theme.typography.body.xl2)
-                  .copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style:
+                  (compact
+                          ? theme.typography.body.lg
+                          : theme.typography.body.xl2)
+                      .copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
             ),
             SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
             NonSelectable(
@@ -212,7 +213,7 @@ class FortressCategoryListTile extends ConsumerWidget {
     final chapterId = category.chapterId;
     final isSelected = ref.watch(
       fortressScreenControllerProvider.select(
-        (s) => s.selectedCategory?.chapterId == chapterId,
+        (s) => s.selectedChapterId == chapterId,
       ),
     );
 

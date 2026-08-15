@@ -3,7 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/onboarding/presentation/models/onboarding_steps.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Bottom navigation for onboarding steps.
@@ -32,7 +32,8 @@ class OnboardingNavigationBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
-    final canContinue = !step.requiresLocation ||
+    final canContinue =
+        !step.requiresLocation ||
         ref.watch(
           prayerSettingsProvider.select(
             (s) => s.value?.isLocationReady ?? false,

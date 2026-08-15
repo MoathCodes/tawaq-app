@@ -2,7 +2,6 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
-import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart' show AdhanSettingsNotifier;
 import 'package:tawaq/gen/assets.gen.dart';
 
 part 'adhan_settings.freezed.dart';
@@ -219,7 +218,7 @@ abstract class AdhanSettings with _$AdhanSettings {
     );
   }
 
-  /// Parses JSON persisted by [AdhanSettingsNotifier].
+  /// Parses persisted JSON.
   factory AdhanSettings.fromJson(Map<String, dynamic> json) =>
       _$AdhanSettingsFromJson(json);
 }

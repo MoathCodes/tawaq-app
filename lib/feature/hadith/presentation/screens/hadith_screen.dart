@@ -1,11 +1,8 @@
 import 'dart:async';
 
-import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/layout/collapsible_horizontal_split_pane.dart';
 import 'package:tawaq/core/layout/lazy_tab_content.dart';
 import 'package:tawaq/core/layout/responsive_horizontal_split.dart';
@@ -24,26 +21,10 @@ import 'package:tawaq/theme/theme.dart';
 /// Main Hadith search and exploration page.
 class HadithPage extends HookConsumerWidget {
   /// Creates the Hadith page widget.
-  const HadithPage({
-    super.key,
-    this.initialHadiths = const <DetailedHadith>[],
-  });
-
-  /// Initial hadith list used when opening the page in specific-list mode.
-  final List<DetailedHadith> initialHadiths;
+  const HadithPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.watch(dorarInitProvider);
-    useEffect(() {
-      unawaited(
-        ref
-            .read(hadithSessionControllerProvider.notifier)
-            .bootstrap(hadiths: initialHadiths),
-      );
-      return null;
-    }, [initialHadiths]);
-
     final screenController = ref.read(hadithSessionControllerProvider.notifier);
 
     return AppShortcutScope(
@@ -178,9 +159,7 @@ class _HadithSidePanel extends ConsumerWidget {
     final isSearchMode = ref.watch(
       hadithSessionControllerProvider.select((s) => s.isSearchMode),
     );
-    final selectedHadith = ref.watch(
-      hadithSessionControllerProvider.select((s) => s.selectedHadith),
-    );
+    final selectedHadith = ref.watch(selectedHadithProvider);
     final settings =
         ref.watch(hadithScreenSettingsProvider).asData?.value ??
         HadithPersistedSettings.initial();
@@ -251,8 +230,7 @@ class _HadithSidePanel extends ConsumerWidget {
               control: FTabControl.lifted(
                 index: tabIndex,
                 onChange: (index) {
-                  if (!isSearchMode &&
-                      index != HadithPanelTab.details.index) {
+                  if (!isSearchMode && index != HadithPanelTab.details.index) {
                     return;
                   }
 

@@ -2,7 +2,7 @@ import 'package:free_map/free_map.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/feature/settings/domain/services/location_service.dart';
+import 'package:tawaq/feature/prayer/domain/services/location_service.dart';
 
 part 'location_service_provider.g.dart';
 

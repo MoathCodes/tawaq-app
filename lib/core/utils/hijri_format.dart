@@ -1,4 +1,5 @@
 import 'package:hijri_date/hijri.dart';
+import 'package:timezone/timezone.dart' show TZDateTime;
 
 /// Hijri date formatting keyed off Gregorian [DateTime]s.
 ///

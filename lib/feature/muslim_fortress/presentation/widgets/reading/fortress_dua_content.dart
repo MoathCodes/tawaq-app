@@ -8,8 +8,8 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
@@ -93,7 +93,9 @@ class _ThikrPreviewText extends StatelessWidget {
     final isQuran = dua.isQuranicPassage;
 
     var style = theme.typography.body.sm.copyWith(
-      color: isExpanded ? theme.colors.foreground : theme.colors.mutedForeground,
+      color: isExpanded
+          ? theme.colors.foreground
+          : theme.colors.mutedForeground,
       height: isQuran ? 2 : 1.6,
       fontSize: isQuran ? (isExpanded ? 22 : 20) : null,
       fontWeight: isExpanded && isQuran ? FontWeight.w600 : FontWeight.w500,

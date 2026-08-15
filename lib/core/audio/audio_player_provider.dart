@@ -16,18 +16,113 @@ TawaqAudioService tawaqAudioService(Ref ref) {
   return service;
 }
 
-/// High-level playback controller for adhan transport and UI state mirroring.
+/// Canonical native-event snapshot for all shared audio transport state.
 @Riverpod(keepAlive: true)
-class AudioPlayerController extends _$AudioPlayerController {
+class AudioSession extends _$AudioSession {
   @override
-  PlaybackState build() {
+  AudioSessionSnapshot build() {
     final service = ref.watch(tawaqAudioServiceProvider);
-    final sub = service.stateStream.listen((next) {
-      state = next;
+    final subscriptions = <StreamSubscription<dynamic>>[
+      service.stateStream.listen((next) => _applyLifecycle(service, next)),
+      service.leaseOwnerStream.listen((owner) {
+        state = state.copyWith(owner: owner, clearOwner: owner == null);
+      }),
+      service.playWhenReadyStream.listen(
+        (intent) => state = state.copyWith(playIntent: intent),
+      ),
+      service.positionStream.listen(
+        (position) => state = state.copyWith(position: position),
+      ),
+      service.durationStream.listen(
+        (duration) => state = state.copyWith(duration: duration),
+      ),
+      service.bufferedRangesStream.listen(
+        (ranges) => state = state.copyWith(
+          bufferedRanges: List.unmodifiable(ranges),
+        ),
+      ),
+      service.currentIndexStream.listen(
+        (index) => state = state.copyWith(playlistIndex: index),
+      ),
+      service.remainingAbLoopsStream.listen((loops) {
+        state = state.copyWith(
+          remainingAbLoops: loops,
+          clearRemainingAbLoops: loops == null,
+        );
+      }),
+    ];
+    ref.onDispose(() {
+      for (final subscription in subscriptions) {
+        unawaited(subscription.cancel());
+      }
     });
-    ref.onDispose(sub.cancel);
-    return service.state;
+    return _snapshotFrom(service, service.state);
   }
+
+  void _applyLifecycle(TawaqAudioService service, PlaybackState next) {
+    state = _snapshotFrom(service, next, previous: state);
+  }
+
+  AudioSessionSnapshot _snapshotFrom(
+    TawaqAudioService service,
+    PlaybackState playback, {
+    AudioSessionSnapshot previous = const AudioSessionSnapshot(),
+  }) {
+    final track = switch (playback) {
+      PlaybackLoading(:final track) ||
+      PlaybackBuffering(:final track) ||
+      PlaybackPlaying(:final track) ||
+      PlaybackPaused(:final track) ||
+      PlaybackCompleted(:final track) => track,
+      PlaybackError(:final track) => track,
+      PlaybackIdle() => null,
+    };
+    final lifecycle = switch (playback) {
+      PlaybackIdle() => AudioSessionLifecycle.idle,
+      PlaybackLoading() => AudioSessionLifecycle.loading,
+      PlaybackBuffering() => AudioSessionLifecycle.buffering,
+      PlaybackPlaying() => AudioSessionLifecycle.playing,
+      PlaybackPaused() => AudioSessionLifecycle.paused,
+      PlaybackCompleted() => AudioSessionLifecycle.completed,
+      PlaybackError() => AudioSessionLifecycle.error,
+    };
+    final position = switch (playback) {
+      PlaybackPlaying(:final position) ||
+      PlaybackPaused(:final position) ||
+      PlaybackCompleted(:final position) => position,
+      _ => previous.position,
+    };
+    final duration = switch (playback) {
+      PlaybackPlaying(:final duration) ||
+      PlaybackPaused(:final duration) ||
+      PlaybackCompleted(:final duration) => duration,
+      _ => previous.duration,
+    };
+    final resetsTransport =
+        playback is PlaybackIdle || playback is PlaybackLoading;
+    return previous.copyWith(
+      owner: service.currentLeaseOwner,
+      clearOwner: service.currentLeaseOwner == null,
+      track: track,
+      clearTrack: track == null,
+      lifecycle: lifecycle,
+      playIntent: !resetsTransport && service.playWhenReady,
+      position: resetsTransport ? Duration.zero : position,
+      duration: resetsTransport ? Duration.zero : duration,
+      bufferedRanges: resetsTransport ? const [] : null,
+      playlistIndex: resetsTransport ? 0 : null,
+      clearRemainingAbLoops: resetsTransport,
+      error: playback is PlaybackError ? playback.message : null,
+      clearError: playback is! PlaybackError,
+    );
+  }
+}
+
+/// Command-only controller for adhan transport.
+@Riverpod(keepAlive: true)
+class AdhanAudioController extends _$AdhanAudioController {
+  @override
+  void build() {}
 
   TawaqAudioService get _service => ref.read(tawaqAudioServiceProvider);
 

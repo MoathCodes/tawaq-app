@@ -7,16 +7,16 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/desktop/desktop_shell.dart';
 import 'package:tawaq/core/desktop/single_instance.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/core/widgets/tawaq_scroll_behavior.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/adhan/adhan_alert_host.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
@@ -25,8 +25,8 @@ import 'package:timezone/data/latest.dart' as tz;
 /// The entry point of the application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq');
   await ensureSingleDesktopInstance();
+  await MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq');
   await initFileLogging();
   tz.initializeTimeZones();
   runApp(const ProviderScope(child: AppBootstrap()));

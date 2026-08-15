@@ -84,7 +84,8 @@ class TawaqAudioService {
   }) : _player = player ?? Player(configuration: kTawaqPlayerConfiguration) {
     // Watchdog must stop the engine — releasing ownership alone leaves an
     // orphaned loaded track that fights the next owner.
-    _leases = leaseRegistry ??
+    _leases =
+        leaseRegistry ??
         AudioLeaseRegistry(
           watchdogTimeout: watchdogTimeout,
           onWatchdogForceRelease: (owner) {
@@ -92,6 +93,7 @@ class TawaqAudioService {
               'Watchdog force-releasing lease for $owner',
               name: 'tawaq.audio',
             );
+            _leaseOwnerController.add(null);
             unawaited(_clearEngineAfterWatchdog());
           },
         );
@@ -120,7 +122,9 @@ class TawaqAudioService {
           _onNaturalCompletion();
         }
       }),
-      _player.stream.duration.listen((_) => unawaited(_refreshPublishedSession())),
+      _player.stream.duration.listen(
+        (_) => unawaited(_refreshPublishedSession()),
+      ),
       _player.stream.error.listen((error) {
         final track = _activeTrack;
         _activeTrack = null;
@@ -149,10 +153,12 @@ class TawaqAudioService {
               _activeTrack = null;
               _trackCompleted = false;
               _cancelFade();
-              _emit(PlaybackError(
-                track: track,
-                message: 'network drop: ended at $position of $duration',
-              ));
+              _emit(
+                PlaybackError(
+                  track: track,
+                  message: 'network drop: ended at $position of $duration',
+                ),
+              );
             } else {
               _onNaturalCompletion();
             }
@@ -161,10 +167,12 @@ class TawaqAudioService {
             _activeTrack = null;
             _trackCompleted = false;
             _cancelFade();
-            _emit(PlaybackError(
-              track: track,
-              message: 'endFile error: ${endFile.error}',
-            ));
+            _emit(
+              PlaybackError(
+                track: track,
+                message: 'endFile error: ${endFile.error}',
+              ),
+            );
           case MpvEndFileReason.stop:
           case MpvEndFileReason.quit:
           case MpvEndFileReason.redirect:
@@ -201,6 +209,7 @@ class TawaqAudioService {
   _ActiveFade? _activeFade;
 
   final _volumeController = StreamController<double>.broadcast();
+  final _leaseOwnerController = StreamController<String?>.broadcast();
 
   // ---- Lease state ----------------------------------------------------------
   // Pure, mpv-free ownership coordination is delegated to AudioLeaseRegistry
@@ -211,6 +220,9 @@ class TawaqAudioService {
 
   /// Current lease owner, or null when idle.
   String? get currentLeaseOwner => _leases.currentOwner;
+
+  /// Emits whenever exclusive transport ownership changes.
+  Stream<String?> get leaseOwnerStream => _leaseOwnerController.stream;
 
   PlaybackState get state => _state;
 
@@ -231,6 +243,15 @@ class TawaqAudioService {
   Stream<Duration> get positionStream => _player.stream.position;
 
   Stream<Duration> get durationStream => _player.stream.duration;
+
+  /// Seekable cache intervals without exposing the platform player to UI.
+  Stream<List<PlaybackBufferRange>> get bufferedRangesStream =>
+      _player.stream.demuxerCacheState.map(
+        (state) => [
+          for (final range in state.seekableRanges)
+            (start: range.start, end: range.end),
+        ],
+      );
 
   /// Emits the currently active playlist index (0-based) whenever it
   /// changes. Derived from [PlayerStream.playlist].
@@ -847,8 +868,7 @@ class TawaqAudioService {
   Future<void> setAbLoopB(Duration? b) => _player.setAbLoopB(b);
 
   /// Sets the number of A-B loop repetitions. Pass `null` for infinite.
-  Future<void> setAbLoopCount(int? count) =>
-      _player.setAbLoopCount(count);
+  Future<void> setAbLoopCount(int? count) => _player.setAbLoopCount(count);
 
   /// Remaining A-B loop iterations (null when no loop or infinite).
   Stream<int?> get remainingAbLoopsStream => _player.stream.remainingAbLoops;
@@ -887,6 +907,7 @@ class TawaqAudioService {
     _stopLeaseKeepAliveTimer();
     await _player.setMediaSession(null);
     _leases.releaseCurrent();
+    _leaseOwnerController.add(null);
   }
 
   /// Releases native handles. Called on app shutdown. Idempotent.
@@ -897,6 +918,7 @@ class TawaqAudioService {
     _stopLeaseKeepAliveTimer();
     await _leases.dispose();
     await _volumeController.close();
+    await _leaseOwnerController.close();
     await _completionController.close();
     for (final sub in _subscriptions) {
       await sub.cancel();
@@ -914,14 +936,19 @@ class TawaqAudioService {
   /// forces a release. Pass [force] to steal immediately: the prior session is
   /// stopped (no fade) then ownership transfers — callers need not race a
   /// separate suspend ritual for correctness.
-  Future<AudioLease> acquire({required String owner, bool force = false}) async {
+  Future<AudioLease> acquire({
+    required String owner,
+    bool force = false,
+  }) async {
     if (force) {
       final holder = _leases.currentOwner;
       if (holder != null && holder != owner) {
         await _unloadEngine(releaseLease: true);
       }
     }
-    return _leases.acquire(owner: owner, force: force);
+    final lease = await _leases.acquire(owner: owner, force: force);
+    _leaseOwnerController.add(owner);
+    return lease;
   }
 
   /// Unloads the loaded track and optionally releases the lease.
@@ -941,6 +968,7 @@ class TawaqAudioService {
     _emit(const PlaybackIdle());
     if (releaseLease) {
       _leases.releaseCurrent();
+      _leaseOwnerController.add(null);
     }
   }
 

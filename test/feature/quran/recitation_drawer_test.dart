@@ -10,13 +10,13 @@ import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/audio_service.dart';
+import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
-import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
@@ -49,6 +49,12 @@ Widget _wrap(Widget child, {TextDirection dir = TextDirection.ltr}) {
       ),
     ),
   );
+}
+
+class _TestRecitationOfflineStore extends RecitationOfflineStore {
+  @override
+  Future<RecitationOfflineState> build() async =>
+      const RecitationOfflineState(totalBytes: 2 * 1024 * 1024);
 }
 
 void main() {
@@ -221,10 +227,11 @@ void main() {
       await tester.pump();
 
       // Closed initially: controller at 0, no panel in tree.
-      final stateClosed = tester
-          .state<RecitationDrawerSurfaceState>(find.byType(
-        RecitationDrawerSurface,
-      ));
+      final stateClosed = tester.state<RecitationDrawerSurfaceState>(
+        find.byType(
+          RecitationDrawerSurface,
+        ),
+      );
       expect(stateClosed.controller.value, 0);
       expect(find.byType(SizedBox), findsWidgets);
 
@@ -240,10 +247,11 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 50));
 
-      final stateOpen = tester
-          .state<RecitationDrawerSurfaceState>(find.byType(
-        RecitationDrawerSurface,
-      ));
+      final stateOpen = tester.state<RecitationDrawerSurfaceState>(
+        find.byType(
+          RecitationDrawerSurface,
+        ),
+      );
       // Forward animation has advanced past 0.
       expect(stateOpen.controller.value, greaterThan(0));
       expect(stateOpen.controller.value, lessThanOrEqualTo(1));
@@ -266,10 +274,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final stateOpen = tester
-          .state<RecitationDrawerSurfaceState>(find.byType(
-        RecitationDrawerSurface,
-      ));
+      final stateOpen = tester.state<RecitationDrawerSurfaceState>(
+        find.byType(
+          RecitationDrawerSurface,
+        ),
+      );
       expect(stateOpen.controller.value, 1);
 
       // Close and pump partway through the reverse animation.
@@ -284,10 +293,11 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 50));
 
-      final stateClosing = tester
-          .state<RecitationDrawerSurfaceState>(find.byType(
-        RecitationDrawerSurface,
-      ));
+      final stateClosing = tester.state<RecitationDrawerSurfaceState>(
+        find.byType(
+          RecitationDrawerSurface,
+        ),
+      );
       // Reverse animation has started: value dropped below 1 but above 0.
       expect(stateClosing.controller.value, lessThan(1));
       expect(stateClosing.controller.value, greaterThanOrEqualTo(0));
@@ -316,8 +326,9 @@ void main() {
       expect(closeCalls, 1);
     });
 
-    testWidgets('RTL directionality does not throw and animates open',
-        (tester) async {
+    testWidgets('RTL directionality does not throw and animates open', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           Directionality(
@@ -332,10 +343,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final state = tester
-          .state<RecitationDrawerSurfaceState>(find.byType(
-        RecitationDrawerSurface,
-      ));
+      final state = tester.state<RecitationDrawerSurfaceState>(
+        find.byType(
+          RecitationDrawerSurface,
+        ),
+      );
       expect(state.controller.value, 1);
     });
   });
@@ -349,36 +361,47 @@ void main() {
     setUp(() {
       stream = _FakePlayerStream();
       player = _FakePlayer();
-      demuxerCacheState =
-          StreamController<DemuxerCacheState>.broadcast();
-      when(() => stream.demuxerCacheState)
-          .thenAnswer((_) => demuxerCacheState.stream);
-      when(() => stream.playing)
-          .thenAnswer((_) => const Stream<bool>.empty());
-      when(() => stream.playWhenReady)
-          .thenAnswer((_) => const Stream<bool>.empty());
-      when(() => stream.completed)
-          .thenAnswer((_) => const Stream<bool>.empty());
-      when(() => stream.eofReached)
-          .thenAnswer((_) => const Stream<bool>.empty());
-      when(() => stream.error)
-          .thenAnswer((_) => const Stream<MpvPlayerError>.empty());
-      when(() => stream.endFile)
-          .thenAnswer((_) => const Stream<MpvFileEndedEvent>.empty());
-      when(() => stream.buffering)
-          .thenAnswer((_) => const Stream<bool>.empty());
-      when(() => stream.pausedForCache)
-          .thenAnswer((_) => const Stream<bool>.empty());
-      when(() => stream.seekCompleted)
-          .thenAnswer((_) => const Stream<void>.empty());
-      when(() => stream.position)
-          .thenAnswer((_) => const Stream<Duration>.empty());
-      when(() => stream.duration)
-          .thenAnswer((_) => const Stream<Duration>.empty());
-      when(() => stream.remainingAbLoops)
-          .thenAnswer((_) => const Stream<int?>.empty());
-      when(() => stream.mediaSessionCommands)
-          .thenAnswer((_) => const Stream<MediaSessionCommand>.empty());
+      demuxerCacheState = StreamController<DemuxerCacheState>.broadcast();
+      when(
+        () => stream.demuxerCacheState,
+      ).thenAnswer((_) => demuxerCacheState.stream);
+      when(() => stream.playing).thenAnswer((_) => const Stream<bool>.empty());
+      when(
+        () => stream.playWhenReady,
+      ).thenAnswer((_) => const Stream<bool>.empty());
+      when(
+        () => stream.completed,
+      ).thenAnswer((_) => const Stream<bool>.empty());
+      when(
+        () => stream.eofReached,
+      ).thenAnswer((_) => const Stream<bool>.empty());
+      when(
+        () => stream.error,
+      ).thenAnswer((_) => const Stream<MpvPlayerError>.empty());
+      when(
+        () => stream.endFile,
+      ).thenAnswer((_) => const Stream<MpvFileEndedEvent>.empty());
+      when(
+        () => stream.buffering,
+      ).thenAnswer((_) => const Stream<bool>.empty());
+      when(
+        () => stream.pausedForCache,
+      ).thenAnswer((_) => const Stream<bool>.empty());
+      when(
+        () => stream.seekCompleted,
+      ).thenAnswer((_) => const Stream<void>.empty());
+      when(
+        () => stream.position,
+      ).thenAnswer((_) => const Stream<Duration>.empty());
+      when(
+        () => stream.duration,
+      ).thenAnswer((_) => const Stream<Duration>.empty());
+      when(
+        () => stream.remainingAbLoops,
+      ).thenAnswer((_) => const Stream<int?>.empty());
+      when(
+        () => stream.mediaSessionCommands,
+      ).thenAnswer((_) => const Stream<MediaSessionCommand>.empty());
       when(() => player.stream).thenReturn(stream);
       when(() => player.state).thenReturn(const PlayerState());
       when(() => player.setAudioClientName(any())).thenAnswer((_) async {});
@@ -416,11 +439,9 @@ void main() {
             MushafReaderController.withRepository(repository: _FakeRepo()),
           ),
           recitationDownloadProgressProvider.overrideWithValue(null),
-          cachedRecitationsSnapshotProvider.overrideWithValue(
-            const AsyncData((
-              files: <CachedRecitation>[],
-              totalBytes: 2 * 1024 * 1024,
-            )),
+          audioSessionProvider.overrideWithValue(const AudioSessionSnapshot()),
+          recitationOfflineStoreProvider.overrideWith(
+            _TestRecitationOfflineStore.new,
           ),
           recitersProvider.overrideWithValue(const AsyncData(<Reciter>[])),
           localeProvider.overrideWith(_TestLocaleNotifier.new),
@@ -461,8 +482,9 @@ void main() {
       expect(find.text('2 MB'), findsOneWidget);
     });
 
-    testWidgets('opens offline files dialog when cache tile tapped',
-        (tester) async {
+    testWidgets('opens offline files dialog when cache tile tapped', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(400, 2000);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -476,7 +498,7 @@ void main() {
       await tester.pump();
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      expect(find.byType(PlayerDialogShell), findsOneWidget);
+      expect(find.byType(TawaqDialogShell), findsOneWidget);
     });
   });
 }
@@ -520,8 +542,7 @@ class _FakeRepo implements IQuranRepository {
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
-  ]) async =>
-      throw UnimplementedError();
+  ]) async => throw UnimplementedError();
 
   @override
   Future<String> getBasmalah() async => '';
@@ -567,12 +588,12 @@ class _FakeRepo implements IQuranRepository {
 
   @override
   Future<QuranPage> getPage(int page) async => QuranPage(
-        pageNumber: page,
-        glyphText: '',
-        lines: const [],
-        surahs: const [],
-        juzNumber: 1,
-      );
+    pageNumber: page,
+    glyphText: '',
+    lines: const [],
+    surahs: const [],
+    juzNumber: 1,
+  );
 
   @override
   QuranPage? peekCachedPage(int page) => null;
@@ -597,8 +618,7 @@ class _FakeRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}

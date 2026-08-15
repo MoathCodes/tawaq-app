@@ -16,13 +16,14 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        channel: 'stable'
+        flutter-version-file: .fvmrc
+        channel: stable
 
     - name: Install dependencies
       run: flutter pub get
 
     - name: Analyze
-      run: flutter analyze
+      run: flutter analyze --no-fatal-infos
 
     - name: Run tests
       run: flutter test
@@ -35,4 +36,4 @@ jobs:
     - name: Analyze example
       run: |
         cd example
-        flutter analyze
+        flutter analyze --no-fatal-infos

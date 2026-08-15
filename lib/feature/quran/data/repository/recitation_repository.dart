@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:logger/logger.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
@@ -68,9 +67,10 @@ class RecitationRepository {
             moshaf: reciter.moshaf
                 .map(
                   (m) => m.copyWith(
-                    timingReadId: readByServer[normalizeRecitationServerUrl(
-                      m.server,
-                    )],
+                    timingReadId:
+                        readByServer[normalizeRecitationServerUrl(
+                          m.server,
+                        )],
                   ),
                 )
                 .toList(),
@@ -165,19 +165,21 @@ class RecitationRepository {
       // errors, which are caught below. [onProgress] is forwarded each event
       // live so callers (e.g. the recitation controller) can drive a progress
       // UI without waiting for the awaited resolution.
-      await _cache.downloadAudio(
-        reciterId: reciter.id,
-        moshafId: moshaf.id,
-        surah: surah,
-        reciterName: reciter.name,
-        riwayahName: moshaf.name,
-        surahName: surahName,
-        url: url,
-        cancellationToken: token,
-      ).forEach((event) {
-        events.add(event);
-        onProgress?.call(event);
-      });
+      await _cache
+          .downloadAudio(
+            reciterId: reciter.id,
+            moshafId: moshaf.id,
+            surah: surah,
+            reciterName: reciter.name,
+            riwayahName: moshaf.name,
+            surahName: surahName,
+            url: url,
+            cancellationToken: token,
+          )
+          .forEach((event) {
+            events.add(event);
+            onProgress?.call(event);
+          });
     } on Object catch (error, stack) {
       failure = error;
       _logger.w(
@@ -281,13 +283,4 @@ class RecitationRepository {
     );
     return file != null;
   }
-
-  /// Lists every cached surah audio file.
-  Future<List<CachedRecitation>> listCached() => _cache.listCached();
-
-  /// Deletes a cached audio file at [path].
-  Future<void> deleteCached(String path) => _cache.deleteCached(path);
-
-  /// The directory holding cached surah audio.
-  Future<Directory> audioDirectory() => _cache.audioDirectory();
 }

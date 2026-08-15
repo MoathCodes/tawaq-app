@@ -87,7 +87,8 @@ class WindowControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final maximized = ref.watch(windowMaximizedProvider).value ?? false;
+    final maximized =
+        ref.watch(nativeWindowStateProvider).value?.maximized ?? false;
     final theme = FTheme.of(context);
     final l10n = context.l10n;
     final isMacStyle = Platform.isMacOS || (forceMacStyle ?? false);

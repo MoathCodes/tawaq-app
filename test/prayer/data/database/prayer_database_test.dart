@@ -3,9 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -275,29 +275,32 @@ void main() {
         expect(result.every((c) => c.completionTime.day == 15), isTrue);
       });
 
-      test('matches prayer-location calendar day across device timezones', () async {
-        final mecca = getLocation('Asia/Riyadh');
-        final nyc = getLocation('America/New_York');
-        // 22:00 in New York on June 4 is 05:00 on June 5 in Mecca.
-        final deviceStoredTime = TZDateTime(nyc, 2024, 6, 4, 22);
+      test(
+        'matches prayer-location calendar day across device timezones',
+        () async {
+          final mecca = getLocation('Asia/Riyadh');
+          final nyc = getLocation('America/New_York');
+          // 22:00 in New York on June 4 is 05:00 on June 5 in Mecca.
+          final deviceStoredTime = TZDateTime(nyc, 2024, 6, 4, 22);
 
-        await db.insertOrUpdateCompletion(
-          PrayerCompletion(
-            id: null,
-            prayer: Prayer.fajr,
-            completionTime: deviceStoredTime,
-            status: CompletionStatus.onTime,
-          ),
-          mecca,
-        );
+          await db.insertOrUpdateCompletion(
+            PrayerCompletion(
+              id: null,
+              prayer: Prayer.fajr,
+              completionTime: deviceStoredTime,
+              status: CompletionStatus.onTime,
+            ),
+            mecca,
+          );
 
-        final result = await db.getCompletionsForDate(
-          DateTime(2024, 6, 5),
-          mecca,
-        );
+          final result = await db.getCompletionsForDate(
+            DateTime(2024, 6, 5),
+            mecca,
+          );
 
-        expect(result, hasLength(1));
-      });
+          expect(result, hasLength(1));
+        },
+      );
 
       test('returns empty list when no completions for date', () async {
         await db.insertOrUpdateCompletion(
@@ -466,8 +469,8 @@ void main() {
               completionTime: date,
               status: statuses[i],
             ),
-          location,
-        );
+            location,
+          );
         }
       }
 
@@ -593,21 +596,24 @@ void main() {
         expect(await isDayFullyComplete(repo, location, date), isFalse);
       });
 
-      test('counts day with all 5 obligatory even if sunnah also logged', () async {
-        final date = DateTime(2024, 5, 16);
-        await seedDay(date, List.filled(5, CompletionStatus.onTime));
-        await db.insertOrUpdateCompletion(
-          PrayerCompletion(
-            id: null,
-            prayer: Prayer.sunrise,
-            completionTime: date,
-            status: CompletionStatus.onTime,
-          ),
-          location,
-        );
+      test(
+        'counts day with all 5 obligatory even if sunnah also logged',
+        () async {
+          final date = DateTime(2024, 5, 16);
+          await seedDay(date, List.filled(5, CompletionStatus.onTime));
+          await db.insertOrUpdateCompletion(
+            PrayerCompletion(
+              id: null,
+              prayer: Prayer.sunrise,
+              completionTime: date,
+              status: CompletionStatus.onTime,
+            ),
+            location,
+          );
 
-        expect(await isDayFullyComplete(repo, location, date), isTrue);
-      });
+          expect(await isDayFullyComplete(repo, location, date), isTrue);
+        },
+      );
     });
 
     group('deleteCompletion', () {

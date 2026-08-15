@@ -51,18 +51,18 @@ RecitationRepository _repo(Directory root, http.Client client) {
 
 /// A fixed reciter fixture whose cache path is stable across calls.
 Reciter _reciter() => const Reciter(
+  id: 1,
+  name: 'Test',
+  moshaf: [
+    Moshaf(
       id: 1,
-      name: 'Test',
-      moshaf: [
-        Moshaf(
-          id: 1,
-          name: 'Hafs',
-          server: 'https://example.com/akdr/',
-          surahList: [1, 2],
-          surahTotal: 2,
-        ),
-      ],
-    );
+      name: 'Hafs',
+      server: 'https://example.com/akdr/',
+      surahList: [1, 2],
+      surahTotal: 2,
+    ),
+  ],
+);
 
 /// The network fallback URL for surah 1 of [_reciter].
 const kSurah1Url = 'https://example.com/akdr/001.mp3';
@@ -119,9 +119,9 @@ void main() {
       // Atomic rename: final .mp3 exists, .part does not.
       final audioDir = Directory('${tempDir.path}/audio');
       final files = audioDir.listSync(recursive: true);
-      final mp3s = files
-          .whereType<File>()
-          .where((f) => f.path.endsWith('.mp3'));
+      final mp3s = files.whereType<File>().where(
+        (f) => f.path.endsWith('.mp3'),
+      );
       expect(mp3s, hasLength(1));
       expect(
         files.where((f) => f.path.endsWith('.part')),
@@ -130,76 +130,78 @@ void main() {
       );
     });
 
-    test('concurrent download joins in-flight and yields cached file', () async {
-      final controller = StreamController<List<int>>();
-      final client = _client(
-        (_) => http.StreamedResponse(
-          controller.stream,
-          200,
-          contentLength: 5,
-        ),
-      );
-      final cache = _cache(tempDir, client);
-      final tokenA = CancellationToken();
-      final tokenB = CancellationToken();
+    test(
+      'concurrent download joins in-flight and yields cached file',
+      () async {
+        final controller = StreamController<List<int>>();
+        final client = _client(
+          (_) => http.StreamedResponse(
+            controller.stream,
+            200,
+            contentLength: 5,
+          ),
+        );
+        final cache = _cache(tempDir, client);
+        final tokenA = CancellationToken();
+        final tokenB = CancellationToken();
 
-      final firstEvents = <DownloadProgress>[];
-      final secondEvents = <DownloadProgress>[];
-      final firstDone = Completer<void>();
-      final secondStarted = Completer<void>();
+        final firstEvents = <DownloadProgress>[];
+        final firstDone = Completer<void>();
+        final secondStarted = Completer<void>();
 
-      final first = cache
-          .downloadAudio(
-            reciterId: 1,
-            moshafId: 1,
-            surah: 1,
-            reciterName: 'Test',
-            riwayahName: 'Hafs',
-            surahName: 'Al-Fatiha',
-            url: 'https://example.com/001.mp3',
-            cancellationToken: tokenA,
-          )
-          .listen(
-            (e) {
-              firstEvents.add(e);
-              if (!secondStarted.isCompleted) secondStarted.complete();
-            },
-            onDone: firstDone.complete,
-          );
+        final first = cache
+            .downloadAudio(
+              reciterId: 1,
+              moshafId: 1,
+              surah: 1,
+              reciterName: 'Test',
+              riwayahName: 'Hafs',
+              surahName: 'Al-Fatiha',
+              url: 'https://example.com/001.mp3',
+              cancellationToken: tokenA,
+            )
+            .listen(
+              (e) {
+                firstEvents.add(e);
+                if (!secondStarted.isCompleted) secondStarted.complete();
+              },
+              onDone: firstDone.complete,
+            );
 
-      await secondStarted.future.timeout(const Duration(seconds: 2));
+        await secondStarted.future.timeout(const Duration(seconds: 2));
 
-      final secondFuture = cache
-          .downloadAudio(
-            reciterId: 1,
-            moshafId: 1,
-            surah: 1,
-            reciterName: 'Test',
-            riwayahName: 'Hafs',
-            surahName: 'Al-Fatiha',
-            url: 'https://example.com/001.mp3',
-            cancellationToken: tokenB,
-          )
-          .toList();
+        final secondFuture = cache
+            .downloadAudio(
+              reciterId: 1,
+              moshafId: 1,
+              surah: 1,
+              reciterName: 'Test',
+              riwayahName: 'Hafs',
+              surahName: 'Al-Fatiha',
+              url: 'https://example.com/001.mp3',
+              cancellationToken: tokenB,
+            )
+            .toList();
 
-      controller.add(Uint8List.fromList([1, 2, 3, 4, 5]));
-      await controller.close();
-      await firstDone.future.timeout(const Duration(seconds: 2));
-      await first.cancel();
+        controller.add(Uint8List.fromList([1, 2, 3, 4, 5]));
+        await controller.close();
+        await firstDone.future.timeout(const Duration(seconds: 2));
+        await first.cancel();
 
-      final second = await secondFuture.timeout(const Duration(seconds: 2));
-      expect(second, isNotEmpty);
-      expect(second.last.receivedBytes, 5);
-      expect(second.last.totalBytes, 5);
-      expect(firstEvents, isNotEmpty);
+        final second = await secondFuture.timeout(const Duration(seconds: 2));
+        expect(second, isNotEmpty);
+        expect(second.last.receivedBytes, 5);
+        expect(second.last.totalBytes, 5);
+        expect(firstEvents, isNotEmpty);
 
-      final audioDir = Directory('${tempDir.path}/audio');
-      final mp3s = audioDir
-          .listSync(recursive: true)
-          .whereType<File>()
-          .where((f) => f.path.endsWith('.mp3'));
-      expect(mp3s, hasLength(1));
-    });
+        final audioDir = Directory('${tempDir.path}/audio');
+        final mp3s = audioDir
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.mp3'));
+        expect(mp3s, hasLength(1));
+      },
+    );
 
     test('deletes .part and does not rename on cancellation', () async {
       // A stream that yields one chunk then stays open (controller not closed)
@@ -299,7 +301,11 @@ void main() {
     test('cached surah returns file:// uri and null progress', () async {
       // Populate the cache with a successful download first.
       final okClient = _client(
-        (_) => _response(chunks: [Uint8List.fromList([1, 2, 3, 4, 5])]),
+        (_) => _response(
+          chunks: [
+            Uint8List.fromList([1, 2, 3, 4, 5]),
+          ],
+        ),
       );
       final repo = _repo(tempDir, okClient);
       final reciter = _reciter();
@@ -325,36 +331,39 @@ void main() {
       expect(result.uri, endsWith('.mp3'));
     });
 
-    test('successful download returns file:// uri and progress events', () async {
-      final client = _client(
-        (_) => _response(
-          chunks: [
-            Uint8List.fromList([1, 2, 3, 4, 5]),
-            Uint8List.fromList([6, 7, 8, 9, 10]),
-          ],
-          contentLength: 10,
-        ),
-      );
-      final repo = _repo(tempDir, client);
-      final reciter = _reciter();
-      final moshaf = reciter.moshaf.first;
+    test(
+      'successful download returns file:// uri and progress events',
+      () async {
+        final client = _client(
+          (_) => _response(
+            chunks: [
+              Uint8List.fromList([1, 2, 3, 4, 5]),
+              Uint8List.fromList([6, 7, 8, 9, 10]),
+            ],
+            contentLength: 10,
+          ),
+        );
+        final repo = _repo(tempDir, client);
+        final reciter = _reciter();
+        final moshaf = reciter.moshaf.first;
 
-      final result = await repo.resolveSurahUri(
-        reciter: reciter,
-        moshaf: moshaf,
-        surah: 1,
-        surahName: 'Al-Fatiha',
-      );
+        final result = await repo.resolveSurahUri(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: 1,
+          surahName: 'Al-Fatiha',
+        );
 
-      expect(result.progress, isNotNull);
-      final events = await result.progress!.toList();
-      // initial(0) + chunk1(5) + chunk2(10) + final-after-rename(10)
-      expect(events.length, 4);
-      expect(events.first.receivedBytes, 0);
-      expect(events.last.fraction, closeTo(1.0, 0.001));
-      expect(result.uri, startsWith('file://'));
-      expect(result.uri, endsWith('.mp3'));
-    });
+        expect(result.progress, isNotNull);
+        final events = await result.progress!.toList();
+        // initial(0) + chunk1(5) + chunk2(10) + final-after-rename(10)
+        expect(events.length, 4);
+        expect(events.first.receivedBytes, 0);
+        expect(events.last.fraction, closeTo(1.0, 0.001));
+        expect(result.uri, startsWith('file://'));
+        expect(result.uri, endsWith('.mp3'));
+      },
+    );
 
     test('non-200 download returns the network url fallback', () async {
       final client = _client(
@@ -551,7 +560,11 @@ void main() {
       var requestCount = 0;
       final client = _client((_) {
         requestCount++;
-        return _response(chunks: [Uint8List.fromList([1, 2, 3])]);
+        return _response(
+          chunks: [
+            Uint8List.fromList([1, 2, 3]),
+          ],
+        );
       });
       final repo = _repo(tempDir, client);
       final reciter = _reciter();
@@ -580,7 +593,11 @@ void main() {
 
     test('persist:true still downloads to file://', () async {
       final client = _client(
-        (_) => _response(chunks: [Uint8List.fromList([1, 2, 3, 4, 5])]),
+        (_) => _response(
+          chunks: [
+            Uint8List.fromList([1, 2, 3, 4, 5]),
+          ],
+        ),
       );
       final repo = _repo(tempDir, client);
       final reciter = _reciter();
@@ -601,7 +618,11 @@ void main() {
       'saveSurahAudio caches; later persist:false resolve returns file://',
       () async {
         final client = _client(
-          (_) => _response(chunks: [Uint8List.fromList([9, 8, 7, 6, 5])]),
+          (_) => _response(
+            chunks: [
+              Uint8List.fromList([9, 8, 7, 6, 5]),
+            ],
+          ),
         );
         final repo = _repo(tempDir, client);
         final reciter = _reciter();
@@ -625,12 +646,15 @@ void main() {
           onProgress: events.add,
         );
         expect(events, isNotEmpty);
-        expect(await repo.isSurahCached(
-          reciter: reciter,
-          moshaf: moshaf,
-          surah: 1,
-          surahName: 'Al-Fatiha',
-        ), isTrue);
+        expect(
+          await repo.isSurahCached(
+            reciter: reciter,
+            moshaf: moshaf,
+            surah: 1,
+            surahName: 'Al-Fatiha',
+          ),
+          isTrue,
+        );
 
         final offline = await repo.resolveSurahUri(
           reciter: reciter,

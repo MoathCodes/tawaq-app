@@ -7,8 +7,8 @@ import 'package:free_map/free_map.dart' show FmMap;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_screen_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_controls.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_map_section.dart';
@@ -41,7 +41,8 @@ class PrayerLocationSettings extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mapActive = !gateMapToSettingsTab ||
+    final mapActive =
+        !gateMapToSettingsTab ||
         ref.watch(
           settingsScreenSettingsProvider.select(
             (s) => s.value == kSettingsLocationTabKey,
@@ -124,9 +125,7 @@ class _UseLocationTile extends ConsumerWidget {
         ),
         title: Text(l10n.useMyLocation),
         subtitle: Text(
-          autoLocation
-              ? l10n.autoLocationEnabled
-              : l10n.autoLocationDisabled,
+          autoLocation ? l10n.autoLocationEnabled : l10n.autoLocationDisabled,
         ),
         suffix: FSwitch(
           enabled: prayerSettingsReady,

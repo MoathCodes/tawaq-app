@@ -12,4 +12,3 @@ abstract final class LocationConstants {
   /// Legacy English fallback from older app versions.
   static const legacyUnknownLocationName = 'Unknown Location';
 }
-

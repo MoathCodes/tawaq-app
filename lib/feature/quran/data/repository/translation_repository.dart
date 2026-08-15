@@ -1,6 +1,6 @@
+import 'package:sqlite3/sqlite3.dart';
 import 'package:tawaq/core/database/asset_database_service.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
-import 'package:tawaq/feature/quran/data/sources/translation_data_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/domain/services/translation_text_normalizer.dart';
 
@@ -13,7 +13,7 @@ class TranslationRepository {
   TranslationRepository(this._dbService);
 
   final AssetDatabaseService _dbService;
-  final Map<TranslationId, ITranslationDataSource> _dataSources = {};
+  final Map<TranslationId, Database> _databases = {};
 
   /// Gets a translation for a specific ayah from the given source.
   Future<Translation?> getTranslation(
@@ -21,19 +21,13 @@ class TranslationRepository {
     int sura,
     int aya,
   ) async {
-    final dataSource = await _getOrCreateDataSource(source);
-    final row = dataSource.getTranslation(sura, aya);
+    final database = await _database(source);
+    final result = database.select(
+      'SELECT * FROM translation WHERE sura = ? AND aya = ?',
+      [sura, aya],
+    );
+    final row = result.isEmpty ? null : _translationFromRow(result.first);
     return _decorate(row, source);
-  }
-
-  /// Gets all translations for a surah from the given source.
-  Future<List<Translation>> getTranslationsForSura(
-    TranslationId source,
-    int sura,
-  ) async {
-    final dataSource = await _getOrCreateDataSource(source);
-    final rows = dataSource.getTranslationsForSura(sura);
-    return rows.map((row) => _decorate(row, source)!).toList();
   }
 
   Translation? _decorate(Translation? translation, TranslationId source) {
@@ -50,19 +44,19 @@ class TranslationRepository {
     );
   }
 
-  Future<ITranslationDataSource> _getOrCreateDataSource(
-    TranslationId source,
-  ) async {
-    // Return cached data source if available
-    if (_dataSources.containsKey(source)) {
-      return _dataSources[source]!;
-    }
-
-    // Open the database and create data source
+  Future<Database> _database(TranslationId source) async {
+    final cached = _databases[source];
+    if (cached != null) return cached;
     final database = await _dbService.openDatabase(source.databasePath);
-    final dataSource = SqliteTranslationDataSource(database);
-    _dataSources[source] = dataSource;
-
-    return dataSource;
+    _databases[source] = database;
+    return database;
   }
+
+  Translation _translationFromRow(Row row) => Translation.fromMap({
+    'id': row['id'],
+    'sura': row['sura'],
+    'aya': row['aya'],
+    'translation': row['translation'],
+    'footnotes': row['footnotes'],
+  });
 }

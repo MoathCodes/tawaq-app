@@ -3,14 +3,14 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/domain/services/reciter_tags.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 
 part 'quran_screen_settings_provider.g.dart';
 
@@ -44,17 +44,11 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
     ref.read(loggerProvider).i('$_quranLogPrefix $field updated');
   }
 
-  /// Persists only navigation-critical page fields after debounced reading.
-  void commitSlimPageInfo(MushafPageInfo info) => _commit((s) {
-    final current = s.pageInfo;
-    if (current.pageNumber == info.pageNumber &&
-        current.juzNumber == info.juzNumber &&
-        current.primarySurahNumber == info.primarySurahNumber &&
-        current.firstAyahId == info.firstAyahId) {
-      return s;
-    }
-    return s.copyWith(pageInfo: info);
-  }, 'Slim Quran page');
+  /// Persists the restore-only page checkpoint.
+  void setLastPageNumber(int page) => _commit(
+    (s) => s.copyWith(lastPageNumber: page.clamp(1, 604)),
+    'Last Quran page',
+  );
 
   /// Sets the reading layout.
   void setLayout(QuranReadingLayout layout) =>
@@ -104,17 +98,25 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
       _commit((s) => s.copyWith(activeStudyTab: tab), 'Active study tab');
 }
 
-/// Ephemeral ayah selection for the Quran screen (not JsonPersist).
+/// Canonical ephemeral ayah identity for the Quran screen.
 @Riverpod(keepAlive: true)
-class QuranSelectedAyah extends _$QuranSelectedAyah {
+class QuranSelectedAyahId extends _$QuranSelectedAyahId {
   @override
-  Ayah? build() => null;
+  int? build() => null;
 
-  /// Updates the in-session selection. Same [Ayah.ayahId] is a no-op.
-  void select(Ayah? ayah) {
-    if (state?.ayahId == ayah?.ayahId) return;
-    state = ayah;
+  /// Updates the in-session selection.
+  void select(int? ayahId) {
+    if (state == ayahId) return;
+    state = ayahId;
   }
+}
+
+/// Immutable ayah data derived from the canonical selected id.
+@riverpod
+Future<Ayah?> quranSelectedAyah(Ref ref) async {
+  final ayahId = ref.watch(quranSelectedAyahIdProvider);
+  if (ayahId == null) return null;
+  return ref.watch(quranMushafControllerProvider).getAyah(ayahId);
 }
 
 /// Persisted Quran recitation preferences.

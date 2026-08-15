@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -63,9 +62,9 @@ class AnimatedIconButton extends HookWidget {
     useEffect(
       () {
         if (isSecondaryActive) {
-          unawaited(animationController.forward());
+          animationController.forward();
         } else {
-          unawaited(animationController.reverse());
+          animationController.reverse();
         }
         return null;
       },

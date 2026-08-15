@@ -19,7 +19,7 @@ const _seekLogName = 'tawaq.recitation.seek';
 /// the app and dispatches each command to the owner that currently holds the
 /// audio lease: [kRecitationLeaseOwner] commands are routed to
 /// [RecitationController] (ayah/surah skip, toggle, seek, stop), while
-/// [kAdhanLeaseOwner] commands are routed to [AudioPlayerController] (the
+/// [kAdhanLeaseOwner] commands are routed to [AdhanAudioController] (the
 /// adhan transport). Commands with no active lease owner are ignored.
 ///
 /// mpv auto-applies play/pause for OS transport buttons. Recitation play/pause
@@ -46,8 +46,7 @@ class MediaSessionCommandRouter extends _$MediaSessionCommandRouter {
   void dispatch(MediaSessionCommand command) => _dispatch(command);
 
   void _dispatch(MediaSessionCommand command) {
-    final service = ref.read(tawaqAudioServiceProvider);
-    switch (service.currentLeaseOwner) {
+    switch (ref.read(audioSessionProvider).owner) {
       case kRecitationLeaseOwner:
         _routeRecitation(command);
       case kAdhanLeaseOwner:
@@ -163,7 +162,7 @@ class MediaSessionCommandRouter extends _$MediaSessionCommandRouter {
 
   void _routeAdhan(MediaSessionCommand command) {
     _logOsCommand(command, owner: kAdhanLeaseOwner);
-    final audio = ref.read(audioPlayerControllerProvider.notifier);
+    final audio = ref.read(adhanAudioControllerProvider.notifier);
     switch (command) {
       case MediaSessionCommandPlay():
         unawaited(audio.resume());

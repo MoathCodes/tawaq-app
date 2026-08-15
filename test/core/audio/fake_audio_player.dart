@@ -36,6 +36,10 @@ class FakeAudioStreamHandles {
       StreamController<Duration>.broadcast();
   final StreamController<int?> remainingAbLoops =
       StreamController<int?>.broadcast();
+  final StreamController<DemuxerCacheState> demuxerCacheState =
+      StreamController<DemuxerCacheState>.broadcast();
+  final StreamController<Playlist> playlist =
+      StreamController<Playlist>.broadcast();
   final StreamController<MediaSessionCommand> mediaSessionCommands =
       StreamController<MediaSessionCommand>.broadcast();
 
@@ -52,6 +56,8 @@ class FakeAudioStreamHandles {
     await position.close();
     await duration.close();
     await remainingAbLoops.close();
+    await demuxerCacheState.close();
+    await playlist.close();
     await mediaSessionCommands.close();
   }
 }
@@ -64,39 +70,54 @@ FakeAudioStreamHandles buildFakeAudioPlayer({
   final handles = FakeAudioStreamHandles(player, stream);
 
   when(() => stream.playing).thenAnswer((_) => handles.playing.stream);
-  when(() => stream.playWhenReady)
-      .thenAnswer((_) => handles.playWhenReady.stream);
+  when(
+    () => stream.playWhenReady,
+  ).thenAnswer((_) => handles.playWhenReady.stream);
   when(() => stream.completed).thenAnswer((_) => handles.completed.stream);
   when(() => stream.eofReached).thenAnswer((_) => handles.eofReached.stream);
   when(() => stream.error).thenAnswer((_) => handles.error.stream);
   when(() => stream.endFile).thenAnswer((_) => handles.endFile.stream);
   when(() => stream.buffering).thenAnswer((_) => handles.buffering.stream);
-  when(() => stream.pausedForCache)
-      .thenAnswer((_) => handles.pausedForCache.stream);
-  when(() => stream.seekCompleted)
-      .thenAnswer((_) => handles.seekCompleted.stream);
+  when(
+    () => stream.pausedForCache,
+  ).thenAnswer((_) => handles.pausedForCache.stream);
+  when(
+    () => stream.seekCompleted,
+  ).thenAnswer((_) => handles.seekCompleted.stream);
   when(() => stream.position).thenAnswer((_) => handles.position.stream);
   when(() => stream.duration).thenAnswer((_) => handles.duration.stream);
-  when(() => stream.remainingAbLoops)
-      .thenAnswer((_) => handles.remainingAbLoops.stream);
-  when(() => stream.mediaSessionCommands)
-      .thenAnswer((_) => handles.mediaSessionCommands.stream);
+  when(
+    () => stream.remainingAbLoops,
+  ).thenAnswer((_) => handles.remainingAbLoops.stream);
+  when(
+    () => stream.demuxerCacheState,
+  ).thenAnswer((_) => handles.demuxerCacheState.stream);
+  when(() => stream.playlist).thenAnswer((_) => handles.playlist.stream);
+  when(
+    () => stream.mediaSessionCommands,
+  ).thenAnswer((_) => handles.mediaSessionCommands.stream);
   when(() => player.stream).thenReturn(stream);
   when(() => player.state).thenReturn(initialState);
-  when(() => player.open(any(), play: any(named: 'play'))).thenAnswer(noopAsync);
-  when(() => player.openAll(
-        any(),
-        play: any(named: 'play'),
-        index: any(named: 'index'),
-      )).thenAnswer(noopAsync);
+  when(
+    () => player.open(any(), play: any(named: 'play')),
+  ).thenAnswer(noopAsync);
+  when(
+    () => player.openAll(
+      any(),
+      play: any(named: 'play'),
+      index: any(named: 'index'),
+    ),
+  ).thenAnswer(noopAsync);
   when(player.play).thenAnswer(noopAsync);
   when(player.pause).thenAnswer(noopAsync);
   when(player.stop).thenAnswer(noopAsync);
-  when(() => player.seek(
-        any(),
-        relative: any(named: 'relative'),
-        exact: any(named: 'exact'),
-      )).thenAnswer(noopAsync);
+  when(
+    () => player.seek(
+      any(),
+      relative: any(named: 'relative'),
+      exact: any(named: 'exact'),
+    ),
+  ).thenAnswer(noopAsync);
   when(() => player.setVolume(any())).thenAnswer(noopAsync);
   when(() => player.setMediaSession(any())).thenAnswer(noopAsync);
   when(() => player.setAudioClientName(any())).thenAnswer(noopAsync);
@@ -106,8 +127,9 @@ FakeAudioStreamHandles buildFakeAudioPlayer({
   when(() => player.setLoop(any())).thenAnswer(noopAsync);
   when(() => player.setGapless(any())).thenAnswer(noopAsync);
   when(() => player.setPrefetchPlaylist(any())).thenAnswer(noopAsync);
-  when(() => player.deleteResumeConfig(filename: any(named: 'filename')))
-      .thenAnswer(noopAsync);
+  when(
+    () => player.deleteResumeConfig(filename: any(named: 'filename')),
+  ).thenAnswer(noopAsync);
   when(player.dispose).thenAnswer(noopAsync);
 
   return handles;

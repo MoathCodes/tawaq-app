@@ -6,8 +6,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/iqamah_draft_provider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/calculation_method_selector.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/custom_parameters_content.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/prayer_iqamah_tile.dart';
@@ -105,11 +105,11 @@ class PrayerIqamahSettings extends HookConsumerWidget {
     final saveButton = showSaveButton
         ? NonSelectable(
             child: FTooltip(
-              semanticsLabel: l10n.save,
               tipBuilder: (ctx, ctrl) => Text(l10n.save),
               child: FButton(
                 variant: unsavedPrayers.isEmpty ? .outline : .primary,
                 prefix: const Icon(FLucideIcons.save, size: 16),
+                semanticsTooltip: l10n.save,
                 style: const FButtonStyleDelta.delta(
                   contentStyle: FButtonContentStyleDelta.delta(
                     padding: EdgeInsetsGeometryDelta.value(

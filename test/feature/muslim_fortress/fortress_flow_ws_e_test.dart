@@ -38,7 +38,7 @@ void main() {
 
       final state = container.read(fortressScreenControllerProvider);
       expect(state.query, isEmpty);
-      expect(state.selectedCategory?.chapterId, 1);
+      expect(state.selectedChapterId, 1);
 
       controller.setQuery('الصباح');
       expect(
@@ -55,17 +55,14 @@ void main() {
 
       expect(container.read(fortressScreenControllerProvider).query, 'نوم');
       expect(
-        container
-            .read(fortressScreenControllerProvider)
-            .selectedCategory
-            ?.chapterId,
+        container.read(fortressScreenControllerProvider).selectedChapterId,
         2,
       );
 
       controller.clearGlobalSearch();
       final state = container.read(fortressScreenControllerProvider);
       expect(state.query, isEmpty);
-      expect(state.selectedCategory?.chapterId, 2);
+      expect(state.selectedChapterId, 2);
     });
   });
 
@@ -83,15 +80,15 @@ void main() {
               ..setQuery('صباح');
 
         expect(
-          container.read(fortressScreenControllerProvider).selectedCategory,
-          category,
+          container.read(fortressScreenControllerProvider).selectedChapterId,
+          category.chapterId,
         );
 
         // Toggle-style selectCategory would clear; search open must not.
         controller.selectSearchTitle(_category(5, title: 'other instance'));
 
         final state = container.read(fortressScreenControllerProvider);
-        expect(state.selectedCategory?.chapterId, 5);
+        expect(state.selectedChapterId, 5);
         expect(state.query, isEmpty);
         expect(state.isFocusMode, isFalse);
       },
@@ -120,10 +117,7 @@ void main() {
             .read(fortressScreenControllerProvider.notifier)
             .selectCategory(_category(category.chapterId));
         expect(
-          container
-              .read(fortressScreenControllerProvider)
-              .selectedCategory
-              ?.chapterId,
+          container.read(fortressScreenControllerProvider).selectedChapterId,
           category.chapterId,
         );
 
@@ -138,7 +132,7 @@ void main() {
             );
 
         final state = container.read(fortressScreenControllerProvider);
-        expect(state.selectedCategory?.chapterId, category.chapterId);
+        expect(state.selectedChapterId, category.chapterId);
         expect(state.isFocusMode, isTrue);
         expect(state.focusStartIndex, 0);
         expect(state.query, isEmpty);
@@ -161,16 +155,21 @@ void main() {
             ..selectCategory(_category(9))
             ..startFocusReading();
 
-      expect(container.read(fortressScreenControllerProvider).isFocusMode, isTrue);
+      expect(
+        container.read(fortressScreenControllerProvider).isFocusMode,
+        isTrue,
+      );
 
       controller.exitFocusMode();
       final state = container.read(fortressScreenControllerProvider);
       expect(state.isFocusMode, isFalse);
-      expect(state.selectedCategory?.chapterId, 9);
+      expect(state.selectedChapterId, 9);
     });
 
     test('startFocusReading no-ops without a selected category', () {
-      container.read(fortressScreenControllerProvider.notifier).startFocusReading();
+      container
+          .read(fortressScreenControllerProvider.notifier)
+          .startFocusReading();
       expect(
         container.read(fortressScreenControllerProvider).isFocusMode,
         isFalse,

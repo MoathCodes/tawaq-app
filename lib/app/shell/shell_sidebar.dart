@@ -1,13 +1,11 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/core/widgets/merged_action_semantics.dart';
 import 'package:tawaq/core/widgets/page_shell/sidebar_settings_provider.dart';
 import 'package:tawaq/core/widgets/shell_a11y.dart';
@@ -78,8 +76,8 @@ class ShellSidebar extends HookConsumerWidget {
 
     useEffect(() {
       isCollapsed
-          ? unawaited(controller.reverse())
-          : unawaited(controller.forward());
+          ? controller.reverse()
+          : controller.forward();
       return null;
     }, [isCollapsed]);
 

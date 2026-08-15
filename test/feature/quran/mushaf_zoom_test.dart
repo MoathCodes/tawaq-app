@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:mushaf_reader/src/core/mushaf_layout.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/theme/custom_themes.dart';
 
 void main() {
@@ -44,7 +44,7 @@ void main() {
     test('clamps into the full fit→fill range', () {
       expect(clampMushafZoom(0.5), kMushafZoomMin);
       expect(clampMushafZoom(1.12), 1.12);
-      expect(clampMushafZoom(2.0), kMushafZoomMax);
+      expect(clampMushafZoom(2), kMushafZoomMax);
     });
   });
 
@@ -66,7 +66,6 @@ void main() {
       const availableHeight = 400.0;
       final style = buildQuranMushafStyle(
         theme,
-        zoom: kMushafZoomFitPage,
       );
       final contain = resolveContainScale(
         scale: style.scale,

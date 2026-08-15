@@ -2,16 +2,12 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
-import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_database.g.dart';
-
-const _repairMetaKey = 'repaired_v1';
 
 /// Provides a singleton instance of the [PrayerDatabase].
 @Riverpod(keepAlive: true)
@@ -23,34 +19,6 @@ PrayerDatabase prayerDatabase(Ref ref) {
     await completionBox.closeBox();
   });
   return prayerDatabase;
-}
-
-/// One-time duplicate repair for legacy prayer completion rows.
-///
-/// Defers until [prayerTimeInputsProvider] has a real prayer location so
-/// grouping keys match completion calendar days. Does not mark repaired when
-/// only a device-local fallback would be available.
-@Riverpod(keepAlive: true)
-Future<void> prayerCompletionsRepair(Ref ref) async {
-  await ref.watch(hiveCoreInitProvider.future);
-  final repairedBox = Box<String, int>('prayer_completions_meta');
-  final alreadyRepaired = (await repairedBox.get(_repairMetaKey) ?? 0) == 1;
-  if (alreadyRepaired) return;
-
-  final inputs = ref.watch(prayerTimeInputsProvider);
-  if (inputs == null) return;
-
-  final removed = await ref
-      .read(prayerDatabaseProvider)
-      .repairDuplicates(inputs.location);
-
-  if (removed > 0) {
-    ref.read(loggerProvider).i(
-      'Repaired $removed duplicate prayer completion row(s)',
-    );
-  }
-
-  await repairedBox.put(_repairMetaKey, 1);
 }
 
 /// The database for the prayer data.
@@ -145,7 +113,8 @@ class PrayerDatabase {
         canonicalId,
         completion.copyWith(
           id: canonicalId,
-          completionTime: canonical?.completionTime ?? completion.completionTime,
+          completionTime:
+              canonical?.completionTime ?? completion.completionTime,
         ),
       );
       for (final key in matchingKeys) {
@@ -182,8 +151,7 @@ class PrayerDatabase {
       if (entries.length <= 1) continue;
 
       final rows = [
-        for (final entry in entries)
-          entry.value.copyWith(id: entry.key),
+        for (final entry in entries) entry.value.copyWith(id: entry.key),
       ];
       final canonical = rows.reduce(preferCanonicalCompletion);
       final canonicalId = canonical.id!;

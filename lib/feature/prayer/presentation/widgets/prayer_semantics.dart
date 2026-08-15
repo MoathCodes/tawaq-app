@@ -1,4 +1,4 @@
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
@@ -13,8 +13,7 @@ abstract final class PrayerSemantics {
   static String heroTimeSquare({
     required String time,
     String? caption,
-  }) =>
-      caption != null ? '$caption, $time' : time;
+  }) => caption != null ? '$caption, $time' : time;
 
   /// Label for the hero / schedule status menu trigger.
   static String statusMenuTrigger({
@@ -41,15 +40,13 @@ abstract final class PrayerSemantics {
   static String todayPerformance({
     required AppLocalizations l10n,
     required int percent,
-  }) =>
-      '$percent%, ${l10n.performanceIndicator}';
+  }) => '$percent%, ${l10n.performanceIndicator}';
 
   /// Read-only label for a stat breakdown cell.
   static String statCell({
     required int value,
     required String statusLabel,
-  }) =>
-      '$value $statusLabel';
+  }) => '$value $statusLabel';
 
   /// Read-only label for the streak banner.
   static String streakSummary({
@@ -64,6 +61,5 @@ abstract final class PrayerSemantics {
   static String sunnahTimeRow({
     required String prayerName,
     required String time,
-  }) =>
-      '$prayerName, $time';
+  }) => '$prayerName, $time';
 }

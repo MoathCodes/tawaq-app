@@ -40,13 +40,13 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.2'
+          flutter-version-file: .fvmrc
           channel: stable
           cache: true
 
       - name: Codegen (packages then app)
         run: bash tool/codegen.sh
-      - run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - run: flutter analyze --no-fatal-infos
       - run: flutter test
 
   macos:
@@ -62,7 +62,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.2'
+          flutter-version-file: .fvmrc
           channel: stable
           cache: true
 
@@ -147,7 +147,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.2'
+          flutter-version-file: .fvmrc
           channel: stable
           cache: true
 
@@ -222,7 +222,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.2'
+          flutter-version-file: .fvmrc
           channel: stable
           cache: true
 

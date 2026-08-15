@@ -21,11 +21,6 @@ class TafsirRepository {
   }
 
   /// Gets all tafsir entries for a surah from the given source.
-  Future<List<Tafsir>> getTafsirForSura(TafsirId source, int suraNo) async {
-    final dataSource = await _getOrCreateDataSource(source);
-    return dataSource.getTafsirForSura(suraNo);
-  }
-
   Future<ITafsirDataSource> _getOrCreateDataSource(TafsirId source) async {
     // Return cached data source if available
     if (_dataSources.containsKey(source)) {

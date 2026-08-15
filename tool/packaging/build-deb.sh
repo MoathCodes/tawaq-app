@@ -31,6 +31,7 @@ Comment=Prayer times, Quran, Hadith, and more
 Exec=/opt/$PKG_NAME/Tawaq %U
 Icon=$PKG_NAME
 Terminal=false
+StartupNotify=true
 Categories=Utility;Education;
 StartupWMClass=Tawaq
 EOF

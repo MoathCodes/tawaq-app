@@ -5,9 +5,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/core/audio/audio_player_provider.dart';
+import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/utils/format_byte_size.dart';
@@ -57,7 +56,10 @@ Widget drawerPlaybackStatusForTest({
 /// so it floats above the routed content on any screen.
 class RecitationDrawerOverlay extends ConsumerWidget {
   /// Creates a [RecitationDrawerOverlay].
-  const RecitationDrawerOverlay({super.key});
+  const RecitationDrawerOverlay({this.onGoToQuran, super.key});
+
+  /// App-composition callback that opens the Quran route.
+  final VoidCallback? onGoToQuran;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,7 +67,7 @@ class RecitationDrawerOverlay extends ConsumerWidget {
     return RecitationDrawerSurface(
       open: open,
       onClose: ref.read(recitationDrawerProvider.notifier).close,
-      child: const _DrawerPanel(),
+      child: _DrawerPanel(onGoToQuran: onGoToQuran),
     );
   }
 }
@@ -120,9 +122,9 @@ class RecitationDrawerSurfaceState extends State<RecitationDrawerSurface>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.open != widget.open) {
       if (widget.open) {
-        unawaited(_controller.forward());
+        _controller.forward();
       } else {
-        unawaited(_controller.reverse());
+        _controller.reverse();
       }
     }
   }
@@ -177,7 +179,9 @@ class RecitationDrawerSurfaceState extends State<RecitationDrawerSurface>
 }
 
 class _DrawerPanel extends HookConsumerWidget {
-  const _DrawerPanel();
+  const _DrawerPanel({this.onGoToQuran});
+
+  final VoidCallback? onGoToQuran;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -291,6 +295,7 @@ class _DrawerPanel extends HookConsumerWidget {
               _DrawerHeader(
                 reciterName: reciterName,
                 riwayah: riwayah,
+                onGoToQuran: onGoToQuran,
               ),
               const SizedBox(height: AppSpacing.lg),
               _DrawerTransportSection(

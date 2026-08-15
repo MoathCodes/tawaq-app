@@ -28,9 +28,7 @@ class FortressCategoryDetailView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final category = ref.watch(
-      fortressScreenControllerProvider.select((s) => s.selectedCategory),
-    );
+    final category = ref.watch(fortressSelectedCategoryProvider);
     if (category == null) return const SizedBox.shrink();
 
     final l10n = context.l10n;

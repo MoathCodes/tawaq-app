@@ -46,8 +46,8 @@ Future<void> desktopShellInit(Ref ref) async {
     ),
   );
   await windowManager.setMinimumSize(kDesktopMinimumWindowSize);
-  // Pin a locale-independent title so flutter_alone can find the window
-  // (Windows HWND lookup; Linux uses the activate socket for tray restore).
+  // Pin a locale-independent title so flutter_alone can find the Windows
+  // HWND. Linux activation is handled by the native GtkApplication.
   await windowManager.setTitle(kDesktopWindowTitle);
 }
 

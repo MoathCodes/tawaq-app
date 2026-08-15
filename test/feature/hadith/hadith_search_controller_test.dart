@@ -315,31 +315,36 @@ void main() {
       expect(state.filters.scholars.map((s) => s.id), ['1', '2', '3']);
     });
 
-    test('exitSpecificMode restores search snapshot from specificList', () async {
-      when(
-        () => repository.searchDetailed(any()),
-      ).thenAnswer((_) async => _response('restored'));
+    test(
+      'exitSpecificMode restores search snapshot from specificList',
+      () async {
+        when(
+          () => repository.searchDetailed(any()),
+        ).thenAnswer((_) async => _response('restored'));
 
-      final session = container.read(hadithSessionControllerProvider.notifier);
-      session.state = session.state.copyWith(
-        query: 'original',
-        filters: const HadithFilters(specialist: true),
-      );
-      await session.openSpecificList([_hadith('similar')]);
+        final session = container.read(
+          hadithSessionControllerProvider.notifier,
+        );
+        session.state = session.state.copyWith(
+          query: 'original',
+          filters: const HadithFilters(specialist: true),
+        );
+        await session.openSpecificList([_hadith('similar')]);
 
-      expect(
-        container.read(hadithSessionControllerProvider).mode,
-        HadithViewMode.specificList,
-      );
+        expect(
+          container.read(hadithSessionControllerProvider).mode,
+          HadithViewMode.specificList,
+        );
 
-      await session.exitSpecificMode();
+        await session.exitSpecificMode();
 
-      final state = container.read(hadithSessionControllerProvider);
-      expect(state.mode, HadithViewMode.search);
-      expect(state.query, 'original');
-      expect(state.filters.specialist, isTrue);
-      expect(state.results.single.hadith, 'restored');
-    });
+        final state = container.read(hadithSessionControllerProvider);
+        expect(state.mode, HadithViewMode.search);
+        expect(state.query, 'original');
+        expect(state.filters.specialist, isTrue);
+        expect(state.results.single.hadith, 'restored');
+      },
+    );
 
     test('selectHadith does not replace searchOutcome', () async {
       when(
@@ -350,9 +355,13 @@ void main() {
       session.state = session.state.copyWith(query: 'q');
       await session.search();
 
-      final before = container.read(hadithSessionControllerProvider).searchOutcome;
+      final before = container
+          .read(hadithSessionControllerProvider)
+          .searchOutcome;
       await session.selectHadith(_hadith('hit'));
-      final after = container.read(hadithSessionControllerProvider).searchOutcome;
+      final after = container
+          .read(hadithSessionControllerProvider)
+          .searchOutcome;
 
       expect(identical(before, after), isTrue);
     });
@@ -382,14 +391,17 @@ void main() {
 
   group('HadithRecentSearches keepAlive', () {
     test('survives listener removal without refetch', () async {
-      final sub = container.listen(hadithRecentSearchesProvider, (_, _) {});
-      await container.read(hadithRecentSearchesProvider.future);
+      final sub = container.listen(
+        hadithRecentSearchesStoreProvider,
+        (_, _) {},
+      );
+      await container.read(hadithRecentSearchesStoreProvider.future);
       verify(() => repository.getRecentSearches()).called(1);
 
       sub.close();
       await pumpEventQueue();
 
-      await container.read(hadithRecentSearchesProvider.future);
+      await container.read(hadithRecentSearchesStoreProvider.future);
       verifyNever(() => repository.getRecentSearches());
     });
   });

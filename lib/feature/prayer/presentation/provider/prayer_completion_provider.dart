@@ -1,14 +1,11 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
-import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
-import 'package:tawaq/feature/settings/presentation/provider/first_prayer_recorded_provider.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_completion_provider.g.dart';
@@ -19,8 +16,7 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
   @override
   void build() {}
 
-  Location? get _location =>
-      ref.read(prayerTimeInputsProvider)?.location;
+  Location? get _location => ref.read(prayerTimeInputsProvider)?.location;
 
   /// Sets or clears the completion status for [prayer] on [completionDay].
   ///
@@ -35,16 +31,16 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
     final location = _location;
     if (location == null) return;
 
-    final repo = ref.read(prayerRepoProvider);
     final dayKey = calendarDayKeyFromDate(completionDay);
     final dayInstant = calendarDayFromKey(dayKey, location);
 
     if (status == CompletionStatus.none) {
-      await repo.deleteCompletionForPrayerOnDate(
-        prayer,
-        dayInstant,
-        location,
-      );
+      await ref
+          .read(prayerCompletionStoreProvider.notifier)
+          .deletePrayer(
+            prayer,
+            dayInstant,
+          );
     } else {
       final existing = await _loadCanonical(prayer, dayKey);
       final completion = PrayerCompletion(
@@ -53,19 +49,8 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
         completionTime: existing?.completionTime ?? dayInstant,
         status: status,
       );
-      await repo.addOrUpdateCompletion(completion, location);
-      // Only stamp first-prayer after a successful write.
-      if (ref.mounted) {
-        ref
-            .read(firstPrayerRecordedDateProvider.notifier)
-            .setIfNull(completion.completionTime);
-      }
+      await ref.read(prayerCompletionStoreProvider.notifier).save(completion);
     }
-
-    if (!ref.mounted) return;
-    invalidatePrayerCompletionsForDayKey(ref, dayKey);
-    // Past-day edits must refresh trend/period analytics, not only "today".
-    ref.invalidate(prayerAnalysisSectionProvider);
   }
 
   /// Cycles [prayer]'s completion on today's calendar day.

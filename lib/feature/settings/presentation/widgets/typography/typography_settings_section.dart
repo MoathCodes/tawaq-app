@@ -4,7 +4,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/semantics_scale_step_picker.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/scale/quran_zoom_control.dart';
 import 'package:tawaq/feature/settings/data/models/app_text_scale.dart';
@@ -45,8 +45,9 @@ class TypographySettingsSection extends ConsumerWidget {
               child: SemanticsScaleStepPicker(
                 groupLabel: l10n.appTextSize,
                 enabled: themeReady,
-                previewSizes:
-                    AppTextScale.values.map((s) => 14 * s.scalar).toList(),
+                previewSizes: AppTextScale.values
+                    .map((s) => 14 * s.scalar)
+                    .toList(),
                 labels: [
                   l10n.appTextSizeCompact,
                   l10n.appTextSizeNormal,

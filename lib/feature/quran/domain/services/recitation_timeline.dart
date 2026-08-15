@@ -133,7 +133,7 @@ RecitationTimeline timelineFor(RecitationState state, SurahTiming? timing) {
 
 /// Pure bookkeeping for post-EOF gapless surah continuation.
 ///
-/// Used by [RecitationController._openGaplessContinuation] so URI / timeline /
+/// Used by the recitation controller's gapless continuation path so URI / timeline /
 /// playlist-index seeding stay in one place (and can be unit-tested without
 /// mirroring controller internals).
 ///
@@ -144,7 +144,8 @@ RecitationTimeline timelineFor(RecitationState state, SurahTiming? timing) {
   RecitationTimeline timeline,
   int seededTrackIndex,
   int openAtIndex,
-}) gaplessContinuationBookkeeping({
+})
+gaplessContinuationBookkeeping({
   required String nextUri,
   required RecitationState stateForTimeline,
   SurahTiming? nextTiming,
@@ -161,5 +162,4 @@ RecitationTimeline timelineFor(RecitationState state, SurahTiming? timing) {
 bool shouldExplicitGaplessAdvance({
   required int? trackIndexAfterOpen,
   required int seededTrackIndex,
-}) =>
-    trackIndexAfterOpen == seededTrackIndex;
+}) => trackIndexAfterOpen == seededTrackIndex;

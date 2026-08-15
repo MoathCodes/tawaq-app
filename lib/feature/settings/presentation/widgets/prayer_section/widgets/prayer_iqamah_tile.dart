@@ -8,8 +8,8 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/iqamah_draft_provider.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -268,10 +268,9 @@ class _IqamahStepper extends ConsumerWidget {
               ),
               _StepperDivider(color: colors.border),
               FTooltip(
-                semanticsLabel: l10n.resetToDefaults,
-                tipBuilder: (context, controller) =>
-                    Text(l10n.resetToDefaults),
+                tipBuilder: (context, controller) => Text(l10n.resetToDefaults),
                 child: _StepperIconButton(
+                  semanticsTooltip: l10n.resetToDefaults,
                   icon: FLucideIcons.rotateCcw,
                   label: SettingsSemantics.resetIqamahAction(l10n, prayerName),
                   enabled: enabled,
@@ -292,12 +291,14 @@ class _StepperIconButton extends StatelessWidget {
     required this.label,
     required this.enabled,
     required this.onPress,
+    this.semanticsTooltip,
   });
 
   final IconData icon;
   final String label;
   final bool enabled;
   final VoidCallback onPress;
+  final String? semanticsTooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -306,6 +307,7 @@ class _StepperIconButton extends StatelessWidget {
       enabled: enabled,
       child: FButton.icon(
         variant: .ghost,
+        semanticsTooltip: semanticsTooltip,
         style: _iqamahStepperButtonStyle,
         onPress: enabled ? onPress : null,
         child: Icon(icon, size: 16),

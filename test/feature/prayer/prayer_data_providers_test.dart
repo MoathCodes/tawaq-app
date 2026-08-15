@@ -5,12 +5,13 @@ import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_models.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_repair_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 

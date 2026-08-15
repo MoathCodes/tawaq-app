@@ -2,8 +2,8 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
 
 part 'hadith_screen_settings_provider.g.dart';
 

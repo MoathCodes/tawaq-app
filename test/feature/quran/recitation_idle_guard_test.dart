@@ -2,9 +2,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/core/audio/audio_service.dart' show TawaqAudioService;
 import 'package:tawaq/core/audio/playback_state.dart' show PlaybackCompleted;
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
+import 'package:tawaq/feature/quran/domain/services/recitation_state_machine.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart' show RecitationController;
-import 'package:tawaq/feature/quran/presentation/providers/recitation_state_machine.dart';
+import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart'
+    show RecitationController;
 
 /// Mirrors completion guards in [RecitationController._onNaturalCompletion].
 /// [AudioCompleted] is dispatched only from [TawaqAudioService.completionStream],

@@ -5,6 +5,7 @@ import 'package:desktop_tray/desktop_tray.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/desktop_shutdown.dart';
 import 'package:tawaq/core/desktop/desktop_window_controller.dart';
+import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/desktop/tray_menu.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
@@ -89,7 +90,7 @@ class DesktopTrayService with DesktopTrayListener {
   }
 
   Future<void> _toggleMainWindow() async {
-    final visible = _ref.read(desktopMainWindowVisibleProvider);
+    final visible = _ref.read(nativeWindowStateProvider).value?.visible ?? true;
     final controller = _ref.read(desktopWindowControllerProvider);
     if (visible) {
       await controller.hideMainWindow();

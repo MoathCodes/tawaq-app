@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 
 const _persistOptions = StorageOptions(

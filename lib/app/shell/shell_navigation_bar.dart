@@ -3,8 +3,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/routing/route_provider.dart';
 
 /// The bottom navigation bar for the main shell.
 class ShellBottomNavigationBar extends HookConsumerWidget {

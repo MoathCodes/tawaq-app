@@ -8,6 +8,7 @@ import 'package:tawaq/core/layout/centered_viewport_shell.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/core/widgets/scroll_overflow_hint_viewport.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
@@ -78,8 +79,11 @@ class _ReciterDialog extends HookConsumerWidget {
     final selectedReciterId = settings?.reciterId;
     final selectedMoshafId = settings?.moshafId;
 
-    final cached =
-        ref.watch(cachedRecitationsSnapshotProvider).value?.files ?? const [];
+    final cached = ref.watch(
+      recitationOfflineStoreProvider.select(
+        (state) => state.value?.files ?? const [],
+      ),
+    );
     final downloadedKeys = useMemoized(
       () => cached.map((c) => (c.reciterId, c.moshafId)).toSet(),
       [cached],
@@ -98,7 +102,9 @@ class _ReciterDialog extends HookConsumerWidget {
 
     final filter = query.value.trim().toLowerCase();
     bool matches(Reciter r) {
-      if (filter.isNotEmpty && !r.name.toLowerCase().contains(filter)) {
+      if (filter.isNotEmpty &&
+          !r.name.toLowerCase().contains(filter) &&
+          !arabicSearchContains(r.name, filter)) {
         return false;
       }
       if (downloadedFilter.value &&
@@ -475,10 +481,10 @@ class _ReciterMetaIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FTooltip(
-      semanticsLabel: message,
       tipBuilder: (_, _) => Text(message),
       child: Semantics(
         label: message,
+        tooltip: message,
         child: Icon(icon, size: size, color: color),
       ),
     );

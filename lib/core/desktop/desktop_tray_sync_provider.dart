@@ -1,16 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart' show Locale;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/desktop/desktop_tray_service.dart';
-import 'package:tawaq/core/desktop/desktop_window_controller.dart';
+import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/desktop/tray_menu.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
-import 'package:tawaq/core/utils/date_formatter.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/date_formatter.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
@@ -25,14 +26,20 @@ String trayTooltipText(Ref ref) {
   final lang = ref.watch(localeProvider).value ?? 'en';
   final l10n = lookupAppLocalizations(Locale(lang));
 
-  final activePrayer = ref.watch(prayerAlertActiveProvider);
+  final activePrayer = ref.watch(prayerAlertSessionStateProvider)?.event.prayer;
   if (activePrayer != null) {
     return l10n.adhanPlayingTitle(activePrayer.getLocaleName(l10n));
   }
 
-  // Minute bucket so remaining time refreshes without a 1 Hz menu rebuild.
-  ref.watch(currentMinuteBucketProvider);
-  final day = ref.watch(prayerDayProvider).value;
+  // Watch only calendar/minute identity; read the full snapshot non-reactively.
+  ref.watch(
+    prayerDayProvider.select((value) {
+      final day = value.value;
+      if (day == null) return null;
+      return (day.calendarDayKey, day.now.hour, day.now.minute);
+    }),
+  );
+  final day = ref.read(prayerDayProvider).value;
   if (day == null) return l10n.appName;
 
   final glance = resolveNextAdhanGlance(day);
@@ -59,8 +66,9 @@ void desktopTraySync(Ref ref) {
     if (!service.isAvailable) return;
     final lang = ref.read(localeProvider).value ?? 'en';
     final l10n = lookupAppLocalizations(Locale(lang));
-    final windowVisible = ref.read(desktopMainWindowVisibleProvider);
-    final alertActive = ref.read(prayerAlertActiveProvider) != null;
+    final windowVisible =
+        ref.read(nativeWindowStateProvider).value?.visible ?? true;
+    final alertActive = ref.read(prayerAlertSessionStateProvider) != null;
     // Surface next prayer as a header row (the only prayer hint on Linux, which
     // has no tray tooltip). Suppress when there is nothing but the app name.
     final tooltip = ref.read(trayTooltipTextProvider);
@@ -82,8 +90,8 @@ void desktopTraySync(Ref ref) {
 
   ref
     ..listen(localeProvider, (_, _) => unawaited(syncMenu()))
-    ..listen(desktopMainWindowVisibleProvider, (_, _) => unawaited(syncMenu()))
-    ..listen(prayerAlertActiveProvider, (_, _) {
+    ..listen(nativeWindowStateProvider, (_, _) => unawaited(syncMenu()))
+    ..listen(prayerAlertSessionStateProvider, (_, _) {
       unawaited(syncMenu());
       unawaited(syncTooltip());
     })

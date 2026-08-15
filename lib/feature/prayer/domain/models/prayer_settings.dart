@@ -3,12 +3,12 @@
 
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:tawaq/feature/settings/data/location_constants.dart';
+import 'package:tawaq/feature/prayer/domain/models/location_constants.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/timezone.dart';
 
-part 'prayer_settings_model.freezed.dart';
-part 'prayer_settings_model.g.dart';
+part 'prayer_settings.freezed.dart';
+part 'prayer_settings.g.dart';
 
 /// Converts a JSON map to a map of [Prayer] to [int] adjustments.
 ///

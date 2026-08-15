@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
 
 /// Settings entry to re-run the onboarding flow.

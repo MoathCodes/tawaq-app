@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:tawaq/core/audio/audio_service.dart' show TawaqAudioService;
+import 'package:tawaq/feature/quran/domain/models/recitation_state.dart' show RecitationState;
 import 'package:tawaq/feature/quran/domain/services/recitation_playback_policy.dart';
 
 /// How an intentional position change should reach the audio engine.
@@ -47,28 +49,21 @@ bool shouldRevertPendingSeek({
 final class SeekPipeline {
   /// Creates an empty pipeline.
   SeekPipeline({
-    required void Function(String message) log,
-    required Future<bool> Function(Duration position) seek,
-    required void Function({
-      required Duration revertTo,
-      required Duration failedTarget,
-    }) onSeekFailed,
-    required void Function({required Duration revertTo}) onTimeout,
-    required Duration Function() lastAcceptedPosition,
-    required bool Function() hasPendingSeek,
-  })  : _log = log,
-        _seek = seek,
-        _onSeekFailed = onSeekFailed,
-        _onTimeout = onTimeout,
-        _lastAcceptedPosition = lastAcceptedPosition,
-        _hasPendingSeek = hasPendingSeek;
+    required this._log,
+    required this._seek,
+    required this._onSeekFailed,
+    required this._onTimeout,
+    required this._lastAcceptedPosition,
+    required this._hasPendingSeek,
+  });
 
   final void Function(String message) _log;
   final Future<bool> Function(Duration position) _seek;
   final void Function({
     required Duration revertTo,
     required Duration failedTarget,
-  }) _onSeekFailed;
+  })
+  _onSeekFailed;
   final void Function({required Duration revertTo}) _onTimeout;
   final Duration Function() _lastAcceptedPosition;
   final bool Function() _hasPendingSeek;

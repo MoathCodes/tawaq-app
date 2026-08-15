@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart';
@@ -228,8 +228,8 @@ void main() {
           prayer: Prayer.fajr,
           status: CompletionStatus.jamaah,
         ),
-          loc,
-        );
+        loc,
+      );
       await repo.addOrUpdateCompletion(
         PrayerCompletion(
           id: null,
@@ -237,8 +237,8 @@ void main() {
           prayer: Prayer.dhuhr,
           status: CompletionStatus.missed, // Missed!
         ),
-          loc,
-        );
+        loc,
+      );
       await repo.addOrUpdateCompletion(
         PrayerCompletion(
           id: null,
@@ -246,8 +246,8 @@ void main() {
           prayer: Prayer.asr,
           status: CompletionStatus.jamaah,
         ),
-          loc,
-        );
+        loc,
+      );
       await repo.addOrUpdateCompletion(
         PrayerCompletion(
           id: null,
@@ -255,8 +255,8 @@ void main() {
           prayer: Prayer.maghrib,
           status: CompletionStatus.jamaah,
         ),
-          loc,
-        );
+        loc,
+      );
       await repo.addOrUpdateCompletion(
         PrayerCompletion(
           id: null,
@@ -264,8 +264,8 @@ void main() {
           prayer: Prayer.isha,
           status: CompletionStatus.none, // None!
         ),
-          loc,
-        );
+        loc,
+      );
 
       final streaks = await repo.computeStreaks(loc);
 

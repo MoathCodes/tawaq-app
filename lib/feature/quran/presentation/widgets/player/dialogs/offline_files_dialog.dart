@@ -30,10 +30,18 @@ class _OfflineFilesDialog extends ConsumerWidget {
     final l10n = context.l10n;
     final colors = context.theme.colors;
     final typography = context.theme.typography;
-    final filesAsync = ref.watch(cachedRecitationsSnapshotProvider);
+    final filesAsync = ref.watch(
+      recitationOfflineStoreProvider.select(
+        (state) => (
+          isLoading: state.isLoading,
+          error: state.error,
+          files: state.value?.files ?? const <CachedRecitation>[],
+          totalBytes: state.value?.totalBytes ?? 0,
+        ),
+      ),
+    );
     final reciters = ref.watch(recitersProvider).value ?? const <Reciter>[];
     final mushaf = ref.read(quranMushafControllerProvider);
-    final repo = ref.read(recitationRepositoryProvider);
     final autoSave =
         ref.watch(
           recitationSettingsProvider.select(
@@ -42,9 +50,8 @@ class _OfflineFilesDialog extends ConsumerWidget {
         ) ??
         true;
 
-    final snapshot = filesAsync.value;
-    final files = snapshot?.files ?? const <CachedRecitation>[];
-    final totalBytes = snapshot?.totalBytes ?? 0;
+    final files = filesAsync.files;
+    final totalBytes = filesAsync.totalBytes;
 
     String reciterName(int id) {
       for (final r in reciters) {
@@ -85,11 +92,12 @@ class _OfflineFilesDialog extends ConsumerWidget {
     }
 
     Future<void> deleteFile(CachedRecitation f) async {
-      await repo.deleteCached(f.file.path);
-      ref.invalidate(cachedRecitationsSnapshotProvider);
+      await ref
+          .read(recitationOfflineStoreProvider.notifier)
+          .delete(f.file.path);
     }
 
-    return PlayerDialogShell(
+    return TawaqDialogShell(
       title: l10n.quranRecitationOfflineFiles,
       icon: FLucideIcons.folder,
       maxHeight: 660,
@@ -220,7 +228,7 @@ class _OfflineFilesDialog extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final dir = await ref.read(recitationRepositoryProvider).audioDirectory();
+    final dir = await ref.read(recitationCacheProvider).audioDirectory();
     final opened = await revealFolderInFileManager(dir.path);
     if (!opened && context.mounted) {
       showFToast(

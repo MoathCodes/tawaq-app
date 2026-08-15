@@ -10,25 +10,57 @@ import 'package:tawaq/feature/settings/presentation/widgets/tabs/settings_appear
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Persisted key for the default settings tab.
+/// Stable application identity for a settings destination.
+enum SettingsTabId {
+  appearance('appearance'),
+  prayerTimes('prayer-times'),
+  location('location'),
+  keyboardShortcuts('keyboard-shortcuts');
+
+  const SettingsTabId(this.wireValue);
+
+  /// Stable query/persistence value.
+  final String wireValue;
+}
+
+/// Persisted/query key for the default settings tab.
 const kSettingsDefaultTabKey = 'appearance';
 
-/// Persisted key for the location settings tab.
-const kSettingsLocationTabKey = 'locationSectionTitle';
+/// Persisted/query key for the location settings tab.
+const kSettingsLocationTabKey = 'location';
+
+/// Whether a Material tab controller has fully settled after a tap or swipe.
+bool settingsTabIsSettled({
+  required bool indexIsChanging,
+  required double offset,
+}) => !indexIsChanging && offset.abs() <= 0.000001;
+
+/// Parses current wire values and legacy ARB-derived persistence keys.
+SettingsTabId? settingsTabIdFromWire(String? value) => switch (value) {
+  'appearance' => SettingsTabId.appearance,
+  'prayer-times' || 'timeSectionTitle' => SettingsTabId.prayerTimes,
+  'location' || 'locationSectionTitle' => SettingsTabId.location,
+  'keyboard-shortcuts' ||
+  'keyboardShortcutsTabTitle' => SettingsTabId.keyboardShortcuts,
+  _ => null,
+};
 
 /// A single settings tab — key, chrome, visibility, and body builder.
 class SettingsTab {
   /// Creates [SettingsTab].
   const SettingsTab({
-    required this.key,
+    required this.id,
     required this.icon,
     required this.label,
     required this.visible,
     required this.builder,
   });
 
-  /// Stable persistence identifier (matches the ARB key for this tab's label).
-  final String key;
+  /// Stable destination identity.
+  final SettingsTabId id;
+
+  /// Stable query/persistence key.
+  String get key => id.wireValue;
 
   /// Tab icon.
   final IconData icon;
@@ -46,28 +78,28 @@ class SettingsTab {
 /// All settings tabs in display order.
 const kSettingsTabs = <SettingsTab>[
   SettingsTab(
-    key: kSettingsDefaultTabKey,
+    id: SettingsTabId.appearance,
     icon: FLucideIcons.palette,
     label: _appearanceLabel,
     visible: _alwaysVisible,
     builder: _appearanceBody,
   ),
   SettingsTab(
-    key: 'timeSectionTitle',
+    id: SettingsTabId.prayerTimes,
     icon: FLucideIcons.clock,
     label: _prayerTimesLabel,
     visible: _alwaysVisible,
     builder: _prayerTimesBody,
   ),
   SettingsTab(
-    key: kSettingsLocationTabKey,
+    id: SettingsTabId.location,
     icon: FLucideIcons.mapPin,
     label: _locationLabel,
     visible: _alwaysVisible,
     builder: _locationBody,
   ),
   SettingsTab(
-    key: 'keyboardShortcutsTabTitle',
+    id: SettingsTabId.keyboardShortcuts,
     icon: FLucideIcons.keyboard,
     label: _keyboardShortcutsLabel,
     visible: _keyboardShortcutsVisible,
@@ -109,9 +141,10 @@ Widget _keyboardShortcutsBody(AppLocalizations l10n) =>
 
 /// Resolves a persisted tab key, defaulting to appearance.
 SettingsTab tabForKey(String? key) {
-  if (key != null) {
+  final id = settingsTabIdFromWire(key);
+  if (id != null) {
     for (final tab in kSettingsTabs) {
-      if (tab.key == key) {
+      if (tab.id == id) {
         return tab;
       }
     }
@@ -133,9 +166,11 @@ int indexForTabKey(
   String tabKey, {
   bool? showKeyboardShortcuts,
 }) {
+  final id = settingsTabIdFromWire(tabKey);
+  if (id == null) return -1;
   final tabs = visibleTabs(showKeyboardShortcuts: showKeyboardShortcuts);
   for (var i = 0; i < tabs.length; i++) {
-    if (tabs[i].key == tabKey) {
+    if (tabs[i].id == id) {
       return i;
     }
   }
@@ -152,7 +187,25 @@ String resolveVisibleTabKey(
         showKeyboardShortcuts: showKeyboardShortcuts,
       ) >=
       0) {
-    return tabKey;
+    return settingsTabIdFromWire(tabKey)!.wireValue;
   }
   return kSettingsDefaultTabKey;
+}
+
+/// Resolves URL input first, falling back to the persisted restore checkpoint
+/// when the wire value is missing, invalid, or unavailable on this platform.
+String resolveSettingsRouteTab({
+  required String? routeKey,
+  required String? persistedKey,
+  required bool showKeyboardShortcuts,
+}) {
+  final routeId = settingsTabIdFromWire(routeKey);
+  if (routeId != null &&
+      (showKeyboardShortcuts || routeId != SettingsTabId.keyboardShortcuts)) {
+    return routeId.wireValue;
+  }
+  return resolveVisibleTabKey(
+    persistedKey ?? kSettingsDefaultTabKey,
+    showKeyboardShortcuts: showKeyboardShortcuts,
+  );
 }

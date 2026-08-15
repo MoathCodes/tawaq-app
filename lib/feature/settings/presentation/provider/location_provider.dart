@@ -1,7 +1,7 @@
 import 'package:free_map/free_map.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/location_service_provider.dart';
 import 'package:tawaq/feature/settings/domain/services/timezone_catalog.dart';
-import 'package:tawaq/feature/settings/presentation/provider/location_service_provider.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 part 'location_provider.g.dart';

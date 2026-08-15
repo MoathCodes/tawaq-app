@@ -166,9 +166,7 @@ class _FortressBrowseMainPane extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final selectedCategory = ref.watch(
-      fortressScreenControllerProvider.select((s) => s.selectedCategory),
-    );
+    final selectedCategory = ref.watch(fortressSelectedCategoryProvider);
     final committedQuery = ref.watch(
       fortressScreenControllerProvider.select((s) => s.query),
     );
@@ -249,7 +247,6 @@ class _FortressBrowseMainPane extends HookConsumerWidget {
                     : Align(
                         alignment: AlignmentDirectional.centerEnd,
                         child: FTooltip(
-                          semanticsLabel: l10n.fortressSearchOpen,
                           tipBuilder: (context, _) =>
                               Text(l10n.fortressSearchOpen),
                           // Sits at the very top of the pane, so the default
@@ -257,6 +254,7 @@ class _FortressBrowseMainPane extends HookConsumerWidget {
                           childAnchor: Alignment.bottomCenter,
                           tipAnchor: Alignment.topCenter,
                           child: FButton.icon(
+                            semanticsTooltip: l10n.fortressSearchOpen,
                             variant: FButtonVariant.ghost,
                             onPress: openSearch,
                             child: const Icon(FLucideIcons.search),

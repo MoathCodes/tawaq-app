@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/routing/route_provider.dart';
 import 'package:tawaq/feature/onboarding/presentation/models/onboarding_steps.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_controller_provider.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';

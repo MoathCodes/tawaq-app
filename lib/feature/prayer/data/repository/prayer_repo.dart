@@ -4,10 +4,10 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/date_extensions.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
@@ -18,7 +18,6 @@ part 'prayer_repo.g.dart';
 /// Provides a singleton instance of the [PrayerRepo].
 @Riverpod(keepAlive: true)
 PrayerRepo prayerRepo(Ref ref) {
-  ref.watch(prayerCompletionsRepairProvider);
   final database = ref.read(prayerDatabaseProvider);
   final log = ref.read(loggerProvider);
   return PrayerRepo(prayerDatabase: database, log: log);
@@ -99,12 +98,10 @@ class PrayerRepo {
       return _cachedStreaks!;
     }
 
-    final days = _fullyCompletedDayKeys
-        .map((key) {
-          final day = calendarDayFromKey(key, location);
-          return DateTime(day.year, day.month, day.day);
-        })
-        .toList();
+    final days = _fullyCompletedDayKeys.map((key) {
+      final day = calendarDayFromKey(key, location);
+      return DateTime(day.year, day.month, day.day);
+    }).toList();
     final result = PrayerAnalyticsCalculator.computeStreaks(
       fullyCompletedDays: days,
       today: todayNorm,
@@ -164,9 +161,7 @@ class PrayerRepo {
       if (entry.key < fromKey || entry.key > toKey) continue;
       result.addAll(dedupeCompletions(entry.value, location));
     }
-    return result
-        .where((c) => c.completionTime.isBetween(from, to))
-        .toList();
+    return result.where((c) => c.completionTime.isBetween(from, to)).toList();
   }
 
   Future<void> _ensureIndex(Location location) async {

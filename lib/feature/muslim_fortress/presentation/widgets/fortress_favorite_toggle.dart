@@ -37,7 +37,6 @@ class FortressFavoriteToggle extends ConsumerWidget {
           .toggleFavorite(chapterId),
       semanticsLabel: l10n.fortressFavorites,
       child: FTooltip(
-        semanticsLabel: l10n.fortressFavorites,
         tipBuilder: (_, _) => Text(l10n.fortressFavorites),
         child: ExcludeSemantics(
           child: Padding(
@@ -45,6 +44,7 @@ class FortressFavoriteToggle extends ConsumerWidget {
             child: Icon(
               isFavorite ? FLucideIcons.bookmarkCheck : FLucideIcons.bookmark,
               size: iconSize,
+              semanticLabel: l10n.fortressFavorites,
               color: isFavorite
                   ? theme.colors.primary
                   : theme.colors.mutedForeground,

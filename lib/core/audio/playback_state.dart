@@ -1,6 +1,78 @@
 import 'package:tawaq/core/audio/audio_service.dart' show TawaqAudioService;
 import 'package:tawaq/core/audio/audio_track.dart';
 
+/// A normalized seekable cache interval reported by the audio backend.
+typedef PlaybackBufferRange = ({Duration start, Duration end});
+
+/// Normalized transport lifecycle reported by the native audio backend.
+enum AudioSessionLifecycle {
+  idle,
+  loading,
+  buffering,
+  playing,
+  paused,
+  completed,
+  error,
+}
+
+/// Complete read-only runtime projection of the shared native audio session.
+class AudioSessionSnapshot {
+  /// Creates an immutable audio-session snapshot.
+  const AudioSessionSnapshot({
+    this.owner,
+    this.track,
+    this.lifecycle = AudioSessionLifecycle.idle,
+    this.playIntent = false,
+    this.position = Duration.zero,
+    this.duration = Duration.zero,
+    this.bufferedRanges = const [],
+    this.playlistIndex = 0,
+    this.remainingAbLoops,
+    this.error,
+  });
+
+  final String? owner;
+  final AudioTrack? track;
+  final AudioSessionLifecycle lifecycle;
+  final bool playIntent;
+  final Duration position;
+  final Duration duration;
+  final List<PlaybackBufferRange> bufferedRanges;
+  final int playlistIndex;
+  final int? remainingAbLoops;
+  final String? error;
+
+  AudioSessionSnapshot copyWith({
+    String? owner,
+    bool clearOwner = false,
+    AudioTrack? track,
+    bool clearTrack = false,
+    AudioSessionLifecycle? lifecycle,
+    bool? playIntent,
+    Duration? position,
+    Duration? duration,
+    List<PlaybackBufferRange>? bufferedRanges,
+    int? playlistIndex,
+    int? remainingAbLoops,
+    bool clearRemainingAbLoops = false,
+    String? error,
+    bool clearError = false,
+  }) => AudioSessionSnapshot(
+    owner: clearOwner ? null : owner ?? this.owner,
+    track: clearTrack ? null : track ?? this.track,
+    lifecycle: lifecycle ?? this.lifecycle,
+    playIntent: playIntent ?? this.playIntent,
+    position: position ?? this.position,
+    duration: duration ?? this.duration,
+    bufferedRanges: bufferedRanges ?? this.bufferedRanges,
+    playlistIndex: playlistIndex ?? this.playlistIndex,
+    remainingAbLoops: clearRemainingAbLoops
+        ? null
+        : remainingAbLoops ?? this.remainingAbLoops,
+    error: clearError ? null : error ?? this.error,
+  );
+}
+
 /// High-level player state exposed to UI and controllers.
 sealed class PlaybackState {
   const PlaybackState();

@@ -3,16 +3,25 @@ import 'package:intl/intl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/core/utils/date_formatter.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_models.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/date_formatter.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 
 part 'prayer_card_provider.g.dart';
 
-final ({String adhanTime, bool canSetStatus, String iqamahTime, bool isCountdown, Prayer prayer, DateTime referenceTime, bool showIqamah}) _emptyPrayerCardStatic = (
+final ({
+  String adhanTime,
+  bool canSetStatus,
+  String iqamahTime,
+  bool isCountdown,
+  Prayer prayer,
+  DateTime referenceTime,
+  bool showIqamah,
+})
+_emptyPrayerCardStatic = (
   prayer: Prayer.fajrAfter,
   adhanTime: '00:00',
   iqamahTime: '00:00',
@@ -40,11 +49,13 @@ PrayerCardStaticInfo prayerCardStatic(Ref ref) {
       formatter: formatter,
     );
   } on Object catch (error, stack) {
-    ref.read(loggerProvider).e(
-      'prayerCardStatic failed',
-      error: error,
-      stackTrace: stack,
-    );
+    ref
+        .read(loggerProvider)
+        .e(
+          'prayerCardStatic failed',
+          error: error,
+          stackTrace: stack,
+        );
     return _emptyPrayerCardStatic;
   }
 }

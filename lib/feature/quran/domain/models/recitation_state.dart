@@ -107,10 +107,13 @@ abstract class RecitationState with _$RecitationState {
     final from = rangeFrom;
     if (loadedSurah == null || from == null) return null;
 
-    final start = segmentStartAyah ??
-        (from.surah == loadedSurah ? from.ayah : 1);
-    final end = segmentEndAyah ??
-        (rangeTo != null && rangeTo!.surah == loadedSurah ? rangeTo!.ayah : null);
+    final start =
+        segmentStartAyah ?? (from.surah == loadedSurah ? from.ayah : 1);
+    final end =
+        segmentEndAyah ??
+        (rangeTo != null && rangeTo!.surah == loadedSurah
+            ? rangeTo!.ayah
+            : null);
     return (startAyah: start, endAyah: end);
   }
 
@@ -194,3 +197,6 @@ enum PlaybackSelectionKind {
   /// Open-ended range (continue from here to end of Quran).
   openEndedRange,
 }
+
+/// Canonical selection/repeat/timeline session state.
+typedef RecitationSessionState = RecitationState;

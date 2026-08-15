@@ -6,9 +6,9 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/volume_slider.dart';
-import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
+import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/adhan_locale_extensions.dart';
-import 'package:tawaq/feature/settings/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/theme/theme.dart';
 

@@ -5,7 +5,8 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
+import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
 
 part 'settings_screen_settings_provider.g.dart';
 
@@ -28,11 +29,13 @@ class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
         decode: _decodeActiveTabKey,
       ).future;
     } on Object catch (error, stack) {
-      ref.read(loggerProvider).e(
-        '$_logPrefix hydrate failed; using default tab',
-        error: error,
-        stackTrace: stack,
-      );
+      ref
+          .read(loggerProvider)
+          .e(
+            '$_logPrefix hydrate failed; using default tab',
+            error: error,
+            stackTrace: stack,
+          );
     }
     final pending = _pendingTabKey;
     _pendingTabKey = null;
@@ -68,10 +71,14 @@ class SettingsScreenSettingsNotifier extends _$SettingsScreenSettingsNotifier {
 
 String _decodeActiveTabKey(String encoded) {
   final decoded = jsonDecode(encoded);
-  if (decoded is String) return decoded;
+  if (decoded is String) {
+    return settingsTabIdFromWire(decoded)?.wireValue ?? _defaultTabKey;
+  }
   if (decoded is Map) {
     final key = decoded['activeTabKey'];
-    if (key is String && key.isNotEmpty) return key;
+    if (key is String && key.isNotEmpty) {
+      return settingsTabIdFromWire(key)?.wireValue ?? _defaultTabKey;
+    }
   }
   return _defaultTabKey;
 }

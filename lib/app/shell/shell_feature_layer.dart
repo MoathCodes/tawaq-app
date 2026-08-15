@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_drawer.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport.dart';
@@ -36,6 +37,8 @@ class ShellContentOverlay extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const RecitationDrawerOverlay();
+    return RecitationDrawerOverlay(
+      onGoToQuran: () => const QuranRoute().go(context),
+    );
   }
 }

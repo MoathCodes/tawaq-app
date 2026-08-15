@@ -1,6 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart'
+import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart'
     show PrayerSettings;
 import 'package:timezone/timezone.dart';
 

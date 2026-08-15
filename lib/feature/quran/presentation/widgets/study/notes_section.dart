@@ -35,7 +35,11 @@ class NotesSection extends HookConsumerWidget {
     final l10n = context.l10n;
 
     final enabled = ayahId != null;
-    final note = ref.watch(quranNotesProvider(ayahId));
+    final note = ref
+        .watch(quranNotesStoreProvider)
+        .whenData(
+          (notes) => ayahId == null ? null : notes[ayahId],
+        );
     final initialText = note.hasValue ? (note.value?.text ?? '') : '';
     final controller = useTextEditingController(text: initialText);
     final hasSynced = useRef(note.hasValue);
@@ -56,7 +60,7 @@ class NotesSection extends HookConsumerWidget {
               text != lastPersistedText.value) {
             lastPersistedText.value = text;
             unawaited(
-              ref.read(quranNotesProvider(id).notifier).addNote(text),
+              ref.read(quranNotesStoreProvider.notifier).save(id, text),
             );
           }
         };
@@ -84,7 +88,7 @@ class NotesSection extends HookConsumerWidget {
       final text = controller.text;
       lastPersistedText.value = text;
       unawaited(
-        ref.read(quranNotesProvider(id).notifier).addNote(text),
+        ref.read(quranNotesStoreProvider.notifier).save(id, text),
       );
     }
 

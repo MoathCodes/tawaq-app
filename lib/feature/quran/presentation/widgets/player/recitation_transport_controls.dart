@@ -38,9 +38,9 @@ class RecitationTransportIcon extends StatelessWidget {
     };
 
     return FTooltip(
-      semanticsLabel: tooltip,
       tipBuilder: (_, _) => Text(tooltip),
       child: MouseClick(
+        semanticsTooltip: tooltip,
         onClick: () => unawaited(onPress()),
         child: Icon(icon, size: iconSize, color: colors.secondaryForeground),
       ),

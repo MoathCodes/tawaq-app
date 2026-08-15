@@ -23,11 +23,56 @@ List<DetailedHadith>? hadithVisibleResultsList(
   };
 }
 
-/// Bookmarked hadiths loaded from local storage.
+DetailedHadith? _selectedFromVisible(Ref ref, HadithSessionState session) {
+  final key = session.selectedHadithKey;
+  if (key == null) return null;
+  return hadithVisibleResultsList(
+    ref,
+    session,
+  )?.where((hadith) => hadithStableKey(hadith) == key).firstOrNull;
+}
+
+/// Selected object derived from its stable key and the visible collection.
+@riverpod
+DetailedHadith? selectedHadith(Ref ref) {
+  final session = ref.watch(hadithSessionControllerProvider);
+  if (session.mode == HadithViewMode.bookmarks) {
+    ref.watch(hadithFavoritesProvider);
+  }
+  return _selectedFromVisible(ref, session);
+}
+
+/// The only writable runtime authority for persisted Hadith favorites.
 @Riverpod(keepAlive: true)
+class HadithFavoritesStore extends _$HadithFavoritesStore {
+  @override
+  Future<Map<String, DetailedHadith>> build() async {
+    final repository = await ref.read(hadithRepositoryProvider.future);
+    final favorites = await repository.getFavorites();
+    return Map.unmodifiable({
+      for (final hadith in favorites) hadithStableKey(hadith): hadith,
+    });
+  }
+
+  /// Toggles [hadith] on disk, then atomically publishes the stored snapshot.
+  Future<void> toggle(HadithBase hadith) async {
+    final repository = await ref.read(hadithRepositoryProvider.future);
+    await repository.toggleFavorite(hadith);
+    final favorites = await repository.getFavorites();
+    if (!ref.mounted) return;
+    state = AsyncData(
+      Map.unmodifiable({
+        for (final favorite in favorites) hadithStableKey(favorite): favorite,
+      }),
+    );
+  }
+}
+
+/// Ordered view of the canonical favorites store.
+@riverpod
 Future<List<DetailedHadith>> hadithFavorites(Ref ref) async {
-  final repository = await ref.read(hadithRepositoryProvider.future);
-  return repository.getFavorites();
+  final favorites = await ref.watch(hadithFavoritesStoreProvider.future);
+  return List.unmodifiable(favorites.values);
 }
 
 /// Coordinates hadith session state, search, mode transitions, and selection.
@@ -163,9 +208,8 @@ class HadithSessionController extends _$HadithSessionController {
         ),
       );
 
-      ref.read(hadithRecentSearchesProvider.notifier).prepend(value);
       unawaited(
-        ref.read(hadithRecentSearchesProvider.notifier).persistQuery(value),
+        ref.read(hadithRecentSearchesStoreProvider.notifier).add(value),
       );
     } catch (e, stackTrace) {
       if (!ref.mounted || generation != _searchGeneration) return;
@@ -232,11 +276,11 @@ class HadithSessionController extends _$HadithSessionController {
         return;
       }
 
-      final selected = state.selectedHadith;
+      final selectedKey = state.selectedHadithKey;
       final keepSelection =
-          selected != null &&
+          selectedKey != null &&
           response.data.any(
-            (hadith) => hadithStableKey(hadith) == hadithStableKey(selected),
+            (hadith) => hadithStableKey(hadith) == selectedKey,
           );
 
       state = state.copyWith(
@@ -265,21 +309,17 @@ class HadithSessionController extends _$HadithSessionController {
   ///
   /// Propagates repository failures so callers can surface a toast.
   Future<void> toggleFavorite(HadithBase hadith) async {
-    final repository = await ref.read(hadithRepositoryProvider.future);
     final key = hadithStableKey(hadith);
-    final wasFavorite = await repository.isFavoriteByKey(key);
+    final wasFavorite =
+        ref.read(hadithFavoritesStoreProvider).value?.containsKey(key) ?? false;
+    await ref.read(hadithFavoritesStoreProvider.notifier).toggle(hadith);
     if (!ref.mounted) return;
-
-    await repository.toggleFavorite(hadith);
-    if (!ref.mounted) return;
-    ref.invalidate(hadithFavoritesProvider);
 
     if (!wasFavorite || state.mode != HadithViewMode.bookmarks) {
       return;
     }
 
-    final selected = state.selectedHadith;
-    if (selected == null || hadithStableKey(selected) != key) {
+    if (state.selectedHadithKey != key) {
       return;
     }
 
@@ -299,7 +339,7 @@ class HadithSessionController extends _$HadithSessionController {
     DetailedHadith hadith, {
     bool openDetailsTab = true,
   }) async {
-    state = state.copyWith(selectedHadith: hadith);
+    state = state.copyWith(selectedHadithKey: hadithStableKey(hadith));
     if (openDetailsTab) {
       ref
           .read(hadithScreenSettingsProvider.notifier)
@@ -319,7 +359,7 @@ class HadithSessionController extends _$HadithSessionController {
     final results = hadithVisibleResultsList(ref, state);
     if (results == null || results.isEmpty) return;
 
-    final current = state.selectedHadith;
+    final current = _selectedFromVisible(ref, state);
     var index = current == null
         ? (delta > 0 ? 0 : results.length - 1)
         : results.indexWhere(
@@ -333,8 +373,7 @@ class HadithSessionController extends _$HadithSessionController {
     }
 
     final next = results[index];
-    if (current != null &&
-        hadithStableKey(next) == hadithStableKey(current)) {
+    if (current != null && hadithStableKey(next) == hadithStableKey(current)) {
       return;
     }
 
@@ -465,8 +504,9 @@ class HadithSessionController extends _$HadithSessionController {
 
 /// Returns the user's persisted recent-search queries.
 @Riverpod(keepAlive: true)
-class HadithRecentSearches extends _$HadithRecentSearches {
+class HadithRecentSearchesStore extends _$HadithRecentSearchesStore {
   static const _defaultLimit = 12;
+  Future<void> _writeTail = Future<void>.value();
 
   @override
   Future<List<String>> build() async {
@@ -475,42 +515,46 @@ class HadithRecentSearches extends _$HadithRecentSearches {
     return entries.map((entry) => entry.query).toList(growable: false);
   }
 
-  /// Optimistically prepends a query to the visible recents list.
-  void prepend(String query) {
+  /// Persists and then publishes a recent query.
+  Future<void> add(String query) => _serialize(() async {
     final normalized = query.trim();
     if (normalized.isEmpty) return;
 
-    final current = state.asData?.value ?? const <String>[];
-    final next = <String>[
-      normalized,
-      ...current.where((entry) => entry != normalized),
-    ].take(_defaultLimit).toList(growable: false);
-    state = AsyncData(next);
-  }
-
-  /// Persists a query through the repository.
-  Future<void> persistQuery(String query) async {
     final repository = await ref.read(hadithRepositoryProvider.future);
-    await repository.addRecentSearch(query);
-  }
+    await repository.addRecentSearch(normalized);
+    await _reload(repository);
+  });
 
-  /// Optimistically removes one query and persists the change.
-  Future<void> removeQuery(String query) async {
-    final current = state.asData?.value;
-    if (current == null) return;
-
-    state = AsyncData(
-      current.where((entry) => entry != query).toList(growable: false),
-    );
+  /// Removes one query on disk before publishing the new list.
+  Future<void> removeQuery(String query) => _serialize(() async {
     final repository = await ref.read(hadithRepositoryProvider.future);
     await repository.removeRecentSearch(query);
-  }
+    await _reload(repository);
+  });
 
-  /// Optimistically clears recents and persists the change.
-  Future<void> clearAll() async {
-    state = const AsyncData(<String>[]);
+  /// Clears storage before publishing the empty list.
+  Future<void> clearAll() => _serialize(() async {
     final repository = await ref.read(hadithRepositoryProvider.future);
     await repository.clearRecentSearches();
+    if (!ref.mounted) return;
+    state = const AsyncData(<String>[]);
+  });
+
+  Future<void> _reload(HadithRepository repository) async {
+    final entries = await repository.getRecentSearches();
+    if (!ref.mounted) return;
+    state = AsyncData(
+      entries
+          .map((entry) => entry.query)
+          .take(_defaultLimit)
+          .toList(growable: false),
+    );
+  }
+
+  Future<void> _serialize(Future<void> Function() operation) {
+    final next = _writeTail.then((_) => operation());
+    _writeTail = next.then<void>((_) {}, onError: (_, _) {});
+    return next;
   }
 }
 
@@ -526,16 +570,18 @@ Future<List<HadithLookupRef>> hadithLookup(
 
   final repository = await ref.read(hadithRepositoryProvider.future);
   return switch (kind) {
-    HadithLookupKind.scholars => (await repository.searchScholars(q))
-        .map((item) => HadithLookupRef(id: item.id, name: item.name))
-        .toList(growable: false),
-    HadithLookupKind.books => (await repository.searchBooks(q))
-        .data
-        .map((item) => HadithLookupRef(id: item.id, name: item.name))
-        .toList(growable: false),
-    HadithLookupKind.rawi => (await repository.searchRawi(q))
-        .map((item) => HadithLookupRef(id: item.id, name: item.name))
-        .toList(growable: false),
+    HadithLookupKind.scholars =>
+      (await repository.searchScholars(q))
+          .map((item) => HadithLookupRef(id: item.id, name: item.name))
+          .toList(growable: false),
+    HadithLookupKind.books =>
+      (await repository.searchBooks(q)).data
+          .map((item) => HadithLookupRef(id: item.id, name: item.name))
+          .toList(growable: false),
+    HadithLookupKind.rawi =>
+      (await repository.searchRawi(q))
+          .map((item) => HadithLookupRef(id: item.id, name: item.name))
+          .toList(growable: false),
   };
 }
 

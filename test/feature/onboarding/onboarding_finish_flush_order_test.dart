@@ -7,9 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -71,11 +71,13 @@ void main() {
       });
 
       // Mutate prefs during onboarding.
-      await container.read(prayerSettingsProvider.notifier).applyLocationBundle(
-        coordinates: Coordinates(21.4225, 39.8262),
-        locationName: 'Makkah',
-        location: tz.getLocation('Asia/Riyadh'),
-      );
+      await container
+          .read(prayerSettingsProvider.notifier)
+          .applyLocationBundle(
+            coordinates: Coordinates(21.4225, 39.8262),
+            locationName: 'Makkah',
+            location: tz.getLocation('Asia/Riyadh'),
+          );
       container.read(themeProvider.notifier).toggleThemeMode();
       container.read(localeProvider.notifier).setLocale(const Locale('ar'));
 
@@ -83,8 +85,9 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 50));
       storage.writeKeys.clear();
 
-      final finished =
-          await container.read(onboardingStateProvider.notifier).finish();
+      final finished = await container
+          .read(onboardingStateProvider.notifier)
+          .finish();
       expect(finished, isTrue);
 
       expect(storage.writeKeys, contains('PrayerSettingsNotifier'));
@@ -95,7 +98,9 @@ void main() {
       final prayerIdx = storage.writeKeys.indexOf('PrayerSettingsNotifier');
       final themeIdx = storage.writeKeys.indexOf('ThemeNotifier');
       final localeIdx = storage.writeKeys.indexOf('locale');
-      final onboardingIdx = storage.writeKeys.indexOf('OnboardingStateNotifier');
+      final onboardingIdx = storage.writeKeys.indexOf(
+        'OnboardingStateNotifier',
+      );
 
       expect(prayerIdx, lessThan(themeIdx));
       expect(themeIdx, lessThan(localeIdx));

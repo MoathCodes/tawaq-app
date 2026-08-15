@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/select_empty_content.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
@@ -84,6 +85,7 @@ class TranslationSourceSelector extends ConsumerWidget {
             final normalized = query.toLowerCase().trim();
             return sources.where(
               (source) =>
+                  arabicSearchContains(source.displayName, normalized) ||
                   source.displayName.toLowerCase().contains(normalized) ||
                   source.language.toLowerCase().contains(normalized),
             );

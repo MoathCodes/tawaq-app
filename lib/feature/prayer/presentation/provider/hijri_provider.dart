@@ -2,7 +2,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/utils/hijri_format.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
-import 'package:timezone/timezone.dart';
 
 part 'hijri_provider.g.dart';
 
@@ -15,10 +14,10 @@ String hijriClock(Ref ref) {
   // non-reactively so this does not recompute on every 1 Hz clock tick.
   ref.watch(prayerCalendarDayKeyProvider);
   final langCode = ref.watch(localeProvider).value ?? 'en';
-  final settings = ref.read(effectivePrayerSettingsProvider);
-  if (settings == null) return '';
+  final now = ref.read(prayerDayProvider).value?.now;
+  if (now == null) return '';
   return HijriFormat.formatDate(
-    TZDateTime.now(settings.location),
+    now,
     langCode,
     pattern: 'DDDD, dd MMMM yyyy',
   );

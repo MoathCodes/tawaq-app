@@ -35,8 +35,6 @@
   "a11yWindowRestore": "استعادة النافذة",
   "about": "عن التطبيق",
   "addReflection": "أضف خاطرة...",
-  "deleteReflection": "حذف الخاطرة",
-  "deleteReflectionConfirm": "حذف هذه الخاطرة؟ لا يمكن التراجع عن ذلك.",
   "adhan": "الأذان",
   "adhanAdjustments": "تعديلات الأذان (بالدقائق)",
   "adhanAlertPositionCenter": "الوسط",
@@ -143,7 +141,7 @@
   "collapsePanel": "طي اللوحة",
   "colorTheme": "نمط الألوان",
   "colorThemeSubtitle": "اختر المخطوطة أو المحايد.",
-  "completed": "مكتملة •",
+  "completed": "مكتملة",
   "completionStatus": "حالة الإكمال",
   "coordinates": "الإحداثيات الجغرافية",
   "currentPrayer": "الصلاة الحالية",
@@ -156,6 +154,8 @@
   "decimalPlaceholder": "٠٫٠",
   "defaultLocation": "الموقع الافتراضي",
   "defaultSurahName": "الفاتحة",
+  "deleteReflection": "حذف الخاطرة",
+  "deleteReflectionConfirm": "حذف هذه الخاطرة؟ لا يمكن التراجع عن ذلك.",
   "desktopForceMacStyleWindowControls": "استخدام أزرار نافذة بنمط macOS",
   "desktopLaunchAtLogin": "البدء عند تسجيل الدخول",
   "desktopLaunchAtLoginHint": "تم تفعيل البدء مخفياً في الشريط أيضاً حتى تعمل تنبيهات الأذان بعد تسجيل الدخول.",
@@ -480,13 +480,6 @@
   "madhabLabel": "المذهب",
   "maghrib": "المغرب",
   "maghribAngleLabel": "زاوية المغرب (°)",
-  "menuAddBookmark": "إضافة إشارة مرجعية",
-  "menuAddFavorite": "إضافة إلى المفضلة",
-  "menuCopyText": "نسخ النص",
-  "menuOpen": "فتح",
-  "menuRemoveBookmark": "إزالة الإشارة المرجعية",
-  "menuRemoveFavorite": "إزالة من المفضلة",
-  "midnight": "منتصف الليل",
   "mediaSessionAppName": "طوّق",
   "mediaSessionAudioBy": "صوت بواسطة {source}",
   "@mediaSessionAudioBy": {
@@ -496,6 +489,13 @@
       }
     }
   },
+  "menuAddBookmark": "إضافة إشارة مرجعية",
+  "menuAddFavorite": "إضافة إلى المفضلة",
+  "menuCopyText": "نسخ النص",
+  "menuOpen": "فتح",
+  "menuRemoveBookmark": "إزالة الإشارة المرجعية",
+  "menuRemoveFavorite": "إزالة من المفضلة",
+  "midnight": "منتصف الليل",
   "minute": "دقيقة",
   "missed": "فائتة",
   "missedRate": "نسبة الفوائت",
@@ -509,10 +509,46 @@
   "next": "التالي",
   "nextPrayer": "الصلاة القادمة",
   "noDataAvailable": "لا توجد بيانات",
+  "noReflectionsMatchSearch": "لا توجد خواطر تطابق بحثك",
+  "noReflectionsYet": "لا خواطر بعد — اكتب خاطرة على آية لتظهر هنا",
   "noResults": "لا توجد نتائج.",
   "noResultsFound": "لا توجد نتائج",
   "northAmerica": "أمريكا الشمالية (ISNA)",
   "noTafsirAvailable": "لا يوجد تفسير متاح لهذه الآية",
+  "noteTimeDaysAgo": "{count, plural, one{منذ يوم} two{منذ يومين} few{منذ {count} أيام} other{منذ {count} يوماً}}",
+  "@noteTimeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeMonthsAgo": "{count, plural, one{الشهر الماضي} two{منذ شهرين} few{منذ {count} أشهر} other{منذ {count} شهراً}}",
+  "@noteTimeMonthsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeToday": "اليوم",
+  "noteTimeWeeksAgo": "{count, plural, one{منذ أسبوع} two{منذ أسبوعين} few{منذ {count} أسابيع} other{منذ {count} أسبوعاً}}",
+  "@noteTimeWeeksAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeYearsAgo": "{count, plural, one{العام الماضي} two{منذ عامين} few{منذ {count} أعوام} other{منذ {count} عاماً}}",
+  "@noteTimeYearsAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noteTimeYesterday": "أمس",
   "noTranslationAvailable": "لا توجد ترجمة متاحة لهذه الآية",
   "nowActive": "نشط الآن",
   "onboardingFinishAction": "ابدأ",
@@ -719,7 +755,7 @@
       }
     }
   },
-  "quranRecitationOfflineFiles": "الملفات دون اتصال",
+  "quranRecitationOfflineFiles": "التلاوات المحفوظة",
   "quranRecitationOfflineInFolder": "في هذا المجلد",
   "quranRecitationOfflineOpenFolder": "فتح المجلد",
   "quranRecitationOfflineStorageUsed": "التخزين المستخدم",
@@ -739,6 +775,14 @@
   "quranRecitationPreviousAyah": "الآية السابقة",
   "quranRecitationPreviousSurah": "السورة السابقة",
   "quranRecitationRangeRepeat": "المدى والتكرار",
+  "quranRecitationPlaysRemaining": "{remaining, plural, =1{تشغيل واحد متبقٍ} =2{تشغيلان متبقيان} other{{remaining} تشغيلات متبقية}}",
+  "@quranRecitationPlaysRemaining": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
   "quranRecitationRepeatProgress": "{current} من {total}",
   "@quranRecitationRepeatProgress": {
     "placeholders": {
@@ -752,8 +796,9 @@
   },
   "quranRecitationRepeatScopeEachAyah": "تكرار كل آية",
   "quranRecitationRepeatScopeSelection": "تكرار المقطع",
-  "quranRecitationSaveOffline": "حفظ دون اتصال",
+  "quranRecitationSeekBarLabel": "موضع التلاوة",
   "quranRecitationSavedOffline": "محفوظ دون اتصال",
+  "quranRecitationSaveOffline": "حفظ دون اتصال",
   "quranRecitationSavingOffline": "جارٍ الحفظ…",
   "quranRecitationSelectionLoopProgress": "تكرار {current} من {total}",
   "@quranRecitationSelectionLoopProgress": {
@@ -822,9 +867,17 @@
   "quranTextSizeIndependentNote": "حجم قراءة القرآن مستقل عن تحجيم التطبيق والنظام.",
   "quranTextSizePreview": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
   "quranTextSizePreviewLabel": "معاينة",
-  "quranZoomFitPage": "ملاءمة",
+  "quranTranslationQuoted": "\"{translation}\"",
+  "@quranTranslationQuoted": {
+    "placeholders": {
+      "translation": {
+        "type": "String"
+      }
+    }
+  },
   "quranZoomFillWidth": "ملء",
   "quranZoomFillWidthHint": "بعد الملاءمة قد تحتاج الصفحة إلى التمرير عمودياً لتكبير أكبر.",
+  "quranZoomFitPage": "ملاءمة",
   "quranZoomPercent": "{percent}٪",
   "@quranZoomPercent": {
     "placeholders": {
@@ -834,51 +887,7 @@
     }
   },
   "quranZoomReset": "إعادة إلى الملاءمة",
-  "quranTranslationQuoted": "\"{translation}\"",
-  "@quranTranslationQuoted": {
-    "placeholders": {
-      "translation": {
-        "type": "String"
-      }
-    }
-  },
   "red": "أحمر",
-  "noReflectionsMatchSearch": "لا توجد خواطر تطابق بحثك",
-  "noReflectionsYet": "لا خواطر بعد — اكتب خاطرة على آية لتظهر هنا",
-  "noteTimeDaysAgo": "{count, plural, one{منذ يوم} two{منذ يومين} few{منذ {count} أيام} other{منذ {count} يوماً}}",
-  "@noteTimeDaysAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "noteTimeMonthsAgo": "{count, plural, one{الشهر الماضي} two{منذ شهرين} few{منذ {count} أشهر} other{منذ {count} شهراً}}",
-  "@noteTimeMonthsAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "noteTimeToday": "اليوم",
-  "noteTimeWeeksAgo": "{count, plural, one{منذ أسبوع} two{منذ أسبوعين} few{منذ {count} أسابيع} other{منذ {count} أسبوعاً}}",
-  "@noteTimeWeeksAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "noteTimeYearsAgo": "{count, plural, one{العام الماضي} two{منذ عامين} few{منذ {count} أعوام} other{منذ {count} عاماً}}",
-  "@noteTimeYearsAgo": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "noteTimeYesterday": "أمس",
   "reflectionPlaceholder": "اكتب خاطرتك حول هذه الآية...",
   "reflectionsSummary": "{noteCount, plural, =0{لا خواطر} =1{خاطرة واحدة في {surahCount, plural, =1{سورة واحدة} =2{سورتين} few{{surahCount} سور} many{{surahCount} سورة} other{{surahCount} سورة}}} =2{خاطرتان في {surahCount, plural, =1{سورة واحدة} =2{سورتين} few{{surahCount} سور} many{{surahCount} سورة} other{{surahCount} سورة}}} few{{noteCount} خواطر في {surahCount, plural, =1{سورة واحدة} =2{سورتين} few{{surahCount} سور} many{{surahCount} سورة} other{{surahCount} سورة}}} many{{noteCount} خاطرة في {surahCount, plural, =1{سورة واحدة} =2{سورتين} few{{surahCount} سور} many{{surahCount} سورة} other{{surahCount} سورة}}} other{{noteCount} خاطرة في {surahCount, plural, =1{سورة واحدة} =2{سورتين} few{{surahCount} سور} many{{surahCount} سورة} other{{surahCount} سورة}}}}",
   "@reflectionsSummary": {
@@ -898,7 +907,6 @@
   "rose": "وردي",
   "save": "حفظ",
   "saveParameters": "حفظ الإعدادات",
-  "searchYourReflections": "ابحث في خواطرك",
   "scheduleAlertEventAdhan": "أذان {prayer}",
   "@scheduleAlertEventAdhan": {
     "placeholders": {
@@ -941,16 +949,15 @@
   "scheduleAlertSoundHint": "تشغيل الأذان عند حلول الوقت",
   "scrollMoreHint": "المزيد بالأسفل",
   "searchForMore": "ابحث للمزيد من الخيارات",
+  "searchingPlace": "البحث عن موقع",
   "searchPlaceAction": "بحث",
   "searchPlaceLabel": "البحث عن موقع",
   "searchPlaceQueryHint": "مدينة أو منطقة أو عنوان",
   "searchPlaceSubmitHint": "اضغط Enter أو زر البحث",
-  "searchingPlace": "البحث عن موقع",
   "searchQuran": "ابحث في القرآن...",
+  "searchYourReflections": "ابحث في خواطرك",
   "selectAyahToSeeContent": "اختر آية لعرض المحتوى.",
   "selectVerseToAddReflection": "يرجى اختيار آية لإضافة خاطرة",
-  "studyTabCurrentAyah": "الآية الحالية",
-  "studyTabMyReflections": "خواطري",
   "settings": "الإعدادات",
   "setupPrayerSettingsSubtitle": "سنرشدك عبر خطوات سريعة. يمكنك تغيير هذه لاحقًا من الإعدادات.",
   "setupPrayerSettingsTitle": "لنضبط إعدادات الصلاة",
@@ -1097,6 +1104,8 @@
     }
   },
   "studyMode": "وضع الدراسة",
+  "studyTabCurrentAyah": "الآية الحالية",
+  "studyTabMyReflections": "خواطري",
   "sunnahAlertTitle": "{prayer}",
   "sunnahOsNotificationBody": "حان وقت صلاة السنة.",
   "sunnahTimes": "أوقات السنن",

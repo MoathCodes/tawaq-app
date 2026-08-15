@@ -82,7 +82,7 @@ class _RangeRepeatDialog extends HookConsumerWidget {
           .read(selectedRecitationProvider)
           .value
           ?.reciter;
-      final selectedAyah = ref.read(quranSelectedAyahProvider);
+      final selectedAyah = ref.read(quranSelectedAyahProvider).value;
 
       final seedSurah =
           initial?.surah ?? playback.surah ?? selectedAyah?.surahNumber ?? 1;
@@ -220,7 +220,7 @@ class _RangeRepeatDialog extends HookConsumerWidget {
       moshafState.value = pick.moshaf;
     }
 
-    return PlayerDialogShell(
+    return TawaqDialogShell(
       title: l10n.quranRangeTitle,
       subtitle: rangeSummary,
       maxHeight: 720,
@@ -435,7 +435,7 @@ class _RangeRepeatDialog extends HookConsumerWidget {
         enabled: autoHighlight,
       );
     }
-    if (context.mounted) unawaited(Navigator.of(context).maybePop());
+    if (context.mounted) Navigator.of(context).maybePop();
   }
 }
 

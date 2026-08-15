@@ -128,9 +128,9 @@ extension MethodLocaleExtension on CalculationMethod {
 /// Utilities for reading localized prayer times from [PrayerTimes].
 extension PrayerLocaleExtension on PrayerTimes {
   /// Returns the [DateTime] of the currently active prayer in the [location].
-  DateTime getCurrentPrayerDateTime(Location location) {
+  DateTime getCurrentPrayerDateTime(Location location, DateTime now) {
     return switch (currentPrayer(
-      time: TZDateTime.from(DateTime.now(), location),
+      time: TZDateTime.from(now, location),
     )) {
       Prayer.fajr => TZDateTime.from(fajr, location),
       Prayer.sunrise => TZDateTime.from(sunrise, location),
@@ -144,9 +144,9 @@ extension PrayerLocaleExtension on PrayerTimes {
   }
 
   /// Returns the [DateTime] of the next prayer in the given [location].
-  DateTime getNextPrayerDateTime(Location location) {
+  DateTime getNextPrayerDateTime(Location location, DateTime now) {
     return switch (nextPrayer(
-      time: TZDateTime.from(DateTime.now(), location),
+      time: TZDateTime.from(now, location),
     )) {
       Prayer.fajr => TZDateTime.from(fajr, location),
       Prayer.sunrise => TZDateTime.from(sunrise, location),
@@ -186,14 +186,12 @@ extension PrayerLocaleNameExtension on Prayer {
 
   /// Returns the localized label for this prayer, including Friday handling
   /// for Jumu'ah.
-  String getLocaleName(AppLocalizations locale) {
+  String getLocaleName(AppLocalizations locale, {DateTime? date}) {
     return switch (this) {
       Prayer.fajr => locale.fajr,
       Prayer.sunrise => locale.sunrise,
       Prayer.dhuhr =>
-        DateTime.now().toLocal().weekday == DateTime.friday
-            ? locale.jumuah
-            : locale.dhuhr,
+        date?.weekday == DateTime.friday ? locale.jumuah : locale.dhuhr,
       Prayer.asr => locale.asr,
       Prayer.maghrib => locale.maghrib,
       Prayer.isha => locale.isha,

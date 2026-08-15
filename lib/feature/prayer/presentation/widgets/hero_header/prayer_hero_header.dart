@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/utils/hijri_provider.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/hijri_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
@@ -358,9 +358,13 @@ class _HeroTimeSquare extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = FTheme.of(context);
-    final (horizontal, vertical, labelStyle, timeStyle, minWidth) = switch (
-      density
-    ) {
+    final (
+      horizontal,
+      vertical,
+      labelStyle,
+      timeStyle,
+      minWidth,
+    ) = switch (density) {
       _HeroTimeSquareDensity.normal => (
         AppSpacing.xl,
         AppSpacing.lg,

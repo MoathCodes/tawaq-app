@@ -3,9 +3,9 @@ import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/settings/data/models/desktop_settings.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
 
 part 'desktop_settings_provider.g.dart';
 
@@ -15,14 +15,8 @@ const _logPrefix = '[DesktopSettingsNotifier]';
 @Riverpod(keepAlive: true)
 @JsonPersist()
 class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
-  DesktopSettings _lastGood = DesktopSettings.defaults();
-
   @override
   Future<DesktopSettings> build() async {
-    listenSelf((_, next) {
-      final value = next.value;
-      if (value != null) _lastGood = value;
-    });
     try {
       await persist(
         ref.watch(settingsStorageProvider.future),
@@ -32,13 +26,13 @@ class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
       ref
           .read(loggerProvider)
           .e(
-            '$_logPrefix hydrate failed; keeping last-good settings',
+            '$_logPrefix hydrate failed; using current/default settings',
             error: error,
             stackTrace: stack,
           );
     }
-    if (!ref.mounted) return _lastGood;
-    return state.value ?? _lastGood;
+    if (!ref.mounted) return DesktopSettings.defaults();
+    return state.value ?? DesktopSettings.defaults();
   }
 
   void _commit(DesktopSettings Function(DesktopSettings) fn, String field) {
@@ -89,11 +83,13 @@ class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
       try {
         await LaunchAtLoginService.setEnabled(value: value);
       } on Object catch (error, stack) {
-        ref.read(loggerProvider).e(
-          '$_logPrefix launch-at-login OS update failed; not committing',
-          error: error,
-          stackTrace: stack,
-        );
+        ref
+            .read(loggerProvider)
+            .e(
+              '$_logPrefix launch-at-login OS update failed; not committing',
+              error: error,
+              stackTrace: stack,
+            );
         rethrow;
       }
     }

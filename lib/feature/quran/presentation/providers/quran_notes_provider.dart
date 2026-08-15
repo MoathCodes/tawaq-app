@@ -35,92 +35,61 @@ class QuranNoteEntry {
   final int numberInSurah;
 }
 
-/// Provider for managing Quran notes for a specific ayah.
-///
-/// Pass in the ayahId to get/set the note for that ayah.
-/// When ayahId is null, returns null and operations are no-ops.
-@riverpod
-class QuranNotesNotifier extends _$QuranNotesNotifier {
+/// The only writable runtime authority for the persisted Quran-note collection.
+@Riverpod(keepAlive: true)
+class QuranNotesStore extends _$QuranNotesStore {
   late final Logger _log;
-  int? _ayahId;
+  Future<void> _writeTail = Future<void>.value();
 
   @override
-  FutureOr<QuranNote?> build(int? ayahId) async {
+  Future<Map<int, QuranNote>> build() async {
     _log = ref.read(loggerProvider);
-    _ayahId = ayahId;
-    const logPrefix = '[QuranNotesNotifier.build] ';
-
-    if (ayahId == null) {
-      _log.d('$logPrefix No ayahId provided');
-      return null;
-    }
-
-    _log.d('$logPrefix Loading note for ayahId: $ayahId');
-    final note = await ref.read(quranNotesSourceProvider).getNote(ayahId);
-    if (!ref.mounted) return null;
-    return note;
+    return ref.read(quranNotesSourceProvider).getAllNotes();
   }
 
-  /// Adds or updates a note for the current ayah.
-  ///
-  /// Empty/whitespace text deletes the note.
-  Future<void> addNote(String note) async {
-    const logPrefix = '[QuranNotesNotifier.addNote] ';
-    final ayahId = _ayahId;
-
-    if (ayahId == null) {
-      _log.w('$logPrefix No ayahId set, cannot add note');
-      return;
-    }
-
+  /// Saves [text] for [ayahId], publishing only after Hive succeeds.
+  Future<void> save(int ayahId, String text) => _serialize(() async {
+    const logPrefix = '[QuranNotesStore.save] ';
     try {
-      _log.d('$logPrefix Adding note for ayahId: $ayahId');
       final source = ref.read(quranNotesSourceProvider);
-      await source.addNote(ayahId, note);
+      await source.addNote(ayahId, text);
       if (!ref.mounted) return;
-      if (note.trim().isEmpty) {
-        state = const AsyncData(null);
-      } else {
-        state = AsyncData(await source.getNote(ayahId));
-      }
-      ref.invalidate(quranAllNotesProvider);
-      _log.d('$logPrefix Note added successfully');
+      final persisted = await source.getAllNotes();
+      if (!ref.mounted) return;
+      state = AsyncData(Map.unmodifiable(persisted));
     } catch (e, stackTrace) {
-      if (!ref.mounted) return;
       _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
-      state = AsyncError(e, stackTrace);
+      rethrow;
     }
-  }
+  });
 
-  /// Deletes the note for the current ayah.
-  Future<void> deleteNote() async {
-    const logPrefix = '[QuranNotesNotifier.deleteNote] ';
-    final ayahId = _ayahId;
-
-    if (ayahId == null) {
-      _log.w('$logPrefix No ayahId set, cannot delete note');
-      return;
-    }
-
+  /// Deletes [ayahId], publishing only after Hive succeeds.
+  Future<void> delete(int ayahId) => _serialize(() async {
+    const logPrefix = '[QuranNotesStore.delete] ';
     try {
-      _log.d('$logPrefix Deleting note for ayahId: $ayahId');
-      await ref.read(quranNotesSourceProvider).deleteNote(ayahId);
+      final source = ref.read(quranNotesSourceProvider);
+      await source.deleteNote(ayahId);
       if (!ref.mounted) return;
-      state = const AsyncData(null);
-      ref.invalidate(quranAllNotesProvider);
-      _log.d('$logPrefix Note deleted successfully');
+      final persisted = await source.getAllNotes();
+      if (!ref.mounted) return;
+      state = AsyncData(Map.unmodifiable(persisted));
     } catch (e, stackTrace) {
-      if (!ref.mounted) return;
       _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
-      state = AsyncError(e, stackTrace);
+      rethrow;
     }
+  });
+
+  Future<void> _serialize(Future<void> Function() operation) {
+    final next = _writeTail.then((_) => operation());
+    _writeTail = next.then<void>((_) {}, onError: (_, _) {});
+    return next;
   }
 }
 
 /// All saved Quran notes with ayah previews, sorted by ayah id.
 @riverpod
 Future<List<QuranNoteEntry>> quranAllNotes(Ref ref) async {
-  final notes = await ref.watch(quranNotesSourceProvider).getAllNotes();
+  final notes = await ref.watch(quranNotesStoreProvider.future);
   if (notes.isEmpty) return const [];
 
   final controller = ref.watch(quranMushafControllerProvider);

@@ -7,19 +7,17 @@ import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
 
 RecitationTimeline _timeline({List<AyahTiming>? ayat}) {
   return RecitationTimeline(
-    timing: ayat == null
-        ? null
-        : SurahTiming(surah: 1, readId: 1, ayat: ayat),
+    timing: ayat == null ? null : SurahTiming(surah: 1, readId: 1, ayat: ayat),
     rangeStartAyah: 1,
     rangeEndAyah: 3,
   );
 }
 
 List<AyahTiming> get _ayat => const [
-      AyahTiming(ayah: 1, startMs: 0, endMs: 1000),
-      AyahTiming(ayah: 2, startMs: 1000, endMs: 2000),
-      AyahTiming(ayah: 3, startMs: 2000, endMs: 3000),
-    ];
+  AyahTiming(ayah: 1, startMs: 0, endMs: 1000),
+  AyahTiming(ayah: 2, startMs: 1000, endMs: 2000),
+  AyahTiming(ayah: 3, startMs: 2000, endMs: 3000),
+];
 
 void main() {
   group('recitation_playback_policy', () {
@@ -59,7 +57,6 @@ void main() {
     test('shouldUseNativeFileLoop requires whole surah and repeats', () {
       const whole = RecitationState(
         surah: 1,
-        ayahRepeatCount: 1,
         repeatsRemaining: 3,
       );
       expect(eligibleForNativeFileLoop(whole), isTrue);
@@ -73,13 +70,12 @@ void main() {
       expect(eligibleForNativeFileLoop(eachAyah), isFalse);
       expect(shouldUseNativeFileLoop(eachAyah), isFalse);
 
-      final ranged = RecitationState(
+      const ranged = RecitationState(
         surah: 1,
-        rangeFrom: const AyahReference(surah: 1, ayah: 1),
-        rangeTo: const AyahReference(surah: 1, ayah: 3),
+        rangeFrom: AyahReference(surah: 1, ayah: 1),
+        rangeTo: AyahReference(surah: 1, ayah: 3),
         segmentStartAyah: 1,
         segmentEndAyah: 3,
-        ayahRepeatCount: 1,
         repeatsRemaining: 3,
       );
       expect(eligibleForNativeFileLoop(ranged), isFalse);
@@ -87,13 +83,13 @@ void main() {
 
     test('playable ayah bounds respect segment', () {
       final timeline = _timeline(ayat: _ayat);
-      final state = RecitationState(
+      const state = RecitationState(
         currentAyah: 2,
-        position: const Duration(milliseconds: 1500),
+        position: Duration(milliseconds: 1500),
         segmentStartAyah: 1,
         segmentEndAyah: 3,
-        rangeFrom: const AyahReference(surah: 1, ayah: 1),
-        rangeTo: const AyahReference(surah: 1, ayah: 3),
+        rangeFrom: AyahReference(surah: 1, ayah: 1),
+        rangeTo: AyahReference(surah: 1, ayah: 3),
       );
       expect(currentAyahOrGuess(state, timeline), 2);
       expect(firstPlayableAyah(state), 1);
@@ -118,13 +114,12 @@ void main() {
 
     test('isPastRangeEnd only for bounded ranges without ayah-repeat', () {
       final timeline = _timeline(ayat: _ayat);
-      final range = RecitationState(
-        rangeFrom: const AyahReference(surah: 1, ayah: 1),
-        rangeTo: const AyahReference(surah: 1, ayah: 3),
+      const range = RecitationState(
+        rangeFrom: AyahReference(surah: 1, ayah: 1),
+        rangeTo: AyahReference(surah: 1, ayah: 3),
         segmentStartAyah: 1,
         segmentEndAyah: 3,
-        duration: const Duration(seconds: 3),
-        ayahRepeatCount: 1,
+        duration: Duration(seconds: 3),
       );
       expect(
         isPastRangeEnd(
@@ -146,9 +141,9 @@ void main() {
 
     test('detectAyahLoopWrap requires near-end then near-start jump', () {
       final timeline = _timeline(ayat: _ayat);
-      final state = RecitationState(
+      const state = RecitationState(
         currentAyah: 1,
-        position: const Duration(milliseconds: 800),
+        position: Duration(milliseconds: 800),
         ayahRepeatCount: 3,
         ayahRepeatsRemaining: 3,
       );
@@ -172,9 +167,9 @@ void main() {
 
     test('sleepBoundary resolves content ends', () {
       final timeline = _timeline(ayat: _ayat);
-      final state = RecitationState(
+      const state = RecitationState(
         currentAyah: 2,
-        duration: const Duration(seconds: 3),
+        duration: Duration(seconds: 3),
         sleep: RecitationSleep.endOfAyah,
       );
       expect(

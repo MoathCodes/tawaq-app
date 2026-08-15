@@ -7,7 +7,6 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_ordinals.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_search_select.dart';
@@ -170,17 +169,10 @@ class HizbSelector extends HookConsumerWidget {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final allHizbs = useFuture(useMemoized(controller.getHizbs));
 
-    final fallbackFirstAyahId = ref.watch(
-      quranScreenSettingsProvider.select(
-        (v) => v.value?.pageInfo.firstAyahId,
-      ),
-    );
-
     return ListenableBuilder(
       listenable: controller.page,
       builder: (context, _) {
-        final firstAyahId =
-            controller.currentPageInfo?.firstAyahId ?? fallbackFirstAyahId;
+        final firstAyahId = controller.currentPageInfo?.firstAyahId;
 
         final selectorReady =
             allHizbs.connectionState == ConnectionState.done && allHizbs.hasData;

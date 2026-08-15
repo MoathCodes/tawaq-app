@@ -10,15 +10,56 @@
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
+  FlMethodChannel* single_instance_channel;
+  gboolean pending_activation;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
+static constexpr char kSingleInstanceChannel[] = "tawaq/single_instance";
+static constexpr char kTakePendingActivation[] = "takePendingActivation";
+
+static void single_instance_method_call_cb(FlMethodChannel* channel,
+                                           FlMethodCall* method_call,
+                                           gpointer user_data) {
+  (void)channel;
+  MyApplication* self = MY_APPLICATION(user_data);
+  const gchar* method = fl_method_call_get_name(method_call);
+  g_autoptr(FlMethodResponse) response = nullptr;
+
+  if (g_strcmp0(method, kTakePendingActivation) == 0) {
+    const gboolean pending = self->pending_activation;
+    self->pending_activation = FALSE;
+    g_autoptr(FlValue) result = fl_value_new_bool(pending);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+  } else {
+    response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
+  }
+
+  fl_method_call_respond(method_call, response, nullptr);
+}
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
+  GtkApplication* gtk_application = GTK_APPLICATION(application);
+  GList* windows = gtk_application_get_windows(gtk_application);
+
+  // A release/profile launch with the same application ID is forwarded here
+  // by GApplication. Reuse the existing Flutter window instead of creating a
+  // second engine. GtkApplication also forwards launcher activation metadata,
+  // allowing the compositor to treat this as a user-requested focus change.
+  if (windows != nullptr) {
+    self->pending_activation = TRUE;
+    GtkWindow* existing_window = GTK_WINDOW(windows->data);
+    gtk_widget_show(GTK_WIDGET(existing_window));
+    gtk_window_deiconify(existing_window);
+    gtk_window_present(existing_window);
+    return;
+  }
+
   GtkWindow* window =
-      GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
+      GTK_WINDOW(gtk_application_window_new(gtk_application));
 
   // Use a header bar when running in GNOME as this is the common style used
   // by applications and is the setup most users will be using (e.g. Ubuntu
@@ -58,6 +99,15 @@ static void my_application_activate(GApplication* application) {
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
+
+  FlBinaryMessenger* messenger =
+      fl_engine_get_binary_messenger(fl_view_get_engine(view));
+  g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
+  self->single_instance_channel = fl_method_channel_new(
+      messenger, kSingleInstanceChannel, FL_METHOD_CODEC(codec));
+  fl_method_channel_set_method_call_handler(
+      self->single_instance_channel, single_instance_method_call_cb, self,
+      nullptr);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
@@ -100,6 +150,7 @@ static void my_application_shutdown(GApplication* application) {
 // Implements GObject::dispose.
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
+  g_clear_object(&self->single_instance_channel);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
   G_OBJECT_CLASS(my_application_parent_class)->dispose(object);
 }
@@ -112,11 +163,21 @@ static void my_application_class_init(MyApplicationClass* klass) {
   G_OBJECT_CLASS(klass)->dispose = my_application_dispose;
 }
 
-static void my_application_init(MyApplication* self) {}
+static void my_application_init(MyApplication* self) {
+  self->single_instance_channel = nullptr;
+  self->pending_activation = FALSE;
+}
 
 MyApplication* my_application_new() {
+  // Flutter debug builds remain non-unique for parallel `flutter run`
+  // sessions. Profile and release builds use GtkApplication's native
+  // per-session uniqueness before Dart or any app storage is initialized.
+#ifdef NDEBUG
+  const GApplicationFlags flags = static_cast<GApplicationFlags>(0);
+#else
+  const GApplicationFlags flags = G_APPLICATION_NON_UNIQUE;
+#endif
   return MY_APPLICATION(g_object_new(my_application_get_type(),
                                      "application-id", APPLICATION_ID,
-                                     "flags", G_APPLICATION_NON_UNIQUE,
-                                     nullptr));
+                                     "flags", flags, nullptr));
 }

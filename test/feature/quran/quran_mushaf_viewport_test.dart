@@ -3,8 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_mushaf_pane.dart';
@@ -174,6 +173,47 @@ void main() {
   }
 
   group('QuranMushafPane double-page guard', () {
+    testWidgets('publishes page only after scroll settlement', (tester) async {
+      int? publishedPage;
+      await tester.pumpWidget(
+        wrap(
+          width: 700,
+          child: QuranMushafPane(
+            onPageChanged: (page) => publishedPage = page,
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final reader = tester.widget<MushafReader>(find.byType(MushafReader));
+      reader.onPageChanged?.call(
+        MushafPageInfo(
+          pageNumber: 2,
+          juzNumber: 1,
+          surahNumbers: const [2],
+          surahNames: const [''],
+          firstAyahId: 8,
+          lastAyahId: 12,
+          ayahIds: const [8, 9, 10, 11, 12],
+        ),
+      );
+
+      expect(publishedPage, isNull);
+      ScrollEndNotification(
+        metrics: FixedScrollMetrics(
+          minScrollExtent: 0,
+          maxScrollExtent: 603,
+          pixels: 1,
+          viewportDimension: 1,
+          axisDirection: AxisDirection.left,
+          devicePixelRatio: 1,
+        ),
+        context: tester.element(find.byType(MushafReader)),
+      ).dispatch(tester.element(find.byType(MushafReader)));
+
+      expect(publishedPage, 2);
+    });
+
     testWidgets(
       'falls back to single page below 2× mushaf minimum width',
       (tester) async {

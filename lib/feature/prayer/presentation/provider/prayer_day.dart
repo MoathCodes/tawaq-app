@@ -5,32 +5,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
-import 'package:tawaq/core/utils/date_formatter.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
+import 'package:tawaq/core/utils/app_clock_provider.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_models.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_day_computer.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/date_formatter.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_day.g.dart';
 
-const _tickInterval = Duration(seconds: 1);
-
 /// Synchronous prayer settings safe for time math and completions.
 ///
-/// Returns the hydrated settings when location is ready, otherwise the last
-/// good stored settings. Null when no valid coordinates exist yet.
+/// Returns hydrated settings when location is ready. Null until then.
 @Riverpod(keepAlive: true)
 PrayerSettings? effectivePrayerSettings(Ref ref) {
-  ref.watch(prayerSettingsProvider);
-  final current = ref.read(prayerSettingsProvider).value;
+  final current = ref.watch(prayerSettingsProvider).value;
   if (current != null && current.isLocationReady) return current;
-  final lastGood = ref.read(prayerSettingsProvider.notifier).lastGood;
-  if (lastGood.isLocationReady) return lastGood;
   return null;
 }
 
@@ -67,20 +61,20 @@ class PrayerDay extends _$PrayerDay {
   TZDateTime? _cachedAnchorDate;
 
   @override
-  Stream<PrayerDaySnapshot> build() async* {
+  Stream<PrayerDaySnapshot> build() {
     ref.watch(prayerTimeInputsProvider);
     final log = ref.read(loggerProvider);
 
     final inputs = ref.read(prayerTimeInputsProvider);
     if (inputs == null) {
-      return;
+      return const Stream<PrayerDaySnapshot>.empty();
     }
 
-    PrayerDaySnapshot? snapshot() {
+    PrayerDaySnapshot? snapshot(DateTime instant) {
       final inputs = ref.read(prayerTimeInputsProvider);
       if (inputs == null) return null;
 
-      final now = TZDateTime.now(inputs.location);
+      final now = TZDateTime.from(instant, inputs.location);
       final bundle = _ensureCache(inputs, now, log);
 
       return PrayerDaySnapshot(
@@ -90,24 +84,24 @@ class PrayerDay extends _$PrayerDay {
       );
     }
 
-    PrayerDaySnapshot? safeSnapshot() {
+    PrayerDaySnapshot? safeSnapshot(DateTime instant) {
       try {
-        return snapshot();
+        return snapshot(instant);
       } on Object catch (error, stack) {
         log.e('PrayerDay tick failed', error: error, stackTrace: stack);
         return null;
       }
     }
 
-    final initial = safeSnapshot();
-    if (initial != null) yield initial;
-
-    while (true) {
-      await Future<void>.delayed(_tickInterval);
-      if (!ref.mounted) return;
-      final next = safeSnapshot();
-      if (next != null) yield next;
-    }
+    final output = StreamController<PrayerDaySnapshot>();
+    ref.onDispose(output.close);
+    ref.listen(appClockProvider, (_, next) {
+      final instant = next.value;
+      if (instant == null || output.isClosed) return;
+      final snapshot = safeSnapshot(instant);
+      if (snapshot != null) output.add(snapshot);
+    }, fireImmediately: true);
+    return output.stream;
   }
 
   PrayerDayBundle _ensureCache(
@@ -189,8 +183,7 @@ int prayerCalendarDayKey(Ref ref) {
 int currentMinuteBucket(Ref ref) {
   return ref.watch(
     prayerDayProvider.select(
-      (asyncDay) =>
-          (asyncDay.value?.now.millisecondsSinceEpoch ?? 0) ~/ 60000,
+      (asyncDay) => (asyncDay.value?.now.millisecondsSinceEpoch ?? 0) ~/ 60000,
     ),
   );
 }

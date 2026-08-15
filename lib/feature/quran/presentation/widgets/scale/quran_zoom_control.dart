@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -25,8 +25,7 @@ class QuranZoomControl extends HookConsumerWidget {
   final bool showHeader;
 
   static const double _span = kMushafZoomMax - kMushafZoomMin;
-  static const double _fitMark =
-      (kMushafZoomFitPage - kMushafZoomMin) / _span;
+  static const double _fitMark = (kMushafZoomFitPage - kMushafZoomMin) / _span;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,8 +47,10 @@ class QuranZoomControl extends HookConsumerWidget {
       return null;
     }, [persistedZoom]);
 
-    final normalized =
-        ((zoomState.value - kMushafZoomMin) / _span).clamp(0.0, 1.0);
+    final normalized = ((zoomState.value - kMushafZoomMin) / _span).clamp(
+      0.0,
+      1.0,
+    );
     final pastFit = zoomState.value > kMushafZoomFitPage + 0.001;
     final notifier = ref.read(quranScreenSettingsProvider.notifier);
 
@@ -76,13 +77,13 @@ class QuranZoomControl extends HookConsumerWidget {
     );
 
     final resetButton = FTooltip(
-      semanticsLabel: l10n.quranZoomReset,
       tipBuilder: (_, _) => Text(l10n.quranZoomReset),
       child: QuranSemantics.labeledControl(
         name: l10n.quranZoomReset,
         button: true,
         excludeChild: true,
         child: FButton.icon(
+          semanticsTooltip: l10n.quranZoomReset,
           variant: .ghost,
           onPress: ready && zoomState.value != kMushafZoomFitPage
               ? resetToFit

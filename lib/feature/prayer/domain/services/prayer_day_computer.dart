@@ -1,8 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hijri_date/hijri.dart';
 import 'package:logger/logger.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_models.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
 import 'package:tawaq/feature/prayer/domain/services/adhan_time_utils.dart';
 import 'package:timezone/timezone.dart';

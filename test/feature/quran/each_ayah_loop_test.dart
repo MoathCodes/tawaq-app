@@ -3,8 +3,8 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
+import 'package:tawaq/feature/quran/domain/services/recitation_state_machine.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_state_machine.dart';
 
 const _reciter = Reciter(id: 1, name: 'Test', moshaf: [_moshaf]);
 const _moshaf = Moshaf(

@@ -16,10 +16,13 @@ import 'package:tawaq/theme/spacing.dart';
 /// Screen for application settings.
 class SettingsScreen extends HookConsumerWidget {
   /// Creates a new [SettingsScreen] instance.
-  const SettingsScreen({this.tabKey, super.key});
+  const SettingsScreen({this.tabKey, this.onTabChanged, super.key});
 
   /// Optional tab to open; null restores the persisted tab.
   final String? tabKey;
+
+  /// Publishes the canonical tab wire value to app-level routing.
+  final ValueChanged<String>? onTabChanged;
 
   static const _maxContentWidth = 800.0;
 
@@ -27,21 +30,18 @@ class SettingsScreen extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final showKeyboardShortcuts = supportsKeyboardShortcuts;
-    final persistedKey = ref.watch(
-      settingsScreenSettingsProvider.select((s) => s.value),
-    );
+    final checkpoint = ref.watch(settingsScreenSettingsProvider);
+    final persistedKey = checkpoint.value;
 
     final tabs = useMemoized(
       () => visibleTabs(showKeyboardShortcuts: showKeyboardShortcuts),
       [showKeyboardShortcuts],
     );
 
-    final activeKey = useMemoized(
-      () => resolveVisibleTabKey(
-        tabKey ?? persistedKey ?? kSettingsDefaultTabKey,
-        showKeyboardShortcuts: showKeyboardShortcuts,
-      ),
-      [tabKey, persistedKey, showKeyboardShortcuts],
+    final activeKey = resolveSettingsRouteTab(
+      routeKey: tabKey,
+      persistedKey: persistedKey,
+      showKeyboardShortcuts: showKeyboardShortcuts,
     );
 
     final initialIndex = indexForTabKey(
@@ -57,70 +57,68 @@ class SettingsScreen extends HookConsumerWidget {
 
     useEffect(
       () {
-        if (tabKey == null) {
+        if (tabKey == null && !checkpoint.hasValue) {
           return null;
         }
 
-        final index = indexForTabKey(
-          tabKey!,
+        final canonical = resolveSettingsRouteTab(
+          routeKey: tabKey,
+          persistedKey: persistedKey,
           showKeyboardShortcuts: showKeyboardShortcuts,
         );
-        if (index < 0) {
-          return null;
-        }
+        final index = indexForTabKey(
+          canonical,
+          showKeyboardShortcuts: showKeyboardShortcuts,
+        );
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!context.mounted) return;
+          if (tabKey != canonical) {
+            onTabChanged?.call(canonical);
+          }
           if (!tabController.indexIsChanging && tabController.index != index) {
             tabController.animateTo(index);
           }
           ref
               .read(settingsScreenSettingsProvider.notifier)
-              .setActiveTabKey(tabKey!);
+              .setActiveTabKey(canonical);
         });
 
         return null;
       },
-      [tabKey, showKeyboardShortcuts],
-    );
-
-    // When persisted tab hydrates (no route override), sync TabController.
-    useEffect(
-      () {
-        if (tabKey != null || persistedKey == null) {
-          return null;
-        }
-
-        final index = indexForTabKey(
-          persistedKey,
-          showKeyboardShortcuts: showKeyboardShortcuts,
-        ).clamp(0, tabs.length - 1);
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!tabController.indexIsChanging && tabController.index != index) {
-            tabController.animateTo(index);
-          }
-        });
-
-        return null;
-      },
-      [persistedKey, tabKey, showKeyboardShortcuts, tabs.length],
+      [
+        tabKey,
+        persistedKey,
+        checkpoint.hasValue,
+        showKeyboardShortcuts,
+        onTabChanged,
+      ],
     );
 
     useEffect(
       () {
-        void onTabChanged() {
-          if (tabController.indexIsChanging) {
+        void handleTabChanged() {
+          // TabController.index changes near the midpoint of a swipe. Publish
+          // only once the tap animation or drag has actually settled.
+          if (!settingsTabIsSettled(
+            indexIsChanging: tabController.indexIsChanging,
+            offset: tabController.offset,
+          )) {
             return;
           }
+          final key = tabs[tabController.index].key;
+          if (tabKey != key && context.mounted) {
+            onTabChanged?.call(key);
+          }
           ref
               .read(settingsScreenSettingsProvider.notifier)
-              .setActiveTabKey(tabs[tabController.index].key);
+              .setActiveTabKey(key);
         }
 
-        tabController.addListener(onTabChanged);
-        return () => tabController.removeListener(onTabChanged);
+        tabController.addListener(handleTabChanged);
+        return () => tabController.removeListener(handleTabChanged);
       },
-      [tabController, tabs],
+      [tabController, tabs, tabKey, onTabChanged],
     );
 
     return Padding(

@@ -11,7 +11,7 @@ import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_controls.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -205,7 +205,9 @@ class LocationMapContainer extends HookConsumerWidget {
       try {
         await settingsNotifierRef.value.applyCurrentDeviceLocation();
       } catch (e) {
-        if (context.mounted) showLocationError(context, l10n.gettingLocation, e);
+        if (context.mounted) {
+          showLocationError(context, l10n.gettingLocation, e);
+        }
       } finally {
         if (context.mounted) isLocating.value = false;
       }
@@ -258,7 +260,8 @@ class LocationMapContainer extends HookConsumerWidget {
                                   ? (_, latlng) => handleTap(latlng)
                                   : null,
                               interactionOptions: InteractionOptions(
-                                flags: InteractiveFlag.all &
+                                flags:
+                                    InteractiveFlag.all &
                                     ~InteractiveFlag.rotate,
                                 cursorKeyboardRotationOptions:
                                     CursorKeyboardRotationOptions.disabled(),
@@ -285,13 +288,13 @@ class LocationMapContainer extends HookConsumerWidget {
                           top: 12,
                           left: 12,
                           child: FTooltip(
-                            semanticsLabel: l10n.useMyLocation,
                             tipBuilder: (_, _) => Text(l10n.useMyLocation),
                             child: SettingsSemantics.iconAction(
                               label: SettingsSemantics.useMyLocationAction(
                                 l10n,
                               ),
                               child: FButton.icon(
+                                semanticsTooltip: l10n.useMyLocation,
                                 variant: .secondary,
                                 onPress: handleLocate,
                                 child: const Icon(FLucideIcons.locate),

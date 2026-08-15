@@ -3,14 +3,12 @@ import 'dart:async';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:tawaq/core/audio/audio_lease.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
-import 'package:tawaq/core/desktop/adhan_alert_controller.dart';
 import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
@@ -19,7 +17,7 @@ import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_ic
 import 'package:tawaq/theme/theme.dart';
 
 /// Forui card shown during prayer alert presentation.
-class AdhanAlertCard extends HookConsumerWidget {
+class AdhanAlertCard extends ConsumerWidget {
   /// Creates [AdhanAlertCard].
   const AdhanAlertCard({
     this.showCloseButton = false,
@@ -31,13 +29,13 @@ class AdhanAlertCard extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final alert = ref.watch(adhanAlertControllerProvider);
-    final kind = alert.kind;
-    final prayer = alert.prayer;
-    final scheduledTime = alert.scheduledTime;
-    if (kind == null || prayer == null || scheduledTime == null) {
+    final alert = ref.watch(prayerAlertSessionStateProvider);
+    if (alert == null) {
       return const SizedBox.shrink();
     }
+    final kind = alert.event.kind;
+    final prayer = alert.event.prayer;
+    final scheduledTime = alert.event.scheduledTime;
 
     final theme = context.theme;
     final colors = theme.colors;
@@ -45,35 +43,29 @@ class AdhanAlertCard extends HookConsumerWidget {
     final prayerName = prayer.getLocaleName(l10n);
     final timeLabel = DateFormat.Hm().format(scheduledTime);
     final title = prayerAlertTitle(l10n, kind, prayerName);
-    final playbackState = ref.watch(audioPlayerControllerProvider);
-    final audioService = ref.watch(tawaqAudioServiceProvider);
+    final audioSession = ref.watch(audioSessionProvider);
     // Only mirror progress while adhan owns the shared player — otherwise the
     // bar reads stale recitation position/duration (often near EOF → full).
-    final adhanOwnsPlayer =
-        audioService.currentLeaseOwner == kAdhanLeaseOwner;
+    final adhanOwnsPlayer = audioSession.owner == kAdhanLeaseOwner;
     final showPlayback =
-        alert.playsSound &&
+        alert.event.playSound &&
         adhanOwnsPlayer &&
-        playbackState is! PlaybackIdle &&
-        playbackState is! PlaybackError;
-    final position = useStream(
-      audioService.positionStream,
-    );
-    final duration = useStream(
-      audioService.durationStream,
-    );
-    final maxMs = duration.data?.inMilliseconds ?? 0;
+        audioSession.lifecycle != AudioSessionLifecycle.idle &&
+        audioSession.lifecycle != AudioSessionLifecycle.error;
+    final maxMs = audioSession.duration.inMilliseconds;
     final progress = maxMs <= 0
         ? 0.0
-        : ((position.data?.inMilliseconds ?? 0) / maxMs).clamp(0.0, 1.0);
+        : (audioSession.position.inMilliseconds / maxMs).clamp(0.0, 1.0);
 
     Future<void> dismiss() =>
         ref.read(prayerAlertDispatcherProvider.notifier).dismiss();
 
-    final dismissLabel =
-        showPlayback ? l10n.adhanStop : l10n.prayerAlertDismiss;
-    final dismissIcon =
-        showPlayback ? FLucideIcons.square : FLucideIcons.bellOff;
+    final dismissLabel = showPlayback
+        ? l10n.adhanStop
+        : l10n.prayerAlertDismiss;
+    final dismissIcon = showPlayback
+        ? FLucideIcons.square
+        : FLucideIcons.bellOff;
 
     final cardDecoration = BoxDecoration(
       color: colors.card,

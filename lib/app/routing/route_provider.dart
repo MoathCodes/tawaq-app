@@ -3,26 +3,25 @@
 
 import 'dart:async';
 
-import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/app/routing/not_found_screen.dart';
+import 'package:tawaq/app/shell/page_shell.dart';
+import 'package:tawaq/app/shell/shell_feature_layer.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/widgets/not_found_screen.dart';
-import 'package:tawaq/core/widgets/page_shell/page_shell.dart';
 import 'package:tawaq/feature/about/presentation/about_dialog.dart';
 import 'package:tawaq/feature/about/presentation/screens/about_screen.dart';
 import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
 import 'package:tawaq/feature/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/screens/prayer_screen.dart';
 import 'package:tawaq/feature/quran/presentation/screens/quran_screen.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/screens/settings_screen.dart';
-import 'package:tawaq/feature/shell/shell_feature_layer.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 part 'route_provider.g.dart';
@@ -134,7 +133,7 @@ class QuranRoute extends AppNavigationRoute with $QuranRoute {
   /// Creates the Quran route.
   const QuranRoute({this.page});
 
- /// Optional Quran page to open; null opens the default page.
+  /// Optional Quran page to open; null opens the default page.
   final int? page;
 
   @override
@@ -149,7 +148,10 @@ class QuranRoute extends AppNavigationRoute with $QuranRoute {
   @override
   /// Builds the Quran screen.
   Widget build(BuildContext context, GoRouterState state) {
-    return QuranScreen(page: page);
+    return QuranScreen(
+      page: page,
+      onPageChanged: (nextPage) => QuranRoute(page: nextPage).replace(context),
+    );
   }
 }
 
@@ -157,10 +159,7 @@ class QuranRoute extends AppNavigationRoute with $QuranRoute {
 @immutable
 class HadithRoute extends AppNavigationRoute with $HadithRoute {
   /// Creates the hadith route.
-  const HadithRoute({this.$extra});
-
-  /// Extra hadiths used when the route is opened in specific-list mode.
-  final List<DetailedHadith>? $extra;
+  const HadithRoute();
 
   @override
   /// The hadith route icon.
@@ -174,9 +173,7 @@ class HadithRoute extends AppNavigationRoute with $HadithRoute {
   @override
   /// Builds the hadith page.
   Widget build(BuildContext context, GoRouterState state) {
-    return HadithPage(
-      initialHadiths: $extra ?? const <DetailedHadith>[],
-    );
+    return const HadithPage();
   }
 }
 
@@ -203,10 +200,10 @@ class MuslimFortressRoute extends AppNavigationRoute with $MuslimFortressRoute {
 @immutable
 class SettingsRoute extends AppNavigationRoute with $SettingsRoute {
   /// Creates the settings route.
-  const SettingsRoute({this.$extra});
+  const SettingsRoute({this.tab});
 
-  /// Optional settings tab key to open; null restores the persisted tab.
-  final String? $extra;
+  /// Optional settings tab wire id; null restores the persisted checkpoint.
+  final String? tab;
 
   @override
   /// The settings route icon.
@@ -220,7 +217,10 @@ class SettingsRoute extends AppNavigationRoute with $SettingsRoute {
   @override
   /// Builds the settings screen.
   Widget build(BuildContext context, GoRouterState state) {
-    return SettingsScreen(tabKey: $extra);
+    return SettingsScreen(
+      tabKey: tab,
+      onTabChanged: (nextTab) => SettingsRoute(tab: nextTab).replace(context),
+    );
   }
 }
 

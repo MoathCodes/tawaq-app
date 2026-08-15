@@ -11,9 +11,9 @@ import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_notes_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
@@ -420,7 +420,7 @@ class _NoteCard extends HookConsumerWidget {
         },
       );
       if (confirmed != true || !context.mounted) return;
-      await ref.read(quranNotesProvider(entry.ayahId).notifier).deleteNote();
+      await ref.read(quranNotesStoreProvider.notifier).delete(entry.ayahId);
     }
 
     final ayahBadge = '${l10n.ayahLabel} ${entry.numberInSurah}';

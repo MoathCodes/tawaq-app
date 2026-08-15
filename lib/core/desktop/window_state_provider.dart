@@ -1,47 +1,55 @@
-import 'dart:async';
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
 
 part 'window_state_provider.g.dart';
 
-/// Whether the main window is currently maximized.
-///
-/// Backed by [WindowListener] events so the value stays in sync after the user
-/// (or the OS) maximizes / restores the window — unlike a one-shot
-/// `windowManager.isMaximized()` future, which never updates.
-@Riverpod(keepAlive: true)
-Stream<bool> windowMaximized(Ref ref) async* {
-  if (!isDesktopPlatform) {
-    yield false;
-    return;
-  }
+/// Canonical native window flags.
+class NativeWindowSnapshot {
+  const NativeWindowSnapshot({required this.visible, required this.maximized});
 
-  final controller = StreamController<bool>();
-  final listener = _WindowMaximizedListener(controller);
-  windowManager.addListener(listener);
-  ref.onDispose(() {
-    windowManager.removeListener(listener);
-    unawaited(controller.close());
-  });
-
-  yield await windowManager.isMaximized();
-  yield* controller.stream;
+  final bool visible;
+  final bool maximized;
 }
 
-class _WindowMaximizedListener with WindowListener {
-  _WindowMaximizedListener(this._controller);
-
-  final StreamController<bool> _controller;
-
-  void _emit({required bool maximized}) {
-    if (!_controller.isClosed) _controller.add(maximized);
+/// Single listener-backed authority for native window flags.
+@Riverpod(keepAlive: true)
+class NativeWindowState extends _$NativeWindowState {
+  @override
+  Future<NativeWindowSnapshot> build() async {
+    if (!isDesktopPlatform) {
+      return const NativeWindowSnapshot(visible: true, maximized: false);
+    }
+    final listener = _NativeWindowListener(refresh);
+    windowManager.addListener(listener);
+    ref.onDispose(() => windowManager.removeListener(listener));
+    return _query();
   }
 
-  @override
-  void onWindowMaximize() => _emit(maximized: true);
+  Future<NativeWindowSnapshot> _query() async => NativeWindowSnapshot(
+    visible: await windowManager.isVisible(),
+    maximized: await windowManager.isMaximized(),
+  );
+
+  /// Re-queries native state after a command or OS event.
+  Future<void> refresh() async {
+    if (!isDesktopPlatform) return;
+    final next = await _query();
+    if (ref.mounted) state = AsyncData(next);
+  }
+}
+
+class _NativeWindowListener with WindowListener {
+  _NativeWindowListener(this._refresh);
+
+  final Future<void> Function() _refresh;
 
   @override
-  void onWindowUnmaximize() => _emit(maximized: false);
+  void onWindowEvent(String eventName) => _refresh();
+
+  @override
+  void onWindowMaximize() => _refresh();
+
+  @override
+  void onWindowUnmaximize() => _refresh();
 }

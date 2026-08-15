@@ -3,10 +3,10 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
+import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
-import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
 
 part 'adhan_settings_provider.g.dart';
 
@@ -16,17 +16,8 @@ const _logPrefix = '[AdhanSettingsNotifier]';
 @Riverpod(keepAlive: true)
 @JsonPersist()
 class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
-  AdhanSettings _lastGood = AdhanSettings.defaults();
-
-  /// Last successfully hydrated / committed settings (defaults until first load).
-  AdhanSettings get lastGood => _lastGood;
-
   @override
   Future<AdhanSettings> build() async {
-    listenSelf((_, next) {
-      final value = next.value;
-      if (value != null) _lastGood = value;
-    });
     try {
       await persist(
         ref.watch(settingsStorageProvider.future),
@@ -38,12 +29,12 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
       ref
           .read(loggerProvider)
           .e(
-            '$_logPrefix hydrate failed; keeping last-good settings',
+            '$_logPrefix hydrate failed; using current/default settings',
             error: error,
             stackTrace: stack,
           );
     }
-    return state.value ?? _lastGood;
+    return state.value ?? AdhanSettings.defaults();
   }
 
   void _commit(AdhanSettings Function(AdhanSettings) fn, String field) {

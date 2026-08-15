@@ -182,18 +182,6 @@ abstract class AppLocalizations {
   /// **'Add a reflection...'**
   String get addReflection;
 
-  /// No description provided for @deleteReflection.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete reflection'**
-  String get deleteReflection;
-
-  /// No description provided for @deleteReflectionConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Delete this reflection? This cannot be undone.'**
-  String get deleteReflectionConfirm;
-
   /// No description provided for @adhan.
   ///
   /// In en, this message translates to:
@@ -617,7 +605,7 @@ abstract class AppLocalizations {
   /// No description provided for @completed.
   ///
   /// In en, this message translates to:
-  /// **'Completed •'**
+  /// **'Completed'**
   String get completed;
 
   /// No description provided for @completionStatus.
@@ -691,6 +679,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Al-Fatihah'**
   String get defaultSurahName;
+
+  /// No description provided for @deleteReflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete reflection'**
+  String get deleteReflection;
+
+  /// No description provided for @deleteReflectionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this reflection? This cannot be undone.'**
+  String get deleteReflectionConfirm;
 
   /// No description provided for @desktopForceMacStyleWindowControls.
   ///
@@ -1928,6 +1928,18 @@ abstract class AppLocalizations {
   /// **'Maghrib Angle (°)'**
   String get maghribAngleLabel;
 
+  /// No description provided for @mediaSessionAppName.
+  ///
+  /// In en, this message translates to:
+  /// **'Tawaq'**
+  String get mediaSessionAppName;
+
+  /// No description provided for @mediaSessionAudioBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio by {source}'**
+  String mediaSessionAudioBy(String source);
+
   /// No description provided for @menuAddBookmark.
   ///
   /// In en, this message translates to:
@@ -1969,18 +1981,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Midnight'**
   String get midnight;
-
-  /// No description provided for @mediaSessionAppName.
-  ///
-  /// In en, this message translates to:
-  /// **'Tawaq'**
-  String get mediaSessionAppName;
-
-  /// No description provided for @mediaSessionAudioBy.
-  ///
-  /// In en, this message translates to:
-  /// **'Audio by {source}'**
-  String mediaSessionAudioBy(String source);
 
   /// No description provided for @minute.
   ///
@@ -2054,6 +2054,18 @@ abstract class AppLocalizations {
   /// **'No data available'**
   String get noDataAvailable;
 
+  /// No description provided for @noReflectionsMatchSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'No reflections match your search'**
+  String get noReflectionsMatchSearch;
+
+  /// No description provided for @noReflectionsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No reflections yet — write one on an ayah to see it here'**
+  String get noReflectionsYet;
+
   /// No description provided for @noResults.
   ///
   /// In en, this message translates to:
@@ -2077,6 +2089,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No tafsir available for this ayah'**
   String get noTafsirAvailable;
+
+  /// No description provided for @noteTimeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{a day ago} other{{count} days ago}}'**
+  String noteTimeDaysAgo(int count);
+
+  /// No description provided for @noteTimeMonthsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{last month} other{{count} months ago}}'**
+  String noteTimeMonthsAgo(int count);
+
+  /// No description provided for @noteTimeToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get noteTimeToday;
+
+  /// No description provided for @noteTimeWeeksAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{a week ago} other{{count} weeks ago}}'**
+  String noteTimeWeeksAgo(int count);
+
+  /// No description provided for @noteTimeYearsAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{a year ago} other{{count} years ago}}'**
+  String noteTimeYearsAgo(int count);
+
+  /// No description provided for @noteTimeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get noteTimeYesterday;
 
   /// No description provided for @noTranslationAvailable.
   ///
@@ -2353,6 +2401,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Optional'**
   String get optionalHint;
+
+  /// No description provided for @or.
+  ///
+  /// In en, this message translates to:
+  /// **'or'**
+  String get or;
 
   /// No description provided for @orange.
   ///
@@ -2984,6 +3038,12 @@ abstract class AppLocalizations {
   /// **'Range & repeat'**
   String get quranRecitationRangeRepeat;
 
+  /// No description provided for @quranRecitationPlaysRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{remaining, plural, =1{1 play remaining} other{{remaining} plays remaining}}'**
+  String quranRecitationPlaysRemaining(int remaining);
+
   /// No description provided for @quranRecitationRepeatProgress.
   ///
   /// In en, this message translates to:
@@ -3002,17 +3062,23 @@ abstract class AppLocalizations {
   /// **'Repeat selection'**
   String get quranRecitationRepeatScopeSelection;
 
-  /// No description provided for @quranRecitationSaveOffline.
+  /// No description provided for @quranRecitationSeekBarLabel.
   ///
   /// In en, this message translates to:
-  /// **'Save for offline'**
-  String get quranRecitationSaveOffline;
+  /// **'Recitation position'**
+  String get quranRecitationSeekBarLabel;
 
   /// No description provided for @quranRecitationSavedOffline.
   ///
   /// In en, this message translates to:
   /// **'Saved offline'**
   String get quranRecitationSavedOffline;
+
+  /// No description provided for @quranRecitationSaveOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Save for offline'**
+  String get quranRecitationSaveOffline;
 
   /// No description provided for @quranRecitationSavingOffline.
   ///
@@ -3182,11 +3248,11 @@ abstract class AppLocalizations {
   /// **'Preview'**
   String get quranTextSizePreviewLabel;
 
-  /// No description provided for @quranZoomFitPage.
+  /// No description provided for @quranTranslationQuoted.
   ///
   /// In en, this message translates to:
-  /// **'Fit'**
-  String get quranZoomFitPage;
+  /// **'\"{translation}\"'**
+  String quranTranslationQuoted(String translation);
 
   /// No description provided for @quranZoomFillWidth.
   ///
@@ -3200,6 +3266,12 @@ abstract class AppLocalizations {
   /// **'Past Fit, the page may scroll vertically for larger text.'**
   String get quranZoomFillWidthHint;
 
+  /// No description provided for @quranZoomFitPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit'**
+  String get quranZoomFitPage;
+
   /// No description provided for @quranZoomPercent.
   ///
   /// In en, this message translates to:
@@ -3212,65 +3284,11 @@ abstract class AppLocalizations {
   /// **'Reset to Fit'**
   String get quranZoomReset;
 
-  /// No description provided for @quranTranslationQuoted.
-  ///
-  /// In en, this message translates to:
-  /// **'\"{translation}\"'**
-  String quranTranslationQuoted(String translation);
-
   /// No description provided for @red.
   ///
   /// In en, this message translates to:
   /// **'Red'**
   String get red;
-
-  /// No description provided for @noReflectionsMatchSearch.
-  ///
-  /// In en, this message translates to:
-  /// **'No reflections match your search'**
-  String get noReflectionsMatchSearch;
-
-  /// No description provided for @noReflectionsYet.
-  ///
-  /// In en, this message translates to:
-  /// **'No reflections yet — write one on an ayah to see it here'**
-  String get noReflectionsYet;
-
-  /// No description provided for @noteTimeDaysAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one{a day ago} other{{count} days ago}}'**
-  String noteTimeDaysAgo(int count);
-
-  /// No description provided for @noteTimeMonthsAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one{last month} other{{count} months ago}}'**
-  String noteTimeMonthsAgo(int count);
-
-  /// No description provided for @noteTimeToday.
-  ///
-  /// In en, this message translates to:
-  /// **'Today'**
-  String get noteTimeToday;
-
-  /// No description provided for @noteTimeWeeksAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one{a week ago} other{{count} weeks ago}}'**
-  String noteTimeWeeksAgo(int count);
-
-  /// No description provided for @noteTimeYearsAgo.
-  ///
-  /// In en, this message translates to:
-  /// **'{count, plural, one{a year ago} other{{count} years ago}}'**
-  String noteTimeYearsAgo(int count);
-
-  /// No description provided for @noteTimeYesterday.
-  ///
-  /// In en, this message translates to:
-  /// **'Yesterday'**
-  String get noteTimeYesterday;
 
   /// No description provided for @reflectionPlaceholder.
   ///
@@ -3326,12 +3344,6 @@ abstract class AppLocalizations {
   /// **'Save Parameters'**
   String get saveParameters;
 
-  /// No description provided for @searchYourReflections.
-  ///
-  /// In en, this message translates to:
-  /// **'Search your reflections'**
-  String get searchYourReflections;
-
   /// No description provided for @scheduleAlertEventAdhan.
   ///
   /// In en, this message translates to:
@@ -3343,12 +3355,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{prayer} iqamah'**
   String scheduleAlertEventIqamah(String prayer);
-
-  /// No description provided for @or.
-  ///
-  /// In en, this message translates to:
-  /// **'or'**
-  String get or;
 
   /// No description provided for @scheduleAlertEventSunnah.
   ///
@@ -3422,6 +3428,12 @@ abstract class AppLocalizations {
   /// **'Search for more options'**
   String get searchForMore;
 
+  /// No description provided for @searchingPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching for a place'**
+  String get searchingPlace;
+
   /// No description provided for @searchPlaceAction.
   ///
   /// In en, this message translates to:
@@ -3446,17 +3458,17 @@ abstract class AppLocalizations {
   /// **'Press Enter or tap search'**
   String get searchPlaceSubmitHint;
 
-  /// No description provided for @searchingPlace.
-  ///
-  /// In en, this message translates to:
-  /// **'Searching for a place'**
-  String get searchingPlace;
-
   /// No description provided for @searchQuran.
   ///
   /// In en, this message translates to:
   /// **'Search Quran...'**
   String get searchQuran;
+
+  /// No description provided for @searchYourReflections.
+  ///
+  /// In en, this message translates to:
+  /// **'Search your reflections'**
+  String get searchYourReflections;
 
   /// No description provided for @selectAyahToSeeContent.
   ///
@@ -3469,18 +3481,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please select a verse to add a reflection'**
   String get selectVerseToAddReflection;
-
-  /// No description provided for @studyTabCurrentAyah.
-  ///
-  /// In en, this message translates to:
-  /// **'Current ayah'**
-  String get studyTabCurrentAyah;
-
-  /// No description provided for @studyTabMyReflections.
-  ///
-  /// In en, this message translates to:
-  /// **'My reflections'**
-  String get studyTabMyReflections;
 
   /// No description provided for @settings.
   ///
@@ -3929,6 +3929,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Study Mode'**
   String get studyMode;
+
+  /// No description provided for @studyTabCurrentAyah.
+  ///
+  /// In en, this message translates to:
+  /// **'Current ayah'**
+  String get studyTabCurrentAyah;
+
+  /// No description provided for @studyTabMyReflections.
+  ///
+  /// In en, this message translates to:
+  /// **'My reflections'**
+  String get studyTabMyReflections;
 
   /// No description provided for @sunnahAlertTitle.
   ///

@@ -24,9 +24,7 @@ int? nextStudyAyahId({
 /// Keeps [MushafReaderController] highlight aligned with session selection.
 void useQuranAyahSelectionSync(WidgetRef ref, {int? page}) {
   final controller = ref.watch(quranMushafControllerProvider);
-  final selectedAyahId = ref.watch(
-    quranSelectedAyahProvider.select((ayah) => ayah?.ayahId),
-  );
+  final selectedAyahId = ref.watch(quranSelectedAyahIdProvider);
 
   // Jump only when [page] changes — not on every rebuild.
   useEffect(() {
@@ -47,21 +45,19 @@ void useQuranAyahSelectionSync(WidgetRef ref, {int? page}) {
 
 /// Updates session ayah selection (mushaf follows via [useQuranAyahSelectionSync]).
 void setQuranSelectedAyah(WidgetRef ref, Ayah? ayah) {
-  ref.read(quranSelectedAyahProvider.notifier).select(ayah);
+  ref.read(quranSelectedAyahIdProvider.notifier).select(ayah?.ayahId);
 }
 
 /// Jumps to an ayah and selects it in session + mushaf.
 Future<void> jumpToQuranAyah(WidgetRef ref, Ayah ayah) async {
   final controller = ref.read(quranMushafControllerProvider);
-  ref.read(quranSelectedAyahProvider.notifier).select(ayah);
+  ref.read(quranSelectedAyahIdProvider.notifier).select(ayah.ayahId);
   await controller.jumpToAyah(ayah.ayahId, select: true);
 }
 
 /// Toggles selection for the tapped ayah across mushaf and session state.
 void toggleQuranAyahSelection(WidgetRef ref, Ayah ayah) {
-  final previousId = ref.read(
-    quranSelectedAyahProvider.select((ayah) => ayah?.ayahId),
-  );
+  final previousId = ref.read(quranSelectedAyahIdProvider);
   if (previousId == ayah.ayahId) {
     setQuranSelectedAyah(ref, null);
   } else {
@@ -104,9 +100,7 @@ Future<void> navigateStudyAyah({
   Future<void> Function(int delta) navigateAyah,
 })
 useStudyAyahNavigation(WidgetRef ref) {
-  final currentAyahId = ref.watch(
-    quranSelectedAyahProvider.select((ayah) => ayah?.ayahId),
-  );
+  final currentAyahId = ref.watch(quranSelectedAyahIdProvider);
 
   return (
     currentAyahId: currentAyahId,

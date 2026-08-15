@@ -1,0 +1,75 @@
+name: Quality
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: App analyze and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .fvmrc
+          channel: stable
+          cache: true
+
+      - name: Generate package and app code
+        run: bash tool/codegen.sh
+
+      - name: Analyze app
+        run: flutter analyze --no-fatal-infos
+
+      - name: Test app
+        run: flutter test
+
+  packages:
+    name: Local package quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .fvmrc
+          channel: stable
+          cache: true
+
+      - name: Check dorar_hadith
+        working-directory: packages/dorar_hadith
+        run: |
+          dart pub get
+          dart analyze lib test
+          dart test
+
+      - name: Check dorar_hadith_flutter
+        working-directory: packages/dorar_hadith/dorar_hadith_flutter
+        run: |
+          flutter pub get
+          flutter analyze --no-fatal-infos
+          flutter test
+
+      - name: Generate mushaf_reader code
+        working-directory: packages/mushaf_reader
+        run: |
+          flutter pub get
+          dart run build_runner build
+
+      - name: Check mushaf_reader
+        working-directory: packages/mushaf_reader
+        run: |
+          flutter analyze --no-fatal-infos
+          flutter test

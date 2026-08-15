@@ -81,7 +81,7 @@ class HadithSessionState {
     this.searchSnapshot,
     this.query = '',
     this.filters = const HadithFilters(),
-    this.selectedHadith,
+    this.selectedHadithKey,
     this.searchOutcome = const AsyncData(HadithSearchPage.empty),
     this.isPaginating = false,
     this.paginationError,
@@ -102,8 +102,8 @@ class HadithSessionState {
   /// Active search filters (session-only).
   final HadithFilters filters;
 
-  /// Currently selected hadith for the detail pane.
-  final DetailedHadith? selectedHadith;
+  /// Stable key of the selected hadith; the object is derived from visible data.
+  final String? selectedHadithKey;
 
   /// Async search outcome for the current query.
   final AsyncValue<HadithSearchPage> searchOutcome;
@@ -160,7 +160,7 @@ class HadithSessionState {
     HadithSearchSnapshot? searchSnapshot,
     String? query,
     HadithFilters? filters,
-    DetailedHadith? selectedHadith,
+    String? selectedHadithKey,
     bool clearSelectedHadith = false,
     AsyncValue<HadithSearchPage>? searchOutcome,
     bool? isPaginating,
@@ -176,9 +176,9 @@ class HadithSessionState {
           : searchSnapshot ?? this.searchSnapshot,
       query: query ?? this.query,
       filters: filters ?? this.filters,
-      selectedHadith: clearSelectedHadith
+      selectedHadithKey: clearSelectedHadith
           ? null
-          : selectedHadith ?? this.selectedHadith,
+          : selectedHadithKey ?? this.selectedHadithKey,
       searchOutcome: searchOutcome ?? this.searchOutcome,
       isPaginating: isPaginating ?? this.isPaginating,
       paginationError: clearPaginationError

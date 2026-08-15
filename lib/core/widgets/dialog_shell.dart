@@ -195,9 +195,6 @@ class TawaqDialogShell extends StatelessWidget {
   }
 }
 
-/// @deprecated Use [TawaqDialogShell] instead.
-typedef PlayerDialogShell = TawaqDialogShell;
-
 /// Standard Forui 0.24+ dialog body: title, body, trailing action row.
 ///
 /// Use inside [FDialog.builder] after the built-in content layout was removed.

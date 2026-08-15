@@ -7,7 +7,6 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/scale/quran_text_scale_popover.dart';
@@ -345,8 +344,10 @@ class _LayoutTabLabel extends StatelessWidget {
 
     if (!showLabel) {
       return FTooltip(
-        semanticsLabel: label,
-        tipBuilder: (_, _) => Text(label),
+        tipBuilder: (_, _) => Text(
+          label,
+          semanticsLabel: label,
+        ),
         child: icon,
       );
     }

@@ -1,13 +1,12 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_snapshot.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_day_models.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/schedule_alert_mode.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_resolver.dart';
-import 'package:tawaq/feature/settings/data/models/adhan_settings.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 
@@ -220,7 +219,10 @@ void main() {
       final location = getLocation('Asia/Riyadh');
       final now = TZDateTime(location, 2026, 6, 9, 12);
       final snapshot = _buildSnapshot(now: now, location: location);
-      final maghrib = snapshot.today.getTimesForPrayer(Prayer.maghrib, location);
+      final maghrib = snapshot.today.getTimesForPrayer(
+        Prayer.maghrib,
+        location,
+      );
       final isha = snapshot.today.getTimesForPrayer(Prayer.isha, location);
       final gapMinutes = isha.difference(maghrib).inMinutes + 5;
 

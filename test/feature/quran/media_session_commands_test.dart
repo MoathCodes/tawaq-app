@@ -4,7 +4,6 @@ import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:tawaq/core/audio/audio_lease.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/audio_service.dart';
-import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/presentation/providers/media_session_router_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
@@ -39,11 +38,11 @@ class _SpyRecitationController extends RecitationController {
 
 enum _AdhanCall { resume, pause, stop }
 
-class _SpyAudioPlayerController extends AudioPlayerController {
+class _SpyAudioPlayerController extends AdhanAudioController {
   final List<_AdhanCall> calls = [];
 
   @override
-  PlaybackState build() => const PlaybackIdle();
+  void build() {}
 
   @override
   Future<bool> pause() async {
@@ -56,12 +55,12 @@ class _SpyAudioPlayerController extends AudioPlayerController {
     calls.add(_AdhanCall.resume);
     return true;
   }
+
   @override
   Future<void> stop({
     Duration fadeOut = Duration.zero,
     bool force = false,
-  }) async =>
-      calls.add(_AdhanCall.stop);
+  }) async => calls.add(_AdhanCall.stop);
 }
 
 void main() {
@@ -84,11 +83,13 @@ void main() {
     required _SpyRecitationController recitationSpy,
     required _SpyAudioPlayerController adhanSpy,
   }) {
-    return ProviderContainer(overrides: [
-      tawaqAudioServiceProvider.overrideWithValue(service),
-      recitationControllerProvider.overrideWith(() => recitationSpy),
-      audioPlayerControllerProvider.overrideWith(() => adhanSpy),
-    ]);
+    return ProviderContainer(
+      overrides: [
+        tawaqAudioServiceProvider.overrideWithValue(service),
+        recitationControllerProvider.overrideWith(() => recitationSpy),
+        adhanAudioControllerProvider.overrideWith(() => adhanSpy),
+      ],
+    );
   }
 
   void setPlayWhenReady(bool value) {
@@ -108,8 +109,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final router =
-          container.read(mediaSessionCommandRouterProvider.notifier);
+      final router = container.read(mediaSessionCommandRouterProvider.notifier);
       await service.acquire(owner: kRecitationLeaseOwner);
       addTearDown(() => service.release(owner: kRecitationLeaseOwner));
 
@@ -171,13 +171,13 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final router =
-          container.read(mediaSessionCommandRouterProvider.notifier);
+      final router = container.read(mediaSessionCommandRouterProvider.notifier);
       await service.acquire(owner: kRecitationLeaseOwner);
       addTearDown(() => service.release(owner: kRecitationLeaseOwner));
 
-      container.read(recitationControllerProvider.notifier).state =
-          const RecitationState(
+      container
+          .read(recitationControllerProvider.notifier)
+          .state = const RecitationState(
         active: true,
         status: RecitationStatus.ended,
         surah: 1,
@@ -190,8 +190,7 @@ void main() {
       expect(recitation.calls, [_RecitationCall.toggle]);
     });
 
-    test('recitation playPause follows post-auto-apply playWhenReady',
-        () async {
+    test('recitation playPause follows post-auto-apply playWhenReady', () async {
       final recitation = _SpyRecitationController();
       final adhan = _SpyAudioPlayerController();
       final container = buildContainer(
@@ -200,8 +199,7 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final router =
-          container.read(mediaSessionCommandRouterProvider.notifier);
+      final router = container.read(mediaSessionCommandRouterProvider.notifier);
       await service.acquire(owner: kRecitationLeaseOwner);
       addTearDown(() => service.release(owner: kRecitationLeaseOwner));
 
@@ -240,8 +238,71 @@ void main() {
       expect(recitation.calls, [_RecitationCall.toggle]);
     });
 
-    test('recitation lease routes stop/next/previous/SeekTo snap seek',
-        () async {
+    test(
+      'recitation lease routes stop/next/previous/SeekTo snap seek',
+      () async {
+        final recitation = _SpyRecitationController();
+        final adhan = _SpyAudioPlayerController();
+        final container = buildContainer(
+          recitationSpy: recitation,
+          adhanSpy: adhan,
+        );
+        addTearDown(container.dispose);
+
+        final router = container.read(
+          mediaSessionCommandRouterProvider.notifier,
+        );
+        await service.acquire(owner: kRecitationLeaseOwner);
+        addTearDown(() => service.release(owner: kRecitationLeaseOwner));
+
+        router
+          ..dispatch(MediaSessionCommand.stop)
+          ..dispatch(MediaSessionCommand.next)
+          ..dispatch(MediaSessionCommand.previous)
+          ..dispatch(const MediaSessionCommand.seekTo(Duration(seconds: 5)));
+
+        await Future<void>.delayed(Duration.zero);
+
+        expect(recitation.calls, [
+          _RecitationCall.stop,
+          _RecitationCall.next,
+          _RecitationCall.previous,
+          _RecitationCall.seekTo,
+        ]);
+        expect(recitation.seeks, [const Duration(seconds: 5)]);
+        expect(adhan.calls, isEmpty);
+      },
+    );
+
+    test(
+      'recitation seekBy routes next (forward) and previous (rewind)',
+      () async {
+        final recitation = _SpyRecitationController();
+        final adhan = _SpyAudioPlayerController();
+        final container = buildContainer(
+          recitationSpy: recitation,
+          adhanSpy: adhan,
+        );
+        addTearDown(container.dispose);
+        final router = container.read(
+          mediaSessionCommandRouterProvider.notifier,
+        );
+        await service.acquire(owner: kRecitationLeaseOwner);
+        addTearDown(() => service.release(owner: kRecitationLeaseOwner));
+
+        router
+          ..dispatch(const MediaSessionCommand.seekBy(Duration(seconds: 15)))
+          ..dispatch(const MediaSessionCommand.seekBy(Duration(seconds: -15)));
+
+        await Future<void>.delayed(Duration.zero);
+        expect(
+          recitation.calls,
+          [_RecitationCall.next, _RecitationCall.previous],
+        );
+      },
+    );
+
+    test('adhan lease routes play->resume, pause->pause, stop->stop', () async {
       final recitation = _SpyRecitationController();
       final adhan = _SpyAudioPlayerController();
       final container = buildContainer(
@@ -249,66 +310,7 @@ void main() {
         adhanSpy: adhan,
       );
       addTearDown(container.dispose);
-
-      final router =
-          container.read(mediaSessionCommandRouterProvider.notifier);
-      await service.acquire(owner: kRecitationLeaseOwner);
-      addTearDown(() => service.release(owner: kRecitationLeaseOwner));
-
-      router
-        ..dispatch(MediaSessionCommand.stop)
-        ..dispatch(MediaSessionCommand.next)
-        ..dispatch(MediaSessionCommand.previous)
-        ..dispatch(const MediaSessionCommand.seekTo(Duration(seconds: 5)));
-
-      await Future<void>.delayed(Duration.zero);
-
-      expect(recitation.calls, [
-        _RecitationCall.stop,
-        _RecitationCall.next,
-        _RecitationCall.previous,
-        _RecitationCall.seekTo,
-      ]);
-      expect(recitation.seeks, [const Duration(seconds: 5)]);
-      expect(adhan.calls, isEmpty);
-    });
-
-    test('recitation seekBy routes next (forward) and previous (rewind)',
-        () async {
-      final recitation = _SpyRecitationController();
-      final adhan = _SpyAudioPlayerController();
-      final container = buildContainer(
-        recitationSpy: recitation,
-        adhanSpy: adhan,
-      );
-      addTearDown(container.dispose);
-      final router =
-          container.read(mediaSessionCommandRouterProvider.notifier);
-      await service.acquire(owner: kRecitationLeaseOwner);
-      addTearDown(() => service.release(owner: kRecitationLeaseOwner));
-
-      router
-        ..dispatch(const MediaSessionCommand.seekBy(Duration(seconds: 15)))
-        ..dispatch(const MediaSessionCommand.seekBy(Duration(seconds: -15)));
-
-      await Future<void>.delayed(Duration.zero);
-      expect(
-        recitation.calls,
-        [_RecitationCall.next, _RecitationCall.previous],
-      );
-    });
-
-    test('adhan lease routes play->resume, pause->pause, stop->stop',
-        () async {
-      final recitation = _SpyRecitationController();
-      final adhan = _SpyAudioPlayerController();
-      final container = buildContainer(
-        recitationSpy: recitation,
-        adhanSpy: adhan,
-      );
-      addTearDown(container.dispose);
-      final router =
-          container.read(mediaSessionCommandRouterProvider.notifier);
+      final router = container.read(mediaSessionCommandRouterProvider.notifier);
       await service.acquire(owner: kAdhanLeaseOwner);
       addTearDown(() => service.release(owner: kAdhanLeaseOwner));
 
@@ -336,8 +338,7 @@ void main() {
         adhanSpy: adhan,
       );
       addTearDown(container.dispose);
-      final router =
-          container.read(mediaSessionCommandRouterProvider.notifier);
+      final router = container.read(mediaSessionCommandRouterProvider.notifier);
       await service.acquire(owner: kAdhanLeaseOwner);
       addTearDown(() => service.release(owner: kAdhanLeaseOwner));
 
@@ -359,8 +360,7 @@ void main() {
         adhanSpy: adhan,
       );
       addTearDown(container.dispose);
-      final router =
-          container.read(mediaSessionCommandRouterProvider.notifier);
+      final router = container.read(mediaSessionCommandRouterProvider.notifier);
 
       // No lease acquired — owner is null.
       expect(service.currentLeaseOwner, isNull);

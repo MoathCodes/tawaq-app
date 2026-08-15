@@ -3,7 +3,7 @@ import 'package:free_map/free_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:lat_lng_to_timezone/lat_lng_to_timezone.dart' as tz_mapper;
 import 'package:logger/logger.dart';
-import 'package:tawaq/feature/settings/domain/models/location_failure.dart';
+import 'package:tawaq/feature/prayer/domain/models/location_failure.dart';
 import 'package:timezone/timezone.dart';
 
 /// Service for location-related operations.

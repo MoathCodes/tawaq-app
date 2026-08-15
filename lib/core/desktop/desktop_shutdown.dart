@@ -1,4 +1,3 @@
-import 'package:flutter_alone/flutter_alone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/desktop/alerts/prayer_alert_dispatcher.dart';
@@ -35,7 +34,6 @@ Future<void> _runShutdownDesktop(Ref ref, {DesktopTrayService? tray}) async {
   } else {
     await ref.read(desktopTrayServiceProvider).dispose();
   }
-  await stopDesktopActivateListener();
-  await FlutterAlone.instance.dispose();
+  await disposeSingleDesktopInstance();
   await windowManager.destroy();
 }

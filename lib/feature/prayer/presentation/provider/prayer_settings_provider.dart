@@ -6,11 +6,11 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
-import 'package:tawaq/feature/settings/data/location_constants.dart';
-import 'package:tawaq/feature/settings/data/models/prayer_settings_model.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
-import 'package:tawaq/feature/settings/presentation/provider/location_service_provider.dart';
+import 'package:tawaq/feature/prayer/domain/models/location_constants.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/location_service_provider.dart';
 import 'package:timezone/timezone.dart';
 
 part 'prayer_settings_provider.g.dart';
@@ -23,18 +23,9 @@ const String _prayerLogPrefix = '[PrayerSettingsNotifier]';
 @Riverpod(keepAlive: true)
 @JsonPersist()
 class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
-  PrayerSettings _lastGood = PrayerSettings.defaultSettings();
-
-  /// Last successfully hydrated settings, used when storage read fails.
-  PrayerSettings get lastGood => _lastGood;
-
   @override
   Future<PrayerSettings> build() async {
     ref.read(loggerProvider).i('$_prayerLogPrefix Building...');
-    listenSelf((_, next) {
-      final value = next.value;
-      if (value != null) _lastGood = value;
-    });
     try {
       await persist(
         ref.watch(settingsStorageProvider.future),
@@ -44,12 +35,12 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
       ref
           .read(loggerProvider)
           .e(
-            '$_prayerLogPrefix hydrate failed; keeping last-good settings',
+            '$_prayerLogPrefix hydrate failed; using current/default settings',
             error: error,
             stackTrace: stack,
           );
     }
-    return state.value ?? _lastGood;
+    return state.value ?? PrayerSettings.defaultSettings();
   }
 
   void _commit(PrayerSettings Function(PrayerSettings) fn, String field) {
@@ -78,8 +69,7 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
       _commit((s) => s.copyWith(iqamahSettings: t), 'Iqamah times');
 
   /// Sets the complete prayer settings object.
-  void setPrayerSettings(PrayerSettings s) =>
-      _commit((_) => s, 'Settings');
+  void setPrayerSettings(PrayerSettings s) => _commit((_) => s, 'Settings');
 
   /// Applies [cb] to the current settings, logging failures before rethrowing.
   @override
@@ -114,11 +104,13 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
           .getLocationFromCoordinatesOffline(coordinates);
       if (resolved != null) return resolved;
     } on Object catch (error, stack) {
-      ref.read(loggerProvider).w(
-        '$_prayerLogPrefix coord TZ lookup failed; trying device TZ',
-        error: error,
-        stackTrace: stack,
-      );
+      ref
+          .read(loggerProvider)
+          .w(
+            '$_prayerLogPrefix coord TZ lookup failed; trying device TZ',
+            error: error,
+            stackTrace: stack,
+          );
     }
     final tz = await FlutterTimezone.getLocalTimezone();
     return getLocation(tz.identifier);
@@ -137,7 +129,6 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     bool? autoLocation,
   }) async {
     if (state.value == null) return;
-    final s = state.value!;
 
     var loc = location;
     if (coordinates != null && loc == null) {
@@ -145,11 +136,15 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     }
 
     _commit(
-      (_) => s.copyWith(
-        coordinates: coordinates ?? s.coordinates,
-        locationName: locationName ?? s.locationName,
-        location: loc ?? s.location,
-        autoLocation: autoLocation ?? s.autoLocation,
+      (current) => current.copyWith(
+        coordinates: coordinates ?? current.coordinates,
+        locationName:
+            locationName ??
+            (coordinates != null
+                ? LocationConstants.unknownLocationName
+                : current.locationName),
+        location: loc ?? current.location,
+        autoLocation: autoLocation ?? current.autoLocation,
       ),
       'Location bundle',
     );

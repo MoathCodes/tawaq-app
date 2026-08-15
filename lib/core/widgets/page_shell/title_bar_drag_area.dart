@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
-import 'package:tawaq/core/widgets/page_shell/page_shell.dart' show PageShell;
 import 'package:window_manager/window_manager.dart';
 
-/// Title-bar drag region that toggles maximize without rebuilding [PageShell].
+/// Title-bar drag region that toggles maximize without rebuilding its shell.
 class TitleBarDragArea extends ConsumerWidget {
   /// Creates [TitleBarDragArea].
   const TitleBarDragArea({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final maximized = ref.watch(windowMaximizedProvider).value ?? false;
+    final maximized =
+        ref.watch(nativeWindowStateProvider).value?.maximized ?? false;
     return ExcludeSemantics(
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,

@@ -30,9 +30,7 @@ class FortressFocusReadingView extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final category = ref.watch(
-      fortressScreenControllerProvider.select((s) => s.selectedCategory),
-    );
+    final category = ref.watch(fortressSelectedCategoryProvider);
     if (category == null) return const SizedBox.shrink();
 
     final l10n = context.l10n;
@@ -83,8 +81,9 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
-    final onExit =
-        ref.read(fortressScreenControllerProvider.notifier).exitFocusMode;
+    final onExit = ref
+        .read(fortressScreenControllerProvider.notifier)
+        .exitFocusMode;
 
     if (duas.isEmpty && !isLoading) {
       return Scaffold(
@@ -181,8 +180,9 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
     return LayoutBuilder(
       builder: (context, bodyConstraints) {
         final shortHeight = bodyConstraints.maxHeight < 560;
-        final horizontalPadding =
-            fortressFocusHorizontalPadding(bodyConstraints.maxWidth);
+        final horizontalPadding = fortressFocusHorizontalPadding(
+          bodyConstraints.maxWidth,
+        );
 
         return Scaffold(
           backgroundColor: theme.colors.background,
@@ -330,7 +330,8 @@ _FortressFocusSession _useFortressFocusSession({
   );
 
   useEffect(
-    () => () => advanceTimer.value?.cancel(),
+    () =>
+        () => advanceTimer.value?.cancel(),
     const [],
   );
 
@@ -359,7 +360,7 @@ _FortressFocusSession _useFortressFocusSession({
     unawaited(
       pulseController.forward(from: 0).then((_) {
         if (context.mounted) {
-          unawaited(pulseController.reverse());
+          pulseController.reverse();
         }
       }),
     );
@@ -609,10 +610,11 @@ class _FocusThikrStage extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final viewportMinHeight = (constraints.maxHeight -
-                verticalPadding * 2 -
-                hintReserve)
-            .clamp(0.0, double.infinity);
+        final viewportMinHeight =
+            (constraints.maxHeight - verticalPadding * 2 - hintReserve).clamp(
+              0.0,
+              double.infinity,
+            );
 
         return Listener(
           onPointerSignal: (event) {
@@ -721,7 +723,7 @@ class _FocusTapRipple extends HookWidget {
     );
 
     useEffect(() {
-      unawaited(controller.forward(from: 0));
+      controller.forward(from: 0);
       return null;
     }, const []);
 

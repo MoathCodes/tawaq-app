@@ -95,3 +95,5 @@ website/
 .zed/
 
 dist/
+# Widget Preview related
+.widget_preview/

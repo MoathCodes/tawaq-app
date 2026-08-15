@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_equalizer.dart';
@@ -28,7 +25,7 @@ class RecitationTransport extends ConsumerWidget {
   }
 }
 
-class _TransportPill extends HookConsumerWidget {
+class _TransportPill extends ConsumerWidget {
   const _TransportPill();
 
   @override
@@ -39,12 +36,14 @@ class _TransportPill extends HookConsumerWidget {
 
     // Chrome only — avoid rebuilding the title-bar pill on every position tick.
     final chrome = ref.watch(
-      recitationControllerProvider.select(
-        (p) => (
-          status: p.status,
-          active: p.active,
-          surah: p.surah,
-          currentAyah: p.currentAyah,
+      recitationViewProvider.select(
+        (view) => (
+          active: view.session.active,
+          surah: view.session.surah,
+          currentAyah: view.session.currentAyah,
+          isLoading: view.isLoading,
+          isEnded: view.isEnded,
+          isPlaying: view.isPlaying,
         ),
       ),
     );
@@ -53,19 +52,9 @@ class _TransportPill extends HookConsumerWidget {
     final mushaf = ref.read(quranMushafControllerProvider);
     final hasAyahTiming = controller.hasAyahTiming;
 
-    final isLoading = chrome.status == RecitationStatus.loading;
-    final isEnded = chrome.status == RecitationStatus.ended;
+    final isLoading = chrome.isLoading;
+    final isEnded = chrome.isEnded;
     final showMetadata = chrome.active;
-
-    final audioService = ref.watch(tawaqAudioServiceProvider);
-    final playWhenReady =
-        useStream(
-          useMemoized(
-            () => audioService.playWhenReadyStream,
-            [audioService],
-          ),
-        ).data ??
-        audioService.playWhenReady;
 
     final surah = chrome.surah;
     final surahName = surah == null
@@ -110,7 +99,7 @@ class _TransportPill extends HookConsumerWidget {
                   ? l10n.quranRecitationClosePlayer
                   : l10n.quranRecitationOpenPlayer,
               prefix: RecitationTransportControls(
-                isPlaying: playWhenReady,
+                isPlaying: chrome.isPlaying,
                 isLoading: isLoading,
                 isEnded: isEnded,
                 onPlayPause: controller.togglePlayPause,
@@ -171,7 +160,7 @@ class _TransportPill extends HookConsumerWidget {
                     )
                   : const SizedBox.shrink(),
               suffix: _TransportSuffix(
-                isPlaying: playWhenReady,
+                isPlaying: chrome.isPlaying,
                 isEnded: isEnded,
                 drawerOpen: drawerOpen,
               ),

@@ -3,9 +3,9 @@ import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/feature/onboarding/data/models/onboarding_state.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
-import 'package:tawaq/feature/settings/presentation/provider/prayer_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 
 part 'onboarding_state_provider.g.dart';
@@ -24,11 +24,13 @@ class OnboardingStateNotifier extends _$OnboardingStateNotifier {
         options: kSettingsPersistForever,
       ).future;
     } on Object catch (error, stack) {
-      ref.read(loggerProvider).e(
-        '$_onboardingLogPrefix hydrate failed; using empty state',
-        error: error,
-        stackTrace: stack,
-      );
+      ref
+          .read(loggerProvider)
+          .e(
+            '$_onboardingLogPrefix hydrate failed; using empty state',
+            error: error,
+            stackTrace: stack,
+          );
     }
     if (!ref.mounted) return const OnboardingState();
     return state.value ?? const OnboardingState();
@@ -61,31 +63,37 @@ class OnboardingStateNotifier extends _$OnboardingStateNotifier {
     try {
       await ref.read(prayerSettingsProvider.notifier).flush();
     } on Object catch (error, stack) {
-      ref.read(loggerProvider).w(
-        '$_onboardingLogPrefix prayer flush skipped',
-        error: error,
-        stackTrace: stack,
-      );
+      ref
+          .read(loggerProvider)
+          .w(
+            '$_onboardingLogPrefix prayer flush skipped',
+            error: error,
+            stackTrace: stack,
+          );
     }
     if (!ref.mounted) return;
     try {
       await ref.read(themeProvider.notifier).flush();
     } on Object catch (error, stack) {
-      ref.read(loggerProvider).w(
-        '$_onboardingLogPrefix theme flush skipped',
-        error: error,
-        stackTrace: stack,
-      );
+      ref
+          .read(loggerProvider)
+          .w(
+            '$_onboardingLogPrefix theme flush skipped',
+            error: error,
+            stackTrace: stack,
+          );
     }
     if (!ref.mounted) return;
     try {
       await ref.read(localeProvider.notifier).flush();
     } on Object catch (error, stack) {
-      ref.read(loggerProvider).w(
-        '$_onboardingLogPrefix locale flush skipped',
-        error: error,
-        stackTrace: stack,
-      );
+      ref
+          .read(loggerProvider)
+          .w(
+            '$_onboardingLogPrefix locale flush skipped',
+            error: error,
+            stackTrace: stack,
+          );
     }
   }
 

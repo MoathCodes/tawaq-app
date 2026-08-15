@@ -12,13 +12,15 @@ class AppDelegate: FlutterAppDelegate {
     hasVisibleWindows flag: Bool
   ) -> Bool {
     // flutter_alone activates via NSWorkspace.open → this reopen path.
-    // Also restores when the Dock icon is clicked with no visible windows
-    // (e.g. hidden to tray). Tray left-click still goes through desktop_tray.
-    if !flag {
-      for window in sender.windows {
-        window.makeKeyAndOrderFront(self)
+    // Restore tray-hidden and Dock-minimized windows, then request activation
+    // so a visible window on another Space is brought forward when allowed.
+    for window in sender.windows {
+      if window.isMiniaturized {
+        window.deminiaturize(self)
       }
+      window.makeKeyAndOrderFront(self)
     }
-    return true
+    sender.activate()
+    return false
   }
 }

@@ -1,6 +1,5 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/foundation.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_day_bundle.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:timezone/timezone.dart';
 
@@ -61,4 +60,23 @@ class PrayerDaySnapshot {
   /// Whether [date] falls on the same local calendar day as [now].
   bool isSameCalendarDay(DateTime date) =>
       date.year == now.year && date.month == now.month && date.day == now.day;
+}
+
+/// Prayer times, sunnah windows, and timeline for a today/yesterday pair.
+@immutable
+class PrayerDayBundle {
+  /// Creates a [PrayerDayBundle].
+  const PrayerDayBundle({
+    required this.today,
+    required this.yesterday,
+    required this.todaySunnah,
+    required this.yesterdaySunnah,
+    required this.timeline,
+  });
+
+  final PrayerTimes today;
+  final PrayerTimes yesterday;
+  final SunnahTimes todaySunnah;
+  final SunnahTimes yesterdaySunnah;
+  final PrayerDayTimeline timeline;
 }

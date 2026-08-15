@@ -10,8 +10,8 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
-import 'package:tawaq/feature/prayer/data/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
@@ -507,18 +507,14 @@ class _TrackerStatusChip extends HookConsumerWidget {
     }
     final prayerTime = ref.watch(
       prayerScheduleProvider(todayKey).select(
-        (rows) => rows
-            .where((row) => row.prayer == prayer)
-            .firstOrNull
-            ?.prayerTime,
+        (rows) =>
+            rows.where((row) => row.prayer == prayer).firstOrNull?.prayerTime,
       ),
     );
     final enable = ref.watch(
       prayerDayProvider.select((asyncDay) {
         final now = asyncDay.value?.now;
-        return now != null &&
-            prayerTime != null &&
-            prayerTime.isBefore(now);
+        return now != null && prayerTime != null && prayerTime.isBefore(now);
       }),
     );
     final isLogged = status != CompletionStatus.none;
@@ -544,9 +540,7 @@ class _TrackerStatusChip extends HookConsumerWidget {
 
     return MouseClick(
       disabled: !enable,
-      onHoverChange: enable
-          ? (hovering) => setHovered(value: hovering)
-          : null,
+      onHoverChange: enable ? (hovering) => setHovered(value: hovering) : null,
       onClick: enable
           ? () => unawaited(
               ref
@@ -558,9 +552,7 @@ class _TrackerStatusChip extends HookConsumerWidget {
             )
           : null,
       semanticsLabel: enable
-          ? (isLogged
-                ? status.getLocaleName(l10n)
-                : l10n.logPrayerStatus)
+          ? (isLogged ? status.getLocaleName(l10n) : l10n.logPrayerStatus)
           : '${l10n.logPrayerStatus}, ${l10n.prepareForPrayer}',
       child: ExcludeSemantics(
         child: Opacity(

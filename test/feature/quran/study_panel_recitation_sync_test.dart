@@ -5,11 +5,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/data/models/quran_note.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
-import 'package:tawaq/feature/quran/domain/models/quran_screen_state.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
+import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_notes_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
@@ -26,18 +26,18 @@ class _TestQuranScreenSettings extends QuranScreenSettingsNotifier {
   Future<QuranScreenState> build() async => QuranScreenState.initial();
 }
 
-class _TestQuranSelectedAyah extends QuranSelectedAyah {
-  _TestQuranSelectedAyah(this._ayah);
+class _TestQuranSelectedAyahId extends QuranSelectedAyahId {
+  _TestQuranSelectedAyahId(this._ayahId);
 
-  final Ayah _ayah;
+  final int _ayahId;
 
   @override
-  Ayah? build() => _ayah;
+  int? build() => _ayahId;
 }
 
-class _TestQuranNotesNotifier extends QuranNotesNotifier {
+class _TestQuranNotesStore extends QuranNotesStore {
   @override
-  Future<QuranNote?> build(int? ayahId) async => null;
+  Future<Map<int, QuranNote>> build() async => const {};
 }
 
 class _StudyPanelTestRepo implements IQuranRepository {
@@ -59,8 +59,7 @@ class _StudyPanelTestRepo implements IQuranRepository {
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
-  ]) async =>
-      _makeAyah(surah * 1000 + ayahInSurah);
+  ]) async => _makeAyah(surah * 1000 + ayahInSurah);
 
   @override
   Future<String> getBasmalah() async => '';
@@ -106,12 +105,12 @@ class _StudyPanelTestRepo implements IQuranRepository {
 
   @override
   Future<QuranPage> getPage(int page) async => QuranPage(
-        pageNumber: page,
-        glyphText: '',
-        lines: const [],
-        surahs: const [],
-        juzNumber: 1,
-      );
+    pageNumber: page,
+    glyphText: '',
+    lines: const [],
+    surahs: const [],
+    juzNumber: 1,
+  );
 
   @override
   QuranPage? peekCachedPage(int page) => null;
@@ -136,22 +135,21 @@ class _StudyPanelTestRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}
 }
 
 Future<Ayah> _makeAyah(int ayahId) async => Ayah(
-      ayahId: ayahId,
-      juz: 1,
-      page: 1,
-      surahNumber: 1,
-      numberInSurah: ayahId,
-      text: '',
-      textPlain: 'test $ayahId',
-    );
+  ayahId: ayahId,
+  juz: 1,
+  page: 1,
+  surahNumber: 1,
+  numberInSurah: ayahId,
+  text: '',
+  textPlain: 'test $ayahId',
+);
 
 void main() {
   late MushafReaderController controller;
@@ -182,21 +180,25 @@ void main() {
     return ProviderScope(
       overrides: [
         quranScreenSettingsProvider.overrideWith(_TestQuranScreenSettings.new),
-        quranSelectedAyahProvider.overrideWith(
-          () => _TestQuranSelectedAyah(selected),
+        quranSelectedAyahIdProvider.overrideWith(
+          () => _TestQuranSelectedAyahId(selected.ayahId),
         ),
         quranMushafControllerProvider.overrideWithValue(controller),
         recitationControllerProvider.overrideWithValue(recitationState),
-        quranNotesProvider(null).overrideWith(_TestQuranNotesNotifier.new),
-        quranNotesProvider(1).overrideWith(_TestQuranNotesNotifier.new),
-        quranNotesProvider(7).overrideWith(_TestQuranNotesNotifier.new),
+        quranNotesStoreProvider.overrideWith(_TestQuranNotesStore.new),
         quranAllNotesProvider.overrideWith((ref) async => const []),
-        ayahTranslationRowProvider(kDefaultTranslationId, 1, 1)
-            .overrideWithValue(
+        ayahTranslationRowProvider(
+          kDefaultTranslationId,
+          1,
+          1,
+        ).overrideWithValue(
           const AsyncData<Translation?>(null),
         ),
-        ayahTranslationRowProvider(kDefaultTranslationId, 1, 7)
-            .overrideWithValue(
+        ayahTranslationRowProvider(
+          kDefaultTranslationId,
+          1,
+          7,
+        ).overrideWithValue(
           const AsyncData<Translation?>(null),
         ),
         tafsirForAyahProvider(TafsirId.tafseerMouaser, 1, 1).overrideWithValue(
@@ -243,7 +245,7 @@ void main() {
 
       final element = tester.element(find.byType(StudyPanel));
       final container = ProviderScope.containerOf(element);
-      expect(container.read(quranSelectedAyahProvider)?.ayahId, 1);
+      expect(container.read(quranSelectedAyahIdProvider), 1);
     },
   );
 
@@ -263,7 +265,7 @@ void main() {
 
       final element = tester.element(find.byType(StudyPanel));
       final container = ProviderScope.containerOf(element);
-      expect(container.read(quranSelectedAyahProvider)?.ayahId, 1);
+      expect(container.read(quranSelectedAyahIdProvider), 1);
     },
   );
 
@@ -283,7 +285,7 @@ void main() {
 
       final element = tester.element(find.byType(StudyPanel));
       final container = ProviderScope.containerOf(element);
-      expect(container.read(quranSelectedAyahProvider)?.ayahId, 1);
+      expect(container.read(quranSelectedAyahIdProvider), 1);
     },
   );
 }

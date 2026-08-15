@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
@@ -20,12 +21,9 @@ class StudyPanelHeader extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(quranMushafControllerProvider);
-    final selectedAyah = ref.watch(quranSelectedAyahProvider);
-    final pageSurah = ref.watch(
-      quranScreenSettingsProvider.select(
-        (value) => value.value?.pageInfo.primarySurahNumber,
-      ),
-    );
+    useListenable(controller.page);
+    final selectedAyah = ref.watch(quranSelectedAyahProvider).value;
+    final pageSurah = controller.currentPageInfo?.primarySurahNumber;
     final surahNumber = selectedAyah?.surahNumber ?? pageSurah;
     final navigation = useStudyAyahNavigation(ref);
     final ayahNumber = selectedAyah?.numberInSurah;

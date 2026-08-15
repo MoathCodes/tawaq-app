@@ -2,9 +2,9 @@ import 'package:riverpod_annotation/experimental/json_persist.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_analytics_prefs.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
-import 'package:tawaq/feature/settings/data/repository/settings_storage.dart';
 
 part 'prayer_analytics_settings_provider.g.dart';
 

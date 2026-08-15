@@ -147,9 +147,8 @@ class _QueryField extends HookConsumerWidget {
             constraints.maxWidth < context.theme.breakpoints.md;
 
         final searchButton = FButton.icon(
-          onPress: canSearch
-              ? () => commitQuery(queryController.text)
-              : null,
+          semanticsTooltip: l10n.hadithSearchAction,
+          onPress: canSearch ? () => commitQuery(queryController.text) : null,
           semanticsLabel: compactActions ? l10n.hadithSearchAction : null,
           child: compactActions
               ? const HadithDecorExcludeSemantics(
@@ -180,7 +179,6 @@ class _QueryField extends HookConsumerWidget {
             ),
             if (compactActions)
               FTooltip(
-                semanticsLabel: l10n.hadithSearchAction,
                 tipBuilder: (_, _) => Text(l10n.hadithSearchAction),
                 child: searchButton,
               )
@@ -363,7 +361,9 @@ class _ActiveFilterChips extends ConsumerWidget {
       hadithSessionControllerProvider.select((s) => s.filters),
     );
     final filterInteractionsEnabled = ref.watch(
-      hadithSessionControllerProvider.select((s) => s.filterInteractionsEnabled),
+      hadithSessionControllerProvider.select(
+        (s) => s.filterInteractionsEnabled,
+      ),
     );
     final theme = context.theme;
     final l10n = context.l10n;
@@ -499,7 +499,7 @@ class _RecentSearchesSection extends ConsumerWidget {
     final searchBusy = ref.watch(
       hadithSessionControllerProvider.select((s) => s.searchBusy),
     );
-    final recentSearches = ref.watch(hadithRecentSearchesProvider);
+    final recentSearches = ref.watch(hadithRecentSearchesStoreProvider);
 
     return recentSearches.when(
       data: (items) {
@@ -527,7 +527,7 @@ class _RecentSearchesSection extends ConsumerWidget {
                     ? null
                     : () => unawaited(
                         ref
-                            .read(hadithRecentSearchesProvider.notifier)
+                            .read(hadithRecentSearchesStoreProvider.notifier)
                             .clearAll(),
                       ),
                 child: Text(l10n.hadithClearAllRecents),
@@ -622,7 +622,7 @@ class _RecentSearchChip extends HookConsumerWidget {
                       onPress: () {
                         unawaited(
                           ref
-                              .read(hadithRecentSearchesProvider.notifier)
+                              .read(hadithRecentSearchesStoreProvider.notifier)
                               .removeQuery(query),
                         );
                       },

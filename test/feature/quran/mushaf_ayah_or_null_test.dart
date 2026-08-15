@@ -122,12 +122,12 @@ class _AnNamlRepo implements IQuranRepository {
 
   @override
   Future<QuranPage> getPage(int page) async => QuranPage(
-        pageNumber: page,
-        glyphText: '',
-        lines: const [],
-        surahs: const [],
-        juzNumber: 1,
-      );
+    pageNumber: page,
+    glyphText: '',
+    lines: const [],
+    surahs: const [],
+    juzNumber: 1,
+  );
 
   @override
   QuranPage? peekCachedPage(int page) => null;
@@ -152,14 +152,10 @@ class _AnNamlRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}
-
-  @override
-  bool isReady() => true;
 }
 
 /// Surah metadata present so count guard is skipped; lookup always throws.
