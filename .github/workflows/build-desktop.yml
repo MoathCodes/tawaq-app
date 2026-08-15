@@ -85,7 +85,14 @@ jobs:
         if: >-
           github.event_name == 'push' ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
-        run: shorebird release macos --build-number ${{ github.run_number }}
+        run: |
+          BUILD_NAME="$(sed -n "s/^version: *\([^+]*\).*/\1/p" pubspec.yaml | head -n1)"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            BUILD_NAME="${GITHUB_REF_NAME#v}"
+          fi
+          shorebird release macos \
+            --build-name "$BUILD_NAME" \
+            --build-number "${{ github.run_number }}"
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
@@ -171,7 +178,15 @@ jobs:
         if: >-
           github.event_name == 'push' ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
-        run: shorebird release windows --build-number ${{ github.run_number }}
+        shell: bash
+        run: |
+          BUILD_NAME="$(sed -n "s/^version: *\([^+]*\).*/\1/p" pubspec.yaml | head -n1)"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            BUILD_NAME="${GITHUB_REF_NAME#v}"
+          fi
+          shorebird release windows \
+            --build-name "$BUILD_NAME" \
+            --build-number "${{ github.run_number }}"
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
@@ -257,7 +272,14 @@ jobs:
         if: >-
           github.event_name == 'push' ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
-        run: shorebird release linux --build-number ${{ github.run_number }}
+        run: |
+          BUILD_NAME="$(sed -n "s/^version: *\([^+]*\).*/\1/p" pubspec.yaml | head -n1)"
+          if [ "${{ github.event_name }}" = "push" ]; then
+            BUILD_NAME="${GITHUB_REF_NAME#v}"
+          fi
+          shorebird release linux \
+            --build-name "$BUILD_NAME" \
+            --build-number "${{ github.run_number }}"
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
