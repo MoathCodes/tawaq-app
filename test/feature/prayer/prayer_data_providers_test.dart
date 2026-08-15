@@ -1,11 +1,17 @@
+import 'dart:async';
+
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
+import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_models.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_repair_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
@@ -17,8 +23,47 @@ PrayerTimeInputs inputsFromSettings(PrayerSettings settings) =>
       location: settings.location,
     );
 
+class _MockPrayerDatabase extends Mock implements PrayerDatabase {}
+
 void main() {
   setUpAll(tz.initializeTimeZones);
+
+  test('completion store waits for the guarded one-time repair', () async {
+    final database = _MockPrayerDatabase();
+    final repairGate = Completer<void>();
+    var repairBuilds = 0;
+    when(() => database.getAllCompletions()).thenAnswer(
+      (_) async => const <PrayerCompletion>[],
+    );
+    final settings = PrayerSettings.defaultSettings().copyWith(
+      coordinates: Coordinates(21.575224, 39.210725),
+      location: getLocation('Asia/Riyadh'),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        hiveCoreInitProvider.overrideWith((ref) async {}),
+        prayerDatabaseProvider.overrideWithValue(database),
+        prayerTimeInputsProvider.overrideWithValue(
+          inputsFromSettings(settings),
+        ),
+        prayerCompletionsRepairProvider.overrideWith((ref) async {
+          repairBuilds++;
+          await repairGate.future;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    final store = container.read(prayerCompletionStoreProvider.future);
+    await Future<void>.delayed(Duration.zero);
+    verifyNever(() => database.getAllCompletions());
+
+    repairGate.complete();
+    await store;
+
+    expect(repairBuilds, 1);
+    verify(() => database.getAllCompletions()).called(1);
+  });
 
   group('prayerDayIsLoading', () {
     late ProviderContainer container;

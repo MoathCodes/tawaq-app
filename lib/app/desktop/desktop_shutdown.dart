@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/app/desktop/desktop_tray_service.dart';
+import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/desktop/single_instance.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';

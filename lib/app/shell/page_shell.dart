@@ -3,14 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/app/desktop/widgets/title_bar_drag_area.dart';
+import 'package:tawaq/app/desktop/widgets/window_controls.dart';
 import 'package:tawaq/app/shell/app_bar.dart';
 import 'package:tawaq/app/shell/shell_navigation_bar.dart';
 import 'package:tawaq/app/shell/shell_shortcut_scope.dart';
 import 'package:tawaq/app/shell/shell_sidebar.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/app/desktop/widgets/title_bar_drag_area.dart';
-import 'package:tawaq/app/desktop/widgets/window_controls.dart';
 import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart';
 
 /// The main shell of the application.

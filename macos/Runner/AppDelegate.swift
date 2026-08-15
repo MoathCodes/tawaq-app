@@ -20,7 +20,11 @@ class AppDelegate: FlutterAppDelegate {
       }
       window.makeKeyAndOrderFront(self)
     }
-    sender.activate()
+    if #available(macOS 14.0, *) {
+      sender.activate()
+    } else {
+      sender.activate(ignoringOtherApps: false)
+    }
     return false
   }
 }

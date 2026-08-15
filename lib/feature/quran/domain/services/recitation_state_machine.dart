@@ -5,7 +5,6 @@ import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 // The event/effect classes are self-describing and the file has many long
 // switch signatures, so suppress documentation and line-length lints.
-// ignore_for_file: public_member_api_docs
 
 import 'package:tawaq/feature/quran/domain/services/recitation_playback_policy.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';

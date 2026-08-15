@@ -727,7 +727,6 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
                                 currentAyahIndex: !_isPreviewing
                                     ? playbackIndex
                                     : null,
-                                glowPhase: 0,
                                 previewSegmentIndex: previewIndex,
                                 previewX: previewTrackX,
                                 isRtl: _isRtl,

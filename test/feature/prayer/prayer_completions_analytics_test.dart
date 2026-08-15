@@ -13,9 +13,7 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 
 void main() {
-  setUpAll(() {
-    tz.initializeTimeZones();
-  });
+  setUpAll(tz.initializeTimeZones);
 
   late PrayerSettings jeddahSettings;
   late Location location;

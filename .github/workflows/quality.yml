@@ -67,6 +67,9 @@ jobs:
         run: |
           flutter pub get
           dart run build_runner build
+          cd example
+          flutter pub get
+          dart run slang
 
       - name: Check mushaf_reader
         working-directory: packages/mushaf_reader

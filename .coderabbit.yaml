@@ -1,0 +1,216 @@
+# yaml-language-server: $schema=https://www.coderabbit.ai/integrations/schema.v2.json
+
+language: en-US
+tone_instructions: >-
+  Be concise, precise, and constructive. Prioritize correctness, regressions,
+  architecture, accessibility, localization, and missing tests over style nits.
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  high_level_summary_instructions: >-
+    Summarize user-visible behavior, architecture or persistence changes,
+    platform impact, generated-code implications, and the tests that cover the
+    change. Call out migrations, asset/database changes, and follow-up risks.
+  review_status: true
+  review_details: true
+  review_progress: true
+  collapse_walkthrough: true
+  changed_files_summary: true
+  sequence_diagrams: false
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: false
+  suggested_reviewers: false
+  poem: false
+  in_progress_fortune: false
+  enable_prompt_for_ai_agents: true
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 5
+    drafts: false
+    base_branches:
+      - main
+    ignore_title_keywords:
+      - WIP
+      - DO NOT REVIEW
+
+  path_filters:
+    - "**"
+    - "!**/*.g.dart"
+    - "!**/*.freezed.dart"
+    - "!lib/gen/**"
+    - "!lib/l10n/app_localizations*.dart"
+    - "!**/*.db"
+    - "!**/*.sqlite"
+    - "!**/*.ttf"
+    - "!**/*.otf"
+    - "!**/*.mp3"
+    - "!**/*.wav"
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.jpeg"
+    - "!**/*.webp"
+    - "!**/*.ico"
+
+  path_instructions:
+    - path: "lib/**/*.dart"
+      instructions: |
+        Apply AGENTS.md as the source of truth. Check app -> feature/core dependency
+        direction, core isolation, feature-domain independence, and prohibited
+        cross-feature imports. Prefer the smallest useful data-flow layering; flag
+        pass-through repositories, services, and providers.
+
+        Async shared state belongs in generated Riverpod providers. Check provider
+        lifecycle choice, ref/watch/read usage, stale async work, disposal, mounted
+        safety, and race conditions. Local widget state should use the least-powerful
+        ConsumerWidget, HookWidget, or HookConsumerWidget that fits.
+
+        Treat app-clock, timezone, persistence, audio leases, desktop lifecycle,
+        routing, and database changes as high-risk. Require actionable evidence for
+        every finding and avoid commenting on unchanged code unless it proves a
+        regression in the diff.
+
+    - path: "lib/feature/**/domain/**/*.dart"
+      instructions: >-
+        Domain code must remain pure and must not import its feature's data or
+        presentation layers. Review business invariants, boundary conditions, and
+        deterministic unit-test coverage. Do not suggest Flutter dependencies for
+        pure domain logic.
+
+    - path: "lib/**/presentation/**/*.dart"
+      instructions: |
+        Review responsive behavior with viewport breakpoints for page-level changes
+        and LayoutBuilder/container breakpoints for allocated-width changes. For
+        split panes, enforce the shared responsive/collapsible split helpers and
+        persisted ratios rather than hand-rolled FResizable layouts.
+
+        Enforce Forui and theme tokens: context.theme, AppSpacing, theme radii and
+        durations, shared card/tab/button/select styles, and theme-adaptive colors.
+        Flag hard-coded status/accent colors, screen-based text scaling, hand-rolled
+        segmented controls, and incorrect compact/primary/standard FTabs usage.
+
+        Check narrow and wide layouts, RTL and English/Arabic behavior, text scaling,
+        keyboard/focus behavior, and desktop selection. Icon-only or ambiguous
+        constrained controls require descriptive FTooltip and appropriate semantics.
+
+    - path: "lib/feature/prayer/**/*.dart"
+      instructions: >-
+        Prayer times must come from prayerDayProvider or historical bundles through
+        prayer_day.dart. Flag DateTime.now(), local timers, ad-hoc prayer-time
+        recomputation, incorrect timezone comparisons, or calendar keys that bypass
+        prayer_calendar.dart. Validate alert scheduling, completion day keys, and
+        behavior across midnight, timezone, and settings changes.
+
+    - path: "lib/feature/quran/**/*.dart"
+      instructions: >-
+        Preserve typed-route ownership of the live page, session-only ayah selection,
+        controller synchronization, independent app text scale and mushafZoom, and
+        recitation state-machine/audio-lease invariants. Review cache bounds,
+        cancellation, rapid navigation, end-of-surah behavior, and study-layout
+        narrow fallbacks.
+
+    - path: "lib/feature/{hadith,muslim_fortress}/**/*.dart"
+      instructions: >-
+        Check repository responsibilities for API/database mapping, copying,
+        versioning, caching, and error handling. Preserve each feature's narrow
+        fallback and persisted split/collapse state. Do not introduce pass-through
+        layers or direct cross-feature dependencies.
+
+    - path: "lib/**/*{search,selector,picker,filter}*.dart"
+      instructions: >-
+        App-side Arabic matching must normalize both query and candidate with
+        normalizeArabicForSearch (or aligned helpers). Do not use the display-only
+        ArabicTextNormalizer for search. Package-owned pre-normalized indexes may
+        retain their own aligned normalization.
+
+    - path: "lib/**/*provider.dart"
+      instructions: |
+        For persisted settings, verify hydration completes before mutation, no-op
+        writes are avoided, storage uses forever cache semantics, and kill-boundary
+        writes are flushed when durability is required. UI/session preferences must
+        remain feature-owned. Provider annotations or model changes may require
+        build_runner output; do not request committing ignored root generated files.
+
+    - path: "lib/app/routing/**/*.dart"
+      instructions: >-
+        Preserve typed go_router navigation and shell boundaries. Live Quran page and
+        settings tab state belong in the URL while persisted values are restore
+        checkpoints. Route annotation changes require code generation.
+
+    - path: "lib/l10n/*.arb"
+      instructions: >-
+        Ensure keys exist in both English and Arabic catalogs, placeholders and
+        metadata agree, wording fits its UI context, and generated localization Dart
+        files are not hand-edited. Consider RTL layout and plural/parameter behavior.
+
+    - path: "packages/**/*.dart"
+      instructions: >-
+        Treat each local package as an independent package with its own public API,
+        analysis, and tests. Respect package boundaries. Changes to generated models
+        in packages/mushaf_reader require the repository's full tool/codegen.sh flow.
+        adhan_dart and dorar_hadith are submodules; flag accidental vendored or
+        unrelated submodule changes.
+
+    - path: "test/**/*.dart"
+      instructions: |
+        Tests should assert observable behavior and regressions, remain deterministic,
+        and avoid real wall-clock, network, audio, platform, or filesystem dependence
+        when an override/fake exists. Time-based tests should override appClockProvider
+        and cover timezone/day-boundary behavior where relevant. Provider tests must
+        manage containers and async settling without leaking timers or subscriptions.
+
+    - path: ".github/workflows/**/*.yml"
+      instructions: >-
+        Review least privilege, pinned or trusted actions, shell quoting, caching,
+        submodule checkout, and concurrency. The Flutter SDK version comes from
+        .fvmrc. Keep CI commands consistent with tool/codegen.sh and the root/package
+        analysis and test scopes.
+
+    - path: "{pubspec.yaml,pubspec.lock,.fvmrc,tool/**}"
+      instructions: >-
+        Read actual constraints rather than assuming versions. Review dependency and
+        SDK changes for compatibility across the app and local packages. Preserve
+        path dependencies and the documented desktop_tray fork. Code-generation
+        scripts must run mushaf_reader generation before root generation.
+
+  tools:
+    github-checks:
+      enabled: true
+      timeout_ms: 900000
+    actionlint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    yamllint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    osvScanner:
+      enabled: true
+
+knowledge_base:
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - files: "AGENTS.md"
+        applyTo: "**"
+      - files: ".github/skills/flutter-*/SKILL.md"
+        applyTo: "**/*.dart, pubspec.yaml"
+      - files: ".github/skills/riverpod-*/SKILL.md"
+        applyTo: "lib/**/*provider.dart, lib/**/*.dart, test/**/*.dart"
+  learnings:
+    scope: local
+    approval_delay: 7
+  issues:
+    scope: local
+  pull_requests:
+    scope: local

@@ -127,14 +127,16 @@ class RecitationOfflineStore extends _$RecitationOfflineStore {
 
   void setProgress(OfflineSaveSnapshot progress) {
     final current = state.value;
-    if (current != null)
+    if (current != null) {
       state = AsyncData(current.copyWith(saveProgress: progress));
+    }
   }
 
   void clearProgress() {
     final current = state.value;
-    if (current != null)
+    if (current != null) {
       state = AsyncData(current.copyWith(clearProgress: true));
+    }
   }
 
   /// Resets transient state before an explicit save or retry begins.
@@ -289,7 +291,7 @@ class RecitationErrorToastListener extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref..listen(
+    ref.listen(
       recitationControllerProvider.select((p) => p.error),
       (previous, next) {
         if (next == null || next == previous) return;

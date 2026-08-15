@@ -5,8 +5,8 @@ import 'package:desktop_tray/desktop_tray.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/app/desktop/desktop_shutdown.dart';
 import 'package:tawaq/app/desktop/desktop_window_controller.dart';
-import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/app/desktop/tray_menu.dart';
+import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
 

@@ -5,6 +5,7 @@ import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_repair_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:timezone/timezone.dart';
 
@@ -22,8 +23,8 @@ class PrayerCompletionStore extends _$PrayerCompletionStore {
     if (location == null) return const {};
     _location = location;
 
+    await ref.watch(prayerCompletionsRepairProvider.future);
     final database = ref.read(prayerDatabaseProvider);
-    await database.repairDuplicates(location);
     final all = await database.getAllCompletions();
     return _index(all, location);
   }
