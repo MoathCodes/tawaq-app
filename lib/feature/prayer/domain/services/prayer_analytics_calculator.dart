@@ -267,7 +267,6 @@ class PrayerAnalyticsCalculator {
   /// A day is considered "fully completed" if all 5 obligatory prayers
   /// were performed with a positive status (jamaah, onTime, or late).
   ///
-  /// The [fullyCompletedDays] list must be sorted in ascending order.
   static ({int current, int best}) computeStreaks({
     required List<DateTime> fullyCompletedDays,
     required DateTime today,
@@ -276,11 +275,12 @@ class PrayerAnalyticsCalculator {
       return (current: 0, best: 0);
     }
 
+    final completedDays = [...fullyCompletedDays]..sort();
     var bestStreak = 0;
     var currentStreak = 0;
     DateTime? previousDay;
 
-    for (final day in fullyCompletedDays) {
+    for (final day in completedDays) {
       if (previousDay == null) {
         currentStreak = 1;
       } else if (_isSameDate(day, previousDay.add(const Duration(days: 1)))) {

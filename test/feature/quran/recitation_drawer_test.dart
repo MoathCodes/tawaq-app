@@ -13,6 +13,7 @@ import 'package:tawaq/core/audio/audio_service.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
@@ -57,6 +58,41 @@ class _TestRecitationOfflineStore extends RecitationOfflineStore {
       const RecitationOfflineState(totalBytes: 2 * 1024 * 1024);
 }
 
+class _CountingRecitationOfflineStore extends RecitationOfflineStore {
+  _CountingRecitationOfflineStore(this.onBuild);
+
+  final VoidCallback onBuild;
+
+  @override
+  Future<RecitationOfflineState> build() async {
+    onBuild();
+    return const RecitationOfflineState();
+  }
+}
+
+class _ErroredRecitationOfflineStore extends RecitationOfflineStore {
+  @override
+  Future<RecitationOfflineState> build() async => const RecitationOfflineState(
+    error: 'network failed',
+    saveProgress: OfflineSaveSnapshot(
+      reciterId: 1,
+      moshafId: 1,
+      surah: 1,
+      progress: DownloadProgress(receivedBytes: 1, totalBytes: 2),
+    ),
+  );
+}
+
+class _OfflineStoreConsumer extends ConsumerWidget {
+  const _OfflineStoreConsumer();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(recitationOfflineStoreProvider);
+    return const SizedBox.shrink();
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -70,6 +106,30 @@ void main() {
     Hive
       ..init('./test/hive_test_db')
       ..registerAdapters();
+  });
+
+  test('offline retry and dismissal clear persistent errors', () async {
+    final container = ProviderContainer(
+      overrides: [
+        recitationOfflineStoreProvider.overrideWith(
+          _ErroredRecitationOfflineStore.new,
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    await container.read(recitationOfflineStoreProvider.future);
+    final store = container.read(recitationOfflineStoreProvider.notifier);
+
+    store.beginSave();
+    expect(container.read(recitationOfflineStoreProvider).value?.error, isNull);
+    expect(
+      container.read(recitationOfflineStoreProvider).value?.saveProgress,
+      isNull,
+    );
+
+    store.setError('failed again');
+    store.clearError();
+    expect(container.read(recitationOfflineStoreProvider).value?.error, isNull);
   });
 
   group('skip-control RTL helpers', () {
@@ -214,6 +274,31 @@ void main() {
   });
 
   group('RecitationDrawerSurface animation', () {
+    testWidgets('closed surface does not initialize offline storage', (
+      tester,
+    ) async {
+      var scans = 0;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            recitationOfflineStoreProvider.overrideWith(
+              () => _CountingRecitationOfflineStore(() => scans++),
+            ),
+          ],
+          child: _wrap(
+            RecitationDrawerSurface(
+              open: false,
+              onClose: () {},
+              child: const _OfflineStoreConsumer(),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(scans, 0);
+    });
+
     testWidgets('runs forward (0 -> 1) when opened', (tester) async {
       await tester.pumpWidget(
         _wrap(

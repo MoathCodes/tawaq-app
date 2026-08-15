@@ -198,6 +198,20 @@ void main() {
     });
 
     group('computeStreaks', () {
+      test('handles historical completed days supplied out of order', () {
+        final result = PrayerAnalyticsCalculator.computeStreaks(
+          fullyCompletedDays: [
+            DateTime(2026, 1, 3),
+            DateTime(2026, 1, 1),
+            DateTime(2026, 1, 2),
+          ],
+          today: DateTime(2026, 1, 3),
+        );
+
+        expect(result.current, 3);
+        expect(result.best, 3);
+      });
+
       test('returns (0, 0) for empty list', () {
         final result = PrayerAnalyticsCalculator.computeStreaks(
           fullyCompletedDays: [],

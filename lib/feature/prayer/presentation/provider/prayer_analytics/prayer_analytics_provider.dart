@@ -80,7 +80,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       for (final entry in index.entries)
         if (_isFullyCompleted(entry.key, entry.value, location))
           calendarDayFromKey(entry.key, location),
-    ];
+    ]..sort();
     final streaks = PrayerAnalyticsCalculator.computeStreaks(
       fullyCompletedDays: completedDays,
       today: todayStart,

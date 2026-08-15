@@ -330,7 +330,7 @@ class _DrawerSeekAndTime extends ConsumerWidget {
 }
 
 /// Maps recitation state into the neutral [SegmentedSeekBar].
-class _RecitationSegmentedSeekBar extends ConsumerWidget {
+class _RecitationSegmentedSeekBar extends HookConsumerWidget {
   const _RecitationSegmentedSeekBar({
     required this.playback,
     required this.position,
@@ -364,21 +364,27 @@ class _RecitationSegmentedSeekBar extends ConsumerWidget {
         isArabic ? ayah.toHinduArabic() : '$ayah';
 
     final timing = timeline?.timing;
-    final segments = timing == null
-        ? const <SeekBarSegment>[]
-        : [
-            for (final a in timing.ayat)
-              if (a.ayah > 0)
-                SeekBarSegment(
-                  index: a.ayah,
-                  start: Duration(milliseconds: a.startMs),
-                  end: Duration(milliseconds: a.endMs),
-                ),
-          ];
+    final segments = useMemoized(
+      () => timing == null
+          ? const <SeekBarSegment>[]
+          : [
+              for (final a in timing.ayat)
+                if (a.ayah > 0)
+                  SeekBarSegment(
+                    index: a.ayah,
+                    start: Duration(milliseconds: a.startMs),
+                    end: Duration(milliseconds: a.endMs),
+                  ),
+            ],
+      [timing],
+    );
 
-    final buffered = bufferedRanges
-        .map((r) => (r.start, r.end))
-        .toList(growable: false);
+    final buffered = useMemoized(
+      () => bufferedRanges
+          .map((range) => (range.start, range.end))
+          .toList(growable: false),
+      [bufferedRanges],
+    );
 
     RepeatStatus? repeat;
     if (playback.ayahRepeatCount > 1 && playback.currentAyah != null) {
@@ -647,13 +653,34 @@ class _DrawerActionsSection extends ConsumerWidget {
         ],
         if (offline.error case final error?) ...[
           const SizedBox(height: AppSpacing.sm),
-          FAlert(
-            variant: .destructive,
-            icon: const Icon(FLucideIcons.triangleAlert),
-            title: Text(
-              l10n.errorOccurredWhile(l10n.quranRecitationSaveOffline),
-            ),
-            subtitle: Text(error),
+          Stack(
+            children: [
+              FAlert(
+                variant: .destructive,
+                icon: const Icon(FLucideIcons.triangleAlert),
+                title: Text(
+                  l10n.errorOccurredWhile(l10n.quranRecitationSaveOffline),
+                ),
+                subtitle: Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 36),
+                  child: Text(error),
+                ),
+              ),
+              PositionedDirectional(
+                top: AppSpacing.sm,
+                end: AppSpacing.sm,
+                child: FTooltip(
+                  tipBuilder: (_, _) => Text(l10n.cancel),
+                  child: FButton.icon(
+                    variant: .ghost,
+                    onPress: ref
+                        .read(recitationOfflineStoreProvider.notifier)
+                        .clearError,
+                    child: const Icon(FLucideIcons.x, size: 16),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ],

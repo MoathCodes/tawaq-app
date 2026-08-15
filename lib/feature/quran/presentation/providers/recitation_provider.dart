@@ -66,12 +66,6 @@ RecitationRepository recitationRepository(Ref ref) {
 Future<List<Reciter>> reciters(Ref ref) =>
     ref.watch(recitationRepositoryProvider).reciters();
 
-/// Cached surah audio listing plus total size from a single disk scan.
-typedef CachedRecitationsSnapshot = ({
-  List<CachedRecitation> files,
-  int totalBytes,
-});
-
 /// Runtime state owned by [RecitationOfflineStore].
 class RecitationOfflineState {
   const RecitationOfflineState({
@@ -143,6 +137,16 @@ class RecitationOfflineStore extends _$RecitationOfflineStore {
       state = AsyncData(current.copyWith(clearProgress: true));
   }
 
+  /// Resets transient state before an explicit save or retry begins.
+  void beginSave() {
+    final current = state.value;
+    if (current != null) {
+      state = AsyncData(
+        current.copyWith(clearProgress: true, clearError: true),
+      );
+    }
+  }
+
   void setError(String error) {
     final current = state.value;
     if (current != null) state = AsyncData(current.copyWith(error: error));
@@ -153,25 +157,6 @@ class RecitationOfflineStore extends _$RecitationOfflineStore {
     if (current != null) state = AsyncData(current.copyWith(clearError: true));
   }
 }
-
-/// Disk-file projection retained for dialogs and reciter availability views.
-@riverpod
-Future<CachedRecitationsSnapshot> cachedRecitationsSnapshot(Ref ref) async {
-  final offline = await ref.watch(recitationOfflineStoreProvider.future);
-  return (files: offline.files, totalBytes: offline.totalBytes);
-}
-
-/// Progress for the active explicit offline save.
-@riverpod
-OfflineSaveSnapshot? recitationOfflineSaveProgress(Ref ref) => ref.watch(
-  recitationOfflineStoreProvider.select((state) => state.value?.saveProgress),
-);
-
-/// Latest explicit offline-save error.
-@riverpod
-String? recitationOfflineSaveError(Ref ref) => ref.watch(
-  recitationOfflineStoreProvider.select((state) => state.value?.error),
-);
 
 /// Live download progress for the in-flight recitation surah download, or
 /// null when no download is active (cached, finished, cancelled, or idle).
@@ -469,7 +454,7 @@ class RecitationController extends _$RecitationController {
     _offlineSaveToken?.cancel();
     final token = CancellationToken();
     _offlineSaveToken = token;
-    ref.read(recitationOfflineStoreProvider.notifier).clearProgress();
+    ref.read(recitationOfflineStoreProvider.notifier).beginSave();
 
     var failed = false;
     Object? failure;
