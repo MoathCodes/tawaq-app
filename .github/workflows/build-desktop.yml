@@ -279,6 +279,9 @@ jobs:
           fi
           shorebird release linux \
             --build-name "$BUILD_NAME" \
+            --build-number "${{ github.run_number }}" \
+            -- \
+            --build-name "$BUILD_NAME" \
             --build-number "${{ github.run_number }}"
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
