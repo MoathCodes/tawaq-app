@@ -1,9 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
-import 'package:logger/logger.dart';
 import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
-import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_slots.dart';
@@ -12,11 +10,11 @@ import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 
 Future<bool> isDayFullyComplete(
-  PrayerRepo repo,
+  PrayerDatabase database,
   Location location,
   DateTime date,
 ) async {
-  final completions = await repo.getPrayerCompletionForDate(date, location);
+  final completions = await database.getCompletionsForDate(date, location);
   final statuses = mapPrayerStatuses(completions, location, date);
   return kObligatoryPrayers.every((prayer) {
     final status = statuses[prayer] ?? CompletionStatus.none;
@@ -37,7 +35,6 @@ void main() {
   group('PrayerDatabase', () {
     late Box<int, PrayerCompletion> box;
     late PrayerDatabase db;
-    late PrayerRepo repo;
     late Location location;
 
     setUp(() async {
@@ -46,7 +43,6 @@ void main() {
       box = Box<int, PrayerCompletion>(boxName);
       await box.clear();
       db = PrayerDatabase(box);
-      repo = PrayerRepo(prayerDatabase: db, log: Logger());
     });
 
     tearDown(() async {
@@ -361,10 +357,10 @@ void main() {
           location,
         );
 
-        final result = await repo.getCompletionsBetween(
-          DateTime(2024, 5, 15),
-          DateTime(2024, 5, 20),
-          location,
+        final result = (await db.getAllCompletions()).where(
+          (completion) =>
+              !completion.completionTime.isBefore(DateTime(2024, 5, 15)) &&
+              !completion.completionTime.isAfter(DateTime(2024, 5, 20)),
         );
 
         expect(result, hasLength(2));
@@ -421,9 +417,8 @@ void main() {
           location,
         );
 
-        final result = await repo.countAllStatusesOnDate(
-          baseDate.subtract(const Duration(days: 1)),
-          baseDate.add(const Duration(days: 1)),
+        final result = countDedupedStatuses(
+          await db.getAllCompletions(),
           location,
         );
 
@@ -435,11 +430,7 @@ void main() {
       });
 
       test('returns zeros for empty database', () async {
-        final result = await repo.countAllStatusesOnDate(
-          DateTime(2024, 5),
-          DateTime(2024, 5, 31),
-          location,
-        );
+        final result = countDedupedStatuses(const [], location);
 
         expect(result[CompletionStatus.jamaah], 0);
         expect(result[CompletionStatus.onTime], 0);
@@ -484,7 +475,7 @@ void main() {
           CompletionStatus.jamaah,
         ]);
 
-        expect(await isDayFullyComplete(repo, location, date), isTrue);
+        expect(await isDayFullyComplete(db, location, date), isTrue);
       });
 
       test('excludes day when any prayer is missed', () async {
@@ -497,7 +488,7 @@ void main() {
           CompletionStatus.onTime,
         ]);
 
-        expect(await isDayFullyComplete(repo, location, date), isFalse);
+        expect(await isDayFullyComplete(db, location, date), isFalse);
       });
 
       test('excludes day when not all prayers are recorded', () async {
@@ -531,7 +522,7 @@ void main() {
           location,
         );
 
-        expect(await isDayFullyComplete(repo, location, date), isFalse);
+        expect(await isDayFullyComplete(db, location, date), isFalse);
       });
 
       test('includes late prayers as completed', () async {
@@ -544,7 +535,7 @@ void main() {
           CompletionStatus.late,
         ]);
 
-        expect(await isDayFullyComplete(repo, location, date), isTrue);
+        expect(await isDayFullyComplete(db, location, date), isTrue);
       });
 
       test('tracks multiple fully completed days', () async {
@@ -559,7 +550,7 @@ void main() {
 
         final completed = [
           for (final date in dates)
-            if (await isDayFullyComplete(repo, location, date)) date.day,
+            if (await isDayFullyComplete(db, location, date)) date.day,
         ]..sort();
 
         expect(completed, [10, 15, 20]);
@@ -593,7 +584,7 @@ void main() {
           location,
         );
 
-        expect(await isDayFullyComplete(repo, location, date), isFalse);
+        expect(await isDayFullyComplete(db, location, date), isFalse);
       });
 
       test(
@@ -611,7 +602,7 @@ void main() {
             location,
           );
 
-          expect(await isDayFullyComplete(repo, location, date), isTrue);
+          expect(await isDayFullyComplete(db, location, date), isTrue);
         },
       );
     });

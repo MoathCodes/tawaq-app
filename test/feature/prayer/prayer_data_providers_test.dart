@@ -1,12 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hivez_flutter/hivez_flutter.dart';
-import 'package:logger/logger.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
-import 'package:tawaq/feature/prayer/data/database/prayer_database.dart';
-import 'package:tawaq/feature/prayer/data/repository/prayer_repo.dart';
-import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_day_models.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_time_inputs.dart';
@@ -35,19 +30,10 @@ void main() {
         location: getLocation('Asia/Riyadh'),
       );
 
-      final box = Box<int, PrayerCompletion>(
-        'prayer_day_test_${DateTime.now().microsecondsSinceEpoch}',
-      );
-      final repo = PrayerRepo(
-        prayerDatabase: PrayerDatabase(box),
-        log: Logger(),
-      );
-
       container = ProviderContainer(
         overrides: [
           hiveCoreInitProvider.overrideWith((ref) async {}),
           prayerCompletionsRepairProvider.overrideWith((ref) async {}),
-          prayerRepoProvider.overrideWithValue(repo),
           prayerTimeInputsProvider.overrideWithValue(
             inputsFromSettings(jeddahSettings),
           ),
@@ -86,19 +72,10 @@ void main() {
         coordinates: Coordinates(21.575224, 39.210725),
         location: getLocation('Asia/Riyadh'),
       );
-      final box = Box<int, PrayerCompletion>(
-        'prayer_day_pause_${DateTime.now().microsecondsSinceEpoch}',
-      );
       final container = ProviderContainer(
         overrides: [
           hiveCoreInitProvider.overrideWith((ref) async {}),
           prayerCompletionsRepairProvider.overrideWith((ref) async {}),
-          prayerRepoProvider.overrideWithValue(
-            PrayerRepo(
-              prayerDatabase: PrayerDatabase(box),
-              log: Logger(),
-            ),
-          ),
           prayerTimeInputsProvider.overrideWithValue(
             inputsFromSettings(jeddahSettings),
           ),
