@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://www.coderabbit.ai/integrations/schema.v2.json
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 
 language: en-US
 tone_instructions: >-
@@ -62,27 +62,42 @@ reviews:
   path_instructions:
     - path: "lib/**/*.dart"
       instructions: |
-        Apply AGENTS.md as the source of truth. Check app -> feature/core dependency
-        direction, core isolation, feature-domain independence, and prohibited
-        cross-feature imports. Prefer the smallest useful data-flow layering; flag
-        pass-through repositories, services, and providers.
-
-        Async shared state belongs in generated Riverpod providers. Check provider
-        lifecycle choice, ref/watch/read usage, stale async work, disposal, mounted
-        safety, and race conditions. Local widget state should use the least-powerful
-        ConsumerWidget, HookWidget, or HookConsumerWidget that fits.
+        Follow AGENTS.md. Preserve app -> feature/core dependencies, core isolation,
+        feature-domain independence, and the cross-feature-import ban. Keep data-flow
+        layers only when they add mapping, caching, validation, logging, or
+        orchestration.
 
         Treat app-clock, timezone, persistence, audio leases, desktop lifecycle,
-        routing, and database changes as high-risk. Require actionable evidence for
-        every finding and avoid commenting on unchanged code unless it proves a
-        regression in the diff.
+        routing, and database work as high-risk. Report only a concrete defect in the
+        changed behavior, and explain the failing path or invariant.
 
     - path: "lib/feature/**/domain/**/*.dart"
       instructions: >-
         Domain code must remain pure and must not import its feature's data or
-        presentation layers. Review business invariants, boundary conditions, and
-        deterministic unit-test coverage. Do not suggest Flutter dependencies for
-        pure domain logic.
+        presentation layers. Check business invariants and boundary conditions with
+        deterministic tests. Keep Flutter dependencies out of pure domain logic.
+
+    - path: "lib/feature/**/data/**/*.dart"
+      instructions: >-
+        Keep persistence, API, and SQLite work behind the feature boundary. Check
+        ownership and disposal of clients and databases, cache keys and invalidation,
+        copy/version behavior for bundled data, and errors at the external boundary.
+        Repository methods must add behavior rather than forward calls unchanged.
+
+    - path: "lib/core/database/**/*.dart"
+      instructions: >-
+        AssetDatabaseService must safely version-copy bundled databases before opening
+        them, avoid corrupting an existing usable copy, cache only live connections,
+        and close them at the owned lifecycle boundary. Review filename/path handling
+        and errors on partial copy or open failure.
+
+    - path: "lib/hive/hive_adapters.dart"
+      instructions: >-
+        Hive type IDs and field numbers are persistent data contracts. Preserve every
+        existing identifier, make new fields backward-compatible, and verify adapter
+        registration in app_init_providers.dart. Source changes require Hive code
+        generation; review the tracked generated adapter metadata, never ignored root
+        build_runner output.
 
     - path: "lib/**/presentation/**/*.dart"
       instructions: |
@@ -132,11 +147,12 @@ reviews:
 
     - path: "lib/**/*provider.dart"
       instructions: |
-        For persisted settings, verify hydration completes before mutation, no-op
-        writes are avoided, storage uses forever cache semantics, and kill-boundary
-        writes are flushed when durability is required. UI/session preferences must
-        remain feature-owned. Provider annotations or model changes may require
-        build_runner output; do not request committing ignored root generated files.
+        Async shared state uses generated Riverpod providers. Check lifecycle choice,
+        ref.watch/read use, stale async work, disposal, mounted safety, and races.
+        Persisted settings must hydrate before mutation, skip no-op writes, use forever
+        cache semantics, and flush at a durability boundary. UI/session preferences
+        remain feature-owned. Provider annotations or model changes require code
+        generation; do not request ignored root generated files.
 
     - path: "lib/app/routing/**/*.dart"
       instructions: >-
@@ -178,7 +194,8 @@ reviews:
         Read actual constraints rather than assuming versions. Review dependency and
         SDK changes for compatibility across the app and local packages. Preserve
         path dependencies and the documented desktop_tray fork. Code-generation
-        scripts must run mushaf_reader generation before root generation.
+        scripts must run mushaf_reader generation before root generation. Do not flag
+        a lockfile update when its declared dependency change requires it.
 
   tools:
     github-checks:
