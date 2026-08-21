@@ -202,7 +202,7 @@ void main() {
         final result = PrayerAnalyticsCalculator.computeStreaks(
           fullyCompletedDays: [
             DateTime(2026, 1, 3),
-            DateTime(2026, 1),
+            DateTime(2026),
             DateTime(2026, 1, 2),
           ],
           today: DateTime(2026, 1, 3),

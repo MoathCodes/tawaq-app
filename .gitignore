@@ -19,6 +19,11 @@ docs/
 docs/*
 !docs/codebase-onboarding/
 !docs/codebase-onboarding/**
+!docs/images/
+!docs/images/readme/
+!docs/images/readme/**
+!docs/adr/
+!docs/adr/**
 # ---------------------------------------------------------------------------
 # IDEs
 # ---------------------------------------------------------------------------

@@ -28,7 +28,7 @@ app:
 
 # System tray icon (transparent background, simplified label).
 tray:
-  text: "تواق"
+  text: "تَوَّاق"
   # Render large, trim, pad, then downscale for crisp small sizes.
   canvas_size: 256
   background: transparent

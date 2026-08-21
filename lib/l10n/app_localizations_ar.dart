@@ -222,7 +222,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get appearanceSubtitle => 'تخصيص سمة التطبيق وألوانه.';
 
   @override
-  String get appName => 'توّاق';
+  String get appName => 'تَوَّاق';
 
   @override
   String get appTextSize => 'حجم نص التطبيق';
@@ -1104,7 +1104,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get maghribAngleLabel => 'زاوية المغرب (°)';
 
   @override
-  String get mediaSessionAppName => 'طوّق';
+  String get mediaSessionAppName => 'تَوَّاق';
 
   @override
   String mediaSessionAudioBy(String source) {
@@ -2412,7 +2412,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get translation => 'الترجمة';
 
   @override
-  String get trayHideApp => 'إخفاء تواق';
+  String get trayHideApp => 'إخفاء تَوَّاق';
 
   @override
   String trayNextPrayerStatus(String prayer, String time, String remaining) {
@@ -2423,7 +2423,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trayQuit => 'إنهاء';
 
   @override
-  String get trayShowApp => 'إظهار تواق';
+  String get trayShowApp => 'إظهار تَوَّاق';
 
   @override
   String get trayStopAdhan => 'إيقاف الأذان';
