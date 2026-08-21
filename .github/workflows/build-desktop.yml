@@ -140,6 +140,7 @@ jobs:
       - name: Package DMG
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         run: |
+          mkdir -p dist
           create-dmg \
             --volname "Tawaq" \
             --window-pos 200 120 \
@@ -148,7 +149,7 @@ jobs:
             --icon "Tawaq.app" 180 170 \
             --app-drop-link 480 170 \
             --hide-extension "Tawaq.app" \
-            "tawaq-macos-${{ matrix.architecture }}.dmg" \
+            "dist/tawaq-macos-${{ matrix.architecture }}.dmg" \
             "build/macos/Build/Products/Release/Tawaq.app" \
           || test $? -eq 2
 
@@ -170,9 +171,7 @@ jobs:
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         with:
           name: tawaq-macos-${{ matrix.architecture }}
-          path: |
-            tawaq-macos-${{ matrix.architecture }}.dmg
-            dist/*-macos-${{ matrix.architecture }}-installer.zip
+          path: dist/*
           retention-days: 7
 
   windows:
