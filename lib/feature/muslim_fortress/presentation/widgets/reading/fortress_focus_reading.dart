@@ -22,6 +22,7 @@ import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_nav_controls.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_dua_content.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/share/fortress_share_dialog.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Full-screen focus reading for a fortress chapter.
@@ -250,6 +251,9 @@ class _FortressFocusReadingBody extends HookConsumerWidget {
                       studyDua: currentDua.hasFocusStudyAction
                           ? currentDua
                           : null,
+                      onShare: () => unawaited(
+                        showFortressShareDialog(context, currentDua),
+                      ),
                       center: Text(
                         session.isDone
                             ? l10n.fortressCompleted
@@ -781,6 +785,7 @@ class _ReadingNavBar extends StatelessWidget {
     required this.canGoNext,
     required this.onPrevious,
     required this.onNext,
+    required this.onShare,
     this.studyDua,
   });
 
@@ -790,6 +795,7 @@ class _ReadingNavBar extends StatelessWidget {
   final bool canGoNext;
   final VoidCallback? onPrevious;
   final VoidCallback? onNext;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -821,6 +827,15 @@ class _ReadingNavBar extends StatelessWidget {
                       FortressDuaStudyNavAction(dua: studyDua!),
                       const SizedBox(height: AppSpacing.sm),
                     ],
+                    FTooltip(
+                      tipBuilder: (_, _) => Text(l10n.fortressShare),
+                      child: FButton.icon(
+                        semanticsTooltip: l10n.fortressShare,
+                        variant: .ghost,
+                        onPress: onShare,
+                        child: const Icon(FLucideIcons.share2, size: 18),
+                      ),
+                    ),
                     Semantics(
                       liveRegion: true,
                       child: center,

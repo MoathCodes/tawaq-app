@@ -884,6 +884,18 @@ abstract class AppLocalizations {
   /// **'Benefit'**
   String get fortressBenefit;
 
+  /// No description provided for @fortressShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share dua'**
+  String get fortressShare;
+
+  /// No description provided for @fortressRepetition.
+  ///
+  /// In en, this message translates to:
+  /// **'Repetition count'**
+  String get fortressRepetition;
+
   /// No description provided for @fortressBrowseWeakHadith.
   ///
   /// In en, this message translates to:
@@ -1489,6 +1501,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Explanation'**
   String get hadithSharh;
+
+  /// No description provided for @hadithShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share hadith'**
+  String get hadithShare;
+
+  /// No description provided for @hadithNumberOrPage.
+  ///
+  /// In en, this message translates to:
+  /// **'Number or page'**
+  String get hadithNumberOrPage;
 
   /// No description provided for @hadithSimilar.
   ///

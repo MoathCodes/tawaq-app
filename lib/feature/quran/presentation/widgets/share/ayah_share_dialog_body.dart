@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/utils/platform.dart';
+import 'package:tawaq/core/widgets/share_card_dialog_layout.dart';
+import 'package:tawaq/core/widgets/share_card_drag_surface.dart';
 import 'package:tawaq/feature/quran/presentation/models/ayah_share_include.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_card.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_range_slider.dart';
@@ -58,52 +59,17 @@ class AyahShareDialogBody extends StatelessWidget {
 
     return Directionality(
       textDirection: TextDirection.ltr,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final sideBySide =
-              isDesktopPlatform ||
-              constraints.maxWidth >= theme.breakpoints.sm;
-
-          if (!sideBySide) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _ControlsPanel(content: content, l10n: l10n),
-                const SizedBox(height: AppSpacing.lg),
-                Expanded(
-                  child: _PreviewPanel(
-                    content: content,
-                    colors: colors,
-                    theme: theme,
-                    l10n: l10n,
-                  ),
-                ),
-              ],
-            );
-          }
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: _PreviewPanel(
-                  content: content,
-                  colors: colors,
-                  theme: theme,
-                  l10n: l10n,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.xl),
-              SizedBox(
-                width: 280,
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: _ControlsPanel(content: content, l10n: l10n),
-                ),
-              ),
-            ],
-          );
-        },
+      child: ShareCardDialogLayout(
+        preview: _PreviewPanel(
+          content: content,
+          colors: colors,
+          theme: theme,
+          l10n: l10n,
+        ),
+        settings: Align(
+          alignment: Alignment.topCenter,
+          child: _ControlsPanel(content: content, l10n: l10n),
+        ),
       ),
     );
   }
@@ -155,21 +121,25 @@ class _PreviewPanel extends StatelessWidget {
                           constraints: BoxConstraints(
                             maxWidth: constraints.maxWidth,
                           ),
-                          child: AyahShareCard(
-                            key: ValueKey(
-                              '${content.selectedAyahIds.join(',')}-'
-                              '${content.options.preserveMushafLineBreaks}',
-                            ),
+                          child: ShareCardDragSurface(
                             boundaryKey: content.boundaryKey,
-                            page: content.page,
-                            ayahIds: content.selectedAyahIds,
-                            style: content.mushafStyle,
-                            showSurahHeader: content.options.showSurahHeader,
-                            showBasmalah: content.options.showBasmalah,
-                            showAppName: content.options.showAppName,
-                            preserveMushafLineBreaks:
-                                content.options.preserveMushafLineBreaks,
-                            isDark: content.isDark,
+                            enabled: true,
+                            child: AyahShareCard(
+                              key: ValueKey(
+                                '${content.selectedAyahIds.join(',')}-'
+                                '${content.options.preserveMushafLineBreaks}',
+                              ),
+                              boundaryKey: content.boundaryKey,
+                              page: content.page,
+                              ayahIds: content.selectedAyahIds,
+                              style: content.mushafStyle,
+                              showSurahHeader: content.options.showSurahHeader,
+                              showBasmalah: content.options.showBasmalah,
+                              showAppName: content.options.showAppName,
+                              preserveMushafLineBreaks:
+                                  content.options.preserveMushafLineBreaks,
+                              isDark: content.isDark,
+                            ),
                           ),
                         ),
                       ),
@@ -186,10 +156,7 @@ class _PreviewPanel extends StatelessWidget {
 }
 
 class _ControlsPanel extends StatelessWidget {
-  const _ControlsPanel({
-    required this.content,
-    required this.l10n,
-  });
+  const _ControlsPanel({required this.content, required this.l10n});
 
   final AyahShareDialogContent content;
   final AppLocalizations l10n;

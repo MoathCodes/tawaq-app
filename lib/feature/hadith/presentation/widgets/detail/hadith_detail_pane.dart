@@ -12,6 +12,7 @@ import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart'
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_meta_field.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_dialog.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Detail pane for the selected hadith, with lazy accordion remote sections.
@@ -166,6 +167,18 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: FTooltip(
+              tipBuilder: (_, _) => Text(l10n.hadithShare),
+              child: FButton.icon(
+                semanticsTooltip: l10n.hadithShare,
+                variant: .ghost,
+                onPress: () => showHadithShareDialog(context, hadith),
+                child: const Icon(FLucideIcons.share2),
+              ),
+            ),
+          ),
           LayoutBuilder(
             builder: (context, constraints) {
               final narrow =
@@ -257,7 +270,9 @@ class HadithAsyncDetailsSection<T> extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Text(
           '$error',
-          style: theme.typography.body.sm.copyWith(color: theme.colors.destructive),
+          style: theme.typography.body.sm.copyWith(
+            color: theme.colors.destructive,
+          ),
         ),
       ),
       AsyncData(:final value) => dataBuilder(value),

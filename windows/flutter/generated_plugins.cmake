@@ -7,10 +7,12 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_alone
   flutter_timezone
   geolocator_windows
+  irondash_engine_context
   local_notifier
   mpv_audio_kit
   pasteboard
   screen_retriever_windows
+  super_native_extensions
   window_manager
 )
 

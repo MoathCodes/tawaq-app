@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -477,6 +478,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fortressBenefit => 'الفائدة';
 
   @override
+  String get fortressShare => 'مشاركة الدعاء';
+
+  @override
+  String get fortressRepetition => 'عدد التكرار';
+
+  @override
   String get fortressBrowseWeakHadith => 'الأحاديث الضعيفة والموضوعة';
 
   @override
@@ -848,6 +855,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hadithSharh => 'الشرح';
+
+  @override
+  String get hadithShare => 'مشاركة الحديث';
+
+  @override
+  String get hadithNumberOrPage => 'الرقم أو الصفحة';
 
   @override
   String get hadithSimilar => 'أحاديث مشابهة';
