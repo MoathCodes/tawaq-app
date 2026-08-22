@@ -32,7 +32,7 @@ void main() {
     final database = _MockPrayerDatabase();
     final repairGate = Completer<void>();
     var repairBuilds = 0;
-    when(() => database.getAllCompletions()).thenAnswer(
+    when(database.getAllCompletions).thenAnswer(
       (_) async => const <PrayerCompletion>[],
     );
     final settings = PrayerSettings.defaultSettings().copyWith(
@@ -56,13 +56,13 @@ void main() {
 
     final store = container.read(prayerCompletionStoreProvider.future);
     await Future<void>.delayed(Duration.zero);
-    verifyNever(() => database.getAllCompletions());
+    verifyNever(database.getAllCompletions);
 
     repairGate.complete();
     await store;
 
     expect(repairBuilds, 1);
-    verify(() => database.getAllCompletions()).called(1);
+    verify(database.getAllCompletions).called(1);
   });
 
   group('prayerDayIsLoading', () {

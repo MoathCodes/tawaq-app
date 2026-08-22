@@ -1,0 +1,3 @@
+# Use user-local installers before notarization and Flatpak
+
+Tawaq will offer a one-line installer and a packaged installer for the macOS and portable Linux release archives. The macOS installer installs for the current user and removes quarantine from Tawaq only, while the Linux installer installs only runtime packages that the downloaded bundle cannot load. This keeps beta installation simple without asking for administrator access unless Linux genuinely needs a missing system library. Flatpak will become the official Linux route when it is ready, with the portable archive retained as a fallback.

@@ -50,8 +50,16 @@ jobs:
       - run: flutter test
 
   macos:
-    name: macOS
-    runs-on: macos-15
+    name: macOS (${{ matrix.architecture }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - architecture: arm64
+            runner: macos-15
+          - architecture: x64
+            runner: macos-15-intel
     if: >-
       github.event_name == 'push' ||
       contains(github.event.inputs.platforms || 'macos,windows,linux', 'macos')
@@ -87,8 +95,10 @@ jobs:
       # Shorebird Release (Tag push or manual 'release')
       - name: Shorebird release
         if: >-
+          matrix.architecture == 'arm64' && (
           github.event_name == 'push' ||
           (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
+          )
         run: |
           BUILD_NAME="$(sed -n "s/^version: *\([^+]*\).*/\1/p" pubspec.yaml | head -n1)"
           if [ "${{ github.event_name }}" = "push" ]; then
@@ -102,7 +112,7 @@ jobs:
 
       # Shorebird Patch (Manual 'patch')
       - name: Shorebird patch
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
+        if: matrix.architecture == 'arm64' && github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
         run: |
           shorebird patch macos \
             ${{ github.event.inputs.release_version != '' && format('--release-version {0}', github.event.inputs.release_version) || '' }}
@@ -111,7 +121,11 @@ jobs:
 
       # Flutter Build (Manual 'build')
       - name: Flutter build (no Shorebird)
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
+        if: matrix.architecture == 'arm64' && github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
+        run: flutter build macos --release --build-number ${{ github.run_number }}
+
+      - name: Flutter build (Intel)
+        if: matrix.architecture == 'x64' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch'))
         run: flutter build macos --release --build-number ${{ github.run_number }}
 
       # Packaging (.dmg) - Only for release or build (not patch)
@@ -126,6 +140,7 @@ jobs:
       - name: Package DMG
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         run: |
+          mkdir -p dist
           create-dmg \
             --volname "Tawaq" \
             --window-pos 200 120 \
@@ -134,15 +149,29 @@ jobs:
             --icon "Tawaq.app" 180 170 \
             --app-drop-link 480 170 \
             --hide-extension "Tawaq.app" \
-            "tawaq-macos.dmg" \
+            "dist/tawaq-macos-${{ matrix.architecture }}.dmg" \
             "build/macos/Build/Products/Release/Tawaq.app" \
           || test $? -eq 2
+
+      - name: Package installer archive
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
+        run: |
+          VERSION="$(sed -n "s/^version: *\([^+]*\).*/\1/p" pubspec.yaml | head -n1)"
+          ARCHIVE_ROOT="tawaq-${VERSION}-macos-${{ matrix.architecture }}"
+          STAGING="$RUNNER_TEMP/$ARCHIVE_ROOT"
+          mkdir -p "$STAGING"
+          ditto "build/macos/Build/Products/Release/Tawaq.app" "$STAGING/Tawaq.app"
+          cp tool/packaging/installers/macos/install.sh "$STAGING/install.sh"
+          cp tool/packaging/installers/macos/INSTALL.md "$STAGING/INSTALL.md"
+          chmod +x "$STAGING/install.sh"
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent "$STAGING" "dist/$ARCHIVE_ROOT-installer.zip"
 
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         with:
-          name: tawaq-macos
-          path: tawaq-macos.dmg
+          name: tawaq-macos-${{ matrix.architecture }}
+          path: dist/*
           retention-days: 7
 
   windows:
@@ -263,6 +292,7 @@ jobs:
             libnotify-dev \
             libmpv-dev \
             rpm \
+            zip \
             zstd \
             dpkg
 
@@ -310,14 +340,28 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
         run: flutter build linux --release --build-number ${{ github.run_number }}
 
-      # Packaging (.deb, .rpm, .pkg.tar.zst) - Only for release or build (not patch)
-      - name: Package Linux installers (.deb, .rpm, .pkg.tar.zst)
+      # Packaging (.deb, .rpm, .pkg.tar.zst, portable ZIP) - Only for release or build (not patch)
+      - name: Package Linux installers and portable ZIP
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         run: |
           export BUILD_NUMBER="${{ github.run_number }}"
           bash tool/packaging/build-deb.sh
           bash tool/packaging/build-rpm.sh
           bash tool/packaging/build-arch.sh
+          VERSION="$(sed -n "s/^version: *\([^+]*\).*/\1/p" pubspec.yaml | head -n1)"
+          mkdir -p dist
+          ARCHIVE_ROOT="tawaq-${VERSION}-linux-x64"
+          STAGING="$RUNNER_TEMP/$ARCHIVE_ROOT"
+          mkdir -p "$STAGING/app" "$STAGING/icons"
+          cp -R build/linux/x64/release/bundle/. "$STAGING/app/"
+          cp -R linux/icons/hicolor "$STAGING/icons/hicolor"
+          cp tool/packaging/installers/linux/install.sh "$STAGING/install.sh"
+          cp tool/packaging/installers/linux/INSTALL.md "$STAGING/INSTALL.md"
+          chmod +x "$STAGING/install.sh"
+          (
+            cd "$RUNNER_TEMP"
+            zip -r -q "$GITHUB_WORKSPACE/dist/$ARCHIVE_ROOT.zip" "$ARCHIVE_ROOT"
+          )
 
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
@@ -327,6 +371,7 @@ jobs:
             dist/*.deb
             dist/*.rpm
             dist/*.pkg.tar.zst
+            dist/*.zip
           retention-days: 7
 
   release:
@@ -367,13 +412,27 @@ jobs:
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
+      - name: Create release checksums
+        run: |
+          shopt -s nullglob
+          assets=(
+            tawaq-macos-*.dmg
+            tawaq-*-macos-*-installer.zip
+            tawaq-*-windows-x64-setup.exe
+            tawaq-*-linux-x64.zip
+            *.deb
+            *.rpm
+            *.pkg.tar.zst
+          )
+          sha256sum "${assets[@]}" > SHA256SUMS
+
       - name: Publish installers via Fastforge
         run: |
           REPO="MoathCodes/tawaq-app"
           TAG="${{ steps.meta.outputs.tag }}"
           PRERELEASE="${{ steps.meta.outputs.prerelease }}"
 
-          for file in tawaq-macos.dmg tawaq-*-windows-x64-setup.exe *.deb *.rpm *.pkg.tar.zst; do
+          for file in tawaq-macos-*.dmg tawaq-*-macos-*-installer.zip tawaq-*-windows-x64-setup.exe tawaq-*-linux-x64.zip *.deb *.rpm *.pkg.tar.zst SHA256SUMS; do
             if [ -f "$file" ]; then
               echo "==> Publishing $file to $REPO ($TAG, prerelease=$PRERELEASE)"
               fastforge publish \
