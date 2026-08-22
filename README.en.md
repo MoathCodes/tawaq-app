@@ -56,10 +56,10 @@ For other Linux distributions, extract the ZIP and run `./install.sh`. The insta
 On macOS and Linux, install the latest beta with:
 
 ```bash
-curl -fsSL https://tawaq.app/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/MoathCodes/tawaq-app/acbaf6ec7836a5248d90fb3ba86f1031fbdfab65/website/public/install.sh | bash
 ```
 
-The installer verifies the release archive against its published SHA-256 checksum before running it. On macOS, it installs Tawaq in `~/Applications` and removes quarantine from that Tawaq copy only, so you do not need the extra Finder steps. On Linux, it installs in `~/.local/opt/tawaq` and asks for a password only when the bundle's library check proves a required system library is missing.
+The bootstrap is pinned to [a published repository commit](https://github.com/MoathCodes/tawaq-app/blob/acbaf6ec7836a5248d90fb3ba86f1031fbdfab65/website/public/install.sh), then verifies the release archive against its published SHA-256 checksum before running it. On macOS, it installs Tawaq in `~/Applications` and removes quarantine from that Tawaq copy only, so you do not need the extra Finder steps. On Linux, it installs in `~/.local/opt/tawaq` and asks for a password only when the bundle's library check proves a required system library is missing.
 
 Prefer an inspectable install? Download the matching ZIP from the releases page, extract it, and run `./install.sh`. The installer supports `--uninstall` and replaces a previous app installation without deleting your data.
 

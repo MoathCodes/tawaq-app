@@ -12,18 +12,8 @@
 .svn/
 migrate_working_dir/
 .jj/
-docs/
-# Version the maintained codebase onboarding guide, while keeping other docs
-# artifacts ignored by default.
-!docs/
-docs/*
-!docs/codebase-onboarding/
-!docs/codebase-onboarding/**
-!docs/images/
-!docs/images/readme/
-!docs/images/readme/**
-!docs/adr/
-!docs/adr/**
+# Local documentation drafts and exports.
+docs/local/
 # ---------------------------------------------------------------------------
 # IDEs
 # ---------------------------------------------------------------------------
