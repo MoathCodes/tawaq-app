@@ -16,6 +16,7 @@ import 'package:tawaq/core/widgets/volume_slider.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
+import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
 import 'package:tawaq/feature/quran/domain/services/reciter_tags.dart';
@@ -241,12 +242,15 @@ class _DrawerPanel extends HookConsumerWidget {
         : null;
     final settings = ref.watch(recitationSettingsProvider).value;
     final mushaf = ref.read(quranMushafControllerProvider);
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
 
     final surah = meta.surah;
-    final surahName = surah == null
-        ? ''
-        : mushaf.getSurahSync(surah)?.displayName ??
-              l10n.quranSurahLabel('$surah');
+    final surahName = AyahReferenceLogic.surahName(
+      surah == null ? null : mushaf.getSurahSync(surah),
+      surah ?? 0,
+      preferArabic: isArabic,
+      fallbackName: '',
+    );
     final reciterName = meta.reciter?.name ?? '';
     final riwayah = meta.moshaf?.name ?? '';
 

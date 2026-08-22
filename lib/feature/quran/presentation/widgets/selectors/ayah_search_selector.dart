@@ -41,7 +41,7 @@ class AyahSearchSelector extends HookConsumerWidget {
       controller.getSurahSync(surahNumber),
       surahNumber,
       preferArabic: preferArabic,
-      fallbackName: l10n.surahNameDefault(surahNumber),
+      fallbackName: '',
     );
   }
 

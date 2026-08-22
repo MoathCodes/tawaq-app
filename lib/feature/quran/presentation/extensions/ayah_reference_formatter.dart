@@ -14,9 +14,11 @@ String localizedAyahReference({
     surah,
     ayah.surahNumber,
     preferArabic: isArabic,
-    fallbackName: l10n.surahNameDefault(ayah.surahNumber),
+    fallbackName: '',
   );
-  return l10n.surahAyahInfo(surahName, ayah.numberInSurah);
+  return surahName.isEmpty
+      ? localizedAyahNumber(l10n, ayah.numberInSurah)
+      : l10n.surahAyahInfo(surahName, ayah.numberInSurah);
 }
 
 /// Verse number only, e.g. "Ayah 7" / "الآية 7".

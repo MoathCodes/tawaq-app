@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_equalizer.dart';
@@ -54,20 +55,22 @@ class _TransportPill extends ConsumerWidget {
 
     final isLoading = chrome.isLoading;
     final isEnded = chrome.isEnded;
-    final showMetadata = chrome.active;
-
     final surah = chrome.surah;
-    final surahName = surah == null
-        ? ''
-        : mushaf.getSurahSync(surah)?.displayName ??
-              l10n.quranSurahLabel('$surah');
+    final surahName = AyahReferenceLogic.surahName(
+      surah == null ? null : mushaf.getSurahSync(surah),
+      surah ?? 0,
+      preferArabic: Localizations.localeOf(context).languageCode == 'ar',
+      fallbackName: '',
+    );
 
     final titleStyle = theme.typography.body.sm.copyWith(
       color: colors.foreground,
       fontWeight: FontWeight.w600,
       height: 1.2,
     );
-    final titleWidget = chrome.currentAyah != null
+    final titleWidget = surahName.isEmpty
+        ? const SizedBox.shrink()
+        : chrome.currentAyah != null
         ? SurahNameWithSuffix(
             surahName: surahName,
             suffix: ' · ${chrome.currentAyah}',
@@ -141,7 +144,7 @@ class _TransportPill extends ConsumerWidget {
                 ),
                 showSkip: showSkip,
               ),
-              title: showMetadata || surahName.isNotEmpty
+              title: surahName.isNotEmpty
                   ? Row(
                       children: [
                         Container(

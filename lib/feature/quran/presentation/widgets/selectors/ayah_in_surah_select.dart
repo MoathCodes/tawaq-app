@@ -65,7 +65,7 @@ class AyahInSurahSelect extends HookConsumerWidget {
       surahMeta,
       surah,
       preferArabic: isArabic,
-      fallbackName: l10n.surahNameDefault(surah),
+      fallbackName: '',
     );
   }
 

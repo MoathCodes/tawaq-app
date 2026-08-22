@@ -41,7 +41,7 @@ class StudyPanelHeader extends HookConsumerWidget {
         surah,
         number,
         preferArabic: isArabic,
-        fallbackName: l10n.surahNameDefault(number),
+        fallbackName: '',
       );
     }();
 

@@ -43,7 +43,7 @@ FAutocompleteItem<Ayah> buildAyahSearchResultItem({
     controller.getSurahSync(ayah.surahNumber),
     ayah.surahNumber,
     preferArabic: isArabic,
-    fallbackName: l10n.surahNameDefault(ayah.surahNumber),
+    fallbackName: '',
   );
 
   final preview = ayahSearchPreviewText(ayah);

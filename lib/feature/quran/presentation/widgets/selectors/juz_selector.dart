@@ -95,7 +95,7 @@ Widget juzSelectSubtitle({
       surah,
       startSurahNumber,
       preferArabic: true,
-      fallbackName: l10n.surahNameDefault(startSurahNumber),
+      fallbackName: '',
     );
     return SurahNameText(surahName, style: subtitleStyle);
   }
@@ -104,7 +104,7 @@ Widget juzSelectSubtitle({
     surah,
     startSurahNumber,
     preferArabic: false,
-    fallbackName: l10n.surahNameDefault(startSurahNumber),
+    fallbackName: '',
   );
   return Text(
     l10n.surahAyahInfo(surahName, startAyahInSurah),
