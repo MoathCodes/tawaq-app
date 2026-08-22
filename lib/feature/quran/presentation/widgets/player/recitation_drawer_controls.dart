@@ -42,9 +42,11 @@ class _DrawerHeader extends ConsumerWidget {
     final mushaf = ref.read(quranMushafControllerProvider);
 
     final surah = header.surah;
-    final surahName = localizedSurahName(
+    final surahName = AyahReferenceLogic.surahName(
       surah == null ? null : mushaf.getSurahSync(surah),
+      surah ?? 0,
       preferArabic: Localizations.localeOf(context).languageCode == 'ar',
+      fallbackName: '',
     );
     final rangeLabel = header.rangeFrom != null
         ? formatAyahRangeLabel(
@@ -53,7 +55,7 @@ class _DrawerHeader extends ConsumerWidget {
             from: header.rangeFrom!,
             to: header.rangeTo,
           )
-        : surahName ?? '';
+        : surahName;
     final ayahRepeat = settings?.ayahRepeatCount ?? 1;
     final rangeRepeat = settings?.rangeRepeatCount ?? 1;
     final showPlaybackStatus = header.active && rangeLabel.isNotEmpty;

@@ -9,10 +9,10 @@ import 'package:tawaq/core/utils/reveal_folder.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
+import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
-import 'package:tawaq/feature/quran/domain/services/surah_name_logic.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -72,9 +72,11 @@ class _OfflineFilesDialog extends ConsumerWidget {
     }
 
     Widget fileTitle(CachedRecitation f) {
-      final surahName = localizedSurahName(
+      final surahName = AyahReferenceLogic.surahName(
         mushaf.getSurahSync(f.surah),
+        f.surah,
         preferArabic: Localizations.localeOf(context).languageCode == 'ar',
+        fallbackName: '',
       );
       final riwayah = riwayahName(f.reciterId, f.moshafId);
       final titleStyle = typography.body.sm.copyWith(color: colors.foreground);
@@ -83,7 +85,7 @@ class _OfflineFilesDialog extends ConsumerWidget {
           style: titleStyle,
           children: [
             TextSpan(text: '${reciterName(f.reciterId)} · '),
-            if (surahName != null)
+            if (surahName.isNotEmpty)
               TextSpan(
                 text: surahName,
                 style: textStyleForSurahName(surahName, titleStyle),

@@ -7,6 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/text/arabic_search_normalize.dart';
+import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_search_select.dart';
@@ -106,6 +107,12 @@ class SurahSearchSelect extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(quranMushafControllerProvider);
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    String localizedName(Surah surah) => AyahReferenceLogic.surahName(
+      surah,
+      surah.number,
+      preferArabic: isArabic,
+      fallbackName: '',
+    );
     final allSurahs = useFuture(useMemoized(controller.getAllSurahs));
 
     final selectedSurah = allSurahs.hasData && value != null
@@ -120,12 +127,7 @@ class SurahSearchSelect extends HookConsumerWidget {
 
     return QuranDivisionSearchSelect<Surah>(
       fieldName: label,
-      closedValue: selectedSurah != null
-          ? ((isArabic
-                    ? selectedSurah.nameArabic
-                    : selectedSurah.nameEnglish) ??
-                '')
-          : null,
+      closedValue: selectedSurah == null ? null : localizedName(selectedSurah),
       ready: ready,
       loading: allSurahs.connectionState == ConnectionState.waiting,
       enabled: enabled,
@@ -135,7 +137,7 @@ class SurahSearchSelect extends HookConsumerWidget {
       useQuranFont: isArabic,
       size: size,
       includeSemantics: false,
-      format: (v) => (isArabic ? v.nameArabic : v.nameEnglish) ?? '',
+      format: localizedName,
       filter: (q) => searchSurahs(allSurahs.data ?? const [], q),
       onChanged: (v) {
         if (v != null) onChanged(v.number);
@@ -146,10 +148,10 @@ class SurahSearchSelect extends HookConsumerWidget {
               value: v,
               title: isArabic
                   ? SurahNameText(
-                      v.nameArabic ?? '',
+                      localizedName(v),
                     )
                   : Text(
-                      v.nameEnglish ?? v.nameArabic ?? '',
+                      localizedName(v),
                     ),
               subtitle: isArabic
                   ? Text(v.nameEnglish ?? v.englishNameTranslation ?? '')
@@ -202,12 +204,14 @@ class SurahSelector extends HookConsumerWidget {
             allSurahs.connectionState == ConnectionState.done &&
             allSurahs.hasData;
         final surahFieldName = QuranSemantics.surahFieldName(l10n);
-        final displayedValue = selectedSurah != null
-            ? ((isArabic
-                      ? selectedSurah.nameArabic
-                      : selectedSurah.nameEnglish) ??
-                  '')
-            : null;
+        final displayedValue = selectedSurah == null
+            ? null
+            : AyahReferenceLogic.surahName(
+                selectedSurah,
+                selectedSurah.number,
+                preferArabic: isArabic,
+                fallbackName: '',
+              );
 
         return QuranSemantics.labeledControl(
           name: surahFieldName,

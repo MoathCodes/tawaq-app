@@ -23,12 +23,12 @@ import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
+import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_playback_policy.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_seek_pipeline.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_state_machine.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
-import 'package:tawaq/feature/quran/domain/services/surah_name_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -342,14 +342,18 @@ class RecitationController extends _$RecitationController {
   }
 
   String _surahFileName(int surah) {
-    return _surahName(surah) ?? surah.toString();
+    // Cache paths must survive locale changes and continue to find files
+    // created by previous versions, which used the Arabic-first display name.
+    return _mushaf.getSurahSync(surah)?.displayName ?? surah.toString();
   }
 
-  String? _surahName(int surah) {
+  String _surahName(int surah) {
     final locale = ref.read(localeProvider).value ?? 'en';
-    return localizedSurahName(
+    return AyahReferenceLogic.surahName(
       _mushaf.getSurahSync(surah),
+      surah,
       preferArabic: locale == 'ar',
+      fallbackName: '',
     );
   }
 
@@ -1964,13 +1968,15 @@ class RecitationController extends _$RecitationController {
     final l10n = lookupAppLocalizations(
       Locale(ref.read(localeProvider).value ?? 'en'),
     );
-    final surahName = localizedSurahName(
+    final surahName = AyahReferenceLogic.surahName(
       _mushaf.getSurahSync(surah),
+      surah,
       preferArabic: l10n.localeName.startsWith('ar'),
+      fallbackName: '',
     );
     await _service.publishMediaSession(
       MediaSessionPublishMetadata(
-        title: surahName ?? '',
+        title: surahName,
         artist: reciterName,
         appName: l10n.mediaSessionAppName,
         album: l10n.mediaSessionAudioBy('mp3quran.net'),
