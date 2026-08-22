@@ -28,7 +28,8 @@ Iterable<Surah> searchSurahs(List<Surah> surahs, String query) {
       score = 100;
     } else if (surah.number.toString().startsWith(normalized)) {
       score = 80;
-    } else if (surah.nameEnglish?.toLowerCase().startsWith(normalized) ?? false) {
+    } else if (surah.nameEnglish?.toLowerCase().startsWith(normalized) ??
+        false) {
       score = 70;
     } else if (surah.nameArabicSimplified != null &&
         normalizeArabicForSearch(
@@ -104,7 +105,6 @@ class SurahSearchSelect extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(quranMushafControllerProvider);
-    final l10n = context.l10n;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
     final allSurahs = useFuture(useMemoized(controller.getAllSurahs));
 
@@ -121,8 +121,10 @@ class SurahSearchSelect extends HookConsumerWidget {
     return QuranDivisionSearchSelect<Surah>(
       fieldName: label,
       closedValue: selectedSurah != null
-          ? ((isArabic ? selectedSurah.nameArabic : selectedSurah.nameEnglish) ??
-                l10n.surahNameDefault(selectedSurah.number))
+          ? ((isArabic
+                    ? selectedSurah.nameArabic
+                    : selectedSurah.nameEnglish) ??
+                '')
           : null,
       ready: ready,
       loading: allSurahs.connectionState == ConnectionState.waiting,
@@ -133,9 +135,7 @@ class SurahSearchSelect extends HookConsumerWidget {
       useQuranFont: isArabic,
       size: size,
       includeSemantics: false,
-      format: (v) =>
-          (isArabic ? v.nameArabic : v.nameEnglish) ??
-          l10n.surahNameDefault(v.number),
+      format: (v) => (isArabic ? v.nameArabic : v.nameEnglish) ?? '',
       filter: (q) => searchSurahs(allSurahs.data ?? const [], q),
       onChanged: (v) {
         if (v != null) onChanged(v.number);
@@ -146,12 +146,10 @@ class SurahSearchSelect extends HookConsumerWidget {
               value: v,
               title: isArabic
                   ? SurahNameText(
-                      v.nameArabic ?? l10n.surahNameDefault(v.number),
+                      v.nameArabic ?? '',
                     )
                   : Text(
-                      v.nameEnglish ??
-                          v.nameArabic ??
-                          l10n.surahNameDefault(v.number),
+                      v.nameEnglish ?? v.nameArabic ?? '',
                     ),
               subtitle: isArabic
                   ? Text(v.nameEnglish ?? v.englishNameTranslation ?? '')
@@ -168,7 +166,11 @@ class SurahSearchSelect extends HookConsumerWidget {
 /// A dropdown selector for choosing a Surah in the Quran reader.
 class SurahSelector extends HookConsumerWidget {
   /// Creates a [SurahSelector] instance.
-  const SurahSelector({this.showLabel = true, this.inlineLabel = false, super.key});
+  const SurahSelector({
+    this.showLabel = true,
+    this.inlineLabel = false,
+    super.key,
+  });
 
   /// Whether the field label is shown above the select.
   final bool showLabel;
@@ -204,7 +206,7 @@ class SurahSelector extends HookConsumerWidget {
             ? ((isArabic
                       ? selectedSurah.nameArabic
                       : selectedSurah.nameEnglish) ??
-                  l10n.surahNameDefault(selectedSurah.number))
+                  '')
             : null;
 
         return QuranSemantics.labeledControl(

@@ -136,7 +136,7 @@ Widget hizbSelectSubtitle({
     surah,
     startSurahNumber,
     preferArabic: false,
-    fallbackName: l10n.surahNameDefault(startSurahNumber),
+    fallbackName: '',
   );
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,7 +155,11 @@ Widget hizbSelectSubtitle({
 /// Hizb selector with rich tiles (hizb label + starting ayah Uthmani preview).
 class HizbSelector extends HookConsumerWidget {
   /// Creates a [HizbSelector] instance.
-  const HizbSelector({this.showLabel = true, this.inlineLabel = false, super.key});
+  const HizbSelector({
+    this.showLabel = true,
+    this.inlineLabel = false,
+    super.key,
+  });
 
   /// Whether the field label is shown above the select.
   final bool showLabel;
@@ -175,7 +179,8 @@ class HizbSelector extends HookConsumerWidget {
         final firstAyahId = controller.currentPageInfo?.firstAyahId;
 
         final selectorReady =
-            allHizbs.connectionState == ConnectionState.done && allHizbs.hasData;
+            allHizbs.connectionState == ConnectionState.done &&
+            allHizbs.hasData;
 
         final currentHizbNumber = selectorReady && firstAyahId != null
             ? hizbNumberForAyahId(controller, firstAyahId)

@@ -138,7 +138,7 @@ class NotesBrowser extends HookConsumerWidget {
         surah,
         surahNumber,
         preferArabic: isArabic,
-        fallbackName: l10n.surahNameDefault(surahNumber),
+        fallbackName: '',
       );
     }
 

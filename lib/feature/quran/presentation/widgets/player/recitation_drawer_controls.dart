@@ -1,5 +1,7 @@
 part of 'recitation_drawer.dart';
 
+// The drawer shares the localized surah-name rule with the compact transport.
+
 // --- header ---
 
 /// Header row for the expanded recitation drawer.
@@ -40,10 +42,10 @@ class _DrawerHeader extends ConsumerWidget {
     final mushaf = ref.read(quranMushafControllerProvider);
 
     final surah = header.surah;
-    final surahName = surah == null
-        ? ''
-        : mushaf.getSurahSync(surah)?.displayName ??
-              l10n.quranSurahLabel('$surah');
+    final surahName = localizedSurahName(
+      surah == null ? null : mushaf.getSurahSync(surah),
+      preferArabic: Localizations.localeOf(context).languageCode == 'ar',
+    );
     final rangeLabel = header.rangeFrom != null
         ? formatAyahRangeLabel(
             mushaf: mushaf,
@@ -51,7 +53,7 @@ class _DrawerHeader extends ConsumerWidget {
             from: header.rangeFrom!,
             to: header.rangeTo,
           )
-        : surahName;
+        : surahName ?? '';
     final ayahRepeat = settings?.ayahRepeatCount ?? 1;
     final rangeRepeat = settings?.rangeRepeatCount ?? 1;
     final showPlaybackStatus = header.active && rangeLabel.isNotEmpty;

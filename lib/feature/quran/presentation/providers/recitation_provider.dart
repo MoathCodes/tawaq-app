@@ -28,6 +28,7 @@ import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_seek_pipeline.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_state_machine.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_timeline.dart';
+import 'package:tawaq/feature/quran/domain/services/surah_name_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -336,6 +337,22 @@ void showRecitationHighlightAutoChangeToast(
 class RecitationController extends _$RecitationController {
   static const _seekLogPrefix = 'tawaq.recitation.seek';
 
+  String _surahTitle(int surah) {
+    return _surahName(surah) ?? '';
+  }
+
+  String _surahFileName(int surah) {
+    return _surahName(surah) ?? surah.toString();
+  }
+
+  String? _surahName(int surah) {
+    final locale = ref.read(localeProvider).value ?? 'en';
+    return localizedSurahName(
+      _mushaf.getSurahSync(surah),
+      preferArabic: locale == 'ar',
+    );
+  }
+
   RecitationTimeline _timeline = const RecitationTimeline();
   Timer? _sleepTimer;
   bool _sessionBootstrapped = false;
@@ -441,7 +458,7 @@ class RecitationController extends _$RecitationController {
     final surah = state.surah;
     if (reciter == null || moshaf == null || surah == null) return;
 
-    final surahName = _surahTitle(surah);
+    final surahName = _surahFileName(surah);
     final alreadyCached = await _repo.isSurahCached(
       reciter: reciter,
       moshaf: moshaf,
@@ -1384,7 +1401,7 @@ class RecitationController extends _$RecitationController {
       reciter: reciter,
       moshaf: moshaf,
       surah: surah,
-      surahName: _surahTitle(surah),
+      surahName: _surahFileName(surah),
       persist: persist,
       cancellationToken: token,
       onProgress: (p) =>
@@ -1544,7 +1561,7 @@ class RecitationController extends _$RecitationController {
       reciter: reciter,
       moshaf: moshaf,
       surah: toSurah,
-      surahName: _surahTitle(toSurah),
+      surahName: _surahFileName(toSurah),
     );
     if (!nextCached) {
       // Fall back to the normal reload path when the next surah is not yet
@@ -1572,7 +1589,7 @@ class RecitationController extends _$RecitationController {
       reciter: reciter,
       moshaf: moshaf,
       surah: fromSurah,
-      surahName: _surahTitle(fromSurah),
+      surahName: _surahFileName(fromSurah),
       persist: persist,
       cancellationToken: token,
       onProgress: (p) =>
@@ -1594,7 +1611,7 @@ class RecitationController extends _$RecitationController {
       reciter: reciter,
       moshaf: moshaf,
       surah: toSurah,
-      surahName: _surahTitle(toSurah),
+      surahName: _surahFileName(toSurah),
       persist: persist,
       cancellationToken: token,
       onProgress: (p) =>
@@ -1940,9 +1957,6 @@ class RecitationController extends _$RecitationController {
     ref.read(recitationDownloadProgressProvider.notifier).clear();
   }
 
-  String _surahTitle(int surah) =>
-      _mushaf.getSurahSync(surah)?.displayName ?? 'Surah $surah';
-
   Future<void> _publishRecitationMediaSession({
     required int surah,
     required String reciterName,
@@ -1950,9 +1964,13 @@ class RecitationController extends _$RecitationController {
     final l10n = lookupAppLocalizations(
       Locale(ref.read(localeProvider).value ?? 'en'),
     );
+    final surahName = localizedSurahName(
+      _mushaf.getSurahSync(surah),
+      preferArabic: l10n.localeName.startsWith('ar'),
+    );
     await _service.publishMediaSession(
       MediaSessionPublishMetadata(
-        title: _surahTitle(surah),
+        title: surahName ?? '',
         artist: reciterName,
         appName: l10n.mediaSessionAppName,
         album: l10n.mediaSessionAudioBy('mp3quran.net'),

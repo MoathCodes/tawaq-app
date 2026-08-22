@@ -1,5 +1,6 @@
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
+import 'package:tawaq/feature/quran/domain/services/surah_name_logic.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 /// Localized label for a repeat count (1, 2, or N times).
@@ -38,10 +39,11 @@ String formatAyahRangeLabel({
   required AyahReference? to,
 }) {
   String refLabel(AyahReference r) {
-    final name =
-        mushaf.getSurahSync(r.surah)?.displayName ??
-        l10n.quranSurahLabel('${r.surah}');
-    return '$name · ${r.ayah}';
+    final name = localizedSurahName(
+      mushaf.getSurahSync(r.surah),
+      preferArabic: l10n.localeName.startsWith('ar'),
+    );
+    return name == null ? '${r.ayah}' : '$name · ${r.ayah}';
   }
 
   if (to == null) {
@@ -52,10 +54,13 @@ String formatAyahRangeLabel({
     return refLabel(from);
   }
   if (from.surah == to.surah) {
-    final name =
-        mushaf.getSurahSync(from.surah)?.displayName ??
-        l10n.quranSurahLabel('${from.surah}');
-    return '$name · ${from.ayah}–${to.ayah}';
+    final name = localizedSurahName(
+      mushaf.getSurahSync(from.surah),
+      preferArabic: l10n.localeName.startsWith('ar'),
+    );
+    return name == null
+        ? '${from.ayah}–${to.ayah}'
+        : '$name · ${from.ayah}–${to.ayah}';
   }
   return '${refLabel(from)} → ${refLabel(to)}';
 }
