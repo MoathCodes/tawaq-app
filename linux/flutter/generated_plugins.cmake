@@ -6,10 +6,12 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_tray
   flutter_alone
   flutter_timezone
+  irondash_engine_context
   local_notifier
   mpv_audio_kit
   pasteboard
   screen_retriever_linux
+  super_native_extensions
   window_manager
 )
 

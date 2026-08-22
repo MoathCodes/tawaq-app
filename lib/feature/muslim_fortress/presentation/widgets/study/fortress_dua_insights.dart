@@ -13,6 +13,7 @@ import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repositor
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_nav_controls.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_commentary_text.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/share/fortress_share_dialog.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -66,6 +67,14 @@ Future<void> showFortressStudySheet(
             ),
           ),
           actions: [
+            FButton(
+              variant: .secondary,
+              onPress: () {
+                Navigator.of(dialogContext).pop();
+                unawaited(showFortressShareDialog(context, dua));
+              },
+              child: Text(l10n.fortressShare),
+            ),
             FButton(
               onPress: () => Navigator.of(dialogContext).pop(),
               child: Text(l10n.cancel),
@@ -265,8 +274,9 @@ class FortressDuaStudyContent extends HookConsumerWidget {
         unawaited(
           ref.read(fortressRepositoryProvider.future).then((repository) {
             if (cancelled) return;
-            commentaryState.value =
-                repository.loadCommentaryForContent(dua.contentId);
+            commentaryState.value = repository.loadCommentaryForContent(
+              dua.contentId,
+            );
             isLoading.value = false;
           }),
         );
@@ -454,10 +464,11 @@ class _StudySectionHeader extends StatelessWidget {
           const SizedBox(width: AppSpacing.sm),
           Text(
             title,
-            style: (prominent ? typography.body.md : typography.body.sm).copyWith(
-              fontWeight: prominent ? FontWeight.w700 : FontWeight.w600,
-              color: prominent ? colors.primary : colors.foreground,
-            ),
+            style: (prominent ? typography.body.md : typography.body.sm)
+                .copyWith(
+                  fontWeight: prominent ? FontWeight.w700 : FontWeight.w600,
+                  color: prominent ? colors.primary : colors.foreground,
+                ),
           ),
         ],
       ),
