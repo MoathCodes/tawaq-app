@@ -123,6 +123,7 @@ class _PreviewPanel extends StatelessWidget {
                           ),
                           child: ShareCardDragSurface(
                             boundaryKey: content.boundaryKey,
+                            enabled: true,
                             child: AyahShareCard(
                               key: ValueKey(
                                 '${content.selectedAyahIds.join(',')}-'
@@ -155,10 +156,7 @@ class _PreviewPanel extends StatelessWidget {
 }
 
 class _ControlsPanel extends StatelessWidget {
-  const _ControlsPanel({
-    required this.content,
-    required this.l10n,
-  });
+  const _ControlsPanel({required this.content, required this.l10n});
 
   final AyahShareDialogContent content;
   final AppLocalizations l10n;

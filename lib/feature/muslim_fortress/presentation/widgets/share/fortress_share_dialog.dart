@@ -23,11 +23,8 @@ Future<void> showFortressShareDialog(
 ) {
   return showFDialog<void>(
     context: context,
-    builder: (context, style, animation) => FortressShareDialog(
-      dua: dua,
-      style: style,
-      animation: animation,
-    ),
+    builder: (context, style, animation) =>
+        FortressShareDialog(dua: dua, style: style, animation: animation),
   );
 }
 
@@ -111,6 +108,7 @@ class FortressShareDialog extends HookConsumerWidget {
     }
 
     final busy = loading.value;
+    final disabled = busy || error.value != null;
     final preview = DecoratedBox(
       decoration: BoxDecoration(
         color: theme.colors.secondary.withAlpha(60),
@@ -125,6 +123,7 @@ class FortressShareDialog extends HookConsumerWidget {
             alignment: Alignment.topCenter,
             child: ShareCardDragSurface(
               boundaryKey: boundaryKey,
+              enabled: !disabled,
               child: FortressShareCard(
                 boundaryKey: boundaryKey,
                 dua: dua,
@@ -178,7 +177,6 @@ class FortressShareDialog extends HookConsumerWidget {
       ],
     );
 
-    final disabled = busy || error.value != null;
     return FDialog(
       style: style,
       animation: animation,

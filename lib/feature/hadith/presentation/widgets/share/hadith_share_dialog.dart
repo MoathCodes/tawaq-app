@@ -22,11 +22,8 @@ Future<void> showHadithShareDialog(
 ) {
   return showFDialog<void>(
     context: context,
-    builder: (context, style, animation) => HadithShareDialog(
-      hadith: hadith,
-      style: style,
-      animation: animation,
-    ),
+    builder: (context, style, animation) =>
+        HadithShareDialog(hadith: hadith, style: style, animation: animation),
   );
 }
 
@@ -52,15 +49,20 @@ class HadithShareDialog extends HookConsumerWidget {
 
     final sharhEnabled = options.value.contains(HadithShareInclude.sharh);
     final usulEnabled = options.value.contains(HadithShareInclude.usul);
-    final sharhState = ref.watch(
-      hadithDetailProvider(
-        HadithDetailKind.sharh,
-        hadith.sharhMetadata?.id ?? '',
-      ),
-    );
-    final usulState = ref.watch(
-      hadithDetailProvider(HadithDetailKind.usul, hadith.hadithId ?? ''),
-    );
+    final sharhState = sharhEnabled && hadith.hasSharhMetadata
+        ? ref.watch(
+            hadithDetailProvider(
+              HadithDetailKind.sharh,
+              hadith.sharhMetadata!.id,
+            ),
+          )
+        : const AsyncData<Object?>(null);
+    final usulState =
+        usulEnabled && hadith.hasUsulHadith && hadith.hadithId != null
+        ? ref.watch(
+            hadithDetailProvider(HadithDetailKind.usul, hadith.hadithId!),
+          )
+        : const AsyncData<Object?>(null);
 
     final sharh = sharhState.hasValue ? sharhState.value as Sharh? : null;
     final usul = usulState.hasValue ? usulState.value as UsulHadith? : null;
@@ -89,22 +91,9 @@ class HadithShareDialog extends HookConsumerWidget {
 
     void update(Set<HadithShareInclude> next) {
       options.value = options.value.copyWith(next);
-      if (next.contains(HadithShareInclude.sharh) &&
-          hadith.sharhMetadata != null) {
-        ref.invalidate(
-          hadithDetailProvider(
-            HadithDetailKind.sharh,
-            hadith.sharhMetadata!.id,
-          ),
-        );
-      }
-      if (next.contains(HadithShareInclude.usul) && hadith.hadithId != null) {
-        ref.invalidate(
-          hadithDetailProvider(HadithDetailKind.usul, hadith.hadithId!),
-        );
-      }
     }
 
+    final busy = isCapturing.value || loading;
     Widget preview = DecoratedBox(
       decoration: BoxDecoration(
         color: theme.colors.secondary.withAlpha(60),
@@ -119,6 +108,7 @@ class HadithShareDialog extends HookConsumerWidget {
             alignment: Alignment.topCenter,
             child: ShareCardDragSurface(
               boundaryKey: boundaryKey,
+              enabled: !busy && !error,
               child: HadithShareCard(
                 boundaryKey: boundaryKey,
                 hadith: hadith,
@@ -134,10 +124,7 @@ class HadithShareDialog extends HookConsumerWidget {
 
     Widget settings = FSelectTileGroup<HadithShareInclude>(
       label: Text(l10n.shareIncludeInImage),
-      control: .lifted(
-        value: options.value.includes,
-        onChange: update,
-      ),
+      control: .lifted(value: options.value.includes, onChange: update),
       children: [
         _tile(HadithShareInclude.narrator, l10n.hadithNarrator),
         _tile(HadithShareInclude.muhaddith, l10n.hadithMuhaddith),
@@ -154,7 +141,6 @@ class HadithShareDialog extends HookConsumerWidget {
       ],
     );
 
-    final busy = isCapturing.value || loading;
     return FDialog(
       style: style,
       animation: animation,

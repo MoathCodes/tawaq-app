@@ -6,11 +6,13 @@ import 'package:tawaq/core/utils/widget_to_image.dart';
 class ShareCardDragSurface extends StatelessWidget {
   const ShareCardDragSurface({
     required this.boundaryKey,
+    required this.enabled,
     required this.child,
     super.key,
   });
 
   final GlobalKey boundaryKey;
+  final bool enabled;
   final Widget child;
 
   @override
@@ -18,6 +20,7 @@ class ShareCardDragSurface extends StatelessWidget {
     return DragItemWidget(
       allowedOperations: () => [DropOperation.copy],
       dragItemProvider: (request) async {
+        if (!enabled) return null;
         final bytes = await captureWidgetToPng(boundaryKey);
         if (bytes == null) return null;
         final item = DragItem(suggestedName: 'tawaq-share.png');
@@ -29,7 +32,7 @@ class ShareCardDragSurface extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         child: child,
       ),
-      child: DraggableWidget(child: child),
+      child: DraggableWidget(isLocationDraggable: (_) => enabled, child: child),
     );
   }
 }
