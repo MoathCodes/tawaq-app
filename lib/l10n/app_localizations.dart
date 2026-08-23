@@ -2888,6 +2888,18 @@ abstract class AppLocalizations {
   /// **'Caching…'**
   String get quranRecitationDownloading;
 
+  /// No description provided for @quranRecitationInitializationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load the saved recitation'**
+  String get quranRecitationInitializationFailed;
+
+  /// No description provided for @quranRecitationRetryInitialization.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get quranRecitationRetryInitialization;
+
   /// No description provided for @quranRecitationEnded.
   ///
   /// In en, this message translates to:

@@ -10,11 +10,13 @@ class _DrawerHeader extends ConsumerWidget {
   const _DrawerHeader({
     required this.reciterName,
     required this.riwayah,
+    required this.isInitializing,
     required this.onGoToQuran,
   });
 
   final String reciterName;
   final String riwayah;
+  final bool isInitializing;
   final VoidCallback? onGoToQuran;
 
   @override
@@ -35,6 +37,7 @@ class _DrawerHeader extends ConsumerWidget {
           active: p.active,
           repeatsRemaining: p.repeatsRemaining,
           currentAyah: p.currentAyah,
+          isInitializing: p.isInitializing,
         ),
       ),
     );
@@ -42,8 +45,9 @@ class _DrawerHeader extends ConsumerWidget {
     final mushaf = ref.read(quranMushafControllerProvider);
 
     final surah = header.surah;
+    final isMetadataLoading = isInitializing || header.isInitializing;
     final surahName = AyahReferenceLogic.surahName(
-      surah == null ? null : mushaf.getSurahSync(surah),
+      isMetadataLoading || surah == null ? null : mushaf.getSurahSync(surah),
       surah ?? 0,
       preferArabic: Localizations.localeOf(context).languageCode == 'ar',
       fallbackName: '',
@@ -60,51 +64,64 @@ class _DrawerHeader extends ConsumerWidget {
     final rangeRepeat = settings?.rangeRepeatCount ?? 1;
     final showPlaybackStatus = header.active && rangeLabel.isNotEmpty;
 
-    return MouseClick(
-      onClick: () => showReciterDialog(context),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
+    final identity = isMetadataLoading
+        ? FSkeletonizer(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  reciterName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.typography.body.md.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colors.foreground,
-                  ),
-                ),
-                if (riwayah.isNotEmpty)
-                  Text(
-                    riwayah,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: subtitleStyle,
-                  ),
-                if (showPlaybackStatus) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  _DrawerPlaybackStatus(
-                    rangeLabel: rangeLabel,
-                    rangeRepeatCount: rangeRepeat,
-                    repeatsRemaining: header.repeatsRemaining,
-                    ayahRepeatCount: ayahRepeat,
-                    currentAyah: header.currentAyah,
-                  ),
-                ],
+                Text('Reciter', style: theme.typography.body.md),
+                const SizedBox(height: AppSpacing.xs),
+                Text('Riwayah', style: subtitleStyle),
               ],
             ),
-          ),
+          )
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                reciterName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.typography.body.md.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: colors.foreground,
+                ),
+              ),
+              if (riwayah.isNotEmpty)
+                Text(
+                  riwayah,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: subtitleStyle,
+                ),
+              if (showPlaybackStatus) ...[
+                const SizedBox(height: AppSpacing.xs),
+                _DrawerPlaybackStatus(
+                  rangeLabel: rangeLabel,
+                  rangeRepeatCount: rangeRepeat,
+                  repeatsRemaining: header.repeatsRemaining,
+                  ayahRepeatCount: ayahRepeat,
+                  currentAyah: header.currentAyah,
+                ),
+              ],
+            ],
+          );
+
+    return MouseClick(
+      disabled: isMetadataLoading,
+      onClick: isMetadataLoading ? null : () => showReciterDialog(context),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: identity),
           const SizedBox(width: AppSpacing.md),
           FTooltip(
             tipBuilder: (_, _) => Text(l10n.quranRecitationGoToQuran),
             child: FButton.icon(
               variant: .ghost,
-              onPress: surah == null
+              onPress: isMetadataLoading || surah == null
                   ? null
                   : () => unawaited(
                       Future<void>(() {
@@ -122,7 +139,9 @@ class _DrawerHeader extends ConsumerWidget {
           const SizedBox(width: AppSpacing.sm),
           FButton(
             prefix: const Icon(FLucideIcons.mic),
-            onPress: () => showReciterDialog(context),
+            onPress: isMetadataLoading
+                ? null
+                : () => showReciterDialog(context),
             variant: .outline,
             child: Text(l10n.quranRecitationSwitchReciter),
           ),
@@ -160,18 +179,15 @@ class _DrawerPlaybackStatus extends HookWidget {
 
     final prevRepeats = useRef(repeatsRemaining);
     final pulseTick = useState(0);
-    useEffect(
-      () {
-        if (rangeRepeatCount > 1 &&
-            repeatsRemaining < prevRepeats.value &&
-            repeatsRemaining > 0) {
-          pulseTick.value++;
-        }
-        prevRepeats.value = repeatsRemaining;
-        return null;
-      },
-      [repeatsRemaining, rangeRepeatCount],
-    );
+    useEffect(() {
+      if (rangeRepeatCount > 1 &&
+          repeatsRemaining < prevRepeats.value &&
+          repeatsRemaining > 0) {
+        pulseTick.value++;
+      }
+      prevRepeats.value = repeatsRemaining;
+      return null;
+    }, [repeatsRemaining, rangeRepeatCount]);
 
     final suffixParts = <String>[];
     final ayah = currentAyah;
@@ -241,6 +257,8 @@ class _DrawerTransportSection extends HookConsumerWidget {
       recitationViewProvider.select(
         (view) => (
           isLoading: view.isLoading,
+          isInitializing: view.isInitializing,
+          canPlay: view.canPlay,
           isEnded: view.isEnded,
           isPlaying: view.isPlaying,
           bufferedRanges: view.bufferedRanges,
@@ -264,8 +282,10 @@ class _DrawerTransportSection extends HookConsumerWidget {
         RecitationDrawerTransportControls(
           isPlaying: chrome.isPlaying,
           isLoading: chrome.isLoading,
+          isInitializing: chrome.isInitializing,
+          canPlay: chrome.canPlay,
           isEnded: chrome.isEnded,
-          onPlayPause: controller.togglePlayPause,
+          onPlayPause: chrome.canPlay ? controller.togglePlayPause : null,
           surahLeftSlot: surahLeftSlot,
           surahRightSlot: surahRightSlot,
           ayahLeftSlot: ayahLeftSlot,
@@ -509,11 +529,7 @@ class _DrawerDownloadProgress extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(color: colors.border),
               ),
-              child: Icon(
-                FLucideIcons.x,
-                size: 16,
-                color: colors.destructive,
-              ),
+              child: Icon(FLucideIcons.x, size: 16, color: colors.destructive),
             ),
           ),
         ),
@@ -638,9 +654,7 @@ class _DrawerActionsSection extends ConsumerWidget {
             FTile(
               prefix: const Icon(FLucideIcons.folder),
               title: Text(l10n.quranRecitationOfflineFiles),
-              subtitle: _DrawerCacheSizeSubtitle(
-                bytes: offline.totalBytes,
-              ),
+              subtitle: _DrawerCacheSizeSubtitle(bytes: offline.totalBytes),
               onPress: () => showOfflineFilesDialog(context),
             ),
           ],
@@ -834,10 +848,7 @@ class _DrawerSettingsSection extends ConsumerWidget {
               flex: 4,
               child: Row(
                 spacing: AppSpacing.md,
-                children: [
-                  autoScrollToggle,
-                  highlightToggle,
-                ],
+                children: [autoScrollToggle, highlightToggle],
               ),
             ),
           ],

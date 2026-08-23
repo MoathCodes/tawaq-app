@@ -7,8 +7,10 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/numeric_step_button.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
@@ -70,6 +72,21 @@ class _RangeRepeatDialog extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final initialization = ref.watch(
+      recitationControllerProvider.select(
+        (state) => (
+          status: state.initializationStatus,
+          error: state.initializationError,
+        ),
+      ),
+    );
+    if (initialization.status == RecitationInitializationStatus.initializing) {
+      return const _RangeRepeatDialogLoading();
+    }
+    if (initialization.status == RecitationInitializationStatus.failed) {
+      return _RangeRepeatDialogFailure(error: initialization.error);
+    }
+
     final l10n = context.l10n;
     final colors = context.theme.colors;
     final mushaf = ref.read(quranMushafControllerProvider);
@@ -183,10 +200,7 @@ class _RangeRepeatDialog extends HookConsumerWidget {
     );
     final toRef = isOpenEnded
         ? null
-        : AyahReference(
-            surah: range.toSurah.value,
-            ayah: range.toAyah.value,
-          );
+        : AyahReference(surah: range.toSurah.value, ayah: range.toAyah.value);
     final rangeSummary = formatAyahRangeLabel(
       mushaf: mushaf,
       l10n: l10n,
@@ -414,11 +428,7 @@ class _RangeRepeatDialog extends HookConsumerWidget {
 
     final autoHighlight = ref
         .read(recitationSettingsProvider.notifier)
-        .setReciter(
-          reciterId: r.id,
-          moshafId: m.id,
-          moshafName: m.name,
-        );
+        .setReciter(reciterId: r.id, moshafId: m.id, moshafName: m.name);
 
     await ref
         .read(recitationControllerProvider.notifier)
@@ -430,12 +440,85 @@ class _RangeRepeatDialog extends HookConsumerWidget {
           to: to,
         );
     if (autoHighlight != null && context.mounted) {
-      showRecitationHighlightAutoChangeToast(
-        context,
-        enabled: autoHighlight,
-      );
+      showRecitationHighlightAutoChangeToast(context, enabled: autoHighlight);
     }
     if (context.mounted) Navigator.of(context).maybePop();
+  }
+}
+
+class _RangeRepeatDialogLoading extends StatelessWidget {
+  const _RangeRepeatDialogLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return TawaqDialogShell(
+      title: l10n.quranRangeTitle,
+      maxHeight: 720,
+      width: context.theme.breakpoints.md,
+      scrollableBody: true,
+      footer: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: FButton(onPress: null, child: Text(l10n.quranRangeSave)),
+      ),
+      child: FSkeletonizer(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Range summary'),
+              const SizedBox(height: AppSpacing.lg),
+              Container(height: 36, color: context.theme.colors.secondary),
+              const SizedBox(height: AppSpacing.lg),
+              Container(height: 132, color: context.theme.colors.secondary),
+              const SizedBox(height: AppSpacing.xl),
+              Container(height: 64, color: context.theme.colors.secondary),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RangeRepeatDialogFailure extends ConsumerWidget {
+  const _RangeRepeatDialogFailure({this.error});
+
+  final String? error;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return TawaqDialogShell(
+      title: l10n.quranRangeTitle,
+      maxHeight: 720,
+      width: context.theme.breakpoints.md,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: FAlert(
+          variant: .destructive,
+          icon: const Icon(FLucideIcons.triangleAlert),
+          title: Text(l10n.quranRecitationInitializationFailed),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (error != null) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(error!),
+              ],
+              const SizedBox(height: AppSpacing.md),
+              FButton(
+                onPress: () => ref
+                    .read(recitationControllerProvider.notifier)
+                    .retryInitialization(),
+                child: Text(l10n.quranRecitationRetryInitialization),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -766,10 +849,7 @@ _useRangePresetResolver({
 }
 
 class _RangeRepeatSectionLabel extends StatelessWidget {
-  const _RangeRepeatSectionLabel({
-    required this.icon,
-    required this.label,
-  });
+  const _RangeRepeatSectionLabel({required this.icon, required this.label});
 
   final IconData icon;
   final String label;

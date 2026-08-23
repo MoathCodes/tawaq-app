@@ -765,6 +765,8 @@
   "quranRecitationClosePlayer": "Close player",
   "quranRecitationComingSoon": "Recitation playback coming soon",
   "quranRecitationDownloading": "Caching…",
+  "quranRecitationInitializationFailed": "Couldn't load the saved recitation",
+  "quranRecitationRetryInitialization": "Try again",
   "quranRecitationEnded": "Ended",
   "quranRecitationGoToQuran": "Go to Quran",
   "quranRecitationHighlight": "Highlight ayah",

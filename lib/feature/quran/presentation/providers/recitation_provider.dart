@@ -53,10 +53,7 @@ RecitationCache recitationCache(Ref ref) => RecitationCache(
 RecitationRepository recitationRepository(Ref ref) {
   final client = ref.watch(recitationHttpClientProvider);
   return RecitationRepository(
-    api: Mp3QuranApi(
-      client: client,
-      logger: ref.watch(loggerProvider),
-    ),
+    api: Mp3QuranApi(client: client, logger: ref.watch(loggerProvider)),
     cache: ref.watch(recitationCacheProvider),
     logger: ref.watch(loggerProvider),
   );
@@ -223,6 +220,20 @@ class RecitationViewState {
       session.isLoading ||
       (ownsAudio && audio.lifecycle == AudioSessionLifecycle.loading);
 
+  /// Whether the saved recitation selection and Quran reference data are
+  /// still loading. This is intentionally separate from audio loading.
+  bool get isInitializing => session.isInitializing;
+
+  /// Whether initialization failed and needs an explicit retry.
+  bool get hasInitializationError => session.hasInitializationError;
+
+  /// Whether a user action can start playback for the current selection.
+  bool get canPlay =>
+      session.isInitializationReady &&
+      session.reciter != null &&
+      session.moshaf != null &&
+      session.surah != null;
+
   /// Whether the current selection has completed.
   bool get isEnded =>
       session.isEnded ||
@@ -292,19 +303,19 @@ class RecitationErrorToastListener extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(
-      recitationControllerProvider.select((p) => p.error),
-      (previous, next) {
-        if (next == null || next == previous) return;
-        showFToast(
-          context: context,
-          variant: .destructive,
-          icon: const Icon(FLucideIcons.triangleAlert),
-          title: Text(context.l10n.quranRecitationPlaybackFailed(next)),
-        );
-        ref.read(recitationControllerProvider.notifier).clearError();
-      },
-    );
+    ref.listen(recitationControllerProvider.select((p) => p.error), (
+      previous,
+      next,
+    ) {
+      if (next == null || next == previous) return;
+      showFToast(
+        context: context,
+        variant: .destructive,
+        icon: const Icon(FLucideIcons.triangleAlert),
+        title: Text(context.l10n.quranRecitationPlaybackFailed(next)),
+      );
+      ref.read(recitationControllerProvider.notifier).clearError();
+    });
     return child;
   }
 }
@@ -337,9 +348,7 @@ void showRecitationHighlightAutoChangeToast(
 class RecitationController extends _$RecitationController {
   static const _seekLogPrefix = 'tawaq.recitation.seek';
 
-  String _surahTitle(int surah) {
-    return _surahName(surah) ?? '';
-  }
+  String _surahTitle(int surah) => _surahName(surah);
 
   String _surahFileName(int surah) {
     // Cache paths must survive locale changes and continue to find files
@@ -360,6 +369,7 @@ class RecitationController extends _$RecitationController {
   RecitationTimeline _timeline = const RecitationTimeline();
   Timer? _sleepTimer;
   bool _sessionBootstrapped = false;
+  int _initializationGeneration = 0;
   CancellationToken? _downloadToken;
   CancellationToken? _offlineSaveToken;
   int? _lastAbLoopRemaining;
@@ -395,10 +405,7 @@ class RecitationController extends _$RecitationController {
       ..listen(audioSessionProvider, _onAudioSessionChanged)
       ..listen(
         recitationSettingsProvider.select(
-          (s) => (
-            s.value?.ayahRepeatCount,
-            s.value?.rangeRepeatCount,
-          ),
+          (s) => (s.value?.ayahRepeatCount, s.value?.rangeRepeatCount),
         ),
         (previous, next) {
           if (next.$1 == null && next.$2 == null) return;
@@ -417,8 +424,11 @@ class RecitationController extends _$RecitationController {
       return state;
     }
     _sessionBootstrapped = true;
-    unawaited(Future.microtask(_bootstrapSession));
-    return const RecitationState(active: true);
+    unawaited(Future.microtask(_initializeSession));
+    return const RecitationState(
+      active: true,
+      initializationStatus: RecitationInitializationStatus.initializing,
+    );
   }
 
   RecitationRepository get _repo => ref.read(recitationRepositoryProvider);
@@ -558,6 +568,7 @@ class RecitationController extends _$RecitationController {
     required Moshaf moshaf,
     required int surah,
   }) async {
+    _acceptUserSelection();
     _dispatch(PlaySurah(reciter: reciter, moshaf: moshaf, surah: surah));
   }
 
@@ -573,6 +584,7 @@ class RecitationController extends _$RecitationController {
     required int endAyah,
   }) async {
     if (!moshaf.hasTiming) return false;
+    _acceptUserSelection();
     _dispatch(
       PlayRange(
         reciter: reciter,
@@ -594,15 +606,13 @@ class RecitationController extends _$RecitationController {
     AyahReference? to,
   }) async {
     if (!moshaf.hasTiming) return false;
+    _acceptUserSelection();
     final segment = firstSegmentForRange(from: from, to: to, mushaf: _mushaf);
     _dispatch(
       PlayRange(
         reciter: reciter,
         moshaf: moshaf,
-        from: AyahReference(
-          surah: segment.surah,
-          ayah: segment.startAyah,
-        ),
+        from: AyahReference(surah: segment.surah, ayah: segment.startAyah),
         to: AyahReference(surah: segment.surah, ayah: segment.endAyah),
         globalFrom: from,
         globalTo: to,
@@ -620,6 +630,7 @@ class RecitationController extends _$RecitationController {
     required AyahReference from,
     AyahReference? to,
   }) async {
+    _acceptUserSelection();
     final intent = playbackIntentForPreset(
       preset: preset,
       reciter: reciter,
@@ -656,10 +667,7 @@ class RecitationController extends _$RecitationController {
           PlayRange(
             reciter: reciter,
             moshaf: moshaf,
-            from: AyahReference(
-              surah: segment.surah,
-              ayah: segment.startAyah,
-            ),
+            from: AyahReference(surah: segment.surah, ayah: segment.startAyah),
             to: AyahReference(surah: segment.surah, ayah: segment.endAyah),
             globalFrom: intent.from,
             globalTo: intent.to,
@@ -740,6 +748,7 @@ class RecitationController extends _$RecitationController {
   }
 
   Future<void> togglePlayPause() async {
+    if (!state.isInitializationReady) return;
     final trackLoaded = _service.hasActiveTrack;
     _seekLog(
       'togglePlayPause trackLoaded=$trackLoaded '
@@ -759,6 +768,9 @@ class RecitationController extends _$RecitationController {
       state = state.copyWith(error: null);
     }
   }
+
+  /// Retries restoring the saved selection and Quran reference data.
+  Future<void> retryInitialization() => _initializeSession();
 
   /// Moves the mushaf to the current playback location.
   ///
@@ -1006,10 +1018,7 @@ class RecitationController extends _$RecitationController {
   /// When [onlyIfPendingEquals] is set (engine seek failure), only clears if
   /// pending still matches that failed target — an older seek must not wipe a
   /// newer scrub/skip pending.
-  void _revertPendingSeek(
-    Duration revertTo, {
-    Duration? onlyIfPendingEquals,
-  }) {
+  void _revertPendingSeek(Duration revertTo, {Duration? onlyIfPendingEquals}) {
     final pending = state.pendingSeekTarget;
     if (pending == null) return;
     if (onlyIfPendingEquals != null &&
@@ -1028,10 +1037,7 @@ class RecitationController extends _$RecitationController {
       'pendingSeek revertToMs=${revertTo.inMilliseconds} '
       'pendingMs=${pending.inMilliseconds}',
     );
-    state = state.copyWith(
-      pendingSeekTarget: null,
-      position: revertTo,
-    );
+    state = state.copyWith(pendingSeekTarget: null, position: revertTo);
     _seekPipeline.clear();
   }
 
@@ -1074,10 +1080,7 @@ class RecitationController extends _$RecitationController {
       return;
     }
 
-    var next = state.copyWith(
-      position: clamped,
-      pendingSeekTarget: clamped,
-    );
+    var next = state.copyWith(position: clamped, pendingSeekTarget: clamped);
     if (state.isEnded) {
       next = next.copyWith(
         status: clamped > Duration.zero
@@ -1570,11 +1573,7 @@ class RecitationController extends _$RecitationController {
     if (!nextCached) {
       // Fall back to the normal reload path when the next surah is not yet
       // downloaded.
-      await _load(
-        reciter: reciter,
-        moshaf: moshaf,
-        surah: toSurah,
-      );
+      await _load(reciter: reciter, moshaf: moshaf, surah: toSurah);
       return;
     }
 
@@ -1899,25 +1898,40 @@ class RecitationController extends _$RecitationController {
     }
   }
 
-  Future<void> _bootstrapSession() async {
-    if (state.reciter != null) return;
+  Future<void> _initializeSession() async {
+    final generation = ++_initializationGeneration;
+    if (ref.mounted) {
+      state = state.copyWith(
+        initializationStatus: RecitationInitializationStatus.initializing,
+        initializationError: null,
+      );
+    }
     try {
+      final settings = await ref.read(recitationSettingsProvider.future);
+      await _mushaf.ensureReady();
       final selected = await ref.read(selectedRecitationProvider.future);
-      if (selected == null) return;
-      final settings = ref.read(recitationSettingsProvider).value;
-      final positionMs = settings?.lastPlaybackPositionMs;
+      if (!ref.mounted || generation != _initializationGeneration) return;
+
+      if (selected == null) {
+        state = state.copyWith(
+          initializationStatus: RecitationInitializationStatus.ready,
+          initializationError: null,
+        );
+        return;
+      }
+      final positionMs = settings.lastPlaybackPositionMs;
       _dispatch(
         RecitationSettingsLoaded(
           reciter: selected.reciter,
           moshaf: selected.moshaf,
-          surah: settings?.lastSurah,
+          surah: settings.lastSurah,
           rangeFrom: _reference(
-            settings?.lastRangeFromSurah,
-            settings?.lastRangeFromAyah,
+            settings.lastRangeFromSurah,
+            settings.lastRangeFromAyah,
           ),
           rangeTo: _reference(
-            settings?.lastRangeToSurah,
-            settings?.lastRangeToAyah,
+            settings.lastRangeToSurah,
+            settings.lastRangeToAyah,
           ),
           resumeFrom: positionMs != null && positionMs > 0
               ? Duration(milliseconds: positionMs)
@@ -1925,6 +1939,7 @@ class RecitationController extends _$RecitationController {
         ),
       );
     } on Object catch (error, stack) {
+      if (!ref.mounted || generation != _initializationGeneration) return;
       ref
           .read(loggerProvider)
           .w(
@@ -1932,6 +1947,21 @@ class RecitationController extends _$RecitationController {
             error: error,
             stackTrace: stack,
           );
+      state = state.copyWith(
+        initializationStatus: RecitationInitializationStatus.failed,
+        initializationError: '$error',
+      );
+    }
+  }
+
+  /// Keeps an in-flight restore from overwriting an explicit user selection.
+  void _acceptUserSelection() {
+    _initializationGeneration++;
+    if (!state.isInitializationReady) {
+      state = state.copyWith(
+        initializationStatus: RecitationInitializationStatus.ready,
+        initializationError: null,
+      );
     }
   }
 

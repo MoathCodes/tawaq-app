@@ -11,6 +11,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/utils/format_byte_size.dart';
 import 'package:tawaq/core/utils/playback_duration.dart';
+import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/core/widgets/volume_slider.dart';
 import 'package:tawaq/feature/quran/data/sources/recitation_cache.dart';
@@ -200,6 +201,7 @@ class _DrawerPanel extends HookConsumerWidget {
           rangeTo: p.rangeTo,
           reciter: p.reciter,
           moshaf: p.moshaf,
+          isInitializing: p.isInitializing,
         ),
       ),
     );
@@ -246,7 +248,7 @@ class _DrawerPanel extends HookConsumerWidget {
 
     final surah = meta.surah;
     final surahName = AyahReferenceLogic.surahName(
-      surah == null ? null : mushaf.getSurahSync(surah),
+      meta.isInitializing || surah == null ? null : mushaf.getSurahSync(surah),
       surah ?? 0,
       preferArabic: isArabic,
       fallbackName: '',
@@ -299,6 +301,7 @@ class _DrawerPanel extends HookConsumerWidget {
               _DrawerHeader(
                 reciterName: reciterName,
                 riwayah: riwayah,
+                isInitializing: meta.isInitializing,
                 onGoToQuran: onGoToQuran,
               ),
               const SizedBox(height: AppSpacing.lg),
