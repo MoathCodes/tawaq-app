@@ -115,7 +115,7 @@ Widget juzSelectSubtitle({
 /// Juz selector that only rebuilds when juz number changes.
 class JuzSelector extends HookConsumerWidget {
   /// Creates a [JuzSelector] instance.
-  const JuzSelector({
+  const new({
     this.showLabel = true,
     this.inlineLabel = false,
     super.key,

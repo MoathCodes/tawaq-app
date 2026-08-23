@@ -17,7 +17,7 @@ enum SettingsTabId {
   location('location'),
   keyboardShortcuts('keyboard-shortcuts');
 
-  const SettingsTabId(this.wireValue);
+  new(this.wireValue);
 
   /// Stable query/persistence value.
   final String wireValue;
@@ -48,7 +48,7 @@ SettingsTabId? settingsTabIdFromWire(String? value) => switch (value) {
 /// A single settings tab — key, chrome, visibility, and body builder.
 class SettingsTab {
   /// Creates [SettingsTab].
-  const SettingsTab({
+  const new({
     required this.id,
     required this.icon,
     required this.label,

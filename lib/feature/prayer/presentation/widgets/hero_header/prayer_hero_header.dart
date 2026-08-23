@@ -23,7 +23,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Hero header showing current prayer info with gradient background.
 class PrayerHeroHeader extends ConsumerWidget {
   /// Creates a [PrayerHeroHeader] instance.
-  const PrayerHeroHeader({super.key});
+  const new({super.key});
 
   /// Border radius for the hero card.
   static const kBorderRadius = BorderRadius.all(Radius.circular(16));
@@ -80,7 +80,7 @@ class PrayerHeroHeader extends ConsumerWidget {
 }
 
 class _HeroBody extends ConsumerWidget {
-  const _HeroBody();
+  const new();
 
   static const _minHeight = 200.0;
 
@@ -275,7 +275,7 @@ class _HeroBody extends ConsumerWidget {
 
 /// Isolates the 1 Hz countdown so gradient/chrome do not rebuild each tick.
 class _HeroCountdownLabel extends ConsumerWidget {
-  const _HeroCountdownLabel();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -294,7 +294,7 @@ class _HeroCountdownLabel extends ConsumerWidget {
 }
 
 class _HeroHijriDatePill extends ConsumerWidget {
-  const _HeroHijriDatePill();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -345,7 +345,7 @@ class _HeroHijriDatePill extends ConsumerWidget {
 enum _HeroTimeSquareDensity { normal, compact, ultraCompact }
 
 class _HeroTimeSquare extends StatelessWidget {
-  const _HeroTimeSquare({
+  const new({
     required this.time,
     required this.label,
     this.density = _HeroTimeSquareDensity.normal,
@@ -434,7 +434,7 @@ class _HeroTimeSquare extends StatelessWidget {
 }
 
 class _HeroStatusPopover extends ConsumerWidget {
-  const _HeroStatusPopover();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

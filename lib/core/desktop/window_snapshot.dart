@@ -11,7 +11,7 @@ const Size kDesktopMinimumWindowSize = Size(800, 600);
 /// Saved native window geometry and flags for restore after adhan alert morph.
 class WindowSnapshot {
   /// Creates a [WindowSnapshot].
-  const WindowSnapshot({
+  const new({
     required this.bounds,
     required this.isAlwaysOnTop,
     required this.isVisible,
@@ -63,7 +63,7 @@ class WindowSnapshot {
 /// Captured window flags for overlay-mode alerts (no geometry morph).
 class AlertWindowFlags {
   /// Creates [AlertWindowFlags].
-  const AlertWindowFlags({required this.isAlwaysOnTop});
+  const new({required this.isAlwaysOnTop});
 
   /// Whether always-on-top was enabled before the alert.
   final bool isAlwaysOnTop;

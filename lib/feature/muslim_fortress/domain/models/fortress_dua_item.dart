@@ -4,7 +4,7 @@ import 'package:tawaq/l10n/app_localizations.dart';
 /// A single dhikr/supplication loaded from Hisn content.
 class FortressDuaItem {
   /// Creates a dhikr item.
-  const FortressDuaItem({
+  const new({
     required this.contentId,
     required this.category,
     required this.text,

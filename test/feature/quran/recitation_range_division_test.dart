@@ -9,7 +9,7 @@ import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
 
 class _BoundsTestRepo implements IQuranRepository {
-  _BoundsTestRepo(this._juzs, this._hizbs, this._ayahs);
+  new(this._juzs, this._hizbs, this._ayahs);
 
   final Map<int, Juz> _juzs;
   final Map<int, Hizb> _hizbs;

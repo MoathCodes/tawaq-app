@@ -14,7 +14,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Desktop tray and window behaviour settings.
 class DesktopSettingsSection extends ConsumerWidget {
   /// Creates [DesktopSettingsSection].
-  const DesktopSettingsSection({super.key});
+  const new({super.key});
 
   Future<void> _handleLaunchAtLoginChange(
     BuildContext context,

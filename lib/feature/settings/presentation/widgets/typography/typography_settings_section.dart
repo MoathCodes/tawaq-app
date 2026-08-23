@@ -17,7 +17,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Typography and scaling controls for app UI and Quran mushaf text.
 class TypographySettingsSection extends ConsumerWidget {
   /// Creates a [TypographySettingsSection].
-  const TypographySettingsSection({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

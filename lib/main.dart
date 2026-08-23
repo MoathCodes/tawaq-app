@@ -35,7 +35,7 @@ Future<void> main() async {
 /// Minimal shell until Hive and desktop services are ready.
 class AppBootstrap extends ConsumerWidget {
   /// Creates [AppBootstrap].
-  const AppBootstrap({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -91,7 +91,7 @@ class AppBootstrap extends ConsumerWidget {
 /// The root widget of the application.
 class TawaqApp extends ConsumerWidget {
   /// Creates a new instance of [TawaqApp].
-  const TawaqApp({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -134,7 +134,7 @@ class TawaqApp extends ConsumerWidget {
 
 /// Rebuilds only when app text scale changes, not on palette/mode/router edits.
 class _AppTextScaleScope extends ConsumerWidget {
-  const _AppTextScaleScope({required this.child});
+  const new({required this.child});
 
   final Widget child;
 
@@ -147,7 +147,7 @@ class _AppTextScaleScope extends ConsumerWidget {
 
 /// Refreshes GPS when auto-location is on and the app returns to foreground.
 class _AutoLocationLifecycle extends ConsumerStatefulWidget {
-  const _AutoLocationLifecycle({required this.child});
+  const new({required this.child});
 
   final Widget child;
 

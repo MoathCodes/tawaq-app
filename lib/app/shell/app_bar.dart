@@ -22,7 +22,7 @@ import 'package:tawaq/theme/theme.dart';
 /// controls instead of occupying a separate header row.
 class ShellAppBar extends ConsumerWidget {
   /// Creates a new instance of [ShellAppBar].
-  const ShellAppBar({required this.dragArea, super.key});
+  const new({required this.dragArea, super.key});
 
   /// The draggable window region placed between the leading and trailing
   /// action clusters.

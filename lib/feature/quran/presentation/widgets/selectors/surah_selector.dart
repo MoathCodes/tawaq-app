@@ -71,7 +71,7 @@ Iterable<Surah> searchSurahs(List<Surah> surahs, String query) {
 /// Searchable surah picker shared by the Quran header and range dialog.
 class SurahSearchSelect extends HookConsumerWidget {
   /// Creates a [SurahSearchSelect].
-  const SurahSearchSelect({
+  const new({
     required this.value,
     required this.onChanged,
     required this.label,
@@ -168,7 +168,7 @@ class SurahSearchSelect extends HookConsumerWidget {
 /// A dropdown selector for choosing a Surah in the Quran reader.
 class SurahSelector extends HookConsumerWidget {
   /// Creates a [SurahSelector] instance.
-  const SurahSelector({
+  const new({
     this.showLabel = true,
     this.inlineLabel = false,
     super.key,

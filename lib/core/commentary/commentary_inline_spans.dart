@@ -263,7 +263,7 @@ abstract final class CommentaryInlineSpans {
 
 @immutable
 class _BuildCacheKey {
-  const _BuildCacheKey({
+  const new({
     required this.input,
     required this.stylesId,
     required this.emphasizeQawl,
@@ -310,7 +310,7 @@ enum CommentaryProseTokenKind {
 @immutable
 class CommentaryProseToken {
   /// Creates a prose token.
-  const CommentaryProseToken({
+  const new({
     required this.text,
     required this.kind,
   });
@@ -326,7 +326,7 @@ enum _InlineKind { ayah, quote, scholarLead, qawlLead }
 
 @immutable
 class _InlineMatch {
-  const _InlineMatch({
+  const new({
     required this.kind,
     required this.start,
     required this.end,

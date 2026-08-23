@@ -48,7 +48,7 @@ FSidebarItemStyleDelta _sidebarItemStyle(BuildContext context) {
 /// The sidebar for the main shell.
 class ShellSidebar extends HookConsumerWidget {
   /// Creates a new instance of [ShellSidebar].
-  const ShellSidebar({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -225,7 +225,7 @@ class ShellSidebar extends HookConsumerWidget {
 }
 
 class _RouteGroup extends ConsumerWidget {
-  const _RouteGroup({
+  const new({
     required this.routes,
     required this.groupKey,
     required this.expanded,

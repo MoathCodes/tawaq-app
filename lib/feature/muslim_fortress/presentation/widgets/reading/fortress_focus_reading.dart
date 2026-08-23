@@ -27,7 +27,7 @@ import 'package:tawaq/theme/theme.dart';
 
 /// Full-screen focus reading for a fortress chapter.
 class FortressFocusReadingView extends HookConsumerWidget {
-  const FortressFocusReadingView({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -66,7 +66,7 @@ class FortressFocusReadingView extends HookConsumerWidget {
 }
 
 class _FortressFocusReadingBody extends HookConsumerWidget {
-  const _FortressFocusReadingBody({
+  const new({
     required this.category,
     required this.duas,
     required this.initialIndex,
@@ -438,7 +438,7 @@ _FortressFocusSession _useFortressFocusSession({
 }
 
 class _FocusToolbar extends StatelessWidget {
-  const _FocusToolbar({
+  const new({
     required this.category,
     required this.duas,
     required this.index,
@@ -570,7 +570,7 @@ class _FocusToolbar extends StatelessWidget {
 }
 
 class _FocusThikrStage extends StatelessWidget {
-  const _FocusThikrStage({
+  const new({
     required this.category,
     required this.duas,
     required this.index,
@@ -711,7 +711,7 @@ class _FocusThikrStage extends StatelessWidget {
 }
 
 class _FocusTapRipple extends HookWidget {
-  const _FocusTapRipple({
+  const new({
     required this.position,
     required this.color,
     super.key,
@@ -779,7 +779,7 @@ class _FocusTapRipple extends HookWidget {
 
 /// Bottom prev/next controls for fortress reading (RTL layout).
 class _ReadingNavBar extends StatelessWidget {
-  const _ReadingNavBar({
+  const new({
     required this.center,
     required this.canGoPrevious,
     required this.canGoNext,

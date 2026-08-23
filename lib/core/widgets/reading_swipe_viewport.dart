@@ -20,7 +20,7 @@ const TextDirection kReadingPageTurnDirection = TextDirection.rtl;
 /// Edge affordances stay pinned to the viewport; content scrolls inside.
 class ReadingSwipeViewport extends HookWidget {
   /// Creates a reading swipe viewport.
-  const ReadingSwipeViewport({
+  const new({
     required this.viewportMinHeight,
     required this.horizontalPadding,
     required this.topPadding,
@@ -273,7 +273,7 @@ class ReadingSwipeViewport extends HookWidget {
 }
 
 class _SwipeNavAffordance extends StatelessWidget {
-  const _SwipeNavAffordance({
+  const new({
     required this.progress,
     required this.label,
     required this.showLabel,

@@ -6,7 +6,7 @@ const OtherCalculationMethod calculationMethodDefaults = CalculationMethod.other
 /// Field values for building a custom [CalculationMethod].
 class CalculationMethodFieldValues {
   /// Creates field values parsed from a form.
-  const CalculationMethodFieldValues({
+  const new({
     required this.fajrAngle,
     required this.ishaAngle,
     required this.ishaInterval,

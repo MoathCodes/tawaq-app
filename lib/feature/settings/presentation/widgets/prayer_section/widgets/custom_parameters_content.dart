@@ -17,7 +17,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Collapsible custom prayer calculation parameters.
 class CustomParametersAccordion extends HookConsumerWidget {
   /// Creates [CustomParametersAccordion].
-  const CustomParametersAccordion({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,7 +48,7 @@ class CustomParametersAccordion extends HookConsumerWidget {
 /// The body content of the custom parameters accordion.
 class CustomParametersContent extends ConsumerWidget {
   /// Creates a new [CustomParametersContent] instance.
-  const CustomParametersContent({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -263,7 +263,7 @@ class CustomParametersContent extends ConsumerWidget {
 /// Generic numeric text field bound to [customParametersDraftProvider].
 class NumericField extends ConsumerWidget {
   /// Creates a new [NumericField] instance.
-  const NumericField({
+  const new({
     required this.fieldKey,
     required this.label,
     this.decimal = false,

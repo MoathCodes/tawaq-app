@@ -6,7 +6,7 @@ import 'package:tawaq/l10n/app_localizations.dart';
 @immutable
 class FortressCategory {
   /// Creates a category row.
-  const FortressCategory({
+  const new({
     required this.chapterId,
     required this.title,
     required this.recurrence,
@@ -41,7 +41,7 @@ class FortressCategory {
 /// Parsed commentary segment (intro prose or a numbered list item).
 class FortressCommentaryBlock {
   /// Creates a commentary block.
-  const FortressCommentaryBlock({
+  const new({
     required this.body,
     this.listNumber,
     this.citations = const [],

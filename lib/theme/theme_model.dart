@@ -73,7 +73,7 @@ enum AppPalette {
   /// Forui neutral (shadcn) palette.
   neutral('Neutral');
 
-  const AppPalette(this.key);
+  new(this.key);
 
   /// Localization/lookup key pointing to palette metadata.
   final String key;
@@ -83,7 +83,7 @@ enum AppPalette {
 @freezed
 abstract class ThemeSettings with _$ThemeSettings {
   /// Creates a theme configuration with explicit palette, scheme, and mode.
-  const factory ThemeSettings({
+  const factory({
     required AppPalette appPalette,
     required FThemeData colorScheme,
     required ThemeMode themeMode,

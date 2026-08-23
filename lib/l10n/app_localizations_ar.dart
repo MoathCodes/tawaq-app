@@ -1718,6 +1718,31 @@ class AppLocalizationsAr extends AppLocalizations {
       'تُحفظ التلاوات تلقائيًا أثناء الاستماع.';
 
   @override
+  String get quranRecitationOfflineClearSelection => 'إلغاء التحديد';
+
+  @override
+  String get quranRecitationOfflineDelete => 'حذف التلاوات';
+
+  @override
+  String get quranRecitationOfflineDeleteAll => 'حذف جميع التلاوات';
+
+  @override
+  String quranRecitationOfflineDeleteConfirm(int count, String size) {
+    return 'هل تريد حذف $count من التلاوات ($size)؟ لا يمكن التراجع عن ذلك.';
+  }
+
+  @override
+  String quranRecitationOfflineDeleteFailed(int count) {
+    return 'تعذر حذف $count من التلاوات. ستبقى محددة لإعادة المحاولة.';
+  }
+
+  @override
+  String get quranRecitationOfflineDeleteSelected => 'حذف المحدد';
+
+  @override
+  String get quranRecitationOfflineDeleteTitle => 'حذف التلاوات؟';
+
+  @override
   String get quranRecitationOfflineEmpty => 'لا توجد تلاوات محفوظة بعد.';
 
   @override
@@ -1735,7 +1760,31 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranRecitationOfflineOpenFolder => 'فتح المجلد';
 
   @override
+  String get quranRecitationOfflinePlaybackStops =>
+      'سيتوقف التشغيل قبل إزالة الملف.';
+
+  @override
+  String get quranRecitationOfflineReciter => 'القارئ';
+
+  @override
+  String get quranRecitationOfflineRiwayah => 'الرواية';
+
+  @override
+  String get quranRecitationOfflineSelectAll => 'تحديد الكل';
+
+  @override
+  String quranRecitationOfflineSelected(int count) {
+    return '$count محدد';
+  }
+
+  @override
+  String get quranRecitationOfflineSize => 'الحجم';
+
+  @override
   String get quranRecitationOfflineStorageUsed => 'التخزين المستخدم';
+
+  @override
+  String get quranRecitationOfflineSurah => 'السورة';
 
   @override
   String get quranRecitationOfflineSubtitle => 'التلاوات المحفوظة';

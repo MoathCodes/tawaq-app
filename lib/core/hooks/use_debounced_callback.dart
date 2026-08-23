@@ -8,7 +8,7 @@ const kAppDebounceDuration = Duration(milliseconds: 400);
 
 /// Debounced [call] with an explicit [cancel] for pending timers.
 final class DebouncedCallback {
-  DebouncedCallback._({
+  new _({
     required this._schedule,
     required this.cancel,
   });

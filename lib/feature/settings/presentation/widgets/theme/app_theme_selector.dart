@@ -10,7 +10,7 @@ import 'package:tawaq/theme/theme_model.dart';
 /// Light/dark mode and Manuscript/Neutral palette controls.
 class ColorThemeSelectorContent extends ConsumerWidget {
   /// Creates [ColorThemeSelectorContent].
-  const ColorThemeSelectorContent({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -83,7 +83,7 @@ class ColorThemeSelectorContent extends ConsumerWidget {
 
 /// Small primary-color dot identifying a palette on the outline/primary buttons.
 class _PaletteSwatch extends StatelessWidget {
-  const _PaletteSwatch({required this.palette});
+  const new({required this.palette});
 
   final AppPalette palette;
 

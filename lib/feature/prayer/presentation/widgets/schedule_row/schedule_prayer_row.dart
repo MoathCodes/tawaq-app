@@ -74,7 +74,7 @@ String? _computePrayerRelativeTime({
 /// A single prayer row in the schedule list with inline status logging.
 class SchedulePrayerRow extends ConsumerWidget {
   /// Creates a [SchedulePrayerRow] instance.
-  const SchedulePrayerRow({
+  const new({
     required this.row,
     required this.isToday,
     required this.currentPrayer,
@@ -183,7 +183,7 @@ class SchedulePrayerRow extends ConsumerWidget {
 }
 
 class _WideScheduleRow extends StatelessWidget {
-  const _WideScheduleRow({
+  const new({
     required this.icon,
     required this.row,
     required this.isActive,
@@ -225,7 +225,7 @@ class _WideScheduleRow extends StatelessWidget {
 }
 
 class _NarrowScheduleRow extends StatelessWidget {
-  const _NarrowScheduleRow({
+  const new({
     required this.icon,
     required this.row,
     required this.isActive,
@@ -314,7 +314,7 @@ class _NarrowScheduleRow extends StatelessWidget {
 }
 
 class _IdentityColumn extends StatelessWidget {
-  const _IdentityColumn({
+  const new({
     required this.row,
     required this.isActive,
     required this.showStatus,
@@ -364,7 +364,7 @@ class _IdentityColumn extends StatelessWidget {
 }
 
 class _RelativeTimeSubtitle extends ConsumerWidget {
-  const _RelativeTimeSubtitle({
+  const new({
     required this.prayerTime,
     required this.status,
     required this.isCurrentPrayer,
@@ -413,7 +413,7 @@ class _RelativeTimeSubtitle extends ConsumerWidget {
 }
 
 class _TimeRail extends StatelessWidget {
-  const _TimeRail({required this.row});
+  const new({required this.row});
 
   final PrayerScheduleRow row;
 
@@ -448,7 +448,7 @@ class _TimeRail extends StatelessWidget {
 }
 
 class _ObligatoryAlertTimeSlot extends ConsumerWidget {
-  const _ObligatoryAlertTimeSlot({
+  const new({
     required this.row,
     required this.time,
     required this.kind,

@@ -8,7 +8,7 @@ import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 /// A recitation that has ayah-by-ayah timing data (from `ayat_timing/reads`).
 class TimingRead {
   /// Creates a [TimingRead].
-  const TimingRead({required this.id, required this.folderUrl});
+  const new({required this.id, required this.folderUrl});
 
   /// The `read` id used as the `read` parameter when fetching timings.
   final int id;
@@ -21,7 +21,7 @@ class TimingRead {
 /// Thin client over the mp3quran.net v3 API.
 class Mp3QuranApi {
   /// Creates a [Mp3QuranApi].
-  Mp3QuranApi({required this._client, required this._logger});
+  new({required this._client, required this._logger});
 
   final http.Client _client;
   final Logger _logger;
@@ -139,7 +139,7 @@ class Mp3QuranApi {
 /// Raised when an mp3quran request fails.
 class Mp3QuranApiException implements Exception {
   /// Creates an [Mp3QuranApiException].
-  const Mp3QuranApiException(this.message);
+  const new(this.message);
 
   /// Human-readable cause.
   final String message;

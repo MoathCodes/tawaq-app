@@ -33,7 +33,7 @@ enum CollapsePlacement {
 /// mirrored for the physical side the pane lives on (via [sideRegionIndex]).
 class CollapsibleHorizontalSplitPane extends StatelessWidget {
   /// Creates a collapsible horizontal split pane.
-  const CollapsibleHorizontalSplitPane({
+  const new({
     required this.sidePanelRatio,
     required this.resolve,
     required this.onSidePanelRatioChanged,
@@ -53,7 +53,7 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
   /// Feature split layout (Hadith, Quran study, Fortress).
   ///
   /// Assumes the container already satisfies [canUseHorizontalSplit].
-  factory CollapsibleHorizontalSplitPane.feature({
+  factory feature({
     required double sidePanelRatio,
     required bool collapsed,
     required ValueChanged<bool> onCollapsedChanged,
@@ -270,7 +270,7 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
 
 /// Compact, clearly-visible collapse button overlaid on the pane header chrome.
 class _CollapseHandle extends StatelessWidget {
-  const _CollapseHandle({
+  const new({
     required this.icon,
     required this.semanticLabel,
     required this.sideOnLeft,
@@ -310,7 +310,7 @@ class _CollapseHandle extends StatelessWidget {
 /// Slim, vertically-centred tab that peeks from the edge when the side pane is
 /// collapsed; tapping it re-expands the pane.
 class _PeekTab extends StatelessWidget {
-  const _PeekTab({
+  const new({
     required this.icon,
     required this.semanticLabel,
     required this.innerOnLeft,

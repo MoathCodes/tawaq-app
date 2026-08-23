@@ -42,7 +42,7 @@ Widget studyAccordionTitle(
 /// Shared title row for tafsir and translation accordion sections.
 class StudySectionTitle extends StatelessWidget {
   /// Creates a study section title row.
-  const StudySectionTitle({
+  const new({
     required this.colors,
     required this.icon,
     required this.text,
@@ -88,7 +88,7 @@ class StudySectionTitle extends StatelessWidget {
 /// Generic async study accordion body with source selector and content slot.
 class StudyContentSection<T> extends StatelessWidget {
   /// Creates a study content section.
-  const StudyContentSection({
+  const new({
     required this.asyncValue,
     required this.contentKey,
     required this.errorMessage,
@@ -208,7 +208,7 @@ class StudyContentSection<T> extends StatelessWidget {
 /// Translation accordion body: source selector, loading states, and text.
 class TranslationAccordionSection extends ConsumerWidget {
   /// Creates a translation accordion section.
-  const TranslationAccordionSection({
+  const new({
     required this.sura,
     required this.aya,
     required this.source,

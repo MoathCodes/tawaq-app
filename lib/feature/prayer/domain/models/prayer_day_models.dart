@@ -7,7 +7,7 @@ import 'package:timezone/timezone.dart';
 @immutable
 class PrayerDayTimeline {
   /// Creates a timeline snapshot.
-  const PrayerDayTimeline({
+  const new({
     required this.fajrToday,
     required this.sunriseToday,
     required this.dhuhrToday,
@@ -38,7 +38,7 @@ class PrayerDayTimeline {
 @immutable
 class PrayerDaySnapshot {
   /// Creates a snapshot.
-  const PrayerDaySnapshot({
+  const new({
     required this.now,
     required this.location,
     required this.bundle,
@@ -66,7 +66,7 @@ class PrayerDaySnapshot {
 @immutable
 class PrayerDayBundle {
   /// Creates a [PrayerDayBundle].
-  const PrayerDayBundle({
+  const new({
     required this.today,
     required this.yesterday,
     required this.todaySunnah,

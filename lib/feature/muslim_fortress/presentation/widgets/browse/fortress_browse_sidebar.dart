@@ -25,7 +25,7 @@ import 'package:tawaq/theme/theme.dart';
 /// search query (which lives in the main pane).
 class FortressBrowseSidebar extends HookConsumerWidget {
   /// Creates the fortress browse sidebar.
-  const FortressBrowseSidebar({
+  const new({
     required this.categories,
     super.key,
   });
@@ -195,7 +195,7 @@ class FortressBrowseSidebar extends HookConsumerWidget {
 /// Category list tile for the fortress browse sidebar.
 class FortressCategoryListTile extends ConsumerWidget {
   /// Creates a category list tile.
-  const FortressCategoryListTile({
+  const new({
     required this.category,
     this.compact = false,
     super.key,
@@ -259,7 +259,7 @@ class FortressCategoryListTile extends ConsumerWidget {
 
 class FortressEmptySidePanelState extends StatelessWidget {
   /// Creates an empty sidebar placeholder.
-  const FortressEmptySidePanelState({required this.isFavoritesTab, super.key});
+  const new({required this.isFavoritesTab, super.key});
 
   /// Whether the favorites tab is active (vs local chapter filter).
   final bool isFavoritesTab;

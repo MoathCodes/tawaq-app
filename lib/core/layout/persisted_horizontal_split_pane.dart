@@ -17,7 +17,7 @@ export 'package:tawaq/core/layout/split_pane_constraints.dart'
 /// user is dragging.
 class PersistedHorizontalSplitPane extends StatefulWidget {
   /// Creates a persisted horizontal split pane.
-  const PersistedHorizontalSplitPane({
+  const new({
     required this.sidePanelRatio,
     required this.resolve,
     required this.onSidePanelRatioChanged,

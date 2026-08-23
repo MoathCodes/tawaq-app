@@ -12,7 +12,7 @@ Future<void> noopAsync(Invocation _) async {}
 
 /// Typed controllers for every stream [TawaqAudioService] subscribes to.
 class FakeAudioStreamHandles {
-  FakeAudioStreamHandles(this.player, this.stream);
+  new(this.player, this.stream);
 
   final FakeAudioPlayer player;
   final FakeAudioPlayerStream stream;

@@ -5,7 +5,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Centered empty-state placeholder with icon, title, and optional hint.
 class EmptyStatePanel extends StatelessWidget {
   /// Creates an empty state panel.
-  const EmptyStatePanel({
+  const new({
     required this.icon,
     required this.title,
     super.key,
@@ -81,7 +81,7 @@ class EmptyStatePanel extends StatelessWidget {
 /// Async error placeholder with icon, message, optional detail, and retry.
 class ErrorStatePanel extends StatelessWidget {
   /// Creates an error state panel.
-  const ErrorStatePanel({
+  const new({
     required this.message,
     super.key,
     this.detail,

@@ -8,7 +8,7 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 /// single place owns the wording.
 class PrayerAlertEvent {
   /// Creates a [PrayerAlertEvent].
-  const PrayerAlertEvent({
+  const new({
     required this.kind,
     required this.prayer,
     required this.scheduledTime,

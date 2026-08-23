@@ -14,7 +14,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Searchable select for choosing a Quran translation source.
 class TranslationSourceSelector extends ConsumerWidget {
   /// Creates a [TranslationSourceSelector].
-  const TranslationSourceSelector({
+  const new({
     this.enabled = true,
     this.showLabel = true,
     super.key,

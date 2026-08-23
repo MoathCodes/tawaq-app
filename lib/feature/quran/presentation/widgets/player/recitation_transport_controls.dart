@@ -16,7 +16,7 @@ enum RecitationTransportDensity {
 
 /// Skip icon button shared by the compact transport and expanded drawer.
 class RecitationTransportIcon extends StatelessWidget {
-  const RecitationTransportIcon({
+  const new({
     required this.icon,
     required this.onPress,
     required this.tooltip,
@@ -50,7 +50,7 @@ class RecitationTransportIcon extends StatelessWidget {
 
 /// Circular play/pause button shared by the compact transport and drawer.
 class RecitationPlayButton extends StatelessWidget {
-  const RecitationPlayButton({
+  const new({
     required this.isPlaying,
     required this.isLoading,
     required this.onPress,
@@ -167,7 +167,7 @@ SkipControl rightSkipControl({
 
 /// Drawer transport with optional ayah-level skips flanking surah-level skips.
 class RecitationDrawerTransportControls extends StatelessWidget {
-  const RecitationDrawerTransportControls({
+  const new({
     required this.isPlaying,
     required this.isLoading,
     required this.onPlayPause,
@@ -251,7 +251,7 @@ class RecitationDrawerTransportControls extends StatelessWidget {
 
 /// Centered play/pause with optional skip controls for both transport surfaces.
 class RecitationTransportControls extends StatelessWidget {
-  const RecitationTransportControls({
+  const new({
     required this.isPlaying,
     required this.isLoading,
     required this.onPlayPause,

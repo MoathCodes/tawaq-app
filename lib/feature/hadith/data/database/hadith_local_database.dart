@@ -28,7 +28,7 @@ HadithLocalDatabase hadithLocalDatabase(Ref ref) {
 /// Handles local persistence for hadith favorites and recent searches.
 class HadithLocalDatabase {
   /// Creates the local database wrapper.
-  HadithLocalDatabase({
+  new({
     required this._favoritesBox,
     required this._recentsBox,
   });
@@ -284,7 +284,7 @@ class HadithLocalDatabase {
 }
 
 class _FavoriteEntry {
-  const _FavoriteEntry({
+  const new({
     required this.key,
     required this.savedAt,
     required this.hadith,

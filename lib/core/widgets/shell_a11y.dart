@@ -2,7 +2,7 @@ import 'package:tawaq/l10n/app_localizations.dart';
 
 /// Localized labels for shell navigation and window chrome.
 abstract final class ShellA11y {
-  ShellA11y._();
+  new _();
 
   /// Label for the theme mode toggle.
   static String themeToggleLabel(

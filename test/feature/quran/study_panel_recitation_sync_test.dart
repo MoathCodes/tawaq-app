@@ -27,7 +27,7 @@ class _TestQuranScreenSettings extends QuranScreenSettingsNotifier {
 }
 
 class _TestQuranSelectedAyahId extends QuranSelectedAyahId {
-  _TestQuranSelectedAyahId(this._ayahId);
+  new(this._ayahId);
 
   final int _ayahId;
 

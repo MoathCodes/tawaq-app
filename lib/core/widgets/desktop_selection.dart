@@ -17,7 +17,7 @@ import 'package:tawaq/core/utils/platform.dart';
 /// click-drag selection (for content inside scrollables).
 class ScopedSelectableText extends StatelessWidget {
   /// Creates scoped selectable text.
-  const ScopedSelectableText(
+  const new(
     this.data, {
     required this.style,
     super.key,
@@ -71,7 +71,7 @@ class ScopedSelectableText extends StatelessWidget {
 /// Rich text with the same scoped selection behavior as [ScopedSelectableText].
 class ScopedSelectableRichText extends StatelessWidget {
   /// Creates scoped selectable rich text.
-  const ScopedSelectableRichText(
+  const new(
     this.textSpan, {
     super.key,
     this.textAlign,
@@ -118,7 +118,7 @@ class ScopedSelectableRichText extends StatelessWidget {
 /// Enables [SelectionArea] on desktop; passthrough on other platforms.
 class DesktopSelectionArea extends StatelessWidget {
   /// Creates a desktop-only selection region.
-  const DesktopSelectionArea({required this.child, super.key});
+  const new({required this.child, super.key});
 
   /// The subtree whose plain [Text] widgets become selectable on desktop.
   final Widget child;
@@ -140,7 +140,7 @@ class DesktopSelectionArea extends StatelessWidget {
 /// (browser `user-select: none`).
 class NonSelectable extends StatelessWidget {
   /// Creates a non-selectable subtree.
-  const NonSelectable({required this.child, super.key});
+  const new({required this.child, super.key});
 
   /// The subtree that must not participate in text selection.
   final Widget child;

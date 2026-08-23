@@ -17,7 +17,7 @@ import 'package:window_manager/window_manager.dart';
 /// Window controls for macOS.
 class MacOSWindowControls extends StatelessWidget {
   /// Creates a new instance of [MacOSWindowControls].
-  const MacOSWindowControls({
+  const new({
     required this.onClose,
     required this.onMinimize,
     required this.onFullscreen,
@@ -80,7 +80,7 @@ class MacOSWindowControls extends StatelessWidget {
 /// Window controls that adapt to the current platform.
 class WindowControls extends ConsumerWidget {
   /// Creates a new instance of [WindowControls].
-  const WindowControls({super.key, this.forceMacStyle});
+  const new({super.key, this.forceMacStyle});
 
   /// Whether to force the macOS style.
   final bool? forceMacStyle;
@@ -184,7 +184,7 @@ class WindowControls extends ConsumerWidget {
 }
 
 class _MacOSControlButton extends HookWidget {
-  const _MacOSControlButton({
+  const new({
     required this.color,
     required this.hoverColor,
     required this.icon,

@@ -26,7 +26,7 @@ enum CompletionStatus {
 @freezed
 abstract class PrayerCompletion with _$PrayerCompletion {
   /// Creates a new instance of [PrayerCompletion].
-  factory PrayerCompletion({
+  factory({
     /// The unique identifier of the prayer completion.
     required int? id,
 
@@ -41,7 +41,7 @@ abstract class PrayerCompletion with _$PrayerCompletion {
   }) = _PrayerCompletion;
 
   /// Creates a new instance of [PrayerCompletion] from a JSON object.
-  factory PrayerCompletion.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$PrayerCompletionFromJson(json);
   // @override
   // Map<String, dynamic> toJson() => _$PrayerCompletionToJson(this);

@@ -12,7 +12,7 @@ import 'package:timezone/timezone.dart';
 /// A schedulable prayer alert event.
 class PrayerAlertTarget {
   /// Creates [PrayerAlertTarget].
-  const PrayerAlertTarget({
+  const new({
     required this.kind,
     required this.prayer,
     required this.scheduledTime,
@@ -39,7 +39,7 @@ class PrayerAlertTarget {
 /// Resolved delivery channels for a fired alert.
 class PrayerAlertDelivery {
   /// Creates [PrayerAlertDelivery].
-  const PrayerAlertDelivery({
+  const new({
     required this.playSound,
     required this.showInApp,
     required this.showOsNotification,

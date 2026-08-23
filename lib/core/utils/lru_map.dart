@@ -1,7 +1,7 @@
 /// Fixed-capacity least-recently-used map backed by insertion-ordered [Map].
 class LruMap<K, V> {
   /// Creates an LRU map that retains at most [maxSize] entries.
-  LruMap(this.maxSize) : assert(maxSize > 0, 'maxSize must be positive');
+  new(this.maxSize) : assert(maxSize > 0, 'maxSize must be positive');
 
   /// Maximum number of entries to retain.
   final int maxSize;

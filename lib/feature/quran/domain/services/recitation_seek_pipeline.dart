@@ -48,7 +48,7 @@ bool shouldRevertPendingSeek({
 /// [flushDeferred] calls skip engine seeks after Play/Stop/AlertSuspend.
 final class SeekPipeline {
   /// Creates an empty pipeline.
-  SeekPipeline({
+  new({
     required this._log,
     required this._seek,
     required this._onSeekFailed,

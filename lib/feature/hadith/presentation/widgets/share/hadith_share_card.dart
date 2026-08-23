@@ -6,7 +6,7 @@ import 'package:tawaq/feature/hadith/presentation/models/hadith_share_include.da
 import 'package:tawaq/theme/theme.dart';
 
 class HadithShareCard extends StatelessWidget {
-  const HadithShareCard({
+  const new({
     required this.boundaryKey,
     required this.hadith,
     required this.options,

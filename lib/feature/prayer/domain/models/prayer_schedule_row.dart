@@ -9,7 +9,7 @@ part 'prayer_schedule_row.freezed.dart';
 @freezed
 abstract class PrayerScheduleRow with _$PrayerScheduleRow {
   /// Creates a [PrayerScheduleRow] instance.
-  const factory PrayerScheduleRow({
+  const factory({
     /// The prayer this row represents.
     required Prayer prayer,
 

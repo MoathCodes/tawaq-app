@@ -15,7 +15,7 @@ import 'package:tawaq/theme/theme.dart';
 /// not shared across ayah changes (no clear-then-assign races).
 class NotesSection extends HookConsumerWidget {
   /// Creates a [NotesSection] instance.
-  const NotesSection({
+  const new({
     required this.ayahId,
     required this.narrowPanel,
     super.key,

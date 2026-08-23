@@ -91,7 +91,7 @@ dev_dependencies:
   forui_cli: ^0.25.0
   flutter_test:
     sdk: flutter
-  freezed: ^3.0.6
+  freezed: ^3.2.3
   go_router_builder: ^4.2.0
   hive_ce_generator: ^1.9.3
   json_serializable: ^6.11.2

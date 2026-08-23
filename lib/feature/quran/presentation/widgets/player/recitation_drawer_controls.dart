@@ -7,7 +7,7 @@ part of 'recitation_drawer.dart';
 /// Header row for the expanded recitation drawer.
 class _DrawerHeader extends ConsumerWidget {
   /// Creates the drawer header.
-  const _DrawerHeader({
+  const new({
     required this.reciterName,
     required this.riwayah,
     required this.isInitializing,
@@ -154,7 +154,7 @@ class _DrawerHeader extends ConsumerWidget {
 /// Live playback status: range, current ayah, and repeat progress.
 class _DrawerPlaybackStatus extends HookWidget {
   /// Creates a playback status line.
-  const _DrawerPlaybackStatus({
+  const new({
     required this.rangeLabel,
     required this.rangeRepeatCount,
     required this.repeatsRemaining,
@@ -238,7 +238,7 @@ class _DrawerPlaybackStatus extends HookWidget {
 /// Transport, seek bar, and elapsed time for the recitation drawer.
 class _DrawerTransportSection extends HookConsumerWidget {
   /// Creates the transport section.
-  const _DrawerTransportSection({
+  const new({
     required this.surahLeftSlot,
     required this.surahRightSlot,
     this.ayahLeftSlot,
@@ -304,7 +304,7 @@ class _DrawerTransportSection extends HookConsumerWidget {
 /// Seek bar + elapsed/duration labels — the only drawer subtree that watches
 /// position so chrome does not rebuild on every tick.
 class _DrawerSeekAndTime extends ConsumerWidget {
-  const _DrawerSeekAndTime({
+  const new({
     required this.bufferedRanges,
     required this.onSeek,
   });
@@ -355,7 +355,7 @@ class _DrawerSeekAndTime extends ConsumerWidget {
 
 /// Maps recitation state into the neutral [SegmentedSeekBar].
 class _RecitationSegmentedSeekBar extends HookConsumerWidget {
-  const _RecitationSegmentedSeekBar({
+  const new({
     required this.playback,
     required this.position,
     required this.duration,
@@ -481,7 +481,7 @@ class _RecitationSegmentedSeekBar extends HookConsumerWidget {
 /// Download progress row shown while a surah is caching.
 class _DrawerDownloadProgress extends StatelessWidget {
   /// Creates the download progress row.
-  const _DrawerDownloadProgress({
+  const new({
     required this.progress,
     required this.onCancel,
   });
@@ -539,7 +539,7 @@ class _DrawerDownloadProgress extends StatelessWidget {
 }
 
 class _DrawerTimeLabel extends StatelessWidget {
-  const _DrawerTimeLabel(this.text);
+  const new(this.text);
 
   final String text;
 
@@ -561,7 +561,7 @@ class _DrawerTimeLabel extends StatelessWidget {
 /// Offline files, range/repeat, and sleep timer tiles in the drawer.
 class _DrawerActionsSection extends ConsumerWidget {
   /// Creates the actions section.
-  const _DrawerActionsSection({
+  const new({
     required this.configuredRangeLabel,
     required this.ayahRepeatCount,
     required this.rangeRepeatCount,
@@ -707,7 +707,7 @@ class _DrawerActionsSection extends ConsumerWidget {
 }
 
 class _DrawerCacheSizeSubtitle extends StatelessWidget {
-  const _DrawerCacheSizeSubtitle({required this.bytes});
+  const new({required this.bytes});
 
   final int bytes;
 
@@ -722,7 +722,7 @@ class _DrawerCacheSizeSubtitle extends StatelessWidget {
 /// Volume slider and playback toggles in the recitation drawer.
 class _DrawerSettingsSection extends ConsumerWidget {
   /// Creates the settings section.
-  const _DrawerSettingsSection({
+  const new({
     required this.isNarrow,
     required this.persistedVolume,
   });

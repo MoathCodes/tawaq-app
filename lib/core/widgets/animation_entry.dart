@@ -15,7 +15,7 @@ const Duration kAnimationEntryEffectDuration = Duration(milliseconds: 620);
 /// unless [forceAnimation] is true.
 class AnimationEntry extends StatefulWidget {
   /// Creates an animation entry.
-  const AnimationEntry({
+  const new({
     required this.child,
     super.key,
     this.delay = Duration.zero,

@@ -1,0 +1,7 @@
+targets:
+  $default:
+    builders:
+      freezed:
+        options:
+          # Dart 3.13 reserves `final` parameters for primary constructors.
+          make_collections_unmodifiable: false

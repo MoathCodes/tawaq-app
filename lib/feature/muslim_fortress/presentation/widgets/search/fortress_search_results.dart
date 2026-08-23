@@ -17,7 +17,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Displays global Hisn search results for titles and dhikr contents.
 class FortressSearchResultsPane extends ConsumerWidget {
   /// Creates a search results pane.
-  const FortressSearchResultsPane({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,7 +45,7 @@ class FortressSearchResultsPane extends ConsumerWidget {
 }
 
 class _FortressSearchResultsBody extends StatelessWidget {
-  const _FortressSearchResultsBody({
+  const new({
     required this.results,
     required this.query,
   });
@@ -81,7 +81,7 @@ class _FortressSearchResultsBody extends StatelessWidget {
 }
 
 class _FortressSearchResultsList extends StatelessWidget {
-  const _FortressSearchResultsList({
+  const new({
     required this.results,
     required this.l10n,
   });
@@ -133,7 +133,7 @@ class _FortressSearchResultsList extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
+  const new({
     required this.icon,
     required this.title,
     required this.count,
@@ -172,7 +172,7 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _TitleResultTile extends ConsumerWidget {
-  const _TitleResultTile({required this.category});
+  const new({required this.category});
 
   final FortressCategory category;
 
@@ -208,7 +208,7 @@ class _TitleResultTile extends ConsumerWidget {
 }
 
 class _ContentResultTile extends ConsumerWidget {
-  const _ContentResultTile({required this.hit});
+  const new({required this.hit});
 
   final FortressSearchContentHit hit;
 

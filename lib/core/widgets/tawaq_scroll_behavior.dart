@@ -70,7 +70,7 @@ bool isMeaningfulScroll(ScrollMetrics metrics) {
 /// that position and remaining content are actually informative.
 class TawaqAppScrollBehavior extends MaterialScrollBehavior {
   /// Creates scroll behavior with minimal, context-aware scrollbars.
-  const TawaqAppScrollBehavior();
+  const new();
 
   @override
   Widget buildScrollbar(
@@ -88,7 +88,7 @@ class TawaqAppScrollBehavior extends MaterialScrollBehavior {
 }
 
 class _MeaningfulScrollbar extends StatefulWidget {
-  const _MeaningfulScrollbar({
+  const new({
     required this.controller,
     required this.child,
   });

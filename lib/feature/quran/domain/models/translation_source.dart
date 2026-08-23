@@ -69,7 +69,7 @@ enum TranslationId {
   ),
   ;
 
-  const TranslationId({
+  new({
     required this.displayName,
     required this.language,
   });

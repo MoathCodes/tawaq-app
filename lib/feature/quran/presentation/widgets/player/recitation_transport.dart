@@ -19,7 +19,7 @@ export 'package:tawaq/feature/quran/presentation/widgets/player/recitation_trans
 /// Always visible so the user can open the player or resume from any screen.
 class RecitationTransport extends ConsumerWidget {
   /// Creates a [RecitationTransport].
-  const RecitationTransport({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +28,7 @@ class RecitationTransport extends ConsumerWidget {
 }
 
 class _TransportPill extends ConsumerWidget {
-  const _TransportPill();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -189,7 +189,7 @@ class _TransportPill extends ConsumerWidget {
 
 /// Chevron and equalizer shown at the end of the transport pill.
 class _TransportSuffix extends StatelessWidget {
-  const _TransportSuffix({
+  const new({
     required this.isPlaying,
     required this.isEnded,
     required this.drawerOpen,

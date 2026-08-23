@@ -4,7 +4,7 @@ import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.da
 /// A content-level global search hit with its parent chapter.
 class FortressSearchContentHit {
   /// Creates a search content hit.
-  const FortressSearchContentHit({
+  const new({
     required this.chapterId,
     required this.categoryTitle,
     required this.item,
@@ -23,7 +23,7 @@ class FortressSearchContentHit {
 /// Aggregated Hisn search results for titles and contents.
 class FortressSearchResults {
   /// Creates search results.
-  const FortressSearchResults({
+  const new({
     required this.titles,
     required this.contents,
     required this.totalTitles,

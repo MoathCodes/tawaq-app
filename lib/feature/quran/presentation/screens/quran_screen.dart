@@ -17,7 +17,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Screen that displays the Quran with various view modes.
 class QuranScreen extends HookConsumerWidget {
   /// Creates a [QuranScreen] instance.
-  const QuranScreen({this.page, this.onPageChanged, super.key});
+  const new({this.page, this.onPageChanged, super.key});
 
   /// Optional mushaf page to open; null opens the default/persisted page.
   final int? page;

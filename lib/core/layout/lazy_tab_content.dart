@@ -8,7 +8,7 @@ import 'package:forui/forui.dart';
 /// [FTabs]). Once activated, content stays built.
 class LazyPanelContent extends StatefulWidget {
   /// Defers building until [_controller]'s index matches [index].
-  const LazyPanelContent.tab({
+  const new tab({
     required TabController this._controller,
     required this.index,
     required this.builder,
@@ -16,7 +16,7 @@ class LazyPanelContent extends StatefulWidget {
   })  : _selectedIndex = null;
 
   /// Defers building until [_selectedIndex] matches [index].
-  const LazyPanelContent.indexed({
+  const new indexed({
     required int this._selectedIndex,
     required this.index,
     required this.builder,

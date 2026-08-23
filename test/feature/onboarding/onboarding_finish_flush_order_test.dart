@@ -16,7 +16,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 /// Records write order while delegating to an in-memory store.
 final class _RecordingStorage extends Storage<String, String> {
-  _RecordingStorage();
+  new();
 
   final Storage<String, String> _inner = Storage.inMemory();
   final List<String> writeKeys = [];

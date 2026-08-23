@@ -15,7 +15,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Adhan notification and sound controls with optional settings chrome.
 class PrayerAdhanSettings extends ConsumerWidget {
   /// Creates [PrayerAdhanSettings].
-  const PrayerAdhanSettings({this.chrome = SettingsChrome.none, super.key});
+  const new({this.chrome = SettingsChrome.none, super.key});
 
   /// Outer card chrome for the settings screen.
   final SettingsChrome chrome;

@@ -15,7 +15,7 @@ enum AudioTrackSource {
 @freezed
 abstract class AudioTrack with _$AudioTrack {
   /// Creates an [AudioTrack].
-  const factory AudioTrack({
+  const factory({
     required String id,
     required String title,
     required String uri,
@@ -25,7 +25,7 @@ abstract class AudioTrack with _$AudioTrack {
   }) = _AudioTrack;
 
   /// Asset bundled under [assetPath] (e.g. `assets/audio/adhan/default.mp3`).
-  factory AudioTrack.asset({
+  factory asset({
     required String id,
     required String title,
     required String assetPath,
@@ -41,7 +41,7 @@ abstract class AudioTrack with _$AudioTrack {
   );
 
   /// Network or file URL understood by mpv.
-  factory AudioTrack.network({
+  factory network({
     required String id,
     required String title,
     required String url,

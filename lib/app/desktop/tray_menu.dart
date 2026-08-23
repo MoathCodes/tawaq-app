@@ -8,7 +8,7 @@ import 'package:tawaq/l10n/app_localizations.dart';
 /// One row in the tray context menu.
 sealed class TrayMenuEntry {
   /// Creates [TrayMenuEntry].
-  const TrayMenuEntry();
+  const new();
 
   /// Non-null for clickable rows; used as native menu item key.
   String? get key;
@@ -23,7 +23,7 @@ sealed class TrayMenuEntry {
 /// Shows and focuses the main window.
 final class TrayMenuShow extends TrayMenuEntry {
   /// Creates [TrayMenuShow].
-  const TrayMenuShow();
+  const new();
 
   @override
   String get key => 'show';
@@ -56,7 +56,7 @@ final class TrayMenuShow extends TrayMenuEntry {
 /// Stops the in-flight prayer alert (sound, overlay, OS notification).
 final class TrayMenuStop extends TrayMenuEntry {
   /// Creates [TrayMenuStop].
-  const TrayMenuStop();
+  const new();
 
   @override
   String get key => 'stop';
@@ -74,7 +74,7 @@ final class TrayMenuStop extends TrayMenuEntry {
 /// Visual separator between menu sections.
 final class TrayMenuSeparator extends TrayMenuEntry {
   /// Creates [TrayMenuSeparator].
-  const TrayMenuSeparator();
+  const new();
 
   @override
   String? get key => null;
@@ -90,7 +90,7 @@ final class TrayMenuSeparator extends TrayMenuEntry {
 /// Quits the application.
 final class TrayMenuQuit extends TrayMenuEntry {
   /// Creates [TrayMenuQuit].
-  const TrayMenuQuit();
+  const new();
 
   @override
   String get key => 'quit';

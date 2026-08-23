@@ -6,7 +6,7 @@ part 'window_state_provider.g.dart';
 
 /// Canonical native window flags.
 class NativeWindowSnapshot {
-  const NativeWindowSnapshot({required this.visible, required this.maximized});
+  const new({required this.visible, required this.maximized});
 
   final bool visible;
   final bool maximized;
@@ -40,7 +40,7 @@ class NativeWindowState extends _$NativeWindowState {
 }
 
 class _NativeWindowListener with WindowListener {
-  _NativeWindowListener(this._refresh);
+  new(this._refresh);
 
   final Future<void> Function() _refresh;
 

@@ -19,7 +19,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Ayah search field for searching through the Quran.
 class AyahSearchSelector extends HookConsumerWidget {
   /// Creates an [AyahSearchSelector] instance.
-  const AyahSearchSelector({
+  const new({
     this.focusNode,
     this.showLabel = true,
     super.key,

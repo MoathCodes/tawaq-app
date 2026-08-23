@@ -22,7 +22,7 @@ class HadithFilterPanel extends ConsumerWidget {
   /// Creates the filter panel.
   ///
   /// Pass [onClose] when shown in a popover; omit for the side-panel tab.
-  const HadithFilterPanel({this.onClose, super.key});
+  const new({this.onClose, super.key});
 
   /// Called when the user dismisses a popover instance.
   final VoidCallback? onClose;
@@ -106,7 +106,7 @@ class HadithFilterPanel extends ConsumerWidget {
 
 /// A single removable active-filter chip action.
 class HadithFilterChipAction {
-  const HadithFilterChipAction({
+  const new({
     required this.label,
     required this.nextFilters,
   });
@@ -206,7 +206,7 @@ List<HadithFilterChipAction> buildActiveHadithFilterChips(
 
 /// Scrollable hadith search filter form (method, scope, degrees, lookups).
 class HadithFilterForm extends ConsumerWidget {
-  const HadithFilterForm({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

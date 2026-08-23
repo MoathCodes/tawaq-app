@@ -6,7 +6,7 @@ import 'package:tawaq/gen/fonts.gen.dart';
 @immutable
 class CommentaryTextStyles {
   /// Creates commentary styles.
-  const CommentaryTextStyles({
+  const new({
     required this.prose,
     required this.ayah,
     required this.qawlLead,
@@ -23,7 +23,7 @@ class CommentaryTextStyles {
   });
 
   /// Builds styles from a base Naskh style and theme colors.
-  factory CommentaryTextStyles.from({
+  factory from({
     required TextStyle baseStyle,
     required FColors colors,
     required bool isDark,
@@ -170,7 +170,7 @@ class CommentaryTextStyles {
 /// Supplies [CommentaryTextStyles] to commentary formatters below in the tree.
 class CommentaryStyleScope extends InheritedWidget {
   /// Creates a commentary style scope.
-  const CommentaryStyleScope({
+  const new({
     required this.styles,
     required super.child,
     super.key,

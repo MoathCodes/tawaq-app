@@ -7,7 +7,7 @@ part 'hadith_favorite.g.dart';
 @freezed
 abstract class HadithFavorite with _$HadithFavorite {
   /// Creates a persisted favorite hadith entry.
-  factory HadithFavorite({
+  factory({
     required String key,
     required String hadith,
     required String rawi,
@@ -19,6 +19,6 @@ abstract class HadithFavorite with _$HadithFavorite {
   }) = _HadithFavorite;
 
   /// Deserializes a favorite hadith entry from JSON.
-  factory HadithFavorite.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$HadithFavoriteFromJson(json);
 }

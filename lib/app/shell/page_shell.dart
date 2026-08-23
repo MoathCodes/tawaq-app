@@ -20,7 +20,7 @@ import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_pr
 /// via [titleBarCenter], [contentWrapper], and [contentOverlay].
 class PageShell extends ConsumerWidget {
   /// Creates a new instance of [PageShell].
-  const PageShell({
+  const new({
     required this.child,
     this.titleBarCenter = const SizedBox.shrink(),
     this.contentWrapper,

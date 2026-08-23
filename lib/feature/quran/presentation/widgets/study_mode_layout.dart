@@ -17,7 +17,7 @@ const _kStackedStudyPanelMaxHeight = 360.0;
 /// Study mode layout for the Quran reader with a side panel.
 class StudyModeLayout extends ConsumerWidget {
   /// Creates a [StudyModeLayout] instance.
-  const StudyModeLayout({
+  const new({
     required this.mushaf,
     super.key,
   });
@@ -138,7 +138,7 @@ class StudyModeLayout extends ConsumerWidget {
 
 /// Collapses an expanded study side panel when the split area becomes tight.
 class _StudySplitAutoCollapse extends HookConsumerWidget {
-  const _StudySplitAutoCollapse({
+  const new({
     required this.containerWidth,
     required this.collapsed,
     required this.child,

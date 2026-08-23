@@ -27,7 +27,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Muslim Fortress screen — sidebar browse, welcome home, and focus reading.
 class MuslimFortressScreen extends ConsumerWidget {
   /// Creates a Muslim Fortress screen.
-  const MuslimFortressScreen({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -158,7 +158,7 @@ class MuslimFortressScreen extends ConsumerWidget {
 
 /// Owns selection/global-search watches so the screen only tracks focus + repo.
 class _FortressBrowseMainPane extends HookConsumerWidget {
-  const _FortressBrowseMainPane();
+  const new();
 
   static const _globalSearchDebounce = Duration(milliseconds: 300);
 
@@ -284,7 +284,7 @@ class _FortressBrowseMainPane extends HookConsumerWidget {
 }
 
 class _FortressDesktopSplitLayout extends ConsumerWidget {
-  const _FortressDesktopSplitLayout({
+  const new({
     required this.mainPane,
     required this.sidebar,
   });

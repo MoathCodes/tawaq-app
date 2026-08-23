@@ -10,7 +10,7 @@ import 'package:tawaq/core/shortcuts/shortcuts.dart';
 /// the tree currently holds focus (e.g. the settings reference tab).
 class ShellShortcutScope extends ConsumerStatefulWidget {
   /// Creates a shell shortcut scope.
-  const ShellShortcutScope({required this.child, super.key});
+  const new({required this.child, super.key});
 
   /// Child widget tree.
   final Widget child;

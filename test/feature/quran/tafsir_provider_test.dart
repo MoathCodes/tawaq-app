@@ -8,7 +8,7 @@ import 'package:tawaq/feature/quran/presentation/providers/tafsir_provider.dart'
 
 /// Counts [TafsirRepository.getTafsir] calls for LRU / auto-dispose assertions.
 class CountingTafsirRepository extends TafsirRepository {
-  CountingTafsirRepository() : super(AssetDatabaseService());
+  new() : super(AssetDatabaseService());
 
   int callCount = 0;
 

@@ -19,7 +19,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Map preview with coordinates summary and drag tip.
 class LocationMapSection extends HookConsumerWidget {
   /// Creates [LocationMapSection].
-  const LocationMapSection({
+  const new({
     this.compact = false,
     this.mapActive = true,
     super.key,
@@ -92,7 +92,7 @@ class LocationMapSection extends HookConsumerWidget {
 /// Interactive map for picking coordinates.
 class LocationMapContainer extends HookConsumerWidget {
   /// Creates [LocationMapContainer].
-  const LocationMapContainer({
+  const new({
     required this.enabled,
     required this.autoLocation,
     required this.coordinates,
@@ -317,7 +317,7 @@ class LocationMapContainer extends HookConsumerWidget {
 }
 
 class LocationMapCenterOverlay extends StatelessWidget {
-  const LocationMapCenterOverlay({required this.autoLocation, super.key});
+  const new({required this.autoLocation, super.key});
 
   final bool autoLocation;
 
@@ -342,7 +342,7 @@ class LocationMapCenterOverlay extends StatelessWidget {
 }
 
 class AutoLocationMessage extends StatelessWidget {
-  const AutoLocationMessage({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -366,7 +366,7 @@ class AutoLocationMessage extends StatelessWidget {
 }
 
 class LocationInfoRow extends StatelessWidget {
-  const LocationInfoRow({
+  const new({
     required this.icon,
     this.text,
     this.iconSize = 16,

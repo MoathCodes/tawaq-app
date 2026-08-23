@@ -16,7 +16,7 @@ import 'package:tawaq/theme/spacing.dart';
 /// Screen for application settings.
 class SettingsScreen extends HookConsumerWidget {
   /// Creates a new [SettingsScreen] instance.
-  const SettingsScreen({this.tabKey, this.onTabChanged, super.key});
+  const new({this.tabKey, this.onTabChanged, super.key});
 
   /// Optional tab to open; null restores the persisted tab.
   final String? tabKey;

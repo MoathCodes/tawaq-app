@@ -4,7 +4,7 @@ import 'package:tawaq/theme/theme.dart';
 
 /// Shared horizontal progress bar for prayer analytics metrics.
 class AnalysisMetricBar extends StatelessWidget {
-  const AnalysisMetricBar({
+  const new({
     required this.value,
     required this.color,
     required this.backgroundColor,

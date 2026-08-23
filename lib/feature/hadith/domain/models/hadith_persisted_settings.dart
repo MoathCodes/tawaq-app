@@ -17,18 +17,18 @@ enum HadithPanelTab {
 @freezed
 abstract class HadithPersistedSettings with _$HadithPersistedSettings {
   /// Creates the hadith persisted settings.
-  const factory HadithPersistedSettings({
+  const factory({
     @Default(HadithPanelTab.details) HadithPanelTab activeTab,
     @Default(SidePanelDefaults.hadithRatio) double sidePanelRatio,
     @Default(SidePanelDefaults.collapsed) bool sidePanelCollapsed,
   }) = _HadithPersistedSettings;
 
   /// Deserializes from JSON.
-  factory HadithPersistedSettings.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$HadithPersistedSettingsFromJson(json);
 
   /// Returns the default initial settings.
-  factory HadithPersistedSettings.initial() => const HadithPersistedSettings();
+  factory initial() => const HadithPersistedSettings();
 
-  const HadithPersistedSettings._();
+  const new _();
 }

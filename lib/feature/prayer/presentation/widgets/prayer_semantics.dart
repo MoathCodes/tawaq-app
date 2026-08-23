@@ -7,7 +7,7 @@ import 'package:tawaq/l10n/app_localizations.dart';
 ///
 /// Labels are built once per widget build from values already on screen models.
 abstract final class PrayerSemantics {
-  PrayerSemantics._();
+  new _();
 
   /// Read-only label for a hero header time box (optional caption + time).
   static String heroTimeSquare({

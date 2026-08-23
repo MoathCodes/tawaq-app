@@ -19,7 +19,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Forui card shown during prayer alert presentation.
 class AdhanAlertCard extends ConsumerWidget {
   /// Creates [AdhanAlertCard].
-  const AdhanAlertCard({
+  const new({
     this.showCloseButton = false,
     super.key,
   });
@@ -135,7 +135,7 @@ class AdhanAlertCard extends ConsumerWidget {
 
 /// Dense layout for the morphed compact alert window.
 class _CompactAlertBody extends StatelessWidget {
-  const _CompactAlertBody({
+  const new({
     required this.prayer,
     required this.title,
     required this.timeLabel,
@@ -222,7 +222,7 @@ class _CompactAlertBody extends StatelessWidget {
 
 /// Modal layout when the main window is already open.
 class _OverlayAlertBody extends StatelessWidget {
-  const _OverlayAlertBody({
+  const new({
     required this.prayer,
     required this.title,
     required this.timeLabel,
@@ -308,7 +308,7 @@ class _OverlayAlertBody extends StatelessWidget {
 }
 
 class _AlertHeader extends StatelessWidget {
-  const _AlertHeader({
+  const new({
     required this.prayer,
     required this.title,
     required this.timeLabel,

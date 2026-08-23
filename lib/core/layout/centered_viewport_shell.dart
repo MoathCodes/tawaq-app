@@ -9,7 +9,7 @@ import 'package:flutter/widgets.dart';
 /// stays in a narrow column (settings, forms, etc.).
 class CenteredViewportShell extends StatelessWidget {
   /// Creates a [CenteredViewportShell] with a centered [header] and [body].
-  const CenteredViewportShell({
+  const new({
     required this.maxContentWidth,
     required this.header,
     required this.body,
@@ -23,7 +23,7 @@ class CenteredViewportShell extends StatelessWidget {
   ///
   /// The scroll viewport spans the full available width while [child] stays in
   /// a centered column — the common settings / form tab pattern.
-  const CenteredViewportShell.scrollTab({
+  const new scrollTab({
     required this.maxContentWidth,
     required Widget child,
     this.alignment = Alignment.topCenter,
@@ -102,7 +102,7 @@ class CenteredViewportShell extends StatelessWidget {
 }
 
 class _CenteredViewportScrollTab extends StatelessWidget {
-  const _CenteredViewportScrollTab({
+  const new({
     required this.maxContentWidth,
     required this.child,
     required this.alignment,

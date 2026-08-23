@@ -4,7 +4,7 @@ import 'package:tawaq/core/utils/widget_to_image.dart';
 
 /// Makes a rendered share card draggable to desktop applications.
 class ShareCardDragSurface extends StatelessWidget {
-  const ShareCardDragSurface({
+  const new({
     required this.boundaryKey,
     required this.enabled,
     required this.child,

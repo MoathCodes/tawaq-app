@@ -47,7 +47,7 @@ const kRecitationSeekLogName = 'tawaq.recitation.seek';
 /// strings (`mediaSessionAppName`, `mediaSessionAudioBy`).
 class MediaSessionPublishMetadata {
   /// Creates [MediaSessionPublishMetadata].
-  const MediaSessionPublishMetadata({
+  const new({
     required this.title,
     required this.artist,
     required this.appName,
@@ -77,7 +77,7 @@ class TawaqAudioService {
   /// [leaseRegistry] is for tests that need a custom registry. Prefer
   /// [watchdogTimeout] when you only need a short unattended deadline — that
   /// path keeps the production watchdog→engine-clear hook.
-  TawaqAudioService({
+  new({
     PlayerApi? player,
     AudioLeaseRegistry? leaseRegistry,
     Duration watchdogTimeout = const Duration(seconds: 30),
@@ -999,7 +999,7 @@ class TawaqAudioService {
 
 /// In-flight volume ramp. Cancel must always complete [done].
 final class _ActiveFade {
-  _ActiveFade({required this.timer, required this.done});
+  new({required this.timer, required this.done});
 
   final Timer timer;
   final Completer<void> done;

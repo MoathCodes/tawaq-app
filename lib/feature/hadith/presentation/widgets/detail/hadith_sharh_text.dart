@@ -14,7 +14,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Renders Dorar hadith sharh with zone-aware metadata and segment styling.
 class HadithSharhText extends HookWidget {
   /// Creates formatted sharh text.
-  const HadithSharhText({
+  const new({
     required this.text,
     this.textAlign = TextAlign.justify,
     super.key,
@@ -76,7 +76,7 @@ class HadithSharhText extends HookWidget {
 }
 
 class _HadithSharhMetadataCard extends StatelessWidget {
-  const _HadithSharhMetadataCard({
+  const new({
     required this.fields,
     required this.baseStyle,
     this.matnPrefix,
@@ -143,7 +143,7 @@ class _HadithSharhMetadataCard extends StatelessWidget {
 }
 
 class _MatnPrefixQuote extends StatelessWidget {
-  const _MatnPrefixQuote({
+  const new({
     required this.text,
     required this.colors,
     required this.style,
@@ -188,7 +188,7 @@ class _MatnPrefixQuote extends StatelessWidget {
 }
 
 class _MetadataRow extends StatelessWidget {
-  const _MetadataRow({
+  const new({
     required this.label,
     required this.value,
     required this.labelStyle,
@@ -229,7 +229,7 @@ class _MetadataRow extends StatelessWidget {
 /// style boundaries. [Column] breaks appear only at paragraph boundaries
 /// (section leads and blank-line pivots).
 class _HadithSharhCommentaryBody extends HookWidget {
-  const _HadithSharhCommentaryBody({
+  const new({
     required this.segments,
     required this.styles,
     required this.textAlign,

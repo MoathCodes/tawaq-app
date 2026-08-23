@@ -50,7 +50,7 @@ Future<ReciterPick?> showReciterDialog(
 );
 
 class _ReciterDialog extends HookConsumerWidget {
-  const _ReciterDialog({
+  const new({
     required this.intent,
     required this.pickOnly,
     required this.initialTimedFilter,
@@ -381,7 +381,7 @@ class _ReciterDialog extends HookConsumerWidget {
 @immutable
 class _ReciterMoshafKey {
   /// Creates a reciter/moshaf key.
-  const _ReciterMoshafKey(this.reciterId, this.moshafId);
+  const new(this.reciterId, this.moshafId);
 
   /// Reciter catalog id.
   final int reciterId;
@@ -459,7 +459,7 @@ String? _moshafSubtitle({
 /// Icon-only meta badge with tooltip for reciter/moshaf rows.
 class _ReciterMetaIcon extends StatelessWidget {
   /// Creates a meta icon.
-  const _ReciterMetaIcon({
+  const new({
     required this.message,
     required this.icon,
     required this.color,
@@ -494,7 +494,7 @@ class _ReciterMetaIcon extends StatelessWidget {
 /// Prefix icon for a moshaf row based on recitation style.
 class _MoshafPrefix extends StatelessWidget {
   /// Creates a moshaf prefix icon.
-  const _MoshafPrefix({required this.style});
+  const new({required this.style});
 
   /// Parsed recitation style from the moshaf name.
   final RecitationStyle? style;
@@ -518,7 +518,7 @@ class _MoshafPrefix extends StatelessWidget {
 /// Download/timing meta icons for a reciter header row.
 class _ReciterHeaderMeta extends StatelessWidget {
   /// Creates reciter header meta icons.
-  const _ReciterHeaderMeta({
+  const new({
     required this.reciter,
     required this.downloadedKeys,
   });
@@ -561,7 +561,7 @@ class _ReciterHeaderMeta extends StatelessWidget {
 /// Download/timing meta icons for a moshaf row.
 class _MoshafMetaRow extends StatelessWidget {
   /// Creates moshaf meta icons.
-  const _MoshafMetaRow({
+  const new({
     required this.moshaf,
     required this.downloaded,
   });
@@ -605,7 +605,7 @@ class _MoshafMetaRow extends StatelessWidget {
 /// Filter chips for the reciter dialog search bar.
 class _ReciterFilterBar extends StatelessWidget {
   /// Creates the filter bar.
-  const _ReciterFilterBar({
+  const new({
     required this.downloadedFilter,
     required this.timedFilter,
     required this.styleFilter,
@@ -682,7 +682,7 @@ class _ReciterFilterBar extends StatelessWidget {
 }
 
 class _FilterChip extends StatelessWidget {
-  const _FilterChip({
+  const new({
     required this.label,
     required this.active,
     required this.onPress,
@@ -728,17 +728,17 @@ List<Moshaf> _selectableMoshafs(Reciter reciter, RecitationPickIntent intent) {
 }
 
 sealed class _ReciterListEntry {
-  const _ReciterListEntry();
+  const new();
 }
 
 final class _ReciterRowEntry extends _ReciterListEntry {
-  const _ReciterRowEntry(this.reciter);
+  const new(this.reciter);
 
   final Reciter reciter;
 }
 
 final class _InlineMoshafEntry extends _ReciterListEntry {
-  const _InlineMoshafEntry(this.reciter, this.moshaf);
+  const new(this.reciter, this.moshaf);
 
   final Reciter reciter;
   final Moshaf moshaf;
@@ -767,7 +767,7 @@ List<_ReciterListEntry> _reciterListEntries({
 /// Scrollable reciter list for the picker dialog.
 class _ReciterListPane extends StatelessWidget {
   /// Creates the list pane.
-  const _ReciterListPane({
+  const new({
     required this.reciters,
     required this.intent,
     required this.selectedReciterId,
@@ -942,7 +942,7 @@ FTile _buildInlineMoshafTile(
 /// Detail pane showing riwayah options for the focused reciter.
 class _ReciterRiwayahPane extends StatelessWidget {
   /// Creates the riwayah detail pane.
-  const _ReciterRiwayahPane({
+  const new({
     required this.reciter,
     required this.intent,
     required this.selectedReciterId,
@@ -1019,7 +1019,7 @@ class _ReciterRiwayahPane extends StatelessWidget {
 /// Radio tile group for picking a moshaf within a reciter.
 class _ReciterMoshafGroup extends StatelessWidget {
   /// Creates a moshaf select group.
-  const _ReciterMoshafGroup({
+  const new({
     required this.reciter,
     required this.intent,
     required this.tileStyle,

@@ -7,7 +7,7 @@ import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart'
 
 /// Counts [DorarClient.getSharhById] calls for auto-dispose assertions.
 class CountingDorarClient extends Mock implements DorarClient {
-  CountingDorarClient() {
+  new() {
     when(() => getSharhById(any())).thenAnswer((invocation) async {
       sharhCallCount++;
       final sharhId = invocation.positionalArguments[0]! as String;

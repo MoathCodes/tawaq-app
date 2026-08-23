@@ -17,7 +17,7 @@ Future<void> showSleepTimerDialog(BuildContext context) => showFDialog<void>(
 );
 
 class _SleepTimerDialog extends ConsumerWidget {
-  const _SleepTimerDialog();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

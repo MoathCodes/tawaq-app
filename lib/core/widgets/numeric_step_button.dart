@@ -13,7 +13,7 @@ enum NumericStepButtonSize {
 /// Compact +/- control for numeric fields (ayah pickers, repeat count, etc.).
 class NumericStepButton extends StatelessWidget {
   /// Creates a [NumericStepButton].
-  const NumericStepButton({
+  const new({
     required this.icon,
     required this.enabled,
     required this.onPress,

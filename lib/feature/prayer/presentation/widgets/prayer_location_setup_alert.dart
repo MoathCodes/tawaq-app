@@ -15,7 +15,7 @@ const _kMaxAlertWidth = 420.0;
 /// taps and [OnboardingStateNotifier.reset] succeeds.
 class PrayerLocationSetupAlert extends ConsumerWidget {
   /// Creates [PrayerLocationSetupAlert].
-  const PrayerLocationSetupAlert({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

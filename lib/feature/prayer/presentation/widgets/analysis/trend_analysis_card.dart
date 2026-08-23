@@ -16,7 +16,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Card showing period trends, rates, and a stacked activity chart.
 class TrendAnalysisCard extends ConsumerWidget {
   /// Creates a [TrendAnalysisCard].
-  const TrendAnalysisCard({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -80,7 +80,7 @@ class TrendAnalysisCard extends ConsumerWidget {
 }
 
 class _PeriodTrendBody extends ConsumerWidget {
-  const _PeriodTrendBody();
+  const new();
 
   String _periodSubtitle(AppLocalizations l10n, PrayerAnalyticsPeriod period) {
     return switch (period) {
@@ -126,7 +126,7 @@ class _PeriodTrendBody extends ConsumerWidget {
 }
 
 class _PeriodCompletionSummary extends StatelessWidget {
-  const _PeriodCompletionSummary({
+  const new({
     required this.completionPercentage,
     required this.subtitle,
   });
@@ -194,7 +194,7 @@ class _PeriodCompletionSummary extends StatelessWidget {
 }
 
 class _PeriodRateBars extends ConsumerWidget {
-  const _PeriodRateBars();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -239,7 +239,7 @@ class _PeriodRateBars extends ConsumerWidget {
 }
 
 class _RateBarRow extends StatelessWidget {
-  const _RateBarRow({
+  const new({
     required this.label,
     required this.value,
     required this.status,

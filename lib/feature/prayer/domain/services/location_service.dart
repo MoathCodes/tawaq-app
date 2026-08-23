@@ -9,7 +9,7 @@ import 'package:timezone/timezone.dart';
 /// Service for location-related operations.
 class LocationService {
   /// Creates a [LocationService] instance.
-  LocationService(this._log, this._service, this.languageCode);
+  new(this._log, this._service, this.languageCode);
 
   /// The logger instance.
   final Logger _log;

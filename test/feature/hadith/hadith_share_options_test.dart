@@ -27,7 +27,7 @@ void main() {
 
   test('constrained options remove unavailable details', () {
     final options =
-        HadithShareOptions({
+        const HadithShareOptions({
           HadithShareInclude.takhrij,
           HadithShareInclude.sharh,
           HadithShareInclude.usul,

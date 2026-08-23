@@ -8,7 +8,7 @@ part 'recitation_state.freezed.dart';
 @freezed
 abstract class RecitationState with _$RecitationState {
   /// Creates a [RecitationState].
-  const factory RecitationState({
+  const factory({
     /// Currently loaded reciter.
     Reciter? reciter,
 
@@ -92,7 +92,7 @@ abstract class RecitationState with _$RecitationState {
     Duration? pendingSeekTarget,
   }) = _RecitationState;
 
-  const RecitationState._();
+  const new _();
 
   /// Kind of playback selection active in the session.
   PlaybackSelectionKind get selectionKind {

@@ -10,7 +10,7 @@ export 'package:tawaq/feature/prayer/domain/prayer_slots.dart'
 /// Trend bucket containing aggregated prayer status counts.
 class PrayerTrendBucket {
   /// Creates a trend bucket that covers a single time range.
-  const PrayerTrendBucket({
+  const new({
     required this.start,
     required this.end,
     required this.statusCounts,
@@ -42,7 +42,7 @@ bool isFullyCompletedBucket(PrayerTrendBucket bucket) {
 /// View data for the analysis section.
 class PrayerAnalysisSectionData {
   /// Creates a prayer analysis snapshot for the selected period.
-  const PrayerAnalysisSectionData({
+  const new({
     required this.period,
     required this.todayStatusCounts,
     required this.todayPrayerStatuses,
@@ -52,7 +52,7 @@ class PrayerAnalysisSectionData {
   });
 
   /// Creates an empty analysis snapshot for the given period.
-  factory PrayerAnalysisSectionData.empty(PrayerAnalyticsPeriod period) {
+  factory empty(PrayerAnalyticsPeriod period) {
     return PrayerAnalysisSectionData(
       period: period,
       todayStatusCounts: _emptyCounts(),

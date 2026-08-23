@@ -18,7 +18,7 @@ enum AudioSessionLifecycle {
 /// Complete read-only runtime projection of the shared native audio session.
 class AudioSessionSnapshot {
   /// Creates an immutable audio-session snapshot.
-  const AudioSessionSnapshot({
+  const new({
     this.owner,
     this.track,
     this.lifecycle = AudioSessionLifecycle.idle,
@@ -75,19 +75,19 @@ class AudioSessionSnapshot {
 
 /// High-level player state exposed to UI and controllers.
 sealed class PlaybackState {
-  const PlaybackState();
+  const new();
 }
 
 /// No active media.
 final class PlaybackIdle extends PlaybackState {
   /// Creates [PlaybackIdle].
-  const PlaybackIdle();
+  const new();
 }
 
 /// Media is opening or buffering.
 final class PlaybackLoading extends PlaybackState {
   /// Creates [PlaybackLoading].
-  const PlaybackLoading(this.track);
+  const new(this.track);
 
   /// Track being prepared.
   final AudioTrack track;
@@ -96,7 +96,7 @@ final class PlaybackLoading extends PlaybackState {
 /// Media is buffering mid-playback.
 final class PlaybackBuffering extends PlaybackState {
   /// Creates [PlaybackBuffering].
-  const PlaybackBuffering(this.track);
+  const new(this.track);
 
   /// Track being buffered.
   final AudioTrack track;
@@ -105,7 +105,7 @@ final class PlaybackBuffering extends PlaybackState {
 /// Actively playing.
 final class PlaybackPlaying extends PlaybackState {
   /// Creates [PlaybackPlaying].
-  const PlaybackPlaying({
+  const new({
     required this.track,
     required this.position,
     required this.duration,
@@ -124,7 +124,7 @@ final class PlaybackPlaying extends PlaybackState {
 /// Paused with a loaded track.
 final class PlaybackPaused extends PlaybackState {
   /// Creates [PlaybackPaused].
-  const PlaybackPaused({
+  const new({
     required this.track,
     required this.position,
     required this.duration,
@@ -146,7 +146,7 @@ final class PlaybackPaused extends PlaybackState {
 /// release; use [TawaqAudioService.completionStream] for ended transitions.
 final class PlaybackCompleted extends PlaybackState {
   /// Creates [PlaybackCompleted].
-  const PlaybackCompleted({
+  const new({
     required this.track,
     required this.position,
     required this.duration,
@@ -165,7 +165,7 @@ final class PlaybackCompleted extends PlaybackState {
 /// Playback failed.
 final class PlaybackError extends PlaybackState {
   /// Creates [PlaybackError].
-  const PlaybackError({
+  const new({
     required this.track,
     required this.message,
   });

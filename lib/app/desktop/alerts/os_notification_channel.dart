@@ -11,7 +11,7 @@ class OsNotificationChannel implements PrayerAlertChannel {
   /// [onClick] runs when the user clicks the notification body (typically to
   /// focus the alert window). [onStop] runs when the Stop action button is
   /// pressed (when [PrayerAlertEvent.osActionLabel] is set).
-  OsNotificationChannel({
+  new({
     required this.onClick,
     required this.onStop,
   });

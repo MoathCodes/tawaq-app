@@ -39,7 +39,7 @@ EdgeInsets hoverCardListPadding({
 /// A card that displays a hover effect when hovered.
 class HoverCard extends HookWidget {
   /// Creates a hover card.
-  const HoverCard({
+  const new({
     required this.child,
     super.key,
     this.padding,
@@ -143,7 +143,7 @@ class HoverCard extends HookWidget {
 /// A card without hover effects.
 class StaticCard extends StatelessWidget {
   /// Creates a static card.
-  const StaticCard({
+  const new({
     required this.child,
     super.key,
     this.padding,

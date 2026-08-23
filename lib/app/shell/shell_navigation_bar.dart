@@ -9,7 +9,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 /// The bottom navigation bar for the main shell.
 class ShellBottomNavigationBar extends HookConsumerWidget {
   /// Creates a new instance of [ShellBottomNavigationBar].
-  const ShellBottomNavigationBar({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

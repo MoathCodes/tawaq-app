@@ -18,10 +18,10 @@ enum AyahShareInclude {
 /// Maps selected share includes to [AyahShareCard] display flags.
 class AyahShareCardOptions {
   /// Creates share card options from [includes].
-  const AyahShareCardOptions(this.includes);
+  const new(this.includes);
 
   /// Default include options for a share image.
-  factory AyahShareCardOptions.defaults({required bool basmalahAvailable}) {
+  factory defaults({required bool basmalahAvailable}) {
     return AyahShareCardOptions({
       AyahShareInclude.surahHeader,
       AyahShareInclude.appName,

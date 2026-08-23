@@ -52,7 +52,7 @@ enum TafsirId {
   ),
   ;
 
-  const TafsirId({
+  new({
     required this.arabicName,
     required this.englishName,
     required this.language,

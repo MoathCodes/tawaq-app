@@ -7,7 +7,7 @@ part 'prayer_analytics.freezed.dart';
 @freezed
 abstract class PrayerAnalytics with _$PrayerAnalytics {
   /// Creates a new instance of [PrayerAnalytics].
-  const factory PrayerAnalytics({
+  const factory({
     /// The period of the analytics.
     required PrayerAnalyticsPeriod period,
 
@@ -34,7 +34,7 @@ abstract class PrayerAnalytics with _$PrayerAnalytics {
   }) = _PrayerAnalytics;
 
   /// Creates an empty instance of [PrayerAnalytics].
-  factory PrayerAnalytics.empty() => const PrayerAnalytics(
+  factory empty() => const PrayerAnalytics(
     period: .weekly,
     completionPercentage: 0,
     currentStreak: 0,

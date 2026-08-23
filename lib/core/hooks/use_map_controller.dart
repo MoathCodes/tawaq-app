@@ -23,7 +23,7 @@ MapController useMapController({List<Object?>? keys}) {
 }
 
 class _MapControllerHook extends Hook<MapController> {
-  const _MapControllerHook({super.keys});
+  const new({super.keys});
 
   @override
   _MapControllerHookState createState() => _MapControllerHookState();

@@ -8,7 +8,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Shared category row content: icon, title, meta, optional trailing widget.
 class FortressCategoryRow extends StatelessWidget {
   /// Creates a category row.
-  const FortressCategoryRow({
+  const new({
     required this.category,
     required this.l10n,
     this.compact = false,

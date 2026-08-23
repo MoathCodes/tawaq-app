@@ -18,7 +18,7 @@ MushafReaderController useMushafController({
 }
 
 class _MushafControllerHook extends Hook<MushafReaderController> {
-  const _MushafControllerHook({
+  const new({
     required this.initialPage,
     required this.pagesPerViewport,
     this.pageController,

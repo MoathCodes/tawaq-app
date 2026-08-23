@@ -4,7 +4,7 @@ import 'package:tawaq/theme/spacing.dart';
 /// A widget that displays an icon with a label.
 class IconLabel extends StatelessWidget {
   /// Creates an [IconLabel].
-  const IconLabel({
+  const new({
     required this.label,
     required this.icon,
     this.excludeIconSemantics = false,

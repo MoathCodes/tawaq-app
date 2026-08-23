@@ -23,7 +23,7 @@ import 'package:tawaq/theme/theme.dart';
 
 /// Daily achievement section: header, streaks, tracker, and status breakdown.
 class DailyAchievementCard extends ConsumerWidget {
-  const DailyAchievementCard({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -134,7 +134,7 @@ class DailyAchievementCard extends ConsumerWidget {
 }
 
 class _DailyStreakBanner extends StatelessWidget {
-  const _DailyStreakBanner({
+  const new({
     required this.currentStreak,
     required this.bestStreak,
   });
@@ -197,7 +197,7 @@ class _DailyStreakBanner extends StatelessWidget {
 }
 
 class _StreakHighlight extends StatelessWidget {
-  const _StreakHighlight({
+  const new({
     required this.icon,
     required this.label,
     required this.streak,
@@ -258,7 +258,7 @@ class _StreakHighlight extends StatelessWidget {
 }
 
 class _DailyPrayerTracker extends ConsumerWidget {
-  const _DailyPrayerTracker({required this.statuses});
+  const new({required this.statuses});
 
   final Map<Prayer, CompletionStatus> statuses;
 
@@ -286,7 +286,7 @@ class _DailyPrayerTracker extends ConsumerWidget {
 }
 
 class _DailyTrackerRow extends ConsumerWidget {
-  const _DailyTrackerRow({
+  const new({
     required this.prayer,
     required this.label,
   });
@@ -335,7 +335,7 @@ class _DailyTrackerRow extends ConsumerWidget {
 }
 
 class _DailyStackedBar extends StatelessWidget {
-  const _DailyStackedBar({
+  const new({
     required this.statuses,
     required this.colors,
   });
@@ -385,7 +385,7 @@ class _DailyStackedBar extends StatelessWidget {
 }
 
 class _DailyStatusGrid extends StatelessWidget {
-  const _DailyStatusGrid({required this.counts});
+  const new({required this.counts});
 
   static const List<CompletionStatus> _statuses = [
     CompletionStatus.jamaah,
@@ -429,7 +429,7 @@ class _DailyStatusGrid extends StatelessWidget {
 }
 
 class _DailyStatusChip extends StatelessWidget {
-  const _DailyStatusChip({
+  const new({
     required this.status,
     required this.value,
   });
@@ -488,7 +488,7 @@ class _DailyStatusChip extends StatelessWidget {
 }
 
 class _TrackerStatusChip extends HookConsumerWidget {
-  const _TrackerStatusChip({
+  const new({
     required this.prayer,
     required this.status,
   });

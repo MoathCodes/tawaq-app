@@ -36,10 +36,10 @@ Future<void> flushPersistedValue(
 /// This enables full `deleteOutOfDate` support and `destroyKey` migration.
 final class SettingsStorage extends Storage<String, String> {
   /// Creates a [SettingsStorage] backed by the given [_box].
-  SettingsStorage(this._box);
+  new(this._box);
 
   /// Opens the underlying Hivez box and returns a ready storage instance.
-  factory SettingsStorage.create() =>
+  factory create() =>
       SettingsStorage(Box<String, String>('riverpod_persist'));
 
   final Box<String, String> _box;

@@ -19,7 +19,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Prayer location controls with optional settings section chrome.
 class PrayerLocationSettings extends ConsumerWidget {
   /// Creates [PrayerLocationSettings].
-  const PrayerLocationSettings({
+  const new({
     this.chrome = SettingsChrome.section,
     this.compactMap = false,
     this.gateMapToSettingsTab = false,
@@ -77,7 +77,7 @@ class PrayerLocationSettings extends ConsumerWidget {
 
 /// Auto-detect location toggle tile.
 class _UseLocationTile extends ConsumerWidget {
-  const _UseLocationTile();
+  const new();
 
   Future<void> _onToggle(
     BuildContext context,

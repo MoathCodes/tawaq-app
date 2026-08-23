@@ -8,14 +8,14 @@ part 'prayer_analytics_prefs.g.dart';
 @freezed
 abstract class PrayerAnalyticsPrefs with _$PrayerAnalyticsPrefs {
   /// Creates a [PrayerAnalyticsPrefs] instance.
-  const factory PrayerAnalyticsPrefs({
+  const factory({
     @Default(PrayerAnalyticsPeriod.weekly) PrayerAnalyticsPeriod period,
   }) = _PrayerAnalyticsPrefs;
 
   /// Creates a [PrayerAnalyticsPrefs] instance from a JSON map.
-  factory PrayerAnalyticsPrefs.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$PrayerAnalyticsPrefsFromJson(json);
 
   /// Default prayer analytics prefs.
-  factory PrayerAnalyticsPrefs.defaults() => const PrayerAnalyticsPrefs();
+  factory defaults() => const PrayerAnalyticsPrefs();
 }

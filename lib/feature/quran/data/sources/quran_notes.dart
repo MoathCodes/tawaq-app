@@ -20,7 +20,7 @@ QuranNotes quranNotesSource(Ref ref) {
 /// Data source for storing and retrieving Quran ayah notes.
 class QuranNotes {
   /// Creates a [QuranNotes] instance.
-  const QuranNotes(this._box, this._log);
+  const new(this._box, this._log);
   final Box<int, QuranNote> _box;
   final Logger _log;
 

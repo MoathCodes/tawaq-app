@@ -5,7 +5,7 @@ import 'package:tawaq/core/widgets/scale_step_picker.dart';
 /// [ScaleStepPicker] with per-step accessibility labels.
 class SemanticsScaleStepPicker extends StatelessWidget {
   /// Creates a [SemanticsScaleStepPicker].
-  const SemanticsScaleStepPicker({
+  const new({
     required this.groupLabel,
     required this.labels,
     required this.selectedIndex,

@@ -12,7 +12,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Analysis section containing daily achievement and trends cards.
 class AnalysisSection extends ConsumerWidget {
   /// Creates an [AnalysisSection].
-  const AnalysisSection({this.sideBySide = false, super.key});
+  const new({this.sideBySide = false, super.key});
 
   /// Whether daily and trend cards render side-by-side.
   final bool sideBySide;
@@ -48,7 +48,7 @@ class AnalysisSection extends ConsumerWidget {
 }
 
 class _AnalysisContent extends StatelessWidget {
-  const _AnalysisContent({required this.sideBySide});
+  const new({required this.sideBySide});
 
   final bool sideBySide;
 

@@ -18,7 +18,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Compact grouped strip for Sunnah-related times above the daily schedule.
 class SunnahTimesCard extends ConsumerWidget {
   /// Creates a [SunnahTimesCard].
-  const SunnahTimesCard({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -188,7 +188,7 @@ class SunnahTimesCard extends ConsumerWidget {
 enum _SunnahCellLayout { row, compact }
 
 class _SunnahStripCell extends ConsumerWidget {
-  const _SunnahStripCell({
+  const new({
     required this.prayer,
     required this.timeLabel,
     required this.colors,

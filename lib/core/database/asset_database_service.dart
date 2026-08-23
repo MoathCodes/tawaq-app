@@ -76,7 +76,7 @@ class AssetDatabaseService {
   ///
   /// [documentsDirectory] and [loadAsset] are test seams; production uses
   /// path_provider + [rootBundle].
-  AssetDatabaseService({
+  new({
     Future<Directory> Function()? documentsDirectory,
     Future<ByteData> Function(String assetPath)? loadAsset,
   }) : _documentsDirectory =

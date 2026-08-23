@@ -11,7 +11,7 @@ import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 /// service stops any prior session when [playTrack] runs.
 class SoundAlertChannel implements PrayerAlertChannel {
   /// Creates a [SoundAlertChannel] over [_adhanPlayer].
-  SoundAlertChannel({
+  new({
     required this._adhanPlayer,
     required this._onCaptureRecitationVolume,
     required this._onSuspend,

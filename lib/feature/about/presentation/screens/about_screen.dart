@@ -11,7 +11,7 @@ import 'package:tawaq/theme/theme.dart';
 /// deep link), reusing the same [AboutView].
 class AboutScreen extends StatelessWidget {
   /// Creates an [AboutScreen].
-  const AboutScreen({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {

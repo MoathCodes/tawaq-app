@@ -11,7 +11,7 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 
 class _MockChannel extends Mock implements PrayerAlertChannel {
-  _MockChannel(this._name);
+  new(this._name);
   final String _name;
 
   @override

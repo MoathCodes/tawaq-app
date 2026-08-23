@@ -29,7 +29,7 @@ bool _startsWithQawlLead(String text) =>
 /// Tafsir accordion body: source selector, fetch, and parsed commentary.
 class TafsirStudySection extends ConsumerWidget {
   /// Creates a tafsir study section.
-  const TafsirStudySection({
+  const new({
     required this.sura,
     required this.aya,
     required this.source,
@@ -93,7 +93,7 @@ class TafsirStudySection extends ConsumerWidget {
 /// matching Hisn study-sheet commentary styling.
 class TafsirText extends HookWidget {
   /// Creates a tafsir text widget.
-  const TafsirText({
+  const new({
     required this.baseStyle,
     this.parseResult,
     this.text,
@@ -157,7 +157,7 @@ class TafsirText extends HookWidget {
 }
 
 class _TruncationFootnote extends StatelessWidget {
-  const _TruncationFootnote({
+  const new({
     required this.colors,
     required this.typography,
   });
@@ -197,7 +197,7 @@ class _TruncationFootnote extends StatelessWidget {
 /// Renders parsed tafsir segments as inline rich-text runs and poetry blocks.
 class TafsirCommentaryBody extends HookWidget {
   /// Creates inline tafsir commentary from [segments].
-  const TafsirCommentaryBody({
+  const new({
     required this.segments,
     required this.styles,
     super.key,
@@ -415,7 +415,7 @@ class TafsirCommentaryBody extends HookWidget {
 }
 
 class _TafsirPoetryBlock extends StatelessWidget {
-  const _TafsirPoetryBlock({
+  const new({
     required this.hemistichRuns,
     required this.style,
   });
@@ -475,7 +475,7 @@ class _TafsirPoetryBlock extends StatelessWidget {
 }
 
 class _TafsirCommentaryBodyContent extends HookWidget {
-  const _TafsirCommentaryBodyContent({required this.segments});
+  const new({required this.segments});
 
   final List<TafsirTextSegment> segments;
 

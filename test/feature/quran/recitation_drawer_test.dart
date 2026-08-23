@@ -59,7 +59,7 @@ class _TestRecitationOfflineStore extends RecitationOfflineStore {
 }
 
 class _CountingRecitationOfflineStore extends RecitationOfflineStore {
-  _CountingRecitationOfflineStore(this.onBuild);
+  new(this.onBuild);
 
   final VoidCallback onBuild;
 
@@ -84,7 +84,7 @@ class _ErroredRecitationOfflineStore extends RecitationOfflineStore {
 }
 
 class _OfflineStoreConsumer extends ConsumerWidget {
-  const _OfflineStoreConsumer();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

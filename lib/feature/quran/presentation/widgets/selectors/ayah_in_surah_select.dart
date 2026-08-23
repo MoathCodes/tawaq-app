@@ -16,7 +16,7 @@ import 'package:tawaq/theme/theme.dart';
 /// [TextInputFormatter] for ayah input that converts Hindu-Arabic numerals and
 /// filters non-digit characters.
 class AyahInputFormatter extends TextInputFormatter {
-  const AyahInputFormatter();
+  const new();
 
   @override
   TextEditingValue formatEditUpdate(
@@ -38,7 +38,7 @@ class AyahInputFormatter extends TextInputFormatter {
 
 /// Inline ayah input within a surah for range endpoint editing.
 class AyahInSurahSelect extends HookConsumerWidget {
-  const AyahInSurahSelect({
+  const new({
     required this.surah,
     required this.ayah,
     required this.onChanged,

@@ -12,7 +12,7 @@ import 'package:tawaq/core/layout/responsive.dart';
 /// multiple rows once width allows more than one column.
 class ResponsiveFieldRow extends StatelessWidget {
   /// Creates a responsive field row.
-  const ResponsiveFieldRow({
+  const new({
     required this.children,
     this.spacing = 12,
     this.maxColumns,

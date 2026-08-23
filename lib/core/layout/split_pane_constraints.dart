@@ -54,7 +54,7 @@ typedef ResolvedHorizontalSplit = ({
 /// Resolved initial extents for a two-pane horizontal split.
 class SplitExtents {
   /// Creates resolved split extents.
-  const SplitExtents({
+  const new({
     required this.sideExtent,
     required this.mainExtent,
   });

@@ -80,7 +80,7 @@ bool manualLocationControlsEnabled(WidgetRef ref) {
 /// City search and timezone controls in a responsive row.
 class LocationControlsRow extends ConsumerWidget {
   /// Creates [LocationControlsRow].
-  const LocationControlsRow({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -101,7 +101,7 @@ class LocationControlsRow extends ConsumerWidget {
 /// field never queries until the user submits.
 class PlaceSearchField extends HookConsumerWidget {
   /// Creates [PlaceSearchField].
-  const PlaceSearchField({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -284,7 +284,7 @@ class PlaceSearchField extends HookConsumerWidget {
 }
 
 class _PlaceSearchResults extends StatelessWidget {
-  const _PlaceSearchResults({
+  const new({
     required this.state,
     required this.onSelect,
   });
@@ -322,7 +322,7 @@ class _PlaceSearchResults extends StatelessWidget {
 /// Timezone select with system-timezone shortcut.
 class TimezoneSelect extends ConsumerWidget {
   /// Creates [TimezoneSelect].
-  const TimezoneSelect({super.key});
+  const new({super.key});
 
   Future<void> _setTimezone(
     BuildContext context,
@@ -414,7 +414,7 @@ class TimezoneSelect extends ConsumerWidget {
 /// Manual latitude/longitude text fields.
 class CoordinatesRow extends ConsumerWidget {
   /// Creates [CoordinatesRow].
-  const CoordinatesRow({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -447,7 +447,7 @@ class CoordinatesRow extends ConsumerWidget {
 }
 
 class _CoordinateField extends HookConsumerWidget {
-  const _CoordinateField({
+  const new({
     required this.isLatitude,
     required this.label,
     required this.min,
@@ -544,7 +544,7 @@ class _CoordinateField extends HookConsumerWidget {
 }
 
 class _CoordinateRangeFormatter extends TextInputFormatter {
-  const _CoordinateRangeFormatter({required this.min, required this.max});
+  const new({required this.min, required this.max});
 
   final double min;
   final double max;

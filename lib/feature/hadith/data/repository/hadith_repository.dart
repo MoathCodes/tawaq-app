@@ -35,7 +35,7 @@ Future<HadithRepository> hadithRepository(Ref ref) async {
 /// Coordinates hadith persistence and remote API access.
 class HadithRepository {
   /// Creates the repository.
-  HadithRepository({
+  new({
     required this._client,
     required this._local,
     required this._log,

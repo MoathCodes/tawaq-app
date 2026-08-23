@@ -36,7 +36,7 @@ TafsirId? _tafsirIdFromPersistedString(String value) {
 /// JSON converter for [TranslationId] storing enum identifiers in persisted state.
 class TranslationIdConverter implements JsonConverter<TranslationId, Object?> {
   /// Creates a [TranslationIdConverter].
-  const TranslationIdConverter();
+  const new();
 
   @override
   TranslationId fromJson(Object? json) {
@@ -53,7 +53,7 @@ class TranslationIdConverter implements JsonConverter<TranslationId, Object?> {
 /// JSON converter for [TafsirId] storing enum identifiers in persisted state.
 class TafsirIdConverter implements JsonConverter<TafsirId, Object?> {
   /// Creates a [TafsirIdConverter].
-  const TafsirIdConverter();
+  const new();
 
   @override
   TafsirId fromJson(Object? json) {

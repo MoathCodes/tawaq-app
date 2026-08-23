@@ -7,7 +7,7 @@ import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 /// Reference strings for ayahs on a share-dialog page.
 class AyahSharePageReferences {
   /// Creates page ayah reference data for the share range slider.
-  const AyahSharePageReferences({
+  const new({
     required this.full,
     required this.compact,
     required this.labeledMarkIndices,
@@ -29,7 +29,7 @@ class AyahSharePageReferences {
 /// on every parent rebuild.
 class AyahShareRangeSlider extends StatefulWidget {
   /// Creates a page ayah range slider.
-  const AyahShareRangeSlider({
+  const new({
     required this.pageNumber,
     required this.pageAyahIds,
     required this.references,

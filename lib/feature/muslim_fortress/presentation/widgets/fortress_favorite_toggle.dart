@@ -9,7 +9,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Bookmark control shared by the browse sidebar and chapter detail header.
 class FortressFavoriteToggle extends ConsumerWidget {
   /// Creates a chapter favorite toggle.
-  const FortressFavoriteToggle({
+  const new({
     required this.chapterId,
     this.iconSize = 18,
     super.key,

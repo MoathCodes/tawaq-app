@@ -141,7 +141,7 @@ void main() {
 }
 
 class _GoToHarness {
-  _GoToHarness({
+  new({
     required this.container,
     required this.context,
     required this.notifier,
@@ -215,7 +215,7 @@ Future<_GoToHarness> _pumpHarness(
 }
 
 class _FixedRecitationController extends RecitationController {
-  _FixedRecitationController(this._initial, this._timeline);
+  new(this._initial, this._timeline);
 
   final RecitationState _initial;
   final RecitationTimeline? _timeline;
@@ -230,7 +230,7 @@ class _FixedRecitationController extends RecitationController {
 }
 
 class _FixedRecitationSettings extends RecitationSettingsNotifier {
-  _FixedRecitationSettings(this._settings);
+  new(this._settings);
 
   final RecitationSettings _settings;
 
@@ -255,7 +255,7 @@ class _SyncQuranSelectedAyahId extends QuranSelectedAyahId {
 }
 
 class _GoToRepo implements IQuranRepository {
-  _GoToRepo({this.ayahCountBySurah = const {}});
+  new({this.ayahCountBySurah = const {}});
 
   final Map<int, int> ayahCountBySurah;
   int? lastSurahJump;

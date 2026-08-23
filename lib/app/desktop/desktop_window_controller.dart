@@ -19,7 +19,7 @@ DesktopWindowController desktopWindowController(Ref ref) {
 /// Coordinates hide-to-tray and real quit behaviour.
 class DesktopWindowController {
   /// Creates a [DesktopWindowController].
-  DesktopWindowController(this._ref);
+  new(this._ref);
 
   final Ref _ref;
 

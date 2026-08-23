@@ -12,7 +12,7 @@ import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_sc
 import 'package:tawaq/theme/theme.dart';
 
 class _LocationSetupScreen extends StatelessWidget {
-  const _LocationSetupScreen();
+  const new();
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +66,7 @@ bool prayerAnalysisCardsSideBySide(
 /// Screen that displays prayer times with hero header, schedule, and stats.
 class PrayerScreen extends ConsumerWidget {
   /// Creates a [PrayerScreen] instance.
-  const PrayerScreen({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -111,7 +111,7 @@ class PrayerScreen extends ConsumerWidget {
 }
 
 class _PrayerMainContent extends StatelessWidget {
-  const _PrayerMainContent({
+  const new({
     required this.pageSplit,
     required this.analysisSideBySide,
   });

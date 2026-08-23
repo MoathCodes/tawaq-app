@@ -114,7 +114,7 @@ Future<void> _writePersistedVersionKey(String dbDir, String versionKey) async {
 /// Maps Hisn al-Muslim package data to Muslim Fortress domain models.
 class FortressRepository {
   /// Creates the repository.
-  FortressRepository(this._client);
+  new(this._client);
 
   final HisnClient _client;
 

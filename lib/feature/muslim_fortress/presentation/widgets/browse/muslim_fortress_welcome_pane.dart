@@ -26,7 +26,7 @@ String _fortressCategoryMetaLine(
 /// Home pane when no chapter is selected (time-based picks + bookmarks).
 class MuslimFortressWelcomePane extends ConsumerWidget {
   /// Creates a welcome pane.
-  const MuslimFortressWelcomePane({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -129,7 +129,7 @@ class MuslimFortressWelcomePane extends ConsumerWidget {
 }
 
 class _WelcomeHeader extends StatelessWidget {
-  const _WelcomeHeader();
+  const new();
 
   @override
   Widget build(BuildContext context) {

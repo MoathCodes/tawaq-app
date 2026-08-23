@@ -1680,6 +1680,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'Recitations are saved automatically while you listen.';
 
   @override
+  String get quranRecitationOfflineClearSelection => 'Clear selection';
+
+  @override
+  String get quranRecitationOfflineDelete => 'Delete downloads';
+
+  @override
+  String get quranRecitationOfflineDeleteAll => 'Delete all downloads';
+
+  @override
+  String quranRecitationOfflineDeleteConfirm(int count, String size) {
+    return 'Delete $count downloads ($size)? This cannot be undone.';
+  }
+
+  @override
+  String quranRecitationOfflineDeleteFailed(int count) {
+    return 'Could not delete $count downloads. They remain selected for retry.';
+  }
+
+  @override
+  String get quranRecitationOfflineDeleteSelected => 'Delete selected';
+
+  @override
+  String get quranRecitationOfflineDeleteTitle => 'Delete downloads?';
+
+  @override
   String get quranRecitationOfflineEmpty => 'No recitations saved yet.';
 
   @override
@@ -1697,7 +1722,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranRecitationOfflineOpenFolder => 'Open folder';
 
   @override
+  String get quranRecitationOfflinePlaybackStops =>
+      'Playback will stop before the file is removed.';
+
+  @override
+  String get quranRecitationOfflineReciter => 'Reciter';
+
+  @override
+  String get quranRecitationOfflineRiwayah => 'Riwayah';
+
+  @override
+  String get quranRecitationOfflineSelectAll => 'Select all';
+
+  @override
+  String quranRecitationOfflineSelected(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get quranRecitationOfflineSize => 'Size';
+
+  @override
   String get quranRecitationOfflineStorageUsed => 'Storage used';
+
+  @override
+  String get quranRecitationOfflineSurah => 'Surah';
 
   @override
   String get quranRecitationOfflineSubtitle => 'Saved recitations';

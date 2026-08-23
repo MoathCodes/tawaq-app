@@ -9,7 +9,7 @@ import 'package:tawaq/feature/quran/domain/models/tafsir_source.dart';
 /// for querying tafsir by source.
 class TafsirRepository {
   /// Creates a tafsir repository.
-  TafsirRepository(this._dbService);
+  new(this._dbService);
 
   final AssetDatabaseService _dbService;
   final Map<TafsirId, ITafsirDataSource> _dataSources = {};

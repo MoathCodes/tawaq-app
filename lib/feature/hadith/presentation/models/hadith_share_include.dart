@@ -13,10 +13,10 @@ enum HadithShareInclude {
 }
 
 class HadithShareOptions {
-  const HadithShareOptions(this.includes);
+  const new(this.includes);
 
-  factory HadithShareOptions.defaults(DetailedHadith hadith) {
-    return HadithShareOptions({
+  factory defaults() {
+    return const HadithShareOptions({
       HadithShareInclude.narrator,
       HadithShareInclude.source,
       HadithShareInclude.grade,
@@ -38,11 +38,13 @@ class HadithShareOptions {
   }) {
     final next = {...includes};
     if (hadith.rawi.trim().isEmpty) next.remove(HadithShareInclude.narrator);
-    if (hadith.mohdith.trim().isEmpty)
+    if (hadith.mohdith.trim().isEmpty) {
       next.remove(HadithShareInclude.muhaddith);
+    }
     if (hadith.book.trim().isEmpty) next.remove(HadithShareInclude.source);
-    if (hadith.numberOrPage.trim().isEmpty)
+    if (hadith.numberOrPage.trim().isEmpty) {
       next.remove(HadithShareInclude.number);
+    }
     if (hadith.hukm.trim().isEmpty) next.remove(HadithShareInclude.grade);
     if ((hadith.takhrij ?? '').trim().isEmpty) {
       next.remove(HadithShareInclude.takhrij);

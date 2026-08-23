@@ -9,7 +9,7 @@ import 'package:window_manager/window_manager.dart';
 /// Title-bar drag region that toggles maximize without rebuilding its shell.
 class TitleBarDragArea extends ConsumerWidget {
   /// Creates [TitleBarDragArea].
-  const TitleBarDragArea({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

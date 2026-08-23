@@ -12,7 +12,7 @@ import 'package:tawaq/feature/settings/presentation/provider/theme_settings_prov
 /// A button that toggles the theme mode between light and dark.
 class ThemeModeButton extends ConsumerWidget {
   /// Creates a theme mode button.
-  const ThemeModeButton({
+  const new({
     super.key,
   });
 

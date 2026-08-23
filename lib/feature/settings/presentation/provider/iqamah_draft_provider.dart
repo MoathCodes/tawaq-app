@@ -21,7 +21,7 @@ const List<Prayer> kIqamahDraftPrayers = <Prayer>[
 /// Draft edit state for the iqamah adjustment section.
 class IqamahDraftState {
   /// Creates [IqamahDraftState].
-  const IqamahDraftState({required this.unsavedPrayers});
+  const new({required this.unsavedPrayers});
 
   /// Prayers whose text field differs from the last saved value.
   final Set<Prayer> unsavedPrayers;

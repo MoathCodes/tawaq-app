@@ -11,7 +11,7 @@ import 'package:tawaq/core/widgets/desktop_selection.dart';
 /// secondary icon.
 class AnimatedIconButton extends HookWidget {
   /// Creates an animated icon button.
-  const AnimatedIconButton({
+  const new({
     required this.primaryIcon,
     required this.secondaryIcon,
     required this.isSecondaryActive,

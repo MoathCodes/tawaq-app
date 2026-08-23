@@ -21,7 +21,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Animated floating bar for copy, share, and play on the selected ayah.
 class AyahSelectionActionsBar extends ConsumerWidget {
   /// Creates the selection actions bar.
-  const AyahSelectionActionsBar({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,7 +57,7 @@ class AyahSelectionActionsBar extends ConsumerWidget {
 }
 
 class _AyahSelectionActionsContent extends ConsumerWidget {
-  const _AyahSelectionActionsContent({
+  const new({
     required this.ayah,
     super.key,
   });

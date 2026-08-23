@@ -11,7 +11,7 @@ part 'quran_notes_provider.g.dart';
 /// A note plus ayah metadata for the reflections browser.
 class QuranNoteEntry {
   /// Creates a [QuranNoteEntry].
-  const QuranNoteEntry({
+  const new({
     required this.ayahId,
     required this.note,
     required this.ayahPreview,

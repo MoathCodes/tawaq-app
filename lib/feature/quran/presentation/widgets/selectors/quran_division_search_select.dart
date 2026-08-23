@@ -50,7 +50,7 @@ FFieldIconBuilder<FTextFieldStyle> _quranInlineSelectPrefixBuilder(
 /// Shared searchable [FSelect] shell for Juz, Hizb, and Surah pickers.
 class QuranDivisionSearchSelect<T> extends StatelessWidget {
   /// Creates a division search select.
-  const QuranDivisionSearchSelect({
+  const new({
     required this.fieldName,
     required this.closedValue,
     required this.ready,

@@ -7,12 +7,12 @@ part 'onboarding_state.g.dart';
 @freezed
 abstract class OnboardingState with _$OnboardingState {
   /// Creates [OnboardingState].
-  const factory OnboardingState({
+  const factory({
     @Default(false) bool completed,
     String? completedAt,
   }) = _OnboardingState;
 
   /// Parses from JSON persisted in Hive.
-  factory OnboardingState.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$OnboardingStateFromJson(json);
 }

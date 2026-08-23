@@ -11,7 +11,7 @@ const kAdhanLeaseOwner = 'adhan';
 /// Same-owner re-acquire renews a single generation: only the latest token
 /// can release. Stale tokens from earlier same-owner acquires are no-ops.
 final class AudioLease {
-  AudioLease._(this.owner, this._generation, this._releaseIfCurrent);
+  new _(this.owner, this._generation, this._releaseIfCurrent);
 
   /// Logical owner identifier (e.g. 'recitation', 'adhan').
   final String owner;
@@ -36,7 +36,7 @@ class AudioLeaseRegistry {
   /// The [watchdogTimeout] bounds how long an owner may hold an unattended
   /// lease before [onWatchdogForceRelease] is invoked and the lease is
   /// force-released. Defaults to 30 seconds.
-  AudioLeaseRegistry({
+  new({
     this.watchdogTimeout = const Duration(seconds: 30),
     this.onWatchdogForceRelease,
   });

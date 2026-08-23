@@ -29,7 +29,7 @@ Future<void> showFortressShareDialog(
 }
 
 class FortressShareDialog extends HookConsumerWidget {
-  const FortressShareDialog({
+  const new({
     required this.dua,
     required this.style,
     this.animation,
@@ -64,8 +64,9 @@ class FortressShareDialog extends HookConsumerWidget {
     );
 
     Future<void> loadCommentary() async {
-      if (commentary.value != null || loading.value || !dua.hasCommentary)
+      if (commentary.value != null || loading.value || !dua.hasCommentary) {
         return;
+      }
       loading.value = true;
       error.value = null;
       try {

@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 /// register callbacks via [onCancel] for snappier interruption.
 class CancellationToken {
   /// Creates a [CancellationToken].
-  CancellationToken();
+  new();
 
   bool _cancelled = false;
   final List<VoidCallback> _callbacks = [];

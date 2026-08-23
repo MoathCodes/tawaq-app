@@ -6,7 +6,7 @@ import 'package:tawaq/core/widgets/desktop_selection.dart';
 /// A widget that detects mouse clicks and hover events.
 class MouseClick extends StatelessWidget {
   /// Creates a mouse click detector.
-  const MouseClick({
+  const new({
     this.child = const SizedBox.shrink(),
     super.key,
     this.onClick,

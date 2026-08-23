@@ -26,7 +26,7 @@ enum SkeletonEffectType {
 /// ```
 class FSkeletonizer extends StatelessWidget {
   /// Creates a Forui-themed skeleton loader.
-  const FSkeletonizer({
+  const new({
     required this.child,
     super.key,
     this.enabled = true,

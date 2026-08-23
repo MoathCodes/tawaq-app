@@ -29,7 +29,7 @@ Future<void> showAboutAppDialog(
 /// A modal dialog presenting information about the app.
 class AboutDialog extends StatelessWidget {
   /// Creates an [AboutDialog].
-  const AboutDialog({
+  const new({
     required this.content,
     required this.style,
     this.animation,

@@ -32,7 +32,7 @@ enum ShortcutScope {
 /// Canonical keyboard shortcut entry (activators + metadata).
 final class ShortcutDef {
   /// Creates a shortcut definition.
-  const ShortcutDef({
+  const new({
     required this.id,
     required this.category,
     required this.activators,

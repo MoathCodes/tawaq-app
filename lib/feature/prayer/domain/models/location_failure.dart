@@ -19,7 +19,7 @@ enum LocationFailureCode {
 /// Exception thrown when a location-related error occurs.
 class LocationException implements Exception {
   /// Creates a [LocationException] for [code].
-  const LocationException(this.code, {this.detail});
+  const new(this.code, {this.detail});
 
   /// The failure category.
   final LocationFailureCode code;

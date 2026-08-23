@@ -72,7 +72,7 @@ FTextFieldStyleDelta _iqamahStepperFieldStyle({
 /// A row for adjusting the iqamah offset of a single prayer.
 class PrayerIqamahTile extends ConsumerWidget {
   /// Creates a new [PrayerIqamahTile] instance.
-  const PrayerIqamahTile({
+  const new({
     required this.prayer,
     required this.allowSigned,
     super.key,
@@ -134,7 +134,7 @@ class PrayerIqamahTile extends ConsumerWidget {
 }
 
 class _PrayerLabel extends StatelessWidget {
-  const _PrayerLabel({
+  const new({
     required this.prayer,
     required this.prayerName,
   });
@@ -181,7 +181,7 @@ class _PrayerLabel extends StatelessWidget {
 }
 
 class _IqamahStepper extends ConsumerWidget {
-  const _IqamahStepper({
+  const new({
     required this.prayer,
     required this.prayerName,
     required this.allowSigned,
@@ -286,7 +286,7 @@ class _IqamahStepper extends ConsumerWidget {
 }
 
 class _StepperIconButton extends StatelessWidget {
-  const _StepperIconButton({
+  const new({
     required this.icon,
     required this.label,
     required this.enabled,
@@ -317,7 +317,7 @@ class _StepperIconButton extends StatelessWidget {
 }
 
 class _StepperDivider extends StatelessWidget {
-  const _StepperDivider({required this.color});
+  const new({required this.color});
 
   final Color color;
 
@@ -334,7 +334,7 @@ class _StepperDivider extends StatelessWidget {
 /// List container for iqamah prayer rows.
 class IqamahPrayerList extends StatelessWidget {
   /// Creates an [IqamahPrayerList].
-  const IqamahPrayerList({
+  const new({
     required this.children,
     super.key,
   });

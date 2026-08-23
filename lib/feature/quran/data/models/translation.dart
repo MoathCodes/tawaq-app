@@ -1,7 +1,7 @@
 /// A single translation entry from a translation database.
 class Translation {
   /// Creates a translation entry.
-  const Translation({
+  const new({
     required this.id,
     required this.sura,
     required this.aya,
@@ -11,7 +11,7 @@ class Translation {
   });
 
   /// Creates a translation from a database row map.
-  factory Translation.fromMap(Map<String, dynamic> map) {
+  factory fromMap(Map<String, dynamic> map) {
     return Translation(
       id: map['id'] as int,
       sura: map['sura'] as int,

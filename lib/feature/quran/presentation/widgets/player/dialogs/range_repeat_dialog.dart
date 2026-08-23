@@ -34,7 +34,7 @@ const _presetTabOrder = <RangeScopePreset>[
 /// Seeds the range dialog from a selected ayah when nothing is playing yet.
 class RangeRepeatInit {
   /// Creates a [RangeRepeatInit].
-  const RangeRepeatInit({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.surah,
@@ -66,7 +66,7 @@ Future<void> showRangeRepeatDialog(
 );
 
 class _RangeRepeatDialog extends HookConsumerWidget {
-  const _RangeRepeatDialog({this.initial});
+  const new({this.initial});
 
   final RangeRepeatInit? initial;
 
@@ -849,7 +849,10 @@ _useRangePresetResolver({
 }
 
 class _RangeRepeatSectionLabel extends StatelessWidget {
-  const _RangeRepeatSectionLabel({required this.icon, required this.label});
+  const new({
+    required this.icon,
+    required this.label,
+  });
 
   final IconData icon;
   final String label;
@@ -874,7 +877,7 @@ class _RangeRepeatSectionLabel extends StatelessWidget {
 }
 
 class _RangeRepeatPresetList extends StatelessWidget {
-  const _RangeRepeatPresetList({
+  const new({
     required this.presetIndex,
     required this.isResolving,
     required this.presetLabel,
@@ -916,7 +919,7 @@ class _RangeRepeatPresetList extends StatelessWidget {
 }
 
 class _RangeRepeatControls extends StatelessWidget {
-  const _RangeRepeatControls({
+  const new({
     required this.ayahRepeat,
     required this.rangeRepeat,
     required this.ayahLabel,
@@ -975,7 +978,7 @@ class _RangeRepeatControls extends StatelessWidget {
 }
 
 class _CompactRepeatStepper extends StatelessWidget {
-  const _CompactRepeatStepper({
+  const new({
     required this.icon,
     required this.label,
     required this.count,

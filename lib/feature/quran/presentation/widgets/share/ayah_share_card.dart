@@ -8,7 +8,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Card rendered with mushaf typography for sharing as an image.
 class AyahShareCard extends StatelessWidget {
   /// Creates a share card.
-  const AyahShareCard({
+  const new({
     required this.boundaryKey,
     required this.page,
     required this.ayahIds,

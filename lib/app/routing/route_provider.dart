@@ -31,7 +31,7 @@ part 'route_provider.g.dart';
 @immutable
 class OnboardingRoute extends GoRouteData with $OnboardingRoute {
   /// Creates the onboarding route.
-  const OnboardingRoute();
+  const new();
 
   @override
   /// Builds the onboarding screen.
@@ -53,7 +53,7 @@ class OnboardingRoute extends GoRouteData with $OnboardingRoute {
 )
 class AppShellRoute extends ShellRouteData {
   /// Creates the application shell route.
-  const AppShellRoute();
+  const new();
 
   @override
   /// Builds the shell around the nested navigator.
@@ -70,7 +70,7 @@ class AppShellRoute extends ShellRouteData {
 /// Shared route base for app navigation metadata and page transitions.
 abstract class AppNavigationRoute extends GoRouteData {
   /// Creates a navigation route.
-  const AppNavigationRoute();
+  const new();
 
   /// The icon shown in navigation chrome for this route.
   IconData get icon;
@@ -109,7 +109,7 @@ abstract class AppNavigationRoute extends GoRouteData {
 @immutable
 class PrayerRoute extends AppNavigationRoute with $PrayerRoute {
   /// Creates the prayer route.
-  const PrayerRoute();
+  const new();
 
   @override
   /// The prayer route icon.
@@ -131,7 +131,7 @@ class PrayerRoute extends AppNavigationRoute with $PrayerRoute {
 @immutable
 class QuranRoute extends AppNavigationRoute with $QuranRoute {
   /// Creates the Quran route.
-  const QuranRoute({this.page});
+  const new({this.page});
 
   /// Optional Quran page to open; null opens the default page.
   final int? page;
@@ -159,7 +159,7 @@ class QuranRoute extends AppNavigationRoute with $QuranRoute {
 @immutable
 class HadithRoute extends AppNavigationRoute with $HadithRoute {
   /// Creates the hadith route.
-  const HadithRoute();
+  const new();
 
   @override
   /// The hadith route icon.
@@ -181,7 +181,7 @@ class HadithRoute extends AppNavigationRoute with $HadithRoute {
 @immutable
 class MuslimFortressRoute extends AppNavigationRoute with $MuslimFortressRoute {
   /// Creates the Muslim Fortress route.
-  const MuslimFortressRoute();
+  const new();
 
   @override
   IconData get icon => FLucideIcons.shield;
@@ -200,7 +200,7 @@ class MuslimFortressRoute extends AppNavigationRoute with $MuslimFortressRoute {
 @immutable
 class SettingsRoute extends AppNavigationRoute with $SettingsRoute {
   /// Creates the settings route.
-  const SettingsRoute({this.tab});
+  const new({this.tab});
 
   /// Optional settings tab wire id; null restores the persisted checkpoint.
   final String? tab;
@@ -228,7 +228,7 @@ class SettingsRoute extends AppNavigationRoute with $SettingsRoute {
 @immutable
 class AboutRoute extends AppNavigationRoute with $AboutRoute {
   /// Creates the about route.
-  const AboutRoute();
+  const new();
 
   @override
   /// The about route icon.

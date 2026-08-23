@@ -7,7 +7,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Empty state for search [FSelect] popovers (icon + muted “no results”).
 class SelectEmptyContent extends StatelessWidget {
   /// Creates a [SelectEmptyContent].
-  const SelectEmptyContent({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) => buildSelectEmptyContent(context);

@@ -6,7 +6,7 @@ import 'package:flutter/widgets.dart';
 /// chrome and shared widgets — not on page body content.
 class MergedActionSemantics extends StatelessWidget {
   /// Creates merged action semantics.
-  const MergedActionSemantics({
+  const new({
     required this.label,
     required this.child,
     this.hint,

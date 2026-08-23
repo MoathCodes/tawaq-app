@@ -8,7 +8,7 @@ import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_trans
 /// Injected title-bar center content (Quran recitation transport).
 class ShellTitleBarCenter extends ConsumerWidget {
   /// Creates the shell title-bar center slot.
-  const ShellTitleBarCenter({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,7 +19,7 @@ class ShellTitleBarCenter extends ConsumerWidget {
 /// Wraps shell route content with feature toast listeners.
 class ShellContentWrapper extends ConsumerWidget {
   /// Creates a shell content wrapper.
-  const ShellContentWrapper({required this.child, super.key});
+  const new({required this.child, super.key});
 
   /// Route content to wrap.
   final Widget child;
@@ -33,7 +33,7 @@ class ShellContentWrapper extends ConsumerWidget {
 /// Full-screen overlay stacked above shell content (recitation drawer).
 class ShellContentOverlay extends ConsumerWidget {
   /// Creates the shell content overlay.
-  const ShellContentOverlay({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

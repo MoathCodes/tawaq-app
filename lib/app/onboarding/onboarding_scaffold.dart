@@ -17,7 +17,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Shared onboarding layout — header, animated step body, and navigation.
 class OnboardingScaffold extends ConsumerWidget {
   /// Creates [OnboardingScaffold].
-  const OnboardingScaffold({
+  const new({
     required this.stepKey,
     required this.stepIndex,
     required this.stepCount,
@@ -197,7 +197,7 @@ class OnboardingScaffold extends ConsumerWidget {
 }
 
 class _OnboardingStepCard extends StatelessWidget {
-  const _OnboardingStepCard({required this.child});
+  const new({required this.child});
 
   final Widget child;
 
@@ -213,7 +213,7 @@ class _OnboardingStepCard extends StatelessWidget {
 }
 
 class _OnboardingStepViewport extends StatelessWidget {
-  const _OnboardingStepViewport({
+  const new({
     required this.resetTrigger,
     required this.maxWidth,
     required this.child,
@@ -240,7 +240,7 @@ class _OnboardingStepViewport extends StatelessWidget {
 }
 
 class _OnboardingHeader extends StatelessWidget {
-  const _OnboardingHeader({
+  const new({
     required this.stepIndex,
     required this.stepCount,
     required this.title,

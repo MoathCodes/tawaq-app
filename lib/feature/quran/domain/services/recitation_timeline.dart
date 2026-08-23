@@ -6,7 +6,7 @@ import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 /// All methods are pure and synchronous; callers own the async timing load.
 class RecitationTimeline {
   /// Creates a timeline with optional timing and optional range markers.
-  const RecitationTimeline({
+  const new({
     this.timing,
     this.rangeStartAyah,
     this.rangeEndAyah,

@@ -28,7 +28,7 @@ typedef AlertErrorSink =
 
 /// One active prayer-alert session shared by tray, UI, sound, and actions.
 class PrayerAlertSession {
-  const PrayerAlertSession({required this.event, this.isCompactMorph = false});
+  const new({required this.event, this.isCompactMorph = false});
 
   final PrayerAlertEvent event;
   final bool isCompactMorph;
@@ -58,7 +58,7 @@ class PrayerAlertSessionState extends _$PrayerAlertSessionState {
 
 /// Coordinates prayer alert delivery across a set of [PrayerAlertChannel]s.
 class PrayerAlertCoordinator {
-  PrayerAlertCoordinator({
+  new({
     required this._channels,
     required this._playbackStream,
     required this._soundSafetyCap,

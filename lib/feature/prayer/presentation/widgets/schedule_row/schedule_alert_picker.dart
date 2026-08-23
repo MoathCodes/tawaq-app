@@ -51,7 +51,7 @@ extension ScheduleAlertModeUi on ScheduleAlertMode {
 /// Compact alert trigger that opens an [FSelectTileGroup] in a popover.
 class ScheduleAlertPicker extends StatelessWidget {
   /// Creates a [ScheduleAlertPicker].
-  const ScheduleAlertPicker({
+  const new({
     required this.mode,
     required this.modes,
     required this.interactiveModes,
@@ -62,7 +62,7 @@ class ScheduleAlertPicker extends StatelessWidget {
   });
 
   /// Obligatory prayer alert picker (adhan / iqamah).
-  factory ScheduleAlertPicker.obligatory({
+  factory obligatory({
     required ScheduleAlertMode mode,
     required String eventLabel,
     required PrayerAlertKind alertKind,
@@ -92,7 +92,7 @@ class ScheduleAlertPicker extends StatelessWidget {
   }
 
   /// Sunnah time alert picker (notify-only).
-  factory ScheduleAlertPicker.sunnah({
+  factory sunnah({
     required ScheduleAlertMode mode,
     required String eventLabel,
     required bool hasSettings,

@@ -14,7 +14,7 @@ import 'package:flutter/material.dart';
 /// ```
 class AppRadii extends ThemeExtension<AppRadii> {
   /// Creates an [AppRadii] instance with the given border radius values.
-  const AppRadii({
+  const new({
     required this.xs,
     required this.sm,
     required this.md,
@@ -24,7 +24,7 @@ class AppRadii extends ThemeExtension<AppRadii> {
   });
 
   /// Default radii values.
-  const AppRadii.standard()
+  const new standard()
     : xs = const BorderRadius.all(Radius.circular(2)),
       sm = const BorderRadius.all(Radius.circular(4)),
       md = const BorderRadius.all(Radius.circular(8)),

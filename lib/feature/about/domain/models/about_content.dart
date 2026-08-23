@@ -7,10 +7,10 @@ import 'package:flutter/widgets.dart';
 @immutable
 class AboutText {
   /// Creates a localized text from explicit [en] and [ar] variants.
-  const AboutText({required this.en, required this.ar});
+  const new({required this.en, required this.ar});
 
   /// Creates a localized text that is identical in both locales.
-  const AboutText.shared(String value)
+  const new shared(String value)
       : en = value,
         ar = value;
 
@@ -30,7 +30,7 @@ class AboutText {
 @immutable
 class AboutFact {
   /// Creates an about fact.
-  const AboutFact({
+  const new({
     required this.icon,
     required this.label,
     required this.value,
@@ -50,7 +50,7 @@ class AboutFact {
 @immutable
 class AboutLink {
   /// Creates an about link.
-  const AboutLink({
+  const new({
     required this.icon,
     required this.label,
     required this.url,
@@ -74,7 +74,7 @@ class AboutLink {
 @immutable
 class AboutCredit {
   /// Creates an about credit.
-  const AboutCredit({
+  const new({
     required this.icon,
     required this.name,
     this.role,
@@ -98,7 +98,7 @@ class AboutCredit {
 @immutable
 class AboutAcknowledgement {
   /// Creates an about acknowledgement.
-  const AboutAcknowledgement({
+  const new({
     required this.name,
     this.description,
     this.url,
@@ -122,7 +122,7 @@ class AboutAcknowledgement {
 @immutable
 class AboutContent {
   /// Creates the about content.
-  const AboutContent({
+  const new({
     required this.appName,
     required this.latinName,
     required this.version,

@@ -6,7 +6,7 @@ import 'package:tawaq/core/widgets/shortcuts/shortcut_indicator.dart';
 /// Wraps [child] with a Forui tooltip that shows the shortcut key combo on hover.
 class ShortcutTooltip extends StatelessWidget {
   /// Creates a shortcut tooltip from a catalog [shortcut].
-  const ShortcutTooltip({
+  const new({
     required this.shortcut,
     required this.child,
     super.key,
@@ -14,7 +14,7 @@ class ShortcutTooltip extends StatelessWidget {
         hintTokens = null;
 
   /// Creates a shortcut tooltip from raw [activators] (no catalog entry).
-  const ShortcutTooltip.activators({
+  const new activators({
     required this.activators,
     required this.child,
     super.key,
@@ -22,7 +22,7 @@ class ShortcutTooltip extends StatelessWidget {
         hintTokens = null;
 
   /// Creates a shortcut tooltip from preformatted key-cap [hintTokens].
-  const ShortcutTooltip.tokens({
+  const new tokens({
     required this.hintTokens,
     required this.child,
     super.key,

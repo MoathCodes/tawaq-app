@@ -13,14 +13,14 @@ import 'package:tawaq/theme/spacing.dart';
 /// ```
 class AppTabsStyles extends ThemeExtension<AppTabsStyles> {
   /// Creates an [AppTabsStyles] from three explicit styles.
-  const AppTabsStyles({
+  const new({
     required this.standard,
     required this.compact,
     required this.primary,
   });
 
   /// Derives the three tab styles from the palette.
-  factory AppTabsStyles.inherit({
+  factory inherit({
     required FColors colors,
     required FTypography typography,
     required FStyle style,

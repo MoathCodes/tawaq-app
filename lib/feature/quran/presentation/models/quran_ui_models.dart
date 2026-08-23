@@ -123,7 +123,7 @@ extension QuranReadingLayoutUi on QuranReadingLayout {
 @freezed
 abstract class QuranScreenState with _$QuranScreenState {
   /// Creates a [QuranScreenState].
-  const factory QuranScreenState({
+  const factory({
     /// Restore-only checkpoint. The route owns the live page.
     @JsonKey(readValue: quranLastPageRead) @Default(1) int lastPageNumber,
     @JsonKey(name: 'quranTextScale', fromJson: mushafZoomFromJson)
@@ -143,12 +143,12 @@ abstract class QuranScreenState with _$QuranScreenState {
     @Default(StudyPanelTab.currentAyah) StudyPanelTab activeStudyTab,
   }) = _QuranScreenState;
 
-  const QuranScreenState._();
+  const new _();
 
   /// Creates state from persisted JSON.
-  factory QuranScreenState.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$QuranScreenStateFromJson(json);
 
   /// Creates the initial reading state.
-  factory QuranScreenState.initial() => const QuranScreenState();
+  factory initial() => const QuranScreenState();
 }

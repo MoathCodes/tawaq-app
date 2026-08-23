@@ -8,7 +8,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Renders keyboard shortcut key caps in a Forui-native style.
 class ShortcutIndicator extends StatelessWidget {
   /// Creates a shortcut indicator from a catalog [shortcut].
-  const ShortcutIndicator({
+  const new({
     required this.shortcut,
     super.key,
     this.showAliases = false,
@@ -16,7 +16,7 @@ class ShortcutIndicator extends StatelessWidget {
        tokens = null;
 
   /// Creates a shortcut indicator from raw activators.
-  const ShortcutIndicator.activators({
+  const new activators({
     required this.activators,
     super.key,
     this.showAliases = false,
@@ -24,7 +24,7 @@ class ShortcutIndicator extends StatelessWidget {
        tokens = null;
 
   /// Creates a shortcut indicator from preformatted key-cap [tokens].
-  const ShortcutIndicator.tokens({
+  const new tokens({
     required this.tokens,
     super.key,
     this.showAliases = false,
@@ -89,7 +89,7 @@ class ShortcutIndicator extends StatelessWidget {
 /// Renders multiple distinct shortcut combos (e.g. ↑ and ↓).
 class ShortcutIndicatorGroup extends StatelessWidget {
   /// Creates a group of shortcut indicators.
-  const ShortcutIndicatorGroup({
+  const new({
     required this.shortcuts,
     super.key,
   });
@@ -120,7 +120,7 @@ class ShortcutIndicatorGroup extends StatelessWidget {
 }
 
 class _ShortcutCombo extends StatelessWidget {
-  const _ShortcutCombo({required this.tokens});
+  const new({required this.tokens});
 
   final List<String> tokens;
 
@@ -147,7 +147,7 @@ class _ShortcutCombo extends StatelessWidget {
 }
 
 class _KeyCap extends StatelessWidget {
-  const _KeyCap({required this.label});
+  const new({required this.label});
 
   final String label;
 

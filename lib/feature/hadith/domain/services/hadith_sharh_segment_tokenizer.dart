@@ -351,7 +351,7 @@ abstract final class HadithSharhSegmentTokenizer {
 }
 
 class _TokenMatch {
-  const _TokenMatch({
+  const new({
     required this.start,
     required this.end,
     required this.segment,

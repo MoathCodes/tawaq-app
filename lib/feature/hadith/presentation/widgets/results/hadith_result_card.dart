@@ -16,7 +16,7 @@ import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 class HadithResultCard extends ConsumerWidget {
-  const HadithResultCard({
+  const new({
     required this.hadith,
     super.key,
     this.isFavorite,
@@ -29,7 +29,7 @@ class HadithResultCard extends ConsumerWidget {
   });
 
   /// Compact card for nested detail panes (similar/alternate hadith).
-  factory HadithResultCard.embedded({
+  factory embedded({
     required DetailedHadith hadith,
     required VoidCallback onSelect,
     Key? key,
@@ -214,7 +214,7 @@ class HadithResultCard extends ConsumerWidget {
 }
 
 class _HadithResultCardBody extends StatelessWidget {
-  const _HadithResultCardBody({
+  const new({
     required this.hadith,
     required this.maxWidth,
     required this.isSelected,
@@ -335,7 +335,7 @@ class _HadithResultCardBody extends StatelessWidget {
 }
 
 class HadithDetailsAvailabilityRow extends StatelessWidget {
-  const HadithDetailsAvailabilityRow({required this.hadith, super.key});
+  const new({required this.hadith, super.key});
 
   final DetailedHadith hadith;
 
@@ -383,7 +383,7 @@ class HadithDetailsAvailabilityRow extends StatelessWidget {
 }
 
 class HadithInfoMiniChip extends StatelessWidget {
-  const HadithInfoMiniChip({required this.icon, required this.text, super.key});
+  const new({required this.icon, required this.text, super.key});
 
   final IconData icon;
   final String text;
@@ -416,7 +416,7 @@ class HadithInfoMiniChip extends StatelessWidget {
 /// Badge showing the hadith grading (hukm).
 class HadithHukmBadge extends StatelessWidget {
   /// Creates a [HadithHukmBadge].
-  const HadithHukmBadge({required this.hukm, super.key});
+  const new({required this.hukm, super.key});
 
   /// The grading text.
   final String hukm;

@@ -58,7 +58,7 @@ Widget drawerPlaybackStatusForTest({
 /// so it floats above the routed content on any screen.
 class RecitationDrawerOverlay extends ConsumerWidget {
   /// Creates a [RecitationDrawerOverlay].
-  const RecitationDrawerOverlay({this.onGoToQuran, super.key});
+  const new({this.onGoToQuran, super.key});
 
   /// App-composition callback that opens the Quran route.
   final VoidCallback? onGoToQuran;
@@ -78,7 +78,7 @@ class RecitationDrawerOverlay extends ConsumerWidget {
 @visibleForTesting
 class RecitationDrawerSurface extends StatefulWidget {
   /// Creates a [RecitationDrawerSurface].
-  const RecitationDrawerSurface({
+  const new({
     required this.open,
     required this.onClose,
     required this.child,
@@ -181,7 +181,7 @@ class RecitationDrawerSurfaceState extends State<RecitationDrawerSurface>
 }
 
 class _DrawerPanel extends HookConsumerWidget {
-  const _DrawerPanel({this.onGoToQuran});
+  const new({this.onGoToQuran});
 
   final VoidCallback? onGoToQuran;
 

@@ -15,7 +15,7 @@ enum HadithMetaFieldLayout {
 /// Shared metadata row for hadith narrator, source, grade, etc.
 class HadithMetaField extends StatelessWidget {
   /// Creates a metadata field.
-  const HadithMetaField({
+  const new({
     required this.label,
     required this.value,
     this.layout = HadithMetaFieldLayout.stacked,

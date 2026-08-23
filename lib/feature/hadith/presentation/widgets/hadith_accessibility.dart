@@ -84,7 +84,7 @@ String hadithCloseFiltersSemanticsLabel(AppLocalizations l10n) =>
 /// Hides decorative visuals from the semantics tree.
 class HadithDecorExcludeSemantics extends StatelessWidget {
   /// Creates a decorator excluder.
-  const HadithDecorExcludeSemantics({required this.child, super.key});
+  const new({required this.child, super.key});
 
   /// The subtree to hide from assistive technologies.
   final Widget child;

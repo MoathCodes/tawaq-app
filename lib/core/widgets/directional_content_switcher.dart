@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 /// Only the incoming child is shown during the transition to avoid overlap.
 class DirectionalContentSwitcher extends StatelessWidget {
   /// Creates a switcher.
-  const DirectionalContentSwitcher({
+  const new({
     required this.currentKey,
     required this.slideDirection,
     required this.child,

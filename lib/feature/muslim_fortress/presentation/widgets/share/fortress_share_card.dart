@@ -7,7 +7,7 @@ import 'package:tawaq/feature/muslim_fortress/presentation/models/fortress_share
 import 'package:tawaq/theme/theme.dart';
 
 class FortressShareCard extends StatelessWidget {
-  const FortressShareCard({
+  const new({
     required this.boundaryKey,
     required this.dua,
     required this.options,

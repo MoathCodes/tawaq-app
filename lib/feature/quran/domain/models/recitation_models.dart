@@ -71,12 +71,12 @@ enum RangeScopePreset {
 @freezed
 abstract class AyahReference with _$AyahReference {
   /// Creates an [AyahReference].
-  const factory AyahReference({
+  const factory({
     required int surah,
     required int ayah,
   }) = _AyahReference;
 
-  const AyahReference._();
+  const new _();
 
   /// Global ayah order key for range comparisons (surah-major).
   int get globalOrder => surah * 1000 + ayah;

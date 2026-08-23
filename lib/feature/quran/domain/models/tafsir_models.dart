@@ -25,7 +25,7 @@ enum TafsirSegmentKind {
 /// A segment of parsed tafsir text.
 class TafsirTextSegment {
   /// Creates a tafsir text segment.
-  const TafsirTextSegment({
+  const new({
     required this.text,
     required this.kind,
     this.poetryHemistichs,
@@ -62,7 +62,7 @@ enum TafsirTruncationReason {
 /// Result of truncation analysis on raw tafsir markup.
 class TafsirTruncationReport {
   /// Creates a truncation report.
-  const TafsirTruncationReport({
+  const new({
     required this.isLikelyTruncated,
     required this.reasons,
   });
@@ -77,7 +77,7 @@ class TafsirTruncationReport {
 /// Combined output of parsing raw tafsir markup and checking DB truncation.
 class TafsirParseResult {
   /// Creates a parse result.
-  const TafsirParseResult({
+  const new({
     required this.segments,
     required this.truncationReport,
   });

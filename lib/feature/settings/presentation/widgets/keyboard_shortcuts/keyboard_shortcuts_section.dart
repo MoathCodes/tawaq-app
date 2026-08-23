@@ -8,7 +8,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Read-only reference list of keyboard shortcuts from the catalog.
 class KeyboardShortcutsSection extends StatelessWidget {
   /// Creates the keyboard shortcuts settings section.
-  const KeyboardShortcutsSection({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -7,7 +7,7 @@ import 'package:tawaq/core/locale/locale_provider.dart';
 /// English / Arabic language picker for onboarding and settings.
 class LocaleSelectTileGroup extends ConsumerWidget {
   /// Creates [LocaleSelectTileGroup].
-  const LocaleSelectTileGroup({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -20,7 +20,7 @@ import 'package:forui/forui.dart';
 /// audio service or Riverpod scope.
 class PersistedVolumeSlider extends HookWidget {
   /// Creates a [PersistedVolumeSlider].
-  const PersistedVolumeSlider({
+  const new({
     required this.persistedVolume,
     required this.onPreview,
     required this.onCommit,

@@ -7,7 +7,7 @@ part 'desktop_settings.g.dart';
 @freezed
 abstract class DesktopSettings with _$DesktopSettings {
   /// Creates [DesktopSettings].
-  const factory DesktopSettings({
+  const factory({
     @Default(true) bool minimizeToTrayOnClose,
     @Default(false) bool minimizeToTray,
     @Default(false) bool launchToTray,
@@ -17,9 +17,9 @@ abstract class DesktopSettings with _$DesktopSettings {
   }) = _DesktopSettings;
 
   /// Default desktop settings.
-  factory DesktopSettings.defaults() => const DesktopSettings();
+  factory defaults() => const DesktopSettings();
 
   /// Parses persisted JSON.
-  factory DesktopSettings.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$DesktopSettingsFromJson(json);
 }

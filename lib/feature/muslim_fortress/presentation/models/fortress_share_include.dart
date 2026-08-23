@@ -9,9 +9,9 @@ enum FortressShareInclude {
 }
 
 class FortressShareOptions {
-  const FortressShareOptions(this.includes);
+  const new(this.includes);
 
-  factory FortressShareOptions.defaults({
+  factory defaults({
     required bool hasSource,
     required bool hasRepetition,
   }) {

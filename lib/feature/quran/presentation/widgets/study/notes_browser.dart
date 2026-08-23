@@ -78,16 +78,16 @@ String noteTimeLabel(
 }
 
 sealed class _NotesListItem {
-  const _NotesListItem();
+  const new();
 }
 
 class _SurahHeaderItem extends _NotesListItem {
-  const _SurahHeaderItem(this.surahNumber);
+  const new(this.surahNumber);
   final int surahNumber;
 }
 
 class _NoteCardItem extends _NotesListItem {
-  const _NoteCardItem(this.entry, this.staggerIndex);
+  const new(this.entry, this.staggerIndex);
   final QuranNoteEntry entry;
   final int staggerIndex;
 }
@@ -110,7 +110,7 @@ List<_NotesListItem> _buildGroupedItems(List<QuranNoteEntry> entries) {
 /// Searchable, surah-grouped browser of all saved Quran reflections.
 class NotesBrowser extends HookConsumerWidget {
   /// Creates a [NotesBrowser].
-  const NotesBrowser({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -317,7 +317,7 @@ class NotesBrowser extends HookConsumerWidget {
 }
 
 class _NotesEmptyState extends StatelessWidget {
-  const _NotesEmptyState({
+  const new({
     required this.icon,
     required this.message,
   });
@@ -358,7 +358,7 @@ class _NotesEmptyState extends StatelessWidget {
 }
 
 class _NoteCard extends HookConsumerWidget {
-  const _NoteCard({
+  const new({
     required this.entry,
     required this.surahName,
     super.key,

@@ -10,7 +10,7 @@ import 'package:tawaq/gen/fonts.gen.dart';
 /// One ayah (or arbitrary) segment on the seek timeline.
 class SeekBarSegment {
   /// Creates a [SeekBarSegment].
-  const SeekBarSegment({
+  const new({
     required this.index,
     required this.start,
     required this.end,
@@ -110,7 +110,7 @@ List<SeekBarSegment> _previewSegmentsForFocusSorted(
 /// Per-ayah repeat state shown beside the active ayah.
 class RepeatStatus {
   /// Creates [RepeatStatus].
-  const RepeatStatus({
+  const new({
     required this.remaining,
     required this.total,
     required this.segmentIndex,
@@ -132,7 +132,7 @@ class RepeatStatus {
 /// Visual tokens for [SegmentedSeekBar].
 class SegmentedSeekBarStyle {
   /// Creates a [SegmentedSeekBarStyle].
-  const SegmentedSeekBarStyle({
+  const new({
     required this.activeColor,
     required this.inactiveColor,
     required this.bufferedColor,
@@ -219,7 +219,7 @@ class SegmentedSeekBarStyle {
 /// A continuous seek bar with timing-aware ayah previews.
 class SegmentedSeekBar extends StatefulWidget {
   /// Creates a [SegmentedSeekBar].
-  const SegmentedSeekBar({
+  const new({
     required this.position,
     required this.duration,
     required this.segments,
@@ -816,7 +816,7 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
 }
 
 class _AyahPreviewCard extends StatelessWidget {
-  const _AyahPreviewCard({
+  const new({
     required this.style,
     required this.anchorCenterX,
     required this.availableWidth,
@@ -986,7 +986,7 @@ class _AyahPreviewCard extends StatelessWidget {
 }
 
 class _PreviewAyahChip extends StatelessWidget {
-  const _PreviewAyahChip({
+  const new({
     required this.segmentIndex,
     required this.label,
     required this.selected,
@@ -1038,7 +1038,7 @@ class _PreviewAyahChip extends StatelessWidget {
 }
 
 class _RepeatBadge extends StatelessWidget {
-  const _RepeatBadge({
+  const new({
     required this.style,
     required this.label,
     required this.segment,
@@ -1108,7 +1108,7 @@ class _RepeatBadge extends StatelessWidget {
 @visibleForTesting
 class SegmentedTrackPainter extends CustomPainter {
   /// Creates a [SegmentedTrackPainter].
-  const SegmentedTrackPainter({
+  const new({
     required this.progress,
     required this.bufferedRanges,
     required this.activeColor,

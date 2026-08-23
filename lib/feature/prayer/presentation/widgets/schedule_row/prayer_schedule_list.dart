@@ -18,7 +18,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Users can navigate back up to a week to view and edit prayer statuses.
 class PrayerScheduleList extends ConsumerWidget {
   /// Creates a [PrayerScheduleList] instance.
-  const PrayerScheduleList({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -155,7 +155,7 @@ class PrayerScheduleList extends ConsumerWidget {
 }
 
 class _HijriLineCalendarItem extends StatelessWidget {
-  const _HijriLineCalendarItem({
+  const new({
     required this.data,
     required this.languageCode,
   });

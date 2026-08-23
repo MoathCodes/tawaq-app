@@ -152,13 +152,13 @@ PlayRange _playRangeFromState(
 
 /// Base class for recitation state-machine events.
 sealed class RecitationEvent {
-  const RecitationEvent();
+  const new();
 }
 
 /// Load and play a whole surah.
 final class PlaySurah extends RecitationEvent {
   /// Creates [PlaySurah].
-  const PlaySurah({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.surah,
@@ -184,7 +184,7 @@ final class PlaySurah extends RecitationEvent {
 /// Load and play a global ayah range.
 final class PlayRange extends RecitationEvent {
   /// Creates [PlayRange].
-  const PlayRange({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.from,
@@ -222,13 +222,13 @@ final class PlayRange extends RecitationEvent {
 /// Play/pause toggle.
 final class TogglePlayPause extends RecitationEvent {
   /// Creates [TogglePlayPause].
-  const TogglePlayPause();
+  const new();
 }
 
 /// Seek to [position].
 final class Seek extends RecitationEvent {
   /// Creates [Seek].
-  const Seek(this.position);
+  const new(this.position);
 
   final Duration position;
 }
@@ -237,7 +237,7 @@ final class Seek extends RecitationEvent {
 /// near the requested position.
 final class PendingSeekTimeout extends RecitationEvent {
   /// Creates [PendingSeekTimeout].
-  const PendingSeekTimeout({this.revertTo});
+  const new({this.revertTo});
 
   /// Last confirmed mpv position to restore when the seek never lands.
   final Duration? revertTo;
@@ -246,7 +246,7 @@ final class PendingSeekTimeout extends RecitationEvent {
 /// Seek did not land in mpv — revert optimistic UI state.
 final class SeekFailed extends RecitationEvent {
   /// Creates [SeekFailed].
-  const SeekFailed({required this.revertTo});
+  const new({required this.revertTo});
 
   /// Last confirmed mpv position before the failed seek.
   final Duration revertTo;
@@ -255,37 +255,37 @@ final class SeekFailed extends RecitationEvent {
 /// Stop playback but keep the session visible.
 final class Stop extends RecitationEvent {
   /// Creates [Stop].
-  const Stop();
+  const new();
 }
 
 /// Advance to the next ayah within the current surah/range.
 final class SkipAyahNext extends RecitationEvent {
   /// Creates [SkipAyahNext].
-  const SkipAyahNext();
+  const new();
 }
 
 /// Go back to the previous ayah within the current surah/range.
 final class SkipAyahPrevious extends RecitationEvent {
   /// Creates [SkipAyahPrevious].
-  const SkipAyahPrevious();
+  const new();
 }
 
 /// Load the next available surah in the moshaf.
 final class SkipSurahNext extends RecitationEvent {
   /// Creates [SkipSurahNext].
-  const SkipSurahNext();
+  const new();
 }
 
 /// Load the previous available surah in the moshaf.
 final class SkipSurahPrevious extends RecitationEvent {
   /// Creates [SkipSurahPrevious].
-  const SkipSurahPrevious();
+  const new();
 }
 
 /// Change sleep timer.
 final class SetSleep extends RecitationEvent {
   /// Creates [SetSleep].
-  const SetSleep(this.sleep);
+  const new(this.sleep);
 
   final RecitationSleep sleep;
 }
@@ -293,7 +293,7 @@ final class SetSleep extends RecitationEvent {
 /// Audio position tick.
 final class AudioPosition extends RecitationEvent {
   /// Creates [AudioPosition].
-  const AudioPosition(this.position);
+  const new(this.position);
 
   final Duration position;
 }
@@ -301,7 +301,7 @@ final class AudioPosition extends RecitationEvent {
 /// Audio total duration reported.
 final class AudioDuration extends RecitationEvent {
   /// Creates [AudioDuration].
-  const AudioDuration(this.duration);
+  const new(this.duration);
 
   final Duration duration;
 }
@@ -309,37 +309,37 @@ final class AudioDuration extends RecitationEvent {
 /// Audio service started playing.
 final class AudioStarted extends RecitationEvent {
   /// Creates [AudioStarted].
-  const AudioStarted();
+  const new();
 }
 
 /// Audio service is buffering.
 final class AudioBuffering extends RecitationEvent {
   /// Creates [AudioBuffering].
-  const AudioBuffering();
+  const new();
 }
 
 /// Audio service is loading/buffering.
 final class AudioLoading extends RecitationEvent {
   /// Creates [AudioLoading].
-  const AudioLoading();
+  const new();
 }
 
 /// Audio service paused.
 final class AudioPaused extends RecitationEvent {
   /// Creates [AudioPaused].
-  const AudioPaused();
+  const new();
 }
 
 /// Audio track reached its end.
 final class AudioCompleted extends RecitationEvent {
   /// Creates [AudioCompleted].
-  const AudioCompleted();
+  const new();
 }
 
 /// Audio track failed.
 final class AudioError extends RecitationEvent {
   /// Creates [AudioError].
-  const AudioError(this.message);
+  const new(this.message);
 
   final String message;
 }
@@ -347,19 +347,19 @@ final class AudioError extends RecitationEvent {
 /// Pause for an adhan/iqamah alert.
 final class AlertSuspend extends RecitationEvent {
   /// Creates [AlertSuspend].
-  const AlertSuspend();
+  const new();
 }
 
 /// Resume after an alert.
 final class AlertResume extends RecitationEvent {
   /// Creates [AlertResume].
-  const AlertResume();
+  const new();
 }
 
 /// Updates the repeat budgets from persisted settings.
 final class SetRepeatCounts extends RecitationEvent {
   /// Creates [SetRepeatCounts].
-  const SetRepeatCounts({this.ayahRepeatCount, this.rangeRepeatCount});
+  const new({this.ayahRepeatCount, this.rangeRepeatCount});
 
   final int? ayahRepeatCount;
   final int? rangeRepeatCount;
@@ -369,13 +369,13 @@ final class SetRepeatCounts extends RecitationEvent {
 /// ayah. Used to advance to the next ayah in each-ayah repeat mode.
 final class AyahLoopExhausted extends RecitationEvent {
   /// Creates [AyahLoopExhausted].
-  const AyahLoopExhausted();
+  const new();
 }
 
 /// Restores a persisted session without starting playback.
 final class RecitationSettingsLoaded extends RecitationEvent {
   /// Creates [RecitationSettingsLoaded].
-  const RecitationSettingsLoaded({
+  const new({
     this.reciter,
     this.moshaf,
     this.surah,
@@ -395,7 +395,7 @@ final class RecitationSettingsLoaded extends RecitationEvent {
 /// Gapless playlist advanced to a new surah.
 final class GaplessTrackAdvanced extends RecitationEvent {
   /// Creates [GaplessTrackAdvanced].
-  const GaplessTrackAdvanced({required this.surah, required this.ayah});
+  const new({required this.surah, required this.ayah});
 
   /// The surah now playing.
   final int surah;
@@ -410,13 +410,13 @@ final class GaplessTrackAdvanced extends RecitationEvent {
 
 /// Side effect the controller must execute.
 sealed class RecitationEffect {
-  const RecitationEffect();
+  const new();
 }
 
 /// Load a whole surah and optionally seek.
 final class LoadSurah extends RecitationEffect {
   /// Creates [LoadSurah].
-  const LoadSurah({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.surah,
@@ -432,7 +432,7 @@ final class LoadSurah extends RecitationEffect {
 /// Load a global range and optionally seek.
 final class LoadRange extends RecitationEffect {
   /// Creates [LoadRange].
-  const LoadRange({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.from,
@@ -450,31 +450,31 @@ final class LoadRange extends RecitationEffect {
 /// Pause the audio engine.
 final class PauseAudio extends RecitationEffect {
   /// Creates [PauseAudio].
-  const PauseAudio();
+  const new();
 }
 
 /// Release the recitation audio lease so alerts can acquire the player.
 final class ReleaseAudioLease extends RecitationEffect {
   /// Creates [ReleaseAudioLease].
-  const ReleaseAudioLease();
+  const new();
 }
 
 /// Resume the audio engine.
 final class ResumeAudio extends RecitationEffect {
   /// Creates [ResumeAudio].
-  const ResumeAudio();
+  const new();
 }
 
 /// Stop the audio engine.
 final class StopAudio extends RecitationEffect {
   /// Creates [StopAudio].
-  const StopAudio();
+  const new();
 }
 
 /// Seek the audio engine.
 final class SeekAudio extends RecitationEffect {
   /// Creates [SeekAudio].
-  const SeekAudio(this.position);
+  const new(this.position);
 
   final Duration position;
 }
@@ -482,7 +482,7 @@ final class SeekAudio extends RecitationEffect {
 /// Highlight an ayah in the mushaf.
 final class HighlightAyah extends RecitationEffect {
   /// Creates [HighlightAyah].
-  const HighlightAyah({required this.surah, required this.ayah});
+  const new({required this.surah, required this.ayah});
 
   final int surah;
   final int ayah;
@@ -492,7 +492,7 @@ final class HighlightAyah extends RecitationEffect {
 /// Emitted in each-ayah repeat mode when advancing to the next ayah.
 final class LoadAyahLoop extends RecitationEffect {
   /// Creates [LoadAyahLoop].
-  const LoadAyahLoop({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.surah,
@@ -509,13 +509,13 @@ final class LoadAyahLoop extends RecitationEffect {
 /// from a previous session does not fire mid-playback).
 final class CancelSleepTimer extends RecitationEffect {
   /// Creates [CancelSleepTimer].
-  const CancelSleepTimer();
+  const new();
 }
 
 /// Persist the current playback state for session restore.
 final class PersistPlaybackState extends RecitationEffect {
   /// Creates [PersistPlaybackState].
-  const PersistPlaybackState({
+  const new({
     this.surah,
     this.rangeFromSurah,
     this.rangeFromAyah,
@@ -535,14 +535,14 @@ final class PersistPlaybackState extends RecitationEffect {
 /// Clears the saved playback position without touching surah/range metadata.
 final class ClearPlaybackPosition extends RecitationEffect {
   /// Creates [ClearPlaybackPosition].
-  const ClearPlaybackPosition();
+  const new();
 }
 
 /// Load the current and next surah as a gapless playlist so the following
 /// surah plays without reloading.
 final class LoadGaplessContinuation extends RecitationEffect {
   /// Creates [LoadGaplessContinuation].
-  const LoadGaplessContinuation({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.fromSurah,
@@ -558,7 +558,7 @@ final class LoadGaplessContinuation extends RecitationEffect {
 /// Load the next surah-local segment in a global multi-surah range.
 final class LoadNextRangeSegment extends RecitationEffect {
   /// Creates [LoadNextRangeSegment].
-  const LoadNextRangeSegment({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.globalFrom,
@@ -585,7 +585,7 @@ enum NativeLoopMode {
 /// Sets native mpv repeat mode.
 final class SetNativeLoop extends RecitationEffect {
   /// Creates [SetNativeLoop].
-  const SetNativeLoop(this.mode);
+  const new(this.mode);
 
   final NativeLoopMode mode;
 }
@@ -593,25 +593,25 @@ final class SetNativeLoop extends RecitationEffect {
 /// Clears armed A-B loop markers without reloading audio.
 final class ClearNativeAbLoop extends RecitationEffect {
   /// Creates [ClearNativeAbLoop].
-  const ClearNativeAbLoop();
+  const new();
 }
 
 /// Resets native loop/gapless/prefetch to safe defaults.
 final class ResetNativePlaybackModes extends RecitationEffect {
   /// Creates [ResetNativePlaybackModes].
-  const ResetNativePlaybackModes();
+  const new();
 }
 
 /// Pauses at EOF while keeping the loaded track and media session intact.
 final class PauseAtEof extends RecitationEffect {
   /// Creates [PauseAtEof].
-  const PauseAtEof();
+  const new();
 }
 
 /// Refreshes native A-B loop after a mid-playback repeat-count change.
 final class RefreshAbLoop extends RecitationEffect {
   /// Creates [RefreshAbLoop].
-  const RefreshAbLoop({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.surah,

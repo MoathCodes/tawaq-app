@@ -12,7 +12,7 @@ import 'package:tawaq/theme/theme.dart';
 /// this host, not the router subtree wrapped by [child].
 class AdhanAlertHost extends ConsumerStatefulWidget {
   /// Creates [AdhanAlertHost].
-  const AdhanAlertHost({required this.child, super.key});
+  const new({required this.child, super.key});
 
   /// Wrapped app subtree.
   final Widget child;
@@ -72,7 +72,7 @@ class _AdhanAlertHostState extends ConsumerState<AdhanAlertHost> {
 }
 
 class _AdhanAlertOverlay extends ConsumerWidget {
-  const _AdhanAlertOverlay();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

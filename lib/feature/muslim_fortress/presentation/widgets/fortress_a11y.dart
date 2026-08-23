@@ -2,7 +2,7 @@ import 'package:tawaq/l10n/app_localizations.dart';
 
 /// Accessibility labels for the Hisn (Muslim Fortress) UI.
 abstract final class FortressA11y {
-  FortressA11y._();
+  new _();
 
   /// Announced label for a prev/next control (disabled state is via [enabled]).
   static String navActionLabel(

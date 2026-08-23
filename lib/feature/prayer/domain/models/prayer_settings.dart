@@ -78,7 +78,7 @@ Map<String, dynamic>? methodToJson(CalculationMethod method) {
 @freezed
 abstract class PrayerSettings with _$PrayerSettings {
   /// Creates a [PrayerSettings] instance.
-  const factory PrayerSettings({
+  const factory({
     /// Calculation method (angles, madhab, high-latitude rules, adjustments).
     @JsonKey(
       name: 'calculation_method',
@@ -129,10 +129,10 @@ abstract class PrayerSettings with _$PrayerSettings {
     @JsonKey(name: 'auto_location') @Default(false) bool autoLocation,
   }) = _PrayerSettings;
 
-  const PrayerSettings._();
+  const new _();
 
   /// Returns the default prayer settings.
-  factory PrayerSettings.defaultSettings() {
+  factory defaultSettings() {
     return PrayerSettings(
       method: CalculationMethod.ummAlQura,
       is24Hours: false,
@@ -145,7 +145,7 @@ abstract class PrayerSettings with _$PrayerSettings {
   }
 
   /// Creates a [PrayerSettings] instance from a JSON map.
-  factory PrayerSettings.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$PrayerSettingsFromJson(json);
 
   /// Whether [coordinates] are set to a real location (not the 0,0 sentinel).

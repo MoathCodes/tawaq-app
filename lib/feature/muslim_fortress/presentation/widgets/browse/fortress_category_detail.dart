@@ -24,7 +24,7 @@ import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortr
 import 'package:tawaq/theme/theme.dart';
 
 class FortressCategoryDetailView extends ConsumerWidget {
-  const FortressCategoryDetailView({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -56,7 +56,7 @@ class FortressCategoryDetailView extends ConsumerWidget {
 }
 
 class _FortressCategoryDetailBody extends HookConsumerWidget {
-  const _FortressCategoryDetailBody({
+  const new({
     required this.category,
     required this.duas,
     this.isLoading = false,
@@ -230,7 +230,7 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
 }
 
 class FortressDuaPreviewCard extends StatelessWidget {
-  const FortressDuaPreviewCard({
+  const new({
     required this.index,
     required this.dua,
     required this.isExpanded,
@@ -333,7 +333,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
 }
 
 class _FortressDuaPreviewSuffix extends StatelessWidget {
-  const _FortressDuaPreviewSuffix({
+  const new({
     required this.targetCount,
     required this.isExpanded,
     required this.colors,
@@ -369,7 +369,7 @@ class _FortressDuaPreviewSuffix extends StatelessWidget {
 }
 
 class FortressDuaPreviewPlaceholder extends StatelessWidget {
-  const FortressDuaPreviewPlaceholder({required this.index, super.key});
+  const new({required this.index, super.key});
 
   final int index;
 

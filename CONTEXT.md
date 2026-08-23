@@ -1,16 +1,6 @@
 # Tawaq
 
-Tawaq is a desktop Islamic companion. This glossary names the concepts that shape the app and its distribution.
-
-## Quran recitation
-
-**Recitation session**:
-The ordered authority for one logical Quran playback session. It accepts user intent and native audio observations, owns timeline and repeat reconciliation, and projects immutable playback state to the app. Native audio remains authoritative for native playback facts.
-_Avoid_: player controller, playback service
-
-**Study selection**:
-The ayah a person is observing in study mode. Playback may move study selection to reveal the currently recited ayah; changing study selection does not direct playback.
-_Avoid_: playback selection, queue position
+Tawaq is a desktop Islamic companion. This glossary names the product concepts that shape how people use, obtain, and install the app.
 
 ## Quran recitation
 
@@ -30,6 +20,9 @@ _Avoid_: recitation initialization
 The canonical Surah and ayah information used to resolve localized Surah names, ayah counts, and valid recitation-range bounds.
 _Avoid_: playback metadata, audio metadata
 
+**Download selection**:
+The temporary set of saved recitation files a person has explicitly selected for one management action. It is not persisted, and closing the manager, rescanning its files, or refreshing reciter data clears it. Successful deletion removes only the affected files from it while failed files remain selected for retry.
+_Avoid_: playback selection, recitation selection
 **Restored recitation selection**:
 A saved reciter, riwayah, Surah, and range loaded during recitation initialization. Tawaq may restore it silently before the person has played or changed it, but playback always requires a separate action.
 _Avoid_: automatic playback, default recitation

@@ -9,7 +9,7 @@ part 'reciter.g.dart';
 @freezed
 abstract class Moshaf with _$Moshaf {
   /// Creates a [Moshaf].
-  const factory Moshaf({
+  const factory({
     /// mp3quran moshaf id.
     required int id,
 
@@ -29,10 +29,10 @@ abstract class Moshaf with _$Moshaf {
     int? timingReadId,
   }) = _Moshaf;
 
-  const Moshaf._();
+  const new _();
 
   /// Creates a [Moshaf] from JSON (disk cache form).
-  factory Moshaf.fromJson(Map<String, dynamic> json) => _$MoshafFromJson(json);
+  factory fromJson(Map<String, dynamic> json) => _$MoshafFromJson(json);
 
   /// Whether ayah-by-ayah timing data is available for this moshaf.
   bool get hasTiming => timingReadId != null;
@@ -45,7 +45,7 @@ abstract class Moshaf with _$Moshaf {
 @freezed
 abstract class Reciter with _$Reciter {
   /// Creates a [Reciter].
-  const factory Reciter({
+  const factory({
     /// mp3quran reciter id.
     required int id,
 
@@ -56,10 +56,10 @@ abstract class Reciter with _$Reciter {
     required List<Moshaf> moshaf,
   }) = _Reciter;
 
-  const Reciter._();
+  const new _();
 
   /// Creates a [Reciter] from JSON (disk cache form).
-  factory Reciter.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$ReciterFromJson(json);
 
   /// Whether any moshaf for this reciter has ayah timing.

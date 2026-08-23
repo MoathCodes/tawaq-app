@@ -16,7 +16,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Header widget for the study panel.
 class StudyPanelHeader extends HookConsumerWidget {
   /// Creates a [StudyPanelHeader] instance.
-  const StudyPanelHeader({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

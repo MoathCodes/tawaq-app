@@ -12,7 +12,7 @@ import 'package:tawaq/core/utils/cancellation_token.dart';
 /// A cached surah audio file on disk.
 class CachedRecitation {
   /// Creates a [CachedRecitation].
-  const CachedRecitation({
+  const new({
     required this.reciterId,
     required this.moshafId,
     required this.surah,
@@ -39,7 +39,7 @@ class CachedRecitation {
 /// Progress of an in-flight surah download.
 class DownloadProgress {
   /// Creates [DownloadProgress].
-  const DownloadProgress({required this.receivedBytes, this.totalBytes});
+  const new({required this.receivedBytes, this.totalBytes});
 
   /// Bytes received so far.
   final int receivedBytes;
@@ -58,7 +58,7 @@ class DownloadProgress {
 /// Explicit offline-save progress scoped to a surah identity.
 class OfflineSaveSnapshot {
   /// Creates [OfflineSaveSnapshot].
-  const OfflineSaveSnapshot({
+  const new({
     required this.reciterId,
     required this.moshafId,
     required this.surah,
@@ -151,7 +151,7 @@ List<_CachedScanEntry> _scanCachedRecitations(String audioDirPath) {
 class RecitationCache {
   /// Creates a [RecitationCache]. [rootOverride] is for tests; production code
   /// leaves it null so the app-support directory is used.
-  RecitationCache({
+  new({
     required this._client,
     required this._logger,
     this.rootOverride,
@@ -442,6 +442,7 @@ class RecitationCache {
       if (file.existsSync()) await file.delete();
     } on Object catch (error) {
       _logger.w('Failed to delete cached recitation $path: $error');
+      rethrow;
     }
   }
 

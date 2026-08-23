@@ -13,7 +13,7 @@ import 'package:tawaq/theme/theme.dart';
 /// View model passed to [AyahShareDialogBody].
 class AyahShareDialogContent {
   /// Creates share dialog content state.
-  const AyahShareDialogContent({
+  const new({
     required this.page,
     required this.pageAyahIds,
     required this.selectedAyahIds,
@@ -47,7 +47,7 @@ class AyahShareDialogContent {
 /// Dialog body for configuring and previewing an ayah share image.
 class AyahShareDialogBody extends StatelessWidget {
   /// Creates the share dialog body.
-  const AyahShareDialogBody({required this.content, super.key});
+  const new({required this.content, super.key});
 
   final AyahShareDialogContent content;
 
@@ -76,7 +76,7 @@ class AyahShareDialogBody extends StatelessWidget {
 }
 
 class _PreviewPanel extends StatelessWidget {
-  const _PreviewPanel({
+  const new({
     required this.content,
     required this.colors,
     required this.theme,
@@ -156,7 +156,7 @@ class _PreviewPanel extends StatelessWidget {
 }
 
 class _ControlsPanel extends StatelessWidget {
-  const _ControlsPanel({required this.content, required this.l10n});
+  const new({required this.content, required this.l10n});
 
   final AyahShareDialogContent content;
   final AppLocalizations l10n;

@@ -17,7 +17,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Calculation method, custom parameters, and time format controls.
 class PrayerCalculationSettings extends ConsumerWidget {
   /// Creates [PrayerCalculationSettings].
-  const PrayerCalculationSettings({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -66,7 +66,7 @@ class PrayerCalculationSettings extends ConsumerWidget {
 /// Iqamah offset editors.
 class PrayerIqamahSettings extends HookConsumerWidget {
   /// Creates [PrayerIqamahSettings].
-  const PrayerIqamahSettings({this.showSaveButton = false, super.key});
+  const new({this.showSaveButton = false, super.key});
 
   /// When true, shows a save action for unsaved iqamah drafts (settings screen).
   final bool showSaveButton;
@@ -189,7 +189,7 @@ class PrayerIqamahSettings extends HookConsumerWidget {
 /// Prayer time calculation and iqamah settings with optional section chrome.
 class PrayerTimeSettings extends ConsumerWidget {
   /// Creates [PrayerTimeSettings].
-  const PrayerTimeSettings({this.chrome = SettingsChrome.section, super.key});
+  const new({this.chrome = SettingsChrome.section, super.key});
 
   /// Outer card chrome for the settings screen.
   final SettingsChrome chrome;
@@ -219,7 +219,7 @@ class PrayerTimeSettings extends ConsumerWidget {
 }
 
 class _TimeFormatSwitch extends ConsumerWidget {
-  const _TimeFormatSwitch({required this.is24Hours});
+  const new({required this.is24Hours});
 
   final bool is24Hours;
 

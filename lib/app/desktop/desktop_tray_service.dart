@@ -25,7 +25,7 @@ DesktopTrayService desktopTrayService(Ref ref) {
 /// Manages tray icon, menu, and events.
 class DesktopTrayService with DesktopTrayListener {
   /// Creates [DesktopTrayService].
-  DesktopTrayService(this._ref);
+  new(this._ref);
 
   final Ref _ref;
   bool _initialized = false;

@@ -8,7 +8,7 @@ import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state
 /// Settings entry to re-run the onboarding flow.
 class OnboardingRerunTile extends ConsumerWidget {
   /// Creates [OnboardingRerunTile].
-  const OnboardingRerunTile({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

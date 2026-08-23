@@ -5,7 +5,7 @@ import 'package:tawaq/core/widgets/desktop_selection.dart';
 /// Explicit button semantics for fortress nav actions (prev / next / study).
 class FortressLabeledNavButton extends StatelessWidget {
   /// Creates a labeled nav button.
-  const FortressLabeledNavButton({
+  const new({
     required this.label,
     required this.enabled,
     required this.onPress,

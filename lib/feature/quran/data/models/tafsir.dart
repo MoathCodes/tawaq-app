@@ -1,7 +1,7 @@
 /// A single tafsir (commentary) entry from a tafsir database.
 class Tafsir {
   /// Creates a tafsir entry.
-  const Tafsir({
+  const new({
     required this.id,
     required this.suraNo,
     required this.ayaNo,
@@ -9,7 +9,7 @@ class Tafsir {
   });
 
   /// Creates a tafsir from a database row map.
-  factory Tafsir.fromMap(Map<String, dynamic> map) {
+  factory fromMap(Map<String, dynamic> map) {
     return Tafsir(
       id: map['id'] as int,
       suraNo: map['sura_no'] as int,

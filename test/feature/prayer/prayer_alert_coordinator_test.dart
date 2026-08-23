@@ -12,7 +12,7 @@ import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 /// Records deliver/cancel calls. `cancel` is a no-op when idle, mirroring the
 /// real channels.
 class _FakeChannel implements PrayerAlertChannel {
-  _FakeChannel(this.debugName, this.log);
+  new(this.debugName, this.log);
 
   @override
   final String debugName;
@@ -42,7 +42,7 @@ class _FakeChannel implements PrayerAlertChannel {
 
 /// Blocks [deliver] until [release] is called — for queue/dispose races.
 class _BlockingChannel implements PrayerAlertChannel {
-  _BlockingChannel(this.debugName, this.log);
+  new(this.debugName, this.log);
 
   @override
   final String debugName;

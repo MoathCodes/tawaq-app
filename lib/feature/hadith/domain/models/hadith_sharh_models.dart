@@ -1,7 +1,7 @@
 /// Structural zones of a Dorar hadith sharh string.
 class HadithSharhZones {
   /// Creates sharh zones.
-  const HadithSharhZones({
+  const new({
     required this.commentary,
     this.matnPrefix,
     this.metadata,
@@ -50,7 +50,7 @@ enum HadithSharhSegmentKind {
 /// A tokenized commentary segment.
 class HadithSharhSegment {
   /// Creates a sharh segment.
-  const HadithSharhSegment({
+  const new({
     required this.kind,
     required this.text,
     this.quotedPhrase,
@@ -90,7 +90,7 @@ enum HadithSharhMetadataLabel {
   /// External citation chain (`التخريج`).
   takhrij('التخريج');
 
-  const HadithSharhMetadataLabel(this.arabicLabel);
+  new(this.arabicLabel);
 
   /// Arabic label text as it appears in Dorar metadata blocks.
   final String arabicLabel;
@@ -109,7 +109,7 @@ enum HadithSharhMetadataLabel {
 /// Structured Dorar sharh metadata header fields.
 class HadithSharhMetadataFields {
   /// Creates parsed sharh metadata fields.
-  const HadithSharhMetadataFields({
+  const new({
     this.rawi,
     this.mohdith,
     this.source,
@@ -172,7 +172,7 @@ class HadithSharhMetadataFields {
 /// Parsed Dorar sharh ready for presentation.
 class HadithSharhParsed {
   /// Creates a parsed sharh view model.
-  const HadithSharhParsed({
+  const new({
     required this.zones,
     required this.segments,
     required this.metadataFields,

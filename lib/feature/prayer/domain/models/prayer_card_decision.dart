@@ -14,7 +14,7 @@ part 'prayer_card_decision.freezed.dart';
 @freezed
 abstract class PrayerCardDecision with _$PrayerCardDecision {
   /// Creates a [PrayerCardDecision] instance.
-  const factory PrayerCardDecision({
+  const factory({
     required DateTime referenceTime,
     required Prayer prayer,
     required bool isCountdown,

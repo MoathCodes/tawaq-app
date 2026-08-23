@@ -2984,6 +2984,48 @@ abstract class AppLocalizations {
   /// **'Recitations are saved automatically while you listen.'**
   String get quranRecitationOfflineAutoSaveOnHint;
 
+  /// No description provided for @quranRecitationOfflineClearSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear selection'**
+  String get quranRecitationOfflineClearSelection;
+
+  /// No description provided for @quranRecitationOfflineDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete downloads'**
+  String get quranRecitationOfflineDelete;
+
+  /// No description provided for @quranRecitationOfflineDeleteAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all downloads'**
+  String get quranRecitationOfflineDeleteAll;
+
+  /// No description provided for @quranRecitationOfflineDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {count} downloads ({size})? This cannot be undone.'**
+  String quranRecitationOfflineDeleteConfirm(int count, String size);
+
+  /// No description provided for @quranRecitationOfflineDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete {count} downloads. They remain selected for retry.'**
+  String quranRecitationOfflineDeleteFailed(int count);
+
+  /// No description provided for @quranRecitationOfflineDeleteSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected'**
+  String get quranRecitationOfflineDeleteSelected;
+
+  /// No description provided for @quranRecitationOfflineDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete downloads?'**
+  String get quranRecitationOfflineDeleteTitle;
+
   /// No description provided for @quranRecitationOfflineEmpty.
   ///
   /// In en, this message translates to:
@@ -3014,11 +3056,53 @@ abstract class AppLocalizations {
   /// **'Open folder'**
   String get quranRecitationOfflineOpenFolder;
 
+  /// No description provided for @quranRecitationOfflinePlaybackStops.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback will stop before the file is removed.'**
+  String get quranRecitationOfflinePlaybackStops;
+
+  /// No description provided for @quranRecitationOfflineReciter.
+  ///
+  /// In en, this message translates to:
+  /// **'Reciter'**
+  String get quranRecitationOfflineReciter;
+
+  /// No description provided for @quranRecitationOfflineRiwayah.
+  ///
+  /// In en, this message translates to:
+  /// **'Riwayah'**
+  String get quranRecitationOfflineRiwayah;
+
+  /// No description provided for @quranRecitationOfflineSelectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get quranRecitationOfflineSelectAll;
+
+  /// No description provided for @quranRecitationOfflineSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String quranRecitationOfflineSelected(int count);
+
+  /// No description provided for @quranRecitationOfflineSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Size'**
+  String get quranRecitationOfflineSize;
+
   /// No description provided for @quranRecitationOfflineStorageUsed.
   ///
   /// In en, this message translates to:
   /// **'Storage used'**
   String get quranRecitationOfflineStorageUsed;
+
+  /// No description provided for @quranRecitationOfflineSurah.
+  ///
+  /// In en, this message translates to:
+  /// **'Surah'**
+  String get quranRecitationOfflineSurah;
 
   /// No description provided for @quranRecitationOfflineSubtitle.
   ///

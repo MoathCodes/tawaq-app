@@ -32,7 +32,7 @@ TextStyle textStyleForSurahName(
 /// Renders a surah name with Uthmanic Hafs when the label is Arabic script.
 class SurahNameText extends StatelessWidget {
   /// Creates a [SurahNameText].
-  const SurahNameText(
+  const new(
     this.name, {
     this.style,
     this.maxLines,
@@ -73,7 +73,7 @@ class SurahNameText extends StatelessWidget {
 /// suffix (ayah number, range, etc.).
 class SurahNameWithSuffix extends StatelessWidget {
   /// Creates a [SurahNameWithSuffix].
-  const SurahNameWithSuffix({
+  const new({
     required this.surahName,
     required this.suffix,
     this.style,
@@ -122,7 +122,7 @@ class SurahNameWithSuffix extends StatelessWidget {
 /// the whole label is Arabic script (e.g. a standalone surah name).
 class AyahReferenceText extends StatelessWidget {
   /// Creates an [AyahReferenceText].
-  const AyahReferenceText(
+  const new(
     this.reference, {
     this.style,
     this.maxLines,
@@ -196,7 +196,7 @@ List<InlineSpan> surahAyahReferenceSpans(String reference, TextStyle style) {
 /// Range label for the player chrome (`surah · ayah`, cross-surah arrows, etc.).
 class AyahRangeLabelText extends StatelessWidget {
   /// Creates an [AyahRangeLabelText].
-  const AyahRangeLabelText(
+  const new(
     this.label, {
     this.style,
     this.suffix = '',

@@ -11,7 +11,7 @@ import 'package:tawaq/theme/theme.dart';
 
 /// Searchable multi-select for one lookup filter dimension.
 class HadithLookupSection extends HookConsumerWidget {
-  const HadithLookupSection({
+  const new({
     required this.title,
     required this.hint,
     required this.kind,

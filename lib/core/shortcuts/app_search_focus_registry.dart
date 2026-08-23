@@ -7,7 +7,7 @@ typedef AppSearchFocusHandler = VoidCallback;
 ///
 /// Only one handler is active at a time; the most recently mounted screen wins.
 class AppSearchFocusRegistry {
-  AppSearchFocusRegistry._();
+  new _();
 
   /// Shared registry instance.
   static final AppSearchFocusRegistry instance = AppSearchFocusRegistry._();

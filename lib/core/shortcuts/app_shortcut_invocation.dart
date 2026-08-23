@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Runtime environment passed to global shortcut dispatch.
 class AppShortcutInvocation {
   /// Creates an invocation context for global shortcut dispatch.
-  const AppShortcutInvocation({
+  const new({
     required this.ref,
     required this.context,
   });

@@ -3,7 +3,7 @@ import 'package:tawaq/core/utils/lru_map.dart';
 /// In-memory LRU for ayah-scoped database rows keyed by `(source, sura, aya)`.
 class LruAyahCache<T> {
   /// Creates a cache retaining at most [maxSize] entries.
-  LruAyahCache({this.maxSize = defaultMaxSize})
+  new({this.maxSize = defaultMaxSize})
     : assert(maxSize > 0, 'maxSize must be positive');
 
   /// Default capacity shared by tafsir and translation row caches.

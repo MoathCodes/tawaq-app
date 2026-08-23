@@ -20,11 +20,11 @@ enum HadithLookupKind {
 @freezed
 abstract class HadithLookupRef with _$HadithLookupRef {
   /// Creates a lookup reference.
-  const factory HadithLookupRef({required String id, required String name}) =
+  const factory({required String id, required String name}) =
       _HadithLookupRef;
 
   /// Deserializes a lookup reference from JSON.
-  factory HadithLookupRef.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$HadithLookupRefFromJson(json);
 }
 
@@ -32,7 +32,7 @@ abstract class HadithLookupRef with _$HadithLookupRef {
 @freezed
 abstract class HadithFilters with _$HadithFilters {
   /// Creates a hadith filter set.
-  const factory HadithFilters({
+  const factory({
     @Default(SearchMethod.anyWord) SearchMethod searchMethod,
     @Default(SearchZone.all) SearchZone zone,
     /// When true, limit results to hadiths that include takhrij in their
@@ -46,7 +46,7 @@ abstract class HadithFilters with _$HadithFilters {
   }) = _HadithFilters;
 
   /// Deserializes a hadith filter set from JSON.
-  factory HadithFilters.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$HadithFiltersFromJson(json);
 }
 

@@ -15,7 +15,7 @@ import 'package:tawaq/theme/theme.dart';
 /// backing list is empty, so it adapts to whatever lives in `about_info.dart`.
 class AboutView extends StatelessWidget {
   /// Creates an [AboutView].
-  const AboutView({required this.content, super.key});
+  const new({required this.content, super.key});
 
   /// The content to render.
   final AboutContent content;
@@ -131,7 +131,7 @@ class AboutView extends StatelessWidget {
 const _kLogoSize = 84.0;
 
 class _AboutHeader extends StatelessWidget {
-  const _AboutHeader({required this.content});
+  const new({required this.content});
 
   final AboutContent content;
 
@@ -211,7 +211,7 @@ Future<void> _openAboutLink(BuildContext context, String url) async {
 
 /// A labelled section: a small icon + heading above arbitrary [child] content.
 class _AboutSection extends StatelessWidget {
-  const _AboutSection({
+  const new({
     required this.icon,
     required this.title,
     required this.child,
@@ -252,7 +252,7 @@ class _AboutSection extends StatelessWidget {
 
 /// The horizontal strip of quick-fact pills below the header.
 class _AboutFacts extends StatelessWidget {
-  const _AboutFacts({required this.facts});
+  const new({required this.facts});
 
   final List<AboutFact> facts;
 
@@ -268,7 +268,7 @@ class _AboutFacts extends StatelessWidget {
 }
 
 class _FactChip extends StatelessWidget {
-  const _FactChip({required this.fact});
+  const new({required this.fact});
 
   final AboutFact fact;
 

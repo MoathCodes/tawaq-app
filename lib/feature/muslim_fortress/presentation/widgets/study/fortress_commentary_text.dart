@@ -16,7 +16,7 @@ import 'package:tawaq/theme/theme.dart';
 /// theme-adaptive tone and a muted surah/ayah reference beside them.
 class FortressCommentaryText extends HookWidget {
   /// Creates formatted commentary text.
-  const FortressCommentaryText({
+  const new({
     required this.text,
     required this.baseStyle,
     this.textAlign = TextAlign.start,
@@ -79,7 +79,7 @@ class FortressCommentaryText extends HookWidget {
 }
 
 class _CommentaryBlockView extends StatelessWidget {
-  const _CommentaryBlockView({
+  const new({
     required this.block,
     required this.colors,
     required this.textAlign,
@@ -119,7 +119,7 @@ class _CommentaryBlockView extends StatelessWidget {
 }
 
 class _CommentaryInlineText extends StatelessWidget {
-  const _CommentaryInlineText({
+  const new({
     required this.text,
     required this.textAlign,
     this.listNumber,
@@ -166,7 +166,7 @@ class _CommentaryInlineText extends StatelessWidget {
 }
 
 class _CitationLine extends StatelessWidget {
-  const _CitationLine({
+  const new({
     required this.text,
     required this.style,
     required this.colors,

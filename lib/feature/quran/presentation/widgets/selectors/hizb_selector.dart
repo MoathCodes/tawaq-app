@@ -155,7 +155,7 @@ Widget hizbSelectSubtitle({
 /// Hizb selector with rich tiles (hizb label + starting ayah Uthmani preview).
 class HizbSelector extends HookConsumerWidget {
   /// Creates a [HizbSelector] instance.
-  const HizbSelector({
+  const new({
     this.showLabel = true,
     this.inlineLabel = false,
     super.key,

@@ -80,7 +80,7 @@ Future<void> showAyahShareDialog(
 /// Dialog for configuring and exporting a verse range as a shareable image.
 class AyahShareDialog extends HookConsumerWidget {
   /// Creates the share dialog.
-  const AyahShareDialog({
+  const new({
     required this.ayah,
     required this.style,
     this.animation,

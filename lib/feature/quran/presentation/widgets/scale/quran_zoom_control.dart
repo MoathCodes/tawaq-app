@@ -14,7 +14,7 @@ import 'package:tawaq/theme/theme.dart';
 /// value, live preview while dragging, commit on release.
 class QuranZoomControl extends HookConsumerWidget {
   /// Creates a [QuranZoomControl].
-  const QuranZoomControl({
+  const new({
     this.showHeader = false,
     super.key,
   });

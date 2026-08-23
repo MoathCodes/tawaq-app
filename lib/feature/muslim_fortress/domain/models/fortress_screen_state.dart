@@ -17,7 +17,7 @@ enum FortressSidebarTab {
 @freezed
 abstract class FortressScreenState with _$FortressScreenState {
   /// Creates the fortress screen state.
-  const factory FortressScreenState({
+  const factory({
     @Default(FortressSidebarTab.allChapters) FortressSidebarTab sidebarTab,
     @Default([]) List<int> favoriteChapterIds,
     @Default(false) bool defaultBookmarksSeeded,
@@ -26,13 +26,13 @@ abstract class FortressScreenState with _$FortressScreenState {
   }) = _FortressScreenState;
 
   /// Deserializes the fortress screen state from JSON.
-  factory FortressScreenState.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$FortressScreenStateFromJson(json);
 
   /// Returns the default initial screen state.
-  factory FortressScreenState.initial() => const FortressScreenState();
+  factory initial() => const FortressScreenState();
 
-  const FortressScreenState._();
+  const new _();
 
   /// Seeds default bookmarks once for new users.
   ///

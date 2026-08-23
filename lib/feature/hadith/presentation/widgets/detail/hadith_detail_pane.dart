@@ -21,7 +21,7 @@ import 'package:tawaq/theme/theme.dart';
 /// [hadithDetailProvider] watches are gated via [FAccordionControl.lifted]
 /// expanded tracking so collapsed sections do not fetch.
 class HadithSelectedDetailsPane extends HookConsumerWidget {
-  const HadithSelectedDetailsPane({required this.hadith, super.key});
+  const new({required this.hadith, super.key});
 
   final DetailedHadith hadith;
 
@@ -248,7 +248,7 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
 }
 
 class HadithAsyncDetailsSection<T> extends StatelessWidget {
-  const HadithAsyncDetailsSection({
+  const new({
     required this.value,
     required this.dataBuilder,
     super.key,
@@ -281,7 +281,7 @@ class HadithAsyncDetailsSection<T> extends StatelessWidget {
 }
 
 class HadithUsulSourceCard extends StatelessWidget {
-  const HadithUsulSourceCard({required this.source, super.key});
+  const new({required this.source, super.key});
 
   final UsulSource source;
 
@@ -318,7 +318,7 @@ class HadithUsulSourceCard extends StatelessWidget {
 }
 
 class HadithSectionPlaceholder extends StatelessWidget {
-  const HadithSectionPlaceholder({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {

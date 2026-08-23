@@ -20,7 +20,7 @@ import 'package:tawaq/theme/theme.dart';
 
 /// Search header with query field, bookmarks chrome, filter chips, and recents.
 class HadithSearchColumn extends ConsumerWidget {
-  const HadithSearchColumn({required this.useSplitLayout, super.key});
+  const new({required this.useSplitLayout, super.key});
 
   final bool useSplitLayout;
 
@@ -52,7 +52,7 @@ class HadithSearchColumn extends ConsumerWidget {
 }
 
 class _SpecificModeHeader extends ConsumerWidget {
-  const _SpecificModeHeader({required this.mode});
+  const new({required this.mode});
 
   final HadithViewMode mode;
 
@@ -94,7 +94,7 @@ class _SpecificModeHeader extends ConsumerWidget {
 }
 
 class _QueryField extends HookConsumerWidget {
-  const _QueryField({required this.useSplitLayout});
+  const new({required this.useSplitLayout});
 
   final bool useSplitLayout;
 
@@ -275,7 +275,7 @@ class _QueryField extends HookConsumerWidget {
 }
 
 class _FilterCountBadge extends StatelessWidget {
-  const _FilterCountBadge({required this.count});
+  const new({required this.count});
 
   final int count;
 
@@ -303,7 +303,7 @@ class _FilterCountBadge extends StatelessWidget {
 }
 
 class _SearchMeta extends ConsumerWidget {
-  const _SearchMeta({required this.useSplitLayout});
+  const new({required this.useSplitLayout});
 
   final bool useSplitLayout;
 
@@ -353,7 +353,7 @@ class _SearchMeta extends ConsumerWidget {
 }
 
 class _ActiveFilterChips extends ConsumerWidget {
-  const _ActiveFilterChips();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -488,7 +488,7 @@ class _ActiveFilterChips extends ConsumerWidget {
 }
 
 class _RecentSearchesSection extends ConsumerWidget {
-  const _RecentSearchesSection({required this.useSplitLayout});
+  const new({required this.useSplitLayout});
 
   final bool useSplitLayout;
 
@@ -556,7 +556,7 @@ class _RecentSearchesSection extends ConsumerWidget {
 }
 
 class _RecentSearchChip extends HookConsumerWidget {
-  const _RecentSearchChip({
+  const new({
     required this.query,
     required this.useSplitLayout,
   });
@@ -640,7 +640,7 @@ class _RecentSearchChip extends HookConsumerWidget {
 }
 
 class _SearchMetaSectionHeader extends StatelessWidget {
-  const _SearchMetaSectionHeader({
+  const new({
     required this.icon,
     required this.title,
     this.trailing,

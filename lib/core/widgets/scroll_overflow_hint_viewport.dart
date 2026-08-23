@@ -9,7 +9,7 @@ const double kScrollOverflowHintMinExtent = 32;
 /// Scroll viewport that shows a subtle chip when more content is below.
 class ScrollOverflowHintViewport extends StatefulWidget {
   /// Creates [ScrollOverflowHintViewport].
-  const ScrollOverflowHintViewport({
+  const new({
     required this.builder,
     this.showHint = true,
     this.minOverflowExtent = kScrollOverflowHintMinExtent,
@@ -137,7 +137,7 @@ class _ScrollOverflowHintViewportState
 }
 
 class _ScrollMoreHintChip extends StatelessWidget {
-  const _ScrollMoreHintChip({required this.label});
+  const new({required this.label});
 
   final String label;
 

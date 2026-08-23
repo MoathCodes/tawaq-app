@@ -12,7 +12,7 @@ import 'package:tawaq/feature/quran/domain/services/recitation_url_builder.dart'
 /// Coordinates the mp3quran API and the on-disk cache for recitation data.
 class RecitationRepository {
   /// Creates a [RecitationRepository].
-  RecitationRepository({
+  new({
     required this._api,
     required this._cache,
     required this._logger,

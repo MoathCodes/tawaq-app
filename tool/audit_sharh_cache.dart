@@ -194,7 +194,7 @@ void main(List<String> args) {
 }
 
 class _SharhEntry {
-  const _SharhEntry({
+  const new({
     required this.id,
     required this.hadith,
     required this.sharh,

@@ -32,7 +32,7 @@ enum FortressDuaContentMode {
 /// Unified thikr + virtue + study presentation for browse and reading flows.
 class FortressDuaContent extends ConsumerWidget {
   /// Creates dua content for the given [mode].
-  const FortressDuaContent({
+  const new({
     required this.dua,
     required this.mode,
     this.muted = false,
@@ -79,7 +79,7 @@ class FortressDuaContent extends ConsumerWidget {
 }
 
 class _ThikrPreviewText extends StatelessWidget {
-  const _ThikrPreviewText({
+  const new({
     required this.dua,
     required this.isExpanded,
   });
@@ -117,7 +117,7 @@ class _ThikrPreviewText extends StatelessWidget {
 /// Virtue line constrained for focus-reading footer chrome.
 class FortressFocusVirtueFooter extends StatelessWidget {
   /// Creates a virtue footer.
-  const FortressFocusVirtueFooter({
+  const new({
     required this.virtue,
     required this.horizontalPadding,
     super.key,
@@ -147,7 +147,7 @@ class FortressFocusVirtueFooter extends StatelessWidget {
 
 /// Mushaf-backed thikr body for focus reading (Quranic passages + prose).
 class _FortressThikrBody extends HookConsumerWidget {
-  const _FortressThikrBody({
+  const new({
     required this.dua,
     this.textAlign = TextAlign.center,
     this.proseStyle,
@@ -243,7 +243,7 @@ class _FortressThikrBody extends HookConsumerWidget {
 }
 
 class _FortressMushafPages extends ConsumerWidget {
-  const _FortressMushafPages({
+  const new({
     required this.pages,
     required this.controller,
     required this.loadingWidget,
@@ -305,7 +305,7 @@ class _FortressMushafPages extends ConsumerWidget {
 }
 
 class _FortressQuranPassage extends StatefulWidget {
-  const _FortressQuranPassage({
+  const new({
     required this.ranges,
     required this.controller,
     required this.fontSize,

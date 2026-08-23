@@ -26,7 +26,7 @@ const _kInlineHizbSelect = HizbSelector(inlineLabel: true);
 /// Header widget for the Quran screen containing navigation controls.
 class QuranHeaderWidget extends HookConsumerWidget {
   /// Creates a [QuranHeaderWidget] instance.
-  const QuranHeaderWidget({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -144,7 +144,7 @@ class QuranHeaderWidget extends HookConsumerWidget {
 }
 
 class _DisplayToolsRow extends StatelessWidget {
-  const _DisplayToolsRow({required this.layoutSegment});
+  const new({required this.layoutSegment});
 
   final Widget layoutSegment;
 
@@ -162,7 +162,7 @@ class _DisplayToolsRow extends StatelessWidget {
 }
 
 class _QuranLocationRail extends StatelessWidget {
-  const _QuranLocationRail({required this.stacked});
+  const new({required this.stacked});
 
   final bool stacked;
 
@@ -215,7 +215,7 @@ class _QuranLocationRail extends StatelessWidget {
 }
 
 class _RailHairline extends StatelessWidget {
-  const _RailHairline({required this.axis});
+  const new({required this.axis});
 
   final Axis axis;
 
@@ -243,7 +243,7 @@ class _RailHairline extends StatelessWidget {
 }
 
 class _HeaderSearchField extends StatelessWidget {
-  const _HeaderSearchField({required this.focusNode});
+  const new({required this.focusNode});
 
   final FocusNode focusNode;
 
@@ -257,7 +257,7 @@ class _HeaderSearchField extends StatelessWidget {
 }
 
 class _HeaderDivider extends StatelessWidget {
-  const _HeaderDivider();
+  const new();
 
   @override
   Widget build(BuildContext context) {
@@ -278,7 +278,7 @@ class _HeaderDivider extends StatelessWidget {
 }
 
 class _LayoutSegment extends StatelessWidget {
-  const _LayoutSegment({
+  const new({
     required this.layout,
     required this.showLabels,
     required this.onLayoutChanged,
@@ -321,7 +321,7 @@ class _LayoutSegment extends StatelessWidget {
 }
 
 class _LayoutTabLabel extends StatelessWidget {
-  const _LayoutTabLabel({
+  const new({
     required this.mode,
     required this.label,
     required this.selected,

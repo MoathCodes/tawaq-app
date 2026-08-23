@@ -26,7 +26,7 @@ import 'package:tawaq/theme/theme.dart';
 /// A study companion panel for the Quran screen.
 class StudyPanel extends HookConsumerWidget {
   /// Creates a study panel.
-  const StudyPanel({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -187,7 +187,7 @@ class StudyPanel extends HookConsumerWidget {
 }
 
 class _StudyPanelBody extends StatelessWidget {
-  const _StudyPanelBody({
+  const new({
     required this.ayahId,
     required this.narrowPanel,
   });
@@ -214,7 +214,7 @@ class _StudyPanelBody extends StatelessWidget {
 
 /// Tafsir and translation accordion for the selected ayah.
 class _StudyContentAccordion extends ConsumerWidget {
-  const _StudyContentAccordion({required this.narrowPanel});
+  const new({required this.narrowPanel});
 
   final bool narrowPanel;
 

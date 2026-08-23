@@ -6,7 +6,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Shared title row for player-style modal dialogs.
 class PlayerDialogHeader extends StatelessWidget {
   /// Creates a [PlayerDialogHeader].
-  const PlayerDialogHeader({
+  const new({
     required this.title,
     this.subtitle,
     this.icon,
@@ -103,7 +103,7 @@ class PlayerDialogHeader extends StatelessWidget {
 /// viewport via [dialogConstraints].
 class TawaqDialogShell extends StatelessWidget {
   /// Creates a [TawaqDialogShell].
-  const TawaqDialogShell({
+  const new({
     required this.title,
     required this.child,
     this.icon,
@@ -200,7 +200,7 @@ class TawaqDialogShell extends StatelessWidget {
 /// Use inside [FDialog.builder] after the built-in content layout was removed.
 class ForuiDialogLayout extends StatelessWidget {
   /// Creates a [ForuiDialogLayout].
-  const ForuiDialogLayout({
+  const new({
     required this.style,
     required this.title,
     required this.body,

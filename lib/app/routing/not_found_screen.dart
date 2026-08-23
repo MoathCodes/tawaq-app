@@ -7,7 +7,7 @@ import 'package:tawaq/theme/theme.dart';
 /// A screen that is displayed when a route is not found.
 class NotFoundScreen extends StatelessWidget {
   /// Creates a not found screen.
-  const NotFoundScreen({required this.errorMsg, super.key});
+  const new({required this.errorMsg, super.key});
 
   /// The error message to display.
   final String errorMsg;

@@ -6,7 +6,7 @@ import 'package:tawaq/core/layout/split_pane_constraints.dart';
 /// Replaces duplicated gating in Hadith, Quran study, and Fortress screens.
 class ResponsiveHorizontalSplitGate extends StatelessWidget {
   /// Creates a responsive horizontal split gate.
-  const ResponsiveHorizontalSplitGate({
+  const new({
     required this.sideMin,
     required this.mainMin,
     required this.builder,

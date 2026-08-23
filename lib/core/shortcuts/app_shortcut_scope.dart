@@ -9,7 +9,7 @@ import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 /// Global shortcuts belong in shell shortcut scope instead.
 class AppShortcutScope extends StatefulWidget {
   /// Creates a shortcut scope.
-  const AppShortcutScope({
+  const new({
     required this.shortcuts,
     required this.handlers,
     required this.child,

@@ -14,7 +14,7 @@ part 'muslim_fortress_provider.g.dart';
 @freezed
 abstract class FortressFlowState with _$FortressFlowState {
   /// Creates the flow state.
-  const factory FortressFlowState({
+  const factory({
     int? selectedChapterId,
     @Default(false) bool isFocusMode,
     @Default(0) int focusStartIndex,

@@ -13,7 +13,7 @@ const List<double> kDefaultScalePreviewSizes = <double>[12, 14, 16, 18];
 /// large block buttons.
 class ScaleStepPicker extends StatelessWidget {
   /// Creates a [ScaleStepPicker].
-  const ScaleStepPicker({
+  const new({
     required this.labels,
     required this.selectedIndex,
     required this.onChanged,
@@ -68,7 +68,7 @@ class ScaleStepPicker extends StatelessWidget {
 }
 
 class _ScaleStepChip extends StatelessWidget {
-  const _ScaleStepChip({
+  const new({
     required this.label,
     required this.selected,
     required this.enabled,

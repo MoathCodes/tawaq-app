@@ -8,7 +8,7 @@ import 'package:tawaq/theme/theme.dart';
 /// A read-only settings row showing a shortcut label and key combo.
 class ShortcutListRow extends StatelessWidget {
   /// Creates a shortcut list row.
-  const ShortcutListRow({
+  const new({
     required this.shortcut,
     super.key,
   });

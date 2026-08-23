@@ -89,7 +89,7 @@ Future<void> showFortressStudySheet(
 /// Compact study control in the focus-reading nav cluster.
 class FortressDuaStudyNavAction extends StatelessWidget {
   /// Creates a study nav action.
-  const FortressDuaStudyNavAction({required this.dua, super.key});
+  const new({required this.dua, super.key});
 
   final FortressDuaItem dua;
 
@@ -184,7 +184,7 @@ class FortressDuaStudyNavAction extends StatelessWidget {
 /// Always-visible الفضل line (focus reading footer).
 class FortressDuaVirtueLine extends StatelessWidget {
   /// Creates a virtue line.
-  const FortressDuaVirtueLine({
+  const new({
     required this.virtue,
     super.key,
   });
@@ -211,7 +211,7 @@ class FortressDuaVirtueLine extends StatelessWidget {
 /// Takhreej / مصدر line (shown inside on-demand study content).
 class FortressDuaSourceLine extends StatelessWidget {
   /// Creates a source line.
-  const FortressDuaSourceLine({
+  const new({
     required this.reference,
     super.key,
   });
@@ -237,7 +237,7 @@ class FortressDuaSourceLine extends StatelessWidget {
 /// Sharh-first study body (used in sheet or inline expansion).
 class FortressDuaStudyContent extends HookConsumerWidget {
   /// Creates study content.
-  const FortressDuaStudyContent({
+  const new({
     required this.dua,
     this.compact = false,
     super.key,
@@ -332,7 +332,7 @@ class FortressDuaStudyContent extends HookConsumerWidget {
 
 /// Hadith and benefit supplements — tabbed only when both are present.
 class _FortressSecondaryInsights extends HookWidget {
-  const _FortressSecondaryInsights({
+  const new({
     required this.hadith,
     required this.benefit,
     required this.proseStyle,
@@ -436,7 +436,7 @@ class _FortressSecondaryInsights extends HookWidget {
 }
 
 class _StudySectionHeader extends StatelessWidget {
-  const _StudySectionHeader({
+  const new({
     required this.icon,
     required this.title,
     this.prominent = false,

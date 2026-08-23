@@ -14,7 +14,7 @@ part 'prayer_time_inputs.freezed.dart';
 @freezed
 abstract class PrayerTimeInputs with _$PrayerTimeInputs {
   /// Creates [PrayerTimeInputs].
-  const factory PrayerTimeInputs({
+  const factory({
     required CalculationMethod method,
     required Coordinates coordinates,
     required Location location,

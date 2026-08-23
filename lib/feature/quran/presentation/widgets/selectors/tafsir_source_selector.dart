@@ -14,7 +14,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Searchable select for choosing a Quran tafsir source.
 class TafsirSourceSelector extends ConsumerWidget {
   /// Creates a [TafsirSourceSelector].
-  const TafsirSourceSelector({
+  const new({
     this.enabled = true,
     super.key,
   });

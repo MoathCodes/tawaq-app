@@ -8,7 +8,7 @@ part 'recitation_settings.g.dart';
 @freezed
 abstract class RecitationSettings with _$RecitationSettings {
   /// Creates [RecitationSettings].
-  const factory RecitationSettings({
+  const factory({
     /// Selected reciter id, or null until the user picks one.
     int? reciterId,
 
@@ -59,9 +59,9 @@ abstract class RecitationSettings with _$RecitationSettings {
   }) = _RecitationSettings;
 
   /// Creates [RecitationSettings] from JSON.
-  factory RecitationSettings.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$RecitationSettingsFromJson(json);
 
   /// Default preferences for a new user.
-  factory RecitationSettings.initial() => const RecitationSettings();
+  factory initial() => const RecitationSettings();
 }

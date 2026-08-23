@@ -17,7 +17,7 @@ abstract class ITafsirDataSource {
 ///            aya_tafseer
 class SqliteTafsirDataSource implements ITafsirDataSource {
   /// Creates a data source from an open sqlite3 database.
-  SqliteTafsirDataSource(this._database);
+  new(this._database);
 
   final Database _database;
 
@@ -51,7 +51,7 @@ class SqliteTafsirDataSource implements ITafsirDataSource {
 /// `SURA_num`, `AYA_num`, `Tafsir`.
 class SqliteCompactTafsirDataSource implements ITafsirDataSource {
   /// Creates a compact-schema data source.
-  SqliteCompactTafsirDataSource(this._database, this._tableName);
+  new(this._database, this._tableName);
 
   final Database _database;
   final String _tableName;

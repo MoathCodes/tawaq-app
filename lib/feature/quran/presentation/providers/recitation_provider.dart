@@ -67,7 +67,7 @@ Future<List<Reciter>> reciters(Ref ref) =>
 
 /// Runtime state owned by [RecitationOfflineStore].
 class RecitationOfflineState {
-  const RecitationOfflineState({
+  const new({
     this.files = const [],
     this.totalBytes = 0,
     this.saveProgress,
@@ -92,6 +92,19 @@ class RecitationOfflineState {
     saveProgress: clearProgress ? null : saveProgress ?? this.saveProgress,
     error: clearError ? null : error ?? this.error,
   );
+}
+
+/// The per-file outcome of one offline-cache deletion operation.
+class RecitationOfflineDeletionResult {
+  const new({
+    required this.deletedPaths,
+    required this.failedPaths,
+  });
+
+  final Set<String> deletedPaths;
+  final Map<String, Object> failedPaths;
+
+  bool get hasFailures => failedPaths.isNotEmpty;
 }
 
 /// The only writable authority for cached files and offline operation state.
@@ -120,8 +133,29 @@ class RecitationOfflineStore extends _$RecitationOfflineStore {
   }
 
   Future<void> delete(String path) async {
-    await ref.read(recitationCacheProvider).deleteCached(path);
+    await deleteFiles([path]);
+  }
+
+  /// Deletes files as one operation and reports every individual outcome.
+  Future<RecitationOfflineDeletionResult> deleteFiles(
+    Iterable<String> paths,
+  ) async {
+    final deletedPaths = <String>{};
+    final failedPaths = <String, Object>{};
+    final cache = ref.read(recitationCacheProvider);
+    for (final path in paths) {
+      try {
+        await cache.deleteCached(path);
+        deletedPaths.add(path);
+      } on Object catch (error) {
+        failedPaths[path] = error;
+      }
+    }
     await refresh();
+    return RecitationOfflineDeletionResult(
+      deletedPaths: Set.unmodifiable(deletedPaths),
+      failedPaths: Map.unmodifiable(failedPaths),
+    );
   }
 
   void setProgress(OfflineSaveSnapshot progress) {
@@ -199,7 +233,7 @@ typedef SelectedRecitation = ({Reciter reciter, Moshaf moshaf});
 
 /// Read-only composition of recitation session, preferences, and transport.
 class RecitationViewState {
-  const RecitationViewState({
+  const new({
     required this.session,
     required this.preferences,
     required this.audio,
@@ -297,7 +331,7 @@ Future<SelectedRecitation?> selectedRecitation(Ref ref) async {
 /// Shows a toast when [RecitationState.error] is set.
 class RecitationErrorToastListener extends ConsumerWidget {
   /// Creates [RecitationErrorToastListener].
-  const RecitationErrorToastListener({required this.child, super.key});
+  const new({required this.child, super.key});
 
   /// Wrapped shell content.
   final Widget child;
@@ -832,6 +866,14 @@ class RecitationController extends _$RecitationController {
   /// Stops audio but keeps the player session visible.
   Future<void> stop() async {
     _dispatch(const Stop());
+  }
+
+  /// Stops and releases a local source before that cached file is removed.
+  Future<void> stopAndReleaseForOfflineDeletion() async {
+    _dispatch(const Stop());
+    await _enqueueIo(
+      () => _service.release(owner: kRecitationLeaseOwner),
+    );
   }
 
   /// Seeks within the current surah audio.

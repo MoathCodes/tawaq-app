@@ -19,7 +19,7 @@ enum SettingsChrome {
 /// another [FCard].
 class SettingsSection extends StatelessWidget {
   /// Creates a new [SettingsSection] instance.
-  const SettingsSection({
+  const new({
     required this.child,
     required this.title,
     required this.subtitle,
@@ -102,7 +102,7 @@ class SettingsSection extends StatelessWidget {
 /// Labeled sub-block inside a [SettingsSection] — heading only, no card.
 class SettingsGroup extends StatelessWidget {
   /// Creates a [SettingsGroup].
-  const SettingsGroup({
+  const new({
     required this.child,
     this.title,
     this.subtitle,

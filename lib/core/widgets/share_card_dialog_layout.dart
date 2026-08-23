@@ -7,7 +7,7 @@ import 'package:tawaq/theme/theme.dart';
 /// The feature supplies the preview and settings widgets. This widget only
 /// standardizes the interaction model and responsive layout.
 class ShareCardDialogLayout extends StatelessWidget {
-  const ShareCardDialogLayout({
+  const new({
     required this.preview,
     required this.settings,
     super.key,

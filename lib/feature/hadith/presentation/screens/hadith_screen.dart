@@ -21,7 +21,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Main Hadith search and exploration page.
 class HadithPage extends HookConsumerWidget {
   /// Creates the Hadith page widget.
-  const HadithPage({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,7 +48,7 @@ class HadithPage extends HookConsumerWidget {
 }
 
 class _HadithResponsiveBody extends ConsumerWidget {
-  const _HadithResponsiveBody();
+  const new();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,7 +63,7 @@ class _HadithResponsiveBody extends ConsumerWidget {
 }
 
 class _HadithSplitGateBody extends ConsumerWidget {
-  const _HadithSplitGateBody({required this.useSplitLayout});
+  const new({required this.useSplitLayout});
 
   final bool useSplitLayout;
 
@@ -78,7 +78,7 @@ class _HadithSplitGateBody extends ConsumerWidget {
 }
 
 class _HadithMainColumn extends StatelessWidget {
-  const _HadithMainColumn({required this.useSplitLayout});
+  const new({required this.useSplitLayout});
 
   final bool useSplitLayout;
 
@@ -95,7 +95,7 @@ class _HadithMainColumn extends StatelessWidget {
 }
 
 class _HadithSplitLayout extends ConsumerWidget {
-  const _HadithSplitLayout({required this.useSplitLayout});
+  const new({required this.useSplitLayout});
 
   final bool useSplitLayout;
 
@@ -146,7 +146,7 @@ class _HadithSplitLayout extends ConsumerWidget {
 }
 
 class _HadithSidePanel extends ConsumerWidget {
-  const _HadithSidePanel({
+  const new({
     required this.onCollapse,
     required this.collapseSemanticLabel,
   });
@@ -249,7 +249,7 @@ class _HadithSidePanel extends ConsumerWidget {
 }
 
 class _SidePanelCollapseHandle extends StatelessWidget {
-  const _SidePanelCollapseHandle({
+  const new({
     required this.semanticLabel,
     required this.onPress,
   });

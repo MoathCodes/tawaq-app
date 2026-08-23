@@ -33,7 +33,7 @@ part 'onboarding_screen.g.dart';
 /// Full-screen first-run onboarding flow.
 class OnboardingScreen extends ConsumerWidget {
   /// Creates [OnboardingScreen].
-  const OnboardingScreen({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -130,7 +130,7 @@ enum OnboardingStep {
 /// Metadata and builder for a single onboarding step.
 class OnboardingStepDef {
   /// Creates [OnboardingStepDef].
-  const OnboardingStepDef({
+  const new({
     required this.step,
     required this.title,
     required this.subtitle,
@@ -215,7 +215,7 @@ OnboardingStepDef onboardingStepDefFor(
 /// UI state for the onboarding stepper.
 class OnboardingControllerState {
   /// Creates [OnboardingControllerState].
-  const OnboardingControllerState({
+  const new({
     required this.step,
     required this.slideDirection,
   });
@@ -263,7 +263,7 @@ class OnboardingController extends _$OnboardingController {
 /// Bottom navigation for onboarding steps.
 class OnboardingNavigationBar extends ConsumerWidget {
   /// Creates [OnboardingNavigationBar].
-  const OnboardingNavigationBar({
+  const new({
     required this.step,
     required this.onContinue,
     required this.onBack,
@@ -337,7 +337,7 @@ class OnboardingNavigationBar extends ConsumerWidget {
 /// Welcome hero for the first onboarding step.
 class OnboardingWelcomeStep extends StatelessWidget {
   /// Creates [OnboardingWelcomeStep].
-  const OnboardingWelcomeStep({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -368,7 +368,7 @@ class OnboardingWelcomeStep extends StatelessWidget {
 /// Language selection step.
 class OnboardingLocaleStep extends StatelessWidget {
   /// Creates [OnboardingLocaleStep].
-  const OnboardingLocaleStep({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -379,7 +379,7 @@ class OnboardingLocaleStep extends StatelessWidget {
 /// Location selection step with setup tip.
 class OnboardingLocationStep extends StatelessWidget {
   /// Creates [OnboardingLocationStep].
-  const OnboardingLocationStep({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -400,7 +400,7 @@ class OnboardingLocationStep extends StatelessWidget {
 /// Contextual alert for the location step.
 class OnboardingLocationAlert extends StatelessWidget {
   /// Creates [OnboardingLocationAlert].
-  const OnboardingLocationAlert({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -417,7 +417,7 @@ class OnboardingLocationAlert extends StatelessWidget {
 /// Theme palette and app text scale onboarding step.
 class OnboardingThemeStep extends ConsumerWidget {
   /// Creates [OnboardingThemeStep].
-  const OnboardingThemeStep({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -462,7 +462,7 @@ class OnboardingThemeStep extends ConsumerWidget {
 /// Final onboarding step showing today's prayer schedule preview.
 class OnboardingFinishStep extends ConsumerWidget {
   /// Creates [OnboardingFinishStep].
-  const OnboardingFinishStep({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -515,7 +515,7 @@ class OnboardingFinishStep extends ConsumerWidget {
 }
 
 class _PrayerPreviewRow extends StatelessWidget {
-  const _PrayerPreviewRow({
+  const new({
     required this.label,
     required this.time,
   });

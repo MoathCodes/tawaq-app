@@ -152,7 +152,7 @@ extension IqamahSoundX on IqamahSound {
 @freezed
 abstract class AdhanSettings with _$AdhanSettings {
   /// Creates [AdhanSettings].
-  const factory AdhanSettings({
+  const factory({
     @JsonKey(
       name: 'enabled',
       fromJson: prayerAlertModesFromJson,
@@ -207,7 +207,7 @@ abstract class AdhanSettings with _$AdhanSettings {
   }) = _AdhanSettings;
 
   /// Default adhan settings.
-  factory AdhanSettings.defaults() {
+  factory defaults() {
     return AdhanSettings(
       adhanModes: {
         for (final p in obligatoryAlertPrayers) p: ScheduleAlertMode.sound,
@@ -219,7 +219,7 @@ abstract class AdhanSettings with _$AdhanSettings {
   }
 
   /// Parses persisted JSON.
-  factory AdhanSettings.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$AdhanSettingsFromJson(json);
 }
 

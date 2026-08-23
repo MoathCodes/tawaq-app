@@ -10,7 +10,7 @@ import 'package:tawaq/feature/quran/domain/services/translation_text_normalizer.
 /// for querying translations by source.
 class TranslationRepository {
   /// Creates a translation repository.
-  TranslationRepository(this._dbService);
+  new(this._dbService);
 
   final AssetDatabaseService _dbService;
   final Map<TranslationId, Database> _databases = {};

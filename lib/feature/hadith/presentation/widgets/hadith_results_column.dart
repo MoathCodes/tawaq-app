@@ -22,7 +22,7 @@ import 'package:tawaq/theme/theme.dart';
 ///
 /// Watches search fields only — selection is per-card / side-panel.
 class HadithResultsColumn extends ConsumerWidget {
-  const HadithResultsColumn({required this.useSplitLayout, super.key});
+  const new({required this.useSplitLayout, super.key});
 
   final bool useSplitLayout;
 
@@ -264,7 +264,7 @@ AsyncValue<List<DetailedHadith>> _searchResultsAsync(
 }
 
 class _ResultListView extends HookConsumerWidget {
-  const _ResultListView({
+  const new({
     required this.hadithList,
     required this.useSplitLayout,
     required this.showPagination,
@@ -344,7 +344,7 @@ class _ResultListView extends HookConsumerWidget {
 }
 
 class _ResultTile extends ConsumerWidget {
-  const _ResultTile({
+  const new({
     required this.hadith,
     required this.useSplitLayout,
   });
@@ -384,7 +384,7 @@ class _ResultTile extends ConsumerWidget {
 }
 
 class _ResultsSkeletonList extends StatelessWidget {
-  const _ResultsSkeletonList();
+  const new();
 
   @override
   Widget build(BuildContext context) {

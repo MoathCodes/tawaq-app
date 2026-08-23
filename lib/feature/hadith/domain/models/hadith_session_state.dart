@@ -17,7 +17,7 @@ enum HadithViewMode {
 /// Snapshot of a hadith search query and its active filters.
 class HadithSearchSnapshot {
   /// Creates a search snapshot.
-  const HadithSearchSnapshot({required this.query, required this.filters});
+  const new({required this.query, required this.filters});
 
   /// The saved query text.
   final String query;
@@ -29,7 +29,7 @@ class HadithSearchSnapshot {
 /// One loaded search page (results + Dorar pagination metadata).
 class HadithSearchPage {
   /// Creates a search page.
-  const HadithSearchPage({
+  const new({
     this.page = 1,
     this.results = const <DetailedHadith>[],
     this.metadata,
@@ -75,7 +75,7 @@ class HadithSearchPage {
 /// [AsyncError]s with no retained list.
 class HadithSessionState {
   /// Creates the session state.
-  const HadithSessionState({
+  const new({
     this.mode = HadithViewMode.search,
     this.specificHadiths = const <DetailedHadith>[],
     this.searchSnapshot,

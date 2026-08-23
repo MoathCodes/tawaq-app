@@ -781,6 +781,20 @@
   "quranRecitationOfflineAutoSave": "Save while listening",
   "quranRecitationOfflineAutoSaveOffHint": "Listening still works online. Use Save for offline for the current surah.",
   "quranRecitationOfflineAutoSaveOnHint": "Recitations are saved automatically while you listen.",
+  "quranRecitationOfflineClearSelection": "Clear selection",
+  "quranRecitationOfflineDelete": "Delete downloads",
+  "quranRecitationOfflineDeleteAll": "Delete all downloads",
+  "quranRecitationOfflineDeleteConfirm": "Delete {count} downloads ({size})? This cannot be undone.",
+  "@quranRecitationOfflineDeleteConfirm": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "size": {"type": "String"}
+    }
+  },
+  "quranRecitationOfflineDeleteFailed": "Could not delete {count} downloads. They remain selected for retry.",
+  "@quranRecitationOfflineDeleteFailed": {"placeholders": {"count": {"type": "int"}}},
+  "quranRecitationOfflineDeleteSelected": "Delete selected",
+  "quranRecitationOfflineDeleteTitle": "Delete downloads?",
   "quranRecitationOfflineEmpty": "No recitations saved yet.",
   "quranRecitationOfflineFileCount": "{count} files",
   "@quranRecitationOfflineFileCount": {
@@ -793,7 +807,15 @@
   "quranRecitationOfflineFiles": "Offline files",
   "quranRecitationOfflineInFolder": "In this folder",
   "quranRecitationOfflineOpenFolder": "Open folder",
+  "quranRecitationOfflinePlaybackStops": "Playback will stop before the file is removed.",
+  "quranRecitationOfflineReciter": "Reciter",
+  "quranRecitationOfflineRiwayah": "Riwayah",
+  "quranRecitationOfflineSelectAll": "Select all",
+  "quranRecitationOfflineSelected": "{count} selected",
+  "@quranRecitationOfflineSelected": {"placeholders": {"count": {"type": "int"}}},
+  "quranRecitationOfflineSize": "Size",
   "quranRecitationOfflineStorageUsed": "Storage used",
+  "quranRecitationOfflineSurah": "Surah",
   "quranRecitationOfflineSubtitle": "Saved recitations",
   "quranRecitationOpenPlayer": "Open player",
   "quranRecitationPause": "Pause",

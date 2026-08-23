@@ -15,7 +15,7 @@ part 'theme_prefs.g.dart';
 @freezed
 abstract class ThemePrefs with _$ThemePrefs {
   /// Creates a [ThemePrefs] instance.
-  const factory ThemePrefs({
+  const factory({
     /// The selected color palette.
     @JsonKey(fromJson: appPaletteFromJson, toJson: appPaletteToJson)
     required AppPalette appPalette,
@@ -28,11 +28,11 @@ abstract class ThemePrefs with _$ThemePrefs {
   }) = _ThemePrefs;
 
   /// Creates a [ThemePrefs] instance from a JSON map.
-  factory ThemePrefs.fromJson(Map<String, dynamic> json) =>
+  factory fromJson(Map<String, dynamic> json) =>
       _$ThemePrefsFromJson(json);
 
   /// Default theme preferences.
-  factory ThemePrefs.defaults() =>
+  factory defaults() =>
       const ThemePrefs(
         appPalette: AppPalette.manuscript,
         themeMode: ThemeMode.light,

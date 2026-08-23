@@ -18,7 +18,7 @@ import 'package:window_manager/window_manager.dart';
 /// Desktop root that wires tray, window lifecycle, and background adhan.
 class DesktopShell extends ConsumerStatefulWidget {
   /// Creates [DesktopShell].
-  const DesktopShell({required this.child, super.key});
+  const new({required this.child, super.key});
 
   /// App content.
   final Widget child;

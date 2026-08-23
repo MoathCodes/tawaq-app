@@ -25,7 +25,7 @@ import 'package:tawaq/theme/theme.dart';
 /// changes instead of tearing down shortcuts, semantics, and ayah actions.
 class QuranMushafPane extends HookConsumerWidget {
   /// Creates a [QuranMushafPane] instance.
-  const QuranMushafPane({this.onPageChanged, super.key});
+  const new({this.onPageChanged, super.key});
 
   /// Reports the settled page/spread anchor to the route owner.
   final ValueChanged<int>? onPageChanged;

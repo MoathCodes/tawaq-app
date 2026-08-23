@@ -8,7 +8,7 @@ import 'package:tawaq/theme/theme.dart';
 /// A compact from/to row for the grouped custom-range card.
 class RangeEndpointRow extends ConsumerWidget {
   /// Creates a [RangeEndpointRow].
-  const RangeEndpointRow({
+  const new({
     required this.prefix,
     required this.surah,
     required this.ayah,

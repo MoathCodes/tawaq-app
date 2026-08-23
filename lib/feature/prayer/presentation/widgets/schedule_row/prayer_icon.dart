@@ -8,7 +8,7 @@ import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
 /// Compact prayer glyph for schedule rows.
 class PrayerIcon extends StatelessWidget {
   /// Creates a [PrayerIcon].
-  const PrayerIcon({
+  const new({
     required this.prayer,
     required this.isActive,
     required this.colors,

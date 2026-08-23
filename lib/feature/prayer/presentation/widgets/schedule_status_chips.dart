@@ -17,7 +17,7 @@ import 'package:tawaq/theme/theme.dart';
 
 /// Circular status chips for schedule prayer rows.
 class ScheduleStatusChips extends ConsumerWidget {
-  const ScheduleStatusChips({
+  const new({
     required this.prayer,
     required this.completionDay,
     required this.prayerTime,
@@ -58,7 +58,7 @@ class ScheduleStatusChips extends ConsumerWidget {
 }
 
 class _ScheduleStatusChip extends ConsumerWidget {
-  const _ScheduleStatusChip({
+  const new({
     required this.prayer,
     required this.completionDay,
     required this.prayerTime,

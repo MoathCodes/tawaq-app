@@ -269,13 +269,13 @@ resolveHizbRangeForAyah(
 
 /// Intent produced from a range preset and resolved endpoints.
 sealed class RecitationPlaybackIntent {
-  const RecitationPlaybackIntent();
+  const new();
 }
 
 /// Play a whole surah from the beginning or [resumeFrom].
 final class PlayWholeSurahIntent extends RecitationPlaybackIntent {
   /// Creates [PlayWholeSurahIntent].
-  const PlayWholeSurahIntent({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.surah,
@@ -291,7 +291,7 @@ final class PlayWholeSurahIntent extends RecitationPlaybackIntent {
 /// Play a global ayah range starting at the first surah-local segment.
 final class PlayAyahRangeIntent extends RecitationPlaybackIntent {
   /// Creates [PlayAyahRangeIntent].
-  const PlayAyahRangeIntent({
+  const new({
     required this.reciter,
     required this.moshaf,
     required this.from,

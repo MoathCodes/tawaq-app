@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Renders a Juz QCF4 glyph using the mushaf basmalah font.
 class JuzNameText extends StatelessWidget {
   /// Creates a [JuzNameText].
-  const JuzNameText(
+  const new(
     this.glyph, {
     this.style,
     this.fontSize = 36,
@@ -40,7 +40,7 @@ class JuzNameText extends StatelessWidget {
 /// Renders a Surah QCF4 name glyph for Arabic Juz subtitles.
 class SurahGlyphText extends StatelessWidget {
   /// Creates a [SurahGlyphText].
-  const SurahGlyphText(
+  const new(
     this.glyph, {
     this.style,
     this.fontSize = 28,

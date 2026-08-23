@@ -28,7 +28,7 @@ Future<void> showHadithShareDialog(
 }
 
 class HadithShareDialog extends HookConsumerWidget {
-  const HadithShareDialog({
+  const new({
     required this.hadith,
     required this.style,
     this.animation,
@@ -94,7 +94,7 @@ class HadithShareDialog extends HookConsumerWidget {
     }
 
     final busy = isCapturing.value || loading;
-    Widget preview = DecoratedBox(
+    final Widget preview = DecoratedBox(
       decoration: BoxDecoration(
         color: theme.colors.secondary.withAlpha(60),
         borderRadius: theme.radii.md,
@@ -122,7 +122,7 @@ class HadithShareDialog extends HookConsumerWidget {
       ),
     );
 
-    Widget settings = FSelectTileGroup<HadithShareInclude>(
+    final Widget settings = FSelectTileGroup<HadithShareInclude>(
       label: Text(l10n.shareIncludeInImage),
       control: .lifted(value: options.value.includes, onChange: update),
       children: [

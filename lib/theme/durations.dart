@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 /// ```
 class AppDurations extends ThemeExtension<AppDurations> {
   /// Creates an [AppDurations] instance with the given duration values.
-  const AppDurations({
+  const new({
     required this.instant,
     required this.fast,
     required this.normal,
@@ -22,7 +22,7 @@ class AppDurations extends ThemeExtension<AppDurations> {
   });
 
   /// Default duration values.
-  const AppDurations.standard()
+  const new standard()
     : instant = const Duration(milliseconds: 100),
       fast = const Duration(milliseconds: 150),
       normal = const Duration(milliseconds: 260),

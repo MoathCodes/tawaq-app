@@ -7,7 +7,7 @@ import 'package:flutter/widgets.dart';
 /// design. Purely decorative; [color] sets the bar color.
 class RecitationEqualizer extends StatefulWidget {
   /// Creates a [RecitationEqualizer].
-  const RecitationEqualizer({
+  const new({
     required this.color,
     this.animating = true,
     this.height = 14,

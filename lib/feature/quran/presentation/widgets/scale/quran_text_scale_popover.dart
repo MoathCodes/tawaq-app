@@ -13,7 +13,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Compact Quran mushaf zoom control for the Quran screen header.
 class QuranTextScalePopover extends ConsumerWidget {
   /// Creates a [QuranTextScalePopover].
-  const QuranTextScalePopover({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -10,7 +10,7 @@ import 'package:timezone/timezone.dart';
 
 /// Pure functions for prayer analytics and trend aggregation.
 class PrayerAnalyticsCalculator {
-  const PrayerAnalyticsCalculator._();
+  const new _();
 
   /// Number of obligatory prayers per day.
   static const int prayersPerDay = 5;

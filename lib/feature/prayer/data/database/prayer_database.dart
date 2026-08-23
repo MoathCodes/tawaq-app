@@ -24,7 +24,7 @@ PrayerDatabase prayerDatabase(Ref ref) {
 /// The database for the prayer data.
 class PrayerDatabase {
   /// Creates a new instance of the [PrayerDatabase].
-  PrayerDatabase(this._box);
+  new(this._box);
   final Box<int, PrayerCompletion> _box;
 
   /// Deletes a prayer completion by Hive key.

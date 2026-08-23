@@ -17,7 +17,7 @@ import 'package:tawaq/theme/theme.dart';
 
 /// Stacked bar chart for prayer completion trends over a period.
 class TrendChart extends ConsumerWidget {
-  const TrendChart({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -287,7 +287,7 @@ class TrendChart extends ConsumerWidget {
 }
 
 class _BottomTitle extends ConsumerWidget {
-  const _BottomTitle({
+  const new({
     required this.index,
     required this.buckets,
     required this.meta,
@@ -355,7 +355,7 @@ class _BottomTitle extends ConsumerWidget {
 }
 
 class _LegendRow extends StatelessWidget {
-  const _LegendRow();
+  const new();
 
   static const List<CompletionStatus> _statuses = [
     CompletionStatus.jamaah,
@@ -385,7 +385,7 @@ class _LegendRow extends StatelessWidget {
 }
 
 class _LegendItem extends StatelessWidget {
-  const _LegendItem({required this.label, required this.color});
+  const new({required this.label, required this.color});
 
   final String label;
   final Color color;

@@ -11,7 +11,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Appearance settings tab body.
 class SettingsAppearanceTab extends StatelessWidget {
   /// Creates [SettingsAppearanceTab].
-  const SettingsAppearanceTab({super.key});
+  const new({super.key});
 
   @override
   Widget build(BuildContext context) {
