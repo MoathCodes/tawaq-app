@@ -45,11 +45,14 @@ String formatAyahRangeLabel({
       preferArabic: l10n.localeName.startsWith('ar'),
       fallbackName: '',
     );
-    return name.isEmpty ? '${r.ayah}' : '$name · ${r.ayah}';
+    return name.isEmpty ? '' : '$name · ${r.ayah}';
   }
 
   if (to == null) {
-    return '${refLabel(from)} → ${l10n.quranRangePresetContinueFromHere}';
+    final fromLabel = refLabel(from);
+    return fromLabel.isEmpty
+        ? ''
+        : '$fromLabel → ${l10n.quranRangePresetContinueFromHere}';
   }
 
   if (from.surah == to.surah && from.ayah == to.ayah) {
@@ -62,9 +65,10 @@ String formatAyahRangeLabel({
       preferArabic: l10n.localeName.startsWith('ar'),
       fallbackName: '',
     );
-    return name.isEmpty
-        ? '${from.ayah}–${to.ayah}'
-        : '$name · ${from.ayah}–${to.ayah}';
+    return name.isEmpty ? '' : '$name · ${from.ayah}–${to.ayah}';
   }
-  return '${refLabel(from)} → ${refLabel(to)}';
+  final fromLabel = refLabel(from);
+  final toLabel = refLabel(to);
+  if (fromLabel.isEmpty || toLabel.isEmpty) return '';
+  return '$fromLabel → $toLabel';
 }

@@ -736,6 +736,8 @@
   "quranRecitationClosePlayer": "إغلاق المشغّل",
   "quranRecitationComingSoon": "تشغيل التلاوة قريباً",
   "quranRecitationDownloading": "جارٍ التخزين…",
+  "quranRecitationInitializationFailed": "تعذّر تحميل التلاوة المحفوظة",
+  "quranRecitationRetryInitialization": "إعادة المحاولة",
   "quranRecitationEnded": "انتهى",
   "quranRecitationGoToQuran": "الانتقال إلى القرآن",
   "quranRecitationHighlight": "تظليل الآية",

@@ -1624,6 +1624,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranRecitationDownloading => 'Caching…';
 
   @override
+  String get quranRecitationInitializationFailed =>
+      'Couldn\'t load the saved recitation';
+
+  @override
+  String get quranRecitationRetryInitialization => 'Try again';
+
+  @override
   String get quranRecitationEnded => 'Ended';
 
   @override
