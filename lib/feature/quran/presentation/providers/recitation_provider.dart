@@ -23,6 +23,7 @@ import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
+import 'package:tawaq/feature/quran/domain/recitation/recitation_session.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_playback_policy.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
@@ -340,10 +341,10 @@ void showRecitationHighlightAutoChangeToast(
 
 /// Drives Quran recitation through the shared audio service.
 ///
-/// The controller is now a thin layer over [transition]: all state lives in the
-/// immutable [RecitationState] and every user/audio event is reduced through
-/// the pure state machine. Side effects returned by the machine are executed
-/// here (load audio, pause, resume, seek, highlight, persist).
+/// Riverpod adapter for the framework-independent [RecitationSession].
+///
+/// The session is the only writer of logical recitation state. This adapter
+/// translates UI and native audio input, then executes the resulting I/O.
 @Riverpod(keepAlive: true)
 class RecitationController extends _$RecitationController {
   static const _seekLogPrefix = 'tawaq.recitation.seek';
@@ -366,22 +367,37 @@ class RecitationController extends _$RecitationController {
     );
   }
 
-  RecitationTimeline _timeline = const RecitationTimeline();
+  RecitationSession? _sessionInstance;
+  RecitationTimeline? _timelineForTest;
   Timer? _sleepTimer;
   bool _sessionBootstrapped = false;
   int _initializationGeneration = 0;
   CancellationToken? _downloadToken;
   CancellationToken? _offlineSaveToken;
-  int? _lastAbLoopRemaining;
-  int? _lastTrackIndex;
-  Duration _lastAcceptedPosition = Duration.zero;
   Future<void> _effectsTail = Future<void>.value();
+
+  RecitationSession get _session =>
+      _sessionInstance ??= _createSession(initialState: state);
+
+  RecitationSession _createSession({
+    RecitationState initialState = const RecitationState(active: true),
+  }) {
+    final session = RecitationSession(
+      initialState: initialState,
+      surahAyahCount: (surah) => _mushaf.getSurahSync(surah)?.ayahCount ?? 1,
+      onStateChanged: (next) => state = next,
+      log: _seekLog,
+    );
+    final testTimeline = _timelineForTest;
+    if (testTimeline != null) session.replaceTimelineForTest(testTimeline);
+    return session;
+  }
 
   late final SeekPipeline _seekPipeline = SeekPipeline(
     log: _seekLog,
     seek: (position) async {
       // Never seek after AlertSuspend released the lease (idle reacquire race).
-      if (state.suspendedSnapshot != null) return false;
+      if (_session.state.suspendedSnapshot != null) return false;
       return _service.seek(position, owner: kRecitationLeaseOwner);
     },
     onSeekFailed: ({required revertTo, required failedTarget}) {
@@ -390,12 +406,18 @@ class RecitationController extends _$RecitationController {
     onTimeout: ({required revertTo}) {
       _revertPendingSeek(revertTo);
     },
-    lastAcceptedPosition: () => _lastAcceptedPosition,
-    hasPendingSeek: () => state.pendingSeekTarget != null,
+    lastAcceptedPosition: () => _session.lastAcceptedPosition,
+    hasPendingSeek: () => _session.state.pendingSeekTarget != null,
   );
 
   @override
   RecitationState build() {
+    _sessionInstance ??= _createSession(
+      initialState: const RecitationState(
+        active: true,
+        initializationStatus: RecitationInitializationStatus.initializing,
+      ),
+    );
     ref
       ..onDispose(() {
         _persistPlaybackCheckpoint();
@@ -410,6 +432,10 @@ class RecitationController extends _$RecitationController {
         (previous, next) {
           if (next.$1 == null && next.$2 == null) return;
           if (next == previous) return;
+          _session.updateRepeatDefaults(
+            ayahRepeatCount: next.$1,
+            rangeRepeatCount: next.$2,
+          );
           _dispatch(
             SetRepeatCounts(
               ayahRepeatCount: next.$1,
@@ -421,14 +447,11 @@ class RecitationController extends _$RecitationController {
 
     if (_sessionBootstrapped) {
       // Preserve in-flight session across rare rebuilds.
-      return state;
+      return _session.state;
     }
     _sessionBootstrapped = true;
     unawaited(Future.microtask(_initializeSession));
-    return const RecitationState(
-      active: true,
-      initializationStatus: RecitationInitializationStatus.initializing,
-    );
+    return _session.state;
   }
 
   RecitationRepository get _repo => ref.read(recitationRepositoryProvider);
@@ -436,16 +459,17 @@ class RecitationController extends _$RecitationController {
   MushafReaderController get _mushaf => ref.read(quranMushafControllerProvider);
 
   /// The timing map for the loaded surah, or null when unavailable.
-  SurahTiming? get currentTiming => _timeline.timing;
+  SurahTiming? get currentTiming => _session.currentTiming;
 
   /// Whether per-ayah timing is loaded for the current surah.
-  bool get hasAyahTiming =>
-      state.moshaf?.hasTiming == true &&
-      (_timeline.hasTiming || state.isLoading || state.timelinePending);
+  bool get hasAyahTiming => _session.hasAyahTiming;
 
   /// Injects [timeline] for tests of [goToPlaybackInMushaf].
   @visibleForTesting
-  set timelineForTest(RecitationTimeline timeline) => _timeline = timeline;
+  set timelineForTest(RecitationTimeline timeline) {
+    _timelineForTest = timeline;
+    _sessionInstance?.replaceTimelineForTest(timeline);
+  }
 
   /// Cancels the in-flight surah download, if one is active.
   ///
@@ -698,7 +722,7 @@ class RecitationController extends _$RecitationController {
 
     // Drop stale timing immediately so position ticks cannot highlight ayahs
     // from the previous moshaf while the new load is in flight.
-    _resetTiming();
+    _session.discardTimeline();
 
     // Persist the new selection immediately.
     final autoHighlight = ref
@@ -765,11 +789,7 @@ class RecitationController extends _$RecitationController {
   }
 
   /// Clears the surfaced error.
-  void clearError() {
-    if (state.error != null) {
-      state = state.copyWith(error: null);
-    }
-  }
+  void clearError() => _session.clearError();
 
   /// Retries restoring the saved selection and Quran reference data.
   Future<void> retryInitialization() => _initializeSession();
@@ -784,7 +804,7 @@ class RecitationController extends _$RecitationController {
     if (surah == null) return;
 
     if (s.moshaf?.hasTiming == true) {
-      final ayahNumber = s.currentAyah ?? _timeline.ayahAt(s.position);
+      final ayahNumber = s.currentAyah ?? _session.timeline.ayahAt(s.position);
       if (ayahNumber != null) {
         try {
           final ayah = await mushafAyahOrNull(_mushaf, surah, ayahNumber);
@@ -830,16 +850,16 @@ class RecitationController extends _$RecitationController {
 
   /// Advances to the next ayah within the current surah/range.
   Future<void> skipAyahNext() async {
-    final current = currentAyahOrGuess(state, _timeline);
+    final current = currentAyahOrGuess(state, _session.timeline);
     if (current == null) return;
-    final last = lastPlayableAyah(state, _timeline);
+    final last = lastPlayableAyah(state, _session.timeline);
     if (last == null || current >= last) return;
     await _navigateToAyahSession(current + 1);
   }
 
   /// Goes to the previous ayah within the current surah/range.
   Future<void> skipAyahPrevious() async {
-    final current = currentAyahOrGuess(state, _timeline);
+    final current = currentAyahOrGuess(state, _session.timeline);
     if (current == null) return;
     final first = firstPlayableAyah(state);
     if (current <= first) return;
@@ -894,7 +914,7 @@ class RecitationController extends _$RecitationController {
       _sleepTimer = Timer(sleep.countdown!, () => unawaited(stop()));
     }
 
-    state = state.copyWith(sleep: sleep);
+    _session.setSleep(sleep);
   }
 
   // ---- Alert coordination ------------------------------------------------
@@ -938,15 +958,12 @@ class RecitationController extends _$RecitationController {
     final settings = ref.read(recitationSettingsProvider).value;
     final ayahRepeatCount = clampRepeatCount(settings?.ayahRepeatCount ?? 1);
     final rangeRepeatCount = clampRepeatCount(settings?.rangeRepeatCount ?? 1);
-    final result = transition(
-      state,
-      const AlertSuspend(),
-      timeline: _timeline,
-      defaultAyahRepeatCount: ayahRepeatCount,
-      defaultRangeRepeatCount: rangeRepeatCount,
+    _session.updateRepeatDefaults(
+      ayahRepeatCount: ayahRepeatCount,
+      rangeRepeatCount: rangeRepeatCount,
     );
-    state = result.state;
-    _applyLocalSideEffects(result.effects);
+    final decision = _session.dispatch(const AlertSuspend());
+    _applySessionDecision(decision, runIo: false);
     // Drain in-flight seeks, then clear+pause+release in one critical section.
     await _enqueueIo(() async {
       _seekPipeline.clear();
@@ -980,24 +997,30 @@ class RecitationController extends _$RecitationController {
     final settings = ref.read(recitationSettingsProvider).value;
     final ayahRepeatCount = clampRepeatCount(settings?.ayahRepeatCount ?? 1);
     final rangeRepeatCount = clampRepeatCount(settings?.rangeRepeatCount ?? 1);
-    final result = transition(
-      state,
+    _session.updateRepeatDefaults(
+      ayahRepeatCount: ayahRepeatCount,
+      rangeRepeatCount: rangeRepeatCount,
+    );
+    final decision = _session.dispatch(
       event,
-      timeline: _timeline,
-      defaultAyahRepeatCount: ayahRepeatCount,
-      defaultRangeRepeatCount: rangeRepeatCount,
       trackLoaded: trackLoaded,
       nativePlayWhenReady: nativePlayWhenReady,
-      surahAyahCount: (surah) => _mushaf.getSurahSync(surah)?.ayahCount ?? 1,
     );
-    state = result.state;
-    if (_abandonsSeekPipeline(event)) {
+    _applySessionDecision(decision);
+  }
+
+  void _applySessionDecision(
+    RecitationSessionDecision decision, {
+    bool runIo = true,
+  }) {
+    if (decision.abandonsPendingSeek) {
       _seekPipeline.clear();
     } else {
       _seekPipeline.syncTimeout();
     }
-    _applyLocalSideEffects(result.effects);
-    final ioEffects = result.effects
+    _applyLocalSideEffects(decision.effects);
+    if (!runIo) return;
+    final ioEffects = decision.effects
         .where(
           (effect) =>
               effect is! CancelSleepTimer && effect is! PersistPlaybackState,
@@ -1006,41 +1029,17 @@ class RecitationController extends _$RecitationController {
     unawaited(_applyEffects(ioEffects));
   }
 
-  /// Events that abandon in-flight / deferred seeks (new load, stop, error).
-  bool _abandonsSeekPipeline(RecitationEvent event) {
-    return event is PlaySurah ||
-        event is PlayRange ||
-        event is Stop ||
-        event is AudioError ||
-        event is AlertSuspend;
-  }
-
   /// Reverts optimistic seek UI when the engine never lands near the target.
   ///
   /// When [onlyIfPendingEquals] is set (engine seek failure), only clears if
   /// pending still matches that failed target — an older seek must not wipe a
   /// newer scrub/skip pending.
   void _revertPendingSeek(Duration revertTo, {Duration? onlyIfPendingEquals}) {
-    final pending = state.pendingSeekTarget;
-    if (pending == null) return;
-    if (onlyIfPendingEquals != null &&
-        !shouldRevertPendingSeek(
-          currentPending: pending,
-          failedTarget: onlyIfPendingEquals,
-        )) {
-      _seekLog(
-        'pendingSeek revert skipped stale '
-        'failedMs=${onlyIfPendingEquals.inMilliseconds} '
-        'pendingMs=${pending.inMilliseconds}',
-      );
-      return;
-    }
-    _seekLog(
-      'pendingSeek revertToMs=${revertTo.inMilliseconds} '
-      'pendingMs=${pending.inMilliseconds}',
+    final reverted = _session.revertPendingSeek(
+      revertTo,
+      onlyIfPendingEquals: onlyIfPendingEquals,
     );
-    state = state.copyWith(pendingSeekTarget: null, position: revertTo);
-    _seekPipeline.clear();
+    if (reverted) _seekPipeline.clear();
   }
 
   /// Intentional in-track / scrub-during-load seek (no Seek event).
@@ -1048,25 +1047,14 @@ class RecitationController extends _$RecitationController {
     if (state.suspendedSnapshot != null) return;
     final defer = state.isLoading;
     if (defer || state.timelinePending) {
-      var next = state.copyWith(
-        position: position,
-        pendingSeekTarget: position,
-      );
-      if (state.isEnded) {
-        next = next.copyWith(
-          status: position > Duration.zero
-              ? RecitationStatus.paused
-              : RecitationStatus.ended,
-        );
-      }
-      state = next;
+      final target = _session.prepareSeek(position);
       _seekPipeline.syncTimeout();
       await _enqueueIo(() async {
         // PlaySurah/Stop/AlertSuspend/newer seek abandoned this scrub.
         if (state.suspendedSnapshot != null) return;
-        if (state.pendingSeekTarget != position) return;
+        if (state.pendingSeekTarget != target) return;
         await _seekPipeline.request(
-          position,
+          target,
           mode: state.isLoading
               ? SeekRequestMode.deferUntilLoaded
               : SeekRequestMode.inTrack,
@@ -1075,28 +1063,20 @@ class RecitationController extends _$RecitationController {
       return;
     }
 
-    final clamped = _timeline.clampToRange(position);
-    final ayah = _timeline.ayahAt(clamped);
-    if (ayah != null && _timeline.startOfAyah(ayah) != null) {
+    final clamped = _session.timeline.clampToRange(position);
+    final ayah = _session.timeline.ayahAt(clamped);
+    if (ayah != null && _session.timeline.startOfAyah(ayah) != null) {
       await _navigateToAyahSession(ayah);
       return;
     }
 
-    var next = state.copyWith(position: clamped, pendingSeekTarget: clamped);
-    if (state.isEnded) {
-      next = next.copyWith(
-        status: clamped > Duration.zero
-            ? RecitationStatus.paused
-            : RecitationStatus.ended,
-      );
-    }
-    state = next;
+    final target = _session.prepareSeek(clamped);
     _seekPipeline.syncTimeout();
     await _enqueueIo(() async {
       if (state.suspendedSnapshot != null) return;
-      if (state.pendingSeekTarget != clamped) return;
+      if (state.pendingSeekTarget != target) return;
       await _seekPipeline.request(
-        clamped,
+        target,
         mode: state.isLoading
             ? SeekRequestMode.deferUntilLoaded
             : SeekRequestMode.inTrack,
@@ -1106,36 +1086,10 @@ class RecitationController extends _$RecitationController {
 
   /// Snap/skip to an ayah start and re-arm A-B when needed.
   Future<void> _navigateToAyahSession(int targetAyah) async {
-    if (state.suspendedSnapshot != null) return;
-    final startRaw = _timeline.startOfAyah(targetAyah);
-    if (startRaw == null) return;
-
-    final start = _timeline.clampToRange(startRaw);
-    final surah = state.surah;
+    final navigation = _session.prepareAyahNavigation(targetAyah);
+    if (navigation == null) return;
+    final start = navigation.position;
     final ayahRepeatCount = state.ayahRepeatCount;
-    final needsAbLoop =
-        ayahRepeatCount > 1 &&
-        state.reciter != null &&
-        state.moshaf != null &&
-        surah != null;
-
-    var next = state.copyWith(
-      position: start,
-      currentAyah: targetAyah,
-      ayahLoopExiting: false,
-      pendingSeekTarget: start,
-      ayahRepeatsRemaining: ayahRepeatCount > 1
-          ? ayahRepeatCount
-          : state.ayahRepeatsRemaining,
-    );
-    if (state.isEnded) {
-      next = next.copyWith(
-        status: start > Duration.zero
-            ? RecitationStatus.paused
-            : RecitationStatus.ended,
-      );
-    }
-    state = next;
     _seekPipeline.syncTimeout();
 
     await _enqueueIo(() async {
@@ -1153,7 +1107,7 @@ class RecitationController extends _$RecitationController {
       if (state.suspendedSnapshot != null) return;
       final pending = state.pendingSeekTarget;
       if (pending != null && pending != start) return;
-      if (needsAbLoop) {
+      if (navigation.needsAbLoop) {
         await _setAyahLoop(targetAyah, ayahRepeatCount);
       }
     });
@@ -1332,7 +1286,7 @@ class RecitationController extends _$RecitationController {
 
     Duration position;
     if (s.moshaf?.hasTiming == true && s.currentAyah != null) {
-      position = _timeline.startOfAyah(s.currentAyah!) ?? s.position;
+      position = _session.timeline.startOfAyah(s.currentAyah!) ?? s.position;
     } else {
       position = s.position;
     }
@@ -1358,13 +1312,7 @@ class RecitationController extends _$RecitationController {
     int? endAyah,
     Duration? resumeFrom,
   }) async {
-    final newGen = state.loadGeneration + 1;
-    state = state.copyWith(
-      loadGeneration: newGen,
-      userStopped: false,
-      timelinePending: moshaf.hasTiming,
-      status: RecitationStatus.loading,
-    );
+    final newGen = _session.beginLoad(hasTiming: moshaf.hasTiming);
 
     try {
       await _service.stop(owner: kRecitationLeaseOwner);
@@ -1376,8 +1324,6 @@ class RecitationController extends _$RecitationController {
             stackTrace: stack,
           );
     }
-    _resetTiming();
-
     final isRange = startAyah != null && endAyah != null;
     final localStart = startAyah;
     final localEnd = endAyah;
@@ -1393,7 +1339,8 @@ class RecitationController extends _$RecitationController {
           mushaf: _mushaf,
         );
     if (isRange && !moshaf.hasTiming && !isUntimedFullSurah) {
-      _applyAudioError('No timing data for range playback');
+      _session.setAudioError('No timing data for range playback');
+      _seekPipeline.clear();
       return;
     }
 
@@ -1429,21 +1376,7 @@ class RecitationController extends _$RecitationController {
     if (moshaf.hasTiming) {
       final timing = await _repo.timing(surah, moshaf.timingReadId!);
       if (newGen != state.loadGeneration) return;
-      _timeline = timelineFor(state, timing);
-      // Timeline resolved: clear the load-pending flag so a subsequent
-      // PlaybackIdle (natural eof) can dispatch AudioCompleted.
-      if (newGen == state.loadGeneration && state.timelinePending) {
-        state = state.copyWith(timelinePending: false);
-      }
-      // Proactively report the timeline's total duration so the seek bar
-      // enables immediately, without waiting for mpv's stream.duration (which
-      // some timed reciters report late or not at all). The machine's
-      // _onAudioDuration keeps the larger value, so a later mpv report that
-      // exceeds this will still win.
-      final total = _timeline.totalDuration;
-      if (newGen == state.loadGeneration && total > state.duration) {
-        state = state.copyWith(duration: total);
-      }
+      _session.installTimeline(timelineFor(state, timing), generation: newGen);
     }
 
     final localStartAyah = startAyah;
@@ -1451,10 +1384,11 @@ class RecitationController extends _$RecitationController {
     if (isRange && moshaf.hasTiming) {
       if (localStartAyah == null ||
           localEndAyah == null ||
-          _timeline.timing == null ||
-          _timeline.startOfAyah(localStartAyah) == null ||
-          _timeline.endOfAyah(localEndAyah) == null) {
-        _applyAudioError('Ayah timing unavailable');
+          _session.timeline.timing == null ||
+          _session.timeline.startOfAyah(localStartAyah) == null ||
+          _session.timeline.endOfAyah(localEndAyah) == null) {
+        _session.setAudioError('Ayah timing unavailable');
+        _seekPipeline.clear();
         return;
       }
     }
@@ -1462,7 +1396,7 @@ class RecitationController extends _$RecitationController {
     final seekTo =
         resumeFrom ??
         (isRange && !isUntimedFullSurah && localStartAyah != null
-            ? _timeline.startOfAyah(localStartAyah)
+            ? _session.timeline.startOfAyah(localStartAyah)
             : null) ??
         Duration.zero;
 
@@ -1500,7 +1434,7 @@ class RecitationController extends _$RecitationController {
     );
 
     if (moshaf.hasTiming && ayahRepeatCount > 1) {
-      _lastAbLoopRemaining = null;
+      _session.resetAbLoopObservation();
       final firstAyah = isRange ? localStartAyah! : 1;
       await _setAyahLoop(firstAyah, ayahRepeatCount);
     }
@@ -1511,10 +1445,10 @@ class RecitationController extends _$RecitationController {
   }
 
   Future<void> _setAyahLoop(int ayah, int ayahRepeatCount) async {
-    final start = _timeline.startOfAyah(ayah);
-    final end = _timeline.endOfAyah(ayah);
+    final start = _session.timeline.startOfAyah(ayah);
+    final end = _session.timeline.endOfAyah(ayah);
     if (start == null || end == null) return;
-    _lastAbLoopRemaining = null;
+    _session.resetAbLoopObservation();
     await _service.setAbLoopA(start);
     await _service.setAbLoopB(end);
     await _service.setAbLoopCount(ayahRepeatCount - 1);
@@ -1534,15 +1468,7 @@ class RecitationController extends _$RecitationController {
       mushaf: _mushaf,
     );
     if (next == null) {
-      final endedPosition = state.duration > Duration.zero
-          ? state.duration
-          : state.position;
-      state = state.copyWith(
-        status: RecitationStatus.ended,
-        position: endedPosition,
-        currentAyah: null,
-        ayahLoopExiting: false,
-      );
+      _session.setRangeEnded();
       await _service.setLoop(Loop.off);
       await _service.pauseAtEof();
       return;
@@ -1579,12 +1505,7 @@ class RecitationController extends _$RecitationController {
       return;
     }
 
-    final newGen = state.loadGeneration + 1;
-    state = state.copyWith(
-      loadGeneration: newGen,
-      userStopped: false,
-      timelinePending: moshaf.hasTiming,
-    );
+    final newGen = _session.beginGaplessLoad(hasTiming: moshaf.hasTiming);
 
     final settings = await ref.read(recitationSettingsProvider.future);
     if (newGen != state.loadGeneration) return;
@@ -1644,14 +1565,7 @@ class RecitationController extends _$RecitationController {
       nextTiming: timing,
     );
     if (timing != null) {
-      _timeline = bookkeeping.timeline;
-      if (newGen == state.loadGeneration && state.timelinePending) {
-        state = state.copyWith(timelinePending: false);
-      }
-      final total = _timeline.totalDuration;
-      if (newGen == state.loadGeneration && total > state.duration) {
-        state = state.copyWith(duration: total);
-      }
+      _session.installTimeline(bookkeeping.timeline, generation: newGen);
     }
 
     final currentTrack = AudioTrack.network(
@@ -1669,7 +1583,7 @@ class RecitationController extends _$RecitationController {
 
     // Seed previous index below openAtIndex so GaplessTrackAdvanced still
     // fires when openAll starts already at that index (no currentIndex tick).
-    _lastTrackIndex = bookkeeping.seededTrackIndex;
+    _session.seedTrackIndex(bookkeeping.seededTrackIndex);
     await _service.openAll(
       [currentTrack, nextTrack],
       index: bookkeeping.openAtIndex,
@@ -1686,115 +1600,11 @@ class RecitationController extends _$RecitationController {
     // openAll may not emit a currentIndex tick when already at openAtIndex.
     // Advance the session explicitly so ayah highlight / media metadata update.
     if (shouldExplicitGaplessAdvance(
-      trackIndexAfterOpen: _lastTrackIndex,
+      trackIndexAfterOpen: _session.lastTrackIndex,
       seededTrackIndex: bookkeeping.seededTrackIndex,
     )) {
-      _lastTrackIndex = bookkeeping.openAtIndex;
+      _session.seedTrackIndex(bookkeeping.openAtIndex);
       _dispatch(GaplessTrackAdvanced(surah: toSurah, ayah: 1));
-    }
-  }
-
-  void _onAbLoopRemaining(int? remaining) {
-    if (state.suspendedSnapshot != null) {
-      _lastAbLoopRemaining = remaining;
-      return;
-    }
-    final previous = _lastAbLoopRemaining;
-    _lastAbLoopRemaining = remaining;
-    if (remaining == 0 && previous != null && previous > 0) {
-      _dispatch(const AyahLoopExhausted());
-    }
-  }
-
-  void _onTrackIndexChanged(int? index) {
-    if (state.suspendedSnapshot != null) return;
-    final previous = _lastTrackIndex;
-    _lastTrackIndex = index;
-    if (index == null || index < 1) return;
-    if (previous != null && previous >= 1) return;
-    final surah = state.surah;
-    if (surah == null || state.rangeFrom != null) return;
-    // Native playlist advanced to the next track. Continue from the first
-    // ayah of the current surah (the machine already advanced surah before
-    // opening the gapless playlist).
-    _dispatch(GaplessTrackAdvanced(surah: surah, ayah: 1));
-  }
-
-  /// True when this controller may ingest shared-player telemetry.
-  ///
-  /// Adhan (and any other lease owner) shares one mpv engine — ignore
-  /// position/duration/state ticks unless we currently own the lease and are
-  /// not soft-suspended for an alert.
-  bool get _ownsAudioEngine =>
-      state.suspendedSnapshot == null &&
-      _service.currentLeaseOwner == kRecitationLeaseOwner;
-
-  void _onPosition(Duration position) {
-    if (!_ownsAudioEngine) return;
-    if (state.userStopped || state.isIdle) {
-      _seekLog(
-        'AudioPosition ignored reason=userStoppedOrIdle '
-        'userStopped=${state.userStopped} idle=${state.isIdle} '
-        'posMs=${position.inMilliseconds}',
-      );
-      return;
-    }
-    final pending = state.pendingSeekTarget;
-    if (pending != null && !positionNearTarget(position, pending)) {
-      _seekLog(
-        'AudioPosition ignored reason=pendingMismatch '
-        'posMs=${position.inMilliseconds} pendingMs=${pending.inMilliseconds}',
-      );
-    }
-    _dispatch(AudioPosition(position));
-    if (state.pendingSeekTarget == null) {
-      _lastAcceptedPosition = state.position;
-    }
-  }
-
-  void _onDuration(Duration duration) {
-    if (!_ownsAudioEngine) return;
-    _applyReportedDuration(duration);
-  }
-
-  bool _shouldDispatchAudioCompleted() {
-    return state.active &&
-        !state.userStopped &&
-        !state.timelinePending &&
-        !state.isLoading &&
-        (state.isPlaying || state.isBuffering);
-  }
-
-  void _onNaturalCompletion({bool authoritativeLifecycle = false}) {
-    if (!_ownsAudioEngine) return;
-    if (authoritativeLifecycle) {
-      if (!state.active ||
-          state.userStopped ||
-          state.timelinePending ||
-          state.isEnded) {
-        return;
-      }
-    } else if (!_shouldDispatchAudioCompleted()) {
-      return;
-    }
-    _dispatch(const AudioCompleted());
-  }
-
-  void _onPlayWhenReadyChanged(bool playWhenReady) {
-    if (!_ownsAudioEngine) return;
-    if (playWhenReady) {
-      if (state.userStopped || state.isEnded) return;
-      if (state.isPlaying || state.isBuffering) return;
-      _applyStatus(RecitationStatus.playing);
-      return;
-    }
-    if (state.userStopped || state.isEnded || state.isLoading) return;
-    if (ref.read(audioSessionProvider).lifecycle ==
-        AudioSessionLifecycle.completed) {
-      return;
-    }
-    if (state.isPlaying || state.isBuffering) {
-      _applyStatus(RecitationStatus.paused);
     }
   }
 
@@ -1803,73 +1613,40 @@ class RecitationController extends _$RecitationController {
     AudioSessionSnapshot next,
   ) {
     if (next.owner != kRecitationLeaseOwner) return;
-
-    final wasRecitation = previous?.owner == kRecitationLeaseOwner;
-    if (!wasRecitation || previous?.position != next.position) {
-      _onPosition(next.position);
-    }
-    if (!wasRecitation || previous?.duration != next.duration) {
-      _onDuration(next.duration);
-    }
-    if (!wasRecitation || previous?.playIntent != next.playIntent) {
-      _onPlayWhenReadyChanged(next.playIntent);
-    }
-    if (!wasRecitation || previous?.remainingAbLoops != next.remainingAbLoops) {
-      _onAbLoopRemaining(next.remainingAbLoops);
-    }
-    if (!wasRecitation || previous?.playlistIndex != next.playlistIndex) {
-      _onTrackIndexChanged(next.playlistIndex);
-    }
-    if (wasRecitation && previous?.lifecycle == next.lifecycle) return;
-
-    switch (next.lifecycle) {
-      case AudioSessionLifecycle.loading:
-        _applyStatus(RecitationStatus.loading);
-      case AudioSessionLifecycle.playing:
-        _applyStatus(RecitationStatus.playing);
-      case AudioSessionLifecycle.paused:
-        _applyStatus(RecitationStatus.paused);
-        _persistPlaybackCheckpoint();
-      case AudioSessionLifecycle.completed:
-        // The native lifecycle is authoritative even when its play-intent
-        // stream reached `false` first and temporarily projected `paused`.
-        _onNaturalCompletion(authoritativeLifecycle: true);
-      case AudioSessionLifecycle.error:
-        _applyAudioError(next.error ?? 'Audio playback failed');
-      case AudioSessionLifecycle.idle:
-        break;
-      case AudioSessionLifecycle.buffering:
-        _applyStatus(RecitationStatus.buffering);
-    }
-  }
-
-  /// Direct status mirror — no status pass-through events.
-  void _applyStatus(RecitationStatus status) {
-    if (state.status == status) return;
-    state = state.copyWith(status: status);
-    _seekPipeline.syncTimeout();
-  }
-
-  /// Prefer timing duration when the engine reports a shorter value.
-  void _applyReportedDuration(Duration duration) {
-    final merged = mergeReportedDuration(
-      current: state.duration,
-      reported: duration,
+    if (_service.currentLeaseOwner != kRecitationLeaseOwner) return;
+    final previousNative = previous?.owner == kRecitationLeaseOwner
+        ? _nativeSnapshot(previous!)
+        : null;
+    final decision = _session.observeNative(
+      previousNative,
+      _nativeSnapshot(next),
     );
-    if (merged == state.duration) return;
-    state = state.copyWith(duration: merged);
-    _seekPipeline.syncTimeout();
+    _applySessionDecision(decision);
+    if (next.lifecycle == AudioSessionLifecycle.paused &&
+        previous?.lifecycle != AudioSessionLifecycle.paused) {
+      _persistPlaybackCheckpoint();
+    }
   }
 
-  void _applyAudioError(String message) {
-    state = state.copyWith(
-      status: RecitationStatus.error,
-      error: message,
-      currentAyah: null,
-      pendingSeekTarget: null,
-    );
-    _seekPipeline.clear();
-  }
+  RecitationNativeSnapshot _nativeSnapshot(
+    AudioSessionSnapshot snapshot,
+  ) => RecitationNativeSnapshot(
+    lifecycle: switch (snapshot.lifecycle) {
+      AudioSessionLifecycle.idle => RecitationNativeLifecycle.idle,
+      AudioSessionLifecycle.loading => RecitationNativeLifecycle.loading,
+      AudioSessionLifecycle.buffering => RecitationNativeLifecycle.buffering,
+      AudioSessionLifecycle.playing => RecitationNativeLifecycle.playing,
+      AudioSessionLifecycle.paused => RecitationNativeLifecycle.paused,
+      AudioSessionLifecycle.completed => RecitationNativeLifecycle.completed,
+      AudioSessionLifecycle.error => RecitationNativeLifecycle.error,
+    },
+    position: snapshot.position,
+    duration: snapshot.duration,
+    playIntent: snapshot.playIntent,
+    remainingAbLoops: snapshot.remainingAbLoops,
+    playlistIndex: snapshot.playlistIndex,
+    error: snapshot.error,
+  );
 
   static const _maxScrollReadyAttempts = 30;
 
@@ -1902,12 +1679,7 @@ class RecitationController extends _$RecitationController {
 
   Future<void> _initializeSession() async {
     final generation = ++_initializationGeneration;
-    if (ref.mounted) {
-      state = state.copyWith(
-        initializationStatus: RecitationInitializationStatus.initializing,
-        initializationError: null,
-      );
-    }
+    if (ref.mounted) _session.beginInitialization();
     try {
       final settings = await ref.read(recitationSettingsProvider.future);
       await _mushaf.ensureReady();
@@ -1915,10 +1687,7 @@ class RecitationController extends _$RecitationController {
       if (!ref.mounted || generation != _initializationGeneration) return;
 
       if (selected == null) {
-        state = state.copyWith(
-          initializationStatus: RecitationInitializationStatus.ready,
-          initializationError: null,
-        );
+        _session.completeInitialization();
         return;
       }
       final positionMs = settings.lastPlaybackPositionMs;
@@ -1949,31 +1718,19 @@ class RecitationController extends _$RecitationController {
             error: error,
             stackTrace: stack,
           );
-      state = state.copyWith(
-        initializationStatus: RecitationInitializationStatus.failed,
-        initializationError: '$error',
-      );
+      _session.failInitialization('$error');
     }
   }
 
   /// Keeps an in-flight restore from overwriting an explicit user selection.
   void _acceptUserSelection({Reciter? reciter, Moshaf? moshaf}) {
     _initializationGeneration++;
-    state = state.copyWith(
-      reciter: reciter ?? state.reciter,
-      moshaf: moshaf ?? state.moshaf,
-      initializationStatus: RecitationInitializationStatus.ready,
-      initializationError: null,
-    );
+    _session.acceptUserSelection(reciter: reciter, moshaf: moshaf);
   }
 
   AyahReference? _reference(int? surah, int? ayah) {
     if (surah == null || ayah == null) return null;
     return AyahReference(surah: surah, ayah: ayah);
-  }
-
-  void _resetTiming() {
-    _timeline = const RecitationTimeline();
   }
 
   CancellationToken _startDownload() {
