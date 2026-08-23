@@ -685,13 +685,15 @@ class RecitationController extends _$RecitationController {
     final s = state;
     final surah = s.surah;
     if (surah == null) {
-      return ref
+      final autoHighlight = ref
           .read(recitationSettingsProvider.notifier)
           .setReciter(
             reciterId: reciter.id,
             moshafId: moshaf.id,
             moshafName: moshaf.name,
           );
+      _acceptUserSelection(reciter: reciter, moshaf: moshaf);
+      return autoHighlight;
     }
 
     // Drop stale timing immediately so position ticks cannot highlight ayahs
@@ -1955,14 +1957,14 @@ class RecitationController extends _$RecitationController {
   }
 
   /// Keeps an in-flight restore from overwriting an explicit user selection.
-  void _acceptUserSelection() {
+  void _acceptUserSelection({Reciter? reciter, Moshaf? moshaf}) {
     _initializationGeneration++;
-    if (!state.isInitializationReady) {
-      state = state.copyWith(
-        initializationStatus: RecitationInitializationStatus.ready,
-        initializationError: null,
-      );
-    }
+    state = state.copyWith(
+      reciter: reciter ?? state.reciter,
+      moshaf: moshaf ?? state.moshaf,
+      initializationStatus: RecitationInitializationStatus.ready,
+      initializationError: null,
+    );
   }
 
   AyahReference? _reference(int? surah, int? ayah) {
