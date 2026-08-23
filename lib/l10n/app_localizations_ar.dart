@@ -1662,6 +1662,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranRecitationDownloading => 'جارٍ التخزين…';
 
   @override
+  String get quranRecitationInitializationFailed =>
+      'تعذّر تحميل التلاوة المحفوظة';
+
+  @override
+  String get quranRecitationRetryInitialization => 'إعادة المحاولة';
+
+  @override
   String get quranRecitationEnded => 'انتهى';
 
   @override

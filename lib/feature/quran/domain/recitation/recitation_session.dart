@@ -1,6 +1,7 @@
 import 'package:mushaf_reader/mushaf_reader.dart' show SurahTiming;
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
+import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_playback_policy.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_seek_pipeline.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_state_machine.dart';
@@ -182,6 +183,36 @@ class RecitationSession {
 
   void setSleep(RecitationSleep sleep) =>
       _commit(_state.copyWith(sleep: sleep));
+
+  void beginInitialization() => _commit(
+    _state.copyWith(
+      initializationStatus: RecitationInitializationStatus.initializing,
+      initializationError: null,
+    ),
+  );
+
+  void completeInitialization() => _commit(
+    _state.copyWith(
+      initializationStatus: RecitationInitializationStatus.ready,
+      initializationError: null,
+    ),
+  );
+
+  void failInitialization(String error) => _commit(
+    _state.copyWith(
+      initializationStatus: RecitationInitializationStatus.failed,
+      initializationError: error,
+    ),
+  );
+
+  void acceptUserSelection({Reciter? reciter, Moshaf? moshaf}) => _commit(
+    _state.copyWith(
+      reciter: reciter ?? _state.reciter,
+      moshaf: moshaf ?? _state.moshaf,
+      initializationStatus: RecitationInitializationStatus.ready,
+      initializationError: null,
+    ),
+  );
 
   /// Invalidates older asynchronous load results and clears old timing.
   int beginLoad({required bool hasTiming}) {

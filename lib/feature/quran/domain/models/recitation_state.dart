@@ -48,6 +48,15 @@ abstract class RecitationState with _$RecitationState {
     /// Unified playback status.
     @Default(RecitationStatus.idle) RecitationStatus status,
 
+    /// Restores the saved session and Quran reference data before playback
+    /// controls can become interactive. This is distinct from [status], which
+    /// describes audio preparation and playback only.
+    @Default(RecitationInitializationStatus.ready)
+    RecitationInitializationStatus initializationStatus,
+
+    /// Error from restoring the saved session or Quran reference data.
+    String? initializationError,
+
     /// Last playback failure surfaced to the UI.
     String? error,
 
@@ -146,6 +155,18 @@ abstract class RecitationState with _$RecitationState {
   /// Whether media is opening/buffering/downloading.
   bool get isLoading => status == RecitationStatus.loading;
 
+  /// Whether saved selection and Quran reference data are still loading.
+  bool get isInitializing =>
+      initializationStatus == RecitationInitializationStatus.initializing;
+
+  /// Whether initialization failed and requires retry.
+  bool get hasInitializationError =>
+      initializationStatus == RecitationInitializationStatus.failed;
+
+  /// Whether the restored selection may be presented and played.
+  bool get isInitializationReady =>
+      initializationStatus == RecitationInitializationStatus.ready;
+
   /// Whether actively playing.
   bool get isPlaying => status == RecitationStatus.playing;
 
@@ -184,6 +205,19 @@ enum RecitationStatus {
 
   /// The current selection finished; press replay to start again.
   ended,
+}
+
+/// Initialization state for the persisted recitation session and Quran
+/// reference data. It deliberately does not overlap with [RecitationStatus].
+enum RecitationInitializationStatus {
+  /// The saved selection or Quran reference data is still loading.
+  initializing,
+
+  /// The selection is safe to present and may be played by a user action.
+  ready,
+
+  /// Saved values remain persisted, but initialization must be retried.
+  failed,
 }
 
 /// Kind of playback selection active in a recitation session.

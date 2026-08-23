@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
@@ -42,6 +43,8 @@ class _TransportPill extends ConsumerWidget {
           active: view.session.active,
           surah: view.session.surah,
           currentAyah: view.session.currentAyah,
+          isInitializing: view.isInitializing,
+          canPlay: view.canPlay,
           isLoading: view.isLoading,
           isEnded: view.isEnded,
           isPlaying: view.isPlaying,
@@ -56,8 +59,9 @@ class _TransportPill extends ConsumerWidget {
     final isLoading = chrome.isLoading;
     final isEnded = chrome.isEnded;
     final surah = chrome.surah;
+    final isInitializing = chrome.isInitializing;
     final surahName = AyahReferenceLogic.surahName(
-      surah == null ? null : mushaf.getSurahSync(surah),
+      isInitializing || surah == null ? null : mushaf.getSurahSync(surah),
       surah ?? 0,
       preferArabic: Localizations.localeOf(context).languageCode == 'ar',
       fallbackName: '',
@@ -68,7 +72,11 @@ class _TransportPill extends ConsumerWidget {
       fontWeight: FontWeight.w600,
       height: 1.2,
     );
-    final titleWidget = surahName.isEmpty
+    final titleWidget = isInitializing
+        ? FSkeletonizer(
+            child: SizedBox(width: 72, child: Text('Surah', style: titleStyle)),
+          )
+        : surahName.isEmpty
         ? const SizedBox.shrink()
         : chrome.currentAyah != null
         ? SurahNameWithSuffix(
@@ -90,7 +98,8 @@ class _TransportPill extends ConsumerWidget {
         final maxWidth = constraints.maxWidth.isFinite
             ? constraints.maxWidth
             : double.infinity;
-        final showSkip = chrome.active && surah != null;
+        final showSkip =
+            chrome.active && surah != null && !isInitializing && chrome.canPlay;
         final isRtl = Directionality.of(context) == TextDirection.rtl;
 
         return ConstrainedBox(
@@ -104,8 +113,10 @@ class _TransportPill extends ConsumerWidget {
               prefix: RecitationTransportControls(
                 isPlaying: chrome.isPlaying,
                 isLoading: isLoading,
+                isInitializing: isInitializing,
+                canPlay: chrome.canPlay,
                 isEnded: isEnded,
-                onPlayPause: controller.togglePlayPause,
+                onPlayPause: chrome.canPlay ? controller.togglePlayPause : null,
                 leftSlot: leftSkipControl(
                   isRtl: isRtl,
                   skipPrevious: hasAyahTiming
@@ -144,7 +155,7 @@ class _TransportPill extends ConsumerWidget {
                 ),
                 showSkip: showSkip,
               ),
-              title: surahName.isNotEmpty
+              title: isInitializing || surahName.isNotEmpty
                   ? Row(
                       children: [
                         Container(
@@ -195,10 +206,7 @@ class _TransportSuffix extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (isPlaying && !isEnded) ...[
-          RecitationEqualizer(
-            color: colors.primary,
-            animating: !drawerOpen,
-          ),
+          RecitationEqualizer(color: colors.primary, animating: !drawerOpen),
           const SizedBox(width: AppSpacing.sm),
         ],
         Icon(

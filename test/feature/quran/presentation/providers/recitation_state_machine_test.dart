@@ -1471,30 +1471,26 @@ void main() {
     test(
       'continueFromHere from ayah 1 produces open-ended PlayAyahRangeIntent',
       () {
-        final result =
-            playbackIntentForPreset(
-                  preset: RangeScopePreset.continueFromHere,
-                  reciter: _reciter,
-                  moshaf: _moshaf,
-                  from: const AyahReference(surah: 8, ayah: 1),
-                  mushafReader: _intentMushaf,
-                )
-                as PlayAyahRangeIntent;
+        final result = playbackIntentForPreset(
+          preset: RangeScopePreset.continueFromHere,
+          reciter: _reciter,
+          moshaf: _moshaf,
+          from: const AyahReference(surah: 8, ayah: 1),
+          mushafReader: _intentMushaf,
+        ) as PlayAyahRangeIntent;
         expect(result.from, const AyahReference(surah: 8, ayah: 1));
         expect(result.to, isNull);
       },
     );
 
     test('continueFromHere from ayah > 1 produces PlayAyahRangeIntent', () {
-      final result =
-          playbackIntentForPreset(
-                preset: RangeScopePreset.continueFromHere,
-                reciter: _reciter,
-                moshaf: _moshaf,
-                from: const AyahReference(surah: 8, ayah: 5),
-                mushafReader: _intentMushaf,
-              )
-              as PlayAyahRangeIntent;
+      final result = playbackIntentForPreset(
+        preset: RangeScopePreset.continueFromHere,
+        reciter: _reciter,
+        moshaf: _moshaf,
+        from: const AyahReference(surah: 8, ayah: 5),
+        mushafReader: _intentMushaf,
+      ) as PlayAyahRangeIntent;
       expect(result.from, const AyahReference(surah: 8, ayah: 5));
       expect(result.to, isNull);
     });
@@ -1628,6 +1624,7 @@ void main() {
       const state = RecitationState(
         status: RecitationStatus.error,
         error: 'previous',
+        initializationStatus: RecitationInitializationStatus.initializing,
       );
       final result = _run(
         state,
@@ -1646,6 +1643,7 @@ void main() {
       expect(result.state.rangeTo, const AyahReference(surah: 2, ayah: 5));
       expect(result.state.active, isTrue);
       expect(result.state.error, isNull);
+      expect(result.state.isInitializationReady, isTrue);
       expect(result.effects, isEmpty);
     });
 

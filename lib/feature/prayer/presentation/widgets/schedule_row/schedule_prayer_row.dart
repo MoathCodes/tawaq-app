@@ -22,6 +22,17 @@ import 'package:tawaq/feature/prayer/presentation/widgets/schedule_status_chips.
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
+/// Returns the localized name for a prayer on the schedule row's calendar day.
+///
+/// The row date is the selected prayer-calendar date. It must be used instead
+/// of the live clock so Dhuhr is named Jumuah only for Friday rows.
+String schedulePrayerName(PrayerScheduleRow row, AppLocalizations l10n) {
+  return row.prayer.getLocaleName(
+    l10n,
+    date: row.completionDate ?? row.prayerTime,
+  );
+}
+
 /// Relative subtitle for a schedule row (e.g. "in 2 hours", "30 mins ago").
 String? _computePrayerRelativeTime({
   required DateTime prayerTime,
@@ -329,7 +340,7 @@ class _IdentityColumn extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          row.prayer.getLocaleName(l10n),
+          schedulePrayerName(row, l10n),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.typography.body.sm.copyWith(
@@ -415,7 +426,7 @@ class _TimeRail extends StatelessWidget {
       children: [
         if (row.formattedIqamahTime != null) ...[
           _ObligatoryAlertTimeSlot(
-            prayer: row.prayer,
+            row: row,
             time: row.formattedIqamahTime!,
             kind: PrayerAlertKind.iqamah,
           ),
@@ -427,7 +438,7 @@ class _TimeRail extends StatelessWidget {
           ),
         ],
         _ObligatoryAlertTimeSlot(
-          prayer: row.prayer,
+          row: row,
           time: row.formattedAdhanTime,
           kind: PrayerAlertKind.adhan,
         ),
@@ -438,12 +449,12 @@ class _TimeRail extends StatelessWidget {
 
 class _ObligatoryAlertTimeSlot extends ConsumerWidget {
   const _ObligatoryAlertTimeSlot({
-    required this.prayer,
+    required this.row,
     required this.time,
     required this.kind,
   });
 
-  final Prayer prayer;
+  final PrayerScheduleRow row;
   final String time;
   final PrayerAlertKind kind;
 
@@ -453,13 +464,13 @@ class _ObligatoryAlertTimeSlot extends ConsumerWidget {
     final colors = theme.colors;
     final l10n = context.l10n;
     final settings = ref.watch(adhanSettingsProvider).value;
-    final prayerName = prayer.getLocaleName(l10n);
+    final prayerName = schedulePrayerName(row, l10n);
     final mode = settings == null
         ? ScheduleAlertMode.off
         : adhanSettingsModeFor(
             settings,
             kind,
-            prayer,
+            row.prayer,
           );
 
     final (label, eventLabel) = switch (kind) {
@@ -510,7 +521,7 @@ class _ObligatoryAlertTimeSlot extends ConsumerWidget {
                 ? null
                 : (next) => ref
                       .read(adhanSettingsProvider.notifier)
-                      .setAlertMode(kind, prayer, next),
+                      .setAlertMode(kind, row.prayer, next),
           ),
         ],
       ],

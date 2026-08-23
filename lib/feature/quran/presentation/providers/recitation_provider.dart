@@ -221,6 +221,20 @@ class RecitationViewState {
       session.isLoading ||
       (ownsAudio && audio.lifecycle == AudioSessionLifecycle.loading);
 
+  /// Whether the saved recitation selection and Quran reference data are
+  /// still loading. This is intentionally separate from audio loading.
+  bool get isInitializing => session.isInitializing;
+
+  /// Whether initialization failed and needs an explicit retry.
+  bool get hasInitializationError => session.hasInitializationError;
+
+  /// Whether a user action can start playback for the current selection.
+  bool get canPlay =>
+      session.isInitializationReady &&
+      session.reciter != null &&
+      session.moshaf != null &&
+      session.surah != null;
+
   /// Whether the current selection has completed.
   bool get isEnded =>
       session.isEnded ||
@@ -335,9 +349,7 @@ void showRecitationHighlightAutoChangeToast(
 class RecitationController extends _$RecitationController {
   static const _seekLogPrefix = 'tawaq.recitation.seek';
 
-  String _surahTitle(int surah) {
-    return _surahName(surah);
-  }
+  String _surahTitle(int surah) => _surahName(surah);
 
   String _surahFileName(int surah) {
     // Cache paths must survive locale changes and continue to find files
@@ -359,6 +371,7 @@ class RecitationController extends _$RecitationController {
   RecitationTimeline? _timelineForTest;
   Timer? _sleepTimer;
   bool _sessionBootstrapped = false;
+  int _initializationGeneration = 0;
   CancellationToken? _downloadToken;
   CancellationToken? _offlineSaveToken;
   Future<void> _effectsTail = Future<void>.value();
@@ -399,7 +412,12 @@ class RecitationController extends _$RecitationController {
 
   @override
   RecitationState build() {
-    _sessionInstance ??= _createSession();
+    _sessionInstance ??= _createSession(
+      initialState: const RecitationState(
+        active: true,
+        initializationStatus: RecitationInitializationStatus.initializing,
+      ),
+    );
     ref
       ..onDispose(() {
         _persistPlaybackCheckpoint();
@@ -432,7 +450,7 @@ class RecitationController extends _$RecitationController {
       return _session.state;
     }
     _sessionBootstrapped = true;
-    unawaited(Future.microtask(_bootstrapSession));
+    unawaited(Future.microtask(_initializeSession));
     return _session.state;
   }
 
@@ -574,6 +592,7 @@ class RecitationController extends _$RecitationController {
     required Moshaf moshaf,
     required int surah,
   }) async {
+    _acceptUserSelection();
     _dispatch(PlaySurah(reciter: reciter, moshaf: moshaf, surah: surah));
   }
 
@@ -589,6 +608,7 @@ class RecitationController extends _$RecitationController {
     required int endAyah,
   }) async {
     if (!moshaf.hasTiming) return false;
+    _acceptUserSelection();
     _dispatch(
       PlayRange(
         reciter: reciter,
@@ -610,6 +630,7 @@ class RecitationController extends _$RecitationController {
     AyahReference? to,
   }) async {
     if (!moshaf.hasTiming) return false;
+    _acceptUserSelection();
     final segment = firstSegmentForRange(from: from, to: to, mushaf: _mushaf);
     _dispatch(
       PlayRange(
@@ -633,6 +654,7 @@ class RecitationController extends _$RecitationController {
     required AyahReference from,
     AyahReference? to,
   }) async {
+    _acceptUserSelection();
     final intent = playbackIntentForPreset(
       preset: preset,
       reciter: reciter,
@@ -687,13 +709,15 @@ class RecitationController extends _$RecitationController {
     final s = state;
     final surah = s.surah;
     if (surah == null) {
-      return ref
+      final autoHighlight = ref
           .read(recitationSettingsProvider.notifier)
           .setReciter(
             reciterId: reciter.id,
             moshafId: moshaf.id,
             moshafName: moshaf.name,
           );
+      _acceptUserSelection(reciter: reciter, moshaf: moshaf);
+      return autoHighlight;
     }
 
     // Drop stale timing immediately so position ticks cannot highlight ayahs
@@ -750,6 +774,7 @@ class RecitationController extends _$RecitationController {
   }
 
   Future<void> togglePlayPause() async {
+    if (!state.isInitializationReady) return;
     final trackLoaded = _service.hasActiveTrack;
     _seekLog(
       'togglePlayPause trackLoaded=$trackLoaded '
@@ -765,6 +790,9 @@ class RecitationController extends _$RecitationController {
 
   /// Clears the surfaced error.
   void clearError() => _session.clearError();
+
+  /// Retries restoring the saved selection and Quran reference data.
+  Future<void> retryInitialization() => _initializeSession();
 
   /// Moves the mushaf to the current playback location.
   ///
@@ -1649,25 +1677,32 @@ class RecitationController extends _$RecitationController {
     }
   }
 
-  Future<void> _bootstrapSession() async {
-    if (state.reciter != null) return;
+  Future<void> _initializeSession() async {
+    final generation = ++_initializationGeneration;
+    if (ref.mounted) _session.beginInitialization();
     try {
+      final settings = await ref.read(recitationSettingsProvider.future);
+      await _mushaf.ensureReady();
       final selected = await ref.read(selectedRecitationProvider.future);
-      if (selected == null) return;
-      final settings = ref.read(recitationSettingsProvider).value;
-      final positionMs = settings?.lastPlaybackPositionMs;
+      if (!ref.mounted || generation != _initializationGeneration) return;
+
+      if (selected == null) {
+        _session.completeInitialization();
+        return;
+      }
+      final positionMs = settings.lastPlaybackPositionMs;
       _dispatch(
         RecitationSettingsLoaded(
           reciter: selected.reciter,
           moshaf: selected.moshaf,
-          surah: settings?.lastSurah,
+          surah: settings.lastSurah,
           rangeFrom: _reference(
-            settings?.lastRangeFromSurah,
-            settings?.lastRangeFromAyah,
+            settings.lastRangeFromSurah,
+            settings.lastRangeFromAyah,
           ),
           rangeTo: _reference(
-            settings?.lastRangeToSurah,
-            settings?.lastRangeToAyah,
+            settings.lastRangeToSurah,
+            settings.lastRangeToAyah,
           ),
           resumeFrom: positionMs != null && positionMs > 0
               ? Duration(milliseconds: positionMs)
@@ -1675,6 +1710,7 @@ class RecitationController extends _$RecitationController {
         ),
       );
     } on Object catch (error, stack) {
+      if (!ref.mounted || generation != _initializationGeneration) return;
       ref
           .read(loggerProvider)
           .w(
@@ -1682,7 +1718,14 @@ class RecitationController extends _$RecitationController {
             error: error,
             stackTrace: stack,
           );
+      _session.failInitialization('$error');
     }
+  }
+
+  /// Keeps an in-flight restore from overwriting an explicit user selection.
+  void _acceptUserSelection({Reciter? reciter, Moshaf? moshaf}) {
+    _initializationGeneration++;
+    _session.acceptUserSelection(reciter: reciter, moshaf: moshaf);
   }
 
   AyahReference? _reference(int? surah, int? ayah) {

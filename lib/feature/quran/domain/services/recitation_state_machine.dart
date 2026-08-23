@@ -667,10 +667,7 @@ List<RecitationEffect> _nativeLoopEffectsForSession(
 }
 
 List<RecitationEffect> _terminalEndedEffects() {
-  return const [
-    SetNativeLoop(NativeLoopMode.off),
-    PauseAtEof(),
-  ];
+  return const [SetNativeLoop(NativeLoopMode.off), PauseAtEof()];
 }
 
 // ---------------------------------------------------------------------------
@@ -993,10 +990,7 @@ RecitationTransition _seek(
             : RecitationStatus.ended,
       );
     }
-    return (
-      state: next,
-      effects: [SeekAudio(event.position)],
-    );
+    return (state: next, effects: [SeekAudio(event.position)]);
   }
 
   final clamped = timeline.clampToRange(event.position);
@@ -1005,10 +999,7 @@ RecitationTransition _seek(
     return _navigateToAyah(state, targetAyah: ayah, timeline: timeline);
   }
 
-  var next = state.copyWith(
-    position: clamped,
-    pendingSeekTarget: clamped,
-  );
+  var next = state.copyWith(position: clamped, pendingSeekTarget: clamped);
   if (state.isEnded) {
     next = next.copyWith(
       status: clamped > Duration.zero
@@ -1016,10 +1007,7 @@ RecitationTransition _seek(
           : RecitationStatus.ended,
     );
   }
-  return (
-    state: next,
-    effects: [SeekAudio(clamped)],
-  );
+  return (state: next, effects: [SeekAudio(clamped)]);
 }
 
 RecitationTransition _stop(RecitationState state) {
@@ -1057,11 +1045,7 @@ RecitationTransition _skipAyahNext(
     return (state: state, effects: const []);
   }
 
-  return _navigateToAyah(
-    state,
-    targetAyah: current + 1,
-    timeline: timeline,
-  );
+  return _navigateToAyah(state, targetAyah: current + 1, timeline: timeline);
 }
 
 RecitationTransition _skipAyahPrevious(
@@ -1074,11 +1058,7 @@ RecitationTransition _skipAyahPrevious(
   final first = firstPlayableAyah(state);
   if (current <= first) return (state: state, effects: const []);
 
-  return _navigateToAyah(
-    state,
-    targetAyah: current - 1,
-    timeline: timeline,
-  );
+  return _navigateToAyah(state, targetAyah: current - 1, timeline: timeline);
 }
 
 RecitationTransition _skipSurahNext(
@@ -1387,10 +1367,7 @@ RecitationTransition _onGaplessTrackAdvanced(
   );
 }
 
-RecitationTransition _onAudioError(
-  RecitationState state,
-  AudioError event,
-) {
+RecitationTransition _onAudioError(RecitationState state, AudioError event) {
   return (
     state: state.copyWith(
       status: RecitationStatus.error,
@@ -1418,15 +1395,9 @@ RecitationTransition _onPendingSeekTimeout(
   );
 }
 
-RecitationTransition _onSeekFailed(
-  RecitationState state,
-  SeekFailed event,
-) {
+RecitationTransition _onSeekFailed(RecitationState state, SeekFailed event) {
   return (
-    state: state.copyWith(
-      pendingSeekTarget: null,
-      position: event.revertTo,
-    ),
+    state: state.copyWith(pendingSeekTarget: null, position: event.revertTo),
     effects: const [],
   );
 }
@@ -1441,10 +1412,7 @@ RecitationTransition _onAudioAbLoopExhausted(
   if (state.ayahLoopExiting) {
     return (state: state, effects: const []);
   }
-  return (
-    state: state.copyWith(ayahLoopExiting: true),
-    effects: const [],
-  );
+  return (state: state.copyWith(ayahLoopExiting: true), effects: const []);
 }
 
 RecitationTransition _advanceAfterAyahLoop(
@@ -1690,12 +1658,7 @@ RecitationTransition _repeatSelection(
     state: next,
     effects: [
       ..._nativeLoopEffectsForSession(next, ayah: firstAyah),
-      LoadSurah(
-        reciter: reciter,
-        moshaf: moshaf,
-        surah: surah,
-        seekTo: start,
-      ),
+      LoadSurah(reciter: reciter, moshaf: moshaf, surah: surah, seekTo: start),
     ],
   );
 }
@@ -1784,10 +1747,7 @@ RecitationTransition _alertResume(RecitationState state) {
     }
   }
 
-  return (
-    state: snapshot.copyWith(suspendedSnapshot: null),
-    effects: effects,
-  );
+  return (state: snapshot.copyWith(suspendedSnapshot: null), effects: effects);
 }
 
 RecitationTransition _setRepeatCounts(
@@ -1851,6 +1811,8 @@ RecitationTransition _settingsLoaded(
       position: event.resumeFrom ?? Duration.zero,
       active: true,
       error: null,
+      initializationStatus: RecitationInitializationStatus.ready,
+      initializationError: null,
     ),
     effects: const [],
   );

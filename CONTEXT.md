@@ -12,6 +12,28 @@ _Avoid_: player controller, playback service
 The ayah a person is observing in study mode. Playback may move study selection to reveal the currently recited ayah; changing study selection does not direct playback.
 _Avoid_: playback selection, queue position
 
+## Quran recitation
+
+**Recitation session**:
+The active or restorable Quran playback selection, including its reciter, moshaf, Surah or ayah range, position, repetition state, timing, sleep state, and any prayer-alert interruption. It survives closing the playback controls and moving through the app; stopping retains enough state to replay.
+_Avoid_: player state, audio session
+
+**Recitation initialization**:
+The period in which Tawaq restores the saved reciter, riwayah, Surah, and recitation range and resolves the Quran reference data needed to present them. It ends before audio preparation begins and never starts playback by itself.
+_Avoid_: playback loading, audio loading
+
+**Audio preparation**:
+The period after a playable recitation selection is ready while Tawaq obtains and opens its audio and timing data.
+_Avoid_: recitation initialization
+
+**Quran reference data**:
+The canonical Surah and ayah information used to resolve localized Surah names, ayah counts, and valid recitation-range bounds.
+_Avoid_: playback metadata, audio metadata
+
+**Restored recitation selection**:
+A saved reciter, riwayah, Surah, and range loaded during recitation initialization. Tawaq may restore it silently before the person has played or changed it, but playback always requires a separate action.
+_Avoid_: automatic playback, default recitation
+
 ## Content sharing
 
 **Share card**:
