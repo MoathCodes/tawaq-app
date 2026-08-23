@@ -1,10 +1,64 @@
+import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/domain/models/prayer_schedule_row.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/schedule_prayer_row.dart'
+    show schedulePrayerName;
+import 'package:tawaq/l10n/app_localizations_ar.dart';
+import 'package:tawaq/l10n/app_localizations_en.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart';
 
 void main() {
   setUpAll(tz.initializeTimeZones);
+
+  group('schedulePrayerName', () {
+    final english = AppLocalizationsEn();
+    final arabic = AppLocalizationsAr();
+
+    PrayerScheduleRow rowAt(DateTime instant) {
+      final location = getLocation('Asia/Riyadh');
+      final local = TZDateTime.from(instant, location);
+      return PrayerScheduleRow(
+        prayer: Prayer.dhuhr,
+        prayerTime: local,
+        formattedAdhanTime: '12:00',
+        completionDate: DateTime(local.year, local.month, local.day),
+      );
+    }
+
+    test('follows the selected Riyadh calendar date across UTC midnight', () {
+      final rows = [
+        rowAt(DateTime.utc(2026, 6, 17, 21, 30)), // Thursday locally.
+        rowAt(DateTime.utc(2026, 6, 18, 21, 30)), // Friday locally.
+        rowAt(DateTime.utc(2026, 6, 19, 21, 30)), // Saturday locally.
+      ];
+
+      expect(rows.map((row) => schedulePrayerName(row, english)).toList(), [
+        'Dhuhr',
+        'Jumuah',
+        'Dhuhr',
+      ]);
+      expect(rows.map((row) => schedulePrayerName(row, arabic)).toList(), [
+        'الظهر',
+        'الجمعة',
+        'الظهر',
+      ]);
+    });
+
+    test(
+      'uses the selected date when prayer time is near a timezone boundary',
+      () {
+        final fridayRow = rowAt(DateTime.utc(2026, 6, 18, 21, 30));
+        final historicalThursday = fridayRow.copyWith(
+          completionDate: DateTime(2026, 6, 18),
+        );
+
+        expect(schedulePrayerName(historicalThursday, english), 'Dhuhr');
+        expect(schedulePrayerName(historicalThursday, arabic), 'الظهر');
+      },
+    );
+  });
 
   group('DateTimeDifference', () {
     group('timeDifference', () {
