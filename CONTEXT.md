@@ -1,6 +1,16 @@
 # Tawaq
 
-Tawaq is a desktop Islamic companion. This glossary names the distribution choices that shape how people obtain and install the app.
+Tawaq is a desktop Islamic companion. This glossary names the concepts that shape the app and its distribution.
+
+## Quran recitation
+
+**Recitation session**:
+The ordered authority for one logical Quran playback session. It accepts user intent and native audio observations, owns timeline and repeat reconciliation, and projects immutable playback state to the app. Native audio remains authoritative for native playback facts.
+_Avoid_: player controller, playback service
+
+**Study selection**:
+The ayah a person is observing in study mode. Playback may move study selection to reveal the currently recited ayah; changing study selection does not direct playback.
+_Avoid_: playback selection, queue position
 
 ## Content sharing
 
