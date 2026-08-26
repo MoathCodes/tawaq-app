@@ -1,3 +1,6 @@
+// Keep explicit constructor names so Hive CE preserves persisted field IDs.
+// ignore_for_file: unnecessary_type_name_in_constructor
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'hadith_recent_search.freezed.dart';
@@ -7,13 +10,13 @@ part 'hadith_recent_search.g.dart';
 @freezed
 abstract class HadithRecentSearch with _$HadithRecentSearch {
   /// Creates a persisted recent-search entry.
-  factory({
+  factory HadithRecentSearch({
     required int id,
     required String query,
     required DateTime searchedAt,
   }) = _HadithRecentSearch;
 
   /// Deserializes a recent-search entry from JSON.
-  factory fromJson(Map<String, dynamic> json) =>
+  factory HadithRecentSearch.fromJson(Map<String, dynamic> json) =>
       _$HadithRecentSearchFromJson(json);
 }

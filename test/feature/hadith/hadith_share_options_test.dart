@@ -17,7 +17,7 @@ void main() {
   );
 
   test('defaults include core attribution and branding', () {
-    final options = HadithShareOptions.defaults(hadith);
+    final options = HadithShareOptions.defaults();
     expect(options.contains(HadithShareInclude.narrator), isTrue);
     expect(options.contains(HadithShareInclude.source), isTrue);
     expect(options.contains(HadithShareInclude.grade), isTrue);

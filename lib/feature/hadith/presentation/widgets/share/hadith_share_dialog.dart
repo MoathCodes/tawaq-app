@@ -8,8 +8,8 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
-import 'package:tawaq/core/widgets/share_card_drag_surface.dart';
 import 'package:tawaq/core/widgets/share_card_dialog_layout.dart';
+import 'package:tawaq/core/widgets/share_card_drag_surface.dart';
 import 'package:tawaq/feature/hadith/presentation/models/hadith_share_include.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_card.dart';
@@ -44,7 +44,7 @@ class HadithShareDialog extends HookConsumerWidget {
     final l10n = context.l10n;
     final theme = context.theme;
     final boundaryKey = useMemoized(GlobalKey.new);
-    final options = useState(HadithShareOptions.defaults(hadith));
+    final options = useState(HadithShareOptions.defaults());
     final isCapturing = useState(false);
 
     final sharhEnabled = options.value.contains(HadithShareInclude.sharh);

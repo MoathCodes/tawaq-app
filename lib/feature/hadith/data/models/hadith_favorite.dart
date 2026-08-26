@@ -1,3 +1,6 @@
+// Keep explicit constructor names so Hive CE preserves persisted field IDs.
+// ignore_for_file: unnecessary_type_name_in_constructor
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'hadith_favorite.freezed.dart';
@@ -7,7 +10,7 @@ part 'hadith_favorite.g.dart';
 @freezed
 abstract class HadithFavorite with _$HadithFavorite {
   /// Creates a persisted favorite hadith entry.
-  factory({
+  factory HadithFavorite({
     required String key,
     required String hadith,
     required String rawi,
@@ -19,6 +22,6 @@ abstract class HadithFavorite with _$HadithFavorite {
   }) = _HadithFavorite;
 
   /// Deserializes a favorite hadith entry from JSON.
-  factory fromJson(Map<String, dynamic> json) =>
+  factory HadithFavorite.fromJson(Map<String, dynamic> json) =>
       _$HadithFavoriteFromJson(json);
 }

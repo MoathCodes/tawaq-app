@@ -1,3 +1,6 @@
+// Keep explicit constructor names so Hive CE preserves persisted field IDs.
+// ignore_for_file: unnecessary_type_name_in_constructor
+
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
@@ -26,7 +29,7 @@ enum CompletionStatus {
 @freezed
 abstract class PrayerCompletion with _$PrayerCompletion {
   /// Creates a new instance of [PrayerCompletion].
-  factory({
+  factory PrayerCompletion({
     /// The unique identifier of the prayer completion.
     required int? id,
 
@@ -41,7 +44,7 @@ abstract class PrayerCompletion with _$PrayerCompletion {
   }) = _PrayerCompletion;
 
   /// Creates a new instance of [PrayerCompletion] from a JSON object.
-  factory fromJson(Map<String, dynamic> json) =>
+  factory PrayerCompletion.fromJson(Map<String, dynamic> json) =>
       _$PrayerCompletionFromJson(json);
   // @override
   // Map<String, dynamic> toJson() => _$PrayerCompletionToJson(this);

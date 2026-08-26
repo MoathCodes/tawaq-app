@@ -43,7 +43,7 @@ dependencies:
   flutter_hooks: ^0.21.3+1
   flutter_localizations:
     sdk: flutter
-  flutter_riverpod: ^3.0.3
+  flutter_riverpod: ^3.4.2
   flutter_timezone: ^5.0.0
   forui: ^0.25.0
   forui_hooks: ^0.25.0
@@ -53,14 +53,14 @@ dependencies:
   go_router: ^17.0.0
   hijri_date: ^1.0.0
   hivez_flutter: ^1.2.2
-  hooks_riverpod: ^3.0.3
+  hooks_riverpod: ^3.4.2
   intl: ^0.20.2
-  json_annotation: ^4.9.0
+  json_annotation: ^4.12.0
   lat_lng_to_timezone: ^0.2.0
   logger: ^2.6.2
   mushaf_reader:
     path: packages/mushaf_reader
-  riverpod_annotation: ^4.0.0
+  riverpod_annotation: ^4.0.6
   skeletonizer: ^2.1.0+1
   sqlite3: ^3.2.0
   path_provider: ^2.1.5
@@ -93,14 +93,21 @@ dev_dependencies:
   forui_cli: ^0.25.0
   flutter_test:
     sdk: flutter
-  freezed: ^3.2.3
+  freezed: ^4.0.0
   go_router_builder: ^4.2.0
-  hive_ce_generator: ^1.9.3
-  json_serializable: ^6.11.2
+  hive_ce_generator: ^1.11.3
+  json_serializable: ^6.14.1
   mocktail: ^1.0.4
-  riverpod_generator: ^4.0.0+1
-  riverpod_lint: ^3.0.3
+  mockito: ^5.8.1
+  riverpod_generator: ^4.0.8
+  riverpod_lint: ^3.1.8
   very_good_analysis: ^10.0.0
+
+# Riverpod's current generator caps analyzer at 13 while Hive CE requires 14.
+# Both support Dart 3.13 syntax, so keep the build graph on analyzer 14 until
+# Riverpod widens its constraint.
+dependency_overrides:
+  analyzer: ^14.1.0
 
 flutter:
   generate: true
