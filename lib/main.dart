@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_driver/driver_extension.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -24,7 +25,11 @@ import 'package:timezone/data/latest.dart' as tz;
 
 /// The entry point of the application.
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  if (const bool.fromEnvironment('ENABLE_FLUTTER_DRIVER')) {
+    enableFlutterDriverExtension();
+  } else {
+    WidgetsFlutterBinding.ensureInitialized();
+  }
   await ensureSingleDesktopInstance();
   await MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq');
   await initFileLogging();
