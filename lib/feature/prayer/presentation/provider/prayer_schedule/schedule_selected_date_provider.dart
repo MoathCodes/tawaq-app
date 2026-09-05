@@ -39,7 +39,10 @@ class ScheduleSelectedDate extends _$ScheduleSelectedDate {
     final appNow = ref.read(appClockProvider).value;
     if (appNow != null) return DateTime(appNow.year, appNow.month, appNow.day);
 
-    return DateTime.utc(1970);
+    // Fall back to the device wall-clock day on the first frame when the
+    // prayer-day and clock providers have no value yet, instead of showing
+    // the 1970 epoch default.
+    return DateTime.now().toLocal();
   }
 
   /// Updates the schedule list to [date] (date component only).

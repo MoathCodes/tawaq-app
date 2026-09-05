@@ -69,10 +69,10 @@ final class ShortcutDef {
 
   /// Scope key used for duplicate-detection in tests.
   String get scopeKey => switch (scope) {
-        ShortcutScope.global => 'global',
-        ShortcutScope.route => 'route:$routePath',
-        ShortcutScope.contextual => 'contextual:$contextTag',
-      };
+    ShortcutScope.global => 'global',
+    ShortcutScope.route => 'route:$routePath',
+    ShortcutScope.contextual => 'contextual:$contextTag',
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -173,7 +173,6 @@ abstract final class AppShortcut {
     scope: ShortcutScope.contextual,
     contextTag: 'quran.studyPanel',
     activators: [
-      plainShortcut(LogicalKeyboardKey.arrowLeft),
       plainShortcut(LogicalKeyboardKey.arrowDown),
     ],
   );
@@ -184,7 +183,6 @@ abstract final class AppShortcut {
     scope: ShortcutScope.contextual,
     contextTag: 'quran.studyPanel',
     activators: [
-      plainShortcut(LogicalKeyboardKey.arrowRight),
       plainShortcut(LogicalKeyboardKey.arrowUp),
     ],
   );
@@ -295,9 +293,7 @@ Map<String, List<ShortcutDef>> findDuplicateActivators() {
         final key = activatorKey(activator);
         final prior = seen[key];
         if (prior != null && prior != shortcut) {
-          duplicates
-              .putIfAbsent(entry.key, () => [])
-              .addAll([prior, shortcut]);
+          duplicates.putIfAbsent(entry.key, () => []).addAll([prior, shortcut]);
         } else {
           seen[key] = shortcut;
         }

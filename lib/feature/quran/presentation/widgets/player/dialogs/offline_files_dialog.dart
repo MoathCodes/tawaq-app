@@ -144,46 +144,64 @@ class _OfflineFilesDialog extends HookConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Wrap(
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
+              crossAxisAlignment: .center,
+              alignment: .spaceEvenly,
               children: [
                 Text(l10n.quranRecitationOfflineSelected(targets.length)),
-                FButton(
-                  variant: .outline,
-                  size: .sm,
-                  onPress: deleting.value || files.isEmpty
-                      ? null
-                      : () => selected.value = {
-                          for (final file in files) file.file.path,
-                        },
-                  child: Text(l10n.quranRecitationOfflineSelectAll),
+                Row(
+                  mainAxisSize: .min,
+                  spacing: AppSpacing.sm,
+                  children: [
+                    FButton(
+                      variant: .outline,
+                      size: .sm,
+                      mainAxisSize: .min,
+                      onPress: deleting.value || files.isEmpty
+                          ? null
+                          : () => selected.value = {
+                              for (final file in files) file.file.path,
+                            },
+                      child: Text(l10n.quranRecitationOfflineSelectAll),
+                    ),
+                    FButton(
+                      variant: .ghost,
+                      mainAxisSize: .min,
+                      size: .sm,
+                      onPress: deleting.value || targets.isEmpty
+                          ? null
+                          : () => selected.value = {},
+                      child: Text(l10n.quranRecitationOfflineClearSelection),
+                    ),
+                  ],
                 ),
-                FButton(
-                  variant: .ghost,
-                  size: .sm,
-                  onPress: deleting.value || targets.isEmpty
-                      ? null
-                      : () => selected.value = {},
-                  child: Text(l10n.quranRecitationOfflineClearSelection),
-                ),
-                FButton(
-                  variant: .destructive,
-                  size: .sm,
-                  onPress: deleting.value || targets.isEmpty
-                      ? null
-                      : () => unawaited(deleteFiles(targets)),
-                  child: Text(l10n.quranRecitationOfflineDeleteSelected),
-                ),
-                FButton(
-                  variant: .destructive,
-                  size: .sm,
-                  onPress: deleting.value || files.isEmpty
-                      ? null
-                      : () => unawaited(deleteFiles(files)),
-                  child: Text(l10n.quranRecitationOfflineDeleteAll),
+                Row(
+                  spacing: AppSpacing.sm,
+                  mainAxisSize: .min,
+                  children: [
+                    FButton(
+                      variant: .destructive,
+                      size: .sm,
+                      mainAxisSize: .min,
+                      onPress: deleting.value || targets.isEmpty
+                          ? null
+                          : () => unawaited(deleteFiles(targets)),
+                      child: Text(l10n.quranRecitationOfflineDeleteSelected),
+                    ),
+                    FButton(
+                      variant: .destructive,
+                      size: .sm,
+                      mainAxisSize: .min,
+                      onPress: deleting.value || files.isEmpty
+                          ? null
+                          : () => unawaited(deleteFiles(files)),
+                      child: Text(l10n.quranRecitationOfflineDeleteAll),
+                    ),
+                  ],
                 ),
               ],
             ),

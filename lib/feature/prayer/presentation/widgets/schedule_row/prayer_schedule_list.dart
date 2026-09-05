@@ -109,7 +109,7 @@ class PrayerScheduleList extends ConsumerWidget {
               final stackHeader = !isContainerAtLeast(
                 context,
                 constraints,
-                FBreakpoint.md,
+                FBreakpoint.sm,
               );
 
               if (stackHeader) {

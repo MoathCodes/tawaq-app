@@ -7,7 +7,7 @@ part 'quran_mushaf_controller_provider.g.dart';
 ///
 /// Reused across header selectors, mushaf panes, and study panel instead of
 /// passing the controller through multiple widget layers.
-@riverpod
+@Riverpod(keepAlive: true)
 MushafReaderController quranMushafController(Ref ref) {
   final controller = MushafReaderController();
   ref.onDispose(controller.dispose);
