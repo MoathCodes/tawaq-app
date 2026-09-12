@@ -44,11 +44,7 @@ List<QuranNoteEntry> filterQuranNotes(
 }
 
 /// Relative-time label for a note; wording lives entirely in ARB plurals.
-String noteTimeLabel(
-  AppLocalizations l10n,
-  DateTime when, {
-  DateTime? now,
-}) {
+String noteTimeLabel(AppLocalizations l10n, DateTime when, {DateTime? now}) {
   final current = now ?? DateTime.now();
   final whenLocal = when.toLocal();
   final currentLocal = current.toLocal();
@@ -317,10 +313,7 @@ class NotesBrowser extends HookConsumerWidget {
 }
 
 class _NotesEmptyState extends StatelessWidget {
-  const new({
-    required this.icon,
-    required this.message,
-  });
+  const new({required this.icon, required this.message});
 
   final IconData icon;
   final String message;
@@ -358,11 +351,7 @@ class _NotesEmptyState extends StatelessWidget {
 }
 
 class _NoteCard extends HookConsumerWidget {
-  const new({
-    required this.entry,
-    required this.surahName,
-    super.key,
-  });
+  const new({required this.entry, required this.surahName, super.key});
 
   final QuranNoteEntry entry;
   final String surahName;
@@ -444,9 +433,12 @@ class _NoteCard extends HookConsumerWidget {
           children: [
             Row(
               children: [
-                FBadge(
-                  variant: .secondary,
-                  child: Text(ayahBadge),
+                Text(
+                  ayahBadge,
+                  style: typography.body.xs.copyWith(
+                    color: colors.mutedForeground,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const Spacer(),
                 Text(

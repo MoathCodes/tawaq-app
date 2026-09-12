@@ -1504,6 +1504,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quranLayoutStudyMode => 'Study Mode';
 
   @override
+  String get quranStudyDismissSelection => 'Dismiss ayah selection';
+
+  @override
   String get quranNoMatchingReciters => 'No matching reciters';
 
   @override

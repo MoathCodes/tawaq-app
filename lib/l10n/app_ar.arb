@@ -684,6 +684,7 @@
   "quranDoublePageWidthFallback": "العرض غير كافٍ لصفحتين — يُعرض صفحة واحدة.",
   "quranLayoutDoublePage": "صفحتان",
   "quranLayoutStudyMode": "وضع الدراسة",
+  "quranStudyDismissSelection": "إلغاء تحديد الآية",
   "quranNoMatchingReciters": "لا يوجد قراء مطابقون",
   "quranPlayAyah": "تشغيل هذه الآية",
   "quranPlayRange": "تشغيل مقطع…",

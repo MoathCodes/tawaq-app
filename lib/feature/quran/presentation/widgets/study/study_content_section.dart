@@ -64,6 +64,7 @@ class StudySectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final typography = context.theme.typography;
     return Row(
       children: [
         QuranSemantics.decorative(
@@ -76,8 +77,9 @@ class StudySectionTitle extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Text(
           text,
-          style: TextStyle(
-            color: muted ? colors.mutedForeground : null,
+          style: typography.body.sm.copyWith(
+            color: muted ? colors.mutedForeground : colors.foreground,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -126,12 +128,12 @@ class StudyContentSection<T> extends StatelessWidget {
       loading: () => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          sourceSelector,
-          const SizedBox(height: AppSpacing.md),
           const FCircularProgress(),
+          _selectorFooter(context, sourceSelector),
         ],
       ),
       error: (_, _) => _statusColumn(
+        context: context,
         typography: typography,
         colors: colors,
         message: errorMessage,
@@ -139,6 +141,7 @@ class StudyContentSection<T> extends StatelessWidget {
       data: (data) {
         if (data == null) {
           return _statusColumn(
+            context: context,
             typography: typography,
             colors: colors,
             message: emptyMessage,
@@ -156,9 +159,8 @@ class StudyContentSection<T> extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        sourceSelector,
-                        const SizedBox(height: AppSpacing.lg),
                         contentBuilder(data),
+                        _selectorFooter(context, sourceSelector),
                       ],
                     ),
                   )
@@ -190,6 +192,7 @@ class StudyContentSection<T> extends StatelessWidget {
   }
 
   Widget _statusColumn({
+    required BuildContext context,
     required FTypography typography,
     required FColors colors,
     required String message,
@@ -197,10 +200,33 @@ class StudyContentSection<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        sourceSelector,
-        const SizedBox(height: AppSpacing.md),
         _messagePlaceholder(typography, colors, message),
+        _selectorFooter(
+          // The footer owns the separator and keeps the source picker a
+          // secondary control after the reading content/status.
+          context,
+          sourceSelector,
+        ),
       ],
+    );
+  }
+
+  Widget _selectorFooter(BuildContext context, Widget selector) {
+    final colors = context.theme.colors;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: colors.border.withValues(alpha: 0.55),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Align(alignment: AlignmentDirectional.centerStart, child: selector),
+        ],
+      ),
     );
   }
 }
@@ -246,20 +272,66 @@ class TranslationAccordionSection extends ConsumerWidget {
 
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: sectionMinHeight),
-      child: StudyContentSection<Translation?>(
-        asyncValue: translationAsync,
-        contentKey: '${source.name}-$sura-$aya',
-        errorMessage: l10n.errorLoadingTranslation,
-        emptyMessage: l10n.noTranslationAvailable,
-        sourceSelector: const TranslationSourceSelector(),
-        contentBuilder: (translation) => ScopedSelectableText(
-          l10n.quranTranslationQuoted(translation!.translation),
-          style: StudyPanelTextStyles.translation(
-            typography: typography,
-            colors: colors,
+      child: LayoutBuilder(
+        builder: (context, constraints) => StudyContentSection<Translation?>(
+          asyncValue: translationAsync,
+          contentKey: '${source.name}-$sura-$aya',
+          errorMessage: l10n.errorLoadingTranslation,
+          emptyMessage: l10n.noTranslationAvailable,
+          // The accordion title already names this section. Keep the select
+          // compact while QuranSemantics retains its explicit field name.
+          sourceSelector: const TranslationSourceSelector(showLabel: false),
+          contentBuilder: (translation) => TranslationProse(
+            translation: translation!,
             source: source,
+            style: StudyPanelTextStyles.translation(
+              context: context,
+              typography: typography,
+              colors: colors,
+              source: source,
+              containerWidth: constraints.maxWidth,
+            ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Renders a translation without changing its source punctuation or content.
+///
+/// Direction comes from the selected edition's metadata rather than the
+/// interface locale or the first character of the translation.
+class TranslationProse extends StatelessWidget {
+  /// Creates a translation prose block.
+  const TranslationProse({
+    required this.translation,
+    required this.source,
+    required this.style,
+    super.key,
+  });
+
+  /// Translation row returned by the bundled source database.
+  final Translation translation;
+
+  /// Selected source metadata.
+  final TranslationId source;
+
+  /// Source-aware prose style.
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    final textDirection = source.direction == TranslationDirection.rtl
+        ? TextDirection.rtl
+        : TextDirection.ltr;
+    return Directionality(
+      textDirection: textDirection,
+      child: ScopedSelectableText(
+        translation.translation,
+        style: style,
+        textAlign: TextAlign.start,
+        textDirection: textDirection,
       ),
     );
   }

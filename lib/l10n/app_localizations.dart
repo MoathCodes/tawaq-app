@@ -2660,6 +2660,12 @@ abstract class AppLocalizations {
   /// **'Study Mode'**
   String get quranLayoutStudyMode;
 
+  /// No description provided for @quranStudyDismissSelection.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss ayah selection'**
+  String get quranStudyDismissSelection;
+
   /// No description provided for @quranNoMatchingReciters.
   ///
   /// In en, this message translates to:

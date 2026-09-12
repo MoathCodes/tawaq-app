@@ -1542,6 +1542,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quranLayoutStudyMode => 'وضع الدراسة';
 
   @override
+  String get quranStudyDismissSelection => 'إلغاء تحديد الآية';
+
+  @override
   String get quranNoMatchingReciters => 'لا يوجد قراء مطابقون';
 
   @override

@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
@@ -140,7 +139,15 @@ class StudyPanel extends HookConsumerWidget {
                           Text(l10n.studyTabMyReflections),
                           if (notesCount > 0) ...[
                             const SizedBox(width: AppSpacing.sm),
-                            FBadge(child: Text('$notesCount')),
+                            Text(
+                              '$notesCount',
+                              style: theme.typography.body.xs.copyWith(
+                                color: theme.colors.mutedForeground,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
                           ],
                         ],
                       ),
