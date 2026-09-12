@@ -57,9 +57,11 @@ class FortressCategoryRow extends StatelessWidget {
               Text(
                 fortressRecurrenceLabel(category.recurrence, l10n),
                 style: theme.typography.body.sm.copyWith(
-                  color: selected
-                      ? colors.primary.withAlpha(150)
-                      : colors.mutedForeground,
+                  // The selected tile already tints its surface with a
+                  // low-alpha primary fill. Keep the recurrence label opaque
+                  // so the selected identity does not turn informational text
+                  // into a low-contrast overlay.
+                  color: selected ? colors.primary : colors.mutedForeground,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
