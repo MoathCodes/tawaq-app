@@ -319,6 +319,27 @@ void main() {
       expect(result.prayer, Prayer.asr);
     });
 
+    test('switches to countdown exactly at midpoint', () {
+      final dhuhrTime = TZDateTime.from(todaysPrayerTimes.dhuhr, location);
+      final asrTime = TZDateTime.from(todaysPrayerTimes.asr, location);
+      final midpoint = dhuhrTime.add(
+        Duration(
+          milliseconds: (asrTime.difference(dhuhrTime).inMilliseconds / 2)
+              .round(),
+        ),
+      );
+
+      final result = computePrayerCardDecisionFromParts(
+        currentTime: midpoint,
+        location: location,
+        timeline: timeline,
+        todaysPrayerTimes: todaysPrayerTimes,
+      );
+
+      expect(result.isCountdown, isTrue);
+      expect(result.prayer, Prayer.asr);
+    });
+
     test('referenceTime is in the future for countdown', () {
       final dhuhrTime = TZDateTime.from(todaysPrayerTimes.dhuhr, location);
       final testTime = dhuhrTime.subtract(const Duration(minutes: 10));
