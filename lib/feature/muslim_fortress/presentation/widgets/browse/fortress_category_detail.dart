@@ -250,84 +250,103 @@ class FortressDuaPreviewCard extends StatelessWidget {
     final colors = theme.colors;
     final hasInsights = dua.hasVirtue || dua.hasStudyContent;
 
-    return Semantics(
-      label: FortressA11y.previewRowLabel(
-        l10n,
-        oneBasedIndex: index + 1,
-        isExpanded: isExpanded,
-        targetCount: dua.targetCount,
-      ),
-      button: !isExpanded,
-      child: FTile(
-        prefix: Text(
-          '${index + 1}.',
-          style: theme.typography.body.sm.copyWith(
-            color: colors.mutedForeground,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        title: ExcludeSemantics(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              FortressDuaContent(
-                dua: dua,
-                mode: isExpanded
-                    ? FortressDuaContentMode.previewExpanded
-                    : FortressDuaContentMode.previewCollapsed,
-              ),
-            ],
-          ),
-        ),
-        subtitle: !isExpanded && hasInsights
-            ? ExcludeSemantics(
-                child: Wrap(
-                  spacing: AppSpacing.xs,
-                  runSpacing: AppSpacing.xs,
-                  children: [
-                    if (dua.hasSharh)
-                      FBadge(
-                        variant: .secondary,
-                        child: Text(l10n.fortressSharh),
-                      ),
-                    if (dua.hasVirtue)
-                      FBadge(
-                        variant: .secondary,
-                        child: Text(l10n.fortressVirtue),
-                      ),
-                  ],
-                ),
-              )
-            : null,
-        suffix: ExcludeSemantics(
-          child: isExpanded
-              ? MouseClick(
-                  onClick: onToggleExpanded,
-                  semanticsLabel: FortressA11y.previewRowLabel(
-                    l10n,
-                    oneBasedIndex: index + 1,
-                    isExpanded: isExpanded,
-                    targetCount: dua.targetCount,
-                  ),
-                  child: _FortressDuaPreviewSuffix(
-                    targetCount: dua.targetCount,
-                    isExpanded: isExpanded,
-                    colors: colors,
-                    typography: theme.typography,
-                  ),
-                )
-              : _FortressDuaPreviewSuffix(
+    final content = FortressDuaContent(
+      dua: dua,
+      mode: isExpanded
+          ? FortressDuaContentMode.previewExpanded
+          : FortressDuaContentMode.previewCollapsed,
+    );
+    final title = isExpanded ? content : ExcludeSemantics(child: content);
+    final subtitle = !isExpanded && hasInsights
+        ? ExcludeSemantics(
+            child: Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [
+                if (dua.hasSharh)
+                  FBadge(variant: .secondary, child: Text(l10n.fortressSharh)),
+                if (dua.hasVirtue)
+                  FBadge(variant: .secondary, child: Text(l10n.fortressVirtue)),
+              ],
+            ),
+          )
+        : null;
+    final suffix = isExpanded
+        ? Semantics(
+            container: true,
+            button: true,
+            label: FortressA11y.previewCollapseLabel(
+              l10n,
+              oneBasedIndex: index + 1,
+            ),
+            onTap: onToggleExpanded,
+            child: MouseClick(
+              onClick: onToggleExpanded,
+              child: ExcludeSemantics(
+                child: _FortressDuaPreviewSuffix(
                   targetCount: dua.targetCount,
                   isExpanded: isExpanded,
                   colors: colors,
                   typography: theme.typography,
                 ),
+              ),
+            ),
+          )
+        : ExcludeSemantics(
+            child: _FortressDuaPreviewSuffix(
+              targetCount: dua.targetCount,
+              isExpanded: isExpanded,
+              colors: colors,
+              typography: theme.typography,
+            ),
+          );
+    final prefix = ExcludeSemantics(
+      child: Text(
+        '${index + 1}.',
+        style: theme.typography.body.sm.copyWith(
+          color: colors.mutedForeground,
+          fontWeight: FontWeight.w600,
         ),
-        selected: isExpanded,
-        // Nested controls (e.g. FTabs) are not FTappableGroup entries; disable
-        // tile press while expanded so tab taps do not collapse the row.
-        onPress: isExpanded ? null : onToggleExpanded,
       ),
+    );
+
+    // Collapsed rows own one semantic button with the sourced dhikr text.
+    // Expanded rows expose their content and nested study tabs as descendants;
+    // only the suffix remains interactive so tab activation never collapses it.
+    final tile = FTile(
+      prefix: prefix,
+      title: title,
+      subtitle: subtitle,
+      suffix: suffix,
+      selected: isExpanded,
+      semanticsLabel: isExpanded
+          ? null
+          : FortressA11y.previewRowLabel(
+              l10n,
+              oneBasedIndex: index + 1,
+              isExpanded: false,
+              targetCount: dua.targetCount,
+              text: dua.text,
+            ),
+      semanticsExpanded: isExpanded,
+      // Nested controls (e.g. FTabs) are not FTappableGroup entries; disable
+      // tile press while expanded so tab taps do not collapse the row.
+      onPress: isExpanded ? null : onToggleExpanded,
+    );
+
+    if (!isExpanded) return tile;
+
+    return Semantics(
+      container: true,
+      explicitChildNodes: true,
+      label: FortressA11y.previewRowLabel(
+        l10n,
+        oneBasedIndex: index + 1,
+        isExpanded: true,
+        targetCount: dua.targetCount,
+      ),
+      expanded: true,
+      child: tile,
     );
   }
 }
