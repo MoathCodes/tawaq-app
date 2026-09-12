@@ -340,6 +340,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get currentStreak => 'الإنجاز الحالي';
 
   @override
+  String get prayerTimeRemaining => 'الوقت المتبقي';
+
+  @override
+  String get prayerTimeSinceStart => 'منذ بداية الصلاة';
+
+  @override
   String get customParametersCollapsedHint =>
       'انقر لتكوين إعدادات الحساب المخصصة';
 

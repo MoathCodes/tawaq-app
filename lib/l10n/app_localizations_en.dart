@@ -321,6 +321,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentStreak => 'Current Streak';
 
   @override
+  String get prayerTimeRemaining => 'Time remaining';
+
+  @override
+  String get prayerTimeSinceStart => 'Since prayer began';
+
+  @override
   String get customParametersCollapsedHint =>
       'Tap to configure custom calculation parameters';
 

@@ -163,6 +163,8 @@
   "coordinates": "Coordinates",
   "currentPrayer": "Current Prayer",
   "currentStreak": "Current Streak",
+  "prayerTimeRemaining": "Time remaining",
+  "prayerTimeSinceStart": "Since prayer began",
   "customParametersCollapsedHint": "Tap to configure custom calculation parameters",
   "customParametersLabel": "Custom parameters",
   "customParametersTitle": "Custom Parameters",

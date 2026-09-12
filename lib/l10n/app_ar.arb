@@ -146,6 +146,8 @@
   "coordinates": "الإحداثيات الجغرافية",
   "currentPrayer": "الصلاة الحالية",
   "currentStreak": "الإنجاز الحالي",
+  "prayerTimeRemaining": "الوقت المتبقي",
+  "prayerTimeSinceStart": "منذ بداية الصلاة",
   "customParametersCollapsedHint": "انقر لتكوين إعدادات الحساب المخصصة",
   "customParametersLabel": "إعدادات مخصصة",
   "customParametersTitle": "إعدادات مخصصة",

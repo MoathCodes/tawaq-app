@@ -204,6 +204,12 @@ Prayer getCurrentPrayer({
 }
 
 /// Picks the hero card prayer and whether to count down or up.
+///
+/// The card stays on the current slot until the midpoint between its start and
+/// the next slot, then switches to the next slot and counts down. This is an
+/// intentional product rule: the hero presentation must reflect the decision's
+/// `isCountdown` field rather than infer a different meaning from the live
+/// duration.
 PrayerCardDecision computePrayerCardDecision({
   required PrayerDaySnapshot snapshot,
 }) {

@@ -17,10 +17,11 @@ import 'package:tawaq/feature/prayer/presentation/provider/prayer_card/prayer_ca
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/hero_header/prayer_hero_labels.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Hero header showing current prayer info with gradient background.
+/// Hero header showing the current or next prayer with a time-aware surface.
 class PrayerHeroHeader extends ConsumerWidget {
   /// Creates a [PrayerHeroHeader] instance.
   const new({super.key});
@@ -28,9 +29,11 @@ class PrayerHeroHeader extends ConsumerWidget {
   /// Border radius for the hero card.
   static const kBorderRadius = BorderRadius.all(Radius.circular(16));
 
-  /// Returns a gradient color pair for each prayer.
-  /// The first color is the primary (lighter), the second is the accent
-  /// (darker).
+  /// Returns a restrained accent pair for each prayer.
+  ///
+  /// The hero uses these colors for its decorative watermark only. Text and
+  /// controls use the active theme's surface and ink roles so contrast holds
+  /// in both light and dark themes.
   static (Color, Color) getPrayerGradient(Prayer prayer) {
     return switch (prayer) {
       Prayer.fajr => (
@@ -82,7 +85,7 @@ class PrayerHeroHeader extends ConsumerWidget {
 class _HeroBody extends ConsumerWidget {
   const new();
 
-  static const _minHeight = 200.0;
+  static const _minHeight = 184.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -91,7 +94,7 @@ class _HeroBody extends ConsumerWidget {
     final card = ref.watch(prayerCardStaticProvider);
     final prayer = card.prayer;
     final showIqamah = card.showIqamah;
-    final (gradientStart, gradientEnd) = PrayerHeroHeader.getPrayerGradient(
+    final (accentStart, accentEnd) = PrayerHeroHeader.getPrayerGradient(
       prayer,
     );
 
@@ -150,8 +153,9 @@ class _HeroBody extends ConsumerWidget {
             gradient: LinearGradient(
               begin: isRtl ? Alignment.topLeft : Alignment.topRight,
               end: isRtl ? Alignment.bottomRight : Alignment.bottomLeft,
-              colors: [gradientStart, gradientEnd],
+              colors: [theme.colors.card, theme.colors.background],
             ),
+            border: Border.all(color: theme.colors.border),
           ),
           child: Stack(
             children: [
@@ -165,34 +169,50 @@ class _HeroBody extends ConsumerWidget {
                     child: Icon(
                       prayer.icon,
                       size: watermarkSize,
-                      color: Colors.white.withValues(alpha: 0.1),
+                      color: Color.lerp(
+                        accentStart,
+                        accentEnd,
+                        0.5,
+                      )!.withValues(alpha: 0.12),
                     ),
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.xl),
+                padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: _HeroHijriDatePill(),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _HeroStateLabel(isCountdown: card.isCountdown),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                prayer.getLocaleName(l10n),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.typography.body.xl3.copyWith(
+                                  color: theme.colors.foreground,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              const _HeroCountdownLabel(),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        const _HeroHijriDatePill(),
+                      ],
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Text(
-                      prayer.getLocaleName(l10n),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.typography.body.xl4.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    const _HeroCountdownLabel(),
-                    const SizedBox(height: AppSpacing.lg),
+                    const SizedBox(height: AppSpacing.md),
                     if (stackBottomRow)
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -281,13 +301,70 @@ class _HeroCountdownLabel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
+    final isCountdown = ref.watch(
+      prayerCardStaticProvider.select((card) => card.isCountdown),
+    );
     final countdown = ref.watch(prayerCardCountdownProvider);
-    return Text(
-      '${l10n.nextPrayer}: $countdown',
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: theme.typography.body.lg.copyWith(
-        color: Colors.white.withValues(alpha: 0.9),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          prayerCardDurationLabel(l10n: l10n, isCountdown: isCountdown),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.typography.body.sm.copyWith(
+            color: theme.colors.foreground,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Text(
+            countdown,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textDirection: TextDirection.ltr,
+            style: theme.typography.body.xl2.copyWith(
+              color: theme.colors.foreground,
+              fontWeight: FontWeight.w700,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeroStateLabel extends StatelessWidget {
+  const new({required this.isCountdown});
+
+  final bool isCountdown;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = context.l10n;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: theme.colors.background,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        prayerCardStateLabel(l10n: l10n, isCountdown: isCountdown),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.typography.body.xs.copyWith(
+          color: theme.colors.foreground,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+        ),
       ),
     );
   }
@@ -311,7 +388,7 @@ class _HeroHijriDatePill extends ConsumerWidget {
           vertical: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
-          color: theme.colors.background.withValues(alpha: 0.3),
+          color: theme.colors.background,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
@@ -320,7 +397,7 @@ class _HeroHijriDatePill extends ConsumerWidget {
             ExcludeSemantics(
               child: Icon(
                 FLucideIcons.calendar,
-                color: Colors.white.withValues(alpha: 0.8),
+                color: theme.colors.foreground,
                 size: theme.typography.body.sm.fontSize,
               ),
             ),
@@ -331,7 +408,7 @@ class _HeroHijriDatePill extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.typography.body.xs.copyWith(
-                  color: Colors.white.withValues(alpha: 0.9),
+                  color: theme.colors.foreground,
                 ),
               ),
             ),
@@ -399,11 +476,9 @@ class _HeroTimeSquare extends StatelessWidget {
           vertical: vertical,
         ),
         decoration: BoxDecoration(
-          color: theme.colors.background.withValues(alpha: 0.2),
+          color: theme.colors.background,
           borderRadius: theme.radii.md,
-          border: Border.all(
-            color: theme.colors.border.withValues(alpha: 0.1),
-          ),
+          border: Border.all(color: theme.colors.border),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -412,7 +487,7 @@ class _HeroTimeSquare extends StatelessWidget {
               Text(
                 label!.toUpperCase(),
                 style: labelStyle.copyWith(
-                  color: Colors.white.withValues(alpha: 0.7),
+                  color: theme.colors.foreground,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1,
                 ),
@@ -421,7 +496,7 @@ class _HeroTimeSquare extends StatelessWidget {
             Text(
               time,
               style: timeStyle.copyWith(
-                color: Colors.white,
+                color: theme.colors.foreground,
                 fontWeight: FontWeight.w600,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
@@ -513,14 +588,10 @@ class _HeroStatusPopover extends ConsumerWidget {
               vertical: AppSpacing.sm,
             ),
             decoration: BoxDecoration(
-              color: isSet
-                  ? theme.colors.secondary
-                  : theme.colors.background.withValues(alpha: 0.2),
+              color: isSet ? theme.colors.secondary : theme.colors.background,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSet
-                    ? theme.colors.secondary
-                    : theme.colors.border.withValues(alpha: 0.1),
+                color: isSet ? theme.colors.secondary : theme.colors.border,
               ),
             ),
             child: Row(
@@ -556,7 +627,7 @@ class _HeroStatusPopover extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.typography.body.sm.copyWith(
-                      color: Colors.white,
+                      color: theme.colors.foreground,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

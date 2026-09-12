@@ -632,6 +632,18 @@ abstract class AppLocalizations {
   /// **'Current Streak'**
   String get currentStreak;
 
+  /// No description provided for @prayerTimeRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining'**
+  String get prayerTimeRemaining;
+
+  /// No description provided for @prayerTimeSinceStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Since prayer began'**
+  String get prayerTimeSinceStart;
+
   /// No description provided for @customParametersCollapsedHint.
   ///
   /// In en, this message translates to:
