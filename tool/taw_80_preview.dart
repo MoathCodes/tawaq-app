@@ -60,7 +60,7 @@ void main() {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SizedBox(
+                      SizedBox(
                         width: 500,
                         child: HadithResultCard(
                           hadith: hadith,
@@ -71,10 +71,10 @@ void main() {
                         ),
                       ),
                       const SizedBox(width: 24),
-                      SizedBox(
+                      const SizedBox(
                         width: 500,
                         height: 620,
-                        child: const HadithSelectedDetailsPane(
+                        child: HadithSelectedDetailsPane(
                           hadith: hadith,
                           resultOrdinal: 2,
                         ),

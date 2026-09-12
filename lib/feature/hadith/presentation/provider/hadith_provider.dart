@@ -198,6 +198,13 @@ class HadithSessionController extends _$HadithSessionController {
 
       if (!ref.mounted || generation != _searchGeneration) return;
 
+      final selectedKey = state.selectedHadithKey;
+      final keepSelection =
+          selectedKey != null &&
+          response.data.any(
+            (hadith) => hadithStableKey(hadith) == selectedKey,
+          );
+
       state = state.copyWith(
         query: value,
         searchOutcome: AsyncData(
@@ -206,6 +213,7 @@ class HadithSessionController extends _$HadithSessionController {
             metadata: response.metadata,
           ),
         ),
+        clearSelectedHadith: selectedKey != null && !keepSelection,
       );
 
       unawaited(

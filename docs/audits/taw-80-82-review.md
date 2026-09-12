@@ -19,7 +19,10 @@ and it does not close TAW-69.
   narrator, scholar, and source metadata wrap without an ellipsis.
 - Detail scroll resets only when the stable hadith identity changes. The side
   panel derives the ordinal from the visible collection, so a page/filter
-  refresh cannot relabel an unrelated selection.
+  refresh cannot relabel an unrelated selection. Search refreshes and page
+  changes clear the stable selection when that identity leaves the visible
+  collection; an available selected object with no ordinal uses the honest
+  localized “Selected hadith” header and its source citation.
 - The title-bar play control uses the hydrated recitation session projection
   already used by the player. Its visible tooltip and accessibility name carry
   the localized Play/Pause action plus available surah/reciter context; it
@@ -35,7 +38,7 @@ and it does not close TAW-69.
 - `fvm exec bash tool/codegen.sh`
 - `fvm flutter gen-l10n`
 - `fvm flutter test test/feature/hadith/hadith_result_card_test.dart test/feature/hadith/hadith_detail_selection_test.dart test/feature/hadith/hadith_search_controller_test.dart test/feature/hadith/hadith_split_layout_test.dart test/feature/quran/recitation_initialization_test.dart`
-- `fvm flutter test` (1003 tests passed)
+- `fvm flutter test` (1004 tests passed)
 - `fvm flutter analyze --no-fatal-infos` (exit 0; existing informational
   diagnostics remain, including the repository's known baseline audit noise)
 - Impeccable layout detector: no findings for the touched Hadith and transport
@@ -44,9 +47,10 @@ and it does not close TAW-69.
 The focused widget tests provide render and semantics evidence for Arabic/RTL
 and English/LTR card content, long neutral judgments, selected identity,
 same-result scroll preservation, different-result scroll reset, independent
-favorite/selection keyboard actions, More actions availability, and transport
-ready/playing/ended/loading/error/missing states. The transport focus test
-opens the tooltip through keyboard focus and activates Play with Enter.
+favorite/selection keyboard actions, More actions availability, page/search
+selection reconciliation, and transport ready/playing/ended/loading/error/
+missing states. The transport focus test opens the tooltip through keyboard
+focus and activates Play with Enter.
 
 ## Runtime artifacts
 
