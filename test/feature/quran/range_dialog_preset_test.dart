@@ -1,6 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
+import 'package:tawaq/feature/quran/domain/models/reciter.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/range_repeat_dialog.dart';
 
 /// Mirrors continue-from-here preset behavior in the range dialog.
 bool shouldForceCustomOnFromEdit(RangeScopePreset preset) =>
@@ -120,6 +124,149 @@ int jumpAyah({
 
 void main() {
   group('range dialog preset decoupling', () {
+    const moshaf = Moshaf(
+      id: 1,
+      name: 'Hafs',
+      server: 'https://example.com/',
+      surahList: [1],
+      surahTotal: 1,
+    );
+    const reciter = Reciter(id: 1, name: 'Test reciter', moshaf: [moshaf]);
+
+    test('explicit initial ayah wins over saved and active context', () {
+      final seed = resolveRangeRepeatSeed(
+        initial: const RangeRepeatInit(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: 9,
+          startAyah: 4,
+        ),
+        playback: const RecitationState(
+          active: true,
+          surah: 2,
+          currentAyah: 255,
+          rangeFrom: AyahReference(surah: 2, ayah: 1),
+          rangeTo: AyahReference(surah: 2, ayah: 286),
+        ),
+        settings: const RecitationSettings(
+          lastRangePreset: RangeScopePreset.thisSurah,
+          lastRangeFromSurah: 3,
+          lastRangeFromAyah: 1,
+          lastRangeToSurah: 3,
+          lastRangeToAyah: 200,
+        ),
+        selectedAyah: null,
+        ayahCount: (_) => 7,
+      );
+
+      expect(seed.isSuggestion, isFalse);
+      expect(seed.initialPreset, RangeScopePreset.thisAyah);
+      expect((seed.fromSurah, seed.fromAyah), (9, 4));
+      expect((seed.toSurah, seed.toAyah), (9, 4));
+    });
+
+    test('current reading is an unpersisted single-ayah suggestion', () {
+      final seed = resolveRangeRepeatSeed(
+        initial: null,
+        playback: const RecitationState(),
+        settings: const RecitationSettings(),
+        selectedAyah: Ayah(
+          ayahId: 6236,
+          surahNumber: 114,
+          numberInSurah: 5,
+          page: 604,
+          juz: 30,
+          text: '',
+        ),
+        ayahCount: (_) => 6,
+      );
+
+      expect(seed.isSuggestion, isTrue);
+      expect(seed.initialPreset, RangeScopePreset.thisAyah);
+      expect((seed.fromSurah, seed.fromAyah), (114, 5));
+      expect((seed.toSurah, seed.toAyah), (114, 5));
+    });
+
+    test(
+      'no current reading suggests the whole surah using its true count',
+      () {
+        final seed = resolveRangeRepeatSeed(
+          initial: null,
+          playback: const RecitationState(),
+          settings: const RecitationSettings(),
+          selectedAyah: null,
+          ayahCount: (surah) => surah == 1 ? 7 : 286,
+        );
+
+        expect(seed.isSuggestion, isTrue);
+        expect(seed.initialPreset, RangeScopePreset.thisSurah);
+        expect((seed.fromSurah, seed.fromAyah), (1, 1));
+        expect((seed.toSurah, seed.toAyah), (1, 7));
+      },
+    );
+
+    test('saved range is restored without suggestion messaging', () {
+      final seed = resolveRangeRepeatSeed(
+        initial: null,
+        playback: const RecitationState(),
+        settings: const RecitationSettings(
+          lastSurah: 3,
+          lastRangePreset: RangeScopePreset.thisSurah,
+        ),
+        selectedAyah: null,
+        ayahCount: (surah) => surah == 3 ? 200 : 7,
+      );
+
+      expect(seed.isSuggestion, isFalse);
+      expect(seed.initialPreset, RangeScopePreset.thisSurah);
+      expect((seed.fromSurah, seed.fromAyah), (3, 1));
+      expect((seed.toSurah, seed.toAyah), (3, 200));
+    });
+
+    test('saved whole-surah range beats a newer viewed ayah', () {
+      final seed = resolveRangeRepeatSeed(
+        initial: null,
+        playback: const RecitationState(),
+        settings: const RecitationSettings(
+          lastSurah: 3,
+          lastRangePreset: RangeScopePreset.thisSurah,
+        ),
+        selectedAyah: Ayah(
+          ayahId: 6236,
+          surahNumber: 114,
+          numberInSurah: 5,
+          page: 604,
+          juz: 30,
+          text: '',
+        ),
+        ayahCount: (surah) => surah == 3 ? 200 : 7,
+      );
+
+      expect((seed.fromSurah, seed.fromAyah), (3, 1));
+      expect((seed.toSurah, seed.toAyah), (3, 200));
+    });
+
+    test('active bounded playback is restored as a custom range', () {
+      final seed = resolveRangeRepeatSeed(
+        initial: null,
+        playback: const RecitationState(
+          active: true,
+          surah: 2,
+          currentAyah: 10,
+          rangeFrom: AyahReference(surah: 1, ayah: 5),
+          rangeTo: AyahReference(surah: 2, ayah: 10),
+        ),
+        settings: const RecitationSettings(),
+        selectedAyah: null,
+        ayahCount: (_) => 7,
+      );
+
+      expect(seed.isSuggestion, isTrue);
+      expect(seed.initialPreset, RangeScopePreset.custom);
+      expect((seed.fromSurah, seed.fromAyah), (1, 5));
+      expect((seed.toSurah, seed.toAyah), (2, 10));
+    });
+
     test('editing from endpoint keeps continueFromHere preset', () {
       expect(
         shouldForceCustomOnFromEdit(RangeScopePreset.continueFromHere),

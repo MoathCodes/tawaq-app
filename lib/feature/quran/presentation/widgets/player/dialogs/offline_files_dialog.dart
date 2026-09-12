@@ -153,9 +153,11 @@ class _OfflineFilesDialog extends HookConsumerWidget {
               alignment: .spaceEvenly,
               children: [
                 Text(l10n.quranRecitationOfflineSelected(targets.length)),
-                Row(
-                  mainAxisSize: .min,
+                Wrap(
                   spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  crossAxisAlignment: .center,
+                  alignment: .center,
                   children: [
                     FButton(
                       variant: .outline,
@@ -179,9 +181,11 @@ class _OfflineFilesDialog extends HookConsumerWidget {
                     ),
                   ],
                 ),
-                Row(
+                Wrap(
                   spacing: AppSpacing.sm,
-                  mainAxisSize: .min,
+                  runSpacing: AppSpacing.sm,
+                  crossAxisAlignment: .center,
+                  alignment: .center,
                   children: [
                     FButton(
                       variant: .destructive,

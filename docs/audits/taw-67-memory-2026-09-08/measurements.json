@@ -1,0 +1,254 @@
+[
+  {
+    "label": "prayer-start",
+    "pid": 2720017,
+    "rss": 234598400,
+    "peak": 244617216,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "PrayerScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 229136,
+      "Pss": 161652,
+      "Swap": 1652
+    },
+    "peakKiB": 238884
+  },
+  {
+    "label": "quran",
+    "pid": 2720017,
+    "rss": 249102336,
+    "peak": 249352192,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "QuranScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 243296,
+      "Pss": 175570,
+      "Swap": 1652
+    },
+    "peakKiB": 243508
+  },
+  {
+    "label": "hadith",
+    "pid": 2720017,
+    "rss": 241545216,
+    "peak": 253902848,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "HadithPage:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 235912,
+      "Pss": 168083,
+      "Swap": 1652
+    },
+    "peakKiB": 247952
+  },
+  {
+    "label": "muslim_fortress",
+    "pid": 2720017,
+    "rss": 246542336,
+    "peak": 255430656,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "MuslimFortressScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 241224,
+      "Pss": 173497,
+      "Swap": 1652
+    },
+    "peakKiB": 249444
+  },
+  {
+    "label": "settings",
+    "pid": 2720017,
+    "rss": 248119296,
+    "peak": 257142784,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "SettingsScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 242336,
+      "Pss": 175014,
+      "Swap": 1652
+    },
+    "peakKiB": 251116
+  },
+  {
+    "label": "prayer",
+    "pid": 2720017,
+    "rss": 244994048,
+    "peak": 265740288,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "PrayerScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 239284,
+      "Pss": 171962,
+      "Swap": 1652
+    },
+    "peakKiB": 259512
+  },
+  {
+    "label": "quran-eight-pages",
+    "pid": 2720017,
+    "rss": 250839040,
+    "peak": 265740288,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "QuranScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 245052,
+      "Pss": 177730,
+      "Swap": 1652
+    },
+    "peakKiB": 259512
+  },
+  {
+    "label": "quran-search",
+    "pid": 2720017,
+    "rss": 250970112,
+    "peak": 265740288,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "QuranScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 245160,
+      "Pss": 177838,
+      "Swap": 1652
+    },
+    "peakKiB": 259512
+  },
+  {
+    "label": "all-translation-open",
+    "pid": 2720017,
+    "rss": 263528448,
+    "peak": 265740288,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "QuranScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 257416,
+      "Pss": 190094,
+      "Swap": 1652
+    },
+    "peakKiB": 259512
+  },
+  {
+    "label": "all-tafsir-open",
+    "pid": 2720017,
+    "rss": 272900096,
+    "peak": 271929344,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "QuranScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 266520,
+      "Pss": 199198,
+      "Swap": 1652
+    },
+    "peakKiB": 266520
+  },
+  {
+    "label": "all-databases-idle",
+    "pid": 2720017,
+    "rss": 273010688,
+    "peak": 272322560,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "QuranScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 266648,
+      "Pss": 199326,
+      "Swap": 1652
+    },
+    "peakKiB": 266648
+  },
+  {
+    "label": "prayer-return",
+    "pid": 2720017,
+    "rss": 275861504,
+    "peak": 287395840,
+    "imageBytes": 0,
+    "imageCount": 0,
+    "liveImages": 0,
+    "widgets": [
+      "PrayerScreen:1"
+    ],
+    "view": [
+      "664.0x718.0 @ 1.0"
+    ],
+    "procKiB": {
+      "Rss": 269412,
+      "Pss": 202108,
+      "Swap": 1652
+    },
+    "peakKiB": 280660
+  }
+]

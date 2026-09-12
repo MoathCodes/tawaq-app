@@ -2576,6 +2576,18 @@ abstract class AppLocalizations {
   /// **'Prepare yourself for the prayer.'**
   String get prepareForPrayer;
 
+  /// No description provided for @previewFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview failed — try again.'**
+  String get previewFailed;
+
+  /// No description provided for @previewListen.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get previewListen;
+
   /// No description provided for @qatar.
   ///
   /// In en, this message translates to:
@@ -2815,6 +2827,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Range'**
   String get quranRangeScope;
+
+  /// No description provided for @quranRangeSuggestedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested from your current reading — Save to keep it.'**
+  String get quranRangeSuggestedHint;
 
   /// No description provided for @quranRangeTitle.
   ///

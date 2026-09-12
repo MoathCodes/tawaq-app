@@ -7,8 +7,9 @@ import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 /// Plays the bundled adhan/iqamah recording with a gentle fade in and out.
 ///
 /// Routes adhan playback through [AdhanAudioController]. Captures a recitation
-/// snapshot via [_onSuspend] for later resume; force-steal inside the audio
-/// service stops any prior session when [playTrack] runs.
+/// snapshot via the suspend callback for later resume; force-steal inside the
+/// audio service stops any prior session when [AdhanAudioController.playTrack]
+/// runs.
 class SoundAlertChannel implements PrayerAlertChannel {
   /// Creates a [SoundAlertChannel] over [_adhanPlayer].
   new({
@@ -17,6 +18,7 @@ class SoundAlertChannel implements PrayerAlertChannel {
     required this._onSuspend,
     required this._onRestoreRecitationVolume,
     required this._onResume,
+    this._onSettlePreview,
   });
 
   final AdhanAudioController _adhanPlayer;
@@ -24,6 +26,7 @@ class SoundAlertChannel implements PrayerAlertChannel {
   final Future<void> Function() _onSuspend;
   final Future<void> Function(double volume) _onRestoreRecitationVolume;
   final Future<void> Function() _onResume;
+  final Future<void> Function()? _onSettlePreview;
 
   double? _capturedVolume;
   bool _armed = false;
@@ -36,6 +39,9 @@ class SoundAlertChannel implements PrayerAlertChannel {
     final assetPath = event.soundAssetPath;
     if (!event.playSound || assetPath == null) return;
 
+    // A preview already occupies the shared adhan lease. Settle it before
+    // capturing volume so this alert cannot nest on top of preview volume.
+    await _onSettlePreview?.call();
     _capturedVolume = await _onCaptureRecitationVolume();
     await _onSuspend();
     _armed = true;

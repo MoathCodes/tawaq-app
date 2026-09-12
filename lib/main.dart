@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/app/audio_interruption_composition.dart';
 import 'package:tawaq/app/desktop/alerts/adhan_alert_host.dart';
 import 'package:tawaq/app/desktop/desktop_shell.dart';
 import 'package:tawaq/app/routing/route_provider.dart';
@@ -100,6 +101,7 @@ class TawaqApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(audioInterruptionCompositionProvider);
     final appRouter = ref.watch(appRouterProvider);
     final langCode = ref.watch(localeProvider).value ?? 'en';
     final themeMode = ref.watch(

@@ -1,0 +1,23 @@
+55d449e1b000-7fff8f5c6000 ---p 00000000 00:00 0                          [rollup]
+Rss:              167584 kB
+Pss:              102364 kB
+Pss_Dirty:         69889 kB
+Pss_Anon:          51968 kB
+Pss_File:          32474 kB
+Pss_Shmem:         17921 kB
+Shared_Clean:      88936 kB
+Shared_Dirty:         72 kB
+Private_Clean:      8720 kB
+Private_Dirty:     69856 kB
+Referenced:       167584 kB
+Anonymous:         51968 kB
+KSM:                   0 kB
+LazyFree:              0 kB
+AnonHugePages:         0 kB
+ShmemPmdMapped:        0 kB
+FilePmdMapped:     26624 kB
+Shared_Hugetlb:        0 kB
+Private_Hugetlb:       0 kB
+Swap:               3256 kB
+SwapPss:               0 kB
+Locked:                0 kB

@@ -27,6 +27,32 @@ _Avoid_: playback selection, recitation selection
 A saved reciter, riwayah, Surah, and range loaded during recitation initialization. Tawaq may restore it silently before the person has played or changed it, but playback always requires a separate action.
 _Avoid_: automatic playback, default recitation
 
+**Unset recitation selection**:
+No saved reciter or range awaiting a person's explicit choice. Playback and saving stay unavailable until one is chosen.
+_Avoid_: default recitation, fallback selection
+
+**Range suggestion**:
+A pre-filled reciter or range drawn from the current reading context. It is shown, never stored, until the person confirms it.
+_Avoid_: default range, silent preset
+
+## Prayer alerts
+
+**Adhan sound**:
+A bundled selectable Adhan recording.
+_Avoid_: voice, muezzin voice
+
+**Iqamah sound**:
+A bundled selectable Iqamah recording.
+_Avoid_: voice
+
+**Preview playback**:
+Hearing a candidate Adhan or Iqamah sound without scheduling an alert or changing the saved choice.
+_Avoid_: test alert, sample
+
+**Alert playback**:
+The scheduled Adhan or Iqamah sound played at prayer time.
+_Avoid_: preview
+
 ## Content sharing
 
 **Share card**:

@@ -5,11 +5,13 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/numeric_step_button.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/domain/services/recitation_range.dart';
@@ -52,6 +54,164 @@ class RangeRepeatInit {
 
   /// Ayah the range defaults to (from = to = this).
   final int startAyah;
+}
+
+/// The initial range values shown by the range dialog.
+///
+/// This is deliberately a display seed. It does not represent persisted
+/// settings and is only applied when the dialog is opened.
+class RangeRepeatSeed {
+  /// Creates a [RangeRepeatSeed].
+  const RangeRepeatSeed({
+    required this.seedSurah,
+    required this.seedAyah,
+    required this.initialPreset,
+    required this.isSuggestion,
+    required this.fromSurah,
+    required this.fromAyah,
+    required this.toSurah,
+    required this.toAyah,
+  });
+
+  /// Surah used as the anchor for preset changes.
+  final int seedSurah;
+
+  /// Ayah used as the anchor for preset changes.
+  final int seedAyah;
+
+  /// Preset selected when the dialog opens.
+  final RangeScopePreset initialPreset;
+
+  /// Whether these values are an unpersisted suggestion.
+  final bool isSuggestion;
+
+  /// Initial from-surah value.
+  final int fromSurah;
+
+  /// Initial from-ayah value.
+  final int fromAyah;
+
+  /// Initial to-surah value.
+  final int toSurah;
+
+  /// Initial to-ayah value.
+  final int toAyah;
+}
+
+/// Resolves the display-only seed for the range dialog.
+///
+/// An explicit [initial] ayah always wins. Otherwise a saved range is
+/// restored, then active playback/current reading is used, and finally a
+/// safe surah-one fallback is shown. [ayahCount] keeps whole-surah defaults
+/// accurate even when the repository has not populated [Surah.ayahCount].
+RangeRepeatSeed resolveRangeRepeatSeed({
+  required RangeRepeatInit? initial,
+  required RecitationState playback,
+  required RecitationSettings? settings,
+  required Ayah? selectedAyah,
+  required int Function(int surah) ayahCount,
+}) {
+  final hasSavedRange =
+      settings?.lastRangePreset != null ||
+      settings?.lastRangeFromSurah != null ||
+      settings?.lastRangeFromAyah != null ||
+      settings?.lastRangeToSurah != null ||
+      settings?.lastRangeToAyah != null;
+  final isSuggestion = initial == null && !hasSavedRange;
+
+  final playbackFrom = playback.rangeFrom;
+  final playbackTo = playback.rangeTo;
+  final playbackHasRange = playbackFrom != null;
+  final currentSurah = playback.surah ?? playbackFrom?.surah;
+  final currentAyah = playback.currentAyah ?? playbackFrom?.ayah;
+  final readingSurah = selectedAyah?.surahNumber;
+  final readingAyah = selectedAyah?.numberInSurah;
+
+  final seedSurah =
+      initial?.surah ??
+      currentSurah ??
+      readingSurah ??
+      settings?.lastSurah ??
+      1;
+  final seedAyah = initial?.startAyah ?? currentAyah ?? readingAyah ?? 1;
+
+  final initialPreset = initial != null
+      ? RangeScopePreset.thisAyah
+      : settings?.lastRangePreset ??
+            (playbackHasRange
+                ? (playbackTo == null
+                      ? RangeScopePreset.continueFromHere
+                      : RangeScopePreset.custom)
+                : (currentSurah != null || selectedAyah != null
+                      ? RangeScopePreset.thisAyah
+                      : RangeScopePreset.thisSurah));
+
+  if (initial != null) {
+    return RangeRepeatSeed(
+      seedSurah: seedSurah,
+      seedAyah: seedAyah,
+      initialPreset: initialPreset,
+      isSuggestion: false,
+      fromSurah: initial.surah,
+      fromAyah: initial.startAyah,
+      toSurah: initial.surah,
+      toAyah: initial.startAyah,
+    );
+  }
+
+  final savedFromSurah = settings?.lastRangeFromSurah;
+  final savedFromAyah = settings?.lastRangeFromAyah;
+  final savedToSurah = settings?.lastRangeToSurah;
+  final savedToAyah = settings?.lastRangeToAyah;
+
+  final fromSurah = hasSavedRange
+      ? savedFromSurah ??
+            (initialPreset == RangeScopePreset.thisSurah
+                ? settings?.lastSurah
+                : null) ??
+            playbackFrom?.surah ??
+            seedSurah
+      : playbackHasRange
+      ? playbackFrom.surah
+      : currentSurah ?? readingSurah ?? seedSurah;
+  final fromAyah = hasSavedRange
+      ? savedFromAyah ??
+            (initialPreset == RangeScopePreset.thisSurah
+                ? 1
+                : playbackFrom?.ayah ?? seedAyah)
+      : playbackHasRange
+      ? playbackFrom.ayah
+      : currentAyah ?? readingAyah ?? seedAyah;
+  final toSurah = hasSavedRange
+      ? savedToSurah ??
+            (initialPreset == RangeScopePreset.thisSurah
+                ? settings?.lastSurah
+                : null) ??
+            playbackTo?.surah ??
+            fromSurah
+      : playbackHasRange
+      ? playbackTo?.surah ?? fromSurah
+      : fromSurah;
+
+  final wholeSurah = initialPreset == RangeScopePreset.thisSurah;
+  final toAyah = wholeSurah
+      ? ayahCount(toSurah)
+      : hasSavedRange
+      ? savedToAyah ?? playbackTo?.ayah ?? fromAyah
+      : playbackHasRange
+      ? playbackTo?.ayah ?? fromAyah
+      : fromAyah;
+
+  return RangeRepeatSeed(
+    seedSurah: seedSurah,
+    seedAyah: seedAyah,
+    initialPreset: initialPreset,
+    isSuggestion: isSuggestion,
+    fromSurah: fromSurah,
+    fromAyah: fromAyah,
+    toSurah: toSurah,
+    toAyah: toAyah,
+  );
 }
 
 /// Opens the range & repeat dialog. With no [initial] it targets the active
@@ -100,64 +260,33 @@ class _RangeRepeatDialog extends HookConsumerWidget {
           .value
           ?.reciter;
       final selectedAyah = ref.read(quranSelectedAyahProvider).value;
-
-      final seedSurah =
-          initial?.surah ?? playback.surah ?? selectedAyah?.surahNumber ?? 1;
-      // Prefer the ayah actually being recited over the range start.
-      final seedAyah =
-          initial?.startAyah ??
-          playback.currentAyah ??
-          playback.rangeFrom?.ayah ??
-          selectedAyah?.numberInSurah ??
-          1;
-      final hasSeedContext = initial != null || playback.active;
-      final savedPreset = settings?.lastRangePreset;
-      final initialPreset =
-          savedPreset ??
-          (hasSeedContext
-              ? RangeScopePreset.thisAyah
-              : RangeScopePreset.custom);
+      final resolved = resolveRangeRepeatSeed(
+        initial: initial,
+        playback: playback,
+        settings: settings,
+        selectedAyah: selectedAyah,
+        ayahCount: (surah) =>
+            mushaf.getSurahSync(surah)?.ayahCount ??
+            (surah >= 1 && surah <= AyahIdResolver.ayahsPerSurah.length
+                ? AyahIdResolver.ayahsPerSurah[surah - 1]
+                : 1),
+      );
 
       return (
-        seedSurah: seedSurah,
-        seedAyah: seedAyah,
-        initialPreset: initialPreset,
+        seedSurah: resolved.seedSurah,
+        seedAyah: resolved.seedAyah,
+        initialPreset: resolved.initialPreset,
+        isSuggestion: resolved.isSuggestion,
         reciter: initial?.reciter ?? playback.reciter ?? selectedReciter,
         moshafId:
             initial?.moshaf.id ?? playback.moshaf?.id ?? settings?.moshafId,
         initialMoshaf: initial?.moshaf ?? playback.moshaf,
         ayahRepeat: settings?.ayahRepeatCount ?? 1,
         rangeRepeat: settings?.rangeRepeatCount ?? 1,
-        // Prefer persisted / active range over the viewed ayah so reopening
-        // restores multi-surah and full-surah selections correctly.
-        fromSurah:
-            settings?.lastRangeFromSurah ??
-            playback.rangeFrom?.surah ??
-            selectedAyah?.surahNumber ??
-            initial?.surah ??
-            playback.surah ??
-            seedSurah,
-        fromAyah:
-            settings?.lastRangeFromAyah ??
-            playback.rangeFrom?.ayah ??
-            selectedAyah?.numberInSurah ??
-            initial?.startAyah ??
-            playback.currentAyah ??
-            seedAyah,
-        toSurah:
-            settings?.lastRangeToSurah ??
-            playback.rangeTo?.surah ??
-            selectedAyah?.surahNumber ??
-            initial?.surah ??
-            playback.surah ??
-            seedSurah,
-        toAyah:
-            settings?.lastRangeToAyah ??
-            playback.rangeTo?.ayah ??
-            selectedAyah?.numberInSurah ??
-            initial?.startAyah ??
-            playback.currentAyah ??
-            seedAyah,
+        fromSurah: resolved.fromSurah,
+        fromAyah: resolved.fromAyah,
+        toSurah: resolved.toSurah,
+        toAyah: resolved.toAyah,
       );
     }, [initial]);
 
@@ -234,6 +363,13 @@ class _RangeRepeatDialog extends HookConsumerWidget {
       moshafState.value = pick.moshaf;
     }
 
+    Future<void> pickReciter() async {
+      final pick = await showReciterDialog(context, pickOnly: true);
+      if (pick == null || !context.mounted) return;
+      reciter.value = pick.reciter;
+      moshafState.value = pick.moshaf;
+    }
+
     return TawaqDialogShell(
       title: l10n.quranRangeTitle,
       subtitle: rangeSummary,
@@ -284,6 +420,22 @@ class _RangeRepeatDialog extends HookConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (seed.isSuggestion)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    child: FAlert(
+                      icon: const Icon(FLucideIcons.info),
+                      title: Text(l10n.quranRangeSuggestedHint),
+                    ),
+                  ),
+                if (reciter.value == null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    child: FButton(
+                      onPress: pickReciter,
+                      child: Text(l10n.quranSelectReciter),
+                    ),
+                  ),
                 if (showTimingAlert)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.lg),
@@ -648,7 +800,11 @@ _useRangePresetResolver({
     );
   }
 
-  int surahAyahCount(int surah) => mushaf.getSurahSync(surah)?.ayahCount ?? 1;
+  int surahAyahCount(int surah) =>
+      mushaf.getSurahSync(surah)?.ayahCount ??
+      (surah >= 1 && surah <= AyahIdResolver.ayahsPerSurah.length
+          ? AyahIdResolver.ayahsPerSurah[surah - 1]
+          : 1);
 
   void clampFromAyahToSurah() {
     final max = surahAyahCount(fromSurah.value);
@@ -725,7 +881,7 @@ _useRangePresetResolver({
       case RangeScopePreset.thisSurah:
         presetGeneration.value++;
         isResolving.value = false;
-        final count = mushaf.getSurahSync(anchorSurah.value)?.ayahCount ?? 1;
+        final count = surahAyahCount(anchorSurah.value);
         fromSurah.value = anchorSurah.value;
         fromAyah.value = 1;
         toSurah.value = anchorSurah.value;

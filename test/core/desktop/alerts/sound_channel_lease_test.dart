@@ -75,6 +75,7 @@ void main() {
       Future<void> Function()? onSuspend,
       Future<void> Function(double volume)? onRestoreRecitationVolume,
       Future<void> Function()? onResume,
+      Future<void> Function()? onSettlePreview,
     }) {
       return SoundAlertChannel(
         adhanPlayer: adhanPlayer,
@@ -82,6 +83,7 @@ void main() {
         onSuspend: onSuspend ?? () async {},
         onRestoreRecitationVolume: onRestoreRecitationVolume ?? (_) async {},
         onResume: onResume ?? () async {},
+        onSettlePreview: onSettlePreview,
       );
     }
 
@@ -131,6 +133,28 @@ void main() {
       expect(capturedVolume, 70);
       expect(suspendCalled, isTrue);
     });
+
+    test(
+      'deliver settles preview before capturing recitation volume',
+      () async {
+        var previewSettled = false;
+        var capturedAfterSettle = false;
+
+        final channel = makeChannel(
+          onSettlePreview: () async {
+            previewSettled = true;
+          },
+          onCaptureRecitationVolume: () async {
+            capturedAfterSettle = previewSettled;
+            return 70;
+          },
+        );
+
+        await channel.deliver(_event());
+
+        expect(capturedAfterSettle, isTrue);
+      },
+    );
 
     test('deliver suspends recitation before adhan playback', () async {
       var suspended = false;

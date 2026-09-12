@@ -8,6 +8,7 @@ import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/volume_slider.dart';
 import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/widgets/prayer_sound_preview.dart';
 import 'package:tawaq/feature/settings/presentation/adhan_locale_extensions.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/theme/theme.dart';
@@ -55,39 +56,65 @@ class PrayerAdhanSettings extends ConsumerWidget {
       children: [
         SettingsGroup(
           title: l10n.adhanSoundLabel,
-          child: FSelect<AdhanSound>(
-            enabled: ready,
-            contentConstraints: selectPopoverPortalConstraints(context),
-            control: .lifted(
-              value: sound,
-              onChange: (value) {
-                if (value == null) return;
-                ref.read(adhanSettingsProvider.notifier).setSound(value);
-              },
-            ),
-            items: {
-              for (final sound in AdhanSound.values)
-                sound.getLocaleName(l10n): sound,
-            },
+          child: Row(
+            spacing: AppSpacing.sm,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: FSelect<AdhanSound>(
+                  enabled: ready,
+                  contentConstraints: selectPopoverPortalConstraints(context),
+                  control: .lifted(
+                    value: sound,
+                    onChange: (value) {
+                      if (value == null) return;
+                      ref.read(adhanSettingsProvider.notifier).setSound(value);
+                    },
+                  ),
+                  items: {
+                    for (final sound in AdhanSound.values)
+                      sound.getLocaleName(l10n): sound,
+                  },
+                ),
+              ),
+              AdhanSoundPreviewButton(
+                sound: sound,
+                label: sound.getLocaleName(l10n),
+              ),
+            ],
           ),
         ),
         const FDivider(),
         SettingsGroup(
           title: l10n.iqamahSoundLabel,
-          child: FSelect<IqamahSound>(
-            enabled: ready,
-            contentConstraints: selectPopoverPortalConstraints(context),
-            control: .lifted(
-              value: iqamahSound,
-              onChange: (value) {
-                if (value == null) return;
-                ref.read(adhanSettingsProvider.notifier).setIqamahSound(value);
-              },
-            ),
-            items: {
-              for (final sound in IqamahSound.values)
-                sound.getLocaleName(l10n): sound,
-            },
+          child: Row(
+            spacing: AppSpacing.sm,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: FSelect<IqamahSound>(
+                  enabled: ready,
+                  contentConstraints: selectPopoverPortalConstraints(context),
+                  control: .lifted(
+                    value: iqamahSound,
+                    onChange: (value) {
+                      if (value == null) return;
+                      ref
+                          .read(adhanSettingsProvider.notifier)
+                          .setIqamahSound(value);
+                    },
+                  ),
+                  items: {
+                    for (final sound in IqamahSound.values)
+                      sound.getLocaleName(l10n): sound,
+                  },
+                ),
+              ),
+              IqamahSoundPreviewButton(
+                sound: iqamahSound,
+                label: iqamahSound.getLocaleName(l10n),
+              ),
+            ],
           ),
         ),
         const FDivider(),

@@ -4,6 +4,34 @@ part of 'recitation_drawer.dart';
 
 // --- header ---
 
+/// Picks a reciter and, on the first successful explicit selection, offers a
+/// range to play.
+///
+/// The picker is intentionally result-based. This lets cancellation remain a
+/// true no-op and prevents a stale [selectedRecitationProvider] recompute from
+/// being mistaken for a new selection. Existing sessions are handed to
+/// [RecitationController.switchReciter], which preserves their whole-surah or
+/// custom-range shape.
+Future<void> _selectReciterThenMaybeRange(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  final playbackBefore = ref.read(recitationControllerProvider);
+  final hadExplicitSelection =
+      playbackBefore.reciter != null ||
+      ref.read(selectedRecitationProvider).value != null;
+
+  final pick = await showReciterDialog(context, pickOnly: true);
+  if (!context.mounted) return;
+  if (pick == null) return;
+
+  await ref
+      .read(recitationControllerProvider.notifier)
+      .switchReciter(pick.reciter, pick.moshaf);
+  if (!context.mounted || hadExplicitSelection) return;
+  await showRangeRepeatDialog(context);
+}
+
 /// Header row for the expanded recitation drawer.
 class _DrawerHeader extends ConsumerWidget {
   /// Creates the drawer header.
@@ -111,7 +139,9 @@ class _DrawerHeader extends ConsumerWidget {
 
     return MouseClick(
       disabled: isMetadataLoading,
-      onClick: isMetadataLoading ? null : () => showReciterDialog(context),
+      onClick: isMetadataLoading
+          ? null
+          : () => _selectReciterThenMaybeRange(context, ref),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -127,9 +157,11 @@ class _DrawerHeader extends ConsumerWidget {
                       Future<void>(() {
                         onGoToQuran?.call();
                       }).then((_) {
-                        ref
-                            .read(recitationControllerProvider.notifier)
-                            .goToPlaybackInMushaf();
+                        unawaited(
+                          ref
+                              .read(recitationControllerProvider.notifier)
+                              .goToPlaybackInMushaf(),
+                        );
                         if (context.mounted) Navigator.of(context).pop();
                       }),
                     ),
@@ -141,7 +173,7 @@ class _DrawerHeader extends ConsumerWidget {
             prefix: const Icon(FLucideIcons.mic),
             onPress: isMetadataLoading
                 ? null
-                : () => showReciterDialog(context),
+                : () => _selectReciterThenMaybeRange(context, ref),
             variant: .outline,
             child: Text(l10n.quranRecitationSwitchReciter),
           ),

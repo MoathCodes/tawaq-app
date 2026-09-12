@@ -297,33 +297,22 @@ RecitationViewState recitationView(Ref ref) => RecitationViewState(
   audio: ref.watch(audioSessionProvider),
 );
 
-/// The currently selected reciter and moshaf, falling back to the first timed
-/// reciter when no persisted id matches.
+/// The explicitly selected reciter and moshaf, or null when the person has
+/// not chosen one yet.
+///
+/// No catalog order ever stands in for a user choice: a missing or unmatched
+/// persisted id stays unset so the player can present the reciter menu.
 @Riverpod(keepAlive: true)
 Future<SelectedRecitation?> selectedRecitation(Ref ref) async {
   final reciters = await ref.watch(recitersProvider.future);
-  if (reciters.isEmpty) return null;
   final settings = ref.watch(recitationSettingsProvider.select((s) => s.value));
-  Reciter? reciter;
-  final id = settings?.reciterId;
-  if (id != null) {
-    for (final r in reciters) {
-      if (r.id == id) {
-        reciter = r;
-        break;
-      }
-    }
-  }
-  if (reciter == null) {
-    for (final r in reciters) {
-      if (r.hasTiming) {
-        reciter = r;
-        break;
-      }
-    }
-    reciter ??= reciters.first;
-  }
-  final moshaf = reciter.resolveMoshaf(settings?.moshafId);
+  final reciterId = settings?.reciterId;
+  final moshafId = settings?.moshafId;
+  if (reciterId == null || moshafId == null) return null;
+
+  final reciter = reciters.where((r) => r.id == reciterId).firstOrNull;
+  if (reciter == null) return null;
+  final moshaf = reciter.moshaf.where((m) => m.id == moshafId).firstOrNull;
   if (moshaf == null) return null;
   return (reciter: reciter, moshaf: moshaf);
 }

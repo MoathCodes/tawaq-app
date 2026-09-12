@@ -7,6 +7,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/app/desktop/adhan_alert_controller.dart';
 import 'package:tawaq/app/desktop/alerts/os_notification_channel.dart';
 import 'package:tawaq/app/desktop/alerts/sound_alert_channel.dart';
+import 'package:tawaq/core/audio/audio_interruption.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
@@ -15,7 +16,6 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_alert_event.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_alert_kind.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_alert_channel.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provider.dart';
-import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 
 part 'prayer_alert_dispatcher.g.dart';
 
@@ -23,8 +23,11 @@ part 'prayer_alert_dispatcher.g.dart';
 const Size kAdhanAlertCompactSize = Size(400, 104);
 
 /// Reports a non-fatal error from the alert pipeline.
-typedef AlertErrorSink =
-    void Function(String message, Object error, StackTrace stack);
+typedef AlertErrorSink = void Function(
+  String message,
+  Object error,
+  StackTrace stack,
+);
 
 /// One active prayer-alert session shared by tray, UI, sound, and actions.
 class PrayerAlertSession {
@@ -290,14 +293,15 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
   @override
   PrayerAlertCoordinator build() {
     final inApp = ref.watch(adhanAlertControllerProvider.notifier);
-    final recitation = ref.read(recitationControllerProvider.notifier);
     final service = ref.read(tawaqAudioServiceProvider);
+    final interruption = ref.read(audioInterruptionCoordinatorProvider);
     final sound = SoundAlertChannel(
       adhanPlayer: ref.read(adhanAudioControllerProvider.notifier),
       onCaptureRecitationVolume: () async => service.volume,
-      onSuspend: recitation.suspendForAlert,
+      onSuspend: interruption.suspendRecitation,
       onRestoreRecitationVolume: service.setVolume,
-      onResume: recitation.resumeAfterAlert,
+      onResume: interruption.resumeRecitation,
+      onSettlePreview: interruption.settlePreview,
     );
     final os = OsNotificationChannel(
       onClick: inApp.focusAlert,

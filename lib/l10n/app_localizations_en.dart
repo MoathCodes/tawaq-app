@@ -1459,6 +1459,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get prepareForPrayer => 'Prepare yourself for the prayer.';
 
   @override
+  String get previewFailed => 'Preview failed — try again.';
+
+  @override
+  String get previewListen => 'Preview';
+
+  @override
   String get qatar => 'Qatar';
 
   @override
@@ -1585,6 +1591,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quranRangeScope => 'Range';
+
+  @override
+  String get quranRangeSuggestedHint =>
+      'Suggested from your current reading — Save to keep it.';
 
   @override
   String get quranRangeTitle => 'Range & repeat for memorization';
