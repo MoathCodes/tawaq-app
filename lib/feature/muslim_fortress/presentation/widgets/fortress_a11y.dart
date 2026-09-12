@@ -46,13 +46,28 @@ abstract final class FortressA11y {
   }) =>
       '$title. $recurrence. ${l10n.fortressSupplicationCount(supplicationCount)}';
 
-  /// Chapter list preview row (index, repeats, expand/collapse).
+  /// Chapter list preview row (text, index, repeats, expand/collapse).
   static String previewRowLabel(
     AppLocalizations l10n, {
     required int oneBasedIndex,
     required bool isExpanded,
     required int targetCount,
-  }) =>
-      '$oneBasedIndex. ×$targetCount. '
-      '${isExpanded ? l10n.collapse : l10n.fortressShowDetails}';
+    String? text,
+  }) {
+    final trimmedText = text?.trim();
+    final parts = <String>[
+      '$oneBasedIndex.',
+      if (!isExpanded && trimmedText != null && trimmedText.isNotEmpty)
+        trimmedText,
+      '×$targetCount',
+    ];
+    if (isExpanded) return parts.join(' ');
+    return '${parts.join(' ')}. ${l10n.fortressShowDetails}';
+  }
+
+  /// Label for the dedicated collapse control in an expanded preview row.
+  static String previewCollapseLabel(
+    AppLocalizations l10n, {
+    required int oneBasedIndex,
+  }) => '$oneBasedIndex. ${l10n.collapse}';
 }
