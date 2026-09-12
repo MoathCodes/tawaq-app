@@ -616,6 +616,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fortressSearchHint => 'ابحث في الأذكار والأبواب...';
 
   @override
+  String get fortressSearchLabel => 'بحث';
+
+  @override
   String get fortressSearchOpen => 'البحث في الأذكار';
 
   @override
@@ -626,6 +629,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get fortressShowDetails => 'عرض التفاصيل';
+
+  @override
+  String get fortressShowLess => 'عرض أقل';
+
+  @override
+  String get fortressShowMore => 'عرض المزيد';
 
   @override
   String get fortressShowSharh => 'عرض الشرح';
@@ -1198,6 +1207,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noDataAvailable => 'لا توجد بيانات';
+
+  @override
+  String get prayerAnalyticsNoRecords => 'لا توجد سجلات للصلاة في هذه الفترة';
+
+  @override
+  String get prayerAnalyticsNoRecordsHint =>
+      'سجّل حالة صلاة في جدول اليوم لتظهر هنا.';
 
   @override
   String get noReflectionsMatchSearch => 'لا توجد خواطر تطابق بحثك';

@@ -62,12 +62,12 @@ abstract final class FortressA11y {
       '×$targetCount',
     ];
     if (isExpanded) return parts.join(' ');
-    return '${parts.join(' ')}. ${l10n.fortressShowDetails}';
+    return '${parts.join(' ')}. ${l10n.fortressShowMore}';
   }
 
   /// Label for the dedicated collapse control in an expanded preview row.
   static String previewCollapseLabel(
     AppLocalizations l10n, {
     required int oneBasedIndex,
-  }) => '$oneBasedIndex. ${l10n.collapse}';
+  }) => '$oneBasedIndex. ${l10n.fortressShowLess}';
 }

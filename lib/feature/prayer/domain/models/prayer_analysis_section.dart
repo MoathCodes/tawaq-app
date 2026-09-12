@@ -44,6 +44,7 @@ class PrayerAnalysisSectionData {
   /// Creates a prayer analysis snapshot for the selected period.
   const new({
     required this.period,
+    required this.hasRecordedData,
     required this.todayStatusCounts,
     required this.todayPrayerStatuses,
     required this.todayPerformanceScore,
@@ -55,6 +56,7 @@ class PrayerAnalysisSectionData {
   factory empty(PrayerAnalyticsPeriod period) {
     return PrayerAnalysisSectionData(
       period: period,
+      hasRecordedData: false,
       todayStatusCounts: _emptyCounts(),
       todayPrayerStatuses: _emptyPrayerStatuses(),
       todayPerformanceScore: 0,
@@ -65,6 +67,12 @@ class PrayerAnalysisSectionData {
 
   /// The analytics period used to build this section.
   final PrayerAnalyticsPeriod period;
+
+  /// Whether the selected period contains at least one recorded prayer row.
+  ///
+  /// This is intentionally separate from completion percentage: an explicit
+  /// missed or late row is data even when the success percentage is zero.
+  final bool hasRecordedData;
 
   /// Completion counts for the current day.
   final Map<CompletionStatus, int> todayStatusCounts;

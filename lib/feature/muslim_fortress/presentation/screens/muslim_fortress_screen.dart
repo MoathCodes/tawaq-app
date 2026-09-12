@@ -193,8 +193,8 @@ class _FortressBrowseMainPane extends HookConsumerWidget {
       return null;
     }, [searchController.text]);
 
-    // The field stays hidden behind an icon button so the pane shows only one
-    // search affordance at rest (the sidebar's chapter filter).
+    // Keep the global search affordance in the browse toolbar so it is
+    // discoverable without adding another search/controller path.
     final searchFocusNode = useFocusNode();
     final expanded = useState(committedQuery.isNotEmpty);
     final openSearch = useCallback(() {
@@ -246,19 +246,11 @@ class _FortressBrowseMainPane extends HookConsumerWidget {
                       )
                     : Align(
                         alignment: AlignmentDirectional.centerEnd,
-                        child: FTooltip(
-                          tipBuilder: (context, _) =>
-                              Text(l10n.fortressSearchOpen),
-                          // Sits at the very top of the pane, so the default
-                          // above-anchored tip lands under the title bar.
-                          childAnchor: Alignment.bottomCenter,
-                          tipAnchor: Alignment.topCenter,
-                          child: FButton.icon(
-                            semanticsTooltip: l10n.fortressSearchOpen,
-                            variant: FButtonVariant.ghost,
-                            onPress: openSearch,
-                            child: const Icon(FLucideIcons.search),
-                          ),
+                        child: FButton(
+                          variant: FButtonVariant.ghost,
+                          onPress: openSearch,
+                          prefix: const Icon(FLucideIcons.search),
+                          child: Text(l10n.fortressSearchLabel),
                         ),
                       ),
               ),

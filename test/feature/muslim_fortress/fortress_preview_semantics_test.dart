@@ -307,4 +307,47 @@ void main() {
       }
     },
   );
+
+  testWidgets(
+    'collapsed preview keeps readable source text and explicit expand copy',
+    (tester) async {
+      const longText =
+          'A long sourced dhikr passage that should remain readable in the '
+          'collapsed preview while the user decides whether to expand it.';
+      const dua = FortressDuaItem(
+        contentId: 9,
+        category: 'Fixture category',
+        text: longText,
+        targetCount: 7,
+        lines: [HisnPlainLine(longText)],
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          FortressDuaPreviewCard(
+            index: 0,
+            dua: dua,
+            isExpanded: false,
+            onToggleExpanded: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      final preview = tester.widget<Text>(find.text(longText));
+      expect(preview.maxLines, 4);
+      expect(
+        preview.style?.color,
+        buildAppTheme(
+          palette: AppPalette.neutral,
+          themeMode: ThemeMode.light,
+          touch: false,
+          textScale: 1,
+        ).colors.foreground,
+      );
+      expect(find.text(l10n.fortressShowMore), findsOneWidget);
+      expect(find.text('×7'), findsOneWidget);
+    },
+  );
 }

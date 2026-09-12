@@ -55,6 +55,110 @@ class FortressCategoryDetailView extends ConsumerWidget {
   }
 }
 
+/// Compact chapter header shared by the browse detail route.
+class FortressCategoryDetailHeader extends StatelessWidget {
+  /// Creates a compact chapter header.
+  const new({
+    required this.category,
+    required this.duaCount,
+    required this.onStartReading,
+    super.key,
+  });
+
+  /// Chapter metadata shown in the header.
+  final FortressCategory category;
+
+  /// Number of sourced adhkar in the chapter.
+  final int duaCount;
+
+  /// Starts focus reading, or is null while the chapter has no content.
+  final VoidCallback? onStartReading;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = context.l10n;
+
+    return StaticCard(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      borderRadius: theme.radii.lg,
+      backgroundColor: theme.colors.secondary.withAlpha(80),
+      borderColor: theme.colors.border.withAlpha(100),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final titleAndMeta = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      category.title,
+                      style: theme.typography.body.xl2.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  FortressFavoriteToggle(
+                    chapterId: category.chapterId,
+                    iconSize: 22,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Wrap(
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.xs,
+                children: [
+                  _FortressHeaderMeta(
+                    icon: FLucideIcons.repeat,
+                    label: fortressRecurrenceLabel(category.recurrence, l10n),
+                  ),
+                  _FortressHeaderMeta(
+                    icon: FLucideIcons.list,
+                    label: l10n.fortressSupplicationsInSection(duaCount),
+                  ),
+                ],
+              ),
+            ],
+          );
+          final startButton = FButton(
+            onPress: onStartReading,
+            prefix: const Icon(FLucideIcons.bookOpen),
+            child: Text(l10n.fortressStartReading),
+          );
+
+          // Keep the action in the header on wide panes, but let it take a
+          // natural second line when localized titles need the room.
+          if (constraints.maxWidth < 520) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                titleAndMeta,
+                const SizedBox(height: AppSpacing.md),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: startButton,
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: titleAndMeta),
+              const SizedBox(width: AppSpacing.lg),
+              startButton,
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
 class _FortressCategoryDetailBody extends HookConsumerWidget {
   const new({
     required this.category,
@@ -77,7 +181,13 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
     final controller = ref.read(fortressScreenControllerProvider.notifier);
     final theme = context.theme;
     final l10n = context.l10n;
-    final expandedIndex = useState<int?>(null);
+    final expandedContentId = useState<int?>(null);
+    useEffect(() {
+      // Keep disclosure local to the selected chapter even if the detail body
+      // is reused while the repository publishes a refreshed snapshot.
+      expandedContentId.value = null;
+      return null;
+    }, [category.chapterId]);
 
     void toggleFavorite() => ref
         .read(fortressScreenSettingsProvider.notifier)
@@ -85,56 +195,12 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
 
     return CenteredViewportShell(
       maxContentWidth: kFortressReadingMaxWidth,
-      header: StaticCard(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        borderRadius: theme.radii.lg,
-        backgroundColor: theme.colors.secondary.withAlpha(80),
-        borderColor: theme.colors.border.withAlpha(100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    category.title,
-                    style: theme.typography.body.xl2.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                FortressFavoriteToggle(
-                  chapterId: category.chapterId,
-                  iconSize: 22,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              fortressRecurrenceLabel(category.recurrence, l10n),
-              style: theme.typography.body.md.copyWith(
-                color: theme.colors.mutedForeground,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            FBadge(
-              child: Text(l10n.fortressSupplicationsInSection(duas.length)),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                FButton(
-                  onPress: duas.isEmpty && !isLoading
-                      ? null
-                      : controller.startFocusReading,
-                  prefix: const Icon(FLucideIcons.bookOpen),
-                  child: Text(l10n.fortressStartReading),
-                ),
-              ],
-            ),
-          ],
-        ),
+      header: FortressCategoryDetailHeader(
+        category: category,
+        duaCount: duas.length,
+        onStartReading: duas.isEmpty && !isLoading
+            ? null
+            : controller.startFocusReading,
       ),
       body: CenteredViewportShell.scrollTab(
         maxContentWidth: kFortressReadingMaxWidth,
@@ -170,7 +236,8 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
                         return FortressDuaPreviewPlaceholder(index: index);
                       }
                       final dua = duas[index];
-                      final isExpanded = expandedIndex.value == index;
+                      final isExpanded =
+                          expandedContentId.value == dua.contentId;
 
                       return FContextMenu(
                         menuBuilder: (context, menuController, _) => [
@@ -212,11 +279,14 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
                           ),
                         ],
                         child: FortressDuaPreviewCard(
+                          key: ValueKey(dua.contentId),
                           index: index,
                           dua: dua,
                           isExpanded: isExpanded,
                           onToggleExpanded: () {
-                            expandedIndex.value = isExpanded ? null : index;
+                            expandedContentId.value = isExpanded
+                                ? null
+                                : dua.contentId;
                           },
                         ),
                       );
@@ -264,9 +334,15 @@ class FortressDuaPreviewCard extends StatelessWidget {
               runSpacing: AppSpacing.xs,
               children: [
                 if (dua.hasSharh)
-                  FBadge(variant: .secondary, child: Text(l10n.fortressSharh)),
+                  _FortressPreviewMeta(
+                    icon: FLucideIcons.bookOpenText,
+                    label: l10n.fortressSharh,
+                  ),
                 if (dua.hasVirtue)
-                  FBadge(variant: .secondary, child: Text(l10n.fortressVirtue)),
+                  _FortressPreviewMeta(
+                    icon: FLucideIcons.sparkles,
+                    label: l10n.fortressVirtue,
+                  ),
               ],
             ),
           )
@@ -368,21 +444,94 @@ class _FortressDuaPreviewSuffix extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          '×$targetCount',
-          style: typography.body.xs.copyWith(
-            color: colors.primary,
-            fontWeight: FontWeight.w600,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '×$targetCount',
+              style: typography.body.xs.copyWith(
+                color: colors.mutedForeground,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              isExpanded ? l10n.fortressShowLess : l10n.fortressShowMore,
+              style: typography.body.xs.copyWith(
+                color: colors.mutedForeground,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Icon(
+              isExpanded ? FLucideIcons.chevronUp : FLucideIcons.chevronDown,
+              size: 14,
+              color: colors.mutedForeground,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _FortressHeaderMeta extends StatelessWidget {
+  const _FortressHeaderMeta({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: theme.colors.mutedForeground),
+        const SizedBox(width: AppSpacing.xs),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.typography.body.sm.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
           ),
         ),
-        const SizedBox(height: AppSpacing.xs),
-        Icon(
-          isExpanded ? FLucideIcons.chevronUp : FLucideIcons.chevronDown,
-          size: 16,
-          color: colors.mutedForeground,
+      ],
+    );
+  }
+}
+
+class _FortressPreviewMeta extends StatelessWidget {
+  const _FortressPreviewMeta({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: theme.colors.mutedForeground),
+        const SizedBox(width: AppSpacing.xs),
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.typography.body.xs.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
+          ),
         ),
       ],
     );

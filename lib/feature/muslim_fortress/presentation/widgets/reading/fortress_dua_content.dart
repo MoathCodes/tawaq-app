@@ -93,9 +93,7 @@ class _ThikrPreviewText extends StatelessWidget {
     final isQuran = dua.isQuranicPassage;
 
     var style = theme.typography.body.sm.copyWith(
-      color: isExpanded
-          ? theme.colors.foreground
-          : theme.colors.mutedForeground,
+      color: theme.colors.foreground,
       height: isQuran ? 2 : 1.6,
       fontSize: isQuran ? (isExpanded ? 22 : 20) : null,
       fontWeight: isExpanded && isQuran ? FontWeight.w600 : FontWeight.w500,
@@ -108,7 +106,7 @@ class _ThikrPreviewText extends StatelessWidget {
       dua.text,
       style: style,
       textAlign: TextAlign.start,
-      maxLines: isExpanded ? null : 2,
+      maxLines: isExpanded ? null : 4,
       overflow: isExpanded ? null : TextOverflow.ellipsis,
     );
   }
