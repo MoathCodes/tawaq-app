@@ -48,15 +48,20 @@ class ManuscriptTheme {
       secondaryForeground: const HSLColor.fromAHSL(1, 40, 0.25, 0.88).toColor(),
       muted: const HSLColor.fromAHSL(1, _warmHue, 0.08, 0.20).toColor(),
       mutedForeground: const HSLColor.fromAHSL(1, 38, 0.15, 0.60).toColor(),
-      destructive: const HSLColor.fromAHSL(1, 0, 0.72, 0.55).toColor(),
+      destructive: const HSLColor.fromAHSL(1, 0, 0.72, 0.66).toColor(),
       destructiveForeground: const HSLColor.fromAHSL(
         1,
-        40,
-        0.20,
-        0.95,
+        _warmHue,
+        0.10,
+        0.08,
       ).toColor(),
-      error: const HSLColor.fromAHSL(1, 5, 0.75, 0.58).toColor(),
-      errorForeground: const HSLColor.fromAHSL(1, 40, 0.20, 0.95).toColor(),
+      error: const HSLColor.fromAHSL(1, 5, 0.75, 0.66).toColor(),
+      errorForeground: const HSLColor.fromAHSL(
+        1,
+        _warmHue,
+        0.10,
+        0.08,
+      ).toColor(),
       border: const HSLColor.fromAHSL(1, _warmHue, 0.10, 0.22).toColor(),
     );
 
@@ -70,13 +75,17 @@ class ManuscriptTheme {
       barrier: Colors.black.withValues(alpha: 0.15),
       background: const HSLColor.fromAHSL(1, 40, 0.40, 0.95).toColor(),
       foreground: const HSLColor.fromAHSL(1, 25, 0.45, 0.18).toColor(),
-      primary: const HSLColor.fromAHSL(1, _primaryHue, 0.85, 0.38).toColor(),
+      // Keep the gold accent warm and saturated while giving it enough depth
+      // for both primary text on cards and its light foreground on controls.
+      primary: const HSLColor.fromAHSL(1, _primaryHue, 0.85, 0.28).toColor(),
       primaryForeground: const HSLColor.fromAHSL(1, 45, 0.30, 0.98).toColor(),
       secondary: const HSLColor.fromAHSL(1, 38, 0.30, 0.84).toColor(),
       card: const HSLColor.fromAHSL(1, _primaryHue, 0.28, 0.88).toColor(),
       secondaryForeground: const HSLColor.fromAHSL(1, 25, 0.40, 0.22).toColor(),
       muted: const HSLColor.fromAHSL(1, 38, 0.25, 0.86).toColor(),
-      mutedForeground: const HSLColor.fromAHSL(1, 25, 0.30, 0.45).toColor(),
+      // This role is used for normal metadata and supporting copy on card,
+      // secondary, and muted surfaces, so it must remain readable on each.
+      mutedForeground: const HSLColor.fromAHSL(1, 25, 0.30, 0.35).toColor(),
       destructive: const HSLColor.fromAHSL(1, 0, 0.72, 0.45).toColor(),
       destructiveForeground: const HSLColor.fromAHSL(
         1,
@@ -84,7 +93,7 @@ class ManuscriptTheme {
         0.30,
         0.98,
       ).toColor(),
-      error: const HSLColor.fromAHSL(1, 5, 0.78, 0.48).toColor(),
+      error: const HSLColor.fromAHSL(1, 5, 0.78, 0.42).toColor(),
       errorForeground: const HSLColor.fromAHSL(1, 45, 0.30, 0.98).toColor(),
       border: const HSLColor.fromAHSL(1, 35, 0.25, 0.72).toColor(),
     );
