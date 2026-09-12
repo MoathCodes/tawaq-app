@@ -626,6 +626,12 @@ abstract class AppLocalizations {
   /// **'Current Prayer'**
   String get currentPrayer;
 
+  /// No description provided for @currentEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current event'**
+  String get currentEvent;
+
   /// No description provided for @currentStreak.
   ///
   /// In en, this message translates to:
@@ -643,6 +649,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Since prayer began'**
   String get prayerTimeSinceStart;
+
+  /// No description provided for @eventTimeSinceStart.
+  ///
+  /// In en, this message translates to:
+  /// **'Since event began'**
+  String get eventTimeSinceStart;
+
+  /// No description provided for @eventTimeRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining'**
+  String get eventTimeRemaining;
 
   /// No description provided for @customParametersCollapsedHint.
   ///
@@ -2083,6 +2101,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next Prayer'**
   String get nextPrayer;
+
+  /// No description provided for @nextEvent.
+  ///
+  /// In en, this message translates to:
+  /// **'Next event'**
+  String get nextEvent;
 
   /// No description provided for @noDataAvailable.
   ///

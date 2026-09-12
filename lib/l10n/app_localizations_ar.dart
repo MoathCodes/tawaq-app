@@ -337,6 +337,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get currentPrayer => 'الصلاة الحالية';
 
   @override
+  String get currentEvent => 'الحدث الحالي';
+
+  @override
   String get currentStreak => 'الإنجاز الحالي';
 
   @override
@@ -344,6 +347,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get prayerTimeSinceStart => 'منذ بداية الصلاة';
+
+  @override
+  String get eventTimeSinceStart => 'منذ بداية الحدث';
+
+  @override
+  String get eventTimeRemaining => 'الوقت المتبقي';
 
   @override
   String get customParametersCollapsedHint =>
@@ -1183,6 +1192,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get nextPrayer => 'الصلاة القادمة';
+
+  @override
+  String get nextEvent => 'الحدث القادم';
 
   @override
   String get noDataAvailable => 'لا توجد بيانات';

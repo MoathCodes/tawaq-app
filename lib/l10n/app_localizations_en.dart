@@ -318,6 +318,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentPrayer => 'Current Prayer';
 
   @override
+  String get currentEvent => 'Current event';
+
+  @override
   String get currentStreak => 'Current Streak';
 
   @override
@@ -325,6 +328,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prayerTimeSinceStart => 'Since prayer began';
+
+  @override
+  String get eventTimeSinceStart => 'Since event began';
+
+  @override
+  String get eventTimeRemaining => 'Time remaining';
 
   @override
   String get customParametersCollapsedHint =>
@@ -1147,6 +1156,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nextPrayer => 'Next Prayer';
+
+  @override
+  String get nextEvent => 'Next event';
 
   @override
   String get noDataAvailable => 'No data available';

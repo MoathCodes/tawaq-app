@@ -19,6 +19,7 @@ import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_fo
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/hero_header/prayer_hero_labels.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Hero header showing the current or next prayer with a time-aware surface.
@@ -184,34 +185,30 @@ class _HeroBody extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _HeroStateLabel(isCountdown: card.isCountdown),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                prayer.getLocaleName(l10n),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.typography.body.xl3.copyWith(
-                                  color: theme.colors.foreground,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.sm),
-                              const _HeroCountdownLabel(),
-                            ],
-                          ),
+                    if (width < breakpoints.sm) ...[
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: width),
+                          child: const _HeroHijriDatePill(),
                         ),
-                        const SizedBox(width: AppSpacing.md),
-                        const _HeroHijriDatePill(),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _HeroPrimaryInfo(prayer: prayer, l10n: l10n),
+                    ] else
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _HeroPrimaryInfo(
+                              prayer: prayer,
+                              l10n: l10n,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          const _HeroHijriDatePill(),
+                        ],
+                      ),
                     const SizedBox(height: AppSpacing.md),
                     if (stackBottomRow)
                       Column(
@@ -293,9 +290,42 @@ class _HeroBody extends ConsumerWidget {
   }
 }
 
+class _HeroPrimaryInfo extends StatelessWidget {
+  const new({required this.prayer, required this.l10n});
+
+  final Prayer prayer;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _HeroStateLabel(prayer: prayer),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          prayer.getLocaleName(l10n),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.typography.body.xl3.copyWith(
+            color: theme.colors.foreground,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _HeroCountdownLabel(prayer: prayer),
+      ],
+    );
+  }
+}
+
 /// Isolates the 1 Hz countdown so gradient/chrome do not rebuild each tick.
 class _HeroCountdownLabel extends ConsumerWidget {
-  const new();
+  const new({required this.prayer});
+
+  final Prayer prayer;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -310,7 +340,11 @@ class _HeroCountdownLabel extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          prayerCardDurationLabel(l10n: l10n, isCountdown: isCountdown),
+          prayerCardDurationLabel(
+            l10n: l10n,
+            prayer: prayer,
+            isCountdown: isCountdown,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: theme.typography.body.sm.copyWith(
@@ -338,15 +372,18 @@ class _HeroCountdownLabel extends ConsumerWidget {
   }
 }
 
-class _HeroStateLabel extends StatelessWidget {
-  const new({required this.isCountdown});
+class _HeroStateLabel extends ConsumerWidget {
+  const new({required this.prayer});
 
-  final bool isCountdown;
+  final Prayer prayer;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
+    final isCountdown = ref.watch(
+      prayerCardStaticProvider.select((card) => card.isCountdown),
+    );
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
@@ -357,7 +394,11 @@ class _HeroStateLabel extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        prayerCardStateLabel(l10n: l10n, isCountdown: isCountdown),
+        prayerCardStateLabel(
+          l10n: l10n,
+          prayer: prayer,
+          isCountdown: isCountdown,
+        ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: theme.typography.body.xs.copyWith(
