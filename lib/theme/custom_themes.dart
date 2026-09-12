@@ -77,7 +77,10 @@ class ManuscriptTheme {
       foreground: const HSLColor.fromAHSL(1, 25, 0.45, 0.18).toColor(),
       // Keep the gold accent warm and saturated while giving it enough depth
       // for both primary text on cards and its light foreground on controls.
-      primary: const HSLColor.fromAHSL(1, _primaryHue, 0.85, 0.28).toColor(),
+      // This accent is also used for compact metadata labels and status copy
+      // on the light secondary/muted surfaces, not only for borders and icons.
+      // Keep the gold hue while giving those active labels a 4.5:1 floor.
+      primary: const HSLColor.fromAHSL(1, _primaryHue, 0.85, 0.23).toColor(),
       primaryForeground: const HSLColor.fromAHSL(1, 45, 0.30, 0.98).toColor(),
       secondary: const HSLColor.fromAHSL(1, 38, 0.30, 0.84).toColor(),
       card: const HSLColor.fromAHSL(1, _primaryHue, 0.28, 0.88).toColor(),
