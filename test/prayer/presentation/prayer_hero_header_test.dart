@@ -135,6 +135,27 @@ void main() {
     expect(duration.textDirection, TextDirection.ltr);
   });
 
+  testWidgets('keeps Arabic event hierarchy readable in dark theme', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        prayer: Prayer.ishaBefore,
+        isCountdown: true,
+        locale: const Locale('ar'),
+        width: 720,
+        dark: true,
+        countdown: '٠٠:١٢:٣٤',
+      ),
+    );
+
+    expect(find.text('الحدث القادم'), findsOneWidget);
+    expect(find.text('الثلث الأخير من الليل'), findsOneWidget);
+    expect(find.text('الوقت المتبقي'), findsOneWidget);
+    final duration = tester.widget<Text>(find.text('٠٠:١٢:٣٤'));
+    expect(duration.textDirection, TextDirection.ltr);
+  });
+
   for (final width in [320.0, 400.0]) {
     testWidgets(
       'keeps essential hero content visible at ${width.toInt()}dp with large text',
