@@ -176,40 +176,41 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (resultOrdinal != null)
-            Semantics(
-              header: true,
-              child: Padding(
-                padding: const EdgeInsetsDirectional.only(
-                  start: AppSpacing.xs,
-                  end: AppSpacing.xs,
-                  bottom: AppSpacing.sm,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: AppSpacing.xs,
-                  children: [
-                    Text(
-                      l10n.hadithSelectedResult(resultOrdinal!),
-                      style: theme.typography.body.lg.copyWith(
-                        color: colors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
+          Semantics(
+            header: true,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: AppSpacing.xs,
+                end: AppSpacing.xs,
+                bottom: AppSpacing.sm,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: AppSpacing.xs,
+                children: [
+                  Text(
+                    resultOrdinal == null
+                        ? l10n.hadithSelectedHadith
+                        : l10n.hadithSelectedResult(resultOrdinal!),
+                    style: theme.typography.body.lg.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w700,
                     ),
-                    Text(
-                      l10n.hadithSourceCitation(
-                        hadith.book,
-                        hadith.numberOrPage,
-                      ),
-                      softWrap: true,
-                      style: theme.typography.body.sm.copyWith(
-                        color: colors.mutedForeground,
-                      ),
+                  ),
+                  Text(
+                    l10n.hadithSourceCitation(
+                      hadith.book,
+                      hadith.numberOrPage,
                     ),
-                  ],
-                ),
+                    softWrap: true,
+                    style: theme.typography.body.sm.copyWith(
+                      color: colors.mutedForeground,
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
           Align(
             alignment: AlignmentDirectional.centerEnd,
             child: FTooltip(

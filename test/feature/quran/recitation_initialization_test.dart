@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/audio/audio_lease.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
+import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_settings.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
@@ -119,46 +122,154 @@ void main() {
     expect(pressed, isFalse);
   });
 
+  testWidgets('focused play control reveals context tooltip and activates', (
+    tester,
+  ) async {
+    var pressed = false;
+    const label = 'Play · Al-Baqarah · Test reciter';
+    await tester.pumpWidget(
+      _wrap(
+        Focus(
+          autofocus: true,
+          child: RecitationPlayButton(
+            isPlaying: false,
+            isLoading: false,
+            semanticsLabel: label,
+            tooltip: label,
+            onPress: () async => pressed = true,
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(find.text(label), findsOneWidget);
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    expect(pressed, isTrue);
+    await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   test('title-bar playback label includes action and hydrated context', () {
     final l10n = lookupAppLocalizations(const Locale('en'));
 
     expect(
       recitationTransportPlaybackLabel(
         l10n: l10n,
-        isPlaying: true,
-        isLoading: false,
-        isInitializing: false,
-        hasInitializationError: false,
-        canPlay: true,
-        hasRangeSelection: false,
+        state: recitationTransportPlaybackState(
+          _view(
+            const RecitationState(
+              reciter: _reciter,
+              moshaf: _timedMoshaf,
+              surah: 2,
+              status: RecitationStatus.playing,
+            ),
+            audio: const AudioSessionSnapshot(
+              owner: kRecitationLeaseOwner,
+              lifecycle: AudioSessionLifecycle.playing,
+              playIntent: true,
+            ),
+          ),
+        ),
         surahName: 'Al-Baqarah',
-        reciterName: 'Test reciter',
       ),
       'Pause · Al-Baqarah · Test reciter',
     );
     expect(
       recitationTransportPlaybackLabel(
         l10n: l10n,
-        isPlaying: false,
-        isLoading: false,
-        isInitializing: false,
-        hasInitializationError: false,
-        canPlay: false,
-        hasRangeSelection: false,
+        state: recitationTransportPlaybackState(
+          _view(const RecitationState()),
+        ),
       ),
-      contains('Select reciter'),
+      contains('Choose a reciter'),
     );
     expect(
       recitationTransportPlaybackLabel(
         l10n: l10n,
-        isPlaying: false,
-        isLoading: true,
-        isInitializing: false,
-        hasInitializationError: false,
-        canPlay: false,
-        hasRangeSelection: false,
-        surahName: 'Al-Baqarah',
-        reciterName: 'Test reciter',
+        state: recitationTransportPlaybackState(
+          _view(const RecitationState(reciter: _reciter)),
+        ),
+      ),
+      contains('Choose a recitation'),
+    );
+    expect(
+      recitationTransportPlaybackLabel(
+        l10n: l10n,
+        state: recitationTransportPlaybackState(
+          _view(
+            const RecitationState(reciter: _reciter, moshaf: _timedMoshaf),
+          ),
+        ),
+      ),
+      contains('Choose a surah'),
+    );
+    expect(
+      recitationTransportPlaybackLabel(
+        l10n: l10n,
+        state: recitationTransportPlaybackState(
+          _view(
+            const RecitationState(
+              rangeFrom: AyahReference(surah: 2, ayah: 1),
+            ),
+          ),
+        ),
+      ),
+      isNot(contains('timed reciter')),
+    );
+    expect(
+      recitationTransportPlaybackLabel(
+        l10n: l10n,
+        state: recitationTransportPlaybackState(
+          _view(
+            const RecitationState(
+              initializationStatus: RecitationInitializationStatus.initializing,
+            ),
+          ),
+        ),
+      ),
+      contains('Loading'),
+    );
+    expect(
+      recitationTransportPlaybackLabel(
+        l10n: l10n,
+        state: recitationTransportPlaybackState(
+          _view(
+            const RecitationState(
+              initializationStatus: RecitationInitializationStatus.failed,
+              initializationError: 'Fixture failure',
+            ),
+          ),
+        ),
+      ),
+      contains(l10n.quranRecitationInitializationFailed),
+    );
+    expect(
+      recitationTransportPlaybackLabel(
+        l10n: l10n,
+        state: recitationTransportPlaybackState(
+          _view(
+            const RecitationState(
+              reciter: _reciter,
+              moshaf: _timedMoshaf,
+              surah: 2,
+              status: RecitationStatus.ended,
+            ),
+          ),
+        ),
+      ),
+      startsWith('Replay'),
+    );
+    expect(
+      recitationTransportPlaybackLabel(
+        l10n: l10n,
+        state: recitationTransportPlaybackState(
+          _view(
+            const RecitationState(status: RecitationStatus.loading),
+          ),
+        ),
       ),
       contains('Loading'),
     );
@@ -173,7 +284,25 @@ const _moshaf = Moshaf(
   surahTotal: 1,
 );
 
+const _timedMoshaf = Moshaf(
+  id: 2,
+  name: 'Timed Hafs',
+  server: 'https://example.com/',
+  surahList: [1, 2],
+  surahTotal: 2,
+  timingReadId: 22,
+);
+
 const _reciter = Reciter(id: 1, name: 'Test reciter', moshaf: [_moshaf]);
+
+RecitationViewState _view(
+  RecitationState session, {
+  AudioSessionSnapshot audio = const AudioSessionSnapshot(),
+}) => RecitationViewState(
+  session: session,
+  preferences: const RecitationSettings(),
+  audio: audio,
+);
 
 class _FailedRecitationController extends RecitationController {
   @override

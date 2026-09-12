@@ -139,37 +139,49 @@ class HadithResultCard extends ConsumerWidget {
           onPress: onSelectAction,
         );
 
+        List<FItemGroupMixin> menuItems(FPopoverController controller) => [
+          FItemGroup(
+            children: [
+              contextMenuAction(
+                controller: controller,
+                icon: FLucideIcons.bookOpenText,
+                label: l10n.menuOpen,
+                onPressed: onSelectAction,
+              ),
+              contextMenuAction(
+                controller: controller,
+                icon: FLucideIcons.copy,
+                label: l10n.menuCopyText,
+                onPressed: () => _copyHadith(context, l10n),
+              ),
+              if (showFavoriteAction && onToggleFavoriteAction != null)
+                contextMenuAction(
+                  controller: controller,
+                  icon: isFavoriteValue
+                      ? FLucideIcons.bookmarkX
+                      : FLucideIcons.bookmark,
+                  label: isFavoriteValue
+                      ? l10n.menuRemoveBookmark
+                      : l10n.menuAddBookmark,
+                  onPressed: onToggleFavoriteAction,
+                ),
+            ],
+          ),
+        ];
+
         final wrapped = FContextMenu(
-          menuBuilder: (context, controller, _) => [
-            FItemGroup(
-              children: [
-                contextMenuAction(
-                  controller: controller,
-                  icon: FLucideIcons.bookOpenText,
-                  label: l10n.menuOpen,
-                  onPressed: onSelectAction,
-                ),
-                contextMenuAction(
-                  controller: controller,
-                  icon: FLucideIcons.copy,
-                  label: l10n.menuCopyText,
-                  onPressed: () => _copyHadith(context, l10n),
-                ),
-                if (showFavoriteAction && onToggleFavoriteAction != null)
-                  contextMenuAction(
-                    controller: controller,
-                    icon: isFavoriteValue
-                        ? FLucideIcons.bookmarkX
-                        : FLucideIcons.bookmark,
-                    label: isFavoriteValue
-                        ? l10n.menuRemoveBookmark
-                        : l10n.menuAddBookmark,
-                    onPressed: onToggleFavoriteAction,
-                  ),
-              ],
-            ),
-          ],
+          menuBuilder: (context, controller, _) => menuItems(controller),
           child: card,
+        );
+
+        final moreActionsButton = FPopoverMenu(
+          menuBuilder: (context, controller, _) => menuItems(controller),
+          builder: (context, controller, _) => FButton.icon(
+            variant: .ghost,
+            semanticsLabel: l10n.hadithMoreActions,
+            onPress: controller.toggle,
+            child: const Icon(FLucideIcons.ellipsis),
+          ),
         );
 
         final selectable = Semantics(
@@ -178,16 +190,15 @@ class HadithResultCard extends ConsumerWidget {
           button: true,
           selected: isSelectedValue,
           onTap: onSelectAction,
-          child: ExcludeSemantics(child: wrapped),
+          child: wrapped,
         );
-
-        if (favoriteButton == null) return selectable;
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(child: selectable),
-            favoriteButton,
+            ?favoriteButton,
+            moreActionsButton,
           ],
         );
       },

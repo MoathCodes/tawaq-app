@@ -1,5 +1,9 @@
 {
   "@@locale": "ar",
+  "globalPlaybackChooseMoshaf": "اختر تلاوة",
+  "globalPlaybackChooseReciter": "اختر القارئ",
+  "globalPlaybackChooseSurah": "اختر السورة",
+  "globalPlaybackReplay": "إعادة التشغيل",
   "a11yExpandSidebar": "توسيع الشريط الجانبي",
   "a11yNavigationUnavailable": "غير متاح",
   "a11yOpenLocationSettings": "فتح إعدادات الموقع",
@@ -318,6 +322,7 @@
     }
   },
   "hadithMuhaddith": "المحدث",
+  "hadithMoreActions": "إجراءات الحديث الإضافية",
   "hadithNarrator": "الراوي",
   "hadithNarrators": "الرواة",
   "hadithNoBookmarks": "لا توجد أحاديث محفوظة",
@@ -360,6 +365,7 @@
   "hadithSearchZoneQudsi": "الأحاديث القدسية",
   "hadithSearchZoneSahabaAthar": "آثار الصحابة",
   "hadithSearchZoneSharh": "شروح الأحاديث",
+  "hadithSelectedHadith": "الحديث المحدد",
   "hadithSelectedResult": "النتيجة المحددة {number}",
   "@hadithSelectedResult": {
     "placeholders": {

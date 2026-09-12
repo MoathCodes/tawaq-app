@@ -98,6 +98,30 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
+  /// No description provided for @globalPlaybackChooseMoshaf.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a recitation'**
+  String get globalPlaybackChooseMoshaf;
+
+  /// No description provided for @globalPlaybackChooseReciter.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a reciter'**
+  String get globalPlaybackChooseReciter;
+
+  /// No description provided for @globalPlaybackChooseSurah.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a surah'**
+  String get globalPlaybackChooseSurah;
+
+  /// No description provided for @globalPlaybackReplay.
+  ///
+  /// In en, this message translates to:
+  /// **'Replay'**
+  String get globalPlaybackReplay;
+
   /// No description provided for @a11yExpandSidebar.
   ///
   /// In en, this message translates to:
@@ -1364,6 +1388,12 @@ abstract class AppLocalizations {
   /// **'Muhaddith'**
   String get hadithMuhaddith;
 
+  /// No description provided for @hadithMoreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More hadith actions'**
+  String get hadithMoreActions;
+
   /// No description provided for @hadithNarrator.
   ///
   /// In en, this message translates to:
@@ -1531,6 +1561,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hadith commentaries'**
   String get hadithSearchZoneSharh;
+
+  /// No description provided for @hadithSelectedHadith.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected hadith'**
+  String get hadithSelectedHadith;
 
   /// No description provided for @hadithSelectedResult.
   ///

@@ -20,33 +20,77 @@ export 'package:tawaq/feature/quran/presentation/widgets/player/recitation_trans
 /// The caller supplies the already hydrated session projection. This helper
 /// intentionally does not read providers or start any asynchronous metadata
 /// work while a tooltip is being built.
+typedef RecitationTransportPlaybackState = ({
+  bool canPlay,
+  bool hasInitializationError,
+  bool hasMoshaf,
+  bool hasRangeSelection,
+  bool hasReciter,
+  bool hasSurah,
+  bool hasTimedReciter,
+  bool isEnded,
+  bool isInitializing,
+  bool isLoading,
+  bool isPlaying,
+  String? reciterName,
+});
+
+/// Projects the exact hydrated view fields needed by the compact transport.
+///
+/// Keep this projection in sync with [RecitationViewState]; unlike a
+/// hand-written fallback it cannot claim a range needs timing when the actual
+/// recitation configuration is missing first.
+RecitationTransportPlaybackState recitationTransportPlaybackState(
+  RecitationViewState view,
+) {
+  final session = view.session;
+  return (
+    canPlay: view.canPlay,
+    hasInitializationError: view.hasInitializationError,
+    hasMoshaf: session.moshaf != null,
+    hasRangeSelection: session.hasRangeSelection,
+    hasReciter: session.reciter != null,
+    hasSurah: session.surah != null,
+    hasTimedReciter: session.moshaf?.hasTiming ?? false,
+    isEnded: view.isEnded,
+    isInitializing: view.isInitializing,
+    isLoading: view.isLoading,
+    isPlaying: view.isPlaying,
+    reciterName: session.reciter?.name,
+  );
+}
+
 String recitationTransportPlaybackLabel({
   required AppLocalizations l10n,
-  required bool isPlaying,
-  required bool isLoading,
-  required bool isInitializing,
-  required bool hasInitializationError,
-  required bool canPlay,
-  required bool hasRangeSelection,
+  required RecitationTransportPlaybackState state,
   String? surahName,
-  String? reciterName,
 }) {
-  final action = isPlaying
+  final action = state.isEnded
+      ? l10n.globalPlaybackReplay
+      : state.isPlaying
       ? l10n.quranRecitationPause
       : l10n.quranRecitationPlay;
   final context = <String>[
     if ((surahName ?? '').trim().isNotEmpty) surahName!.trim(),
-    if ((reciterName ?? '').trim().isNotEmpty) reciterName!.trim(),
+    if ((state.reciterName ?? '').trim().isNotEmpty) state.reciterName!.trim(),
   ];
-  final missingContext = hasRangeSelection
-      ? l10n.quranRangeRequiresTimedReciter
-      : '${l10n.quranRecitationUnavailable}. ${l10n.quranSelectReciter}';
+  final missingContext = switch (()) {
+    _ when !state.hasReciter => l10n.globalPlaybackChooseReciter,
+    _ when !state.hasMoshaf => l10n.globalPlaybackChooseMoshaf,
+    _ when !state.hasSurah => l10n.globalPlaybackChooseSurah,
+    _ when state.hasRangeSelection && !state.hasTimedReciter =>
+      l10n.quranRangeRequiresTimedReciter,
+    _ => l10n.quranRecitationUnavailable,
+  };
 
   return <String>[
     action,
-    if (isInitializing || isLoading) l10n.loading,
-    if (hasInitializationError) l10n.quranRecitationInitializationFailed,
-    if (!canPlay && !isInitializing && !isLoading && !hasInitializationError)
+    if (state.isInitializing || state.isLoading) l10n.loading,
+    if (state.hasInitializationError) l10n.quranRecitationInitializationFailed,
+    if (!state.canPlay &&
+        !state.isInitializing &&
+        !state.isLoading &&
+        !state.hasInitializationError)
       missingContext,
     ...context,
   ].join(' · ');
@@ -81,14 +125,7 @@ class _TransportPill extends ConsumerWidget {
           active: view.session.active,
           surah: view.session.surah,
           currentAyah: view.session.currentAyah,
-          reciterName: view.session.reciter?.name,
-          hasRangeSelection: view.session.hasRangeSelection,
-          hasInitializationError: view.hasInitializationError,
-          isInitializing: view.isInitializing,
-          canPlay: view.canPlay,
-          isLoading: view.isLoading,
-          isEnded: view.isEnded,
-          isPlaying: view.isPlaying,
+          playback: recitationTransportPlaybackState(view),
         ),
       ),
     );
@@ -97,11 +134,11 @@ class _TransportPill extends ConsumerWidget {
     final mushaf = ref.read(quranMushafControllerProvider);
     final hasAyahTiming = controller.hasAyahTiming;
 
-    final isLoading = chrome.isLoading;
-    final isEnded = chrome.isEnded;
+    final playback = chrome.playback;
+    final isLoading = playback.isLoading;
+    final isEnded = playback.isEnded;
     final surah = chrome.surah;
-    final isInitializing = chrome.isInitializing;
-    final isInitializationError = chrome.hasInitializationError;
+    final isInitializing = playback.isInitializing;
     final surahName = AyahReferenceLogic.surahName(
       isInitializing || surah == null ? null : mushaf.getSurahSync(surah),
       surah ?? 0,
@@ -137,14 +174,8 @@ class _TransportPill extends ConsumerWidget {
 
     final playbackLabel = recitationTransportPlaybackLabel(
       l10n: l10n,
-      isPlaying: chrome.isPlaying,
-      isLoading: isLoading,
-      isInitializing: isInitializing,
-      hasInitializationError: isInitializationError,
-      canPlay: chrome.canPlay,
-      hasRangeSelection: chrome.hasRangeSelection,
+      state: chrome.playback,
       surahName: surahName,
-      reciterName: chrome.reciterName,
     );
 
     return LayoutBuilder(
@@ -153,7 +184,10 @@ class _TransportPill extends ConsumerWidget {
             ? constraints.maxWidth
             : double.infinity;
         final showSkip =
-            chrome.active && surah != null && !isInitializing && chrome.canPlay;
+            chrome.active &&
+            surah != null &&
+            !isInitializing &&
+            playback.canPlay;
         final isRtl = Directionality.of(context) == TextDirection.rtl;
 
         return ConstrainedBox(
@@ -165,12 +199,14 @@ class _TransportPill extends ConsumerWidget {
                   ? l10n.quranRecitationClosePlayer
                   : l10n.quranRecitationOpenPlayer,
               prefix: RecitationTransportControls(
-                isPlaying: chrome.isPlaying,
+                isPlaying: playback.isPlaying,
                 isLoading: isLoading,
                 isInitializing: isInitializing,
-                canPlay: chrome.canPlay,
+                canPlay: playback.canPlay,
                 isEnded: isEnded,
-                onPlayPause: chrome.canPlay ? controller.togglePlayPause : null,
+                onPlayPause: playback.canPlay
+                    ? controller.togglePlayPause
+                    : null,
                 leftSlot: leftSkipControl(
                   isRtl: isRtl,
                   skipPrevious: hasAyahTiming
@@ -230,7 +266,7 @@ class _TransportPill extends ConsumerWidget {
                     )
                   : const SizedBox.shrink(),
               suffix: _TransportSuffix(
-                isPlaying: chrome.isPlaying,
+                isPlaying: playback.isPlaying,
                 isEnded: isEnded,
                 drawerOpen: drawerOpen,
               ),
