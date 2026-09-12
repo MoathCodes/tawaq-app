@@ -92,12 +92,13 @@ class _ThikrPreviewText extends StatelessWidget {
     final theme = context.theme;
     final isQuran = dua.isQuranicPassage;
 
-    var style = theme.typography.body.sm.copyWith(
-      color: theme.colors.foreground,
-      height: isQuran ? 2 : 1.6,
-      fontSize: isQuran ? (isExpanded ? 22 : 20) : null,
-      fontWeight: isExpanded && isQuran ? FontWeight.w600 : FontWeight.w500,
-    );
+    var style = (isQuran ? theme.typography.body.sm : theme.typography.body.md)
+        .copyWith(
+          color: theme.colors.foreground,
+          height: isQuran ? 2 : 1.75,
+          fontSize: isQuran ? (isExpanded ? 22 : 20) : null,
+          fontWeight: isExpanded && isQuran ? FontWeight.w600 : FontWeight.w500,
+        );
     if (isQuran) {
       style = style.copyWith(fontFamily: FontFamily.uthmanicHafs);
     }

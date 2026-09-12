@@ -22,18 +22,15 @@ class AnalysisSection extends ConsumerWidget {
     final analysisState = ref.watch(prayerAnalysisSectionProvider);
 
     return analysisState.when(
-      data: (_) => _AnalysisContent(sideBySide: sideBySide),
+      data: (data) => data.isReady
+          ? _AnalysisContent(sideBySide: sideBySide)
+          : _AnalysisLoadingContent(sideBySide: sideBySide),
       loading: () {
         final previous = analysisState.asData?.value;
-        if (previous != null) {
+        if (previous?.isReady ?? false) {
           return _AnalysisContent(sideBySide: sideBySide);
         }
-        return Semantics(
-          label: context.l10n.loadingAnalytics,
-          child: FSkeletonizer(
-            child: _AnalysisContent(sideBySide: sideBySide),
-          ),
-        );
+        return _AnalysisLoadingContent(sideBySide: sideBySide);
       },
       error: (e, _) => StaticCard(
         child: FAlert(
@@ -45,6 +42,20 @@ class AnalysisSection extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _AnalysisLoadingContent extends StatelessWidget {
+  const _AnalysisLoadingContent({required this.sideBySide});
+
+  final bool sideBySide;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: context.l10n.loadingAnalytics,
+    child: FSkeletonizer(
+      child: _AnalysisContent(sideBySide: sideBySide),
+    ),
+  );
 }
 
 class _AnalysisContent extends StatelessWidget {

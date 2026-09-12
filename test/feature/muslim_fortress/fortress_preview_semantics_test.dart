@@ -10,6 +10,7 @@ import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
+import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
@@ -33,14 +34,18 @@ FortressDuaItem _fixtureDua() => const FortressDuaItem(
   ),
 );
 
-Widget _wrap(Widget child, {Locale locale = const Locale('en')}) {
+Widget _wrap(
+  Widget child, {
+  Locale locale = const Locale('en'),
+  double textScale = 1,
+}) {
   return ProviderScope(
     child: FTheme(
       data: buildAppTheme(
         palette: AppPalette.neutral,
         themeMode: ThemeMode.light,
         touch: false,
-        textScale: 1,
+        textScale: textScale,
       ),
       child: MaterialApp(
         locale: locale,
@@ -52,7 +57,20 @@ Widget _wrap(Widget child, {Locale locale = const Locale('en')}) {
   );
 }
 
+const _bundledArabicPassage =
+    'ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلۡحَيُّ ٱلۡقَيُّومُۚ لَا تَأۡخُذُهُۥ سِنَةٞ وَلَا نَوۡمٞۚ لَّهُۥ مَا فِي ٱلسَّمَٰوَٰتِ وَمَا فِي ٱلۡأَرۡضِۗ مَن ذَا ٱلَّذِي يَشۡفَعُ عِندَهُۥٓ إِلَّا بِإِذۡنِهِۦۚ يَعۡلَمُ مَا بَيۡنَ أَيۡدِيهِمۡ وَمَا خَلۡفَهُمۡۖ وَلَا يُحِيطُونَ بِشَيۡءٖ مِّنۡ عِلۡمِهِۦٓ إِلَّا بِمَا شَآءَۚ وَسِعَ كُرۡسِيُّهُ ٱلسَّمَٰوَٰتِ وَٱلۡأَرۡضَۖ وَلَا يَـُٔودُهُۥ حِفۡظُهُمَاۚ وَهُوَ ٱلۡعَلِيُّ ٱلۡعَظِيمُ';
+
 void main() {
+  setUpAll(() async {
+    final loader = FontLoader(FontFamily.uthmanicHafs)
+      ..addFont(
+        rootBundle.load(
+          'assets/fonts/hafs_tafseerMouaser_v3_fonts/uthmanic_hafs_v20.ttf',
+        ),
+      );
+    await loader.load();
+  });
+
   testWidgets(
     'collapsed preview owns one text-bearing expand button in English and Arabic',
     (tester) async {
@@ -348,6 +366,52 @@ void main() {
       );
       expect(find.text(l10n.fortressShowMore), findsOneWidget);
       expect(find.text('×7'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'narrow large Arabic preview keeps the footer below sourced prose',
+    (tester) async {
+      const dua = FortressDuaItem(
+        contentId: 255,
+        category: 'آية الكرسي',
+        text: _bundledArabicPassage,
+        targetCount: 1,
+        lines: [
+          HisnQuranLine(
+            HisnQuranSingleAyah(
+              HisnVerseRange(surah: 2, startAyah: 255, endAyah: 255),
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: 320,
+            child: FortressDuaPreviewCard(
+              index: 0,
+              dua: dua,
+              isExpanded: false,
+              onToggleExpanded: () {},
+            ),
+          ),
+          locale: const Locale('ar'),
+          textScale: 1.3,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      final prose = tester.getRect(find.text(_bundledArabicPassage));
+      final target = tester.getRect(find.text('×1'));
+      expect(prose.height, greaterThan(0));
+      expect(target.top, greaterThanOrEqualTo(prose.bottom));
+      expect(
+        find.text(lookupAppLocalizations(const Locale('ar')).fortressShowMore),
+        findsOneWidget,
+      );
     },
   );
 }

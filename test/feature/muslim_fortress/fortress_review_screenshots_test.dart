@@ -10,36 +10,39 @@ import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
+import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
 const _category = FortressCategory(
-  chapterId: 9,
-  title: 'Morning remembrance',
+  chapterId: 29,
+  title: 'أَذْكَارُ الصَّبَاحِ',
   recurrence: HisnRecurrence.daily,
-  supplicationCount: 4,
+  supplicationCount: 24,
 );
 
+const _bundledAyatulKursi =
+    'ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلۡحَيُّ ٱلۡقَيُّومُۚ لَا تَأۡخُذُهُۥ سِنَةٞ وَلَا نَوۡمٞۚ لَّهُۥ مَا فِي ٱلسَّمَٰوَٰتِ وَمَا فِي ٱلۡأَرۡضِۗ مَن ذَا ٱلَّذِي يَشۡفَعُ عِندَهُۥٓ إِلَّا بِإِذۡنِهِۦۚ يَعۡلَمُ مَا بَيۡنَ أَيۡدِيهِمۡ وَمَا خَلۡفَهُمۡۖ وَلَا يُحِيطُونَ بِشَيۡءٖ مِّنۡ عِلۡمِهِۦٓ إِلَّا بِمَا شَآءَۚ وَسِعَ كُرۡسِيُّهُ ٱلسَّمَٰوَٰتِ وَٱلۡأَرۡضَۖ وَلَا يَـُٔودُهُۥ حِفۡظُهُمَاۚ وَهُوَ ٱلۡعَلِيُّ ٱلۡعَظِيمُ';
+
 const _dua = FortressDuaItem(
-  contentId: 91,
-  category: 'Review fixture',
-  text: 'O Allah, help me remember You, give thanks to You, and worship You in the best manner. This is synthetic review content.',
-  targetCount: 3,
+  contentId: 93,
+  category: 'أَذْكَارُ الصَّبَاحِ',
+  text: _bundledAyatulKursi,
+  targetCount: 1,
   lines: [
-    HisnPlainLine(
-      'O Allah, help me remember You, give thanks to You, and worship You in the best manner.',
+    HisnQuranLine(
+      HisnQuranSingleAyah(
+        HisnVerseRange(surah: 2, startAyah: 255, endAyah: 255),
+      ),
     ),
   ],
-  commentary: HisnCommentary(
-    id: 92,
-    contentId: 91,
-    sharh: 'Synthetic explanation for the review image.',
-    hadith: 'Synthetic related hadith for the review image.',
-    benefit: 'Synthetic benefit for the review image.',
-  ),
+  source: 'سورة البقرة، الآية: 255. من قالها حين يصبح أُجير من الجن حتى يمسي، ومن قالها حين يمسي أُجير منهم حتى يصبح. أخرجه الحاكم، 1/562، وصححه الألباني في صحيح الترغيب والترهيب، 1/273، وعزاه إلى النسائي، والطبراني، وقال: ((إسناد الطبراني جيد))',
+  virtue: 'من قالها حين يصبح أُجير من الجن حتى يمسي، ومن قالها حين يمسي أُجير منهم حتى يصبح',
 );
 
 Widget _gallery({
@@ -48,14 +51,23 @@ Widget _gallery({
   required ThemeMode themeMode,
   required AppPalette palette,
   required double textScale,
+  bool expanded = false,
+  bool includeToolbar = true,
+  bool searchOpen = false,
 }) {
-  final key = ValueKey('${locale.languageCode}-${themeMode.name}-$width');
+  final key = ValueKey(
+    '${locale.languageCode}-${themeMode.name}-$width-${expanded ? 'expanded' : 'collapsed'}-${includeToolbar ? 'toolbar' : 'header'}${searchOpen ? '-search' : ''}',
+  );
   return ProviderScope(
     overrides: [
       hiveCoreInitProvider.overrideWith((ref) async {}),
       settingsStorageProvider.overrideWith(
         (ref) async => Storage<String, String>.inMemory(),
       ),
+      if (searchOpen)
+        fortressScreenControllerProvider.overrideWith(
+          _SearchToolbarController.new,
+        ),
     ],
     child: FTheme(
       data: buildAppTheme(
@@ -78,16 +90,20 @@ Widget _gallery({
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (includeToolbar) ...[
+                      const ExcludeSemantics(child: FortressBrowseToolbar()),
+                      const SizedBox(height: 16),
+                    ],
                     FortressCategoryDetailHeader(
                       category: _category,
-                      duaCount: 4,
+                      duaCount: 24,
                       onStartReading: () {},
                     ),
                     const SizedBox(height: 16),
                     FortressDuaPreviewCard(
                       index: 0,
                       dua: _dua,
-                      isExpanded: false,
+                      isExpanded: expanded,
                       onToggleExpanded: () {},
                     ),
                   ],
@@ -198,7 +214,7 @@ class _BaselineHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        FBadge(child: Text(l10n.fortressSupplicationsInSection(4))),
+        FBadge(child: Text(l10n.fortressSupplicationsInSection(24))),
         const SizedBox(height: AppSpacing.lg),
         FButton(
           prefix: const Icon(FLucideIcons.bookOpen),
@@ -219,6 +235,23 @@ void main() {
         ),
       );
     await loader.load();
+    final quranLoader = FontLoader(FontFamily.uthmanicHafs)
+      ..addFont(
+        rootBundle.load(
+          'assets/fonts/hafs_tafseerMouaser_v3_fonts/uthmanic_hafs_v20.ttf',
+        ),
+      );
+    await quranLoader.load();
+    final iconLoader = FontLoader('ForuiLucideIcons')
+      ..addFont(
+        rootBundle.load('packages/forui_assets/assets/lucide.ttf'),
+      );
+    await iconLoader.load();
+    final packageIconLoader =
+        FontLoader('packages/forui_assets/ForuiLucideIcons')..addFont(
+          rootBundle.load('packages/forui_assets/assets/lucide.ttf'),
+        );
+    await packageIconLoader.load();
   });
 
   _goldenTest(
@@ -258,6 +291,46 @@ void main() {
     file: 'goldens/fortress_narrow_ar_neutral_dark.png',
   );
 
+  _goldenTest(
+    'expanded narrow Arabic Manuscript dark large text',
+    width: 360,
+    locale: const Locale('ar'),
+    themeMode: ThemeMode.dark,
+    palette: AppPalette.manuscript,
+    textScale: 1.3,
+    expanded: true,
+    file: 'goldens/fortress_expanded_narrow_ar_manuscript_dark_large.png',
+  );
+
+  testWidgets('composed browse toolbar renders its existing search field', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _gallery(
+        width: 720,
+        locale: const Locale('en'),
+        themeMode: ThemeMode.light,
+        palette: AppPalette.manuscript,
+        textScale: 1,
+        includeToolbar: true,
+        searchOpen: true,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(FTextField), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await expectLater(
+      find.byKey(
+        const ValueKey(
+          'en-light-720.0-collapsed-toolbar-search',
+        ),
+      ),
+      matchesGoldenFile(
+        'goldens/fortress_browse_search_en_manuscript_light.png',
+      ),
+    );
+  });
+
   _baselineGoldenTest(
     'baseline desktop English Manuscript light',
     width: 720,
@@ -296,6 +369,11 @@ void main() {
   );
 }
 
+class _SearchToolbarController extends FortressScreenController {
+  @override
+  FortressFlowState build() => const FortressFlowState(query: 'fixture');
+}
+
 void _goldenTest(
   String description, {
   required double width,
@@ -304,6 +382,7 @@ void _goldenTest(
   required AppPalette palette,
   required double textScale,
   required String file,
+  bool expanded = false,
 }) {
   testWidgets(description, (tester) async {
     await tester.pumpWidget(
@@ -313,12 +392,17 @@ void _goldenTest(
         themeMode: themeMode,
         palette: palette,
         textScale: textScale,
+        expanded: expanded,
       ),
     );
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await expectLater(
-      find.byKey(ValueKey('${locale.languageCode}-${themeMode.name}-$width')),
+      find.byKey(
+        ValueKey(
+          '${locale.languageCode}-${themeMode.name}-$width-${expanded ? 'expanded' : 'collapsed'}-toolbar',
+        ),
+      ),
       matchesGoldenFile(file),
     );
   });

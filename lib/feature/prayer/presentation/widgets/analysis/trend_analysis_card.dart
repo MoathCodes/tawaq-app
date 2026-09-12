@@ -90,6 +90,14 @@ class _PeriodTrendBody extends ConsumerWidget {
     };
   }
 
+  String _periodScope(AppLocalizations l10n, PrayerAnalyticsPeriod period) {
+    return switch (period) {
+      PrayerAnalyticsPeriod.weekly => l10n.prayerAnalyticsPeriodLast7Days,
+      PrayerAnalyticsPeriod.monthly => l10n.prayerAnalyticsPeriodLast30Days,
+      PrayerAnalyticsPeriod.yearly => l10n.prayerAnalyticsPeriodLast365Days,
+    };
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -103,19 +111,24 @@ class _PeriodTrendBody extends ConsumerWidget {
         (state) => state.value?.periodAnalytics,
       ),
     );
+    final isReady = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.isReady ?? false,
+      ),
+    );
     final hasRecordedData = ref.watch(
       prayerAnalysisSectionProvider.select(
         (state) => state.value?.hasRecordedData ?? false,
       ),
     );
 
-    if (analytics == null) {
+    if (analytics == null || !isReady) {
       return const SizedBox.shrink();
     }
 
     if (!hasRecordedData) {
       return _NoPrayerRecordsState(
-        scope: _periodSubtitle(l10n, period),
+        scope: _periodScope(l10n, period),
         title: l10n.prayerAnalyticsNoRecords,
         hint: l10n.prayerAnalyticsNoRecordsHint,
       );

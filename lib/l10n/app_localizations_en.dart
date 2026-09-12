@@ -1173,6 +1173,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noDataAvailable => 'No data available';
 
   @override
+  String get prayerAnalyticsPeriodLast7Days => 'Last 7 days';
+
+  @override
+  String get prayerAnalyticsPeriodLast30Days => 'Last 30 days';
+
+  @override
+  String get prayerAnalyticsPeriodLast365Days => 'Last 365 days';
+
+  @override
   String get prayerAnalyticsNoRecords => 'No prayer records for this period';
 
   @override

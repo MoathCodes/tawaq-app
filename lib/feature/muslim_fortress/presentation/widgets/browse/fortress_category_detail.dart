@@ -327,7 +327,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
           : FortressDuaContentMode.previewCollapsed,
     );
     final title = isExpanded ? content : ExcludeSemantics(child: content);
-    final subtitle = !isExpanded && hasInsights
+    final insightMeta = !isExpanded && hasInsights
         ? ExcludeSemantics(
             child: Wrap(
               spacing: AppSpacing.xs,
@@ -347,7 +347,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
             ),
           )
         : null;
-    final suffix = isExpanded
+    final disclosure = isExpanded
         ? Semantics(
             container: true,
             button: true,
@@ -360,7 +360,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
               child: MouseClick(
                 onClick: onToggleExpanded,
                 child: ExcludeSemantics(
-                  child: _FortressDuaPreviewSuffix(
+                  child: _FortressDuaPreviewFooter(
                     targetCount: dua.targetCount,
                     isExpanded: isExpanded,
                     colors: colors,
@@ -371,13 +371,27 @@ class FortressDuaPreviewCard extends StatelessWidget {
             ),
           )
         : ExcludeSemantics(
-            child: _FortressDuaPreviewSuffix(
+            child: _FortressDuaPreviewFooter(
               targetCount: dua.targetCount,
               isExpanded: isExpanded,
               colors: colors,
               typography: theme.typography,
             ),
           );
+    final subtitle = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (insightMeta != null) ...[
+          insightMeta,
+          const SizedBox(height: AppSpacing.xs),
+        ],
+        Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: disclosure,
+        ),
+      ],
+    );
     final prefix = ExcludeSemantics(
       child: Text(
         '${index + 1}.',
@@ -390,12 +404,11 @@ class FortressDuaPreviewCard extends StatelessWidget {
 
     // Collapsed rows own one semantic button with the sourced dhikr text.
     // Expanded rows expose their content and nested study tabs as descendants;
-    // only the suffix remains interactive so tab activation never collapses it.
+    // Only the footer remains interactive so tab activation never collapses it.
     final tile = FTile(
       prefix: prefix,
       title: title,
       subtitle: subtitle,
-      suffix: suffix,
       selected: isExpanded,
       semanticsLabel: isExpanded
           ? null
@@ -429,7 +442,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
   }
 }
 
-class _FortressDuaPreviewSuffix extends StatelessWidget {
+class _FortressDuaPreviewFooter extends StatelessWidget {
   const new({
     required this.targetCount,
     required this.isExpanded,

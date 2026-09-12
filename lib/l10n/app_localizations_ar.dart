@@ -1209,6 +1209,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noDataAvailable => 'لا توجد بيانات';
 
   @override
+  String get prayerAnalyticsPeriodLast7Days => 'آخر 7 أيام';
+
+  @override
+  String get prayerAnalyticsPeriodLast30Days => 'آخر 30 يومًا';
+
+  @override
+  String get prayerAnalyticsPeriodLast365Days => 'آخر 365 يومًا';
+
+  @override
   String get prayerAnalyticsNoRecords => 'لا توجد سجلات للصلاة في هذه الفترة';
 
   @override

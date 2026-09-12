@@ -2132,6 +2132,24 @@ abstract class AppLocalizations {
   /// **'No data available'**
   String get noDataAvailable;
 
+  /// No description provided for @prayerAnalyticsPeriodLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get prayerAnalyticsPeriodLast7Days;
+
+  /// No description provided for @prayerAnalyticsPeriodLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get prayerAnalyticsPeriodLast30Days;
+
+  /// No description provided for @prayerAnalyticsPeriodLast365Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 365 days'**
+  String get prayerAnalyticsPeriodLast365Days;
+
   /// No description provided for @prayerAnalyticsNoRecords.
   ///
   /// In en, this message translates to:
