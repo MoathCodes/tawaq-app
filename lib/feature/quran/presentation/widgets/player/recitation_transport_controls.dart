@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Visual density for shared recitation transport controls.
@@ -58,6 +59,8 @@ class RecitationPlayButton extends StatelessWidget {
     this.enabled = true,
     this.isEnded = false,
     this.density = RecitationTransportDensity.compact,
+    this.semanticsLabel,
+    this.tooltip,
     super.key,
   });
 
@@ -68,6 +71,12 @@ class RecitationPlayButton extends StatelessWidget {
   final bool isEnded;
   final Future<void> Function()? onPress;
   final RecitationTransportDensity density;
+
+  /// Accessible action and context label for the play/pause control.
+  final String? semanticsLabel;
+
+  /// Visual tooltip for the play/pause control.
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -85,37 +94,70 @@ class RecitationPlayButton extends StatelessWidget {
       ),
     };
 
+    final control = isLoading || isInitializing
+        ? SizedBox(
+            width: size,
+            height: size,
+            child: Center(child: FCircularProgress(size: progressSize)),
+          )
+        : Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              color: enabled ? colors.primary : colors.disable(colors.primary),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              isEnded
+                  ? FLucideIcons.rotateCcw
+                  : isPlaying
+                  ? FLucideIcons.pause
+                  : FLucideIcons.play,
+              size: iconSize,
+              color: enabled
+                  ? colors.primaryForeground
+                  : colors.disable(colors.primaryForeground),
+            ),
+          );
+
+    final localized = AppLocalizations.of(context);
+    final actionLabel =
+        semanticsLabel ??
+        (localized == null
+            ? (isPlaying ? 'Pause' : 'Play')
+            : (isPlaying
+                  ? localized.quranRecitationPause
+                  : localized.quranRecitationPlay));
+    final tooltipLabel = tooltip ?? actionLabel;
+
     if (isLoading || isInitializing) {
-      return SizedBox(
-        width: size,
-        height: size,
-        child: Center(child: FCircularProgress(size: progressSize)),
+      final loadingControl = Semantics(
+        label: actionLabel,
+        tooltip: tooltip == null ? null : tooltipLabel,
+        child: control,
+      );
+      if (tooltip == null) return loadingControl;
+      return FTooltip(
+        tipBuilder: (_, _) => Text(tooltipLabel),
+        child: loadingControl,
       );
     }
 
-    return MouseClick(
+    final tappable = MouseClick(
       disabled: !enabled,
-      onClick: enabled && onPress != null ? () => unawaited(onPress!()) : null,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: enabled ? colors.primary : colors.disable(colors.primary),
-          shape: BoxShape.circle,
-        ),
-        alignment: Alignment.center,
-        child: Icon(
-          isEnded
-              ? FLucideIcons.rotateCcw
-              : isPlaying
-              ? FLucideIcons.pause
-              : FLucideIcons.play,
-          size: iconSize,
-          color: enabled
-              ? colors.primaryForeground
-              : colors.disable(colors.primaryForeground),
-        ),
-      ),
+      semanticsLabel: actionLabel,
+      semanticsTooltip: tooltip == null ? null : tooltipLabel,
+      onClick: enabled && !isLoading && !isInitializing && onPress != null
+          ? () => unawaited(onPress!())
+          : null,
+      child: control,
+    );
+
+    if (tooltip == null) return tappable;
+    return FTooltip(
+      tipBuilder: (_, _) => Text(tooltipLabel),
+      child: tappable,
     );
   }
 }
@@ -262,6 +304,8 @@ class RecitationTransportControls extends StatelessWidget {
     this.canPlay = true,
     this.density = RecitationTransportDensity.compact,
     this.showSkip = true,
+    this.playbackSemanticsLabel,
+    this.playbackTooltip,
     super.key,
   });
 
@@ -275,6 +319,8 @@ class RecitationTransportControls extends StatelessWidget {
   final SkipControl rightSlot;
   final RecitationTransportDensity density;
   final bool showSkip;
+  final String? playbackSemanticsLabel;
+  final String? playbackTooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -308,6 +354,8 @@ class RecitationTransportControls extends StatelessWidget {
             isEnded: isEnded,
             onPress: onPlayPause,
             density: density,
+            semanticsLabel: playbackSemanticsLabel,
+            tooltip: playbackTooltip,
           ),
           if (showSkip) ...[
             SizedBox(width: gap),

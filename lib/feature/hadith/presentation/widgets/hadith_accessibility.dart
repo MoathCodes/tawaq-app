@@ -21,10 +21,13 @@ String hadithResultRowSemanticsLabel(
   AppLocalizations l10n, {
   required bool isFavorite,
   required bool isSelected,
+  int? resultOrdinal,
 }) {
-  final narrator = '${l10n.hadithFieldLabel(l10n.hadithNarrator)}'
+  final narrator =
+      '${l10n.hadithFieldLabel(l10n.hadithNarrator)}'
       '${hadithSemanticsSnippet(hadith.rawi)}';
   final parts = <String>[
+    if (resultOrdinal != null) l10n.hadithResultIdentity(resultOrdinal),
     l10n.hadithSourceCitation(hadith.book, hadith.numberOrPage),
     narrator,
     hadith.hukm,

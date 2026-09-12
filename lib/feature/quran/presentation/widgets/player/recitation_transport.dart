@@ -9,10 +9,48 @@ import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.d
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_equalizer.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport_controls.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 export 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport_controls.dart'
     show SkipAction, SkipControl, leftSkipControl, rightSkipControl;
+
+/// Builds the title-bar play control's complete accessible name and tooltip.
+///
+/// The caller supplies the already hydrated session projection. This helper
+/// intentionally does not read providers or start any asynchronous metadata
+/// work while a tooltip is being built.
+String recitationTransportPlaybackLabel({
+  required AppLocalizations l10n,
+  required bool isPlaying,
+  required bool isLoading,
+  required bool isInitializing,
+  required bool hasInitializationError,
+  required bool canPlay,
+  required bool hasRangeSelection,
+  String? surahName,
+  String? reciterName,
+}) {
+  final action = isPlaying
+      ? l10n.quranRecitationPause
+      : l10n.quranRecitationPlay;
+  final context = <String>[
+    if ((surahName ?? '').trim().isNotEmpty) surahName!.trim(),
+    if ((reciterName ?? '').trim().isNotEmpty) reciterName!.trim(),
+  ];
+  final missingContext = hasRangeSelection
+      ? l10n.quranRangeRequiresTimedReciter
+      : '${l10n.quranRecitationUnavailable}. ${l10n.quranSelectReciter}';
+
+  return <String>[
+    action,
+    if (isInitializing || isLoading) l10n.loading,
+    if (hasInitializationError) l10n.quranRecitationInitializationFailed,
+    if (!canPlay && !isInitializing && !isLoading && !hasInitializationError)
+      missingContext,
+    ...context,
+  ].join(' · ');
+}
 
 /// Compact inline transport that lives in the title bar.
 ///
@@ -43,6 +81,9 @@ class _TransportPill extends ConsumerWidget {
           active: view.session.active,
           surah: view.session.surah,
           currentAyah: view.session.currentAyah,
+          reciterName: view.session.reciter?.name,
+          hasRangeSelection: view.session.hasRangeSelection,
+          hasInitializationError: view.hasInitializationError,
           isInitializing: view.isInitializing,
           canPlay: view.canPlay,
           isLoading: view.isLoading,
@@ -60,6 +101,7 @@ class _TransportPill extends ConsumerWidget {
     final isEnded = chrome.isEnded;
     final surah = chrome.surah;
     final isInitializing = chrome.isInitializing;
+    final isInitializationError = chrome.hasInitializationError;
     final surahName = AyahReferenceLogic.surahName(
       isInitializing || surah == null ? null : mushaf.getSurahSync(surah),
       surah ?? 0,
@@ -92,6 +134,18 @@ class _TransportPill extends ConsumerWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           );
+
+    final playbackLabel = recitationTransportPlaybackLabel(
+      l10n: l10n,
+      isPlaying: chrome.isPlaying,
+      isLoading: isLoading,
+      isInitializing: isInitializing,
+      hasInitializationError: isInitializationError,
+      canPlay: chrome.canPlay,
+      hasRangeSelection: chrome.hasRangeSelection,
+      surahName: surahName,
+      reciterName: chrome.reciterName,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -154,6 +208,8 @@ class _TransportPill extends ConsumerWidget {
                       : FLucideIcons.skipForward,
                 ),
                 showSkip: showSkip,
+                playbackSemanticsLabel: playbackLabel,
+                playbackTooltip: playbackLabel,
               ),
               title: isInitializing || surahName.isNotEmpty
                   ? Row(

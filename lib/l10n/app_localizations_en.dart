@@ -798,6 +798,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithRetry => 'Retry';
 
   @override
+  String hadithResultIdentity(int number) {
+    return 'Result $number';
+  }
+
+  @override
   String get hadithScholars => 'Scholars';
 
   @override
@@ -835,6 +840,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hadithSearchZoneSharh => 'Hadith commentaries';
+
+  @override
+  String hadithSelectedResult(int number) {
+    return 'Selected result $number';
+  }
 
   @override
   String get hadithSharh => 'Explanation';

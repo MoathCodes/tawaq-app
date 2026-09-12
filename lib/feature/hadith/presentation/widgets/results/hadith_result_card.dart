@@ -19,6 +19,7 @@ class HadithResultCard extends ConsumerWidget {
   const new({
     required this.hadith,
     super.key,
+    this.resultOrdinal,
     this.isFavorite,
     this.isSelected,
     this.onToggleFavorite,
@@ -45,6 +46,9 @@ class HadithResultCard extends ConsumerWidget {
   }
 
   final DetailedHadith hadith;
+
+  /// Honest page-local position when the surrounding list has established it.
+  final int? resultOrdinal;
   final bool? isFavorite;
   final bool? isSelected;
   final VoidCallback? onToggleFavorite;
@@ -120,18 +124,19 @@ class HadithResultCard extends ConsumerWidget {
       l10n,
       isFavorite: isFavoriteValue,
       isSelected: isSelectedValue,
+      resultOrdinal: resultOrdinal,
     );
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final card = _HadithResultCardBody(
           hadith: hadith,
+          resultOrdinal: resultOrdinal,
           maxWidth: constraints.maxWidth,
           isSelected: isSelectedValue,
           showMetadataAvailability: showMetadataAvailability,
           hadithMaxLines: hadithMaxLines,
           onPress: onSelectAction,
-          semanticsLabel: rowLabel,
         );
 
         final wrapped = FContextMenu(
@@ -167,12 +172,21 @@ class HadithResultCard extends ConsumerWidget {
           child: card,
         );
 
-        if (favoriteButton == null) return wrapped;
+        final selectable = Semantics(
+          container: true,
+          label: rowLabel,
+          button: true,
+          selected: isSelectedValue,
+          onTap: onSelectAction,
+          child: ExcludeSemantics(child: wrapped),
+        );
+
+        if (favoriteButton == null) return selectable;
 
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: wrapped),
+            Expanded(child: selectable),
             favoriteButton,
           ],
         );
@@ -216,21 +230,21 @@ class HadithResultCard extends ConsumerWidget {
 class _HadithResultCardBody extends StatelessWidget {
   const new({
     required this.hadith,
+    required this.resultOrdinal,
     required this.maxWidth,
     required this.isSelected,
     required this.showMetadataAvailability,
     required this.hadithMaxLines,
     required this.onPress,
-    required this.semanticsLabel,
   });
 
   final DetailedHadith hadith;
+  final int? resultOrdinal;
   final double maxWidth;
   final bool isSelected;
   final bool showMetadataAvailability;
   final int hadithMaxLines;
   final VoidCallback onPress;
-  final String semanticsLabel;
 
   int _effectiveHadithMaxLines(FBreakpoints breakpoints) {
     if (maxWidth < breakpoints.sm) {
@@ -255,10 +269,11 @@ class _HadithResultCardBody extends StatelessWidget {
     final effectiveMaxLines = _effectiveHadithMaxLines(breakpoints);
     final textAlign = _hadithTextAlign(breakpoints);
 
-    return HoverCard(
+    final card = HoverCard(
       onPress: onPress,
-      semanticsLabel: semanticsLabel,
-      backgroundColor: colors.background,
+      backgroundColor: isSelected
+          ? colors.secondary.withValues(alpha: 0.28)
+          : colors.background,
       borderColor: isSelected
           ? colors.primary
           : colors.border.withValues(alpha: 0.6),
@@ -268,6 +283,35 @@ class _HadithResultCardBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         spacing: AppSpacing.sm,
         children: [
+          if (resultOrdinal != null)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: AppSpacing.sm,
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.hadithResultIdentity(resultOrdinal!),
+                    style: theme.typography.body.sm.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: Text(
+                    l10n.hadithSourceCitation(
+                      hadith.book,
+                      hadith.numberOrPage,
+                    ),
+                    textAlign: TextAlign.end,
+                    softWrap: true,
+                    style: theme.typography.body.sm.copyWith(
+                      color: colors.mutedForeground,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -287,6 +331,11 @@ class _HadithResultCardBody extends StatelessWidget {
                 style: theme.typography.body.lg.copyWith(height: 1.9),
               ),
             ),
+          ),
+          // Keep the source judgment independent from secondary affordances;
+          // a long judgment must remain fully readable and wrap naturally.
+          HadithDecorExcludeSemantics(
+            child: HadithHukmBadge(hukm: hadith.hukm),
           ),
           ExcludeSemantics(
             child: Column(
@@ -314,22 +363,32 @@ class _HadithResultCardBody extends StatelessWidget {
               ],
             ),
           ),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.xs,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              HadithDecorExcludeSemantics(
-                child: HadithHukmBadge(hukm: hadith.hukm),
-              ),
-              if (showMetadataAvailability)
-                HadithDecorExcludeSemantics(
-                  child: HadithDetailsAvailabilityRow(hadith: hadith),
-                ),
-            ],
-          ),
+          if (showMetadataAvailability)
+            HadithDecorExcludeSemantics(
+              child: HadithDetailsAvailabilityRow(hadith: hadith),
+            ),
         ],
       ),
+    );
+
+    if (!isSelected) return card;
+
+    return Stack(
+      children: [
+        card,
+        PositionedDirectional(
+          start: 0,
+          top: 8,
+          bottom: 8,
+          child: Container(
+            width: 3,
+            decoration: BoxDecoration(
+              color: colors.primary,
+              borderRadius: theme.radii.sm,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

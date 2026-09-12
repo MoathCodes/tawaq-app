@@ -1448,6 +1448,12 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get hadithRetry;
 
+  /// No description provided for @hadithResultIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Result {number}'**
+  String hadithResultIdentity(int number);
+
   /// No description provided for @hadithScholars.
   ///
   /// In en, this message translates to:
@@ -1525,6 +1531,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hadith commentaries'**
   String get hadithSearchZoneSharh;
+
+  /// No description provided for @hadithSelectedResult.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected result {number}'**
+  String hadithSelectedResult(int number);
 
   /// No description provided for @hadithSharh.
   ///

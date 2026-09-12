@@ -355,6 +355,14 @@
     }
   },
   "hadithRetry": "Retry",
+  "hadithResultIdentity": "Result {number}",
+  "@hadithResultIdentity": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "hadithScholars": "Scholars",
   "hadithScope": "Scope",
   "hadithSearchAction": "Search",
@@ -368,6 +376,14 @@
   "hadithSearchZoneQudsi": "Qudsi hadiths",
   "hadithSearchZoneSahabaAthar": "Companion narrations",
   "hadithSearchZoneSharh": "Hadith commentaries",
+  "hadithSelectedResult": "Selected result {number}",
+  "@hadithSelectedResult": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "hadithSharh": "Explanation",
   "hadithShare": "Share hadith",
   "hadithNumberOrPage": "Number or page",

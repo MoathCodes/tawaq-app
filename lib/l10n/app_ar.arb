@@ -339,6 +339,14 @@
     }
   },
   "hadithRetry": "إعادة المحاولة",
+  "hadithResultIdentity": "النتيجة {number}",
+  "@hadithResultIdentity": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "hadithScholars": "المحدث",
   "hadithScope": "نطاق البحث",
   "hadithSearchAction": "بحث",
@@ -352,6 +360,14 @@
   "hadithSearchZoneQudsi": "الأحاديث القدسية",
   "hadithSearchZoneSahabaAthar": "آثار الصحابة",
   "hadithSearchZoneSharh": "شروح الأحاديث",
+  "hadithSelectedResult": "النتيجة المحددة {number}",
+  "@hadithSelectedResult": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "hadithSharh": "الشرح",
   "hadithShare": "مشاركة الحديث",
   "hadithNumberOrPage": "الرقم أو الصفحة",

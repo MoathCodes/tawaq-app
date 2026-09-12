@@ -37,8 +37,6 @@ class HadithMetaField extends StatelessWidget {
 
     return switch (layout) {
       HadithMetaFieldLayout.inline => RichText(
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
         text: TextSpan(
           style: theme.typography.body.sm.copyWith(
             color: theme.colors.secondaryForeground,

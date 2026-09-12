@@ -8,7 +8,9 @@ import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/reciter.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport_controls.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -115,6 +117,51 @@ void main() {
     await tester.tap(find.byIcon(FLucideIcons.play));
     await tester.pump(const Duration(milliseconds: 100));
     expect(pressed, isFalse);
+  });
+
+  test('title-bar playback label includes action and hydrated context', () {
+    final l10n = lookupAppLocalizations(const Locale('en'));
+
+    expect(
+      recitationTransportPlaybackLabel(
+        l10n: l10n,
+        isPlaying: true,
+        isLoading: false,
+        isInitializing: false,
+        hasInitializationError: false,
+        canPlay: true,
+        hasRangeSelection: false,
+        surahName: 'Al-Baqarah',
+        reciterName: 'Test reciter',
+      ),
+      'Pause · Al-Baqarah · Test reciter',
+    );
+    expect(
+      recitationTransportPlaybackLabel(
+        l10n: l10n,
+        isPlaying: false,
+        isLoading: false,
+        isInitializing: false,
+        hasInitializationError: false,
+        canPlay: false,
+        hasRangeSelection: false,
+      ),
+      contains('Select reciter'),
+    );
+    expect(
+      recitationTransportPlaybackLabel(
+        l10n: l10n,
+        isPlaying: false,
+        isLoading: true,
+        isInitializing: false,
+        hasInitializationError: false,
+        canPlay: false,
+        hasRangeSelection: false,
+        surahName: 'Al-Baqarah',
+        reciterName: 'Test reciter',
+      ),
+      contains('Loading'),
+    );
   });
 }
 
