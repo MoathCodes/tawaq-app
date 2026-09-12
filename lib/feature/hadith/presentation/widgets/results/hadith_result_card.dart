@@ -425,17 +425,9 @@ class HadithHukmBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final colors = theme.colors;
-    final lower = hukm.toLowerCase();
+    final judgment = hukm.trim();
 
-    final color = switch (lower) {
-      _ when lower.contains('صحيح') => colors.primary,
-      _ when lower.contains('حسن') => Color.lerp(
-        colors.primary,
-        colors.mutedForeground,
-        0.35,
-      )!,
-      _ => Color.lerp(colors.primary, colors.mutedForeground, 0.75)!,
-    };
+    if (judgment.isEmpty) return const SizedBox.shrink();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -446,15 +438,17 @@ class HadithHukmBadge extends StatelessWidget {
             vertical: 6,
           ),
           decoration: BoxDecoration(
-            color: color.withAlpha(28),
+            color: colors.card,
             borderRadius: theme.radii.md,
-            border: Border.all(color: color.withAlpha(80)),
+            border: Border.all(color: colors.border),
           ),
           child: Text(
             hukm,
-            style: theme.typography.body.sm.copyWith(color: color),
-            overflow: TextOverflow.ellipsis,
-            maxLines: 2,
+            style: theme.typography.body.sm.copyWith(
+              color: colors.foreground,
+              fontWeight: FontWeight.w600,
+            ),
+            softWrap: true,
           ),
         );
       },
