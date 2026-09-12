@@ -280,14 +280,16 @@ class FortressDuaPreviewCard extends StatelessWidget {
               oneBasedIndex: index + 1,
             ),
             onTap: onToggleExpanded,
-            child: MouseClick(
-              onClick: onToggleExpanded,
-              child: ExcludeSemantics(
-                child: _FortressDuaPreviewSuffix(
-                  targetCount: dua.targetCount,
-                  isExpanded: isExpanded,
-                  colors: colors,
-                  typography: theme.typography,
+            child: ExcludeSemantics(
+              child: MouseClick(
+                onClick: onToggleExpanded,
+                child: ExcludeSemantics(
+                  child: _FortressDuaPreviewSuffix(
+                    targetCount: dua.targetCount,
+                    isExpanded: isExpanded,
+                    colors: colors,
+                    typography: theme.typography,
+                  ),
                 ),
               ),
             ),
