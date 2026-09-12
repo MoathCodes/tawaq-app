@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -111,45 +112,79 @@ class _EmptyQuranRepository implements IQuranRepository {
   Future<void> warmUpSearchIndex() async {}
 }
 
+class _TestQuranSelectedAyahId extends QuranSelectedAyahId {
+  _TestQuranSelectedAyahId(this._ayahId);
+
+  final int? _ayahId;
+
+  @override
+  int? build() => _ayahId;
+}
+
 void main() {
-  testWidgets('selected ayah actions remain named and wrap at narrow width', (
-    tester,
-  ) async {
-    final theme = buildAppTheme(
-      palette: AppPalette.neutral,
-      themeMode: ThemeMode.light,
-      touch: false,
-      textScale: 1,
-    );
+  final theme = buildAppTheme(
+    palette: AppPalette.neutral,
+    themeMode: ThemeMode.light,
+    touch: false,
+    textScale: 1,
+  );
+  final ayah = Ayah(
+    ayahId: 1,
+    juz: 1,
+    page: 1,
+    surahNumber: 1,
+    numberInSurah: 1,
+    text: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
+    textPlain: 'In the name of Allah',
+  );
+
+  Future<MushafReaderController> pumpReaderComposition(
+    WidgetTester tester, {
+    required double width,
+    _TestQuranSelectedAyahId? selectedState,
+  }) async {
     final controller = MushafReaderController.withRepository(
       repository: _EmptyQuranRepository(),
     );
-    final ayah = Ayah(
-      ayahId: 1,
-      juz: 1,
-      page: 1,
-      surahNumber: 1,
-      numberInSurah: 1,
-      text: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
-      textPlain: 'In the name of Allah',
-    );
-
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           quranMushafControllerProvider.overrideWithValue(controller),
           quranSelectedAyahProvider.overrideWithValue(AsyncData(ayah)),
+          quranSelectedAyahIdProvider.overrideWith(
+            () => selectedState ?? _TestQuranSelectedAyahId(ayah.ayahId),
+          ),
         ],
         child: FTheme(
           data: theme,
-          child: MaterialApp(
-            locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            home: const Scaffold(
-              body: SizedBox(
-                width: 320,
-                child: Center(child: AyahSelectionActionsBar()),
+          child: FToaster(
+            child: MaterialApp(
+              locale: const Locale('en'),
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: SizedBox(
+                  width: width,
+                  height: 520,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Expanded(
+                        child: ColoredBox(
+                          color: Color(0xfff4f0e8),
+                          child: Center(child: Text('page metadata')),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: AyahSelectionActionsBar(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -157,7 +192,23 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    return controller;
+  }
 
+  void performSemanticTap(WidgetTester tester, String label) {
+    final node = tester.getSemantics(find.bySemanticsLabel(label));
+    expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    expect(node.getSemanticsData().hasAction(SemanticsAction.focus), isTrue);
+    tester.binding.renderViews.first.owner!.semanticsOwner!.performAction(
+      node.id,
+      SemanticsAction.tap,
+    );
+  }
+
+  testWidgets('reader composition keeps actions named and wraps when narrow', (
+    tester,
+  ) async {
+    final controller = await pumpReaderComposition(tester, width: 320);
     for (final label in [
       'Play',
       'Share',
@@ -167,7 +218,61 @@ void main() {
       expect(find.bySemanticsLabel(label), findsOneWidget);
     }
     expect(find.byType(Wrap), findsWidgets);
+    expect(
+      tester.getTopLeft(find.text('page metadata')).dy,
+      lessThan(tester.getTopLeft(find.bySemanticsLabel('Copy')).dy),
+    );
+    controller.dispose();
+  });
 
+  testWidgets('wide reader composition keeps labels and play chevron visible', (
+    tester,
+  ) async {
+    final controller = await pumpReaderComposition(tester, width: 760);
+    expect(find.text('Play'), findsOneWidget);
+    expect(find.text('Share'), findsOneWidget);
+    expect(find.text('Copy'), findsOneWidget);
+    expect(find.byIcon(FLucideIcons.chevronDown), findsOneWidget);
+    controller.dispose();
+  });
+
+  testWidgets('labeled actions activate through semantic tap', (tester) async {
+    final selectedState = _TestQuranSelectedAyahId(ayah.ayahId);
+
+    var controller = await pumpReaderComposition(
+      tester,
+      width: 760,
+      selectedState: selectedState,
+    );
+    performSemanticTap(tester, 'Play');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Play this ayah'), findsOneWidget);
+    controller.dispose();
+
+    controller = await pumpReaderComposition(
+      tester,
+      width: 760,
+      selectedState: selectedState,
+    );
+    performSemanticTap(tester, 'Copy');
+    // FToaster intentionally keeps its dismissal timer alive; a bounded
+    // pump is enough to flush the clipboard callback without waiting for the
+    // toast lifecycle.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.textContaining('Copied'), findsOneWidget);
+    controller.dispose();
+
+    controller = await pumpReaderComposition(
+      tester,
+      width: 760,
+      selectedState: selectedState,
+    );
+    performSemanticTap(tester, 'Dismiss ayah selection');
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(selectedState.state, isNull);
     controller.dispose();
   });
 }

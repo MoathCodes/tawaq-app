@@ -128,8 +128,8 @@ class StudyContentSection<T> extends StatelessWidget {
       loading: () => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _selectorHeader(context, sourceSelector),
           const FCircularProgress(),
-          _selectorFooter(context, sourceSelector),
         ],
       ),
       error: (_, _) => _statusColumn(
@@ -159,8 +159,8 @@ class StudyContentSection<T> extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        _selectorHeader(context, sourceSelector),
                         contentBuilder(data),
-                        _selectorFooter(context, sourceSelector),
                       ],
                     ),
                   )
@@ -200,31 +200,26 @@ class StudyContentSection<T> extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _selectorHeader(context, sourceSelector),
         _messagePlaceholder(typography, colors, message),
-        _selectorFooter(
-          // The footer owns the separator and keeps the source picker a
-          // secondary control after the reading content/status.
-          context,
-          sourceSelector,
-        ),
       ],
     );
   }
 
-  Widget _selectorFooter(BuildContext context, Widget selector) {
+  Widget _selectorHeader(BuildContext context, Widget selector) {
     final colors = context.theme.colors;
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.md),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Align(alignment: AlignmentDirectional.centerStart, child: selector),
+          const SizedBox(height: AppSpacing.sm),
           Divider(
             height: 1,
             thickness: 1,
             color: colors.border.withValues(alpha: 0.55),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Align(alignment: AlignmentDirectional.centerStart, child: selector),
         ],
       ),
     );
@@ -326,6 +321,7 @@ class TranslationProse extends StatelessWidget {
         ? TextDirection.rtl
         : TextDirection.ltr;
     return Directionality(
+      key: const ValueKey('translation-prose-direction'),
       textDirection: textDirection,
       child: ScopedSelectableText(
         translation.translation,

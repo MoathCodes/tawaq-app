@@ -79,7 +79,10 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < theme.breakpoints.sm;
+        // The reader can offer a narrower toolbar than the app breakpoint.
+        // Base this choice on the space actually available to this group so a
+        // desktop reader still exposes the text actions and play chevron.
+        final compact = constraints.maxWidth < 420;
 
         Widget playTrigger(VoidCallback toggle) => compact
             ? _iconAction(
@@ -248,13 +251,17 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
       onPress: onPress,
       child: Icon(icon, size: 18),
     );
-    return QuranSemantics.labeledControl(
-      name: label,
-      button: true,
-      excludeChild: true,
-      child: FTooltip(
-        tipBuilder: (_, _) => Text(label, semanticsLabel: label),
-        child: button,
+    return Focus(
+      canRequestFocus: true,
+      child: QuranSemantics.labeledControl(
+        name: label,
+        button: true,
+        onTap: onPress,
+        excludeChild: true,
+        child: FTooltip(
+          tipBuilder: (_, _) => Text(label, semanticsLabel: label),
+          child: button,
+        ),
       ),
     );
   }
@@ -265,11 +272,15 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
     required FButtonVariant variant,
     required Widget child,
   }) {
-    return QuranSemantics.labeledControl(
-      name: label,
-      button: true,
-      excludeChild: true,
-      child: FButton(variant: variant, onPress: onPress, child: child),
+    return Focus(
+      canRequestFocus: true,
+      child: QuranSemantics.labeledControl(
+        name: label,
+        button: true,
+        onTap: onPress,
+        excludeChild: true,
+        child: FButton(variant: variant, onPress: onPress, child: child),
+      ),
     );
   }
 

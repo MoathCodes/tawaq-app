@@ -206,9 +206,12 @@ class QuranMushafPane extends HookConsumerWidget {
                   AppSpacing.lg,
                   AppSpacing.sm,
                 ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 520),
-                  child: const AyahSelectionActionsBar(),
+                // Let the action bar measure the actual reader width. It
+                // applies its own compact threshold, while this full-width
+                // anchor keeps wide labels and the play chevron reachable.
+                child: const SizedBox(
+                  width: double.infinity,
+                  child: AyahSelectionActionsBar(),
                 ),
               ),
             ),
