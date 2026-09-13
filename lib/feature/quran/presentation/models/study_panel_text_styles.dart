@@ -24,13 +24,13 @@ abstract final class StudyPanelTextStyles {
         ? responsiveValueForWidth(
             context,
             containerWidth,
-            belowSm: typography.body.sm,
+            belowSm: typography.body.md,
             sm: typography.body.md,
             md: typography.body.lg,
           )
         : responsiveValue(
             context,
-            belowSm: typography.body.sm,
+            belowSm: typography.body.md,
             sm: typography.body.md,
             md: typography.body.lg,
           );
@@ -44,18 +44,27 @@ abstract final class StudyPanelTextStyles {
 
   /// Body style for a translation paragraph.
   static TextStyle translation({
+    required BuildContext context,
     required FTypography typography,
     required FColors colors,
     required TranslationId source,
+    double? containerWidth,
   }) {
-    final base = typography.body.sm.copyWith(
+    final base = containerWidth != null
+        ? responsiveValueForWidth(
+            context,
+            containerWidth,
+            belowSm: typography.body.md,
+            sm: typography.body.md,
+            md: typography.body.lg,
+          )
+        : typography.body.md;
+    final style = base.copyWith(
       color: colors.foreground,
       height: source == TranslationId.urdu ? 2.0 : 1.6,
-      fontStyle: source.usesItalicQuoteStyle
-          ? FontStyle.italic
-          : FontStyle.normal,
+      fontStyle: FontStyle.normal,
     );
     final fontFamily = source.fontFamily;
-    return fontFamily == null ? base : base.copyWith(fontFamily: fontFamily);
+    return fontFamily == null ? style : style.copyWith(fontFamily: fontFamily);
   }
 }

@@ -15,10 +15,16 @@ import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/range_repeat_dialog.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/dialogs/reciter_dialog.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_dialog.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Animated floating bar for copy, share, and play on the selected ayah.
+const _actionButtonShortcuts = <ShortcutActivator, Intent>{
+  SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+  SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+};
+
+/// Animated contextual actions attached to the bottom of the Quran reader.
 class AyahSelectionActionsBar extends ConsumerWidget {
   /// Creates the selection actions bar.
   const new({super.key});
@@ -57,10 +63,7 @@ class AyahSelectionActionsBar extends ConsumerWidget {
 }
 
 class _AyahSelectionActionsContent extends ConsumerWidget {
-  const new({
-    required this.ayah,
-    super.key,
-  });
+  const new({required this.ayah, super.key});
 
   final Ayah ayah;
 
@@ -69,18 +72,34 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
     final theme = context.theme;
     final durations = theme.durations;
     final l10n = context.l10n;
+    final colors = theme.colors;
+    final controller = ref.watch(quranMushafControllerProvider);
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    final reference = localizedAyahReference(
+      ayah: ayah,
+      controller: controller,
+      l10n: l10n,
+      isArabic: isArabic,
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final compact = constraints.maxWidth < theme.breakpoints.sm;
+        // The reader can offer a narrower toolbar than the app breakpoint.
+        // Base this choice on the space actually available to this group so a
+        // desktop reader still exposes the text actions and play chevron.
+        final compact = constraints.maxWidth < 420;
 
         Widget playTrigger(VoidCallback toggle) => compact
-            ? FButton.icon(
+            ? _iconAction(
+                label: l10n.quranRecitationPlay,
+                icon: FLucideIcons.play,
                 onPress: toggle,
-                child: const Icon(FLucideIcons.play, size: 18),
+                variant: FButtonVariant.primary,
               )
-            : FButton(
+            : _labeledAction(
+                label: l10n.quranRecitationPlay,
                 onPress: toggle,
+                variant: FButtonVariant.primary,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -92,12 +111,16 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
               );
 
         final shareButton = compact
-            ? FButton.icon(
+            ? _iconAction(
+                label: l10n.ayahShare,
+                icon: FLucideIcons.share2,
                 onPress: () => showAyahShareDialog(context, ayah: ayah),
-                child: const Icon(FLucideIcons.share2, size: 18),
+                variant: FButtonVariant.outline,
               )
-            : FButton(
+            : _labeledAction(
+                label: l10n.ayahShare,
                 onPress: () => showAyahShareDialog(context, ayah: ayah),
+                variant: FButtonVariant.outline,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -109,12 +132,16 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
               );
 
         final copyButton = compact
-            ? FButton.icon(
+            ? _iconAction(
+                label: l10n.ayahCopy,
+                icon: FLucideIcons.copy,
                 onPress: () => copySelectedAyah(context, ref, ayah),
-                child: const Icon(FLucideIcons.copy, size: 18),
+                variant: FButtonVariant.outline,
               )
-            : FButton.icon(
+            : _labeledAction(
+                label: l10n.ayahCopy,
                 onPress: () => copySelectedAyah(context, ref, ayah),
+                variant: FButtonVariant.outline,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -125,55 +152,146 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
                 ),
               );
 
-        return Row(
-              spacing: AppSpacing.sm,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FPopoverMenu(
-                  menu: [
-                    FItemGroup(
-                      children: [
-                        FItem(
-                          prefix: const Icon(FLucideIcons.play),
-                          title: Text(l10n.quranPlayAyah),
-                          onPress: () =>
-                              unawaited(_playAyahAction(context, ref, ayah)),
-                        ),
-                        FItem(
-                          prefix: const Icon(FLucideIcons.bookOpen),
-                          title: Text(l10n.quranPlaySurah),
-                          onPress: () =>
-                              unawaited(_playSurahAction(context, ref, ayah)),
-                        ),
-                        FItem(
-                          prefix: const Icon(FLucideIcons.repeat),
-                          title: Text(l10n.quranPlayRange),
-                          onPress: () =>
-                              unawaited(_playRangeAction(context, ref, ayah)),
-                        ),
-                      ],
+        final dismissButton = _iconAction(
+          label: l10n.quranStudyDismissSelection,
+          icon: FLucideIcons.x,
+          onPress: () => setQuranSelectedAyah(ref, null),
+          variant: FButtonVariant.ghost,
+        );
+
+        final actionControls = Wrap(
+          alignment: WrapAlignment.center,
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          children: [
+            FPopoverMenu(
+              menu: [
+                FItemGroup(
+                  children: [
+                    FItem(
+                      prefix: const Icon(FLucideIcons.play),
+                      title: Text(l10n.quranPlayAyah),
+                      onPress: () =>
+                          unawaited(_playAyahAction(context, ref, ayah)),
+                    ),
+                    FItem(
+                      prefix: const Icon(FLucideIcons.bookOpen),
+                      title: Text(l10n.quranPlaySurah),
+                      onPress: () =>
+                          unawaited(_playSurahAction(context, ref, ayah)),
+                    ),
+                    FItem(
+                      prefix: const Icon(FLucideIcons.repeat),
+                      title: Text(l10n.quranPlayRange),
+                      onPress: () =>
+                          unawaited(_playRangeAction(context, ref, ayah)),
                     ),
                   ],
-                  builder: (context, controller, _) =>
-                      playTrigger(controller.toggle),
-                ),
-                shareButton,
-                copyButton,
-                FButton.icon(
-                  onPress: () => setQuranSelectedAyah(ref, null),
-                  child: const Icon(FLucideIcons.x, size: 18),
                 ),
               ],
-            )
-            .animate()
-            .fadeIn(duration: durations.fast, curve: Curves.easeOut)
-            .scale(
-              begin: const Offset(0.9, 0.9),
-              end: const Offset(1, 1),
-              duration: durations.normal,
-              curve: Curves.easeOutBack,
-            );
+              builder: (context, controller, _) =>
+                  playTrigger(controller.toggle),
+            ),
+            shareButton,
+            copyButton,
+            dismissButton,
+          ],
+        );
+
+        final width = constraints.maxWidth.clamp(0.0, 520.0);
+        final surface = SizedBox(
+          key: const ValueKey('ayah-selection-actions-surface'),
+          width: width,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.background,
+              border: Border.all(color: colors.border),
+              borderRadius: theme.radii.lg,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    reference,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.body.xs.copyWith(
+                      color: colors.mutedForeground,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  actionControls,
+                ],
+              ),
+            ),
+          ),
+        );
+        return Align(
+          alignment: AlignmentDirectional.center,
+          child: surface
+              .animate()
+              .fadeIn(duration: durations.fast, curve: Curves.easeOut)
+              .scale(
+                begin: const Offset(0.9, 0.9),
+                end: const Offset(1, 1),
+                duration: durations.normal,
+                curve: Curves.easeOutBack,
+              ),
+        );
       },
+    );
+  }
+
+  Widget _iconAction({
+    required String label,
+    required IconData icon,
+    required VoidCallback onPress,
+    required FButtonVariant variant,
+  }) {
+    final button = FButton.icon(
+      variant: variant,
+      onPress: onPress,
+      shortcuts: _actionButtonShortcuts,
+      child: Icon(icon, size: 18),
+    );
+    return FTooltip(
+      tipBuilder: (_, _) => Text(label, semanticsLabel: label),
+      child: QuranSemantics.labeledControl(
+        name: label,
+        onTap: onPress,
+        button: true,
+        excludeChild: true,
+        child: button,
+      ),
+    );
+  }
+
+  Widget _labeledAction({
+    required String label,
+    required VoidCallback onPress,
+    required FButtonVariant variant,
+    required Widget child,
+  }) {
+    return QuranSemantics.labeledControl(
+      name: label,
+      onTap: onPress,
+      button: true,
+      excludeChild: true,
+      child: FButton(
+        variant: variant,
+        onPress: onPress,
+        shortcuts: _actionButtonShortcuts,
+        mainAxisSize: MainAxisSize.min,
+        child: child,
+      ),
     );
   }
 
@@ -299,8 +417,5 @@ void copySelectedAyah(BuildContext context, WidgetRef ref, Ayah ayah) {
       ),
     ),
   );
-  showFToast(
-    context: context,
-    title: Text(l10n.ayahCopied(reference)),
-  );
+  showFToast(context: context, title: Text(l10n.ayahCopied(reference)));
 }

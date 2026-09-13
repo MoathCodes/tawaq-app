@@ -124,6 +124,15 @@ class _MushafViewportTestRepo implements IQuranRepository {
   Future<void> warmUpSearchIndex() async {}
 }
 
+class _SelectedAyahId extends QuranSelectedAyahId {
+  _SelectedAyahId(this._ayahId);
+
+  final int _ayahId;
+
+  @override
+  int? build() => _ayahId;
+}
+
 void main() {
   late MushafReaderController controller;
 
@@ -140,6 +149,7 @@ void main() {
   Widget wrap({
     required double width,
     required Widget child,
+    Ayah? selectedAyah,
   }) {
     final theme = buildAppTheme(
       palette: AppPalette.neutral,
@@ -153,6 +163,12 @@ void main() {
         quranScreenSettingsProvider.overrideWith(_TestQuranScreenSettings.new),
         quranMushafControllerProvider.overrideWithValue(controller),
         appThemeDataProvider.overrideWithValue(theme),
+        if (selectedAyah != null) ...[
+          quranSelectedAyahProvider.overrideWithValue(AsyncData(selectedAyah)),
+          quranSelectedAyahIdProvider.overrideWith(
+            () => _SelectedAyahId(selectedAyah.ayahId),
+          ),
+        ],
       ],
       child: FTheme(
         data: theme,
@@ -250,5 +266,47 @@ void main() {
         expect(find.byType(FAlert), findsNothing);
       },
     );
+
+    testWidgets('attaches wide selected actions to the real reader flow', (
+      tester,
+    ) async {
+      final ayah = Ayah(
+        ayahId: 1,
+        juz: 1,
+        page: 1,
+        surahNumber: 1,
+        numberInSurah: 1,
+        text: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
+        textPlain: 'In the name of Allah',
+      );
+      await tester.pumpWidget(
+        wrap(
+          width: 800,
+          selectedAyah: ayah,
+          child: const QuranMushafPane(),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      final semanticsHandle = tester.ensureSemantics();
+
+      expect(find.text('Play'), findsOneWidget);
+      expect(find.text('Share'), findsOneWidget);
+      expect(find.text('Copy'), findsOneWidget);
+      expect(find.byIcon(FLucideIcons.chevronDown), findsOneWidget);
+      final surfaceRect = tester.getRect(
+        find.byKey(const ValueKey('ayah-selection-actions-surface')),
+      );
+      final playRect = tester.getRect(find.text('Play'));
+      final shareRect = tester.getRect(find.text('Share'));
+      final copyRect = tester.getRect(find.text('Copy'));
+      expect(playRect.top, closeTo(shareRect.top, 1));
+      expect(shareRect.top, closeTo(copyRect.top, 1));
+      expect(surfaceRect.height, lessThan(150));
+      expect(
+        tester.getTopLeft(find.text('Copy')).dy,
+        greaterThan(tester.getBottomLeft(find.byType(MushafReader)).dy),
+      );
+      semanticsHandle.dispose();
+    });
   });
 }

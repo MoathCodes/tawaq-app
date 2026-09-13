@@ -69,14 +69,17 @@ class TafsirStudySection extends ConsumerWidget {
             errorMessage: l10n.errorLoadingTafsir,
             emptyMessage: l10n.noTafsirAvailable,
             sourceSelector: const TafsirSourceSelector(),
-            contentBuilder: (parsed) => TafsirText(
-              parseResult: parsed,
-              tafsirId: resolvedSource,
-              baseStyle: StudyPanelTextStyles.tafsirBase(
-                context: context,
-                typography: typography,
-                colors: colors,
-                containerWidth: constraints.maxWidth,
+            contentBuilder: (parsed) => Directionality(
+              textDirection: TextDirection.rtl,
+              child: TafsirText(
+                parseResult: parsed,
+                tafsirId: resolvedSource,
+                baseStyle: StudyPanelTextStyles.tafsirBase(
+                  context: context,
+                  typography: typography,
+                  colors: colors,
+                  containerWidth: constraints.maxWidth,
+                ),
               ),
             ),
           );

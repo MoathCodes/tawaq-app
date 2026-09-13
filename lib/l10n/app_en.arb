@@ -721,6 +721,7 @@
   "quranDoublePageWidthFallback": "Not enough width for a two-page spread — showing one page.",
   "quranLayoutDoublePage": "Double Page",
   "quranLayoutStudyMode": "Study Mode",
+  "quranStudyDismissSelection": "Dismiss ayah selection",
   "quranNoMatchingReciters": "No matching reciters",
   "quranPlayAyah": "Play this ayah",
   "quranPlayRange": "Play a range…",

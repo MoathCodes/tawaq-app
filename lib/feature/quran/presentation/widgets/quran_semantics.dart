@@ -34,8 +34,7 @@ abstract final class QuranSemantics {
   static Widget sectionHeader({
     required String label,
     required Widget child,
-  }) =>
-      SemanticsWrappers.sectionHeader(label: label, child: child);
+  }) => SemanticsWrappers.sectionHeader(label: label, child: child);
 
   /// Mushaf / page canvas: one announced region, no per-glyph semantics.
   static Widget mushafReadingRegion({
@@ -66,20 +65,21 @@ abstract final class QuranSemantics {
     required String name,
     required Widget child,
     String? value,
+    VoidCallback? onTap,
     bool enabled = true,
     bool button = false,
     bool selected = false,
     bool excludeChild = false,
-  }) =>
-      SemanticsWrappers.labeledControl(
-        label: name,
-        value: value,
-        enabled: enabled,
-        button: button,
-        selected: selected,
-        excludeChild: excludeChild,
-        child: child,
-      );
+  }) => SemanticsWrappers.labeledControl(
+    label: name,
+    value: value,
+    onTap: onTap,
+    enabled: enabled,
+    button: button,
+    selected: selected,
+    excludeChild: excludeChild,
+    child: child,
+  );
 
   /// Merges descendants into one node (e.g. icon + label chip).
   static Widget mergedChip({required Widget child}) =>

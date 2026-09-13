@@ -177,7 +177,6 @@ class QuranMushafPane extends HookConsumerWidget {
               },
               child: Stack(
                 fit: StackFit.expand,
-                clipBehavior: Clip.none,
                 children: [
                   NotificationListener<ScrollEndNotification>(
                     onNotification: (_) {
@@ -186,26 +185,37 @@ class QuranMushafPane extends HookConsumerWidget {
                     },
                     child: NonSelectable(child: reader),
                   ),
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: AppSpacing.lg,
-                    child: Align(
-                      alignment: _ayahActionsAlignment(context, layout),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: layout == QuranReadingLayout.studyMode
-                              ? AppSpacing.lg
-                              : 0,
-                        ),
-                        child: const AyahSelectionActionsBar(),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
+        );
+
+        // Keep selection actions in the reader's flow so they never cover a
+        // Quran line or the page metadata. The group remains attached to the
+        // reader in both study and double-page layouts.
+        final readerWithActions = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: mushaf),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.xs,
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                ),
+                // Let the action bar measure the actual reader width. It
+                // applies its own compact threshold, while this full-width
+                // anchor keeps wide labels and the play chevron reachable.
+                child: const SizedBox(
+                  width: double.infinity,
+                  child: AyahSelectionActionsBar(),
+                ),
+              ),
+            ),
+          ],
         );
 
         if (wantsDoubleSpread && !canFitDoubleSpread) {
@@ -227,27 +237,13 @@ class QuranMushafPane extends HookConsumerWidget {
                   ),
                 ),
               ),
-              Expanded(child: mushaf),
+              Expanded(child: readerWithActions),
             ],
           );
         }
 
-        return mushaf;
+        return readerWithActions;
       },
     );
   }
-}
-
-/// Study mode pins the bar to the mushaf pane's outer edge (away from the
-/// study panel). Double-page mode keeps it centered over the spread.
-Alignment _ayahActionsAlignment(
-  BuildContext context,
-  QuranReadingLayout layout,
-) {
-  if (layout != QuranReadingLayout.studyMode) {
-    return Alignment.bottomCenter;
-  }
-
-  final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-  return isArabic ? Alignment.bottomLeft : Alignment.bottomRight;
 }
