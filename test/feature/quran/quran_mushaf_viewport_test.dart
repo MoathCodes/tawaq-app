@@ -287,15 +287,26 @@ void main() {
         ),
       );
       await tester.pump(const Duration(milliseconds: 300));
+      final semanticsHandle = tester.ensureSemantics();
 
       expect(find.text('Play'), findsOneWidget);
       expect(find.text('Share'), findsOneWidget);
       expect(find.text('Copy'), findsOneWidget);
       expect(find.byIcon(FLucideIcons.chevronDown), findsOneWidget);
+      final surfaceRect = tester.getRect(
+        find.byKey(const ValueKey('ayah-selection-actions-surface')),
+      );
+      final playRect = tester.getRect(find.text('Play'));
+      final shareRect = tester.getRect(find.text('Share'));
+      final copyRect = tester.getRect(find.text('Copy'));
+      expect(playRect.top, closeTo(shareRect.top, 1));
+      expect(shareRect.top, closeTo(copyRect.top, 1));
+      expect(surfaceRect.height, lessThan(150));
       expect(
         tester.getTopLeft(find.text('Copy')).dy,
         greaterThan(tester.getBottomLeft(find.byType(MushafReader)).dy),
       );
+      semanticsHandle.dispose();
     });
   });
 }

@@ -25,10 +25,11 @@
   share/copy flows, keyboard shortcuts, and selection dismissal are retained.
   The action controls measure the actual reader toolbar width: wide readers
   show text labels and the Play chevron, while narrow readers wrap compact
-  controls. Each named action now forwards its callback into the semantic
-  wrapper and retains a focusable node. Semantic activation tests invoke Play,
-  Copy, and Dismiss through `SemanticsAction.tap` and verify the existing
-  effects.
+  controls. Each named action forwards its callback into the semantic wrapper
+  while the underlying Forui button remains the only keyboard focus stop.
+  Semantic activation tests invoke Play, Copy, and Dismiss through
+  `SemanticsAction.tap`; keyboard tests traverse with Tab and activate Play
+  with Enter and Copy with Space, verifying the existing effects.
 - Quran informational metadata uses plain text for the reflections count and
   ayah identity instead of filled badges. Interactive controls keep their
   button treatment.
@@ -40,16 +41,24 @@
 - [After light render](taw-78-81-screenshots/quran-study-after-light.png) and
   [after dark render](taw-78-81-screenshots/quran-study-after-dark.png) are
   native Linux Flutter widget captures using the shipped Manuscript theme,
-  font assets, and Forui icon glyphs. They show a 360px study column (the
-  narrow-pane target), English and Arabic reader content, the wide action
-  group, and bundled Urdu, Bengali, and Chinese font samples. The historical
-  [after widget filename](taw-78-81-screenshots/quran-study-after-widget.png)
-  is kept as the light capture for existing review links.
-- The capture harness used the exact first-row strings from the shipped
-  `saheeh_international`, `quran_ur`, `quran_bn`, and `quran_zh` databases and
-  the existing Al-Fatihah fixture. It was a temporary native Linux entrypoint
-  removed after capture; the PNGs are portable evidence, not fabricated test
-  snapshots.
+  font assets, and Forui icon glyphs. The left column is the actual
+  `StudyContentSection`/`TranslationProse` composition at a 350px narrow-pane
+  width; the right column is the actual `QuranMushafPane` with a bundled Hive
+  Mushaf page and the selected-ayah action group. The compact wide toolbar
+  shows Play + chevron, Share, Copy, and dismiss on one row. The language rows
+  below the study prose are explicitly labeled font specimens, not a second
+  reader. The [after widget filename](taw-78-81-screenshots/quran-study-after-widget.png)
+  remains a light-capture compatibility link.
+- The committed capture harness is
+  [`tool/quran_visual_harness.dart`](../../tool/quran_visual_harness.dart). It
+  uses a dedicated `tawaq-quran-review-harness` app-data subdirectory, so it
+  reads the shipped Mushaf Hive fixture without contending with a running
+  Tawaq instance. Run it with `TAWAQ_SCREENSHOT=/tmp/quran-study-light.png
+  fvm flutter run -d linux -t tool/quran_visual_harness.dart
+  --dart-define=DARK=false` (set `DARK=true` for dark mode). The translation and
+  labeled language specimens use the exact first-row strings from the shipped
+  `saheeh_international`, `quran_ur`, `quran_bn`, and `quran_zh` databases.
+  These PNGs are portable native evidence, not fabricated test snapshots.
 
 The main Linux app also built successfully with `fvm flutter run -d linux
 --debug`, but a separate running Tawaq process held the shared Mushaf Hive
@@ -64,9 +73,9 @@ claims about the locked main-app runtime.
 | --- | --- |
 | `fvm exec bash tool/codegen.sh` | Passed; generated files are ignored by the repository as configured. |
 | `fvm flutter gen-l10n` | Passed; tracked localization outputs updated. |
-| `fvm flutter test test/feature/quran` | Passed: 479 tests. |
-| `fvm flutter test` | Passed: 1,008 tests. |
-| `fvm flutter analyze --no-fatal-infos` | Passed with no errors; 164 repository lint infos remain (including existing baseline infos and non-blocking new-test style infos). |
+| `fvm flutter test test/feature/quran` | Passed: 481 tests. |
+| `fvm flutter test` | Passed: 1,010 tests. |
+| `fvm flutter analyze --no-fatal-infos` | Passed with no errors; 169 repository lint infos remain (including existing baseline infos and non-blocking preview/test style infos). |
 | Impeccable type/layout detectors | Returned no findings for the affected Quran files. |
 
 The known baseline docs/audits/taw-67-memory-2026-09-08/probe.dart dynamic-to-

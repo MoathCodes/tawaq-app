@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
@@ -198,7 +199,6 @@ void main() {
   void performSemanticTap(WidgetTester tester, String label) {
     final node = tester.getSemantics(find.bySemanticsLabel(label));
     expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
-    expect(node.getSemanticsData().hasAction(SemanticsAction.focus), isTrue);
     tester.binding.renderViews.first.owner!.semanticsOwner!.performAction(
       node.id,
       SemanticsAction.tap,
@@ -222,6 +222,12 @@ void main() {
       tester.getTopLeft(find.text('page metadata')).dy,
       lessThan(tester.getTopLeft(find.bySemanticsLabel('Copy')).dy),
     );
+    final surfaceRect = tester.getRect(
+      find.byKey(const ValueKey('ayah-selection-actions-surface')),
+    );
+    expect(surfaceRect.width, lessThanOrEqualTo(320));
+    expect(surfaceRect.height, lessThan(220));
+    expect(tester.takeException(), isNull);
     controller.dispose();
   });
 
@@ -233,6 +239,17 @@ void main() {
     expect(find.text('Share'), findsOneWidget);
     expect(find.text('Copy'), findsOneWidget);
     expect(find.byIcon(FLucideIcons.chevronDown), findsOneWidget);
+    final surfaceRect = tester.getRect(
+      find.byKey(const ValueKey('ayah-selection-actions-surface')),
+    );
+    final playRect = tester.getRect(find.bySemanticsLabel('Play'));
+    final shareRect = tester.getRect(find.bySemanticsLabel('Share'));
+    final copyRect = tester.getRect(find.bySemanticsLabel('Copy'));
+    expect(playRect.top, closeTo(shareRect.top, 1));
+    expect(shareRect.top, closeTo(copyRect.top, 1));
+    expect(surfaceRect.width, lessThanOrEqualTo(520));
+    expect(surfaceRect.height, lessThan(150));
+    expect(tester.takeException(), isNull);
     controller.dispose();
   });
 
@@ -273,6 +290,44 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(selectedState.state, isNull);
+    controller.dispose();
+  });
+
+  testWidgets('Play is reachable with Tab and activates with Enter', (
+    tester,
+  ) async {
+    final selectedState = _TestQuranSelectedAyahId(ayah.ayahId);
+    final controller = await pumpReaderComposition(
+      tester,
+      width: 760,
+      selectedState: selectedState,
+    );
+    await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Play this ayah'), findsOneWidget);
+    controller.dispose();
+  });
+
+  testWidgets('Copy is reachable with Tab and activates with Space', (
+    tester,
+  ) async {
+    final selectedState = _TestQuranSelectedAyahId(ayah.ayahId);
+    final controller = await pumpReaderComposition(
+      tester,
+      width: 760,
+      selectedState: selectedState,
+    );
+    for (var i = 0; i < 3; i++) {
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.pump();
+    }
+    await tester.sendKeyEvent(LogicalKeyboardKey.space);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.textContaining('Copied'), findsOneWidget);
     controller.dispose();
   });
 }

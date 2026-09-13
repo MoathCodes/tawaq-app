@@ -19,6 +19,11 @@ import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/share/ayah_share_dialog.dart';
 import 'package:tawaq/theme/theme.dart';
 
+const _actionButtonShortcuts = <ShortcutActivator, Intent>{
+  SingleActivator(LogicalKeyboardKey.enter): ActivateIntent(),
+  SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
+};
+
 /// Animated contextual actions attached to the bottom of the Quran reader.
 class AyahSelectionActionsBar extends ConsumerWidget {
   /// Creates the selection actions bar.
@@ -194,48 +199,53 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
         );
 
         final width = constraints.maxWidth.clamp(0.0, 520.0);
-        return SizedBox(
-              width: width,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.background,
-                  border: Border.all(color: colors.border),
-                  borderRadius: theme.radii.lg,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        reference,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.typography.body.xs.copyWith(
-                          color: colors.mutedForeground,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      actionControls,
-                    ],
-                  ),
-                ),
+        final surface = SizedBox(
+          key: const ValueKey('ayah-selection-actions-surface'),
+          width: width,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.background,
+              border: Border.all(color: colors.border),
+              borderRadius: theme.radii.lg,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
               ),
-            )
-            .animate()
-            .fadeIn(duration: durations.fast, curve: Curves.easeOut)
-            .scale(
-              begin: const Offset(0.9, 0.9),
-              end: const Offset(1, 1),
-              duration: durations.normal,
-              curve: Curves.easeOutBack,
-            );
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    reference,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.body.xs.copyWith(
+                      color: colors.mutedForeground,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  actionControls,
+                ],
+              ),
+            ),
+          ),
+        );
+        return Align(
+          alignment: AlignmentDirectional.center,
+          child: surface
+              .animate()
+              .fadeIn(duration: durations.fast, curve: Curves.easeOut)
+              .scale(
+                begin: const Offset(0.9, 0.9),
+                end: const Offset(1, 1),
+                duration: durations.normal,
+                curve: Curves.easeOutBack,
+              ),
+        );
       },
     );
   }
@@ -249,19 +259,17 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
     final button = FButton.icon(
       variant: variant,
       onPress: onPress,
+      shortcuts: _actionButtonShortcuts,
       child: Icon(icon, size: 18),
     );
-    return Focus(
-      canRequestFocus: true,
+    return FTooltip(
+      tipBuilder: (_, _) => Text(label, semanticsLabel: label),
       child: QuranSemantics.labeledControl(
         name: label,
-        button: true,
         onTap: onPress,
+        button: true,
         excludeChild: true,
-        child: FTooltip(
-          tipBuilder: (_, _) => Text(label, semanticsLabel: label),
-          child: button,
-        ),
+        child: button,
       ),
     );
   }
@@ -272,14 +280,17 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
     required FButtonVariant variant,
     required Widget child,
   }) {
-    return Focus(
-      canRequestFocus: true,
-      child: QuranSemantics.labeledControl(
-        name: label,
-        button: true,
-        onTap: onPress,
-        excludeChild: true,
-        child: FButton(variant: variant, onPress: onPress, child: child),
+    return QuranSemantics.labeledControl(
+      name: label,
+      onTap: onPress,
+      button: true,
+      excludeChild: true,
+      child: FButton(
+        variant: variant,
+        onPress: onPress,
+        shortcuts: _actionButtonShortcuts,
+        mainAxisSize: MainAxisSize.min,
+        child: child,
       ),
     );
   }
