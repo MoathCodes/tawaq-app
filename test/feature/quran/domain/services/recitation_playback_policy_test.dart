@@ -139,6 +139,44 @@ void main() {
       );
     });
 
+    test('isPastRangeEnd ignores untimed open-ended playback', () {
+      const state = RecitationState(
+        rangeFrom: AyahReference(surah: 1, ayah: 1),
+        duration: Duration(minutes: 1),
+      );
+
+      expect(
+        isPastRangeEnd(
+          state: state,
+          timeline: const RecitationTimeline(),
+          position: const Duration(seconds: 5),
+        ),
+        isFalse,
+      );
+    });
+
+    test('isPastRangeEnd ignores untimed bounded playback', () {
+      const state = RecitationState(
+        rangeFrom: AyahReference(surah: 1, ayah: 1),
+        rangeTo: AyahReference(surah: 2, ayah: 10),
+        segmentStartAyah: 1,
+        segmentEndAyah: 7,
+        duration: Duration(minutes: 1),
+      );
+
+      expect(
+        isPastRangeEnd(
+          state: state,
+          timeline: const RecitationTimeline(
+            rangeStartAyah: 1,
+            rangeEndAyah: 7,
+          ),
+          position: const Duration(seconds: 5),
+        ),
+        isFalse,
+      );
+    });
+
     test('detectAyahLoopWrap requires near-end then near-start jump', () {
       final timeline = _timeline(ayat: _ayat);
       const state = RecitationState(
@@ -187,6 +225,13 @@ void main() {
         sleepBoundary(
           state.copyWith(sleep: RecitationSleep.off),
           timeline: timeline,
+        ),
+        isNull,
+      );
+      expect(
+        sleepBoundary(
+          const RecitationState(sleep: RecitationSleep.endOfRange),
+          timeline: const RecitationTimeline(),
         ),
         isNull,
       );
