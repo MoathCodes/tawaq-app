@@ -90,6 +90,14 @@ class _PeriodTrendBody extends ConsumerWidget {
     };
   }
 
+  String _periodScope(AppLocalizations l10n, PrayerAnalyticsPeriod period) {
+    return switch (period) {
+      PrayerAnalyticsPeriod.weekly => l10n.prayerAnalyticsPeriodLast7Days,
+      PrayerAnalyticsPeriod.monthly => l10n.prayerAnalyticsPeriodLast30Days,
+      PrayerAnalyticsPeriod.yearly => l10n.prayerAnalyticsPeriodLast365Days,
+    };
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -103,9 +111,27 @@ class _PeriodTrendBody extends ConsumerWidget {
         (state) => state.value?.periodAnalytics,
       ),
     );
+    final isReady = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.isReady ?? false,
+      ),
+    );
+    final hasRecordedData = ref.watch(
+      prayerAnalysisSectionProvider.select(
+        (state) => state.value?.hasRecordedData ?? false,
+      ),
+    );
 
-    if (analytics == null) {
+    if (analytics == null || !isReady) {
       return const SizedBox.shrink();
+    }
+
+    if (!hasRecordedData) {
+      return _NoPrayerRecordsState(
+        scope: _periodScope(l10n, period),
+        title: l10n.prayerAnalyticsNoRecords,
+        hint: l10n.prayerAnalyticsNoRecordsHint,
+      );
     }
 
     return Column(
@@ -121,6 +147,63 @@ class _PeriodTrendBody extends ConsumerWidget {
         const SizedBox(height: AppSpacing.lg),
         const TrendChart(),
       ],
+    );
+  }
+}
+
+class _NoPrayerRecordsState extends StatelessWidget {
+  const _NoPrayerRecordsState({
+    required this.scope,
+    required this.title,
+    required this.hint,
+  });
+
+  final String scope;
+  final String title;
+  final String hint;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = FTheme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Icon(
+            FLucideIcons.calendarDays,
+            size: 24,
+            color: theme.colors.mutedForeground,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            scope,
+            textAlign: TextAlign.center,
+            style: theme.typography.body.xs.copyWith(
+              color: theme.colors.mutedForeground,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: theme.typography.body.md.copyWith(
+              color: theme.colors.foreground,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            hint,
+            textAlign: TextAlign.center,
+            style: theme.typography.body.sm.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

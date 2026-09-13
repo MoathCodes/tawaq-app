@@ -597,6 +597,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fortressSearchHint => 'Search chapters and adhkar...';
 
   @override
+  String get fortressSearchLabel => 'Search';
+
+  @override
   String get fortressSearchOpen => 'Search adhkar';
 
   @override
@@ -607,6 +610,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fortressShowDetails => 'Show details';
+
+  @override
+  String get fortressShowLess => 'Show less';
+
+  @override
+  String get fortressShowMore => 'Show more';
 
   @override
   String get fortressShowSharh => 'Show explanation';
@@ -1162,6 +1171,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noDataAvailable => 'No data available';
+
+  @override
+  String get prayerAnalyticsPeriodLast7Days => 'Last 7 days';
+
+  @override
+  String get prayerAnalyticsPeriodLast30Days => 'Last 30 days';
+
+  @override
+  String get prayerAnalyticsPeriodLast365Days => 'Last 365 days';
+
+  @override
+  String get prayerAnalyticsNoRecords => 'No prayer records for this period';
+
+  @override
+  String get prayerAnalyticsNoRecordsHint =>
+      'Record a prayer status in today’s schedule to see it here.';
 
   @override
   String get noReflectionsMatchSearch => 'No reflections match your search';

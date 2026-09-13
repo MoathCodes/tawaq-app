@@ -76,6 +76,7 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
           ...entry.value,
     ];
     final periodCounts = countDedupedStatuses(periodCompletions, location);
+    final hasRecordedData = periodCounts.values.any((count) => count > 0);
     final completedDays = <DateTime>[
       for (final entry in index.entries)
         if (_isFullyCompleted(entry.key, entry.value, location))
@@ -114,6 +115,8 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
 
     return PrayerAnalysisSectionData(
       period: period,
+      isReady: true,
+      hasRecordedData: hasRecordedData,
       todayStatusCounts: todayCounts,
       todayPrayerStatuses: todayPrayerStatuses,
       todayPerformanceScore: performanceScore,

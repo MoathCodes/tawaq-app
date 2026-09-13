@@ -1112,6 +1112,12 @@ abstract class AppLocalizations {
   /// **'Search chapters and adhkar...'**
   String get fortressSearchHint;
 
+  /// No description provided for @fortressSearchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get fortressSearchLabel;
+
   /// No description provided for @fortressSearchOpen.
   ///
   /// In en, this message translates to:
@@ -1135,6 +1141,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Show details'**
   String get fortressShowDetails;
+
+  /// No description provided for @fortressShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get fortressShowLess;
+
+  /// No description provided for @fortressShowMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get fortressShowMore;
 
   /// No description provided for @fortressShowSharh.
   ///
@@ -2113,6 +2131,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No data available'**
   String get noDataAvailable;
+
+  /// No description provided for @prayerAnalyticsPeriodLast7Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 7 days'**
+  String get prayerAnalyticsPeriodLast7Days;
+
+  /// No description provided for @prayerAnalyticsPeriodLast30Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 30 days'**
+  String get prayerAnalyticsPeriodLast30Days;
+
+  /// No description provided for @prayerAnalyticsPeriodLast365Days.
+  ///
+  /// In en, this message translates to:
+  /// **'Last 365 days'**
+  String get prayerAnalyticsPeriodLast365Days;
+
+  /// No description provided for @prayerAnalyticsNoRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'No prayer records for this period'**
+  String get prayerAnalyticsNoRecords;
+
+  /// No description provided for @prayerAnalyticsNoRecordsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Record a prayer status in today’s schedule to see it here.'**
+  String get prayerAnalyticsNoRecordsHint;
 
   /// No description provided for @noReflectionsMatchSearch.
   ///

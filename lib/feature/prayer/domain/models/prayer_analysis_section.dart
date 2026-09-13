@@ -44,6 +44,8 @@ class PrayerAnalysisSectionData {
   /// Creates a prayer analysis snapshot for the selected period.
   const new({
     required this.period,
+    required this.isReady,
+    required this.hasRecordedData,
     required this.todayStatusCounts,
     required this.todayPrayerStatuses,
     required this.todayPerformanceScore,
@@ -52,9 +54,11 @@ class PrayerAnalysisSectionData {
   });
 
   /// Creates an empty analysis snapshot for the given period.
-  factory empty(PrayerAnalyticsPeriod period) {
+  factory empty(PrayerAnalyticsPeriod period, {bool isReady = false}) {
     return PrayerAnalysisSectionData(
       period: period,
+      isReady: isReady,
+      hasRecordedData: false,
       todayStatusCounts: _emptyCounts(),
       todayPrayerStatuses: _emptyPrayerStatuses(),
       todayPerformanceScore: 0,
@@ -65,6 +69,18 @@ class PrayerAnalysisSectionData {
 
   /// The analytics period used to build this section.
   final PrayerAnalyticsPeriod period;
+
+  /// Whether the live prayer inputs were ready when this snapshot was built.
+  ///
+  /// An unready snapshot must not be presented as factual absence of prayer
+  /// records while settings or the shared clock are still hydrating.
+  final bool isReady;
+
+  /// Whether the selected period contains at least one recorded prayer row.
+  ///
+  /// This is intentionally separate from completion percentage: an explicit
+  /// missed or late row is data even when the success percentage is zero.
+  final bool hasRecordedData;
 
   /// Completion counts for the current day.
   final Map<CompletionStatus, int> todayStatusCounts;

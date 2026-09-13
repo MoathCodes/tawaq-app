@@ -156,23 +156,22 @@ class MuslimFortressScreen extends ConsumerWidget {
   }
 }
 
-/// Owns selection/global-search watches so the screen only tracks focus + repo.
-class _FortressBrowseMainPane extends HookConsumerWidget {
-  const new();
+/// Search toolbar for the Fortress browse pane.
+///
+/// Kept public so the composed browse affordance can be rendered and verified
+/// independently without creating a second search flow.
+class FortressBrowseToolbar extends HookConsumerWidget {
+  /// Creates the Fortress browse search toolbar.
+  const new({super.key});
 
   static const _globalSearchDebounce = Duration(milliseconds: 300);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = context.theme;
     final l10n = context.l10n;
-    final selectedCategory = ref.watch(fortressSelectedCategoryProvider);
     final committedQuery = ref.watch(
       fortressScreenControllerProvider.select((s) => s.query),
     );
-    final isGlobalSearch =
-        committedQuery.length >= fortressSearchMinQueryLength;
-
     final searchController = useTextEditingController(text: committedQuery);
     useListenable(searchController);
     useEffect(() {
@@ -193,8 +192,8 @@ class _FortressBrowseMainPane extends HookConsumerWidget {
       return null;
     }, [searchController.text]);
 
-    // The field stays hidden behind an icon button so the pane shows only one
-    // search affordance at rest (the sidebar's chapter filter).
+    // Keep the global search affordance in the browse toolbar so it is
+    // discoverable without adding another search/controller path.
     final searchFocusNode = useFocusNode();
     final expanded = useState(committedQuery.isNotEmpty);
     final openSearch = useCallback(() {
@@ -213,58 +212,68 @@ class _FortressBrowseMainPane extends HookConsumerWidget {
       return () => searchFocusNode.removeListener(collapseWhenEmpty);
     }, [searchFocusNode]);
 
+    final theme = context.theme;
+
+    // Matches the results column width below so the field never spans the
+    // full pane on wide desktops.
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: kFortressReadingMaxWidth),
+        child: NonSelectable(
+          child: AnimatedSize(
+            duration: theme.durations.fast,
+            alignment: AlignmentDirectional.topStart,
+            child: expanded.value
+                ? FTextField(
+                    focusNode: searchFocusNode,
+                    hint: l10n.fortressSearchHint,
+                    textInputAction: TextInputAction.search,
+                    control: FTextFieldControl.managed(
+                      controller: searchController,
+                    ),
+                    clearable: (value) => value.text.isNotEmpty,
+                    prefixBuilder: (context, style, variants) => Padding(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      child: Icon(
+                        FLucideIcons.search,
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                  )
+                : Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: FButton(
+                      variant: FButtonVariant.ghost,
+                      onPress: openSearch,
+                      prefix: const Icon(FLucideIcons.search),
+                      child: Text(l10n.fortressSearchLabel),
+                    ),
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Owns selection/global-search watches so the screen only tracks focus + repo.
+class _FortressBrowseMainPane extends HookConsumerWidget {
+  const new();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = context.theme;
+    final selectedCategory = ref.watch(fortressSelectedCategoryProvider);
+    final committedQuery = ref.watch(
+      fortressScreenControllerProvider.select((s) => s.query),
+    );
+    final isGlobalSearch =
+        committedQuery.length >= fortressSearchMinQueryLength;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Matches the results column width below so the field never spans the
-        // full pane on wide desktops.
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: kFortressReadingMaxWidth,
-            ),
-            child: NonSelectable(
-              child: AnimatedSize(
-                duration: theme.durations.fast,
-                alignment: AlignmentDirectional.topStart,
-                child: expanded.value
-                    ? FTextField(
-                        focusNode: searchFocusNode,
-                        hint: l10n.fortressSearchHint,
-                        textInputAction: TextInputAction.search,
-                        control: FTextFieldControl.managed(
-                          controller: searchController,
-                        ),
-                        clearable: (value) => value.text.isNotEmpty,
-                        prefixBuilder: (context, style, variants) => Padding(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          child: Icon(
-                            FLucideIcons.search,
-                            color: theme.colors.mutedForeground,
-                          ),
-                        ),
-                      )
-                    : Align(
-                        alignment: AlignmentDirectional.centerEnd,
-                        child: FTooltip(
-                          tipBuilder: (context, _) =>
-                              Text(l10n.fortressSearchOpen),
-                          // Sits at the very top of the pane, so the default
-                          // above-anchored tip lands under the title bar.
-                          childAnchor: Alignment.bottomCenter,
-                          tipAnchor: Alignment.topCenter,
-                          child: FButton.icon(
-                            semanticsTooltip: l10n.fortressSearchOpen,
-                            variant: FButtonVariant.ghost,
-                            onPress: openSearch,
-                            child: const Icon(FLucideIcons.search),
-                          ),
-                        ),
-                      ),
-              ),
-            ),
-          ),
-        ),
+        const FortressBrowseToolbar(),
         const SizedBox(height: AppSpacing.lg),
         Expanded(
           child: AnimatedSwitcher(
