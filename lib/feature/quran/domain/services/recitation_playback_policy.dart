@@ -87,6 +87,11 @@ bool isPastRangeEnd({
 }) {
   if (state.ayahRepeatCount > 1 || !state.isRange) return false;
   final endBoundary = timeline.rangeEnd;
+  // An untimed timeline has no position-based range boundary. Its rangeEnd
+  // falls back to zero, which would otherwise make every positive-duration
+  // playback look complete on the first position tick. Natural EOF owns
+  // completion for untimed audio.
+  if (endBoundary <= Duration.zero) return false;
   return position >= endBoundary && state.duration > Duration.zero;
 }
 
@@ -127,10 +132,10 @@ Duration? sleepBoundary(
 }) {
   return switch (state.sleep) {
     RecitationSleep.off => null,
-    RecitationSleep.endOfAyah => state.currentAyah == null
-        ? null
-        : timeline.endOfAyah(state.currentAyah!),
-    RecitationSleep.endOfRange => timeline.rangeEnd,
+    RecitationSleep.endOfAyah =>
+      state.currentAyah == null ? null : timeline.endOfAyah(state.currentAyah!),
+    RecitationSleep.endOfRange =>
+      timeline.rangeEnd > Duration.zero ? timeline.rangeEnd : null,
     RecitationSleep.endOfSurah =>
       state.duration > Duration.zero ? state.duration : null,
     _ => null,
