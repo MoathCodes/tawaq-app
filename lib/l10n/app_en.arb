@@ -1,5 +1,9 @@
 {
   "@@locale": "en",
+  "globalPlaybackChooseMoshaf": "Choose a recitation",
+  "globalPlaybackChooseReciter": "Choose a reciter",
+  "globalPlaybackChooseSurah": "Choose a surah",
+  "globalPlaybackReplay": "Replay",
   "a11yExpandSidebar": "Expand sidebar",
   "a11yNavigationUnavailable": "Unavailable",
   "a11yOpenLocationSettings": "Open location settings",
@@ -337,6 +341,7 @@
     }
   },
   "hadithMuhaddith": "Muhaddith",
+  "hadithMoreActions": "More hadith actions",
   "hadithNarrator": "Narrator",
   "hadithNarrators": "Narrators",
   "hadithNoBookmarks": "No saved hadiths yet",
@@ -358,6 +363,14 @@
     }
   },
   "hadithRetry": "Retry",
+  "hadithResultIdentity": "Result {number}",
+  "@hadithResultIdentity": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "hadithScholars": "Scholars",
   "hadithScope": "Scope",
   "hadithSearchAction": "Search",
@@ -371,6 +384,15 @@
   "hadithSearchZoneQudsi": "Qudsi hadiths",
   "hadithSearchZoneSahabaAthar": "Companion narrations",
   "hadithSearchZoneSharh": "Hadith commentaries",
+  "hadithSelectedHadith": "Selected hadith",
+  "hadithSelectedResult": "Selected result {number}",
+  "@hadithSelectedResult": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "hadithSharh": "Explanation",
   "hadithShare": "Share hadith",
   "hadithNumberOrPage": "Number or page",

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -9,7 +10,9 @@ import 'package:tawaq/core/layout/responsive_horizontal_split.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_detail_pane.dart';
@@ -156,10 +159,23 @@ class _HadithSidePanel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isSearchMode = ref.watch(
-      hadithSessionControllerProvider.select((s) => s.isSearchMode),
-    );
+    final session = ref.watch(hadithSessionControllerProvider);
+    final isSearchMode = session.isSearchMode;
     final selectedHadith = ref.watch(selectedHadithProvider);
+    final visibleResults = switch (session.mode) {
+      HadithViewMode.search => session.results,
+      HadithViewMode.bookmarks =>
+        ref.watch(hadithFavoritesProvider).value ?? const <DetailedHadith>[],
+      HadithViewMode.specificList => session.specificHadiths,
+    };
+    final selectedOrdinal = selectedHadith == null
+        ? null
+        : visibleResults.indexWhere(
+                (item) =>
+                    hadithStableKey(item) == hadithStableKey(selectedHadith),
+              ) +
+              1;
+    final selectedResultOrdinal = selectedOrdinal == 0 ? null : selectedOrdinal;
     final settings =
         ref.watch(hadithScreenSettingsProvider).asData?.value ??
         HadithPersistedSettings.initial();
@@ -188,7 +204,13 @@ class _HadithSidePanel extends ConsumerWidget {
                   ),
                 ),
               )
-            : HadithSelectedDetailsPane(hadith: selectedHadith),
+            : HadithSelectedDetailsPane(
+                key: ValueKey(
+                  'hadith-detail-${hadithStableKey(selectedHadith)}',
+                ),
+                hadith: selectedHadith,
+                resultOrdinal: selectedResultOrdinal,
+              ),
       ),
       if (isSearchMode)
         FTabEntry(

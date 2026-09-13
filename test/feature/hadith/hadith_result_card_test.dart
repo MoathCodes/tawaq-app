@@ -1,5 +1,8 @@
+import 'dart:ui' as ui;
+
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -130,6 +133,108 @@ void main() {
     expect(label, contains(_qualifiedFixture));
     expect(label, endsWith(_qualifiedFixture));
   });
+
+  testWidgets(
+    'result identity and selected state stay visible alongside the source',
+    (tester) async {
+      final hadith = _fixtureHadith(_qualifiedFixture);
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      final rowLabel = hadithResultRowSemanticsLabel(
+        hadith,
+        l10n,
+        isFavorite: false,
+        isSelected: true,
+        resultOrdinal: 2,
+      );
+
+      await tester.pumpWidget(
+        _wrapCard(
+          HadithResultCard(
+            hadith: hadith,
+            resultOrdinal: 2,
+            isFavorite: false,
+            isSelected: true,
+            onSelect: () {},
+            showFavoriteAction: false,
+          ),
+          themeMode: ThemeMode.light,
+          locale: const Locale('en'),
+          textScale: 1,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Result 2'), findsOneWidget);
+      expect(
+        find.text('Fixture source (Fixture reference)'),
+        findsOneWidget,
+      );
+      final semantics = tester.getSemantics(find.bySemanticsLabel(rowLabel));
+      expect(semantics.flagsCollection.isSelected, ui.Tristate.isTrue);
+    },
+  );
+
+  testWidgets(
+    'keyboard selection and visible actions stay independently reachable',
+    (tester) async {
+      final hadith = _fixtureHadith(_qualifiedFixture);
+      var selected = false;
+      var favorited = false;
+      final l10n = lookupAppLocalizations(const Locale('en'));
+
+      await tester.pumpWidget(
+        _wrapCard(
+          Focus(
+            autofocus: true,
+            child: HadithResultCard(
+              hadith: hadith,
+              isFavorite: false,
+              isSelected: false,
+              onSelect: () => selected = true,
+              onToggleFavorite: () => favorited = true,
+            ),
+          ),
+          themeMode: ThemeMode.light,
+          locale: const Locale('en'),
+          textScale: 1,
+        ),
+      );
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      expect(selected, isTrue);
+
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyEvent(LogicalKeyboardKey.space);
+      expect(favorited, isTrue);
+
+      await tester.tap(find.bySemanticsLabel(l10n.hadithMoreActions));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.menuCopyText), findsOneWidget);
+      expect(find.text(l10n.menuOpen), findsOneWidget);
+
+      await tester.pumpWidget(
+        _wrapCard(
+          HadithResultCard(
+            hadith: hadith,
+            isFavorite: false,
+            isSelected: false,
+            onSelect: () {},
+            showFavoriteAction: false,
+          ),
+          themeMode: ThemeMode.light,
+          locale: const Locale('en'),
+          textScale: 1,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel(l10n.hadithMoreActions));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.menuCopyText), findsOneWidget);
+      expect(find.text(l10n.menuOpen), findsOneWidget);
+      expect(find.text(l10n.menuAddBookmark), findsNothing);
+    },
+  );
 
   testWidgets(
     'complete result card wraps long judgments at narrow large text in both themes',

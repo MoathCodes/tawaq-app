@@ -11,6 +11,7 @@ import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_detail_pane.dart';
@@ -108,9 +109,7 @@ class HadithResultsColumn extends ConsumerWidget {
           children: [
             FSkeletonizer.shimmer(
               enabled:
-                  mode == HadithViewMode.search &&
-                  isLoading &&
-                  results.isEmpty,
+                  mode == HadithViewMode.search && isLoading && results.isEmpty,
               child: semanticsContent,
             ),
             if (mode == HadithViewMode.search &&
@@ -289,12 +288,11 @@ class _ResultListView extends HookConsumerWidget {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!scrollController.hasClients) return;
 
-          scrollController.animateTo(
-            0,
-            duration: scrollDuration,
-            curve: Curves.easeOutCubic,
-          )
-        ;
+        scrollController.animateTo(
+          0,
+          duration: scrollDuration,
+          curve: Curves.easeOutCubic,
+        );
       });
       return null;
     }, [page]);
@@ -307,6 +305,7 @@ class _ResultListView extends HookConsumerWidget {
       itemBuilder: (context, index) {
         return _ResultTile(
           hadith: hadithList[index],
+          resultOrdinal: index + 1,
           useSplitLayout: useSplitLayout,
         );
       },
@@ -346,15 +345,20 @@ class _ResultListView extends HookConsumerWidget {
 class _ResultTile extends ConsumerWidget {
   const new({
     required this.hadith,
+    required this.resultOrdinal,
     required this.useSplitLayout,
   });
 
   final DetailedHadith hadith;
+  final int resultOrdinal;
   final bool useSplitLayout;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final card = HadithResultCard(hadith: hadith);
+    final card = HadithResultCard(
+      hadith: hadith,
+      resultOrdinal: resultOrdinal,
+    );
 
     if (useSplitLayout) return card;
 
@@ -365,7 +369,11 @@ class _ResultTile extends ConsumerWidget {
           preferredWidth: 620,
           preferredHeight: 620,
         ),
-        child: HadithSelectedDetailsPane(hadith: hadith),
+        child: HadithSelectedDetailsPane(
+          key: ValueKey('hadith-detail-${hadithStableKey(hadith)}'),
+          hadith: hadith,
+          resultOrdinal: resultOrdinal,
+        ),
       ),
       builder: (_, controller, child) => MouseClick(
         onClick: () {

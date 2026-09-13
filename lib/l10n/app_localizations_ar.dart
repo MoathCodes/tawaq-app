@@ -10,6 +10,18 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get globalPlaybackChooseMoshaf => 'اختر تلاوة';
+
+  @override
+  String get globalPlaybackChooseReciter => 'اختر القارئ';
+
+  @override
+  String get globalPlaybackChooseSurah => 'اختر السورة';
+
+  @override
+  String get globalPlaybackReplay => 'إعادة التشغيل';
+
+  @override
   String get a11yExpandSidebar => 'توسيع الشريط الجانبي';
 
   @override
@@ -784,6 +796,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithMuhaddith => 'المحدث';
 
   @override
+  String get hadithMoreActions => 'إجراءات الحديث الإضافية';
+
+  @override
   String get hadithNarrator => 'الراوي';
 
   @override
@@ -839,6 +854,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithRetry => 'إعادة المحاولة';
 
   @override
+  String hadithResultIdentity(int number) {
+    return 'النتيجة $number';
+  }
+
+  @override
   String get hadithScholars => 'المحدث';
 
   @override
@@ -876,6 +896,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hadithSearchZoneSharh => 'شروح الأحاديث';
+
+  @override
+  String get hadithSelectedHadith => 'الحديث المحدد';
+
+  @override
+  String hadithSelectedResult(int number) {
+    return 'النتيجة المحددة $number';
+  }
 
   @override
   String get hadithSharh => 'الشرح';

@@ -21,9 +21,12 @@ import 'package:tawaq/theme/theme.dart';
 /// [hadithDetailProvider] watches are gated via [FAccordionControl.lifted]
 /// expanded tracking so collapsed sections do not fetch.
 class HadithSelectedDetailsPane extends HookConsumerWidget {
-  const new({required this.hadith, super.key});
+  const new({required this.hadith, this.resultOrdinal, super.key});
 
   final DetailedHadith hadith;
+
+  /// Honest page-local position for the selected result, when available.
+  final int? resultOrdinal;
 
   Widget _sectionTitle(FColors colors, IconData icon, String text) => Row(
     children: [
@@ -39,13 +42,18 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
     final colors = theme.colors;
     final l10n = context.l10n;
     final expanded = useState(<int>{});
+    final scrollController = useScrollController();
     final hadithId = hadith.hadithId;
     final stableKey = hadithStableKey(hadith);
 
     useEffect(() {
       expanded.value = {};
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!scrollController.hasClients) return;
+        scrollController.jumpTo(0);
+      });
       return null;
-    }, [stableKey]);
+    }, [stableKey, scrollController]);
 
     final sections = <({IconData icon, String title, Widget Function() child})>[
       if (hadith.hasSharhMetadata)
@@ -163,10 +171,46 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
     ];
 
     return SingleChildScrollView(
+      controller: scrollController,
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Semantics(
+            header: true,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: AppSpacing.xs,
+                end: AppSpacing.xs,
+                bottom: AppSpacing.sm,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: AppSpacing.xs,
+                children: [
+                  Text(
+                    resultOrdinal == null
+                        ? l10n.hadithSelectedHadith
+                        : l10n.hadithSelectedResult(resultOrdinal!),
+                    style: theme.typography.body.lg.copyWith(
+                      color: colors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    l10n.hadithSourceCitation(
+                      hadith.book,
+                      hadith.numberOrPage,
+                    ),
+                    softWrap: true,
+                    style: theme.typography.body.sm.copyWith(
+                      color: colors.mutedForeground,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           Align(
             alignment: AlignmentDirectional.centerEnd,
             child: FTooltip(

@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tawaq/feature/hadith/data/repository/hadith_repository.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
@@ -197,6 +198,42 @@ void main() {
       expect(state.results, hasLength(1));
       expect(state.results.single.hadith, 'page-2');
     });
+
+    test(
+      'search refresh clears selection when its stable result leaves view',
+      () async {
+        when(() => repository.searchDetailed(any())).thenAnswer((invocation) {
+          final params =
+              invocation.positionalArguments[0]! as HadithSearchParams;
+          return Future.value(
+            _response(params.value == 'first' ? 'selected' : 'new'),
+          );
+        });
+
+        final session = container.read(
+          hadithSessionControllerProvider.notifier,
+        );
+        session.state = session.state.copyWith(query: 'first');
+        await session.search();
+        final selected = container
+            .read(hadithSessionControllerProvider)
+            .results
+            .single;
+        await session.selectHadith(selected);
+        expect(
+          container.read(hadithSessionControllerProvider).selectedHadithKey,
+          hadithStableKey(selected),
+        );
+
+        session.state = session.state.copyWith(query: 'second');
+        await session.search();
+
+        expect(
+          container.read(hadithSessionControllerProvider).selectedHadithKey,
+          isNull,
+        );
+      },
+    );
 
     test('goToPage keeps current page when response is empty', () async {
       when(() => repository.searchDetailed(any())).thenAnswer((invocation) {

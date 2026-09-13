@@ -1,5 +1,9 @@
 {
   "@@locale": "ar",
+  "globalPlaybackChooseMoshaf": "اختر تلاوة",
+  "globalPlaybackChooseReciter": "اختر القارئ",
+  "globalPlaybackChooseSurah": "اختر السورة",
+  "globalPlaybackReplay": "إعادة التشغيل",
   "a11yExpandSidebar": "توسيع الشريط الجانبي",
   "a11yNavigationUnavailable": "غير متاح",
   "a11yOpenLocationSettings": "فتح إعدادات الموقع",
@@ -321,6 +325,7 @@
     }
   },
   "hadithMuhaddith": "المحدث",
+  "hadithMoreActions": "إجراءات الحديث الإضافية",
   "hadithNarrator": "الراوي",
   "hadithNarrators": "الرواة",
   "hadithNoBookmarks": "لا توجد أحاديث محفوظة",
@@ -342,6 +347,14 @@
     }
   },
   "hadithRetry": "إعادة المحاولة",
+  "hadithResultIdentity": "النتيجة {number}",
+  "@hadithResultIdentity": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "hadithScholars": "المحدث",
   "hadithScope": "نطاق البحث",
   "hadithSearchAction": "بحث",
@@ -355,6 +368,15 @@
   "hadithSearchZoneQudsi": "الأحاديث القدسية",
   "hadithSearchZoneSahabaAthar": "آثار الصحابة",
   "hadithSearchZoneSharh": "شروح الأحاديث",
+  "hadithSelectedHadith": "الحديث المحدد",
+  "hadithSelectedResult": "النتيجة المحددة {number}",
+  "@hadithSelectedResult": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
   "hadithSharh": "الشرح",
   "hadithShare": "مشاركة الحديث",
   "hadithNumberOrPage": "الرقم أو الصفحة",

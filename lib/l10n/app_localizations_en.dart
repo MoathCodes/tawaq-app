@@ -10,6 +10,18 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get globalPlaybackChooseMoshaf => 'Choose a recitation';
+
+  @override
+  String get globalPlaybackChooseReciter => 'Choose a reciter';
+
+  @override
+  String get globalPlaybackChooseSurah => 'Choose a surah';
+
+  @override
+  String get globalPlaybackReplay => 'Replay';
+
+  @override
   String get a11yExpandSidebar => 'Expand sidebar';
 
   @override
@@ -754,6 +766,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithMuhaddith => 'Muhaddith';
 
   @override
+  String get hadithMoreActions => 'More hadith actions';
+
+  @override
   String get hadithNarrator => 'Narrator';
 
   @override
@@ -807,6 +822,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithRetry => 'Retry';
 
   @override
+  String hadithResultIdentity(int number) {
+    return 'Result $number';
+  }
+
+  @override
   String get hadithScholars => 'Scholars';
 
   @override
@@ -844,6 +864,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hadithSearchZoneSharh => 'Hadith commentaries';
+
+  @override
+  String get hadithSelectedHadith => 'Selected hadith';
+
+  @override
+  String hadithSelectedResult(int number) {
+    return 'Selected result $number';
+  }
 
   @override
   String get hadithSharh => 'Explanation';
