@@ -56,13 +56,28 @@ focus and activates Play with Enter.
 
 These are cropped from the isolated preview target
 [`tool/taw_80_preview.dart`](../../tool/taw_80_preview.dart) running as a
-native Linux Flutter profile app. They use shipped fonts/icons and synthetic,
-non-private fixture inputs; the Arabic source phrase and its Bukhari citation
-are shown exactly, while the long judgment is explicitly synthetic. The
-English capture is Manuscript light at normal text size. The Arabic capture is
-Manuscript dark at 1.3 text scale with a narrow detail pane. The tooltip
-captures show the localized global playback name with surah and reciter
-context.
+native Linux Flutter profile app. The harness follows the production theme
+bridge (`FTheme` inside `MaterialApp` using `toApproximateMaterialTheme`) and
+uses `FScaffold`; the Hadith panes use a `LayoutBuilder` split so both panes
+remain fully inside the captured viewport. They use shipped fonts/icons and
+synthetic, non-private fixture inputs; the Arabic source phrase and its Bukhari
+citation are shown exactly, while the long judgment is explicitly synthetic.
+The English capture is Manuscript light at normal text size. The Arabic capture
+is Manuscript dark at 1.3 text scale with a narrow detail pane. The tooltip
+captures use the actual `RecitationPlayButton` inside
+`RecitationTransportControls`; its label is produced by
+`recitationTransportPlaybackState` and `recitationTransportPlaybackLabel`, and
+the tooltip was revealed with keyboard Tab focus.
+
+Capture commands used:
+
+```text
+fvm flutter run -d linux --profile -t tool/taw_80_preview.dart --dart-define=PREVIEW_LOCALE=en --dart-define=PREVIEW_DARK=false --dart-define=PREVIEW_LARGE_TEXT=false
+fvm flutter run -d linux --profile -t tool/taw_80_preview.dart --dart-define=PREVIEW_LOCALE=ar --dart-define=PREVIEW_DARK=true --dart-define=PREVIEW_LARGE_TEXT=true
+```
+
+For each run, `wtype -k Tab` focused the real play control before the tooltip
+crop; the Hadith crops were taken before that focus transition.
 
 - [Hadith English / Manuscript light](artifacts/hadith-en-manuscript-light.png)
 - [Hadith Arabic / Manuscript dark / text 1.3](artifacts/hadith-ar-manuscript-dark-text-1_3.png)
