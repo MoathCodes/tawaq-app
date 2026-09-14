@@ -41,7 +41,10 @@ FPlatformThemeData resolvePlatformColorScheme(
   AppPalette palette,
   ThemeMode themeMode,
 ) {
-  final paletteKey = palette.key;
+  final paletteKey = (palette == AppPalette.omarchy
+          ? AppPalette.manuscript
+          : palette)
+      .key;
   final schemesList = _palettesData[paletteKey];
 
   if (schemesList == null || schemesList.length != 2) {
@@ -71,7 +74,11 @@ enum AppPalette {
   manuscript('Manuscript'),
 
   /// Forui neutral (shadcn) palette.
-  neutral('Neutral');
+  neutral('Neutral'),
+
+  /// Uses the active Omarchy desktop palette when running in an Omarchy
+  /// session. This option is only exposed on Omarchy.
+  omarchy('Omarchy');
 
   new(this.key);
 
@@ -97,6 +104,7 @@ extension AppPaletteLocale on AppPalette {
     return switch (this) {
       AppPalette.manuscript => locale.islamicTheme,
       AppPalette.neutral => locale.neutral,
+      AppPalette.omarchy => locale.omarchy,
     };
   }
 }

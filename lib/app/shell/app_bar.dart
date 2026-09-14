@@ -10,9 +10,11 @@ import 'package:tawaq/core/widgets/shortcuts/shortcut_hint.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/hijri_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
+import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_controls.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/theme_mode_button.dart';
 import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/theme/theme_model.dart';
 
 /// Compact shell actions (location, date, language, theme) laid out for the
 /// title bar.
@@ -34,6 +36,9 @@ class ShellAppBar extends ConsumerWidget {
       prayerSettingsProvider.select((s) => s.value?.locationName),
     );
     final theme = context.theme;
+    final showThemeModeButton = ref.watch(
+      themeProvider.select((s) => s.value?.appPalette != AppPalette.omarchy),
+    );
 
     final isArabic = context.l10n.localeName == 'ar';
     final showLanguageLabel = isAtLeast(context, FBreakpoint.md);
@@ -115,7 +120,7 @@ class ShellAppBar extends ConsumerWidget {
             spacing: AppSpacing.sm,
             children: [
               languageButton,
-              const ThemeModeButton(),
+              if (showThemeModeButton) const ThemeModeButton(),
             ],
           ),
         ],

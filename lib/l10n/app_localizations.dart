@@ -2156,6 +2156,12 @@ abstract class AppLocalizations {
   /// **'Neutral'**
   String get neutral;
 
+  /// No description provided for @omarchy.
+  ///
+  /// In en, this message translates to:
+  /// **'Omarchy'**
+  String get omarchy;
+
   /// No description provided for @next.
   ///
   /// In en, this message translates to:
