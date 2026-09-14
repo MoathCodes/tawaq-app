@@ -1225,7 +1225,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get neutral => 'محايد';
 
   @override
-  String get omarchy => 'أوماركي';
+  String get omarchy => 'أومارتشي';
 
   @override
   String get next => 'التالي';
