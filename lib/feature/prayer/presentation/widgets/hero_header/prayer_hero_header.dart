@@ -31,9 +31,7 @@ class PrayerHeroHeader extends ConsumerWidget {
     if (ref.watch(prayerDayIsLoadingProvider)) {
       return Semantics(
         label: context.l10n.loadingSchedule,
-        child: const FSkeletonizer(
-          child: _HeroBody(),
-        ),
+        child: const FSkeletonizer(child: _HeroBody()),
       );
     }
 
@@ -197,23 +195,19 @@ class _HeroCountdownLabel extends ConsumerWidget {
         crossAxisAlignment: .center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: .center,
-            children: [
-              Text(
-                prayerCardDurationLabel(
-                  l10n: l10n,
-                  prayer: prayer,
-                  isCountdown: isCountdown,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.typography.body.sm.copyWith(
-                  color: theme.colors.foreground,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
+          Text(
+            prayerCardDurationLabel(
+              l10n: l10n,
+              prayer: prayer,
+              isCountdown: isCountdown,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: theme.typography.body.sm.copyWith(
+              color: theme.colors.foreground,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: AppSpacing.xs),
           Directionality(
@@ -357,10 +351,7 @@ class _HeroStatusPopover extends ConsumerWidget {
         ? ishaPreFajrDay
         : dateFromCalendarDayKey(dayKey);
     final status = ref.watch(
-      completionStatusProvider(
-        prayer,
-        calendarDayKeyFromDate(completionDay),
-      ),
+      completionStatusProvider(prayer, calendarDayKeyFromDate(completionDay)),
     );
 
     final menuTriggerLabel = PrayerSemantics.statusMenuTrigger(
