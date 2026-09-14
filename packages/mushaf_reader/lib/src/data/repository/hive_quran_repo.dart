@@ -78,7 +78,10 @@ class HiveQuranRepository implements IQuranRepository {
   int get pageCacheCapacity => _maxCacheSize;
 
   set pageCacheCapacity(int value) {
-    _maxCacheSize = value.clamp(kDefaultPageCacheCapacity, kTwoPageCacheCapacity);
+    _maxCacheSize = value.clamp(
+      kDefaultPageCacheCapacity,
+      kTwoPageCacheCapacity,
+    );
     while (_pageCache.length > _maxCacheSize) {
       _pageCache.remove(_pageCache.keys.first);
     }
@@ -92,6 +95,9 @@ class HiveQuranRepository implements IQuranRepository {
 
   /// Whether initialization is in progress.
   Completer<void>? _initCompleter;
+
+  /// Whether the final owner released this repository during initialization.
+  bool _disposed = false;
 
   /// LRU cache for recently accessed page models.
   final _pageCache = <int, QuranPage>{};
@@ -121,8 +127,10 @@ class HiveQuranRepository implements IQuranRepository {
   /// Pair each [acquire] with [dispose] on the returned instance (e.g. via
   /// [MushafReaderController.dispose]).
   static HiveQuranRepository acquire() {
+    final repository = instance;
     _refCount++;
-    return instance;
+    repository._disposed = false;
+    return repository;
   }
 
   /// Returns the singleton without changing [refCount].
@@ -134,6 +142,7 @@ class HiveQuranRepository implements IQuranRepository {
 
   /// Forcefully closes all boxes and clears caches.
   void closeAll() {
+    _disposed = true;
     _closeAndReset();
   }
 
@@ -145,24 +154,37 @@ class HiveQuranRepository implements IQuranRepository {
 
     // Keep the page LRU warm while other owners still hold a ref.
     if (_refCount <= 0) {
+      _disposed = true;
       _closeAndReset();
     }
   }
 
   @override
   Future<void> ensureReady() async {
+    if (_disposed) return;
     if (_boxManager != null) return;
     if (_initCompleter != null) return _initCompleter!.future;
 
-    _initCompleter = Completer<void>();
+    final initCompleter = Completer<void>();
+    _initCompleter = initCompleter;
 
     try {
+      if (_disposed) {
+        initCompleter.complete();
+        return;
+      }
+
       // Shares the [HiveBoxManager] singleton with [MushafReaderLibrary].
       // Prefer calling MushafReaderLibrary.ensureInitialized() first so
       // [subDirectory] is applied before any box access.
       _boxManager = HiveBoxManager.acquire();
       if (!_boxManager!.isInitialized) {
         await _boxManager!.init();
+      }
+
+      if (_disposed) {
+        initCompleter.complete();
+        return;
       }
 
       // Pre-cache all surahs (114 items - small memory footprint)
@@ -194,10 +216,14 @@ class HiveQuranRepository implements IQuranRepository {
 
       _globalAyahIdStartBySurah = AyahIdResolver.buildStarts(_surahCache);
 
-      _initCompleter!.complete();
-    } catch (e) {
-      _initCompleter!.completeError(e);
-      _initCompleter = null;
+      initCompleter.complete();
+    } catch (e, st) {
+      if (!initCompleter.isCompleted) {
+        initCompleter.completeError(e, st);
+      }
+      if (identical(_initCompleter, initCompleter)) {
+        _initCompleter = null;
+      }
       rethrow;
     }
   }
@@ -447,9 +473,8 @@ class HiveQuranRepository implements IQuranRepository {
     }
 
     // Fetch ayahs in parallel — LazyBox has no batch get API.
-    final ayahIds = <int>{
-      for (final layout in layouts) layout.ayahId,
-    }.toList(growable: false);
+    final ayahIds = <int>{for (final layout in layouts) layout.ayahId}
+        .toList(growable: false);
     final ayahResults = await Future.wait(
       ayahIds.map((id) => _boxManager!.ayahsBox.get(id)),
     );

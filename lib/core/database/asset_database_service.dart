@@ -21,8 +21,7 @@ bool assetDatabaseNeedsCopy({
   required bool fileExists,
   required String? persistedVersion,
   required String bundledVersion,
-}) =>
-    !fileExists || persistedVersion != bundledVersion;
+}) => !fileExists || persistedVersion != bundledVersion;
 
 void _copyDatabaseBytes((String path, Uint8List bytes) args) {
   final file = File(args.$1);
@@ -88,6 +87,7 @@ class AssetDatabaseService {
 
   final Map<String, Database> _openDatabases = {};
   final Map<String, Completer<Database>> _inFlight = {};
+  bool _disposed = false;
 
   /// Opens a database from the given asset path.
   ///
@@ -96,10 +96,14 @@ class AssetDatabaseService {
   /// version key differs from the persisted one, then opened with sqlite3.
   /// Subsequent calls with the same [assetPath] return the cached instance.
   /// Concurrent opens for the same path share a single in-flight [Completer].
-  Future<Database> openDatabase(String assetPath) async {
+  Future<Database> openDatabase(String assetPath) {
+    if (_disposed) {
+      return Future.error(StateError('AssetDatabaseService has been disposed'));
+    }
+
     final cached = _openDatabases[assetPath];
     if (cached != null) {
-      return cached;
+      return Future.value(cached);
     }
 
     final pending = _inFlight[assetPath];
@@ -109,8 +113,19 @@ class AssetDatabaseService {
 
     final completer = Completer<Database>();
     _inFlight[assetPath] = completer;
+    unawaited(_openDatabase(assetPath, completer));
+    return completer.future;
+  }
+
+  Future<void> _openDatabase(
+    String assetPath,
+    Completer<Database> completer,
+  ) async {
     try {
       final documentsDir = await _documentsDirectory();
+      if (_disposed) {
+        throw StateError('AssetDatabaseService has been disposed');
+      }
       final dbFileName = p.basename(assetPath);
       final dbPath = p.join(
         documentsDir.path,
@@ -121,6 +136,9 @@ class AssetDatabaseService {
       final versionPath = '$dbPath$_persistedVersionFileSuffix';
 
       final data = await _loadAsset(assetPath);
+      if (_disposed) {
+        throw StateError('AssetDatabaseService has been disposed');
+      }
       final bytes = data.buffer.asUint8List(
         data.offsetInBytes,
         data.lengthInBytes,
@@ -137,39 +155,56 @@ class AssetDatabaseService {
       if (needsCopy) {
         await Isolate.run(() => _copyDatabaseBytes((dbPath, bytes)));
         await _writePersistedVersionKey(versionPath, bundledVersion);
+        if (_disposed) {
+          throw StateError('AssetDatabaseService has been disposed');
+        }
       }
 
       final raced = _openDatabases[assetPath];
       if (raced != null) {
         completer.complete(raced);
-        return raced;
+        return;
       }
 
       final database = sqlite3.open(dbPath);
+      if (_disposed) {
+        database.close();
+        throw StateError('AssetDatabaseService has been disposed');
+      }
       final existing = _openDatabases[assetPath];
       if (existing != null) {
         // Orphan: close the duplicate connection (sqlite3 Database.close).
         database.close();
         completer.complete(existing);
-        return existing;
+        return;
       }
       _openDatabases[assetPath] = database;
       completer.complete(database);
-      return database;
     } on Object catch (error, stackTrace) {
-      completer.completeError(error, stackTrace);
-      rethrow;
+      if (!completer.isCompleted) {
+        completer.completeError(error, stackTrace);
+      }
     } finally {
-      _inFlight.remove(assetPath);
+      if (identical(_inFlight[assetPath], completer)) {
+        _inFlight.remove(assetPath);
+      }
     }
   }
 
   /// Closes all open databases and releases resources.
   void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+
     for (final db in _openDatabases.values) {
       db.close();
     }
     _openDatabases.clear();
+
+    final error = StateError('AssetDatabaseService has been disposed');
+    for (final completer in _inFlight.values) {
+      if (!completer.isCompleted) completer.completeError(error);
+    }
     _inFlight.clear();
   }
 }

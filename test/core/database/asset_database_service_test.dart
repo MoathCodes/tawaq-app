@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -134,6 +135,27 @@ void main() {
         jsonDecode(versionFile.readAsStringSync())['version_key'],
         assetDatabaseVersionKey(bundled.length),
       );
+    });
+
+    test('closes an in-flight open when disposed', () async {
+      final docs = await Directory.systemTemp.createTemp('tawaq_asset_db_');
+      addTearDown(() => docs.delete(recursive: true));
+
+      final documents = Completer<Directory>();
+      final service = AssetDatabaseService(
+        documentsDirectory: () => documents.future,
+        loadAsset: (path) async =>
+            ByteData.sublistView(_sqliteBytes(rowCount: 1)),
+      );
+
+      final opening = service.openDatabase('assets/database/demo.db');
+      final openingAgain = service.openDatabase('assets/database/demo.db');
+      final result = expectLater(opening, throwsA(isA<StateError>()));
+      final resultAgain = expectLater(openingAgain, throwsA(isA<StateError>()));
+      service.dispose();
+      documents.complete(docs);
+
+      await Future.wait([result, resultAgain]);
     });
   });
 }
