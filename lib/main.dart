@@ -67,7 +67,8 @@ class AppBootstrap extends ConsumerWidget {
 
     Widget splash() => MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: materialTheme,
+      showSemanticsDebugger:true,
+ theme: materialTheme,
       home: foruiShell(
         child: const FScaffold(
           child: Center(child: FCircularProgress.loader()),
