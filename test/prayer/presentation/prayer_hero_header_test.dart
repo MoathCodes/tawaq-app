@@ -67,9 +67,14 @@ Widget _host({
             size: Size(width, 800),
             textScaler: TextScaler.linear(textScale),
           ),
-          child: SizedBox(
-            width: width,
-            child: const PrayerHeroHeader(),
+          child: SingleChildScrollView(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: SizedBox(
+                width: width,
+                child: const PrayerHeroHeader(),
+              ),
+            ),
           ),
         ),
       ),
@@ -78,6 +83,30 @@ Widget _host({
 }
 
 void main() {
+  testWidgets('uses a solid surface and balances the desktop hierarchy', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        prayer: Prayer.maghrib,
+        isCountdown: true,
+        locale: const Locale('en'),
+        width: 720,
+      ),
+    );
+
+    final surface = tester.widget<Container>(
+      find.byKey(const ValueKey('prayer-hero-surface')),
+    );
+    final decoration = surface.decoration! as BoxDecoration;
+    expect(decoration.color, isNotNull);
+    expect(decoration.gradient, isNull);
+
+    final prayerCenter = tester.getCenter(find.text('Maghrib'));
+    final countdownCenter = tester.getCenter(find.text('00:12:34'));
+    expect((prayerCenter.dx - countdownCenter.dx).abs(), greaterThan(180));
+  });
+
   testWidgets('renders elapsed obligatory prayer state and LTR duration', (
     tester,
   ) async {

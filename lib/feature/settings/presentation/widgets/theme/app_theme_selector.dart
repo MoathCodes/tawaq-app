@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:tawaq/core/desktop/omarchy_theme_source.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
+import 'package:tawaq/theme/omarchy_theme.dart';
+import 'package:tawaq/theme/omarchy_theme_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
-/// Light/dark mode and Manuscript/Neutral palette controls.
+/// Light/dark mode and available palette controls.
 class ColorThemeSelectorContent extends ConsumerWidget {
   /// Creates [ColorThemeSelectorContent].
   const new({super.key});
@@ -21,8 +24,21 @@ class ColorThemeSelectorContent extends ConsumerWidget {
       themeProvider.select((t) => t.value?.appPalette),
     );
     final themeReady = ref.watch(themeProvider.select((t) => t.hasValue));
+    final omarchyTheme = ref.watch(omarchyThemeProvider).value;
+    final omarchyAvailable = omarchyTheme?.isAvailable == true;
+    final omarchySelected =
+        selectedPalette == AppPalette.omarchy && omarchyAvailable;
+    final effectiveSelectedPalette =
+        selectedPalette == AppPalette.omarchy && !omarchyAvailable
+        ? AppPalette.manuscript
+        : selectedPalette;
+    final visiblePalettes = AppPalette.values.where(
+      (palette) => palette != AppPalette.omarchy || omarchyAvailable,
+    );
     final l10n = context.l10n;
-    final isLight = selectedMode != ThemeMode.dark;
+    final isLight = omarchySelected
+        ? buildOmarchyColors(omarchyTheme!).brightness == Brightness.light
+        : selectedMode != ThemeMode.dark;
     final notifier = ref.read(themeProvider.notifier);
 
     return Column(
@@ -36,7 +52,7 @@ class ColorThemeSelectorContent extends ConsumerWidget {
               Expanded(
                 child: FButton(
                   variant: isLight ? .primary : .outline,
-                  onPress: themeReady
+                  onPress: themeReady && !omarchySelected
                       ? () => notifier.setThemeMode(ThemeMode.light)
                       : null,
                   prefix: const Icon(FLucideIcons.sun, size: 16),
@@ -46,7 +62,7 @@ class ColorThemeSelectorContent extends ConsumerWidget {
               Expanded(
                 child: FButton(
                   variant: isLight ? .outline : .primary,
-                  onPress: themeReady
+                  onPress: themeReady && !omarchySelected
                       ? () => notifier.setThemeMode(ThemeMode.dark)
                       : null,
                   prefix: const Icon(FLucideIcons.moon, size: 16),
@@ -62,14 +78,19 @@ class ColorThemeSelectorContent extends ConsumerWidget {
           child: Row(
             spacing: AppSpacing.sm,
             children: [
-              for (final palette in AppPalette.values)
+              for (final palette in visiblePalettes)
                 Expanded(
                   child: FButton(
-                    variant: selectedPalette == palette ? .primary : .outline,
+                    variant: effectiveSelectedPalette == palette
+                        ? .primary
+                        : .outline,
                     onPress: themeReady
                         ? () => notifier.setPalette(palette)
                         : null,
-                    prefix: _PaletteSwatch(palette: palette),
+                    prefix: _PaletteSwatch(
+                      palette: palette,
+                      omarchyTheme: omarchyTheme,
+                    ),
                     child: Text(palette.getLocaleName(l10n)),
                   ),
                 ),
@@ -83,17 +104,21 @@ class ColorThemeSelectorContent extends ConsumerWidget {
 
 /// Small primary-color dot identifying a palette on the outline/primary buttons.
 class _PaletteSwatch extends StatelessWidget {
-  const new({required this.palette});
+  const new({required this.palette, this.omarchyTheme});
 
   final AppPalette palette;
+  final OmarchyThemeSnapshot? omarchyTheme;
 
   @override
   Widget build(BuildContext context) {
-    final colors = resolveColorScheme(
-      palette,
-      ThemeMode.light,
-      touch: context.platformVariant.touch,
-    ).colors;
+    final colors =
+        palette == AppPalette.omarchy && omarchyTheme?.isAvailable == true
+        ? buildOmarchyColors(omarchyTheme!)
+        : resolveColorScheme(
+            palette,
+            ThemeMode.light,
+            touch: context.platformVariant.touch,
+          ).colors;
     return Container(
       width: 12,
       height: 12,

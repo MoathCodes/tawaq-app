@@ -7,6 +7,7 @@ import 'package:tawaq/core/shortcuts/app_search_focus_registry.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_invocation.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
+import 'package:tawaq/theme/theme_model.dart';
 
 /// Dispatches a global [ShortcutDef] from shell shortcut scope.
 void invokeGlobalShortcut(
@@ -15,7 +16,10 @@ void invokeGlobalShortcut(
 ) {
   switch (shortcut.id) {
     case 'toggleTheme':
-      invocation.ref.read(themeProvider.notifier).toggleThemeMode();
+      final palette = invocation.ref.read(themeProvider).value?.appPalette;
+      if (palette != AppPalette.omarchy) {
+        invocation.ref.read(themeProvider.notifier).toggleThemeMode();
+      }
     case 'toggleLocale':
       invocation.ref.read(localeProvider.notifier).toggleLocale();
     case 'openSettings':

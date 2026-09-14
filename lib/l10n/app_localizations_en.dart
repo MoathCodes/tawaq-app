@@ -1189,6 +1189,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get neutral => 'Neutral';
 
   @override
+  String get omarchy => 'Omarchy';
+
+  @override
   String get next => 'Next';
 
   @override

@@ -3,9 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/desktop/omarchy_theme_source.dart';
 import 'package:tawaq/feature/settings/data/models/theme_prefs.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
+import 'package:tawaq/theme/omarchy_theme.dart';
+import 'package:tawaq/theme/omarchy_theme_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -24,10 +27,18 @@ FThemeData buildAppTheme({
   required ThemeMode themeMode,
   required bool touch,
   required double textScale,
+  OmarchyThemeSnapshot? omarchyTheme,
 }) {
-  final base = resolveColorScheme(palette, themeMode, touch: touch);
+  final fallbackPalette = palette == AppPalette.omarchy
+      ? AppPalette.manuscript
+      : palette;
+  final base = resolveColorScheme(fallbackPalette, themeMode, touch: touch);
+  final colors =
+      palette == AppPalette.omarchy && omarchyTheme?.isAvailable == true
+      ? buildOmarchyColors(omarchyTheme!)
+      : base.colors;
   final typeface = FTypeface.inherit(
-    colors: base.colors,
+    colors: colors,
     touch: touch,
     fontFamily: FontFamily.iBMPlexSansArabic,
   );
@@ -36,21 +47,21 @@ FThemeData buildAppTheme({
     body: typeface,
   ).scale(sizeScalar: textScale);
   final style = FStyle.inherit(
-    colors: base.colors,
+    colors: colors,
     typography: typography,
     touch: touch,
   );
 
   const radii = AppRadii.standard();
   final tabs = AppTabsStyles.inherit(
-    colors: base.colors,
+    colors: colors,
     typography: typography,
     style: style,
     radii: radii,
   );
 
   return FThemeData(
-    colors: base.colors,
+    colors: colors,
     touch: touch,
     typography: typography,
     style: style,
@@ -69,11 +80,13 @@ FThemeData appThemeData(Ref ref) {
   final themeMode = ref.watch(
     themeProvider.select((t) => t.value?.themeMode ?? ThemeMode.light),
   );
+  final omarchyTheme = ref.watch(omarchyThemeProvider).value;
   return buildAppTheme(
     palette: palette,
     themeMode: themeMode,
     touch: _isTouchThemePlatform(),
     textScale: 1,
+    omarchyTheme: omarchyTheme,
   );
 }
 
@@ -94,5 +107,6 @@ FThemeData appThemeWithTextScale(Ref ref) {
     ),
     touch: _isTouchThemePlatform(),
     textScale: scale,
+    omarchyTheme: ref.watch(omarchyThemeProvider).value,
   );
 }

@@ -65,6 +65,7 @@ dependencies:
   sqlite3: ^3.2.0
   path_provider: ^2.1.5
   timezone: ^0.11.0
+  toml: ^0.18.0
   window_manager: ^0.5.1
   screen_retriever: ^0.2.1
   flutter_alone: ^4.1.0

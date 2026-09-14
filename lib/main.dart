@@ -67,7 +67,8 @@ class AppBootstrap extends ConsumerWidget {
 
     Widget splash() => MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: materialTheme,
+      showSemanticsDebugger:true,
+ theme: materialTheme,
       home: foruiShell(
         child: const FScaffold(
           child: Center(child: FCircularProgress.loader()),
@@ -139,7 +140,7 @@ class TawaqApp extends ConsumerWidget {
   }
 }
 
-/// Rebuilds only when app text scale changes, not on palette/mode/router edits.
+/// Keeps the animated Forui theme mounted while app theme data changes.
 class _AppTextScaleScope extends ConsumerWidget {
   const new({required this.child});
 

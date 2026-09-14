@@ -8,6 +8,7 @@ import 'package:tawaq/core/widgets/merged_action_semantics.dart';
 import 'package:tawaq/core/widgets/shell_a11y.dart';
 import 'package:tawaq/core/widgets/shortcuts/shortcut_hint.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
+import 'package:tawaq/theme/theme_model.dart';
 
 /// A button that toggles the theme mode between light and dark.
 class ThemeModeButton extends ConsumerWidget {
@@ -18,6 +19,11 @@ class ThemeModeButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final palette = ref.watch(
+      themeProvider.select((s) => s.value?.appPalette),
+    );
+    if (palette == AppPalette.omarchy) return const SizedBox.shrink();
+
     final isDark = ref.watch(
       themeProvider.select((s) => s.value?.themeMode == ThemeMode.dark),
     );

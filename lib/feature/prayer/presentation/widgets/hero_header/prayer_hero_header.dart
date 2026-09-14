@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +9,6 @@ import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
-import 'package:tawaq/feature/prayer/presentation/models/prayer_images.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/hijri_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_card/prayer_card_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completion_provider.dart';
@@ -19,7 +16,6 @@ import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_fo
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/hero_header/prayer_hero_labels.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_semantics.dart';
-import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Hero header showing the current or next prayer with a time-aware surface.
@@ -29,44 +25,6 @@ class PrayerHeroHeader extends ConsumerWidget {
 
   /// Border radius for the hero card.
   static const kBorderRadius = BorderRadius.all(Radius.circular(16));
-
-  /// Returns a restrained accent pair for each prayer.
-  ///
-  /// The hero uses these colors for its decorative watermark only. Text and
-  /// controls use the active theme's surface and ink roles so contrast holds
-  /// in both light and dark themes.
-  static (Color, Color) getPrayerGradient(Prayer prayer) {
-    return switch (prayer) {
-      Prayer.fajr => (
-        const Color(0xFF5C6BC0), // Indigo/blue twilight
-        const Color(0xFF303F9F), // Darker indigo
-      ),
-      Prayer.sunrise => (
-        const Color(0xFFFF8A65), // Soft orange
-        const Color(0xFFE64A19), // Deep orange
-      ),
-      Prayer.dhuhr => (
-        const Color(0xFF4FC3F7), // Light sky blue
-        const Color(0xFF0288D1), // Deep blue
-      ),
-      Prayer.asr => (
-        const Color(0xFFFFB74D), // Warm amber
-        const Color(0xFFF57C00), // Deep amber
-      ),
-      Prayer.maghrib => (
-        const Color(0xFFFF7043), // Sunset orange
-        const Color(0xFFD84315), // Deep burnt orange
-      ),
-      Prayer.isha => (
-        const Color(0xFF7986CB), // Soft indigo
-        const Color(0xFF3949AB), // Deep indigo
-      ),
-      _ => (
-        const Color(0xFF4DB6AC), // Teal
-        const Color(0xFF00897B), // Deep teal
-      ),
-    };
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -86,242 +44,140 @@ class PrayerHeroHeader extends ConsumerWidget {
 class _HeroBody extends ConsumerWidget {
   const new();
 
-  static const _minHeight = 184.0;
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = context.l10n;
     final card = ref.watch(prayerCardStaticProvider);
-    final prayer = card.prayer;
-    final showIqamah = card.showIqamah;
-    final (accentStart, accentEnd) = PrayerHeroHeader.getPrayerGradient(
-      prayer,
-    );
-
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final dayKey = ref.watch(prayerCalendarDayKeyProvider);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final breakpoints = theme.breakpoints;
-        final width = constraints.maxWidth;
-        final timeSquareDensity = _resolveTimeSquareDensity(
-          width: width,
-          breakpoints: breakpoints,
-          showIqamah: showIqamah,
+        final stacked =
+            constraints.maxWidth < 600 ||
+            MediaQuery.textScalerOf(context).scale(16) > 22;
+        final identity = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              card.prayer.getLocaleName(l10n),
+              style: theme.typography.body.xl3.copyWith(
+                color: theme.colors.foreground,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Wrap(
+              spacing: AppSpacing.lg,
+              runSpacing: AppSpacing.sm,
+              children: [
+                _HeroScheduledTime(
+                  time: card.adhanTime,
+                  label: card.prayer.isObligatory ? l10n.adhan : null,
+                ),
+                if (card.showIqamah)
+                  _HeroScheduledTime(time: card.iqamahTime, label: l10n.iqamah),
+              ],
+            ),
+          ],
         );
-        final stackBottomRow = width < breakpoints.lg;
-        final watermarkSize = math.min(160, width * 0.32).toDouble();
-
-        Widget buildAdhanSquare({bool leadingSpacing = false}) {
-          final square = _HeroTimeSquare(
-            time: card.adhanTime,
-            label: prayer.isObligatory ? l10n.adhan : null,
-            density: timeSquareDensity,
-          );
-          if (!leadingSpacing) return square;
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(width: AppSpacing.lg),
-              square,
-            ],
-          );
-        }
-
-        Widget buildIqamahSquare({bool leadingSpacing = false}) {
-          if (!showIqamah) return const SizedBox.shrink();
-          final square = _HeroTimeSquare(
-            time: card.iqamahTime,
-            label: l10n.iqamah,
-            density: timeSquareDensity,
-          );
-          if (!leadingSpacing) return square;
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(width: AppSpacing.lg),
-              square,
-            ],
-          );
-        }
 
         return Container(
-          clipBehavior: Clip.antiAlias,
-          constraints: const BoxConstraints(minHeight: _minHeight),
+          key: const ValueKey('prayer-hero-surface'),
           decoration: BoxDecoration(
+            color: theme.colors.card,
             borderRadius: PrayerHeroHeader.kBorderRadius,
-            gradient: LinearGradient(
-              begin: isRtl ? Alignment.topLeft : Alignment.topRight,
-              end: isRtl ? Alignment.bottomRight : Alignment.bottomLeft,
-              colors: [theme.colors.card, theme.colors.background],
-            ),
             border: Border.all(color: theme.colors.border),
           ),
-          child: Stack(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Positioned(
-                right: isRtl ? null : AppSpacing.lg,
-                left: isRtl ? AppSpacing.lg : null,
-                bottom: AppSpacing.md,
-                child: ExcludeSemantics(
-                  child: Transform.rotate(
-                    angle: isRtl ? 0.2 : -0.2,
-                    child: Icon(
-                      prayer.icon,
-                      size: watermarkSize,
-                      color: Color.lerp(
-                        accentStart,
-                        accentEnd,
-                        0.5,
-                      )!.withValues(alpha: 0.12),
-                    ),
-                  ),
-                ),
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  _HeroStateLabel(prayer: card.prayer),
+                  const _HeroHijriDatePill(),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: AppSpacing.lg),
+              if (stacked) ...[
+                identity,
+                const SizedBox(height: AppSpacing.lg),
+                _HeroCountdownLabel(prayer: card.prayer),
+              ] else
+                Row(
                   children: [
-                    if (width < breakpoints.sm) ...[
-                      Align(
+                    Expanded(flex: 5, child: identity),
+                    const SizedBox(width: AppSpacing.xl),
+                    Expanded(
+                      flex: 4,
+                      child: Align(
                         alignment: AlignmentDirectional.centerEnd,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: width),
-                          child: const _HeroHijriDatePill(),
-                        ),
+                        child: _HeroCountdownLabel(prayer: card.prayer),
                       ),
-                      const SizedBox(height: AppSpacing.md),
-                      _HeroPrimaryInfo(prayer: prayer, l10n: l10n),
-                    ] else
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: _HeroPrimaryInfo(
-                              prayer: prayer,
-                              l10n: l10n,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          const _HeroHijriDatePill(),
-                        ],
-                      ),
-                    const SizedBox(height: AppSpacing.md),
-                    if (stackBottomRow)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Wrap(
-                            spacing: AppSpacing.lg,
-                            runSpacing: AppSpacing.md,
-                            children: [
-                              buildAdhanSquare(),
-                              buildIqamahSquare(),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          const Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: _HeroStatusPopover(),
-                          ),
-                        ],
-                      )
-                    else
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          buildAdhanSquare(),
-                          buildIqamahSquare(leadingSpacing: true),
-                          const Spacer(),
-                          const Flexible(
-                            child: Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: _HeroStatusPopover(),
-                            ),
-                          ),
-                        ],
-                      ),
+                    ),
                   ],
                 ),
-              ),
+              if (card.canSetStatus && dayKey != 0) ...[
+                const SizedBox(height: AppSpacing.lg),
+                const Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: _HeroStatusPopover(),
+                ),
+              ],
             ],
           ),
         );
       },
     );
   }
-
-  static _HeroTimeSquareDensity _resolveTimeSquareDensity({
-    required double width,
-    required FBreakpoints breakpoints,
-    required bool showIqamah,
-  }) {
-    const normalMin = 112.0;
-    const compactMin = 96.0;
-    const ultraMin = 80.0;
-    const statusReserve = 120.0;
-    final squareCount = showIqamah ? 2 : 1;
-    final squareSpacing = showIqamah ? AppSpacing.lg : 0.0;
-    final squaresWidth = squareCount == 2
-        ? normalMin + compactMin + squareSpacing
-        : normalMin;
-
-    if (width >= breakpoints.lg && width >= squaresWidth + statusReserve) {
-      return _HeroTimeSquareDensity.normal;
-    }
-    if (width >= breakpoints.sm) {
-      final compactWidth = squareCount == 2
-          ? compactMin * 2 + squareSpacing
-          : compactMin;
-      if (width >= compactWidth + statusReserve) {
-        return _HeroTimeSquareDensity.compact;
-      }
-    }
-    final ultraWidth = squareCount == 2
-        ? ultraMin * 2 + squareSpacing
-        : ultraMin;
-    if (width >= ultraWidth) {
-      return _HeroTimeSquareDensity.ultraCompact;
-    }
-    return _HeroTimeSquareDensity.ultraCompact;
-  }
 }
 
-class _HeroPrimaryInfo extends StatelessWidget {
-  const new({required this.prayer, required this.l10n});
+class _HeroScheduledTime extends StatelessWidget {
+  const new({required this.time, this.label});
 
-  final Prayer prayer;
-  final AppLocalizations l10n;
+  final String time;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _HeroStateLabel(prayer: prayer),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          prayer.getLocaleName(l10n),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.typography.body.xl3.copyWith(
-            color: theme.colors.foreground,
-            fontWeight: FontWeight.bold,
+    return Semantics(
+      label: PrayerSemantics.heroTimeSquare(time: time, caption: label),
+      readOnly: true,
+      excludeSemantics: true,
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          if (label != null)
+            Text(
+              label!,
+              style: theme.typography.body.sm.copyWith(
+                color: theme.colors.mutedForeground,
+              ),
+            ),
+          Text(
+            time,
+            textDirection: TextDirection.ltr,
+            style: theme.typography.body.lg.copyWith(
+              color: theme.colors.foreground,
+              fontWeight: FontWeight.w600,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        _HeroCountdownLabel(prayer: prayer),
-      ],
+        ],
+      ),
     );
   }
 }
 
-/// Isolates the 1 Hz countdown so gradient/chrome do not rebuild each tick.
+/// Isolates the 1 Hz countdown so the hero chrome does not rebuild each tick.
 class _HeroCountdownLabel extends ConsumerWidget {
   const new({required this.prayer});
 
@@ -335,39 +191,50 @@ class _HeroCountdownLabel extends ConsumerWidget {
       prayerCardStaticProvider.select((card) => card.isCountdown),
     );
     final countdown = ref.watch(prayerCardCountdownProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          prayerCardDurationLabel(
-            l10n: l10n,
-            prayer: prayer,
-            isCountdown: isCountdown,
+    return SizedBox(
+      width: 220,
+      child: Column(
+        crossAxisAlignment: .center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: .center,
+            children: [
+              Text(
+                prayerCardDurationLabel(
+                  l10n: l10n,
+                  prayer: prayer,
+                  isCountdown: isCountdown,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.typography.body.sm.copyWith(
+                  color: theme.colors.foreground,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.typography.body.sm.copyWith(
-            color: theme.colors.foreground,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Directionality(
-          textDirection: TextDirection.ltr,
-          child: Text(
-            countdown,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(height: AppSpacing.xs),
+          Directionality(
             textDirection: TextDirection.ltr,
-            style: theme.typography.body.xl2.copyWith(
-              color: theme.colors.foreground,
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [FontFeature.tabularFigures()],
+            child: Text(
+              countdown,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textDirection: TextDirection.ltr,
+              key: const ValueKey('prayer-hero-countdown'),
+              style: theme.typography.body.xl3.copyWith(
+                fontSize: 42,
+                height: 1.2,
+                color: theme.colors.primary,
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -451,95 +318,6 @@ class _HeroHijriDatePill extends ConsumerWidget {
                 style: theme.typography.body.xs.copyWith(
                   color: theme.colors.foreground,
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-enum _HeroTimeSquareDensity { normal, compact, ultraCompact }
-
-class _HeroTimeSquare extends StatelessWidget {
-  const new({
-    required this.time,
-    required this.label,
-    this.density = _HeroTimeSquareDensity.normal,
-  });
-
-  final String time;
-  final String? label;
-  final _HeroTimeSquareDensity density;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = FTheme.of(context);
-    final (
-      horizontal,
-      vertical,
-      labelStyle,
-      timeStyle,
-      minWidth,
-    ) = switch (density) {
-      _HeroTimeSquareDensity.normal => (
-        AppSpacing.xl,
-        AppSpacing.lg,
-        theme.typography.body.sm,
-        theme.typography.body.xl2,
-        112.0,
-      ),
-      _HeroTimeSquareDensity.compact => (
-        AppSpacing.lg,
-        AppSpacing.md,
-        theme.typography.body.xs,
-        theme.typography.body.xl,
-        96.0,
-      ),
-      _HeroTimeSquareDensity.ultraCompact => (
-        AppSpacing.sm,
-        AppSpacing.xs,
-        theme.typography.body.xs,
-        theme.typography.body.lg,
-        80.0,
-      ),
-    };
-
-    return Semantics(
-      label: PrayerSemantics.heroTimeSquare(time: time, caption: label),
-      readOnly: true,
-      excludeSemantics: true,
-      child: Container(
-        constraints: BoxConstraints(minWidth: minWidth),
-        padding: EdgeInsets.symmetric(
-          horizontal: horizontal,
-          vertical: vertical,
-        ),
-        decoration: BoxDecoration(
-          color: theme.colors.background,
-          borderRadius: theme.radii.md,
-          border: Border.all(color: theme.colors.border),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (label != null)
-              Text(
-                label!.toUpperCase(),
-                style: labelStyle.copyWith(
-                  color: theme.colors.foreground,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1,
-                ),
-              ),
-            if (label != null) const SizedBox(height: AppSpacing.xs),
-            Text(
-              time,
-              style: timeStyle.copyWith(
-                color: theme.colors.foreground,
-                fontWeight: FontWeight.w600,
-                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ],
