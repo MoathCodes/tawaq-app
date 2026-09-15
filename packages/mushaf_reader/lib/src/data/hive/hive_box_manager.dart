@@ -77,6 +77,9 @@ class HiveBoxManager {
   /// Whether boxes have been opened via [init].
   bool get isInitialized => _initialized;
 
+  /// Whether the final owner released this manager during initialization.
+  bool _disposeRequested = false;
+
   /// [subDirectory] from the first successful [init], if any.
   String? get configuredSubDirectory => _configuredSubDirectory;
 
@@ -93,8 +96,10 @@ class HiveBoxManager {
   ///
   /// Pair each [acquire] with [dispose] on the returned instance.
   static HiveBoxManager acquire() {
+    final manager = instance;
     _refCount++;
-    return instance;
+    manager._disposeRequested = false;
+    return manager;
   }
 
   /// Returns the singleton without changing [refCount].
@@ -172,6 +177,10 @@ class HiveBoxManager {
 
   /// Forcefully closes all boxes.
   void closeAll() {
+    if (_initCompleter != null && !_initialized) {
+      _disposeRequested = true;
+      return;
+    }
     _closeAndReset();
   }
 
@@ -184,6 +193,10 @@ class HiveBoxManager {
     _refCount--;
 
     if (_refCount <= 0) {
+      if (_initCompleter != null && !_initialized) {
+        _disposeRequested = true;
+        return;
+      }
       _closeAndReset();
     }
   }
@@ -227,7 +240,8 @@ class HiveBoxManager {
 
     _assertMatchingSubDirectory(subDirectory);
     _configuredSubDirectory = subDirectory;
-    _initCompleter = Completer<void>();
+    final initCompleter = Completer<void>();
+    _initCompleter = initCompleter;
 
     try {
       // Initialize Hive with Flutter's application documents directory
@@ -258,11 +272,14 @@ class HiveBoxManager {
       _buildLayoutsByPageIndex();
 
       _initialized = true;
-      _initCompleter!.complete();
+      initCompleter.complete();
+      if (_disposeRequested) _closeAndReset();
     } catch (e, st) {
       _configuredSubDirectory = null;
-      _initCompleter!.completeError(e, st);
-      _initCompleter = null;
+      if (!initCompleter.isCompleted) {
+        initCompleter.completeError(e, st);
+      }
+      _closeAndReset();
       rethrow;
     }
   }
@@ -310,6 +327,7 @@ class HiveBoxManager {
     _initialized = false;
     _configuredSubDirectory = null;
     _initCompleter = null;
+    _disposeRequested = false;
     _instance = null;
     _refCount = 0;
   }
@@ -355,9 +373,9 @@ class HiveBoxManager {
     Map<String, dynamic> localManifest = {};
     if (localManifestFile.existsSync()) {
       try {
-        localManifest =
-            json.decode(localManifestFile.readAsStringSync())
-                as Map<String, dynamic>;
+        localManifest = json.decode(
+          localManifestFile.readAsStringSync(),
+        ) as Map<String, dynamic>;
       } catch (_) {
         // Corrupted manifest, will re-copy all
       }
