@@ -132,7 +132,10 @@ class HiveBoxManager {
     _searchIndexOpenCompleter = Completer<Box<String>>();
 
     try {
-      _searchIndexBox = await Hive.openBox<String>('search_index');
+      _searchIndexBox = await Hive.openBox<String>(
+        'search_index',
+        path: _hivePath,
+      );
       _searchIndexOpenCompleter!.complete(_searchIndexBox!);
       return _searchIndexBox!;
     } catch (e, st) {
@@ -244,7 +247,7 @@ class HiveBoxManager {
     _initCompleter = initCompleter;
 
     try {
-      // Initialize Hive with Flutter's application documents directory
+      // Keep package boxes independent of the host's global Hive directory.
       final appDir = await getApplicationDocumentsDirectory();
       _hivePath = subDirectory != null
           ? p.join(appDir.path, subDirectory)
@@ -253,8 +256,6 @@ class HiveBoxManager {
       // Ensure the directory exists
       await Directory(_hivePath).create(recursive: true);
 
-      Hive.init(_hivePath);
-
       // Register all adapters
       Hive.registerAdapters();
 
@@ -262,12 +263,15 @@ class HiveBoxManager {
       await _copyBoxesFromAssets();
 
       // Open core boxes (search_index opens on demand via [ensureSearchIndexBoxOpen])
-      _surahsBox = await Hive.openBox<Surah>('surahs');
-      _ayahsBox = await Hive.openLazyBox<Ayah>('ayahs');
-      _juzsBox = await Hive.openBox<Juz>('juzs');
-      _hizbsBox = await Hive.openBox<Hizb>('hizbs');
-      _pageLayoutsBox = await Hive.openBox<PageLayouts>('pagelayouts');
-      _metadataBox = await Hive.openBox<String>('metadata');
+      _surahsBox = await Hive.openBox<Surah>('surahs', path: _hivePath);
+      _ayahsBox = await Hive.openLazyBox<Ayah>('ayahs', path: _hivePath);
+      _juzsBox = await Hive.openBox<Juz>('juzs', path: _hivePath);
+      _hizbsBox = await Hive.openBox<Hizb>('hizbs', path: _hivePath);
+      _pageLayoutsBox = await Hive.openBox<PageLayouts>(
+        'pagelayouts',
+        path: _hivePath,
+      );
+      _metadataBox = await Hive.openBox<String>('metadata', path: _hivePath);
 
       _buildLayoutsByPageIndex();
 

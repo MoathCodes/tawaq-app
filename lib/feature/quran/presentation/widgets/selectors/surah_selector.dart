@@ -6,8 +6,8 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
+import 'package:tawaq/feature/quran/domain/services/quran_search_query.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_search_select.dart';
@@ -15,10 +15,8 @@ import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
 
 /// Ranks [surahs] by relevance to [query] using the shared Quran surah search.
 Iterable<Surah> searchSurahs(List<Surah> surahs, String query) {
-  if (query.isEmpty) return surahs;
-
-  final normalized = query.toLowerCase().trim();
-  final arabicQuery = normalizeArabicForSearch(normalized);
+  final normalized = normalizeQuranSearchQuery(query);
+  if (normalized.isEmpty) return surahs;
   final queryNum = int.tryParse(normalized);
 
   final results = <(Surah, int)>[];
@@ -33,9 +31,9 @@ Iterable<Surah> searchSurahs(List<Surah> surahs, String query) {
         false) {
       score = 70;
     } else if (surah.nameArabicSimplified != null &&
-        normalizeArabicForSearch(
+        normalizeQuranSearchQuery(
           surah.nameArabicSimplified!,
-        ).startsWith(arabicQuery)) {
+        ).startsWith(normalized)) {
       score = 70;
     } else if (surah.englishNameTranslation?.toLowerCase().startsWith(
           normalized,
@@ -50,9 +48,9 @@ Iterable<Surah> searchSurahs(List<Surah> surahs, String query) {
         false) {
       score = 45;
     } else if (surah.nameArabicSimplified != null &&
-        normalizeArabicForSearch(
+        normalizeQuranSearchQuery(
           surah.nameArabicSimplified!,
-        ).contains(arabicQuery)) {
+        ).contains(normalized)) {
       score = 50;
     }
 

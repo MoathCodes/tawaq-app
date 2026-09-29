@@ -80,6 +80,7 @@ class AyahSearchSelector extends HookConsumerWidget {
         label: showLabel ? Text(l10n.searchQuran) : const SizedBox.shrink(),
         textDirection: isArabic ? TextDirection.rtl : null,
         textInputAction: TextInputAction.search,
+        retainFocus: false,
         prefixBuilder: (context, style, states) => Padding(
           padding: const EdgeInsets.all(AppSpacing.xs),
           child: QuranSemantics.decorative(

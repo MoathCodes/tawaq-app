@@ -5,6 +5,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
+import 'package:tawaq/feature/quran/domain/services/quran_search_query.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_ordinals.dart';
@@ -20,6 +21,23 @@ String englishJuzLabel(int n) => 'Juz $n';
 /// Locale-aware Juz title for closed fields and search (not the glyph).
 String localizedJuzNumericLabel(int n, {required bool isArabic}) {
   return isArabic ? 'الجزء ${arabicJuzOrdinal(n)}' : englishJuzLabel(n);
+}
+
+/// Filters juzs by number or the localized label shown in the picker.
+Iterable<Juz> searchJuzs(
+  List<Juz> juzs,
+  String query, {
+  required bool isArabic,
+}) {
+  final normalized = normalizeQuranSearchQuery(query);
+  if (normalized.isEmpty) return juzs;
+  return juzs.where(
+    (juz) =>
+        juz.number.toString().contains(normalized) ||
+        normalizeQuranSearchQuery(
+          localizedJuzNumericLabel(juz.number, isArabic: isArabic),
+        ).contains(normalized),
+  );
 }
 
 /// Closed-field label for a Juz: AR glyph only; EN `Juz N`.
@@ -167,9 +185,11 @@ class JuzSelector extends HookConsumerWidget {
           inlineLabel: inlineLabel,
           useQuranFont: isArabic,
           format: (v) => localizedJuzNumericLabel(v.number, isArabic: isArabic),
-          filter: (q) => allJuzs.hasData
-              ? allJuzs.data!.where((e) => e.number.toString().contains(q))
-              : [],
+          filter: (q) => searchJuzs(
+            allJuzs.data ?? const [],
+            q,
+            isArabic: isArabic,
+          ),
           onChanged: (v) async {
             if (v != null) await controller.jumpToJuz(v.number);
           },

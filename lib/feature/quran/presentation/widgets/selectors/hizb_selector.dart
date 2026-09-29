@@ -4,8 +4,8 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
+import 'package:tawaq/feature/quran/domain/services/quran_search_query.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_ordinals.dart';
@@ -32,10 +32,8 @@ Iterable<Hizb> searchHizbs({
   required String query,
   required bool isArabic,
 }) {
-  if (query.isEmpty) return hizbs;
-
-  final normalized = query.toLowerCase().trim();
-  final arabicQuery = normalizeArabicForSearch(normalized);
+  final normalized = normalizeQuranSearchQuery(query);
+  if (normalized.isEmpty) return hizbs;
   final queryNum = int.tryParse(normalized);
 
   final results = <(Hizb, int)>[];
@@ -45,6 +43,10 @@ Iterable<Hizb> searchHizbs({
       score = 100;
     } else if (hizb.number.toString().startsWith(normalized)) {
       score = 80;
+    } else if (normalizeQuranSearchQuery(
+      localizedHizbTitle(hizb.number, isArabic: isArabic),
+    ).contains(normalized)) {
+      score = 70;
     } else {
       final surahNumber = hizb.startSurahNumber;
       if (surahNumber != null) {
@@ -52,9 +54,9 @@ Iterable<Hizb> searchHizbs({
         if (surah?.nameEnglish?.toLowerCase().startsWith(normalized) ?? false) {
           score = 70;
         } else if (surah?.nameArabicSimplified != null &&
-            normalizeArabicForSearch(
+            normalizeQuranSearchQuery(
               surah!.nameArabicSimplified!,
-            ).startsWith(arabicQuery)) {
+            ).contains(normalized)) {
           score = 70;
         } else if (surah?.englishNameTranslation?.toLowerCase().startsWith(
               normalized,
