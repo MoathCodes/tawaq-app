@@ -1,12 +1,18 @@
 # Original round uses ivory/gold; refined round uses one contrasting mark color.
 # Legacy geometry lives in render.py. Studio artwork and colors live in SVG masters.
-default: folio_ribbon
+default: folio_amber
 collections:
+  amber: [folio_amber, folio_ribbon]
   original: [crescent, qaf, arch]
   refined: [monogram, lune, leaf]
   studio: [folio, taw, pull]
   arabic: [folio_ribbon, folio_ta, folio_name]
 designs:
+  folio_amber:
+    name: Turning ta / amber
+    svg: artwork/folio_amber.svg
+    background: '#F7F4ED'
+    foreground: '#80591F'
   folio_ta:
     name: Folded ta / sage
     svg: artwork/folio_ta.svg

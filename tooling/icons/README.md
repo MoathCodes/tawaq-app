@@ -1,10 +1,13 @@
 # Tawaq icons
 
 The generator exports editable icon candidates and desktop assets.
-**Turning ta / sage (`folio_ribbon`) is the selected and installed default.**
-Its custom ت keeps Folio's sage palette, parchment surface and folded depth.
+**Turning ta / amber (`folio_amber`) is the selected and installed default.**
+Its custom ت pairs warm amber, honey highlights and brown folds with parchment.
+The geometry is identical to the approved Turning ta; the sage version remains
+available as `folio_ribbon`.
 The latest refinement softens the left cap and right tip, with a continuous fold
-seam and restrained shading planes. The `arabic` collection contains:
+seam and restrained shading planes. The `amber` collection compares amber and sage.
+The `arabic` collection contains:
 
 - **Folded ta** (`folio_ta`): Folio's planes joined into a ت body with two dots.
 - **Turning ta** (`folio_ribbon`): an open curved ت bowl with a turning-page terminal.
@@ -27,7 +30,9 @@ Six earlier candidates remain selectable: crescent/jade, qaf/plum, arch/clay,
 qaf/porcelain (`monogram`), lune/ink and leaf/slate.
 
 ```bash
-# Review the selected refinement against the previous Turning ta.
+# Compare the selected amber icon with the previous sage icon.
+./tooling/icons/generate.sh --variant folio_amber --out out/amber --before ../../docs/design/icons/turning-sage --before-label 'Turning ta / sage'
+# Review the earlier sage refinement against the previous Turning ta.
 ./tooling/icons/generate.sh --variant folio_ribbon --out out/turning-refined --before ../../docs/design/icons/turning-before --before-label 'Turning ta / previous'
 # Review the Arabic collection against its Folio foundation.
 ./tooling/icons/generate.sh --all --collection arabic --out out/arabic --before ../../docs/design/icons/folio-foundation --before-label 'Folio / foundation'
@@ -104,8 +109,10 @@ the local Linux app through the pinned SDK.
 
 ## Evidence
 
-The latest [Turning ta comparison](../../docs/design/icons/turning-refined-comparison.png)
-shows the previous Turning ta, the refined default and reference Folio at launcher,
+The [amber comparison](../../docs/design/icons/amber-comparison.png) shows the
+selected amber default beside the previous sage icon at launcher, menu and tray
+sizes on light/dark surfaces. The earlier [Turning ta comparison](../../docs/design/icons/turning-refined-comparison.png)
+shows the previous Turning ta, the refined sage icon and reference Folio at launcher,
 menu and tray sizes on light/dark surfaces. The prior-round
 [Arabic comparison](../../docs/design/icons/arabic-comparison.png) compares the
 three Arabic directions with their Folio foundation. The

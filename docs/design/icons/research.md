@@ -147,7 +147,7 @@ the raised right tip and carries a continuous fold seam to the base. Restrained
 shading planes are clipped to the silhouette. The sage palette, parchment surface
 and two-dot ت identity remain consistent across the app and tray exports.
 
-Turning ta (`folio_ribbon`) is now the selected and installed default and the
+At this stage, Turning ta (`folio_ribbon`) became the selected and installed default and the
 first entry in the `arabic` collection. The other Arabic concepts and reference
 Folio remain available. Small exports keep the same silhouette and use the
 existing detail removal and compact fills at 32px and below.
@@ -157,3 +157,17 @@ ta, revised Turning ta and reference Folio at launcher, menu and tray sizes on
 light/dark surfaces. The [Arabic comparison](arabic-comparison.png) records the
 prior exploration. These remain exported-asset previews; native desktop scaling
 and tray behavior are not verified by these images.
+
+## Follow-up: selected amber palette
+
+The user selected a warm manuscript-inspired recolor of the approved Turning ت.
+Amber (`folio_amber`) is now the installed default. The silhouette and refined
+fold remain unchanged; honey highlights, ochre planes and deep brown folds give
+the mark warmth while retaining separation on parchment. The compact brown fill
+(`#80591F`) has a 5.68:1 contrast ratio against its background (`#F7F4ED`).
+
+The [amber comparison](amber-comparison.png) preserves the sage baseline beside
+the new exports. Sage remains selectable as `folio_ribbon`. The same generator
+exports app, menu, tray and website assets, including simplified small-size fills.
+The Linux app was rebuilt and reinstalled; installed app, tray and launcher pixels
+match the exports. macOS and Windows native rendering remain unverified.
