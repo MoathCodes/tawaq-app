@@ -153,9 +153,14 @@ class SurahSearchSelect extends HookConsumerWidget {
                     ),
               subtitle: isArabic
                   ? Text(v.nameEnglish ?? v.englishNameTranslation ?? '')
-                  : (v.nameArabic != null
-                        ? SurahNameText(v.nameArabic!)
-                        : Text(v.englishNameTranslation ?? '')),
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (v.englishNameTranslation?.isNotEmpty ?? false)
+                          Text(v.englishNameTranslation!),
+                        if (v.nameArabic != null) SurahNameText(v.nameArabic!),
+                      ],
+                    ),
             ),
           )
           .toList(),
