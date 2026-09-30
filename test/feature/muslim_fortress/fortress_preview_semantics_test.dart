@@ -1,17 +1,18 @@
 import 'dart:ui' show SemanticsAction, Tristate;
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -49,7 +50,7 @@ Widget _wrap(
       ),
       child: MaterialApp(
         locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: SingleChildScrollView(child: child)),
       ),

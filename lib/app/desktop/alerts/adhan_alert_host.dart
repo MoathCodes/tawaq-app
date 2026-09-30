@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/app/desktop/alerts/adhan_alert_card.dart';
 import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';

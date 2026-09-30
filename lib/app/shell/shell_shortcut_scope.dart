@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/app/shortcuts/app_shortcut_global_handlers.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
 

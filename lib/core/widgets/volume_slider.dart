@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A volume slider (0–100) whose local value is synced to a persisted volume
 /// and whose preview updates continuously while dragging.

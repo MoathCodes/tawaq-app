@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Defers building tab/panel content until it is first selected.
 ///

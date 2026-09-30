@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:forui_hooks/forui_hooks.dart';
 import 'package:free_map/free_map.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';

@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:dorar_hadith/dorar_hadith.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/context_menu_action.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';

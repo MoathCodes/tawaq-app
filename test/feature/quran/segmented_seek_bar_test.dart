@@ -2,12 +2,13 @@ import 'dart:async';
 import 'dart:ui' show Tristate;
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/segmented_seek_bar.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -22,7 +23,7 @@ Widget _wrap(Widget child, {TextDirection direction = TextDirection.ltr}) {
     data: theme,
     child: MaterialApp(
       debugShowCheckedModeBanner: false,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      localizationsDelegates: appLocalizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: Directionality(

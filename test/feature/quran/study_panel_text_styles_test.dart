@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/presentation/models/study_panel_text_styles.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';

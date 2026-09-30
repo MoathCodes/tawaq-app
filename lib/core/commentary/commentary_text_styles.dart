@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 
 /// Shared typography styles for Arabic commentary formatters.

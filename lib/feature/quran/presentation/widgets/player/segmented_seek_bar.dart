@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:developer' as developer;
 import 'dart:math';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/utils/playback_duration.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 

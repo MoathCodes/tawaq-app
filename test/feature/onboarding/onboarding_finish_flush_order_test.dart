@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';

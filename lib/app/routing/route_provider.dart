@@ -3,9 +3,9 @@
 
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/app/onboarding/onboarding_screen.dart';
 import 'package:tawaq/app/routing/not_found_screen.dart';

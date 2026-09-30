@@ -1,10 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:intl/intl.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';

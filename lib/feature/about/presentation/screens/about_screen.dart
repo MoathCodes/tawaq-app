@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/centered_viewport_shell.dart';
 import 'package:tawaq/feature/about/data/about_info.dart';
 import 'package:tawaq/feature/about/presentation/widgets/about_view.dart';

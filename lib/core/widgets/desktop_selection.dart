@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/utils/platform.dart';
 
 /// Theme-aligned colors for standalone selectable text on desktop.

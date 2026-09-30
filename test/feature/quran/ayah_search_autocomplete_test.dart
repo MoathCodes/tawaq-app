@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
@@ -11,6 +11,7 @@ import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_search_r
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_search_selector.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -85,7 +86,7 @@ void main() {
             textScale: 1,
           ),
           child: MaterialApp(
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: appLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: Padding(

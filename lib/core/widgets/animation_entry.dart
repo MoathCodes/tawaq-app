@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Total duration of [AnimationEntry] entrance effects after [delay].
 const Duration kAnimationEntryEffectDuration = Duration(milliseconds: 620);

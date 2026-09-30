@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';

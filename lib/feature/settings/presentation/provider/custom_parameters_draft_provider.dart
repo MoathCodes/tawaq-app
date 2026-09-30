@@ -1,7 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/domain/use_cases/calculation_method_form.dart';

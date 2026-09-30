@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/feature/onboarding/data/models/onboarding_state.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';

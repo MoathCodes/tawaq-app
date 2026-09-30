@@ -1,15 +1,16 @@
 import 'dart:ui' as ui;
 
 import 'package:dorar_hadith/dorar_hadith.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -66,7 +67,7 @@ Widget _wrapCard(
       ),
       child: MaterialApp(
         locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(

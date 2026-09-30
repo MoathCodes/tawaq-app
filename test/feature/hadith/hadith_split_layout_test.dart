@@ -1,14 +1,15 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -49,7 +50,7 @@ void main() {
       child: FTheme(
         data: theme,
         child: MaterialApp(
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: MediaQuery(
             data: const MediaQueryData(size: Size(1024, 768)),

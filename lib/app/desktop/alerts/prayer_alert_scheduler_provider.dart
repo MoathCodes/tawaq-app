@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart' show Locale;
+import 'package:material_ui/material_ui.dart' show Locale;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';

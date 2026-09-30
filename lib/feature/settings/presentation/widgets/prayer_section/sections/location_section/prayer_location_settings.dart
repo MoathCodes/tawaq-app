@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:free_map/fm_map.dart' show FmMap;
 import 'package:free_map/free_map.dart' show FmMap;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';

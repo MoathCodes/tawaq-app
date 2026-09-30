@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_invocation.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';

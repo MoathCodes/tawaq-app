@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A collection of handcrafted theme presets inspired by manuscript
 /// (parchment) aesthetics used across the app.

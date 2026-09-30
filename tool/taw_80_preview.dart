@@ -1,7 +1,7 @@
 import 'package:dorar_hadith/dorar_hadith.dart';
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/audio/playback_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_detail_pane.dart';
@@ -13,6 +13,7 @@ import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.d
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport_controls.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -90,7 +91,8 @@ void main() {
         darkTheme: materialTheme,
         themeMode: dark ? ThemeMode.dark : ThemeMode.light,
         locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        builder: (_, child) => MaterialUiCompatibilityBridge(child: child!),
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: FTheme(
           data: appTheme,

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/keyboard_shortcuts/keyboard_shortcuts_section.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/adhan_section.dart';

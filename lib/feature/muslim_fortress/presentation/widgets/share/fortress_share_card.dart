@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/models/fortress_share_include.dart';

@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_analytics_prefs.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
@@ -15,6 +15,7 @@ import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics_sett
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/trend_analysis_card.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/trend_chart.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -55,7 +56,7 @@ Widget _analysisHost({
       ),
       child: MaterialApp(
         locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: const Scaffold(body: TrendAnalysisCard()),
       ),
@@ -138,12 +139,12 @@ void main() {
     await loader.load();
     final iconLoader = FontLoader('ForuiLucideIcons')
       ..addFont(
-        rootBundle.load('packages/forui_assets/assets/lucide.ttf'),
+        rootBundle.load('packages/forui_lucide/assets/lucide.ttf'),
       );
     await iconLoader.load();
     final packageIconLoader =
-        FontLoader('packages/forui_assets/ForuiLucideIcons')..addFont(
-          rootBundle.load('packages/forui_assets/assets/lucide.ttf'),
+        FontLoader('packages/forui_lucide/ForuiLucideIcons')..addFont(
+          rootBundle.load('packages/forui_lucide/assets/lucide.ttf'),
         );
     await packageIconLoader.load();
   });

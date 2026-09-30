@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/utils/share_card_export.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';

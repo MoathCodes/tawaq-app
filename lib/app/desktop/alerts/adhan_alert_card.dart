@@ -1,11 +1,11 @@
 import 'dart:async';
 
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/core/audio/audio_lease.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';

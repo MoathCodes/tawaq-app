@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_category_row.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/l10n/app_localizations_en.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
@@ -32,7 +33,7 @@ Widget _host({required Widget child, required FThemeData theme}) => FTheme(
   data: theme,
   child: MaterialApp(
     debugShowCheckedModeBanner: false,
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(body: child),
   ),

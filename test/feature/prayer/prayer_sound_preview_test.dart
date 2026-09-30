@@ -1,14 +1,15 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/prayer/domain/models/adhan_settings.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/adhan_preview_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/prayer_sound_preview.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme.dart';
 import 'package:tawaq/theme/theme_model.dart';
@@ -110,7 +111,7 @@ Widget _wrap(
     textScale: 1,
   ),
   child: MaterialApp(
-    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    localizationsDelegates: appLocalizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     home: Scaffold(
       body: Directionality(
