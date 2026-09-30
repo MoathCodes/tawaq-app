@@ -1,10 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_number_search.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_selector.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/juz_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/surah_selector.dart';
 import 'package:tawaq/l10n/app_localizations_en.dart';
+
 import 'hizb_selector_subtitle_test_helper.dart';
 
 void main() {
@@ -75,34 +76,55 @@ void main() {
       expect(results.single.number, 19);
     });
 
-    test('prefix match on Arabic surah name', () {
-      final surah8 = controller.getSurahSync(8)!;
-      final simplified = normalizeArabicForSearch(
-        surah8.nameArabicSimplified!,
-      );
-      String? matchingQuery;
-      for (var len = 1; len <= simplified.length; len++) {
-        final query = simplified.substring(0, len);
-        final results = searchHizbs(
-          hizbs: hizbs,
-          controller: controller,
-          query: query,
-          isArabic: true,
-        );
-        if (results.any((h) => h.number == 19)) {
-          matchingQuery = query;
-          break;
-        }
-      }
-
-      expect(matchingQuery, isNotNull);
+    test('Arabic surah name matches without the source سورة prefix', () {
       final results = searchHizbs(
         hizbs: hizbs,
         controller: controller,
-        query: matchingQuery!,
+        query: '  ٱلْأَنفَالِ  ',
         isArabic: true,
-      ).toList();
-      expect(results.map((h) => h.number), contains(19));
+      );
+      expect(results.single.number, 19);
+    });
+
+    test('Arabic digits and displayed ordinal label find a hizb', () {
+      for (final query in ['١٩', 'التاسع عشر', 'الحزب التاسع عشر']) {
+        expect(
+          searchHizbs(
+            hizbs: hizbs,
+            controller: controller,
+            query: query,
+            isArabic: true,
+          ).first.number,
+          19,
+          reason: query,
+        );
+      }
+    });
+
+    test('English displayed label is searchable', () {
+      expect(
+        searchHizbs(
+          hizbs: hizbs,
+          controller: controller,
+          query: 'Hizb 19',
+          isArabic: false,
+        ).single.number,
+        19,
+      );
+    });
+
+    test('whitespace returns all and unmatched text returns none', () {
+      for (final (query, count) in [('  ', hizbs.length), ('zzzzz', 0)]) {
+        expect(
+          searchHizbs(
+            hizbs: hizbs,
+            controller: controller,
+            query: query,
+            isArabic: true,
+          ).length,
+          count,
+        );
+      }
     });
 
     test('empty query returns all hizbs', () {
@@ -118,7 +140,43 @@ void main() {
     });
   });
 
+  group('searchJuzs', () {
+    final juzs = [
+      Juz(number: 2, glyph: ''),
+      Juz(number: 12, glyph: ''),
+      Juz(number: 20, glyph: ''),
+    ];
+
+    test('searches number, Arabic digits, and displayed ordinal label', () {
+      for (final query in ['20', '٢٠', 'العشرون', 'الجزء العشرون']) {
+        expect(searchJuzs(juzs, query, isArabic: true).single.number, 20);
+      }
+      expect(searchJuzs(juzs, ' JUZ 20 ', isArabic: false).single.number, 20);
+      expect(searchJuzs(juzs, '٢', isArabic: true).map((j) => j.number), [
+        2,
+        12,
+        20,
+      ]);
+    });
+
+    test('whitespace returns all and unmatched text returns none', () {
+      expect(searchJuzs(juzs, '  ', isArabic: true), juzs);
+      expect(searchJuzs(juzs, 'zzzzz', isArabic: false), isEmpty);
+    });
+  });
+
   group('searchSurahs', () {
+    test('Arabic digits retain exact and prefix number matching', () {
+      final surahs = [
+        Surah(number: 5, glyph: 'S5', hasBasmalah: true),
+        Surah(number: 55, glyph: 'S55', hasBasmalah: true),
+      ];
+      expect(searchSurahs(surahs, ' ٥٥ ').single.number, 55);
+      expect(searchSurahs(surahs, '٥').map((s) => s.number), [5, 55]);
+      expect(searchSurahs(surahs, '   '), surahs);
+      expect(searchSurahs(surahs, 'zzzzz'), isEmpty);
+    });
+
     test('typed ال matches surahs with alef wasla in the name', () {
       final surahs = [
         Surah(
@@ -258,8 +316,7 @@ class _SearchHizbsTestRepo implements IQuranRepository {
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
-  ]) =>
-      throw UnimplementedError();
+  ]) => throw UnimplementedError();
 
   @override
   Future<String> getBasmalah() async => '';
@@ -337,8 +394,7 @@ class _SearchHizbsTestRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}
@@ -363,8 +419,7 @@ class _HizbBoundsTestRepo implements IQuranRepository {
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
-  ]) =>
-      throw UnimplementedError();
+  ]) => throw UnimplementedError();
 
   @override
   Future<String> getBasmalah() async => '';
@@ -440,8 +495,7 @@ class _HizbBoundsTestRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}
@@ -456,13 +510,13 @@ class _SubtitleTestRepo implements IQuranRepository {
 
   @override
   Future<List<Surah>> getAllSurahs() async => [
-        Surah(
-          number: 16,
-          glyph: 'S16',
-          hasBasmalah: true,
-          nameEnglish: 'An-Nahl',
-        ),
-      ];
+    Surah(
+      number: 16,
+      glyph: 'S16',
+      hasBasmalah: true,
+      nameEnglish: 'An-Nahl',
+    ),
+  ];
 
   @override
   Future<Ayah> getAyah(int ayahId, [bool removeNewLines = true]) =>
@@ -473,8 +527,7 @@ class _SubtitleTestRepo implements IQuranRepository {
     int surah,
     int ayahInSurah, [
     bool removeNewLines = true,
-  ]) =>
-      throw UnimplementedError();
+  ]) => throw UnimplementedError();
 
   @override
   Future<String> getBasmalah() async => '';
@@ -562,8 +615,7 @@ class _SubtitleTestRepo implements IQuranRepository {
     String query, {
     int? surahNumber,
     int maxResults = 100,
-  }) async =>
-      [];
+  }) async => [];
 
   @override
   Future<void> warmUpSearchIndex() async {}

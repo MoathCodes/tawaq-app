@@ -85,3 +85,13 @@ fvm flutter test
 ```
 
 Before handing off, inspect the final diff. Report the behavior changed, fan-out considered, generation performed, checks run, and any limitation. The task is complete when the requested behavior, every affected consumer, reachable states, tests, and generated outputs agree without feature slop.
+
+## PRs and issues
+
+Lead with the user-visible problem and result in one or two short sentences. For an unresolved issue, state the failure and expected behavior; describe a fix only once it exists. Keep titles concrete.
+
+Put supporting details below the summary. Include only causes, implementation choices, validation, evidence links, and limitations that help someone assess the work. Use short sentences or bullets, with each fact stated once. Scale detail to the change; keep investigation history and routine check logs out of the opening.
+
+Example PR opening: "Saved recitation ranges were shortened on restart. They now restore in full."
+
+Optional detail below it: "Restoration waits for Quran metadata. Cold-start regression passes; before/after video attached."
