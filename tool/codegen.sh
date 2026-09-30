@@ -9,6 +9,10 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
+echo "==> initialize pinned submodules"
+git submodule sync --recursive
+git submodule update --init --recursive --depth 1
+
 echo "==> codegen packages/mushaf_reader"
 (
   cd packages/mushaf_reader

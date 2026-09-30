@@ -1,0 +1,13 @@
+{
+  "$schema": "https://t3.codes/schema/t3.json",
+  "worktreeSubmodules": "none",
+  "scripts": [
+    {
+      "name": "Setup Worktree",
+      "command": "fvm exec bash tool/codegen.sh",
+      "icon": "configure",
+      "runOnWorktreeCreate": true,
+      "async": false
+    }
+  ]
+}
