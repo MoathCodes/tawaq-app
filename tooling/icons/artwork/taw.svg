@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 100 100" width="1024" height="1024">
+<title>Tawaq — Taw, olive on parchment</title>
+<desc>A custom Arabic-initial-inspired sweep with two dots. Warm olive planes follow one upper-left light direction.</desc>
+<defs>
+ <linearGradient id="paper" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#FFFDF7" offset="0"/><stop stop-color="#F0EADF" offset="1"/></linearGradient>
+ <linearGradient id="olive" x1="0.18" y1="0.10" x2="0.78" y2="1"><stop stop-color="#AFBC68" offset="0"/><stop stop-color="#819746" offset="0.48"/><stop stop-color="#42623A" offset="1"/></linearGradient>
+ <linearGradient id="fold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#48663D" offset="0"/><stop stop-color="#648042" offset="1"/></linearGradient>
+ <linearGradient id="dot" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#92A753" offset="0"/><stop stop-color="#62813C" offset="1"/></linearGradient>
+<clipPath id="silhouette"><path d="M 25 43 C 21 60 32 74 50 74 C 68 74 79 57 77 31 C 68 43 65 58 54 61 C 41 65 34 55 37 45 Z"/></clipPath>
+</defs>
+<g id="surface" inkscape:label="Parchment surface"><rect x="3.5" y="3.5" width="93" height="93" rx="22" fill="url(#paper)" data-small-fill="#F7F4ED"/></g>
+<g id="mark" inkscape:label="Taw mark">
+ <path id="sweep" d="M 25 43 C 21 60 32 74 50 74 C 68 74 79 57 77 31 C 68 43 65 58 54 61 C 41 65 34 55 37 45 Z" fill="url(#olive)" data-small-fill="#567339"/>
+ <circle cx="43" cy="31" r="4.1" fill="url(#dot)" data-small-fill="#567339"/>
+ <circle cx="56" cy="28" r="4.1" fill="url(#dot)" data-small-fill="#567339"/>
+ <g id="detail" inkscape:label="Fold shading" clip-path="url(#silhouette)">
+  <path d="M 77 31 C 78 46 77 63 67 70 C 68 54 69 43 77 31 Z" fill="url(#fold)" opacity="0.88"/>
+  <path d="M 25 43 C 21 60 32 74 50 74" fill="none" stroke="#DCE1A6" stroke-opacity="0.30" stroke-width="0.6"/>
+ </g>
+</g>
+</svg>

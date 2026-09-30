@@ -1,10 +1,27 @@
 # Original round uses ivory/gold; refined round uses one contrasting mark color.
-# Geometry belongs to render.py; these are the only palette owners.
-default: monogram
+# Legacy geometry lives in render.py. Studio artwork and colors live in SVG masters.
+default: folio_ribbon
 collections:
   original: [crescent, qaf, arch]
   refined: [monogram, lune, leaf]
+  studio: [folio, taw, pull]
+  arabic: [folio_ribbon, folio_ta, folio_name]
 designs:
+  folio_ta:
+    name: Folded ta / sage
+    svg: artwork/folio_ta.svg
+    background: '#F7F4ED'
+    foreground: '#527045'
+  folio_ribbon:
+    name: Turning ta / sage
+    svg: artwork/folio_ribbon.svg
+    background: '#F7F4ED'
+    foreground: '#527045'
+  folio_name:
+    name: Tawaq / sage
+    svg: artwork/folio_name.svg
+    background: '#F7F4ED'
+    foreground: '#527045'
   crescent:
     name: Crescent / jade
     background: '#123F43'
@@ -32,3 +49,18 @@ designs:
     name: Leaf / slate
     background: '#26384A'
     foreground: '#EEF0EB'
+  taw:
+    name: Taw / olive
+    svg: artwork/taw.svg
+    background: '#F7F4ED'
+    foreground: '#567339'
+  pull:
+    name: Pull / honey
+    svg: artwork/pull.svg
+    background: '#F7F4ED'
+    foreground: '#96631F'
+  folio:
+    name: Folio / sage
+    svg: artwork/folio.svg
+    background: '#F7F4ED'
+    foreground: '#527045'

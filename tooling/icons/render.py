@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
-"""Render size-aware geometric Tawaq icons. No browser, fonts or ImageMagick.
+"""Render size-aware Tawaq icons. Artwork SVG variants use Inkscape; legacy variants use Pillow.
 
 ./generate.sh --all --install --before ../../docs/design/icons/before
 """
 from __future__ import annotations
 
 import argparse
+from functools import lru_cache
 import html
 import shutil
+import subprocess
+import tempfile
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import yaml
@@ -74,7 +78,54 @@ def path_points(data: str) -> list[tuple[float, float]]:
     return points
 
 
+@lru_cache(maxsize=128)
+def render_svg(svg_text: str, size: int, tray: bool) -> Image.Image:
+    """Render the editable master through Inkscape, simplifying small artwork."""
+    inkscape = shutil.which('inkscape')
+    if not inkscape:
+        raise RuntimeError('These artwork variants require Inkscape. Install it and rerun generate.sh.')
+    root = ET.fromstring(svg_text)
+    ET.register_namespace('', 'http://www.w3.org/2000/svg')
+    # Wordmarks use their companion initial at small sizes and in every tray.
+    for element in root.iter():
+        if element.get('id') == 'large-mark':
+            element.set('display', 'none' if tray or size < 64 else 'inline')
+        elif element.get('id') == 'compact-mark':
+            element.set('display', 'inline' if tray or size < 64 else 'none')
+    if size <= 32:
+        for parent in root.iter():
+            for child in list(parent):
+                if child.get('id') == 'detail':
+                    parent.remove(child)
+        for element in root.iter():
+            if color := element.get('data-small-fill'):
+                element.set('fill', color)
+    if tray:
+        for element in root.iter():
+            if element.get('id') == 'mark':
+                element.set('transform', 'translate(50 50) scale(1.08) translate(-50 -50)')
+    pixels = size * 4 if size <= 128 else size
+    with tempfile.TemporaryDirectory(prefix='tawaq-svg-') as tmp:
+        output = Path(tmp) / 'icon.png'
+        result = subprocess.run(
+            [inkscape, '--pipe', '--export-area-page', '--export-type=png',
+             f'--export-filename={output}', f'--export-width={pixels}',
+             f'--export-height={pixels}', '--export-png-color-mode=RGBA_8'],
+            input=ET.tostring(root, encoding='unicode'), capture_output=True, text=True,
+            check=False,
+        )
+        if result.returncode or not output.is_file():
+            raise RuntimeError(f'Inkscape export failed: {result.stderr.strip()}')
+        with Image.open(output) as image:
+            rendered = image.convert('RGBA').resize((size, size), Image.Resampling.LANCZOS)
+            # Remove sub-1% alpha ringing beyond the SVG's transparent outline.
+            rendered.putalpha(rendered.getchannel('A').point(lambda value: 0 if value < 3 else value))
+            return rendered
+
+
 def render_icon(design: str, palette: dict, size: int, *, tray: bool = False) -> Image.Image:
+    if artwork := palette.get('svg'):
+        return render_svg((TOOL_ROOT / artwork).read_text(encoding='utf-8'), size, tray).copy()
     # Draw from geometry at each target size, rather than shrinking a 1024px bitmap.
     scale = 4 if size >= 256 else 8
     side = size * scale
@@ -97,6 +148,8 @@ def render_icon(design: str, palette: dict, size: int, *, tray: bool = False) ->
 
 
 def svg(design: str, palette: dict) -> str:
+    if artwork := palette.get('svg'):
+        return (TOOL_ROOT / artwork).read_text(encoding='utf-8')
     shapes = ['<rect x="3.5" y="3.5" width="93" height="93" rx="22" fill="'+palette['background']+'"/>']
     for kind, geometry, role in mark(design, False):
         color = palette[role]
@@ -131,6 +184,7 @@ def export(design: str, palette: dict, root: Path) -> None:
     for size in TRAY_SIZES:
         save_png(render_icon(design, palette, size, tray=True), root / 'tray' / f'tray_icon_{size}.png')
     save_png(render_icon(design, palette, 32, tray=True), root / 'tray/tray_icon.png')
+    save_png(render_icon(design, palette, 1024), root / 'website/images/app-icon.png')
 
 
 def install_assets(repo: Path, root: Path) -> None:
@@ -156,6 +210,14 @@ def install_assets(repo: Path, root: Path) -> None:
     source.mkdir(parents=True, exist_ok=True)
     for name in ('app_icon.png', 'app_icon.svg'):
         shutil.copy2(root / 'master' / name, source / name)
+    # Website workspaces are separate, ignored checkouts. Update those present
+    # without creating an incomplete website in a fresh app checkout.
+    for site in ('sakinah', 'concepts'):
+        public = repo / 'website' / site / 'public'
+        if public.is_dir():
+            target = public / 'images/app-icon.png'
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(root / 'website/images/app-icon.png', target)
 
 
 def font(size: int) -> ImageFont.FreeTypeFont:
@@ -216,14 +278,18 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--config', default='config.yaml')
     parser.add_argument('--out', default='out')
-    parser.add_argument('--variant', choices=['crescent', 'qaf', 'arch', 'lune', 'monogram', 'leaf'])
-    parser.add_argument('--collection', choices=['original', 'refined'], help='Limit --all to one design round.')
+    parser.add_argument('--variant', help='Design key from config.yaml.')
+    parser.add_argument('--collection', help='Limit --all to one collection in config.yaml.')
     parser.add_argument('--all', action='store_true', help='Export every candidate, in addition to the selected default.')
     parser.add_argument('--before', help='Directory with old app_icon.png and tray_icon.png for comparison.')
     parser.add_argument('--before-label', default='Old')
     parser.add_argument('--install', action='store_true')
     args = parser.parse_args()
     config = yaml.safe_load((TOOL_ROOT / args.config).read_text(encoding='utf-8'))
+    if args.variant and args.variant not in config['designs']:
+        parser.error(f'Unknown variant: {args.variant}')
+    if args.collection and args.collection not in config['collections']:
+        parser.error(f'Unknown collection: {args.collection}')
     selected = args.variant or config['default']
     if args.variant is None and args.collection:
         selected = config['collections'][args.collection][0]

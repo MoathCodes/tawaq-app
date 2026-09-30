@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="1024" height="1024">
+<title>Tawaq — folded tāʾ / sage</title><desc>A custom tāʾ: two dots above a connected curved bowl, with manuscript planes rising from a single binding fold.</desc>
+<defs xmlns="http://www.w3.org/2000/svg">
+ <linearGradient id="paper" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#FFFDF7" offset="0" /><stop stop-color="#F0EADF" offset="1" /></linearGradient>
+ <linearGradient id="left" x1="0.15" y1="0" x2="0.8" y2="1"><stop stop-color="#A5B57C" offset="0" /><stop stop-color="#718953" offset="0.5" /><stop stop-color="#425E3D" offset="1" /></linearGradient>
+ <linearGradient id="right" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#B9C78D" offset="0" /><stop stop-color="#8DA461" offset="0.48" /><stop stop-color="#567B49" offset="1" /></linearGradient>
+ <linearGradient id="fold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#587144" offset="0" /><stop stop-color="#37583C" offset="1" /></linearGradient>
+</defs>
+
+<g id="surface"><rect x="3.5" y="3.5" width="93" height="93" rx="22" fill="url(#paper)" data-small-fill="#F7F4ED"/></g>
+<g id="mark"><path id="body" d="M 23 35 C 36 37 44 45 49 60 C 56 45 65 33 78 28 L 78 47 C 78 66 65 77 50 77 C 34 77 22 64 22 48 C 22 42 22 38 23 35 Z" fill="url(#left)" data-small-fill="#527045"/><rect x="39.5" y="29.5" width="7.5" height="7.5" rx="2.1" fill="url(#left)" data-small-fill="#527045"/><rect x="52.5" y="29.5" width="7.5" height="7.5" rx="2.1" fill="url(#right)" data-small-fill="#527045"/><g id="detail"><path d="M 78 28 L 78 47 C 78 66 65 77 50 77 L 49 60 C 56 45 65 33 78 28 Z" fill="url(#right)"/>
+<path d="M 23 35 C 36 37 44 45 49 60 L 50 77 C 42 56 34 44 23 35 Z" fill="url(#fold)" opacity=".72"/>
+<path d="M 78 28 C 64 42 57 55 50 77 L 49 60 C 56 45 65 33 78 28 Z" fill="#D1D9A1" opacity=".22"/></g></g>
+</svg>

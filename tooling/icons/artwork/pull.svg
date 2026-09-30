@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" viewBox="0 0 100 100" width="1024" height="1024">
+<title>Tawaq — Pull, honey on parchment</title>
+<desc>A continuous inward loop and an open returning sweep, inspired by the waw in Tawaq's name.</desc>
+<defs>
+ <linearGradient id="paper" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#FFFDF7" offset="0"/><stop stop-color="#F0EADF" offset="1"/></linearGradient>
+ <linearGradient id="honey" x1="0.1" y1="0" x2="0.85" y2="1"><stop stop-color="#DDBB6D" offset="0"/><stop stop-color="#BC8A38" offset="0.45"/><stop stop-color="#936025" offset="1"/></linearGradient>
+ <linearGradient id="return" x1="0.1" y1="0" x2="1" y2="1"><stop stop-color="#9D6828" offset="0"/><stop stop-color="#C09546" offset="1"/></linearGradient>
+<clipPath id="silhouette"><path clip-rule="evenodd" d="M 59 25 C 74 25 82 38 79 52 C 76 68 62 78 46 78 C 33 78 23 70 23 57 L 35 54 C 34 61 39 67 47 67 C 57 67 64 62 68 56 C 54 62 42 54 42 42 C 42 32 49 25 59 25 Z M 59 36 C 54 36 51 39 51 43 C 51 48 55 51 60 51 C 65 51 69 47 69 43 C 69 39 65 36 59 36 Z"/></clipPath>
+</defs>
+<g id="surface" inkscape:label="Parchment surface"><rect x="3.5" y="3.5" width="93" height="93" rx="22" fill="url(#paper)" data-small-fill="#F7F4ED"/></g>
+<g id="mark" inkscape:label="Returning loop">
+ <path id="loop" fill-rule="evenodd" d="M 59 25 C 74 25 82 38 79 52 C 76 68 62 78 46 78 C 33 78 23 70 23 57 L 35 54 C 34 61 39 67 47 67 C 57 67 64 62 68 56 C 54 62 42 54 42 42 C 42 32 49 25 59 25 Z M 59 36 C 54 36 51 39 51 43 C 51 48 55 51 60 51 C 65 51 69 47 69 43 C 69 39 65 36 59 36 Z" fill="url(#honey)" data-small-fill="#96631F"/>
+ <g id="detail" inkscape:label="Fold shading" clip-path="url(#silhouette)">
+  <path d="M 79 44 C 81 59 70 75 54 77 C 63 69 65 62 68 56 C 73 53 77 50 79 44 Z" fill="url(#return)"/>
+ </g>
+</g>
+</svg>

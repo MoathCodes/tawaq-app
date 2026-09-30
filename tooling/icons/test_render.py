@@ -24,11 +24,23 @@ class IconExportsTest(unittest.TestCase):
                     self.assertEqual(image.getpixel((0, 0))[3], 0)
                     self.assertEqual(image.getpixel((size//2, size//2))[3], 255)
                     # Count actual mark pixels, including dark-on-light candidates.
-                    foreground = tuple(int(palette['foreground'][i:i+2], 16) for i in (1, 3, 5))
+                    background = tuple(int(palette['background'][i:i+2], 16) for i in (1, 3, 5))
                     coverage = sum(count for count, pixel in image.getcolors(size*size)
-                                   if pixel[3] > 240 and sum((pixel[i]-foreground[i])**2
-                                   for i in range(3)) < 60**2)
+                                   if pixel[3] > 240 and sum((pixel[i]-background[i])**2
+                                   for i in range(3)) > 80**2)
                     self.assertGreater(coverage, size*size*0.08)
+
+    def test_arabic_name_uses_matching_initial_for_menus_and_trays(self):
+        designs = self.config['designs']
+        for size, tray in ((16, False), (32, False), (48, False),
+                           (32, True), (64, True), (128, True)):
+            with self.subTest(size=size, tray=tray):
+                self.assertEqual(
+                    render_icon('folio_name', designs['folio_name'], size, tray=tray).tobytes(),
+                    render_icon('folio_ta', designs['folio_ta'], size, tray=tray).tobytes())
+        self.assertNotEqual(
+            render_icon('folio_name', designs['folio_name'], 64).tobytes(),
+            render_icon('folio_ta', designs['folio_ta'], 64).tobytes())
 
 
     def test_ico_contains_all_custom_rendered_sizes(self):
@@ -55,6 +67,8 @@ class IconExportsTest(unittest.TestCase):
             sentinel = repo / 'linux/icons/hicolor/custom.txt'
             sentinel.parent.mkdir(parents=True)
             sentinel.write_text('preserve me too')
+            for site in ('sakinah', 'concepts'):
+                (repo / 'website' / site / 'public').mkdir(parents=True)
             install_assets(repo, root)
             self.assertEqual(metadata.read_text(), 'preserve me')
             self.assertEqual(sentinel.read_text(), 'preserve me too')
@@ -66,6 +80,10 @@ class IconExportsTest(unittest.TestCase):
                 'master/app_icon.svg': 'tooling/icons/source/app_icon.svg',
             }.items():
                 self.assertEqual((root / source).read_bytes(), (repo / target).read_bytes())
+            for site in ('sakinah', 'concepts'):
+                for name in ('images/app-icon.png',):
+                    self.assertEqual((root / 'website' / name).read_bytes(),
+                                     (repo / 'website' / site / 'public' / name).read_bytes())
 
     def test_palette_foreground_and_accent_exceed_three_to_one(self):
         def luminance(color):
