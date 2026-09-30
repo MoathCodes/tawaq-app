@@ -1,0 +1,170 @@
+══╡ EXCEPTION CAUGHT BY SCHEDULER LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during a scheduler callback:
+'package:flutter/src/semantics/semantics.dart': Failed assertion: line 3862 pos 16:
+'node.isMergedIntoParent': is not true.
+
+Either the assertion indicates an error in the framework itself, or we should provide substantially
+more information in this error message to help you determine and fix the underlying cause.
+In either case, please report this assertion by filing a bug on GitHub:
+  https://github.com/flutter/flutter/issues/new?template=02_bug.yml
+
+When the exception was thrown, this was the stack:
+#2      SemanticsNode.getSemanticsData.<anonymous closure> (package:flutter/src/semantics/semantics.dart:3862:16)
+#3      SemanticsNode._visitDescendants (package:flutter/src/semantics/semantics.dart:3123:21)
+#4      SemanticsNode.getSemanticsData (package:flutter/src/semantics/semantics.dart:3861:7)
+#5      SemanticsNode._addToUpdate (package:flutter/src/semantics/semantics.dart:4090:32)
+#6      SemanticsOwner.sendSemanticsUpdate (package:flutter/src/semantics/semantics.dart:5065:14)
+#7      PipelineOwner.flushSemantics (package:flutter/src/rendering/object.dart:1651:24)
+#8      PipelineOwner.flushSemantics (package:flutter/src/rendering/object.dart:1653:15)
+#9      RendererBinding.drawFrame (package:flutter/src/rendering/binding.dart:699:25)
+#10     WidgetsBinding.drawFrame (package:flutter/src/widgets/binding.dart:1573:13)
+#11     RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:558:5)
+#12     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#13     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1345:9)
+#14     SchedulerBinding._handleDrawFrame (package:flutter/src/scheduler/binding.dart:1198:5)
+#15     _invoke (dart:ui/hooks.dart:441:13)
+#16     PlatformDispatcher._drawFrame (dart:ui/platform_dispatcher.dart:450:5)
+#17     _drawFrame (dart:ui/hooks.dart:413:31)
+(elided 2 frames from class _AssertionError)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+┌───────────────────────────────────────────────────────────────────────────────
+│ 2026-09-30 02:50:53.999
+├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+│ 🐛 [HadithRepository.searchDetailed]  query="إنما الأعمال بالنيات" page=1
+└───────────────────────────────────────────────────────────────────────────────
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+[HivezBox:hadith_recent_searches] Initializing box...
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+[HivezBox:hadith_recent_searches] Box initialized successfully.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+┌───────────────────────────────────────────────────────────────────────────────
+│ 2026-09-30 02:52:52.502
+├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+│ 💡 [LocaleNotifier] Setting to: ar
+└───────────────────────────────────────────────────────────────────────────────
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 4990 pos 16: 'node.parent == null || !node.parent!.isPartOfNodeMerging || node.isMergedIntoParent': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+┌───────────────────────────────────────────────────────────────────────────────
+│ 2026-09-30 02:52:55.188
+├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+│ 💡 [ThemeNotifier] Theme mode updated
+└───────────────────────────────────────────────────────────────────────────────
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+┌───────────────────────────────────────────────────────────────────────────────
+│ 2026-09-30 02:54:38.964
+├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+│ 💡 [LocaleNotifier] Setting to: en
+└───────────────────────────────────────────────────────────────────────────────
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+┌───────────────────────────────────────────────────────────────────────────────
+│ 2026-09-30 02:58:58.993
+├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+│ 💡 [ThemeNotifier] Theme mode updated
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 2026-09-30 02:59:05.606
+├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+│ 💡 [LocaleNotifier] Setting to: ar
+└───────────────────────────────────────────────────────────────────────────────
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 4990 pos 16: 'node.parent == null || !node.parent!.isPartOfNodeMerging || node.isMergedIntoParent': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 4990 pos 16: 'node.parent == null || !node.parent!.isPartOfNodeMerging || node.isMergedIntoParent': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+┌───────────────────────────────────────────────────────────────────────────────
+│ 2026-09-30 03:00:20.320
+├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+│ 💡 [RecitationSettingsNotifier] Range preset updated
+└───────────────────────────────────────────────────────────────────────────────
+┌───────────────────────────────────────────────────────────────────────────────
+│ 2026-09-30 03:00:20.323
+├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+│ 💡 [RecitationSettingsNotifier] Playback state updated
+└───────────────────────────────────────────────────────────────────────────────
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+┌───────────────────────────────────────────────────────────────────────────────
+│ 2026-09-30 03:00:20.422
+├┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+│ 🐛 [tawaq.recitation.seek] [RecitationSession] load generation=1 started
+└───────────────────────────────────────────────────────────────────────────────
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Another exception was thrown: 'package:flutter/src/semantics/semantics.dart': Failed assertion: line 5053 pos 14: 'node.parent?._dirty != true': is not true.
+Lost connection to device.

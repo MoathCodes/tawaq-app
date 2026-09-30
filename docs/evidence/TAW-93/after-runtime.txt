@@ -1,0 +1,6 @@
+Flutter 3.47.1 Linux debug; disposable profile.
+Removed unconditional splash SemanticsDebugger; cold restart.
+Semantics enabled before repeated route/theme transitions.
+Driver set_semantics(true): changedState=false.
+Repeated Settings/Quran/Hadith/Fortress/Prayer theme toggles: no application runtime errors found.
+A later get_diagnostics_tree timeout was a driver selector failure, not an application assertion.
