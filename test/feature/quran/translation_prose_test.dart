@@ -6,8 +6,8 @@ import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/study_content_section.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/translation_source_selector.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/study_content_section.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
@@ -60,9 +60,9 @@ void main() {
   ) async {
     const sourceText = 'In the name of Allah — [2]';
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('ar'),
-        home: const Directionality(
+      const MaterialApp(
+        locale: Locale('ar'),
+        home: Directionality(
           textDirection: TextDirection.rtl,
           child: Scaffold(
             body: TranslationProse(
@@ -97,18 +97,18 @@ void main() {
   ) async {
     const sourceText = 'اللہ کے نام سے — [۲]';
     await tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('en'),
+      const MaterialApp(
+        locale: Locale('en'),
         home: Scaffold(
           body: TranslationProse(
             source: TranslationId.urdu,
-            translation: const Translation(
+            translation: Translation(
               id: 1,
               sura: 1,
               aya: 1,
               translation: sourceText,
             ),
-            style: const TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: 16),
           ),
         ),
       ),
@@ -146,11 +146,11 @@ void main() {
           ],
           child: FTheme(
             data: theme,
-            child: MaterialApp(
-              locale: const Locale('en'),
+            child: const MaterialApp(
+              locale: Locale('en'),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: const Scaffold(
+              home: Scaffold(
                 body: TranslationSourceSelector(showLabel: false),
               ),
             ),
@@ -202,7 +202,7 @@ void main() {
                     onTap: () {},
                     child: const Text('Source'),
                   ),
-                  contentBuilder: (text) => Text(text),
+                  contentBuilder: Text.new,
                 ),
               ),
             ),

@@ -1,5 +1,4 @@
 // Freezed annotations often target specific fields/getters.
-// ignore_for_file: invalid_annotation_target
 
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';

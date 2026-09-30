@@ -227,7 +227,7 @@ abstract class AppLocalizations {
   /// No description provided for @adhanAlertPositionLabel.
   ///
   /// In en, this message translates to:
-  /// **'Alert position'**
+  /// **'In-app alert position'**
   String get adhanAlertPositionLabel;
 
   /// No description provided for @adhanAlertPositionTopEnd.
@@ -371,25 +371,25 @@ abstract class AppLocalizations {
   /// No description provided for @adhanSectionSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.'**
+  /// **'Choose adhan and iqamah sounds and how prayer-time alerts appear. The alert menu on the Prayer page decides whether each event is silent, plays sound, or shows a notification.'**
   String get adhanSectionSubtitle;
 
   /// No description provided for @adhanSectionTitle.
   ///
   /// In en, this message translates to:
-  /// **'Adhan'**
+  /// **'Prayer alerts'**
   String get adhanSectionTitle;
 
   /// No description provided for @adhanShowAlertLabel.
   ///
   /// In en, this message translates to:
-  /// **'Show adhan alert'**
+  /// **'Show in-app alert'**
   String get adhanShowAlertLabel;
 
   /// No description provided for @adhanShowOsNotificationLabel.
   ///
   /// In en, this message translates to:
-  /// **'OS notification when hidden in tray'**
+  /// **'Show OS notification'**
   String get adhanShowOsNotificationLabel;
 
   /// No description provided for @adhanSoundLabel.
@@ -407,7 +407,7 @@ abstract class AppLocalizations {
   /// No description provided for @adhanVolumeLabel.
   ///
   /// In en, this message translates to:
-  /// **'Adhan volume'**
+  /// **'Alert volume (adhan and iqamah)'**
   String get adhanVolumeLabel;
 
   /// No description provided for @advancedSettingsTitle.
@@ -1805,7 +1805,7 @@ abstract class AppLocalizations {
   /// No description provided for @iqamahSoundLabel.
   ///
   /// In en, this message translates to:
-  /// **'Iqamah call'**
+  /// **'Iqamah sound'**
   String get iqamahSoundLabel;
 
   /// No description provided for @iqamahSubtitleMessage.

@@ -114,7 +114,7 @@ class _EmptyQuranRepository implements IQuranRepository {
 }
 
 class _TestQuranSelectedAyahId extends QuranSelectedAyahId {
-  _TestQuranSelectedAyahId(this._ayahId);
+  new(this._ayahId);
 
   final int? _ayahId;
 
@@ -167,17 +167,17 @@ void main() {
                 body: SizedBox(
                   width: width,
                   height: 520,
-                  child: Column(
+                  child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: ColoredBox(
                           color: Color(0xfff4f0e8),
                           child: Center(child: Text('page metadata')),
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                        padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
                         child: SizedBox(
                           width: double.infinity,
                           child: AyahSelectionActionsBar(),

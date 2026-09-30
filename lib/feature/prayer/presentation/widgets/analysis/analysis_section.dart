@@ -45,7 +45,7 @@ class AnalysisSection extends ConsumerWidget {
 }
 
 class _AnalysisLoadingContent extends StatelessWidget {
-  const _AnalysisLoadingContent({required this.sideBySide});
+  const new({required this.sideBySide});
 
   final bool sideBySide;
 

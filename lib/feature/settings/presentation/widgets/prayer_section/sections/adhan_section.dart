@@ -13,7 +13,7 @@ import 'package:tawaq/feature/settings/presentation/adhan_locale_extensions.dart
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Adhan notification and sound controls with optional settings chrome.
+/// Prayer alert notification and sound controls with optional settings chrome.
 class PrayerAdhanSettings extends ConsumerWidget {
   /// Creates [PrayerAdhanSettings].
   const new({this.chrome = SettingsChrome.none, super.key});
@@ -50,73 +50,121 @@ class PrayerAdhanSettings extends ConsumerWidget {
       ),
     );
 
+    final soundControls = LayoutBuilder(
+      builder: (context, constraints) {
+        final soundFields = [
+          _AdhanSoundField(
+            label: l10n.adhanSoundLabel,
+            select: FSelect<AdhanSound>(
+              enabled: ready,
+              contentConstraints: selectPopoverPortalConstraints(context),
+              control: .lifted(
+                value: sound,
+                onChange: (value) {
+                  if (value == null) return;
+                  ref.read(adhanSettingsProvider.notifier).setSound(value);
+                },
+              ),
+              items: {
+                for (final sound in AdhanSound.values)
+                  sound.getLocaleName(l10n): sound,
+              },
+            ),
+            preview: AdhanSoundPreviewButton(
+              sound: sound,
+              label: sound.getLocaleName(l10n),
+            ),
+          ),
+          _AdhanSoundField(
+            label: l10n.iqamahSoundLabel,
+            select: FSelect<IqamahSound>(
+              enabled: ready,
+              contentConstraints: selectPopoverPortalConstraints(context),
+              control: .lifted(
+                value: iqamahSound,
+                onChange: (value) {
+                  if (value == null) return;
+                  ref
+                      .read(adhanSettingsProvider.notifier)
+                      .setIqamahSound(value);
+                },
+              ),
+              items: {
+                for (final sound in IqamahSound.values)
+                  sound.getLocaleName(l10n): sound,
+              },
+            ),
+            preview: IqamahSoundPreviewButton(
+              sound: iqamahSound,
+              label: iqamahSound.getLocaleName(l10n),
+            ),
+          ),
+        ];
+
+        if (constraints.maxWidth < 560) {
+          return Column(
+            spacing: AppSpacing.md,
+            children: soundFields,
+          );
+        }
+
+        return Row(
+          spacing: AppSpacing.lg,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final field in soundFields) Expanded(child: field),
+          ],
+        );
+      },
+    );
+
+    final alertChannels = LayoutBuilder(
+      builder: (context, constraints) {
+        final switchFields = [
+          NonSelectable(
+            child: FSwitch(
+              enabled: ready,
+              value: showAdhanAlert,
+              onChange: (value) => ref
+                  .read(adhanSettingsProvider.notifier)
+                  .setShowAdhanAlert(value: value),
+              label: Text(l10n.adhanShowAlertLabel),
+            ),
+          ),
+          NonSelectable(
+            child: FSwitch(
+              enabled: ready,
+              value: showOsNotification,
+              onChange: (value) => ref
+                  .read(adhanSettingsProvider.notifier)
+                  .setShowOsNotification(value: value),
+              label: Text(l10n.adhanShowOsNotificationLabel),
+            ),
+          ),
+        ];
+
+        if (constraints.maxWidth < 560) {
+          return Column(
+            spacing: AppSpacing.sm,
+            children: switchFields,
+          );
+        }
+
+        return Row(
+          spacing: AppSpacing.lg,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final field in switchFields) Expanded(child: field),
+          ],
+        );
+      },
+    );
+
     final content = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: AppSpacing.lg,
+      spacing: AppSpacing.md,
       children: [
-        SettingsGroup(
-          title: l10n.adhanSoundLabel,
-          child: Row(
-            spacing: AppSpacing.sm,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: FSelect<AdhanSound>(
-                  enabled: ready,
-                  contentConstraints: selectPopoverPortalConstraints(context),
-                  control: .lifted(
-                    value: sound,
-                    onChange: (value) {
-                      if (value == null) return;
-                      ref.read(adhanSettingsProvider.notifier).setSound(value);
-                    },
-                  ),
-                  items: {
-                    for (final sound in AdhanSound.values)
-                      sound.getLocaleName(l10n): sound,
-                  },
-                ),
-              ),
-              AdhanSoundPreviewButton(
-                sound: sound,
-                label: sound.getLocaleName(l10n),
-              ),
-            ],
-          ),
-        ),
-        const FDivider(),
-        SettingsGroup(
-          title: l10n.iqamahSoundLabel,
-          child: Row(
-            spacing: AppSpacing.sm,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: FSelect<IqamahSound>(
-                  enabled: ready,
-                  contentConstraints: selectPopoverPortalConstraints(context),
-                  control: .lifted(
-                    value: iqamahSound,
-                    onChange: (value) {
-                      if (value == null) return;
-                      ref
-                          .read(adhanSettingsProvider.notifier)
-                          .setIqamahSound(value);
-                    },
-                  ),
-                  items: {
-                    for (final sound in IqamahSound.values)
-                      sound.getLocaleName(l10n): sound,
-                  },
-                ),
-              ),
-              IqamahSoundPreviewButton(
-                sound: iqamahSound,
-                label: iqamahSound.getLocaleName(l10n),
-              ),
-            ],
-          ),
-        ),
+        soundControls,
         const FDivider(),
         SettingsGroup(
           title: l10n.adhanVolumeLabel,
@@ -129,31 +177,7 @@ class PrayerAdhanSettings extends ConsumerWidget {
           ),
         ),
         const FDivider(),
-        Column(
-          spacing: AppSpacing.md,
-          children: [
-            NonSelectable(
-              child: FSwitch(
-                enabled: ready,
-                value: showAdhanAlert,
-                onChange: (value) => ref
-                    .read(adhanSettingsProvider.notifier)
-                    .setShowAdhanAlert(value: value),
-                label: Text(l10n.adhanShowAlertLabel),
-              ),
-            ),
-            NonSelectable(
-              child: FSwitch(
-                enabled: ready,
-                value: showOsNotification,
-                onChange: (value) => ref
-                    .read(adhanSettingsProvider.notifier)
-                    .setShowOsNotification(value: value),
-                label: Text(l10n.adhanShowOsNotificationLabel),
-              ),
-            ),
-          ],
-        ),
+        alertChannels,
         const FDivider(),
         SettingsGroup(
           title: l10n.adhanAlertPositionLabel,
@@ -186,6 +210,35 @@ class PrayerAdhanSettings extends ConsumerWidget {
       title: l10n.adhanSectionTitle,
       subtitle: l10n.adhanSectionSubtitle,
       child: content,
+    );
+  }
+}
+
+class _AdhanSoundField extends StatelessWidget {
+  const new({
+    required this.label,
+    required this.select,
+    required this.preview,
+  });
+
+  final String label;
+  final Widget select;
+  final Widget preview;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      spacing: AppSpacing.sm,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: SettingsGroup(
+            title: label,
+            child: select,
+          ),
+        ),
+        preview,
+      ],
     );
   }
 }

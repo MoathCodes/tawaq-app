@@ -152,7 +152,7 @@ class _PeriodTrendBody extends ConsumerWidget {
 }
 
 class _NoPrayerRecordsState extends StatelessWidget {
-  const _NoPrayerRecordsState({
+  const new({
     required this.scope,
     required this.title,
     required this.hint,

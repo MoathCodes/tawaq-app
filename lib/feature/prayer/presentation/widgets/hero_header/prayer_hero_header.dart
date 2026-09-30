@@ -192,7 +192,6 @@ class _HeroCountdownLabel extends ConsumerWidget {
     return SizedBox(
       width: 220,
       child: Column(
-        crossAxisAlignment: .center,
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(

@@ -26,7 +26,7 @@ const _first = Reciter(id: 1, name: 'First', moshaf: [_timed, _untimed]);
 const _second = Reciter(id: 2, name: 'Second', moshaf: [_timed]);
 
 class _Settings extends RecitationSettingsNotifier {
-  _Settings(this.settings);
+  new(this.settings);
 
   final RecitationSettings settings;
 

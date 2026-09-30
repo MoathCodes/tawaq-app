@@ -71,11 +71,11 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
   void setVolume(double volume) =>
       _commit((s) => s.copyWith(volume: volume.clamp(0, 100)), 'Volume');
 
-  /// Sets whether the in-app alert overlay is shown.
+  /// Sets whether the in-app alert overlay is shown for prayer alerts.
   void setShowAdhanAlert({required bool value}) =>
       _commit((s) => s.copyWith(showAdhanAlert: value), 'Show alert');
 
-  /// Sets whether a companion OS notification is shown from tray.
+  /// Sets whether an OS notification is shown for prayer alerts.
   void setShowOsNotification({required bool value}) =>
       _commit((s) => s.copyWith(showOsNotification: value), 'OS notification');
 

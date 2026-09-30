@@ -14,7 +14,7 @@ import 'package:tawaq/theme/theme.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
 class _FakePreview extends AdhanPreview {
-  _FakePreview({this.playGate});
+  new({this.playGate});
 
   Completer<void>? playGate;
   Object? playError;

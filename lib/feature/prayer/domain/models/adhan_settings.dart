@@ -191,7 +191,13 @@ abstract class AdhanSettings with _$AdhanSettings {
     /// maghrib→isha, which can be only ~30 min apart) or nags you about a call
     /// you already prayed an hour ago.
     @Default(20) int catchUpWindowMinutes,
+
+    /// Whether the in-app alert overlay is shown for adhan, iqamah, and
+    /// notify-only prayer-time alerts.
     @Default(true) bool showAdhanAlert,
+
+    /// Whether an operating-system notification is shown for adhan, iqamah,
+    /// and notify-only prayer-time alerts.
     @Default(true) bool showOsNotification,
     @Default(AdhanAlertPosition.topEnd) AdhanAlertPosition alertPosition,
 

@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tawaq/feature/prayer/data/models/prayer_analytics_prefs.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analysis_section.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
@@ -64,7 +64,7 @@ Widget _analysisHost({
 }
 
 class _StaticAnalysisNotifier extends PrayerAnalysisSectionNotifier {
-  _StaticAnalysisNotifier(this.value);
+  new(this.value);
 
   final PrayerAnalysisSectionData value;
 
@@ -79,7 +79,7 @@ class _LoadingAnalysisNotifier extends PrayerAnalysisSectionNotifier {
 }
 
 class _ErrorAnalysisNotifier extends PrayerAnalysisSectionNotifier {
-  _ErrorAnalysisNotifier(this.error, this.stackTrace);
+  new(this.error, this.stackTrace);
 
   final Object error;
   final StackTrace stackTrace;
@@ -89,7 +89,7 @@ class _ErrorAnalysisNotifier extends PrayerAnalysisSectionNotifier {
 }
 
 class _StaticAnalyticsSettingsNotifier extends PrayerAnalyticsSettingsNotifier {
-  _StaticAnalyticsSettingsNotifier(this.period);
+  new(this.period);
 
   final PrayerAnalyticsPeriod period;
 
@@ -251,7 +251,6 @@ void main() {
         analysis: AsyncData(_recordedMissedData()),
         period: PrayerAnalyticsPeriod.monthly,
         locale: const Locale('ar'),
-        palette: AppPalette.neutral,
         themeMode: ThemeMode.dark,
         textScale: 1.3,
       ),

@@ -10,8 +10,8 @@ import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -154,12 +154,12 @@ Widget _baselineGallery({
                 key: key,
                 child: Column(
                   children: [
-                    StaticCard(
-                      padding: const EdgeInsets.all(24),
+                    const StaticCard(
+                      padding: EdgeInsets.all(24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const _BaselineHeader(),
+                          _BaselineHeader(),
                         ],
                       ),
                     ),
@@ -182,7 +182,7 @@ Widget _baselineGallery({
 }
 
 class _BaselineHeader extends StatelessWidget {
-  const _BaselineHeader();
+  const new();
 
   @override
   Widget build(BuildContext context) {
@@ -312,7 +312,6 @@ void main() {
         themeMode: ThemeMode.light,
         palette: AppPalette.manuscript,
         textScale: 1,
-        includeToolbar: true,
         searchOpen: true,
       ),
     );

@@ -494,7 +494,7 @@ class _FortressDuaPreviewFooter extends StatelessWidget {
 }
 
 class _FortressHeaderMeta extends StatelessWidget {
-  const _FortressHeaderMeta({required this.icon, required this.label});
+  const new({required this.icon, required this.label});
 
   final IconData icon;
   final String label;
@@ -523,7 +523,7 @@ class _FortressHeaderMeta extends StatelessWidget {
 }
 
 class _FortressPreviewMeta extends StatelessWidget {
-  const _FortressPreviewMeta({required this.icon, required this.label});
+  const new({required this.icon, required this.label});
 
   final IconData icon;
   final String label;

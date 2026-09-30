@@ -104,7 +104,7 @@ Future<void> main() async {
       throw StateError('Screenshot boundary was not laid out');
     }
     final boundary = renderObject;
-    final image = await boundary.toImage(pixelRatio: 1);
+    final image = await boundary.toImage();
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     if (bytes != null) {
       await File(path).writeAsBytes(bytes.buffer.asUint8List(), flush: true);
@@ -122,7 +122,7 @@ class _HarnessSelectedAyah extends QuranSelectedAyahId {
 }
 
 class _HarnessPage extends StatelessWidget {
-  const _HarnessPage({required this.theme});
+  const new({required this.theme});
 
   final FThemeData theme;
 
@@ -164,7 +164,7 @@ class _HarnessPage extends StatelessWidget {
 }
 
 class _StudyFixture extends StatelessWidget {
-  const _StudyFixture({required this.theme});
+  const new({required this.theme});
 
   final FThemeData theme;
 
@@ -245,7 +245,7 @@ class _StudyFixture extends StatelessWidget {
 }
 
 class _Specimen extends StatelessWidget {
-  const _Specimen({
+  const new({
     required this.label,
     required this.text,
     required this.direction,

@@ -113,7 +113,7 @@ _create() {
       audioInterruptionCoordinatorProvider.overrideWithValue(interruption),
       audioSessionProvider.overrideWith(() => session),
       recitationControllerProvider.overrideWith(() => recitation),
-      adhanSettingsProvider.overrideWith(() => _Settings()),
+      adhanSettingsProvider.overrideWith(_Settings.new),
     ],
   );
   addTearDown(() async {

@@ -20,7 +20,7 @@ import 'package:tawaq/theme/theme_model.dart';
 class _Repository extends Mock implements IQuranRepository {}
 
 class _Controller extends RecitationController {
-  _Controller(this.value);
+  new(this.value);
 
   final RecitationState value;
 
@@ -29,7 +29,7 @@ class _Controller extends RecitationController {
 }
 
 class _Settings extends RecitationSettingsNotifier {
-  _Settings(this.value);
+  new(this.value);
 
   final RecitationSettings value;
 
@@ -41,7 +41,7 @@ class _Settings extends RecitationSettingsNotifier {
 }
 
 class _OpenDialog extends StatefulWidget {
-  const _OpenDialog({required this.initial});
+  const new({required this.initial});
 
   final RangeRepeatInit? initial;
 
@@ -71,11 +71,11 @@ Widget _app({
   Locale locale = const Locale('en'),
 }) {
   final repository = _Repository();
-  when(() => repository.ensureReady()).thenAnswer((_) async {});
-  when(() => repository.getBasmalah()).thenAnswer((_) async => '');
-  when(() => repository.getJuzs()).thenAnswer((_) async => []);
-  when(() => repository.getHizbs()).thenAnswer((_) async => []);
-  when(() => repository.getAllSurahs()).thenAnswer(
+  when(repository.ensureReady).thenAnswer((_) async {});
+  when(repository.getBasmalah).thenAnswer((_) async => '');
+  when(repository.getJuzs).thenAnswer((_) async => []);
+  when(repository.getHizbs).thenAnswer((_) async => []);
+  when(repository.getAllSurahs).thenAnswer(
     (_) async => [
       for (var number = 1; number <= 114; number++)
         Surah(

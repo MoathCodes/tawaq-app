@@ -198,9 +198,9 @@ class QuranMushafPane extends HookConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(child: mushaf),
-            Center(
+            const Center(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(
+                padding: EdgeInsets.fromLTRB(
                   AppSpacing.lg,
                   AppSpacing.xs,
                   AppSpacing.lg,
@@ -209,7 +209,7 @@ class QuranMushafPane extends HookConsumerWidget {
                 // Let the action bar measure the actual reader width. It
                 // applies its own compact threshold, while this full-width
                 // anchor keeps wide labels and the play chevron reachable.
-                child: const SizedBox(
+                child: SizedBox(
                   width: double.infinity,
                   child: AyahSelectionActionsBar(),
                 ),

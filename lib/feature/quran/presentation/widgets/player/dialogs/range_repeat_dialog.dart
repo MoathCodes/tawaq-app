@@ -62,7 +62,7 @@ class RangeRepeatInit {
 /// settings and is only applied when the dialog is opened.
 class RangeRepeatSeed {
   /// Creates a [RangeRepeatSeed].
-  const RangeRepeatSeed({
+  const new({
     required this.seedSurah,
     required this.seedAyah,
     required this.initialPreset,
@@ -599,7 +599,7 @@ class _RangeRepeatDialog extends HookConsumerWidget {
 }
 
 class _RangeRepeatDialogLoading extends StatelessWidget {
-  const _RangeRepeatDialogLoading();
+  const new();
 
   @override
   Widget build(BuildContext context) {
@@ -619,7 +619,7 @@ class _RangeRepeatDialogLoading extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text('Range summary'),
+              const Text('Range summary'),
               const SizedBox(height: AppSpacing.lg),
               Container(height: 36, color: context.theme.colors.secondary),
               const SizedBox(height: AppSpacing.lg),
@@ -635,7 +635,7 @@ class _RangeRepeatDialogLoading extends StatelessWidget {
 }
 
 class _RangeRepeatDialogFailure extends ConsumerWidget {
-  const _RangeRepeatDialogFailure({this.error});
+  const new({this.error});
 
   final String? error;
 

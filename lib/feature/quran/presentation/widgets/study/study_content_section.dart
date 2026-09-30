@@ -299,7 +299,7 @@ class TranslationAccordionSection extends ConsumerWidget {
 /// interface locale or the first character of the translation.
 class TranslationProse extends StatelessWidget {
   /// Creates a translation prose block.
-  const TranslationProse({
+  const new({
     required this.translation,
     required this.source,
     required this.style,

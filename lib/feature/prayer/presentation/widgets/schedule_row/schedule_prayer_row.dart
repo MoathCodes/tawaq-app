@@ -486,6 +486,7 @@ class _ObligatoryAlertTimeSlot extends ConsumerWidget {
 
     return Row(
       mainAxisSize: MainAxisSize.min,
+      spacing: AppSpacing.xs,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,

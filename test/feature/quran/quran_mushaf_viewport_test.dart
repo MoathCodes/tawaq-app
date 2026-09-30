@@ -125,7 +125,7 @@ class _MushafViewportTestRepo implements IQuranRepository {
 }
 
 class _SelectedAyahId extends QuranSelectedAyahId {
-  _SelectedAyahId(this._ayahId);
+  new(this._ayahId);
 
   final int _ayahId;
 

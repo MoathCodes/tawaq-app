@@ -42,7 +42,7 @@
   "adhan": "Adhan",
   "adhanAdjustments": "Adhan adjustments (minutes)",
   "adhanAlertPositionCenter": "Center",
-  "adhanAlertPositionLabel": "Alert position",
+  "adhanAlertPositionLabel": "In-app alert position",
   "adhanAlertPositionTopEnd": "Top right",
   "adhanAlertPositionTopStart": "Top left",
   "adhanAlertTitle": "Adhan — {prayer}",
@@ -112,13 +112,13 @@
       }
     }
   },
-  "adhanSectionSubtitle": "Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.",
-  "adhanSectionTitle": "Adhan",
-  "adhanShowAlertLabel": "Show adhan alert",
-  "adhanShowOsNotificationLabel": "OS notification when hidden in tray",
+  "adhanSectionSubtitle": "Choose adhan and iqamah sounds and how prayer-time alerts appear. The alert menu on the Prayer page decides whether each event is silent, plays sound, or shows a notification.",
+  "adhanSectionTitle": "Prayer alerts",
+  "adhanShowAlertLabel": "Show in-app alert",
+  "adhanShowOsNotificationLabel": "Show OS notification",
   "adhanSoundLabel": "Adhan sound",
   "adhanStop": "Stop",
-  "adhanVolumeLabel": "Adhan volume",
+  "adhanVolumeLabel": "Alert volume (adhan and iqamah)",
   "advancedSettingsTitle": "Advanced Settings",
   "appearance": "Appearance",
   "appearanceSubtitle": "Customize the app's theme and colors.",
@@ -482,7 +482,7 @@
     }
   },
   "iqamahSavedTitle": "Iqamah adjustments saved",
-  "iqamahSoundLabel": "Iqamah call",
+  "iqamahSoundLabel": "Iqamah sound",
   "iqamahSubtitleMessage": "+{iqamahMins} minutes",
   "@iqamahSubtitleMessage": {
     "placeholders": {

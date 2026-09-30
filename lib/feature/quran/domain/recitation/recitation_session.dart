@@ -20,7 +20,7 @@ enum RecitationNativeLifecycle {
 
 /// Framework-independent native playback facts observed by a session.
 class RecitationNativeSnapshot {
-  const RecitationNativeSnapshot({
+  const new({
     required this.lifecycle,
     required this.position,
     required this.duration,
@@ -41,7 +41,7 @@ class RecitationNativeSnapshot {
 
 /// Result of one ordered logical session decision.
 class RecitationSessionDecision {
-  const RecitationSessionDecision({
+  const new({
     this.effects = const [],
     this.abandonsPendingSeek = false,
   });
@@ -58,15 +58,12 @@ class RecitationSessionDecision {
 /// They submit commands or observations here and project [state]; they never
 /// reconcile or mutate logical session state themselves.
 class RecitationSession {
-  RecitationSession({
-    required int Function(int surah) surahAyahCount,
+  new({
+    required this._surahAyahCount,
     RecitationState initialState = const RecitationState(active: true),
-    void Function(RecitationState state)? onStateChanged,
-    void Function(String message)? log,
-  }) : _surahAyahCount = surahAyahCount,
-       _state = initialState,
-       _onStateChanged = onStateChanged,
-       _log = log;
+    this._onStateChanged,
+    this._log,
+  }) : _state = initialState;
 
   final int Function(int surah) _surahAyahCount;
   final void Function(RecitationState state)? _onStateChanged;

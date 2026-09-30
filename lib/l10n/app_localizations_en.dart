@@ -79,7 +79,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adhanAlertPositionCenter => 'Center';
 
   @override
-  String get adhanAlertPositionLabel => 'Alert position';
+  String get adhanAlertPositionLabel => 'In-app alert position';
 
   @override
   String get adhanAlertPositionTopEnd => 'Top right';
@@ -184,17 +184,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adhanSectionSubtitle =>
-      'Desktop adhan alerts and sounds. The app must stay running in the system tray for adhan to play.';
+      'Choose adhan and iqamah sounds and how prayer-time alerts appear. The alert menu on the Prayer page decides whether each event is silent, plays sound, or shows a notification.';
 
   @override
-  String get adhanSectionTitle => 'Adhan';
+  String get adhanSectionTitle => 'Prayer alerts';
 
   @override
-  String get adhanShowAlertLabel => 'Show adhan alert';
+  String get adhanShowAlertLabel => 'Show in-app alert';
 
   @override
-  String get adhanShowOsNotificationLabel =>
-      'OS notification when hidden in tray';
+  String get adhanShowOsNotificationLabel => 'Show OS notification';
 
   @override
   String get adhanSoundLabel => 'Adhan sound';
@@ -203,7 +202,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get adhanStop => 'Stop';
 
   @override
-  String get adhanVolumeLabel => 'Adhan volume';
+  String get adhanVolumeLabel => 'Alert volume (adhan and iqamah)';
 
   @override
   String get advancedSettingsTitle => 'Advanced Settings';
@@ -994,7 +993,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get iqamahSavedTitle => 'Iqamah adjustments saved';
 
   @override
-  String get iqamahSoundLabel => 'Iqamah call';
+  String get iqamahSoundLabel => 'Iqamah sound';
 
   @override
   String iqamahSubtitleMessage(int iqamahMins) {

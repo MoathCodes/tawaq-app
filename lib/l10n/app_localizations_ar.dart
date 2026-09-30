@@ -79,7 +79,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adhanAlertPositionCenter => 'الوسط';
 
   @override
-  String get adhanAlertPositionLabel => 'موضع التنبيه';
+  String get adhanAlertPositionLabel => 'موضع التنبيه داخل التطبيق';
 
   @override
   String get adhanAlertPositionTopEnd => 'أعلى اليمين';
@@ -204,17 +204,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adhanSectionSubtitle =>
-      'تنبيهات وأصوات الأذان على سطح المكتب. يجب أن يبقى التطبيق يعمل في شريط النظام لتشغيل الأذان.';
+      'اختر أصوات الأذان والإقامة وطريقة ظهور تنبيهات أوقات الصلاة. وتحدد قائمة التنبيه في صفحة الصلاة ما إذا كان كل تنبيه صامتًا أو بصوت أو بإشعار.';
 
   @override
-  String get adhanSectionTitle => 'الأذان';
+  String get adhanSectionTitle => 'تنبيهات الصلاة';
 
   @override
-  String get adhanShowAlertLabel => 'إظهار تنبيه الأذان';
+  String get adhanShowAlertLabel => 'إظهار التنبيه داخل التطبيق';
 
   @override
-  String get adhanShowOsNotificationLabel =>
-      'إشعار النظام عند الإخفاء في الشريط';
+  String get adhanShowOsNotificationLabel => 'إظهار إشعار النظام';
 
   @override
   String get adhanSoundLabel => 'صوت الأذان';
@@ -223,7 +222,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get adhanStop => 'إيقاف';
 
   @override
-  String get adhanVolumeLabel => 'مستوى صوت الأذان';
+  String get adhanVolumeLabel => 'مستوى صوت التنبيهات (الأذان والإقامة)';
 
   @override
   String get advancedSettingsTitle => 'إعدادات متقدمة';
@@ -1025,7 +1024,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get iqamahSavedTitle => 'حُفظت إعدادات الإقامة';
 
   @override
-  String get iqamahSoundLabel => 'نداء الإقامة';
+  String get iqamahSoundLabel => 'صوت الإقامة';
 
   @override
   String iqamahSubtitleMessage(int iqamahMins) {
