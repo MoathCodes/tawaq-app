@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/a11y/a11y.dart';
 import 'package:tawaq/core/widgets/scale_step_picker.dart';
 

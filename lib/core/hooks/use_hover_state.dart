@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart' show MouseRegion;
-import 'package:flutter/material.dart' show MouseRegion;
 import 'package:flutter/widgets.dart' show MouseRegion;
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:material_ui/material_ui.dart' show MouseRegion;
 
 /// A record type representing hover state and its setter.
 typedef HoverState = ({

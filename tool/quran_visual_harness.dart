@@ -16,10 +16,10 @@ library;
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
@@ -31,6 +31,7 @@ import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/translation_source_selector.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_content_section.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -85,8 +86,10 @@ Future<void> main() async {
         child: FToaster(
           child: MaterialApp(
             debugShowCheckedModeBanner: false,
+            theme: theme.toApproximateMaterialTheme(),
+            builder: (_, child) => MaterialUiCompatibilityBridge(child: child!),
             locale: const Locale('en'),
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: appLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: _HarnessPage(theme: theme),
           ),

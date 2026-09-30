@@ -18,8 +18,8 @@
 library;
 
 import 'package:flutter/cupertino.dart' show EdgeInsets, SizedBox;
-import 'package:flutter/material.dart' show EdgeInsets, SizedBox;
 import 'package:flutter/widgets.dart' show EdgeInsets, SizedBox;
+import 'package:material_ui/material_ui.dart' show EdgeInsets, SizedBox;
 
 /// Spacing tokens for the application.
 ///

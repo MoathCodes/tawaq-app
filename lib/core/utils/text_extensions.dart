@@ -1,6 +1,6 @@
 // text_extensions.dart
-import 'package:flutter/material.dart';
 import 'package:forui/theme.dart';
+import 'package:material_ui/material_ui.dart';
 // ← adjust to your real import path for FTheme
 
 /// Text styling helpers that apply the app's [FTheme] typography presets to a

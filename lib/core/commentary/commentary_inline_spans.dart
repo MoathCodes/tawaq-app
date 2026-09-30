@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/commentary/commentary_text_styles.dart';
 import 'package:tawaq/core/text/qawl_patterns.dart';
 import 'package:tawaq/core/utils/lru_map.dart';

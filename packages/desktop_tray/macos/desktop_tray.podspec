@@ -12,11 +12,11 @@ Pod::Spec.new do |s|
   s.license          = { :type => 'MIT', :file => '../LICENSE' }
   s.author           = { 'Kurban' => 'dev@kurban.im' }
   s.source           = { :path => '.' }
-  s.source_files     = 'Classes/**/*'
+  s.source_files     = 'desktop_tray/Sources/desktop_tray/**/*.swift'
   s.dependency 'FlutterMacOS'
 
   s.platform = :osx, '10.14'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
-  s.swift_version = '5.0'
+  s.swift_version = '5.9'
 end
 

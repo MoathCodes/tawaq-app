@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart' show FThemeData;
 import 'package:forui/theme.dart' show FThemeData;
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/settings/data/models/app_text_scale.dart';
 import 'package:tawaq/theme/theme_model.dart';
 

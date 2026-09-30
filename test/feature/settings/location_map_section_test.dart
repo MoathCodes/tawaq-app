@@ -1,11 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_map_section.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
@@ -44,7 +45,7 @@ void main() {
           child: FTheme(
             data: theme,
             child: MaterialApp(
-              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              localizationsDelegates: appLocalizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(
                 body: LocationMapContainer(

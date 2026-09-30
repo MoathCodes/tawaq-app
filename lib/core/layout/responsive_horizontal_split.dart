@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 
 /// Builds split or stacked layouts based on [canUseHorizontalSplit].

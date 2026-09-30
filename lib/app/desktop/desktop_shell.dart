@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/app/desktop/alerts/prayer_alert_scheduler_provider.dart';
 import 'package:tawaq/app/desktop/desktop_tray_service.dart';
 import 'package:tawaq/app/desktop/desktop_tray_sync_provider.dart';

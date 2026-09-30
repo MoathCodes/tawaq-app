@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/locale/locale_select_tile_group.dart';
 import 'package:tawaq/feature/onboarding/presentation/widgets/onboarding_rerun_tile.dart';

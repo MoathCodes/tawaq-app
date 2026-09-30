@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
@@ -25,6 +25,7 @@ import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_drawe
 import 'package:tawaq/feature/quran/presentation/widgets/player/recitation_transport.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
@@ -536,7 +537,7 @@ void main() {
           data: theme,
           child: const MaterialApp(
             debugShowCheckedModeBanner: false,
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            localizationsDelegates: appLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: MediaQuery(
               data: MediaQueryData(size: Size(400, 1600)),

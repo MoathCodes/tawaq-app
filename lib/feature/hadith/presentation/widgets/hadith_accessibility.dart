@@ -1,5 +1,5 @@
 import 'package:dorar_hadith/dorar_hadith.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 /// Maximum characters included in narrator snippets for list semantics.

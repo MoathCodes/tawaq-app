@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 
 export 'package:tawaq/core/layout/split_pane_constraints.dart'

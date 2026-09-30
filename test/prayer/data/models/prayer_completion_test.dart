@@ -1,7 +1,7 @@
 import 'package:adhan_dart/adhan_dart.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/presentation/extensions/completion_status_ui.dart';
 

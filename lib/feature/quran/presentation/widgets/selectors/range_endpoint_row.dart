@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_in_surah_select.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/surah_selector.dart';
 import 'package:tawaq/theme/theme.dart';

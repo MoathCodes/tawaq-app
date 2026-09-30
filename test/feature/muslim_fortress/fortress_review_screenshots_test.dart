@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/storage/settings_storage.dart';
@@ -15,6 +15,7 @@ import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortre
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme.dart';
 import 'package:tawaq/theme/theme_model.dart';
@@ -78,7 +79,7 @@ Widget _gallery({
       ),
       child: MaterialApp(
         locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
@@ -143,7 +144,7 @@ Widget _baselineGallery({
       ),
       child: MaterialApp(
         locale: locale,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
@@ -244,12 +245,12 @@ void main() {
     await quranLoader.load();
     final iconLoader = FontLoader('ForuiLucideIcons')
       ..addFont(
-        rootBundle.load('packages/forui_assets/assets/lucide.ttf'),
+        rootBundle.load('packages/forui_lucide/assets/lucide.ttf'),
       );
     await iconLoader.load();
     final packageIconLoader =
-        FontLoader('packages/forui_assets/ForuiLucideIcons')..addFont(
-          rootBundle.load('packages/forui_assets/assets/lucide.ttf'),
+        FontLoader('packages/forui_lucide/ForuiLucideIcons')..addFont(
+          rootBundle.load('packages/forui_lucide/assets/lucide.ttf'),
         );
     await packageIconLoader.load();
   });

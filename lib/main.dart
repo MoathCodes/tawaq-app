@@ -2,11 +2,10 @@
 library;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_driver/driver_extension.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/app/audio_interruption_composition.dart';
 import 'package:tawaq/app/desktop/alerts/adhan_alert_host.dart';
@@ -21,6 +20,7 @@ import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
@@ -60,10 +60,8 @@ class AppBootstrap extends ConsumerWidget {
 
     // Forui 0.24 widgets (FScaffold, FCircularProgress, …) read
     // FAccessibilityScope via FTheme — wrap splash/error shells too.
-    Widget foruiShell({required Widget child}) => FTheme(
-      data: themeapp,
-      child: child,
-    );
+    Widget foruiShell({required Widget child}) =>
+        FTheme(data: themeapp, child: child);
 
     Widget splash() => MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -122,16 +120,15 @@ class TawaqApp extends ConsumerWidget {
       routerConfig: appRouter,
       onGenerateTitle: (ctx) => AppLocalizations.of(ctx)?.appName ?? '',
       localizationsDelegates: const [
-        AppLocalizations.delegate,
+        ...appLocalizationsDelegates,
         FLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
       ],
-      builder: (_, child) => _AppTextScaleScope(
-        child: FToaster(
-          child: _AutoLocationLifecycle(
-            child: AdhanAlertHost(child: child ?? const SizedBox.shrink()),
+      builder: (_, child) => MaterialUiCompatibilityBridge(
+        child: _AppTextScaleScope(
+          child: FToaster(
+            child: _AutoLocationLifecycle(
+              child: AdhanAlertHost(child: child ?? const SizedBox.shrink()),
+            ),
           ),
         ),
       ),

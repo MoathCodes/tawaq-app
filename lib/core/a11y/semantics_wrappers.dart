@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/widgets/merged_action_semantics.dart';
 
 /// Shared accessibility semantics wrappers for feature screens.

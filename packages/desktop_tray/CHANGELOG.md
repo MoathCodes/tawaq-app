@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026.6.25
+
+### Added
+
+- **macOS**: Swift Package Manager (SPM) support for Flutter 3.44+. Adds
+  `macos/desktop_tray/Package.swift` with `FlutterFramework` dependency.
+  CocoaPods builds remain supported via updated podspec paths.
+
+### Changed
+
+- **macOS**: relocated native Swift sources from `macos/Classes/` to
+  `macos/desktop_tray/Sources/desktop_tray/` to align with Flutter's
+  standard SPM plugin layout.
+
 ## 2026.4.19
 
 ### Fixed

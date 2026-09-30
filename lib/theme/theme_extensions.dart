@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/theme/durations.dart';
 import 'package:tawaq/theme/radii.dart';
 import 'package:tawaq/theme/tabs_styles.dart';

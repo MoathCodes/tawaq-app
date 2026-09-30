@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/layout/collapsible_horizontal_split_pane.dart';
 import 'package:tawaq/core/layout/responsive_horizontal_split.dart';

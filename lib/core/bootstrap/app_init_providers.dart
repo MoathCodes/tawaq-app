@@ -1,7 +1,7 @@
 import 'package:dorar_hadith_flutter/dorar_hadith_flutter.dart';
-import 'package:flutter/material.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:local_notifier/local_notifier.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';

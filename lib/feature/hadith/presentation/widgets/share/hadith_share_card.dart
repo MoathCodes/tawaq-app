@@ -1,6 +1,6 @@
 import 'package:dorar_hadith/dorar_hadith.dart';
-import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/hadith/presentation/models/hadith_share_include.dart';
 import 'package:tawaq/theme/theme.dart';

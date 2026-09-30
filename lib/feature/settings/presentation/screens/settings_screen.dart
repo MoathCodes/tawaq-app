@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/centered_viewport_shell.dart';
 import 'package:tawaq/core/layout/lazy_tab_content.dart';
 import 'package:tawaq/core/layout/responsive.dart';
@@ -49,10 +49,15 @@ class SettingsScreen extends HookConsumerWidget {
       showKeyboardShortcuts: showKeyboardShortcuts,
     ).clamp(0, tabs.length - 1);
 
-    final tabController = useTabController(
-      initialLength: tabs.length,
-      initialIndex: initialIndex,
+    final vsync = useSingleTickerProvider();
+    final tabController = useMemoized(
+      () => TabController(
+        length: tabs.length,
+        initialIndex: initialIndex,
+        vsync: vsync,
+      ),
     );
+    useEffect(() => tabController.dispose, [tabController]);
     final tabsStyle = context.theme.tabsStyle;
 
     useEffect(
@@ -95,31 +100,26 @@ class SettingsScreen extends HookConsumerWidget {
       ],
     );
 
-    useEffect(
-      () {
-        void handleTabChanged() {
-          // TabController.index changes near the midpoint of a swipe. Publish
-          // only once the tap animation or drag has actually settled.
-          if (!settingsTabIsSettled(
-            indexIsChanging: tabController.indexIsChanging,
-            offset: tabController.offset,
-          )) {
-            return;
-          }
-          final key = tabs[tabController.index].key;
-          if (tabKey != key && context.mounted) {
-            onTabChanged?.call(key);
-          }
-          ref
-              .read(settingsScreenSettingsProvider.notifier)
-              .setActiveTabKey(key);
+    useEffect(() {
+      void handleTabChanged() {
+        // TabController.index changes near the midpoint of a swipe. Publish
+        // only once the tap animation or drag has actually settled.
+        if (!settingsTabIsSettled(
+          indexIsChanging: tabController.indexIsChanging,
+          offset: tabController.offset,
+        )) {
+          return;
         }
+        final key = tabs[tabController.index].key;
+        if (tabKey != key && context.mounted) {
+          onTabChanged?.call(key);
+        }
+        ref.read(settingsScreenSettingsProvider.notifier).setActiveTabKey(key);
+      }
 
-        tabController.addListener(handleTabChanged);
-        return () => tabController.removeListener(handleTabChanged);
-      },
-      [tabController, tabs, tabKey, onTabChanged],
-    );
+      tabController.addListener(handleTabChanged);
+      return () => tabController.removeListener(handleTabChanged);
+    }, [tabController, tabs, tabKey, onTabChanged]);
 
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.md),
