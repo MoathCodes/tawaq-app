@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/images/app_icon.png" alt="Tawaq app icon" width="128" height="128" />
+</p>
+
 # Tawaq
 
 Tawaq is a desktop Islamic app for prayer times, Quran reading and study, Hadith search, and Hisn al-Muslim. It brings those daily tools together in one calm, focused space.

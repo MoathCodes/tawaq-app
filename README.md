@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/images/app_icon.png" alt="أيقونة تَوَّاق" width="128" height="128" />
+</p>
+
 # تَوَّاق
 
 <div dir="rtl">
