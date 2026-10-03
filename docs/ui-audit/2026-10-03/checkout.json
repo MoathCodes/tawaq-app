@@ -1,0 +1,7 @@
+{
+  "repo": "/home/moath/Projects/tawaq-app",
+  "head": "e9293e32b489c2d5811cdf682f7e872029fa2adf",
+  "branch": "main",
+  "dirty": " M AGENTS.md\n M lib/feature/settings/presentation/widgets/theme/app_theme_selector.dart\n M lib/l10n/app_ar.arb\n M lib/l10n/app_en.arb\n M lib/l10n/app_localizations.dart\n M lib/l10n/app_localizations_ar.dart\n M lib/l10n/app_localizations_en.dart\n M lib/main.dart\n M lib/theme/app_theme_builder.dart\n M lib/theme/custom_themes.dart\n M lib/theme/theme_model.dart\n M test/feature/settings/app_theme_selector_test.dart\n M test/feature/settings/settings_storage_gate_test.dart\n M test/theme/manuscript_theme_contrast_test.dart\n?? .agents/\n?? docs/design/sage/\n?? tool/sage_visual_harness.dart\n",
+  "scope": "Audit only; file GitHub issues with visual evidence. No fixes or PR."
+}
