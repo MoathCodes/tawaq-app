@@ -6,7 +6,7 @@
 
 | 平台          | 底层实现                                         |
 |-------------|----------------------------------------------|
-| **Linux**   | libayatana-appindicator（或旧版 libappindicator） |
+| **Linux**   | StatusNotifierItem + GTK/dbusmenu |
 | **macOS**   | NSStatusBar + NSMenu                         |
 | **Windows** | Win32 Shell_NotifyIcon + GDI+（PNG/JPG/BMP/ICO） |
 
@@ -15,7 +15,7 @@
 ## 功能特性
 
 - 🖨️ 从 Flutter 资源路径设置托盘图标（`.png` / `.jpg` / `.bmp` / `.ico`）
-- 💬 设置鼠标悬停提示文字（Windows / macOS 支持）
+- 💬 设置鼠标悬停提示文字及原生标题
 - 📋 构建右键菜单，支持普通项、分隔线、复选框和嵌套子菜单
 - 🖱️ 通过监听器混入类接收左键、右键及菜单项点击回调
 - 🧩 自动递增的唯一菜单项 ID，无需外部 ID 生成器
@@ -34,17 +34,17 @@ dependencies:
 
 ### Linux 系统依赖
 
-Linux 端需要安装 `libayatana-appindicator3`（推荐）或 `libappindicator3`：
+Tawaq 的 Linux 实现需要 GTK 3 和 `libdbusmenu-gtk3`：
 
 ```bash
 # Ubuntu / Debian
-sudo apt install libayatana-appindicator3-dev
+sudo apt install libdbusmenu-gtk3-dev
 
 # Fedora
-sudo dnf install libayatana-appindicator-gtk3-devel
+sudo dnf install libdbusmenu-gtk3-devel
 
 # Arch
-sudo pacman -S libayatana-appindicator
+sudo pacman -S libdbusmenu-gtk3
 ```
 
 ## 使用方法
@@ -136,7 +136,7 @@ await desktopTray.destroy();
 |---------------------------------------|-------------------------|
 | `checkAvailable()`                    | 检测托盘后端是否可用（仅 Linux 有实际意义） |
 | `setIcon(String assetPath)`           | 从 Flutter 资源路径设置托盘图标    |
-| `setToolTip(String toolTip)`          | 设置悬停提示文字（Linux 上无效）     |
+| `setToolTip(String toolTip)`          | 设置悬停提示文字及 Linux 原生标题     |
 | `setContextMenu(TrayMenu menu)`       | 替换右键上下文菜单               |
 | `popUpContextMenu()`                  | 以编程方式弹出上下文菜单（Linux 上无效） |
 | `destroy()`                           | 移除托盘图标并释放原生资源           |
@@ -155,7 +155,7 @@ await desktopTray.destroy();
 
 ## 平台说明
 
-- **Linux**：AppIndicator 在左键点击时也会显示上下文菜单。`popUpContextMenu()` 无效。AppIndicator API 不支持 Tooltip。新版 libayatana-appindicator 的弃用警告已被静默抑制。
+- **Linux（Tawaq 分支）**：左键激活通过 StatusNotifierItem 触发 `onTrayIconMouseUp()`。右键菜单由托盘宿主显示，`popUpContextMenu()` 仍然无效。提示文字同时更新原生标题；托盘宿主重启后会重新注册。
 - **macOS**：图标数据以 base64 编码发送到原生层，用于构造 `NSImage`。
 - **Windows**：同时支持 `.ico` / `.png` / `.jpg` / `.bmp` / `.gif`。`.ico` 通过 `LoadImage` 加载，其他格式使用 GDI+ 解码并缩放至系统小图标尺寸。若解码失败会抛出 `PlatformException`（code 为 `ICON_LOAD_FAILED`），而不会再造成“有按钮无图标”的情况。
 

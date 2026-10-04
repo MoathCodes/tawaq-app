@@ -7,7 +7,6 @@ import Foundation
 
 import desktop_tray
 import device_info_plus
-import flutter_alone
 import flutter_timezone
 import geolocator_apple
 import irondash_engine_context
@@ -23,7 +22,6 @@ import window_manager
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
   DesktopTrayPlugin.register(with: registry.registrar(forPlugin: "DesktopTrayPlugin"))
   DeviceInfoPlusMacosPlugin.register(with: registry.registrar(forPlugin: "DeviceInfoPlusMacosPlugin"))
-  FlutterAlonePlugin.register(with: registry.registrar(forPlugin: "FlutterAlonePlugin"))
   FlutterTimezonePlugin.register(with: registry.registrar(forPlugin: "FlutterTimezonePlugin"))
   GeolocatorPlugin.register(with: registry.registrar(forPlugin: "GeolocatorPlugin"))
   IrondashEngineContextPlugin.register(with: registry.registrar(forPlugin: "IrondashEngineContextPlugin"))

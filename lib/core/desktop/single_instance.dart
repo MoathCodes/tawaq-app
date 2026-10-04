@@ -1,80 +1,46 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:flutter_alone/flutter_alone.dart';
 import 'package:tawaq/core/utils/platform.dart';
+import 'package:window_manager/window_manager.dart';
 
-/// Stable OS window title used by flutter_alone HWND / window lookup.
-///
-/// Must stay Latin and locale-independent so a second launch can find a
-/// tray-hidden window even when in-app branding uses Arabic `توّاق`.
+/// Locale-independent native desktop window title.
 const kDesktopWindowTitle = 'Tawaq';
 
-const _packageId = 'me.moathdev.tawaq';
-const _lockFileName = 'me.moathdev.tawaq.lock';
-const _linuxSingleInstanceChannel = MethodChannel('tawaq/single_instance');
+const _channel = MethodChannel('tawaq/single_instance');
 
-/// Consumes a Linux reactivation that arrived while Flutter was bootstrapping.
+/// Restores, shows, and focuses the primary window through its native runner.
 ///
-/// The native `GtkApplication` handles later activations directly. This
-/// one-shot query only prevents launch-to-tray initialization from hiding a
-/// window that the user asked to reopen during startup. Channel failures keep
-/// the window visible because hiding it would recreate the original problem.
-Future<bool> takePendingDesktopActivate() async {
-  if (!Platform.isLinux) return false;
-  try {
-    return await _linuxSingleInstanceChannel.invokeMethod<bool>(
-          'takePendingActivation',
-        ) ??
-        false;
-  } on PlatformException {
-    return true;
-  } on MissingPluginException {
-    return true;
-  }
-}
-
-/// Ensures only one desktop instance runs.
-///
-/// Windows and macOS use flutter_alone and exit a duplicate process after it
-/// activates the primary window. Linux is gated earlier by the native
-/// `GtkApplication`, before a second Flutter engine is created.
-///
-/// Duplicate checks are skipped in debug so parallel `flutter run` sessions
-/// and hot restart keep working.
-Future<void> ensureSingleDesktopInstance() async {
+/// The same native operation handles tray activation and duplicate launches.
+/// Runners acquire instance ownership before creating a Flutter engine in
+/// profile/release builds; debug builds still allow parallel development.
+Future<void> activateDesktopWindow() async {
   if (!isDesktopPlatform) return;
+  await _channel.invokeMethod<void>('activate');
+}
 
-  final FlutterAloneConfig config;
-  if (Platform.isWindows) {
-    config = FlutterAloneConfig.forWindows(
-      windowsConfig: const DefaultWindowsMutexConfig(
-        packageId: _packageId,
-        appName: kDesktopWindowTitle,
-      ),
-      windowConfig: const WindowConfig(windowTitle: kDesktopWindowTitle),
-      messageConfig: const EnMessageConfig(showMessageBox: false),
-    );
-  } else if (Platform.isMacOS) {
-    config = FlutterAloneConfig.forMacOS(
-      macOSConfig: MacOSConfig(lockFileName: _lockFileName),
-      windowConfig: const WindowConfig(windowTitle: kDesktopWindowTitle),
-      messageConfig: const EnMessageConfig(showMessageBox: false),
-    );
-  } else {
-    // Linux uniqueness and activation are owned by GtkApplication in the
-    // native runner, before Dart starts.
-    return;
-  }
-
-  if (!await FlutterAlone.instance.checkAndRun(config: config)) {
-    exit(0);
+/// Completes startup visibility without losing a concurrent reopen request.
+///
+/// Native runners serialize the launch-to-tray decision with OS activation.
+/// An activation received before this call keeps the window visible. If the
+/// channel is unavailable, keep a visible recovery path rather than hide.
+Future<void> completeDesktopActivationBootstrap({
+  required bool launchHidden,
+}) async {
+  if (!isDesktopPlatform) return;
+  try {
+    await _channel.invokeMethod<void>('completeBootstrap', {
+      'launchHidden': launchHidden,
+    });
+  } on PlatformException {
+    await _showRecoveryWindow();
+  } on MissingPluginException {
+    await _showRecoveryWindow();
   }
 }
 
-/// Releases the Windows or macOS duplicate-instance guard during real quit.
-Future<void> disposeSingleDesktopInstance() async {
-  if (Platform.isWindows || Platform.isMacOS) {
-    await FlutterAlone.instance.dispose();
-  }
+Future<void> _showRecoveryWindow() async {
+  if (Platform.isLinux) await windowManager.restore();
+  await windowManager.show();
+  await windowManager.focus();
 }

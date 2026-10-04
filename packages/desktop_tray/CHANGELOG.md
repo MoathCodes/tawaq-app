@@ -1,5 +1,12 @@
 # Changelog
 
+## Tawaq local changes
+
+- Linux primary activation reaches `onTrayIconMouseUp` through a direct StatusNotifierItem export. The GTK/dbusmenu context menu retains its lifetime and live-update fixes.
+- Linux tooltip text updates the native title. Tray registration recovers when the host restarts, and destruction releases exports and menus.
+- Windows double-click activation reaches the same completion callback.
+- Native Linux contract tests and Dart event/cleanup regressions cover the fork.
+
 ## 2026.6.25
 
 ### Added

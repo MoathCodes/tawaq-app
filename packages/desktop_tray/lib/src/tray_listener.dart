@@ -9,6 +9,8 @@ abstract mixin class DesktopTrayListener {
   void onTrayIconMouseDown() {}
 
   /// Left mouse button released on the tray icon.
+  ///
+  /// Linux maps StatusNotifierItem primary activation to this callback.
   void onTrayIconMouseUp() {}
 
   /// Right mouse button pressed on the tray icon.

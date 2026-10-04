@@ -1,8 +1,7 @@
-import 'dart:io';
-
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/app/desktop/desktop_shutdown.dart';
 import 'package:tawaq/app/desktop/desktop_tray_service.dart';
+import 'package:tawaq/core/desktop/single_instance.dart';
 import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/settings/presentation/provider/desktop_settings_provider.dart';
@@ -22,6 +21,7 @@ class DesktopWindowController {
   new(this._ref);
 
   final Ref _ref;
+  Future<void>? _activation;
 
   /// Hides or quits depending on persisted desktop settings.
   Future<void> requestClose() async {
@@ -68,12 +68,20 @@ class DesktopWindowController {
 
   /// Shows and focuses the main window.
   Future<void> showMainWindow() async {
-    // Linux GTK may treat show() after hide as minimize (window_manager#580).
-    if (Platform.isLinux) {
-      await windowManager.restore();
+    // Double-clicks and repeated launcher requests share one in-flight action.
+    final pending = _activation;
+    if (pending != null) return await pending;
+    final activation = _showMainWindow();
+    _activation = activation;
+    try {
+      await activation;
+    } finally {
+      _activation = null;
     }
-    await windowManager.show();
-    await windowManager.focus();
+  }
+
+  Future<void> _showMainWindow() async {
+    await activateDesktopWindow();
     await _ref.read(nativeWindowStateProvider.notifier).refresh();
   }
 

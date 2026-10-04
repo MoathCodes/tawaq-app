@@ -27,7 +27,7 @@ Summary:        Tawaq — Prayer times, Quran, Hadith, and Athkar
 License:        MIT
 URL:            https://github.com/MoathCodes/tawaq-app
 AutoReqProv:    no
-Requires:       gtk3, (libayatana-appindicator or libayatana-appindicator-gtk3 or libappindicator-gtk3), libnotify, mpv
+Requires:       gtk3, libdbusmenu-gtk3, libnotify, mpv
 
 %description
 An all-in-one Islamic desktop companion with prayer times,

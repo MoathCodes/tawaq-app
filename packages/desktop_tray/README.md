@@ -6,7 +6,7 @@ Built with zero third-party Dart dependencies — only native platform APIs:
 
 | Platform    | Backend                                             |
 |-------------|-----------------------------------------------------|
-| **Linux**   | libayatana-appindicator (or legacy libappindicator)  |
+| **Linux**   | StatusNotifierItem + GTK/dbusmenu  |
 | **macOS**   | NSStatusBar + NSMenu                                |
 | **Windows** | Win32 Shell_NotifyIcon + GDI+ (PNG/JPG/BMP/ICO)     |
 
@@ -15,7 +15,7 @@ Built with zero third-party Dart dependencies — only native platform APIs:
 ## Features
 
 - 🖨️ Set a tray icon from Flutter asset paths (`.png` / `.jpg` / `.bmp` / `.ico`)
-- 💬 Set a hover tooltip (supported on Windows and macOS)
+- 💬 Set a hover tooltip and native title
 - 📋 Build context menus with normal items, separators, checkboxes, and nested submenus
 - 🖱️ Receive left-click, right-click, and menu-item-click callbacks via a listener mixin
 - 🧩 Unique auto-incremented item IDs — no external ID generators needed
@@ -35,17 +35,17 @@ dependencies:
 
 ### Linux System Dependencies
 
-The Linux implementation requires `libayatana-appindicator3` (preferred) or `libappindicator3`:
+The Tawaq Linux implementation requires GTK 3 and `libdbusmenu-gtk3`:
 
 ```bash
 # Ubuntu / Debian
-sudo apt install libayatana-appindicator3-dev
+sudo apt install libdbusmenu-gtk3-dev
 
 # Fedora
-sudo dnf install libayatana-appindicator-gtk3-devel
+sudo dnf install libdbusmenu-gtk3-devel
 
 # Arch
-sudo pacman -S libayatana-appindicator
+sudo pacman -S libdbusmenu-gtk3
 ```
 
 ## Usage
@@ -137,7 +137,7 @@ await desktopTray.destroy();
 |---------------------------------------|---------------------------------------------------------|
 | `checkAvailable()`                    | Probe the tray backend (Linux-only; `true` elsewhere)   |
 | `setIcon(String assetPath)`           | Set tray icon from a Flutter asset path                 |
-| `setToolTip(String toolTip)`          | Set hover tooltip text (no-op on Linux)                 |
+| `setToolTip(String toolTip)`          | Set hover tooltip text and Linux native title                 |
 | `setContextMenu(TrayMenu menu)`       | Replace the right-click context menu                    |
 | `popUpContextMenu()`                  | Programmatically open the context menu (no-op on Linux) |
 | `destroy()`                           | Remove the tray icon and release native resources       |
@@ -156,7 +156,7 @@ await desktopTray.destroy();
 
 ## Platform Notes
 
-- **Linux**: AppIndicator always shows the context menu on left-click. `popUpContextMenu()` is a no-op. Tooltip is not supported by the AppIndicator API. The deprecation warning from newer versions of libayatana-appindicator is silently suppressed.
+- **Linux (Tawaq fork)**: StatusNotifierItem `Activate` maps to `onTrayIconMouseUp`. `ItemIsMenu` is false, so primary activation and the right-click menu are distinct. The tray host renders the exported GTK/dbusmenu menu; `popUpContextMenu()` remains a no-op. Tooltip text also updates the native title. Registration is renewed when the tray host restarts.
 - **macOS**: Icon data is sent as base64 to the native layer for `NSImage` construction.
 - **Windows**: `.ico`, `.png`, `.jpg`, `.bmp`, and `.gif` are all supported. `.ico` is loaded via `LoadImage`; other formats are decoded by GDI+ and scaled to the system small-icon size. If the file cannot be decoded the plugin throws a `PlatformException` with code `ICON_LOAD_FAILED` instead of registering an empty tray slot.
 
@@ -167,3 +167,15 @@ A complete demo covering every public API lives in [`example/`](example). See [e
 ## License
 
 See [LICENSE](LICENSE).
+
+
+## Tawaq fork validation
+
+Run `fvm flutter analyze --no-fatal-infos` and `fvm flutter test` from this package directory.
+On Linux with a desktop session, GTK/dbusmenu development files, and Python GObject bindings, run:
+
+```bash
+bash linux/test/run.sh /absolute/path/to/tray_icon.png
+```
+
+The native test uses a private session bus to check activation, menu selection and live updates, tray-host restart, and cleanup.

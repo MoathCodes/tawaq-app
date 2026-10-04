@@ -19,7 +19,12 @@ analyzer:
     invalid_annotation_target: ignore
 
 plugins:
-  riverpod_lint: 3.1.9
+  riverpod_lint:
+    version: 3.1.9
+    diagnostics:
+      # App-lived coordinators intentionally consume shorter-lived providers.
+      # Their watches/listeners own the lifetime of those dependencies.
+      only_use_keep_alive_inside_keep_alive: false
 
 linter:
   # The lint rules applied to this project can be customized in the

@@ -6,7 +6,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/app/desktop/desktop_shutdown.dart';
 import 'package:tawaq/app/desktop/desktop_window_controller.dart';
 import 'package:tawaq/app/desktop/tray_menu.dart';
-import 'package:tawaq/core/desktop/window_state_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
 
@@ -29,6 +28,7 @@ class DesktopTrayService with DesktopTrayListener {
 
   final Ref _ref;
   bool _initialized = false;
+  Future<void>? _initialization;
   String? _lastTooltip;
 
   /// Whether the tray backend is active.
@@ -39,7 +39,18 @@ class DesktopTrayService with DesktopTrayListener {
   /// Menu content is applied separately via [applyMenu].
   Future<void> ensureInitialized() async {
     if (!isDesktopPlatform || _initialized) return;
+    final pending = _initialization;
+    if (pending != null) return await pending;
+    final initialization = _initialize();
+    _initialization = initialization;
+    try {
+      await initialization;
+    } finally {
+      _initialization = null;
+    }
+  }
 
+  Future<void> _initialize() async {
     final log = _ref.read(loggerProvider);
     final available = await desktopTray.checkAvailable();
     if (!available) {
@@ -50,9 +61,19 @@ class DesktopTrayService with DesktopTrayListener {
     }
 
     desktopTray.addListener(this);
-    await desktopTray.setIcon('assets/images/tray_icon.png');
-    await desktopTray.setToolTip('Tawaq');
-    _initialized = true;
+    try {
+      await desktopTray.setIcon('assets/images/tray_icon.png');
+      await desktopTray.setToolTip('Tawaq');
+      _initialized = true;
+    } on Exception catch (error, stackTrace) {
+      desktopTray.removeListener(this);
+      await desktopTray.destroy();
+      log.w(
+        '[DesktopTrayService] Tray initialization failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   /// Applies the tray context menu.
@@ -76,33 +97,13 @@ class DesktopTrayService with DesktopTrayListener {
   }
 
   @override
-  Future<void> onTrayIconMouseDown() async {
-    // Intentionally empty: hide-on-down + show-on-up caused a visible flicker
-    // on Windows/macOS. Toggle happens once on mouse up instead.
-  }
-
-  @override
   void onTrayIconMouseUp() {
-    // Linux (AppIndicator) opens the menu natively; only Windows/macOS need a
-    // manual response. Left-click toggles the main window.
-    if (Platform.isLinux) return;
-    unawaited(_toggleMainWindow());
-  }
-
-  Future<void> _toggleMainWindow() async {
-    final visible = _ref.read(nativeWindowStateProvider).value?.visible ?? true;
-    final controller = _ref.read(desktopWindowControllerProvider);
-    if (visible) {
-      await controller.hideMainWindow();
-    } else {
-      await controller.showMainWindow();
-    }
+    unawaited(_ref.read(desktopWindowControllerProvider).showMainWindow());
   }
 
   @override
   void onTrayIconRightMouseUp() {
-    // Windows/macOS only: the plugin fires the event but does not auto-open
-    // the context menu, so request it explicitly. (macOS uses performClick.)
+    // Linux panels display the exported dbusmenu themselves.
     if (Platform.isLinux) return;
     unawaited(desktopTray.popUpContextMenu());
   }
@@ -120,9 +121,11 @@ class DesktopTrayService with DesktopTrayListener {
 
   /// Removes tray icon and listener.
   Future<void> dispose() async {
+    await _initialization;
     if (!_initialized) return;
     desktopTray.removeListener(this);
     await desktopTray.destroy();
     _initialized = false;
+    _lastTooltip = null;
   }
 }

@@ -4,7 +4,6 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   desktop_tray
-  flutter_alone
   flutter_timezone
   irondash_engine_context
   local_notifier

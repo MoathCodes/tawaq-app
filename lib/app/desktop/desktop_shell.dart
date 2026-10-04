@@ -60,17 +60,12 @@ class _DesktopShellState extends ConsumerState<DesktopShell>
       launchHidden = tray.isAvailable;
     }
 
-    if (launchHidden) {
-      await windowManager.hide();
-      if (await takePendingDesktopActivate()) {
-        await ref.read(desktopWindowControllerProvider).showMainWindow();
-      } else {
-        await ref.read(nativeWindowStateProvider.notifier).refresh();
-      }
-    } else {
-      await windowManager.show();
-      await ref.read(nativeWindowStateProvider.notifier).refresh();
-    }
+    if (!mounted) return;
+    // Native runners apply this decision atomically with launcher activation.
+    // A reopen received during hydration always wins over launch-to-tray.
+    await completeDesktopActivationBootstrap(launchHidden: launchHidden);
+    if (!mounted) return;
+    await ref.read(nativeWindowStateProvider.notifier).refresh();
   }
 
   @override
