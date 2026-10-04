@@ -3,6 +3,8 @@
 
 #include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
+#include <flutter/method_channel.h>
+#include <flutter/encodable_value.h>
 
 #include <memory>
 
@@ -15,6 +17,8 @@ class FlutterWindow : public Win32Window {
   explicit FlutterWindow(const flutter::DartProject& project);
   virtual ~FlutterWindow();
 
+  void ActivateMainWindow();
+
  protected:
   // Win32Window:
   bool OnCreate() override;
@@ -23,6 +27,11 @@ class FlutterWindow : public Win32Window {
                          LPARAM const lparam) noexcept override;
 
  private:
+  bool bootstrap_complete_ = false;
+  bool pending_activation_ = false;
+  std::unique_ptr<flutter::MethodChannel<flutter::EncodableValue>>
+      activation_channel_;
+
   // The project to run.
   flutter::DartProject project_;
 

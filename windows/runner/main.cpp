@@ -4,9 +4,14 @@
 
 #include "flutter_window.h"
 #include "utils.h"
+#include "single_instance.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
+  SingleInstance single_instance;
+  if (single_instance.failed()) return EXIT_FAILURE;
+  if (!single_instance.is_primary()) return EXIT_SUCCESS;
+
   // Attach to console when present (e.g., 'flutter run') or create a
   // new console when running with a debugger.
   if (!::AttachConsole(ATTACH_PARENT_PROCESS) && ::IsDebuggerPresent()) {
@@ -33,9 +38,25 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   window.SetQuitOnClose(true);
 
   ::MSG msg;
-  while (::GetMessage(&msg, nullptr, 0, 0)) {
-    ::TranslateMessage(&msg);
-    ::DispatchMessage(&msg);
+  bool running = true;
+  const HANDLE activation = single_instance.activation_event();
+  while (running) {
+    const DWORD count = activation == nullptr ? 0 : 1;
+    const DWORD result = MsgWaitForMultipleObjectsEx(
+        count, count == 0 ? nullptr : &activation, INFINITE, QS_ALLINPUT,
+        MWMO_INPUTAVAILABLE);
+    if (result == WAIT_FAILED) return EXIT_FAILURE;
+    if (count != 0 && result == WAIT_OBJECT_0) {
+      window.ActivateMainWindow();
+    }
+    while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
+      if (msg.message == WM_QUIT) {
+        running = false;
+        break;
+      }
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
   }
 
   ::CoUninitialize();

@@ -12,12 +12,21 @@ struct _MyApplication {
   char** dart_entrypoint_arguments;
   FlMethodChannel* single_instance_channel;
   gboolean pending_activation;
+  gboolean bootstrap_complete;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
 static constexpr char kSingleInstanceChannel[] = "tawaq/single_instance";
-static constexpr char kTakePendingActivation[] = "takePendingActivation";
+static void activate_main_window(MyApplication* self) {
+  if (!self->bootstrap_complete) self->pending_activation = TRUE;
+  GList* windows = gtk_application_get_windows(GTK_APPLICATION(self));
+  if (windows == nullptr) return;
+  GtkWindow* window = GTK_WINDOW(windows->data);
+  gtk_widget_show(GTK_WIDGET(window));
+  gtk_window_deiconify(window);
+  gtk_window_present(window);
+}
 
 static void single_instance_method_call_cb(FlMethodChannel* channel,
                                            FlMethodCall* method_call,
@@ -27,11 +36,30 @@ static void single_instance_method_call_cb(FlMethodChannel* channel,
   const gchar* method = fl_method_call_get_name(method_call);
   g_autoptr(FlMethodResponse) response = nullptr;
 
-  if (g_strcmp0(method, kTakePendingActivation) == 0) {
-    const gboolean pending = self->pending_activation;
-    self->pending_activation = FALSE;
-    g_autoptr(FlValue) result = fl_value_new_bool(pending);
-    response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+  if (g_strcmp0(method, "activate") == 0) {
+    activate_main_window(self);
+    response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
+  } else if (g_strcmp0(method, "completeBootstrap") == 0) {
+    FlValue* args = fl_method_call_get_args(method_call);
+    FlValue* hidden = args != nullptr && fl_value_get_type(args) == FL_VALUE_TYPE_MAP
+                          ? fl_value_lookup_string(args, "launchHidden")
+                          : nullptr;
+    if (hidden == nullptr || fl_value_get_type(hidden) != FL_VALUE_TYPE_BOOL) {
+      response = FL_METHOD_RESPONSE(fl_method_error_response_new(
+          "INVALID_ARGUMENT", "launchHidden must be a bool", nullptr));
+    } else {
+      if (!self->bootstrap_complete) {
+        self->bootstrap_complete = TRUE;
+        if (fl_value_get_bool(hidden) && !self->pending_activation) {
+          GList* windows = gtk_application_get_windows(GTK_APPLICATION(self));
+          if (windows != nullptr) gtk_widget_hide(GTK_WIDGET(windows->data));
+        } else {
+          activate_main_window(self);
+        }
+        self->pending_activation = FALSE;
+      }
+      response = FL_METHOD_RESPONSE(fl_method_success_response_new(nullptr));
+    }
   } else {
     response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
   }
@@ -50,11 +78,7 @@ static void my_application_activate(GApplication* application) {
   // second engine. GtkApplication also forwards launcher activation metadata,
   // allowing the compositor to treat this as a user-requested focus change.
   if (windows != nullptr) {
-    self->pending_activation = TRUE;
-    GtkWindow* existing_window = GTK_WINDOW(windows->data);
-    gtk_widget_show(GTK_WIDGET(existing_window));
-    gtk_window_deiconify(existing_window);
-    gtk_window_present(existing_window);
+    activate_main_window(self);
     return;
   }
 
@@ -166,6 +190,7 @@ static void my_application_class_init(MyApplicationClass* klass) {
 static void my_application_init(MyApplication* self) {
   self->single_instance_channel = nullptr;
   self->pending_activation = FALSE;
+  self->bootstrap_complete = FALSE;
 }
 
 MyApplication* my_application_new() {

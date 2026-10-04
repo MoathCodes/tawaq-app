@@ -98,13 +98,12 @@ class DesktopTray {
     await _channel.invokeMethod<void>('setIcon', arguments);
   }
 
-  /// Set the hover tooltip text. On Linux this is a safe no-op.
+  /// Set the hover tooltip text (also the StatusNotifierItem title on Linux).
   Future<void> setToolTip(String toolTip) async {
     await _channel.invokeMethod<void>('setToolTip', {'toolTip': toolTip});
   }
 
-  /// Replace the context menu displayed on right-click (or left-click on
-  /// Linux AppIndicator).
+  /// Replace the context menu displayed on right-click.
   Future<void> setContextMenu(TrayMenu menu) async {
     _menu = menu;
     await _channel.invokeMethod<void>('setContextMenu', {'menu': menu.toJson()});
@@ -112,7 +111,7 @@ class DesktopTray {
 
   /// Programmatically open the context menu at the current cursor position.
   ///
-  /// On Linux this is a no-op because AppIndicator natively shows the menu.
+  /// On Linux this is a no-op because the tray host renders the exported menu.
   Future<void> popUpContextMenu() async {
     await _channel.invokeMethod<void>('popUpContextMenu');
   }

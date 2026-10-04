@@ -69,8 +69,8 @@ void desktopTraySync(Ref ref) {
     final windowVisible =
         ref.read(nativeWindowStateProvider).value?.visible ?? true;
     final alertActive = ref.read(prayerAlertSessionStateProvider) != null;
-    // Surface next prayer as a header row (the only prayer hint on Linux, which
-    // has no tray tooltip). Suppress when there is nothing but the app name.
+    // Surface next prayer in the menu as well as the native tooltip/title.
+    // Suppress the header when there is nothing but the app name.
     final tooltip = ref.read(trayTooltipTextProvider);
     final header = tooltip == l10n.appName ? null : tooltip;
     await service.applyMenu(

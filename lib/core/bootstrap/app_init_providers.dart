@@ -46,8 +46,7 @@ Future<void> desktopShellInit(Ref ref) async {
     ),
   );
   await windowManager.setMinimumSize(kDesktopMinimumWindowSize);
-  // Pin a locale-independent title so flutter_alone can find the Windows
-  // HWND. Linux activation is handled by the native GtkApplication.
+  // Keep native branding stable across locale changes.
   await windowManager.setTitle(kDesktopWindowTitle);
 }
 

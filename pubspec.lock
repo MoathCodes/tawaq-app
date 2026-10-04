@@ -362,14 +362,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_alone:
-    dependency: "direct main"
-    description:
-      name: flutter_alone
-      sha256: "4db70e3bd44ade29e46414c8aced7ff1daddd199eb20e0a17f79f8df260ddf1a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.1.0"
   flutter_animate:
     dependency: "direct main"
     description:
