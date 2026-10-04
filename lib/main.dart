@@ -12,7 +12,6 @@ import 'package:tawaq/app/desktop/alerts/adhan_alert_host.dart';
 import 'package:tawaq/app/desktop/desktop_shell.dart';
 import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
-import 'package:tawaq/core/desktop/single_instance.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/widgets/tawaq_scroll_behavior.dart';
@@ -31,7 +30,6 @@ Future<void> main() async {
   } else {
     WidgetsFlutterBinding.ensureInitialized();
   }
-  await ensureSingleDesktopInstance();
   await MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq');
   await initFileLogging();
   tz.initializeTimeZones();

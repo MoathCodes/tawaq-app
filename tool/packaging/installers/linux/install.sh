@@ -72,19 +72,19 @@ package_for_library() {
   case "$library" in
     libgtk-3.so.0)
       case "$manager" in apt) printf 'libgtk-3-0\n' ;; *) printf 'gtk3\n' ;; esac ;;
-    libayatana-appindicator3.so.1)
+    libdbusmenu-gtk3.so.4)
       case "$manager" in
-        apt) printf 'libayatana-appindicator3-1\n' ;;
-        dnf) printf 'libayatana-appindicator-gtk3\n' ;;
-        pacman) printf 'libayatana-appindicator\n' ;;
-        zypper) printf 'libayatana-appindicator3-1\n' ;;
+        apt) printf 'libdbusmenu-gtk3-4\n' ;;
+        dnf) printf 'libdbusmenu-gtk3\n' ;;
+        pacman) printf 'libdbusmenu-gtk3\n' ;;
+        zypper) printf 'libdbusmenu-gtk3-4\n' ;;
       esac ;;
-    libappindicator3.so.1)
+    libdbusmenu-glib.so.4)
       case "$manager" in
-        apt) printf 'libappindicator3-1\n' ;;
-        dnf) printf 'libappindicator-gtk3\n' ;;
-        pacman) printf 'libappindicator-gtk3\n' ;;
-        zypper) printf 'libappindicator3-1\n' ;;
+        apt) printf 'libdbusmenu-glib4\n' ;;
+        dnf) printf 'libdbusmenu\n' ;;
+        pacman) printf 'libdbusmenu-glib\n' ;;
+        zypper) printf 'libdbusmenu-glib4\n' ;;
       esac ;;
     libnotify.so.4)
       case "$manager" in apt) printf 'libnotify4\n' ;; *) printf 'libnotify\n' ;; esac ;;

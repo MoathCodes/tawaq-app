@@ -54,7 +54,7 @@ Version: ${VERSION}-${BUILD_NUMBER}
 Section: utils
 Priority: optional
 Architecture: $ARCH
-Depends: libgtk-3-0, libayatana-appindicator3-1 | libappindicator3-1, libnotify4, mpv
+Depends: libgtk-3-0, libdbusmenu-gtk3-4, libnotify4, mpv
 Maintainer: Moath <moath@moathdev.me>
 Description: Tawaq — Prayer times, Quran, Hadith, and Athkar
  An all-in-one Islamic desktop companion with prayer times,

@@ -1,6 +1,7 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <flutter/standard_method_codec.h>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -27,6 +28,41 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
+  activation_channel_ =
+      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+          flutter_controller_->engine()->messenger(), "tawaq/single_instance",
+          &flutter::StandardMethodCodec::GetInstance());
+  activation_channel_->SetMethodCallHandler(
+      [this](const auto& call, auto result) {
+        if (call.method_name() == "activate") {
+          ActivateMainWindow();
+          result->Success();
+        } else if (call.method_name() == "completeBootstrap") {
+          const auto* args = std::get_if<flutter::EncodableMap>(call.arguments());
+          const bool* hidden = nullptr;
+          if (args != nullptr) {
+            auto it = args->find(flutter::EncodableValue("launchHidden"));
+            if (it != args->end()) hidden = std::get_if<bool>(&it->second);
+          }
+          if (hidden == nullptr) {
+            result->Error("INVALID_ARGUMENT", "launchHidden must be a bool");
+            return;
+          }
+          if (!bootstrap_complete_) {
+            bootstrap_complete_ = true;
+            if (*hidden && !pending_activation_) {
+              ShowWindow(GetHandle(), SW_HIDE);
+            } else {
+              ActivateMainWindow();
+            }
+            pending_activation_ = false;
+          }
+          result->Success();
+        } else {
+          result->NotImplemented();
+        }
+      });
+
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
     this->Show();
   });
@@ -40,6 +76,7 @@ bool FlutterWindow::OnCreate() {
 }
 
 void FlutterWindow::OnDestroy() {
+  activation_channel_ = nullptr;
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -68,4 +105,17 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   return Win32Window::MessageHandler(hwnd, message, wparam, lparam);
+}
+
+void FlutterWindow::ActivateMainWindow() {
+  if (!bootstrap_complete_) pending_activation_ = true;
+  HWND window = GetHandle();
+  if (IsIconic(window)) {
+    ShowWindow(window, SW_RESTORE);
+  } else {
+    ShowWindow(window, SW_SHOW);
+  }
+  SetWindowPos(window, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+  SetForegroundWindow(window);
+  SetFocus(flutter_controller_->view()->GetNativeWindow());
 }

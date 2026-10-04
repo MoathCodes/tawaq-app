@@ -1,24 +1,6 @@
-// ---------------------------------------------------------------------------
-// desktop_tray – Linux native implementation
-//
-// Uses libayatana-appindicator (or legacy libappindicator) with GtkMenu.
-// The deprecation g_warning() from newer libayatana-appindicator versions
-// is silently suppressed via a GLib log handler — no output to stderr.
-//
-// Three design rules prevent "corrupted size vs. prev_size" heap corruption
-// from libdbusmenu:
-//
-//   1.  The GtkMenu is created once and NEVER replaced.  Only its children
-//       are swapped when the Dart side calls setContextMenu.
-//
-//   2.  app_indicator_set_menu() is re-called on every setContextMenu (tawaq
-//       local patch) so live label/checkbox updates propagate to the dbusmenu
-//       host. The plugin keeps a sunk ref on g_menu so the unref inside
-//       set_menu never destroys our static menu pointer.
-//
-//   3.  Old GtkMenuItems are removed from the container, ref-counted, and
-//       queued for deferred destruction via g_idle_add().
-// ---------------------------------------------------------------------------
+// Linux StatusNotifierItem activation with a GTK/dbusmenu context menu.
+// Keep one sunk GtkMenu and defer removed widget destruction to preserve the
+// existing libdbusmenu lifetime and live-update fixes.
 
 #include "include/desktop_tray/desktop_tray_plugin.h"
 
@@ -26,11 +8,10 @@
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 
-#ifdef HAVE_AYATANA
-#include <libayatana-appindicator/app-indicator.h>
-#else
-#include <libappindicator/app-indicator.h>
-#endif
+#include <libdbusmenu-glib/server.h>
+#include <libdbusmenu-gtk/parser.h>
+#include <memory>
+#include "status_notifier_item.h"
 
 #include <cstring>
 
@@ -52,70 +33,15 @@ G_DEFINE_TYPE(DesktopTrayPlugin, desktop_tray_plugin, g_object_get_type())
 
 static DesktopTrayPlugin* g_plugin = nullptr;
 
-static AppIndicator* g_indicator = nullptr;
+static std::unique_ptr<StatusNotifierItem> g_item;
+static DbusmenuServer* g_menu_server = nullptr;
 static GtkWidget*    g_menu      = nullptr;
 static gchar*        g_stashed_title = nullptr;
 
-static bool g_tray_unavailable = false;
 
 // Orphaned widgets awaiting deferred destruction.
 static GList* g_orphans       = nullptr;
 static bool   g_flush_pending = false;
-
-// ----- GLib log handler: completely suppress appindicator warnings ----------
-
-// libayatana-appindicator emits a deprecation g_warning() at construction.
-// This handler silently swallows it so it never appears on stderr.
-static void silent_log_handler(const gchar* /*log_domain*/,
-                               GLogLevelFlags /*log_level*/,
-                               const gchar* /*message*/,
-                               gpointer /*user_data*/) {
-  // Intentionally empty — suppress all messages from this domain.
-}
-
-// ----- D-Bus availability check ---------------------------------------------
-
-static gboolean is_status_notifier_available() {
-  GError* error = nullptr;
-  GDBusConnection* conn =
-      g_bus_get_sync(G_BUS_TYPE_SESSION, nullptr, &error);
-  if (conn == nullptr) {
-    if (error) {
-      g_printerr("desktop_tray: cannot connect to session bus: %s\n",
-                  error->message);
-      g_error_free(error);
-    }
-    return FALSE;
-  }
-
-  GVariant* result = g_dbus_connection_call_sync(
-      conn,
-      "org.freedesktop.DBus",
-      "/org/freedesktop/DBus",
-      "org.freedesktop.DBus",
-      "NameHasOwner",
-      g_variant_new("(s)", "org.kde.StatusNotifierWatcher"),
-      G_VARIANT_TYPE("(b)"),
-      G_DBUS_CALL_FLAGS_NONE,
-      2000,
-      nullptr,
-      &error);
-
-  gboolean available = FALSE;
-  if (result != nullptr) {
-    g_variant_get(result, "(b)", &available);
-    g_variant_unref(result);
-  } else {
-    if (error) {
-      g_printerr("desktop_tray: D-Bus NameHasOwner failed: %s\n",
-                  error->message);
-      g_error_free(error);
-    }
-  }
-
-  g_object_unref(conn);
-  return available;
-}
 
 // ----- Deferred destruction -------------------------------------------------
 
@@ -225,157 +151,85 @@ static void ensure_menu() {
   }
   if (g_menu == nullptr) {
     g_menu = gtk_menu_new();
-    // gtk_menu_new() returns a floating ref. Sink it so app_indicator_set_menu()
-    // (which always unrefs its previous menu before re-binding) cannot drop the
-    // last reference and leave g_menu dangling on the next setContextMenu call.
+    // Keep the menu alive across exported root updates.
     g_object_ref_sink(g_menu);
   }
 }
 
-// ----- Icon path helper -----------------------------------------------------
+static void export_menu() {
+  if (g_menu_server == nullptr)
+    g_menu_server = dbusmenu_server_new("/StatusNotifierItem/Menu");
+  DbusmenuMenuitem* root = dbusmenu_gtk_parse_menu_structure(g_menu);
+  dbusmenu_server_set_root(g_menu_server, root);
+  if (root != nullptr) g_object_unref(root);
+}
 
-static void split_icon_path(const char* icon_path,
-                            gchar** out_dir,
-                            gchar** out_name) {
-  *out_dir  = g_path_get_dirname(icon_path);
-  gchar* base = g_path_get_basename(icon_path);
-  gchar* dot = g_strrstr(base, ".");
-  if (dot != nullptr && dot != base) {
-    *dot = '\0';
+static void destroy_tray() {
+  g_item.reset();
+  g_clear_object(&g_menu_server);
+  if (g_menu != nullptr) {
+    clear_menu(g_menu);
+    gtk_widget_destroy(g_menu);
+    g_clear_object(&g_menu);
   }
-  *out_name = base;
-}
-
-// ----- Tray title (maps Dart setToolTip to app_indicator_set_title) -----------
-
-static void stash_indicator_title(const gchar* title) {
-  g_free(g_stashed_title);
-  g_stashed_title = (title != nullptr && title[0] != '\0')
-                        ? g_strdup(title)
-                        : nullptr;
-}
-
-static void apply_indicator_title() {
-  if (g_indicator == nullptr || g_stashed_title == nullptr) return;
-  app_indicator_set_title(g_indicator, g_stashed_title);
+  g_clear_pointer(&g_stashed_title, g_free);
 }
 
 // ----- Method-channel handlers ----------------------------------------------
 
 static FlMethodResponse* handle_check_available(FlValue* /*args*/) {
-  gboolean avail = is_status_notifier_available();
-  return FL_METHOD_RESPONSE(
-      fl_method_success_response_new(fl_value_new_bool(avail)));
+  return FL_METHOD_RESPONSE(fl_method_success_response_new(
+      fl_value_new_bool(StatusNotifierItem::IsAvailable())));
 }
 
 static FlMethodResponse* handle_destroy(FlValue* /*args*/) {
-  if (g_indicator != nullptr) {
-    app_indicator_set_status(g_indicator, APP_INDICATOR_STATUS_PASSIVE);
-  }
-  return FL_METHOD_RESPONSE(
-      fl_method_success_response_new(fl_value_new_bool(true)));
+  destroy_tray();
+  return FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_bool(true)));
 }
 
 static FlMethodResponse* handle_set_icon(FlValue* args) {
-  if (g_tray_unavailable) {
-    return FL_METHOD_RESPONSE(
-        fl_method_success_response_new(fl_value_new_bool(false)));
-  }
-
-  const char* icon_path =
-      fl_value_get_string(fl_value_lookup_string(args, "iconPath"));
-
-  gchar* icon_dir  = nullptr;
-  gchar* icon_name = nullptr;
-  split_icon_path(icon_path, &icon_dir, &icon_name);
-
-  ensure_menu();
-
-  if (g_indicator == nullptr) {
-    if (!is_status_notifier_available()) {
-      g_printerr("desktop_tray: StatusNotifierWatcher not found on D-Bus, "
-                  "skipping tray icon creation.\n");
-      g_tray_unavailable = true;
-      g_free(icon_dir);
-      g_free(icon_name);
-      return FL_METHOD_RESPONSE(
-          fl_method_success_response_new(fl_value_new_bool(false)));
+  const char* path = fl_value_get_string(fl_value_lookup_string(args, "iconPath"));
+  g_autoptr(GError) error = nullptr;
+  if (g_item == nullptr) {
+    ensure_menu();
+    export_menu();
+    auto item = std::make_unique<StatusNotifierItem>([]() {
+      if (g_plugin != nullptr) {
+        // SNI supplies activation, not physical down/up events. Map it to the
+        // established completion callback so a single click activates once.
+        fl_method_channel_invoke_method(g_plugin->channel, "onTrayIconMouseUp",
+                                        nullptr, nullptr, nullptr, nullptr);
+      }
+    });
+    if (!item->Start(path, &error)) {
+      return FL_METHOD_RESPONSE(fl_method_error_response_new(
+          "TRAY_UNAVAILABLE", error->message, nullptr));
     }
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    g_indicator = app_indicator_new_with_path(
-        "tawaq", icon_name,
-        APP_INDICATOR_CATEGORY_APPLICATION_STATUS, icon_dir);
-#pragma GCC diagnostic pop
-
-    if (g_indicator == nullptr) {
-      g_printerr("desktop_tray: app_indicator_new_with_path returned NULL.\n");
-      g_tray_unavailable = true;
-      g_free(icon_dir);
-      g_free(icon_name);
-      return FL_METHOD_RESPONSE(
-          fl_method_success_response_new(fl_value_new_bool(false)));
-    }
+    g_item = std::move(item);
+  } else if (!g_item->SetIcon(path, &error)) {
+    return FL_METHOD_RESPONSE(fl_method_error_response_new(
+        "ICON_LOAD_FAILED", error->message, nullptr));
   }
-
-  app_indicator_set_icon_theme_path(g_indicator, icon_dir);
-  app_indicator_set_status(g_indicator, APP_INDICATOR_STATUS_ACTIVE);
-  app_indicator_set_icon_full(
-      g_indicator, icon_name,
-      g_stashed_title != nullptr ? g_stashed_title : "");
-  apply_indicator_title();
-
-  g_free(icon_dir);
-  g_free(icon_name);
-
-  return FL_METHOD_RESPONSE(
-      fl_method_success_response_new(fl_value_new_bool(true)));
+  if (g_stashed_title != nullptr) g_item->SetTitle(g_stashed_title);
+  return FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_bool(true)));
 }
 
 static FlMethodResponse* handle_set_tooltip(FlValue* args) {
-  // AppIndicator has no hover-tooltip API; map setToolTip to the panel title.
-  FlValue* tool_tip_val = fl_value_lookup_string(args, "toolTip");
-  const char* tool_tip =
-      tool_tip_val != nullptr ? fl_value_get_string(tool_tip_val) : "";
-  stash_indicator_title(tool_tip);
-  apply_indicator_title();
-  return FL_METHOD_RESPONSE(
-      fl_method_success_response_new(fl_value_new_bool(true)));
+  const char* title = fl_value_get_string(fl_value_lookup_string(args, "toolTip"));
+  g_free(g_stashed_title);
+  g_stashed_title = g_strdup(title);
+  if (g_item != nullptr) g_item->SetTitle(title);
+  return FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_bool(true)));
 }
 
 static FlMethodResponse* handle_set_context_menu(FlValue* args) {
-  if (g_tray_unavailable) {
-    return FL_METHOD_RESPONSE(
-        fl_method_success_response_new(fl_value_new_bool(false)));
-  }
-
   ensure_menu();
-
-  // 1. Remove old items (deferred destruction).
   clear_menu(g_menu);
-
-  // 2. Populate with new items.
-  FlValue* menu_val  = fl_value_lookup_string(args, "menu");
-  FlValue* items_val = fl_value_lookup_string(menu_val, "items");
-  populate_menu(g_menu, items_val);
-
-  // 3. LOCAL PATCH (tawaq): re-export the menu on EVERY update, not just once.
-  //    Upstream bound the menu a single time (g_menu_bound) to avoid heap
-  //    corruption, but swapping children of an already-bound AppIndicator menu
-  //    does not refresh in most dbusmenu hosts — labels/checkboxes went stale.
-  //    Re-calling app_indicator_set_menu() with the SAME g_menu widget is
-  //    refcount-safe (ref new == unref old) and the deferred clear_menu() above
-  //    still prevents the libdbusmenu heap corruption the one-time bind guarded.
-  if (g_indicator != nullptr) {
-    app_indicator_set_menu(g_indicator, GTK_MENU(g_menu));
-
-    // 4. Make new items visible.
-    gtk_widget_show_all(g_menu);
-  }
-
-  return FL_METHOD_RESPONSE(
-      fl_method_success_response_new(fl_value_new_bool(true)));
+  FlValue* menu = fl_value_lookup_string(args, "menu");
+  populate_menu(g_menu, fl_value_lookup_string(menu, "items"));
+  gtk_widget_show_all(g_menu);
+  export_menu();
+  return FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_bool(true)));
 }
 
 static FlMethodResponse* handle_pop_up_context_menu(FlValue* /*args*/) {
@@ -413,6 +267,13 @@ static void desktop_tray_plugin_handle_method_call(
 }
 
 static void desktop_tray_plugin_dispose(GObject* object) {
+  DesktopTrayPlugin* self = DESKTOP_TRAY_PLUGIN(object);
+  if (g_plugin == self) {
+    destroy_tray();
+    g_plugin = nullptr;
+  }
+  g_clear_object(&self->channel);
+  g_clear_object(&self->registrar);
   G_OBJECT_CLASS(desktop_tray_plugin_parent_class)->dispose(object);
 }
 
@@ -431,25 +292,6 @@ static void method_call_cb(FlMethodChannel* /*channel*/,
 
 void desktop_tray_plugin_register_with_registrar(
     FlPluginRegistrar* registrar) {
-  // Install silent log handlers BEFORE any appindicator code runs.
-  // This completely suppresses the "libayatana-appindicator is deprecated"
-  // g_warning() — it never appears on stderr.
-  g_log_set_handler("libayatana-appindicator",
-                    (GLogLevelFlags)(G_LOG_LEVEL_WARNING |
-                                    G_LOG_LEVEL_CRITICAL |
-                                    G_LOG_LEVEL_MESSAGE),
-                    silent_log_handler, nullptr);
-  g_log_set_handler("libappindicator",
-                    (GLogLevelFlags)(G_LOG_LEVEL_WARNING |
-                                    G_LOG_LEVEL_CRITICAL |
-                                    G_LOG_LEVEL_MESSAGE),
-                    silent_log_handler, nullptr);
-  g_log_set_handler("dbusmenu-glib",
-                    (GLogLevelFlags)(G_LOG_LEVEL_WARNING |
-                                    G_LOG_LEVEL_CRITICAL |
-                                    G_LOG_LEVEL_MESSAGE),
-                    silent_log_handler, nullptr);
-
   DesktopTrayPlugin* plugin = DESKTOP_TRAY_PLUGIN(
       g_object_new(desktop_tray_plugin_get_type(), nullptr));
 

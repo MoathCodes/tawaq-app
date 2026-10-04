@@ -8,6 +8,7 @@ find_package(PkgConfig REQUIRED)
 
 add_library(${PLUGIN_NAME} SHARED
   "desktop_tray_plugin.cc"
+  "status_notifier_item.cc"
 )
 apply_standard_settings(${PLUGIN_NAME})
 set_target_properties(${PLUGIN_NAME} PROPERTIES
@@ -18,23 +19,8 @@ target_include_directories(${PLUGIN_NAME} INTERFACE
 target_link_libraries(${PLUGIN_NAME} PRIVATE flutter)
 target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::GTK)
 
-pkg_check_modules(APPINDICATOR IMPORTED_TARGET ayatana-appindicator3-0.1)
-if(APPINDICATOR_FOUND)
-  target_compile_definitions(${PLUGIN_NAME} PRIVATE HAVE_AYATANA)
-else()
-  pkg_check_modules(APPINDICATOR IMPORTED_TARGET appindicator3-0.1)
-endif()
-if(APPINDICATOR_FOUND)
-  target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::APPINDICATOR)
-else()
-  message(
-    FATAL_ERROR
-    "\n"
-    "The `desktop_tray` plugin requires ayatana-appindicator3-0.1 or "
-    "appindicator3-0.1.\n"
-    "  sudo apt install libayatana-appindicator3-dev\n"
-  )
-endif()
+pkg_check_modules(DBUSMENU REQUIRED IMPORTED_TARGET dbusmenu-gtk3-0.4)
+target_link_libraries(${PLUGIN_NAME} PRIVATE PkgConfig::DBUSMENU)
 
 set(desktop_tray_bundled_libraries
   ""

@@ -312,6 +312,7 @@ std::optional<LRESULT> DesktopTrayPlugin::HandleWindowProc(HWND hWnd,
                               std::make_unique<flutter::EncodableValue>());
       break;
     case WM_LBUTTONUP:
+    case WM_LBUTTONDBLCLK:
       g_channel->InvokeMethod("onTrayIconMouseUp",
                               std::make_unique<flutter::EncodableValue>());
       break;

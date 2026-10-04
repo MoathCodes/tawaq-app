@@ -70,7 +70,7 @@ size = $INSTALLED_SIZE
 arch = $ARCH
 license = MIT
 depend = gtk3
-depend = libayatana-appindicator
+depend = libdbusmenu-gtk3
 depend = libnotify
 depend = mpv
 EOF
