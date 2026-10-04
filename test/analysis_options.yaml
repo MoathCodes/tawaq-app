@@ -1,7 +1,0 @@
-include: ../analysis_options.yaml
-
-analyzer:
-  errors:
-    # Test helpers create independent root scopes with fixture overrides.
-    # They do not introduce scoped dependencies into the production app.
-    riverpod_lint/scoped_providers_should_specify_dependencies: ignore

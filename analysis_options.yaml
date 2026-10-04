@@ -17,12 +17,14 @@ analyzer:
   errors:
     avoid_catches_without_on_clauses: ignore
     invalid_annotation_target: ignore
-    # App-lived coordinators intentionally consume shorter-lived providers.
-    # Keep lifetime suggestions visible without changing runtime ownership.
-    riverpod_lint/only_use_keep_alive_inside_keep_alive: info
 
 plugins:
-  riverpod_lint: 3.1.9
+  riverpod_lint:
+    version: 3.1.9
+    diagnostics:
+      # App-lived coordinators intentionally consume shorter-lived providers.
+      # Their watches/listeners own the lifetime of those dependencies.
+      only_use_keep_alive_inside_keep_alive: false
 
 linter:
   # The lint rules applied to this project can be customized in the

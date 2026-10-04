@@ -1,3 +1,6 @@
+// Fixture overrides belong to an independent root test scope.
+// ignore_for_file: riverpod_lint/scoped_providers_should_specify_dependencies
+
 import 'dart:ui' as ui;
 
 import 'package:dorar_hadith/dorar_hadith.dart';
