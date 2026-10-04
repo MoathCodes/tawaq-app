@@ -19,7 +19,7 @@ analyzer:
     invalid_annotation_target: ignore
     # App-lived coordinators intentionally consume shorter-lived providers.
     # Keep lifetime suggestions visible without changing runtime ownership.
-    only_use_keep_alive_inside_keep_alive: info
+    riverpod_lint/only_use_keep_alive_inside_keep_alive: info
 
 plugins:
   riverpod_lint: 3.1.9
