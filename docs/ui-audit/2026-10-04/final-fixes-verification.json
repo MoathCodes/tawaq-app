@@ -60,6 +60,15 @@
       "result": "passed",
       "errors": 0,
       "warnings": 0
+    },
+    "ci_generator_recovery": {
+      "result": "passed locally; CI confirmation pending",
+      "cause": "Ignored Mushaf lockfile resolved analyzer 14.5.0, incompatible with build_runner 2.16.1 internal setter usage",
+      "fix": "Track tested Mushaf lockfile and enforce package/app generator lockfiles",
+      "analyzer": "14.4.0",
+      "mushaf_lock_sha256": "aac6a056e5ade58a8834a998d9a2b91218ccf4f25887aa353f869cc695909891",
+      "fresh_package_generation": "Passed in a separate directory without a .dart_tool/build cache",
+      "check_harness_regression": "1 passed"
     }
   },
   "visual": {

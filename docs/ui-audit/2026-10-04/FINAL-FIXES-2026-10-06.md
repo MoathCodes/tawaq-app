@@ -54,7 +54,11 @@ full app tests, package checks, generation, Linux debug builds and release-gate
 Python tests are recorded in the adjacent final verification record. Analysis
 has no errors or warnings; informational lints remain. Candidate builds now
 apply their build number to pubspec before recording toolchain identity, with a
-regression checking the recorded identity through acceptance validation.
+regression checking the recorded identity through acceptance validation. Clean
+CI exposed an ignored Mushaf generator lockfile: fresh resolution selected
+analyzer 14.5.0, whose removed internal setter breaks build_runner 2.16.1. The
+vendored package now tracks its tested 14.4.0 graph, and generation enforces
+lockfiles for the package and app instead of silently resolving a different graph.
 
 Windows/macOS machines remain unavailable. Verified redistribution terms for the
 14 bundled databases, broader native release acceptance, and the unproven RSS

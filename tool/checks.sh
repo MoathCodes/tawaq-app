@@ -35,7 +35,7 @@ if [[ "$scope" != app ]]; then
   )
   (
     cd packages/mushaf_reader
-    flutter pub get
+    flutter pub get --enforce-lockfile
     dart run build_runner build
     (cd example && flutter pub get && dart run slang)
     flutter analyze --no-fatal-infos
