@@ -9,6 +9,7 @@ import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/models/ayah_share_include.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
@@ -63,17 +64,11 @@ Future<AyahSharePageReferences> _loadPageAyahReferences(
 }
 
 /// Opens the ayah share dialog for exporting verses as an image.
-Future<void> showAyahShareDialog(
-  BuildContext context, {
-  required Ayah ayah,
-}) {
+Future<void> showAyahShareDialog(BuildContext context, {required Ayah ayah}) {
   return showFDialog<void>(
     context: context,
-    builder: (context, style, animation) => AyahShareDialog(
-      ayah: ayah,
-      style: style,
-      animation: animation,
-    ),
+    builder: (context, style, animation) =>
+        AyahShareDialog(ayah: ayah, style: style, animation: animation),
   );
 }
 
@@ -110,8 +105,13 @@ class AyahShareDialog extends HookConsumerWidget {
     );
     final mushafStyle = buildQuranMushafStyle(theme, zoom: mushafZoom);
 
+    final loadAttempt = useState(0);
     final pageSnapshot = useFuture(
-      useMemoized(() => controller.getPage(ayah.page), [ayah.page]),
+      useMemoized(() => controller.getPage(ayah.page), [
+        controller,
+        ayah.page,
+        loadAttempt.value,
+      ]),
     );
 
     final options = useState(
@@ -152,6 +152,7 @@ class AyahShareDialog extends HookConsumerWidget {
           labeledMarkIndices: {0},
         );
     final selectedIndex = pageAyahIds.indexOf(ayah.ayahId);
+    final pageReady = page != null && selectedIndex >= 0;
 
     final selectedAyahIds = useState<List<int>>([ayah.ayahId]);
     final defaultsApplied = useRef(false);
@@ -161,10 +162,7 @@ class AyahShareDialog extends HookConsumerWidget {
         MushafPageRangeLayout.basmalahPossible(page, selectedAyahIds.value);
     final lineBreaksToggleAvailable =
         page != null &&
-        MushafPageRangeLayout.newlinesWouldCompact(
-          page,
-          selectedAyahIds.value,
-        );
+        MushafPageRangeLayout.newlinesWouldCompact(page, selectedAyahIds.value);
 
     useEffect(() {
       if (page == null) return null;
@@ -194,7 +192,7 @@ class AyahShareDialog extends HookConsumerWidget {
     }, [page, selectedAyahIds.value.join(',')]);
 
     Future<void> exportImage({required bool copyToClipboard}) async {
-      if (isCapturing.value) return;
+      if (isCapturing.value || !pageReady) return;
       isCapturing.value = true;
       try {
         await exportAyahShareImage(
@@ -206,8 +204,15 @@ class AyahShareDialog extends HookConsumerWidget {
           primaryColor: colors.primary,
           copyToClipboard: copyToClipboard,
         );
+      } on Object {
+        if (context.mounted) {
+          showFToast(
+            context: context,
+            title: Text(l10n.shareImageExportFailed),
+          );
+        }
       } finally {
-        isCapturing.value = false;
+        if (context.mounted) isCapturing.value = false;
       }
     }
 
@@ -222,17 +227,17 @@ class AyahShareDialog extends HookConsumerWidget {
       if (pageSnapshot.connectionState == ConnectionState.waiting) {
         return const Center(child: FCircularProgress.loader());
       }
-      if (pageSnapshot.hasError) {
-        return Center(
-          child: Text(
-            l10n.shareFailedToLoadPage('${pageSnapshot.error}'),
-          ),
+      if (pageSnapshot.hasError || !pageReady) {
+        return ErrorStatePanel(
+          message: l10n.sharePageLoadFailed,
+          retryLabel: l10n.retryAction,
+          onRetry: () => loadAttempt.value++,
         );
       }
 
       return AyahShareDialogBody(
         content: AyahShareDialogContent(
-          page: page!,
+          page: page,
           pageAyahIds: pageAyahIds,
           selectedAyahIds: selectedAyahIds.value,
           selectedIndex: selectedIndex,
@@ -257,11 +262,13 @@ class AyahShareDialog extends HookConsumerWidget {
       constraints: dialogSize,
       builder: (context, dialogStyle) => ForuiDialogLayout(
         style: dialogStyle,
+        expandActions: true,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(l10n.shareVerses),
+            Expanded(child: Text(l10n.shareVerses)),
             FButton.icon(
+              semanticsLabel: l10n.close,
               onPress: () => Navigator.of(context).pop(),
               variant: .ghost,
               child: const Icon(FLucideIcons.x),
@@ -272,16 +279,16 @@ class AyahShareDialog extends HookConsumerWidget {
         actions: [
           FButton(
             variant: .secondary,
-            onPress: isCapturing.value
+            onPress: isCapturing.value || !pageReady
                 ? null
                 : () => unawaited(exportImage(copyToClipboard: false)),
-            child: Text(l10n.shareSaveImage),
+            child: Flexible(child: Text(l10n.shareSaveImage)),
           ),
           FButton(
-            onPress: isCapturing.value
+            onPress: isCapturing.value || !pageReady
                 ? null
                 : () => unawaited(exportImage(copyToClipboard: true)),
-            child: Text(l10n.shareCopyImage),
+            child: Flexible(child: Text(l10n.shareCopyImage)),
           ),
         ],
       ),

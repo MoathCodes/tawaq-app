@@ -74,10 +74,7 @@ Widget _host({
           child: SingleChildScrollView(
             child: Align(
               alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: width,
-                child: const PrayerHeroHeader(),
-              ),
+              child: SizedBox(width: width, child: const PrayerHeroHeader()),
             ),
           ),
         ),
@@ -142,7 +139,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Next event'), findsOneWidget);
+    expect(find.text('Next time'), findsOneWidget);
     expect(find.text('Time remaining'), findsOneWidget);
     expect(find.text('Midnight'), findsOneWidget);
     expect(find.text('Next Prayer'), findsNothing);
@@ -161,7 +158,7 @@ void main() {
       ),
     );
 
-    expect(find.text('الحدث الحالي'), findsOneWidget);
+    expect(find.text('الوقت الحالي'), findsOneWidget);
     expect(find.text('منذ بداية الحدث'), findsOneWidget);
     expect(find.text('الشروق'), findsOneWidget);
     final duration = tester.widget<Text>(find.text('+٠١:٠٢:٠٣'));
@@ -182,7 +179,7 @@ void main() {
       ),
     );
 
-    expect(find.text('الحدث القادم'), findsOneWidget);
+    expect(find.text('الوقت القادم'), findsOneWidget);
     expect(find.text('الثلث الأخير من الليل'), findsOneWidget);
     expect(find.text('الوقت المتبقي'), findsOneWidget);
     final duration = tester.widget<Text>(find.text('٠٠:١٢:٣٤'));
@@ -205,7 +202,7 @@ void main() {
         );
 
         expect(tester.takeException(), isNull);
-        expect(find.text('Next event'), findsOneWidget);
+        expect(find.text('Next time'), findsOneWidget);
         expect(find.text('Last Third Of The Night'), findsOneWidget);
         expect(find.text('00:12:34'), findsOneWidget);
       },

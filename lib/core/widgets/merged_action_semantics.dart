@@ -2,7 +2,8 @@ import 'package:flutter/widgets.dart';
 
 /// A single accessibility node for icon-only or composite controls.
 ///
-/// Hides descendant semantics to avoid duplicate announcements. Use on shell
+/// Preserves real descendant actions unless an explicit activation replaces them.
+/// Use on shell
 /// chrome and shared widgets — not on page body content.
 class MergedActionSemantics extends StatelessWidget {
   /// Creates merged action semantics.
@@ -10,6 +11,7 @@ class MergedActionSemantics extends StatelessWidget {
     required this.label,
     required this.child,
     this.hint,
+    this.onTap,
     this.selected = false,
     this.enabled = true,
     this.button = true,
@@ -21,6 +23,9 @@ class MergedActionSemantics extends StatelessWidget {
 
   /// Optional activation or state hint.
   final String? hint;
+
+  /// Explicit activation for a composite that replaces descendant semantics.
+  final VoidCallback? onTap;
 
   /// Whether this control is in a selected state (e.g. current tab).
   final bool selected;
@@ -35,13 +40,16 @@ class MergedActionSemantics extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: label,
-    hint: hint,
-    selected: selected,
-    enabled: enabled,
-    button: button,
-    excludeSemantics: true,
-    child: child,
+  Widget build(BuildContext context) => MergeSemantics(
+    child: Semantics(
+      label: label,
+      hint: hint,
+      selected: selected,
+      enabled: enabled,
+      button: button,
+      onTap: enabled ? onTap : null,
+      excludeSemantics: onTap != null,
+      child: child,
+    ),
   );
 }

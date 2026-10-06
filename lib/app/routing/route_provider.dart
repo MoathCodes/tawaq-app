@@ -12,7 +12,7 @@ import 'package:tawaq/app/routing/not_found_screen.dart';
 import 'package:tawaq/app/shell/page_shell.dart';
 import 'package:tawaq/app/shell/shell_feature_layer.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
-import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/feature/about/presentation/about_dialog.dart';
 import 'package:tawaq/feature/about/presentation/screens/about_screen.dart';
 import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
@@ -22,6 +22,7 @@ import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provi
 import 'package:tawaq/feature/prayer/presentation/screens/prayer_screen.dart';
 import 'package:tawaq/feature/quran/presentation/screens/quran_screen.dart';
 import 'package:tawaq/feature/settings/presentation/screens/settings_screen.dart';
+import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 part 'route_provider.g.dart';
@@ -123,7 +124,10 @@ class PrayerRoute extends AppNavigationRoute with $PrayerRoute {
   @override
   /// Builds the prayer screen.
   Widget build(BuildContext context, GoRouterState state) {
-    return const PrayerScreen();
+    return PrayerScreen(
+      onSetLocation: () =>
+          const SettingsRoute(tab: kSettingsLocationTabKey).push<void>(context),
+    );
   }
 }
 
@@ -284,12 +288,13 @@ GoRouter appRouter(Ref ref) {
       if (!needed && onOnboarding) return const PrayerRoute().location;
       return null;
     },
-    errorPageBuilder: (context, state) => NoTransitionPage(
-      key: state.pageKey,
-      child: NotFoundScreen(
-        errorMsg: state.error?.message ?? context.l10n.errorNotFoundPage,
-      ),
-    ),
+    errorPageBuilder: (context, state) {
+      ref.read(loggerProvider).w('Could not open route', error: state.error);
+      return NoTransitionPage(
+        key: state.pageKey,
+        child: const NotFoundScreen(),
+      );
+    },
   );
   ref
     ..onDispose(appRouter.dispose)
@@ -306,10 +311,7 @@ const kMainRoutes = <AppNavigationRoute>[
 ];
 
 /// Secondary shell destinations (settings, about).
-const kSecondaryRoutes = <AppNavigationRoute>[
-  SettingsRoute(),
-  AboutRoute(),
-];
+const kSecondaryRoutes = <AppNavigationRoute>[SettingsRoute(), AboutRoute()];
 
 /// Returns the localized label if available,
 ///  otherwise returns the initial label.

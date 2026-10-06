@@ -88,6 +88,8 @@ Before handing off, inspect the final diff. Report the behavior changed, fan-out
 
 ## PRs and issues
 
+For issue-to-PR delivery, native Linux reproduction or visual evidence, and PR babysitting, read `.agents/skills/tawaq-delivery/SKILL.md`. Its Linux reference covers Hyprland workspace ownership and capture; its PR reference covers CI/review follow-up and issue reconciliation.
+
 Lead with the user-visible problem and result in one or two short sentences. For an unresolved issue, state the failure and expected behavior; describe a fix only once it exists. Keep titles concrete.
 
 Put supporting details below the summary. Include only causes, implementation choices, validation, evidence links, and limitations that help someone assess the work. Use short sentences or bullets, with each fact stated once. Scale detail to the change; keep investigation history and routine check logs out of the opening.

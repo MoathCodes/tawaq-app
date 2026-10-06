@@ -16,13 +16,31 @@ abstract final class AboutStrings {
   static const credits = AboutText(en: 'Credits', ar: 'فريق العمل');
 
   /// Heading above the acknowledgements section.
-  static const acknowledgements =
-      AboutText(en: 'Acknowledgements', ar: 'شكر وتقدير');
+  static const acknowledgements = AboutText(
+    en: 'Acknowledgements',
+    ar: 'شكر وتقدير',
+  );
 
   /// Accessibility/tooltip label for the close button.
   static const close = AboutText(en: 'Close', ar: 'إغلاق');
 
+  static const copyLink = AboutText(en: 'Copy link', ar: 'نسخ الرابط');
+  static const linkFailed = AboutText(
+    en: 'Could not open link',
+    ar: 'تعذّر فتح الرابط',
+  );
+  static const versionLoading = AboutText(
+    en: 'Loading version…',
+    ar: 'جارٍ تحميل الإصدار…',
+  );
+  static const versionUnavailable = AboutText(
+    en: 'Version unavailable',
+    ar: 'الإصدار غير متاح',
+  );
+
   /// Toast shown after a link is copied to the clipboard.
-  static const linkCopied =
-      AboutText(en: 'Link copied to clipboard', ar: 'تم نسخ الرابط');
+  static const linkCopied = AboutText(
+    en: 'Link copied to clipboard',
+    ar: 'تم نسخ الرابط',
+  );
 }

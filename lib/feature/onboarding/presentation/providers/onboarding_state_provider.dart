@@ -42,59 +42,36 @@ class OnboardingStateNotifier extends _$OnboardingStateNotifier {
   /// navigate on a no-op (avoids redirect bounce). Flushes prayer/theme/locale
   /// first so kill-after-finish still sees those prefs, then writes
   /// `completed` last.
-  Future<bool> finish() async {
+  Future<bool>? _finishing;
+
+  Future<bool> finish() => _finishing ??= _finish().whenComplete(() {
+    _finishing = null;
+  });
+
+  Future<bool> _finish() async {
     if (!state.hasValue) return false;
-
-    // Best-effort flush of prefs mutated during onboarding — do not block
-    // completion if a sibling notifier is unavailable in tests/edge cases.
-    await _flushSiblingPrefs();
+    // Every preference edited in setup is required, including appearance.
+    // A failed write propagates to the recoverable setup UI.
+    await ref.read(prayerSettingsProvider.future);
     if (!ref.mounted) return false;
-
-    final next = state.value!.copyWith(
+    await ref.read(prayerSettingsProvider.notifier).flush();
+    await ref.read(themeProvider.future);
+    if (!ref.mounted) return false;
+    await ref.read(themeProvider.notifier).flush();
+    await ref.read(localeProvider.future);
+    if (!ref.mounted) return false;
+    await ref.read(localeProvider.notifier).flush();
+    if (!ref.mounted) return false;
+    final next = state.requireValue.copyWith(
       completed: true,
       completedAt: DateTime.now().toIso8601String(),
     );
+    final storage = await ref.read(settingsStorageProvider.future);
+    if (!ref.mounted) return false;
+    await flushPersistedValue(storage, key, next);
+    if (!ref.mounted) return false;
     state = AsyncData(next);
-    await flush();
     return true;
-  }
-
-  Future<void> _flushSiblingPrefs() async {
-    try {
-      await ref.read(prayerSettingsProvider.notifier).flush();
-    } on Object catch (error, stack) {
-      ref
-          .read(loggerProvider)
-          .w(
-            '$_onboardingLogPrefix prayer flush skipped',
-            error: error,
-            stackTrace: stack,
-          );
-    }
-    if (!ref.mounted) return;
-    try {
-      await ref.read(themeProvider.notifier).flush();
-    } on Object catch (error, stack) {
-      ref
-          .read(loggerProvider)
-          .w(
-            '$_onboardingLogPrefix theme flush skipped',
-            error: error,
-            stackTrace: stack,
-          );
-    }
-    if (!ref.mounted) return;
-    try {
-      await ref.read(localeProvider.notifier).flush();
-    } on Object catch (error, stack) {
-      ref
-          .read(loggerProvider)
-          .w(
-            '$_onboardingLogPrefix locale flush skipped',
-            error: error,
-            stackTrace: stack,
-          );
-    }
   }
 
   /// Clears completion so onboarding can run again.
@@ -104,10 +81,15 @@ class OnboardingStateNotifier extends _$OnboardingStateNotifier {
   /// `/onboarding`. Returns `false` when state is not yet hydrated — callers
   /// must not navigate.
   Future<bool> reset() async {
+    if (_finishing != null) await _finishing;
+    if (!ref.mounted) return false;
     if (!state.hasValue) return false;
     const next = OnboardingState();
+    final storage = await ref.read(settingsStorageProvider.future);
+    if (!ref.mounted) return false;
+    await flushPersistedValue(storage, key, next);
+    if (!ref.mounted) return false;
     state = const AsyncData(next);
-    await flush();
     return true;
   }
 

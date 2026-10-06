@@ -54,10 +54,7 @@ FAutocompleteItem<Ayah> buildAyahSearchResultItem({
       children: [
         Flexible(
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 2,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: colors.primary.withValues(alpha: .1),
               borderRadius: BorderRadius.circular(4),
@@ -77,9 +74,7 @@ FAutocompleteItem<Ayah> buildAyahSearchResultItem({
         const SizedBox(width: AppSpacing.sm),
         Text(
           l10n.pageJuzInfo(ayah.page, ayah.juz),
-          style: typography.body.xs.copyWith(
-            color: colors.mutedForeground,
-          ),
+          style: typography.body.xs.copyWith(color: colors.mutedForeground),
         ),
       ],
     ),

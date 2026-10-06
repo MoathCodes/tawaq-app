@@ -7,15 +7,8 @@ import 'package:tawaq/core/widgets/merged_action_semantics.dart';
 /// custom click targets, merged chips, and controls that need explicit names.
 abstract final class SemanticsWrappers {
   /// Marks [child] as a page/section heading.
-  static Widget sectionHeader({
-    required Widget child,
-    String? label,
-  }) {
-    return Semantics(
-      header: true,
-      label: label,
-      child: child,
-    );
+  static Widget sectionHeader({required Widget child, String? label}) {
+    return Semantics(header: true, label: label, child: child);
   }
 
   /// Interactive or read-only control with an explicit [label].
@@ -41,6 +34,7 @@ abstract final class SemanticsWrappers {
         hint: hint,
         enabled: enabled,
         selected: selected,
+        onTap: onTap,
         child: iconAction,
       );
     }
@@ -57,7 +51,7 @@ abstract final class SemanticsWrappers {
       button: button,
       selected: selected,
       onTap: button && enabled ? onTap : null,
-      child: excludeChild || isReadOnly
+      child: (excludeChild && onTap != null) || isReadOnly
           ? ExcludeSemantics(child: child)
           : child,
     );

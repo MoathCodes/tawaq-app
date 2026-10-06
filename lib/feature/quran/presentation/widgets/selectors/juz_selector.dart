@@ -133,11 +133,7 @@ Widget juzSelectSubtitle({
 /// Juz selector that only rebuilds when juz number changes.
 class JuzSelector extends HookConsumerWidget {
   /// Creates a [JuzSelector] instance.
-  const new({
-    this.showLabel = true,
-    this.inlineLabel = false,
-    super.key,
-  });
+  const new({this.showLabel = true, this.inlineLabel = false, super.key});
 
   /// Whether the field label is shown above the select.
   final bool showLabel;
@@ -149,9 +145,7 @@ class JuzSelector extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(quranMushafControllerProvider);
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final allJuzs = useFuture(
-      useMemoized(controller.getJuzs),
-    );
+    final allJuzs = useFuture(useMemoized(controller.getJuzs));
 
     return ListenableBuilder(
       listenable: controller.page,
@@ -185,11 +179,8 @@ class JuzSelector extends HookConsumerWidget {
           inlineLabel: inlineLabel,
           useQuranFont: isArabic,
           format: (v) => localizedJuzNumericLabel(v.number, isArabic: isArabic),
-          filter: (q) => searchJuzs(
-            allJuzs.data ?? const [],
-            q,
-            isArabic: isArabic,
-          ),
+          filter: (q) =>
+              searchJuzs(allJuzs.data ?? const [], q, isArabic: isArabic),
           onChanged: (v) async {
             if (v != null) await controller.jumpToJuz(v.number);
           },

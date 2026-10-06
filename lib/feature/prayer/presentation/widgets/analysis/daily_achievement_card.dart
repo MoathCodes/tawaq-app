@@ -134,10 +134,7 @@ class DailyAchievementCard extends ConsumerWidget {
 }
 
 class _DailyStreakBanner extends StatelessWidget {
-  const new({
-    required this.currentStreak,
-    required this.bestStreak,
-  });
+  const new({required this.currentStreak, required this.bestStreak});
 
   final int currentStreak;
   final int bestStreak;
@@ -271,10 +268,7 @@ class _DailyPrayerTracker extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final prayer in kObligatoryPrayers) ...[
-          _DailyTrackerRow(
-            prayer: prayer,
-            label: prayer.getLocaleName(l10n),
-          ),
+          _DailyTrackerRow(prayer: prayer, label: prayer.getLocaleName(l10n)),
           if (prayer != kObligatoryPrayers.last)
             const SizedBox(height: AppSpacing.sm),
         ],
@@ -286,10 +280,7 @@ class _DailyPrayerTracker extends ConsumerWidget {
 }
 
 class _DailyTrackerRow extends ConsumerWidget {
-  const new({
-    required this.prayer,
-    required this.label,
-  });
+  const new({required this.prayer, required this.label});
 
   final Prayer prayer;
   final String label;
@@ -335,10 +326,7 @@ class _DailyTrackerRow extends ConsumerWidget {
 }
 
 class _DailyStackedBar extends StatelessWidget {
-  const new({
-    required this.statuses,
-    required this.colors,
-  });
+  const new({required this.statuses, required this.colors});
 
   final Map<Prayer, CompletionStatus> statuses;
   final FColors colors;
@@ -391,7 +379,6 @@ class _DailyStatusGrid extends StatelessWidget {
     CompletionStatus.jamaah,
     CompletionStatus.onTime,
     CompletionStatus.late,
-    CompletionStatus.missed,
   ];
 
   final Map<CompletionStatus, int> counts;
@@ -429,10 +416,7 @@ class _DailyStatusGrid extends StatelessWidget {
 }
 
 class _DailyStatusChip extends StatelessWidget {
-  const new({
-    required this.status,
-    required this.value,
-  });
+  const new({required this.status, required this.value});
 
   final CompletionStatus status;
   final int value;
@@ -488,10 +472,7 @@ class _DailyStatusChip extends StatelessWidget {
 }
 
 class _TrackerStatusChip extends HookConsumerWidget {
-  const new({
-    required this.prayer,
-    required this.status,
-  });
+  const new({required this.prayer, required this.status});
 
   final Prayer prayer;
   final CompletionStatus status;

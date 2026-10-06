@@ -1,0 +1,795 @@
+{
+  "date": "2026-10-04",
+  "baseline": "e9293e32b489c2d5811cdf682f7e872029fa2adf",
+  "status": "proposed",
+  "audit_findings": [
+    {
+      "finding": "UI-01",
+      "issue": "TAW-98",
+      "url": "https://linear.app/tawaq/issue/TAW-98/quran-compact-layout-shrinks-the-reader-and-overflows-study-tabs-at",
+      "work": "W04",
+      "scenario": "RC-05",
+      "acceptance": "Readable compact reader/study with no overflow",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-02",
+      "issue": "TAW-104",
+      "url": "https://linear.app/tawaq/issue/TAW-104/keep-the-quran-study-panel-collapsed-in-the-stacked-layout",
+      "work": "W04",
+      "scenario": "RC-05",
+      "acceptance": "Explicit collapse intent survives stacked/compact fallback",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-03",
+      "issue": "TAW-81",
+      "url": "https://linear.app/tawaq/issue/TAW-81/polish-quran-study-labels-and-selected-ayah-actions",
+      "work": "W04",
+      "scenario": "RC-05",
+      "acceptance": "Ayah actions do not move the reading viewport",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-04",
+      "issue": "TAW-105",
+      "url": "https://linear.app/tawaq/issue/TAW-105/make-the-unselected-quran-study-state-compact-and-actionable",
+      "work": "W04",
+      "scenario": "RC-05",
+      "acceptance": "Unselected Study uses a compact useful instruction",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-05",
+      "issue": "TAW-95",
+      "url": "https://linear.app/tawaq/issue/TAW-95/recitation-player-wraps-toggle-labels-into-vertical-letters-and",
+      "work": "W05",
+      "scenario": "RC-08",
+      "acceptance": "Toggle labels use words, never vertical letter columns",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-06",
+      "issue": "TAW-95",
+      "url": "https://linear.app/tawaq/issue/TAW-95/recitation-player-wraps-toggle-labels-into-vertical-letters-and",
+      "work": "W05",
+      "scenario": "RC-08",
+      "acceptance": "All player actions reachable at actual 800×600 height",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-07",
+      "issue": "TAW-70",
+      "url": "https://linear.app/tawaq/issue/TAW-70/require-explicit-reciter-and-range-selection-when-no-selection-exists",
+      "work": "W05",
+      "scenario": "RC-07/08",
+      "acceptance": "Missing reciter/range has an explicit first action",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-08",
+      "issue": "TAW-106",
+      "url": "https://linear.app/tawaq/issue/TAW-106/open-location-setup-directly-from-the-missing-location-recovery",
+      "work": "W03",
+      "scenario": "RC-02",
+      "acceptance": "Location recovery preserves onboarding completion",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-09",
+      "issue": "TAW-107",
+      "url": "https://linear.app/tawaq/issue/TAW-107/keep-adhan-alerts-from-interrupting-incomplete-onboarding",
+      "work": "W03",
+      "scenario": "RC-01/04",
+      "acceptance": "No unsolicited alert during incomplete/active setup",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-10",
+      "issue": "TAW-108",
+      "url": "https://linear.app/tawaq/issue/TAW-108/make-onboarding-compact-and-explain-its-setup-stages",
+      "work": "W03",
+      "scenario": "RC-01",
+      "acceptance": "Named stages, understandable progress and return/edit flow",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-11",
+      "issue": "TAW-109",
+      "url": "https://linear.app/tawaq/issue/TAW-109/prioritize-city-selection-in-prayer-location-setup",
+      "work": "W02/W03",
+      "scenario": "RC-01/03",
+      "acceptance": "City-first setup; advanced inputs optional and zone explicit",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-12",
+      "issue": "TAW-110",
+      "url": "https://linear.app/tawaq/issue/TAW-110/put-appearance-controls-first-in-the-appearance-tab",
+      "work": "W08",
+      "scenario": "RC-11",
+      "acceptance": "Appearance controls lead their own destination",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-13",
+      "issue": "TAW-111",
+      "url": "https://linear.app/tawaq/issue/TAW-111/distinguish-theme-mode-from-color-palette-in-settings-copy",
+      "work": "W08",
+      "scenario": "RC-11",
+      "acceptance": "Mode and palette labels describe distinct choices",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-14",
+      "issue": "TAW-112",
+      "url": "https://linear.app/tawaq/issue/TAW-112/keep-the-five-prayer-schedule-easy-to-scan-in-the-initial-view",
+      "work": "W02",
+      "scenario": "RC-04",
+      "acceptance": "Five-prayer overview precedes analytics",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-15",
+      "issue": "TAW-102",
+      "url": "https://linear.app/tawaq/issue/TAW-102/english-prayer-dashboard-says-player-analytics-and-1-days",
+      "work": "W02",
+      "scenario": "RC-04",
+      "acceptance": "Prayer analytics title and plural forms are correct",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-16",
+      "issue": "TAW-99",
+      "url": "https://linear.app/tawaq/issue/TAW-99/hisn-al-muslim-chapter-list-is-clipped-to-a-sliver-at-the-minimum",
+      "work": "W07",
+      "scenario": "RC-10",
+      "acceptance": "Catalog remains useful at compact size and XL text",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-17",
+      "issue": "TAW-113",
+      "url": "https://linear.app/tawaq/issue/TAW-113/use-locale-direction-for-english-fortress-controls-and-progress",
+      "work": "W07",
+      "scenario": "RC-10",
+      "acceptance": "English chrome/progress LTR; Arabic source remains RTL",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-18",
+      "issue": "TAW-82",
+      "url": "https://linear.app/tawaq/issue/TAW-82/polish-global-shell-affordances-and-informational-badges",
+      "work": "W07",
+      "scenario": "RC-10",
+      "acceptance": "Chapter filtering and corpus search have clear scopes",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-19",
+      "issue": "TAW-15",
+      "url": "https://linear.app/tawaq/issue/TAW-15/modernize-the-hadith-screen-to-match-the-current-app-design-system",
+      "work": "W06",
+      "scenario": "RC-09",
+      "acceptance": "Initial details region does not dominate an empty screen",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-20",
+      "issue": "TAW-15",
+      "url": "https://linear.app/tawaq/issue/TAW-15/modernize-the-hadith-screen-to-match-the-current-app-design-system",
+      "work": "W06",
+      "scenario": "RC-09",
+      "acceptance": "Filter help explains actual provider behavior accurately",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-21",
+      "issue": "TAW-14",
+      "url": "https://linear.app/tawaq/issue/TAW-14/refresh-about-content-and-document-all-datacontent-sources",
+      "work": "W08",
+      "scenario": "RC-11",
+      "acceptance": "Verified credits/links/version; no template content",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-22",
+      "issue": "TAW-14",
+      "url": "https://linear.app/tawaq/issue/TAW-14/refresh-about-content-and-document-all-datacontent-sources",
+      "work": "W08",
+      "scenario": "RC-11",
+      "acceptance": "Open and Copy are separate truthful actions",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-23",
+      "issue": "TAW-114",
+      "url": "https://linear.app/tawaq/issue/TAW-114/make-about-version-and-support-easier-to-find",
+      "work": "W08",
+      "scenario": "RC-11",
+      "acceptance": "Support/version reachable without oversized repeated hero",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-24",
+      "issue": "TAW-82",
+      "url": "https://linear.app/tawaq/issue/TAW-82/polish-global-shell-affordances-and-informational-badges",
+      "work": "W01",
+      "scenario": "RC-06/11",
+      "acceptance": "Navigation has discoverable names and accessible actions",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-25",
+      "issue": "TAW-101",
+      "url": "https://linear.app/tawaq/issue/TAW-101/hadith-search-fails-with-a-disposed-provider-error-and-exposes",
+      "work": "W06",
+      "scenario": "RC-09",
+      "acceptance": "Reachable failures have localized recovery; original disposal bug repaired",
+      "focused_runtime_verification_required": true
+    },
+    {
+      "finding": "UI-26",
+      "issue": "TAW-115",
+      "url": "https://linear.app/tawaq/issue/TAW-115/verify-and-repair-keyboard-access-and-scope-of-recent-query-deletion",
+      "work": "W06",
+      "scenario": "RC-09",
+      "acceptance": "Verify actual delete scope; keyboard can reach individual removal",
+      "focused_runtime_verification_required": true
+    },
+    {
+      "finding": "UI-27",
+      "issue": "TAW-86",
+      "url": "https://linear.app/tawaq/issue/TAW-86/rethink-and-reimplement-app-animations-so-they-enhance-the-experience",
+      "work": "W09",
+      "scenario": "RC-05/11/15",
+      "acceptance": "Reduced-motion preference honored by all audited owners",
+      "focused_runtime_verification_required": true
+    },
+    {
+      "finding": "UI-28",
+      "issue": "TAW-116",
+      "url": "https://linear.app/tawaq/issue/TAW-116/verify-and-expose-reflection-autosave-status-and-recovery",
+      "work": "W04/W11",
+      "scenario": "RC-05",
+      "acceptance": "Verify store lifecycle; save acknowledgement and retry are truthful",
+      "focused_runtime_verification_required": true
+    },
+    {
+      "finding": "UI-29",
+      "issue": "TAW-117",
+      "url": "https://linear.app/tawaq/issue/TAW-117/stretch-the-onboarding-title-bar-across-the-native-window",
+      "work": "W03",
+      "scenario": "RC-01",
+      "acceptance": "Native-safe title bar spans the window width",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-30",
+      "issue": "TAW-118",
+      "url": "https://linear.app/tawaq/issue/TAW-118/display-configured-zone-prayer-times-in-the-onboarding-preview",
+      "work": "W02/W03",
+      "scenario": "RC-01/04",
+      "acceptance": "Configured-zone preview exactly matches main schedule",
+      "focused_runtime_verification_required": false
+    },
+    {
+      "finding": "UI-31",
+      "issue": "TAW-108",
+      "url": "https://linear.app/tawaq/issue/TAW-108/make-onboarding-compact-and-explain-its-setup-stages",
+      "work": "W03",
+      "scenario": "RC-01",
+      "acceptance": "Task-focused setup composition replaces excessive empty space",
+      "focused_runtime_verification_required": false
+    }
+  ],
+  "github_migration": {
+    "26": {
+      "id": "TAW-95",
+      "uuid": "f90220ae-fc02-41f0-b3ba-0acad3fb4255",
+      "url": "https://linear.app/tawaq/issue/TAW-95/recitation-player-wraps-toggle-labels-into-vertical-letters-and"
+    },
+    "27": {
+      "id": "TAW-96",
+      "uuid": "c926e83c-6a8b-418d-8b22-f73b1fdb96b5",
+      "url": "https://linear.app/tawaq/issue/TAW-96/save-while-listening-is-hidden-below-the-entire-downloaded-recitation"
+    },
+    "28": {
+      "id": "TAW-97",
+      "uuid": "71e9aaba-ac35-481a-bec8-c38b6db7ad2e",
+      "url": "https://linear.app/tawaq/issue/TAW-97/prayer-calendar-jumps-and-resets-its-visible-dates-after-the-entrance"
+    },
+    "29": {
+      "id": "TAW-98",
+      "uuid": "07f173fd-73ce-4b01-934f-d85495970427",
+      "url": "https://linear.app/tawaq/issue/TAW-98/quran-compact-layout-shrinks-the-reader-and-overflows-study-tabs-at"
+    },
+    "30": {
+      "id": "TAW-99",
+      "uuid": "504baa3a-714f-4a29-b266-b884d150ac43",
+      "url": "https://linear.app/tawaq/issue/TAW-99/hisn-al-muslim-chapter-list-is-clipped-to-a-sliver-at-the-minimum"
+    },
+    "31": {
+      "id": "TAW-100",
+      "uuid": "0c016a11-c687-4e0f-bd06-897bfdb6a383",
+      "url": "https://linear.app/tawaq/issue/TAW-100/restored-paused-recitation-shows-a-000-total-beside-a-nonzero-saved"
+    },
+    "33": {
+      "id": "TAW-101",
+      "uuid": "2ab482e4-c59b-44f2-80d7-29d62a9acd9d",
+      "url": "https://linear.app/tawaq/issue/TAW-101/hadith-search-fails-with-a-disposed-provider-error-and-exposes"
+    },
+    "34": {
+      "id": "TAW-102",
+      "uuid": "18f62fe1-ae11-4a1d-a130-26fd84544039",
+      "url": "https://linear.app/tawaq/issue/TAW-102/english-prayer-dashboard-says-player-analytics-and-1-days"
+    },
+    "35": {
+      "id": "TAW-103",
+      "uuid": "446cdcef-cb9f-4e99-a671-71b5a6a031c6",
+      "url": "https://linear.app/tawaq/issue/TAW-103/fortress-filter-says-no-favorites-even-when-bookmarked-chapters-exist"
+    }
+  },
+  "linear_dispositions": [
+    {
+      "issue": "TAW-7",
+      "title": "Hide ayah lens when recitation has no ayah timing data",
+      "url": "https://linear.app/tawaq/issue/TAW-7/hide-ayah-lens-when-recitation-has-no-ayah-timing-data",
+      "snapshot_status": "Todo",
+      "disposition": "W05 / required"
+    },
+    {
+      "issue": "TAW-10",
+      "title": "Complete desktop shortcuts and fix Quran keyboard focus/navigation",
+      "url": "https://linear.app/tawaq/issue/TAW-10/complete-desktop-shortcuts-and-fix-quran-keyboard-focusnavigation",
+      "snapshot_status": "Todo",
+      "disposition": "W04 / required"
+    },
+    {
+      "issue": "TAW-11",
+      "title": "Remove duplicate macOS window controls and use native-safe title-bar spacing",
+      "url": "https://linear.app/tawaq/issue/TAW-11/remove-duplicate-macos-window-controls-and-use-native-safe-title-bar",
+      "snapshot_status": "Todo",
+      "disposition": "W10 / required: macOS launch"
+    },
+    {
+      "issue": "TAW-13",
+      "title": "Replace app and system-tray icons with a coherent production icon set",
+      "url": "https://linear.app/tawaq/issue/TAW-13/replace-app-and-system-tray-icons-with-a-coherent-production-icon-set",
+      "snapshot_status": "Backlog",
+      "disposition": "W10 / verify TAW-92 implementation before new work"
+    },
+    {
+      "issue": "TAW-14",
+      "title": "Refresh About content and document all data/content sources",
+      "url": "https://linear.app/tawaq/issue/TAW-14/refresh-about-content-and-document-all-datacontent-sources",
+      "snapshot_status": "Todo",
+      "disposition": "W08 / required"
+    },
+    {
+      "issue": "TAW-15",
+      "title": "Modernize the Hadith screen to match the current app design system",
+      "url": "https://linear.app/tawaq/issue/TAW-15/modernize-the-hadith-screen-to-match-the-current-app-design-system",
+      "snapshot_status": "Backlog",
+      "disposition": "W06 / required"
+    },
+    {
+      "issue": "TAW-17",
+      "title": "Remove the Missed prayer completion status safely",
+      "url": "https://linear.app/tawaq/issue/TAW-17/remove-the-missed-prayer-completion-status-safely",
+      "snapshot_status": "Todo",
+      "disposition": "W11 / required with recorded migration decision"
+    },
+    {
+      "issue": "TAW-18",
+      "title": "Explore and implement a recitation dialog redesign",
+      "url": "https://linear.app/tawaq/issue/TAW-18/explore-and-implement-a-recitation-dialog-redesign",
+      "snapshot_status": "Backlog",
+      "disposition": "W05 / bounded layout included; broader exploration deferred"
+    },
+    {
+      "issue": "TAW-19",
+      "title": "Add an interactive UI tour to onboarding",
+      "url": "https://linear.app/tawaq/issue/TAW-19/add-an-interactive-ui-tour-to-onboarding",
+      "snapshot_status": "Backlog",
+      "disposition": "After launch / interactive tour"
+    },
+    {
+      "issue": "TAW-20",
+      "title": "Speed up tab swipe transitions and next-section reveal",
+      "url": "https://linear.app/tawaq/issue/TAW-20/speed-up-tab-swipe-transitions-and-next-section-reveal",
+      "snapshot_status": "Todo",
+      "disposition": "W09 / required"
+    },
+    {
+      "issue": "TAW-21",
+      "title": "Animate Mushaf transitions to eliminate navigation and panel-collapse flicker",
+      "url": "https://linear.app/tawaq/issue/TAW-21/animate-mushaf-transitions-to-eliminate-navigation-and-panel-collapse",
+      "snapshot_status": "Todo",
+      "disposition": "W09 / required"
+    },
+    {
+      "issue": "TAW-22",
+      "title": "Find a better home for “My Notes” in the Quran experience",
+      "url": "https://linear.app/tawaq/issue/TAW-22/find-a-better-home-for-my-notes-in-the-quran-experience",
+      "snapshot_status": "Backlog",
+      "disposition": "W04 / required"
+    },
+    {
+      "issue": "TAW-24",
+      "title": "Add more customizable app themes",
+      "url": "https://linear.app/tawaq/issue/TAW-24/add-more-customizable-app-themes",
+      "snapshot_status": "Backlog",
+      "disposition": "After launch / more palettes beyond current theme work"
+    },
+    {
+      "issue": "TAW-25",
+      "title": "Add monthly prayer times calendar with past and future navigation",
+      "url": "https://linear.app/tawaq/issue/TAW-25/add-monthly-prayer-times-calendar-with-past-and-future-navigation",
+      "snapshot_status": "Backlog",
+      "disposition": "After launch / new monthly calendar feature"
+    },
+    {
+      "issue": "TAW-26",
+      "title": "Research whether a Tawaq mobile app is worth building",
+      "url": "https://linear.app/tawaq/issue/TAW-26/research-whether-a-tawaq-mobile-app-is-worth-building",
+      "snapshot_status": "Backlog",
+      "disposition": "After launch / mobile product research"
+    },
+    {
+      "issue": "TAW-27",
+      "title": "Research MorphNext for animated icon morphing and UX",
+      "url": "https://linear.app/tawaq/issue/TAW-27/research-morphnext-for-animated-icon-morphing-and-ux",
+      "snapshot_status": "Backlog",
+      "disposition": "After launch / icon-morphing research"
+    },
+    {
+      "issue": "TAW-28",
+      "title": "Improve Windows window corner radius and edge spacing",
+      "url": "https://linear.app/tawaq/issue/TAW-28/improve-windows-window-corner-radius-and-edge-spacing",
+      "snapshot_status": "Todo",
+      "disposition": "W10 / required: Windows launch"
+    },
+    {
+      "issue": "TAW-65",
+      "title": "Keep the Prayer line calendar current and selected across midnight",
+      "url": "https://linear.app/tawaq/issue/TAW-65/keep-the-prayer-line-calendar-current-and-selected-across-midnight",
+      "snapshot_status": "Backlog",
+      "disposition": "W02 / required"
+    },
+    {
+      "issue": "TAW-66",
+      "title": "Make Linux launch-at-login work across Hyprland and other window managers",
+      "url": "https://linear.app/tawaq/issue/TAW-66/make-linux-launch-at-login-work-across-hyprland-and-other-window",
+      "snapshot_status": "Backlog",
+      "disposition": "W10 / reconcile overlap into TAW-84"
+    },
+    {
+      "issue": "TAW-67",
+      "title": "Reduce release-build RAM usage from roughly 400 MB",
+      "url": "https://linear.app/tawaq/issue/TAW-67/reduce-release-build-ram-usage-from-roughly-400-mb",
+      "snapshot_status": "Backlog",
+      "disposition": "W09 / required"
+    },
+    {
+      "issue": "TAW-68",
+      "title": "High priority: run a full read-only Linux UI and profile audit",
+      "url": "https://linear.app/tawaq/issue/TAW-68/high-priority-run-a-full-read-only-linux-ui-and-profile-audit",
+      "snapshot_status": "Backlog",
+      "disposition": "W09 / required"
+    },
+    {
+      "issue": "TAW-69",
+      "title": "Restore consistent leading and trailing padding across app pages",
+      "url": "https://linear.app/tawaq/issue/TAW-69/restore-consistent-leading-and-trailing-padding-across-app-pages",
+      "snapshot_status": "Backlog",
+      "disposition": "W01 / required"
+    },
+    {
+      "issue": "TAW-70",
+      "title": "Require explicit reciter and range selection when no selection exists",
+      "url": "https://linear.app/tawaq/issue/TAW-70/require-explicit-reciter-and-range-selection-when-no-selection-exists",
+      "snapshot_status": "Backlog",
+      "disposition": "W05 / required"
+    },
+    {
+      "issue": "TAW-71",
+      "title": "Add a compact Flutter runtime debugging contract for MCP workflows",
+      "url": "https://linear.app/tawaq/issue/TAW-71/add-a-compact-flutter-runtime-debugging-contract-for-mcp-workflows",
+      "snapshot_status": "Backlog",
+      "disposition": "W00 / minimal verification support"
+    },
+    {
+      "issue": "TAW-72",
+      "title": "Preview Adhan and iqamah voices before applying a selection",
+      "url": "https://linear.app/tawaq/issue/TAW-72/preview-adhan-and-iqamah-voices-before-applying-a-selection",
+      "snapshot_status": "Backlog",
+      "disposition": "W03/W05 / verify existing preview implementation first"
+    },
+    {
+      "issue": "TAW-81",
+      "title": "Polish Quran study labels and selected-ayah actions",
+      "url": "https://linear.app/tawaq/issue/TAW-81/polish-quran-study-labels-and-selected-ayah-actions",
+      "snapshot_status": "Backlog",
+      "disposition": "W04 / required"
+    },
+    {
+      "issue": "TAW-82",
+      "title": "Polish global shell affordances and informational badges",
+      "url": "https://linear.app/tawaq/issue/TAW-82/polish-global-shell-affordances-and-informational-badges",
+      "snapshot_status": "Backlog",
+      "disposition": "W01 / required"
+    },
+    {
+      "issue": "TAW-84",
+      "title": "Make Linux launch at login work across UWSM and direct Hyprland sessions",
+      "url": "https://linear.app/tawaq/issue/TAW-84/make-linux-launch-at-login-work-across-uwsm-and-direct-hyprland",
+      "snapshot_status": "Backlog",
+      "disposition": "W10 / required"
+    },
+    {
+      "issue": "TAW-85",
+      "title": "Make automatic location reliable on Linux and Flatpak",
+      "url": "https://linear.app/tawaq/issue/TAW-85/make-automatic-location-reliable-on-linux-and-flatpak",
+      "snapshot_status": "Backlog",
+      "disposition": "W02/W10 / required"
+    },
+    {
+      "issue": "TAW-86",
+      "title": "Rethink and reimplement app animations so they enhance the experience, not become it",
+      "url": "https://linear.app/tawaq/issue/TAW-86/rethink-and-reimplement-app-animations-so-they-enhance-the-experience",
+      "snapshot_status": "Backlog",
+      "disposition": "W09 / required"
+    },
+    {
+      "issue": "TAW-87",
+      "title": "Let GPS update prayer times without a city-name lookup",
+      "url": "https://linear.app/tawaq/issue/TAW-87/let-gps-update-prayer-times-without-a-city-name-lookup",
+      "snapshot_status": "Backlog",
+      "disposition": "W02 / required"
+    },
+    {
+      "issue": "TAW-88",
+      "title": "Keep downloaded recitations usable after reciter catalog expiry",
+      "url": "https://linear.app/tawaq/issue/TAW-88/keep-downloaded-recitations-usable-after-reciter-catalog-expiry",
+      "snapshot_status": "Backlog",
+      "disposition": "W05 / required"
+    },
+    {
+      "issue": "TAW-89",
+      "title": "Detect bundled tafsir and translation database updates by content",
+      "url": "https://linear.app/tawaq/issue/TAW-89/detect-bundled-tafsir-and-translation-database-updates-by-content",
+      "snapshot_status": "Backlog",
+      "disposition": "W11 / required with recorded migration decision"
+    },
+    {
+      "issue": "TAW-90",
+      "title": "Start recitation before automatic saving finishes and make cancellation responsive",
+      "url": "https://linear.app/tawaq/issue/TAW-90/start-recitation-before-automatic-saving-finishes-and-make",
+      "snapshot_status": "Backlog",
+      "disposition": "W05 / required"
+    },
+    {
+      "issue": "TAW-92",
+      "title": "Use amber Turning ت across Tawaq app and tray icons",
+      "url": "https://linear.app/tawaq/issue/TAW-92/use-amber-turning-t-across-tawaq-app-and-tray-icons",
+      "snapshot_status": "Backlog",
+      "disposition": "W10 / verify existing artwork; reconcile TAW-13"
+    },
+    {
+      "issue": "TAW-94",
+      "title": "Resolve desktop UI findings from the Linux audits",
+      "url": "https://linear.app/tawaq/issue/TAW-94/resolve-desktop-ui-findings-from-the-linux-audits",
+      "snapshot_status": "Backlog",
+      "disposition": "W12 / tracker reconciliation"
+    },
+    {
+      "issue": "TAW-95",
+      "title": "Recitation player wraps toggle labels into vertical letters and overflows its panel",
+      "url": "https://linear.app/tawaq/issue/TAW-95/recitation-player-wraps-toggle-labels-into-vertical-letters-and",
+      "snapshot_status": "Todo",
+      "disposition": "W05 / required"
+    },
+    {
+      "issue": "TAW-96",
+      "title": "Save while listening is hidden below the entire downloaded recitation list",
+      "url": "https://linear.app/tawaq/issue/TAW-96/save-while-listening-is-hidden-below-the-entire-downloaded-recitation",
+      "snapshot_status": "Todo",
+      "disposition": "W05 / required"
+    },
+    {
+      "issue": "TAW-97",
+      "title": "Prayer calendar jumps and resets its visible dates after the entrance animation",
+      "url": "https://linear.app/tawaq/issue/TAW-97/prayer-calendar-jumps-and-resets-its-visible-dates-after-the-entrance",
+      "snapshot_status": "Todo",
+      "disposition": "W02 / required"
+    },
+    {
+      "issue": "TAW-98",
+      "title": "Quran compact layout shrinks the reader and overflows study tabs at 800×600",
+      "url": "https://linear.app/tawaq/issue/TAW-98/quran-compact-layout-shrinks-the-reader-and-overflows-study-tabs-at",
+      "snapshot_status": "Todo",
+      "disposition": "W04 / required"
+    },
+    {
+      "issue": "TAW-99",
+      "title": "Hisn al-Muslim chapter list is clipped to a sliver at the minimum desktop size",
+      "url": "https://linear.app/tawaq/issue/TAW-99/hisn-al-muslim-chapter-list-is-clipped-to-a-sliver-at-the-minimum",
+      "snapshot_status": "Todo",
+      "disposition": "W07 / required"
+    },
+    {
+      "issue": "TAW-100",
+      "title": "Restored paused recitation shows a 0:00 total beside a nonzero saved position",
+      "url": "https://linear.app/tawaq/issue/TAW-100/restored-paused-recitation-shows-a-000-total-beside-a-nonzero-saved",
+      "snapshot_status": "Todo",
+      "disposition": "W05 / required"
+    },
+    {
+      "issue": "TAW-101",
+      "title": "Hadith search fails with a disposed-provider error and exposes debugging instructions",
+      "url": "https://linear.app/tawaq/issue/TAW-101/hadith-search-fails-with-a-disposed-provider-error-and-exposes",
+      "snapshot_status": "Todo",
+      "disposition": "W06 / required"
+    },
+    {
+      "issue": "TAW-102",
+      "title": "English prayer dashboard says Player Analytics and 1 days",
+      "url": "https://linear.app/tawaq/issue/TAW-102/english-prayer-dashboard-says-player-analytics-and-1-days",
+      "snapshot_status": "Todo",
+      "disposition": "W02 / required"
+    },
+    {
+      "issue": "TAW-103",
+      "title": "Fortress filter says no favorites even when bookmarked chapters exist",
+      "url": "https://linear.app/tawaq/issue/TAW-103/fortress-filter-says-no-favorites-even-when-bookmarked-chapters-exist",
+      "snapshot_status": "Todo",
+      "disposition": "W07 / required"
+    },
+    {
+      "issue": "TAW-104",
+      "title": "Keep the Quran study panel collapsed in the stacked layout",
+      "url": "https://linear.app/tawaq/issue/TAW-104/keep-the-quran-study-panel-collapsed-in-the-stacked-layout",
+      "snapshot_status": "Todo",
+      "disposition": "W04 / required"
+    },
+    {
+      "issue": "TAW-105",
+      "title": "Make the unselected Quran study state compact and actionable",
+      "url": "https://linear.app/tawaq/issue/TAW-105/make-the-unselected-quran-study-state-compact-and-actionable",
+      "snapshot_status": "Backlog",
+      "disposition": "W04 / required"
+    },
+    {
+      "issue": "TAW-106",
+      "title": "Open location setup directly from the missing-location recovery",
+      "url": "https://linear.app/tawaq/issue/TAW-106/open-location-setup-directly-from-the-missing-location-recovery",
+      "snapshot_status": "Todo",
+      "disposition": "W03 / required"
+    },
+    {
+      "issue": "TAW-107",
+      "title": "Keep Adhan alerts from interrupting incomplete onboarding",
+      "url": "https://linear.app/tawaq/issue/TAW-107/keep-adhan-alerts-from-interrupting-incomplete-onboarding",
+      "snapshot_status": "Todo",
+      "disposition": "W03 / required"
+    },
+    {
+      "issue": "TAW-108",
+      "title": "Make onboarding compact and explain its setup stages",
+      "url": "https://linear.app/tawaq/issue/TAW-108/make-onboarding-compact-and-explain-its-setup-stages",
+      "snapshot_status": "Backlog",
+      "disposition": "W03 / required"
+    },
+    {
+      "issue": "TAW-109",
+      "title": "Prioritize city selection in prayer location setup",
+      "url": "https://linear.app/tawaq/issue/TAW-109/prioritize-city-selection-in-prayer-location-setup",
+      "snapshot_status": "Backlog",
+      "disposition": "W03 / required"
+    },
+    {
+      "issue": "TAW-110",
+      "title": "Put appearance controls first in the Appearance tab",
+      "url": "https://linear.app/tawaq/issue/TAW-110/put-appearance-controls-first-in-the-appearance-tab",
+      "snapshot_status": "Backlog",
+      "disposition": "W08 / required"
+    },
+    {
+      "issue": "TAW-111",
+      "title": "Distinguish theme mode from color palette in settings copy",
+      "url": "https://linear.app/tawaq/issue/TAW-111/distinguish-theme-mode-from-color-palette-in-settings-copy",
+      "snapshot_status": "Todo",
+      "disposition": "W08 / required"
+    },
+    {
+      "issue": "TAW-112",
+      "title": "Keep the five-prayer schedule easy to scan in the initial view",
+      "url": "https://linear.app/tawaq/issue/TAW-112/keep-the-five-prayer-schedule-easy-to-scan-in-the-initial-view",
+      "snapshot_status": "Backlog",
+      "disposition": "W02 / required"
+    },
+    {
+      "issue": "TAW-113",
+      "title": "Use locale direction for English Fortress controls and progress",
+      "url": "https://linear.app/tawaq/issue/TAW-113/use-locale-direction-for-english-fortress-controls-and-progress",
+      "snapshot_status": "Todo",
+      "disposition": "W07 / required"
+    },
+    {
+      "issue": "TAW-114",
+      "title": "Make About version and support easier to find",
+      "url": "https://linear.app/tawaq/issue/TAW-114/make-about-version-and-support-easier-to-find",
+      "snapshot_status": "Backlog",
+      "disposition": "W08 / required"
+    },
+    {
+      "issue": "TAW-115",
+      "title": "Verify and repair keyboard access and scope of recent-query deletion",
+      "url": "https://linear.app/tawaq/issue/TAW-115/verify-and-repair-keyboard-access-and-scope-of-recent-query-deletion",
+      "snapshot_status": "Backlog",
+      "disposition": "W06 / verify and finish"
+    },
+    {
+      "issue": "TAW-116",
+      "title": "Verify and expose reflection autosave status and recovery",
+      "url": "https://linear.app/tawaq/issue/TAW-116/verify-and-expose-reflection-autosave-status-and-recovery",
+      "snapshot_status": "Backlog",
+      "disposition": "W04/W11 / verify and finish"
+    },
+    {
+      "issue": "TAW-117",
+      "title": "Stretch the onboarding title bar across the native window",
+      "url": "https://linear.app/tawaq/issue/TAW-117/stretch-the-onboarding-title-bar-across-the-native-window",
+      "snapshot_status": "Todo",
+      "disposition": "W03 / required"
+    },
+    {
+      "issue": "TAW-118",
+      "title": "Display configured-zone prayer times in the onboarding preview",
+      "url": "https://linear.app/tawaq/issue/TAW-118/display-configured-zone-prayer-times-in-the-onboarding-preview",
+      "snapshot_status": "Todo",
+      "disposition": "W02 / required"
+    }
+  ],
+  "done_regression_issues": [
+    "TAW-76",
+    "TAW-78",
+    "TAW-23",
+    "TAW-93",
+    "TAW-91",
+    "TAW-62",
+    "TAW-77",
+    "TAW-75",
+    "TAW-74",
+    "TAW-73",
+    "TAW-64",
+    "TAW-83",
+    "TAW-80",
+    "TAW-79",
+    "TAW-63",
+    "TAW-12",
+    "TAW-16",
+    "TAW-8",
+    "TAW-6",
+    "TAW-9"
+  ],
+  "launch_platforms": [
+    "Linux",
+    "Windows",
+    "macOS"
+  ],
+  "launch_strategy": "Simultaneous public launch; all three native acceptance and distribution gates required",
+  "launch_scope_status": "confirmed by user",
+  "final_ui_ux_gate": {
+    "scenario": "RC-16",
+    "work": "W12",
+    "required": true,
+    "skill": "impeccable",
+    "spec_section": 12,
+    "status": "required_not_yet_verified",
+    "scope": "Every reachable page, sheet, detail pane, dialog, drawer, menu and popover in the final native candidate",
+    "acceptance": "Complete runtime surface inventory, Impeccable audit/polish and confirmation evidence under the section 7 matrix; all confirmed UI/UX defects resolved or explicitly reviewed as intentional design",
+    "release_gate": true
+  }
+}

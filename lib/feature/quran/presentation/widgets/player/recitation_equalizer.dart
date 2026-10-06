@@ -1,5 +1,5 @@
-
 import 'package:flutter/widgets.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 
 /// A small three-bar "now playing" equalizer that animates while audio plays.
 ///
@@ -43,10 +43,18 @@ class _RecitationEqualizerState extends State<RecitationEqualizer>
   );
 
   static const _phases = [0.0, 0.2, 0.4];
+  bool _reducedMotion = false;
 
   @override
   void initState() {
     super.initState();
+    _syncAnimation();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reducedMotion = reduceMotion(context);
     _syncAnimation();
   }
 
@@ -59,7 +67,7 @@ class _RecitationEqualizerState extends State<RecitationEqualizer>
   }
 
   void _syncAnimation() {
-    if (widget.animating) {
+    if (widget.animating && !_reducedMotion) {
       if (!_controller.isAnimating) {
         _controller.repeat(reverse: true);
       }
@@ -100,7 +108,7 @@ class _RecitationEqualizerState extends State<RecitationEqualizer>
 
   Widget _bar(double phase) {
     final t = (_controller.value + phase) % 1.0;
-    final scale = widget.animating
+    final scale = widget.animating && !_reducedMotion
         ? 0.3 + 0.7 * (t < 0.5 ? t * 2 : (1 - t) * 2)
         : 0.45;
     return Align(

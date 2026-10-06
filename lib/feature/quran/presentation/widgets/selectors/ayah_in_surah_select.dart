@@ -90,9 +90,7 @@ class AyahInSurahSelect extends HookConsumerWidget {
       final clamped = v.clamp(1, ayahCount);
       controller
         ..text = '$clamped'
-        ..selection = TextSelection.collapsed(
-          offset: controller.text.length,
-        );
+        ..selection = TextSelection.collapsed(offset: controller.text.length);
       onChanged(clamped);
     }
 
@@ -104,9 +102,7 @@ class AyahInSurahSelect extends HookConsumerWidget {
       } else {
         controller
           ..text = '$ayah'
-          ..selection = TextSelection.collapsed(
-            offset: controller.text.length,
-          );
+          ..selection = TextSelection.collapsed(offset: controller.text.length);
       }
     }
 
@@ -122,7 +118,6 @@ class AyahInSurahSelect extends HookConsumerWidget {
         name: label,
         value: _ayahReference(l10n, surahName, ayah),
         enabled: enabled,
-        excludeChild: true,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -145,9 +140,7 @@ class AyahInSurahSelect extends HookConsumerWidget {
             SizedBox(
               width: 68,
               child: FTextField(
-                control: FTextFieldControl.managed(
-                  controller: controller,
-                ),
+                control: FTextFieldControl.managed(controller: controller),
                 focusNode: focusNode,
                 size: FTextFieldSizeVariant.sm,
                 textAlign: TextAlign.center,
@@ -182,15 +175,12 @@ class AyahInSurahSelect extends HookConsumerWidget {
       name: label,
       value: _ayahReference(l10n, surahName, ayah),
       enabled: enabled,
-      excludeChild: true,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: FTextField(
-              control: FTextFieldControl.managed(
-                controller: controller,
-              ),
+              control: FTextFieldControl.managed(controller: controller),
               focusNode: focusNode,
               label: Text(label),
               inputFormatters: const [AyahInputFormatter()],

@@ -15,9 +15,7 @@ MushafStyle buildQuranMushafStyle(
   FThemeData theme, {
   double zoom = kMushafZoomDefault,
 }) => MushafStyle(
-  scale: MushafScale(
-    readingBoost: clampMushafZoom(zoom),
-  ),
+  scale: MushafScale(readingBoost: clampMushafZoom(zoom)),
   ayahStyleModifier: (s) => s.copyWith(color: theme.colors.foreground),
   juzStyleModifier: (s) => s.copyWith(color: theme.colors.mutedForeground),
   pageNumberStyleModifier: (s) =>
@@ -36,7 +34,7 @@ MushafStyle buildQuranMushafStyle(
 );
 
 /// Stable mushaf style keyed by palette, brightness, and mushaf zoom.
-@Riverpod(keepAlive: true)
+@riverpod
 MushafStyle mushafStyle(Ref ref) {
   final theme = ref.watch(appThemeDataProvider);
   final zoom = ref.watch(

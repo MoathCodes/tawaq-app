@@ -90,6 +90,9 @@ class HadithSessionController extends _$HadithSessionController {
     return const HadithSessionState();
   }
 
+  /// Resets cached initialization failures for a user-requested retry.
+  void retryInitialization() => retryFailedHadithInitialization(ref);
+
   /// Bootstraps the controller into search or specific-list mode.
   Future<void> bootstrap({
     List<DetailedHadith> hadiths = const <DetailedHadith>[],
@@ -142,6 +145,7 @@ class HadithSessionController extends _$HadithSessionController {
       return;
     }
 
+    ++_searchGeneration;
     state = state.copyWith(filters: filters);
 
     if (!state.isSearchMode) {
@@ -169,6 +173,7 @@ class HadithSessionController extends _$HadithSessionController {
   /// New-query failures are **hard** [AsyncError]s — prior page data is not
   /// retained (see [HadithSessionState] pagination rule for `goToPage`).
   Future<void> search() async {
+    _cancelDebounces();
     final generation = ++_searchGeneration;
     final value = state.query.trim();
 
@@ -190,28 +195,24 @@ class HadithSessionController extends _$HadithSessionController {
       searchOutcome: const AsyncLoading(),
     );
 
+    retryInitialization();
+    final params = _toSearchParams(query: value, page: 1);
     try {
       final repository = await ref.read(hadithRepositoryProvider.future);
-      final response = await repository.searchDetailed(
-        _toSearchParams(query: value, page: 1),
-      );
+      if (!ref.mounted || generation != _searchGeneration) return;
+      final response = await repository.searchDetailed(params);
 
       if (!ref.mounted || generation != _searchGeneration) return;
 
       final selectedKey = state.selectedHadithKey;
       final keepSelection =
           selectedKey != null &&
-          response.data.any(
-            (hadith) => hadithStableKey(hadith) == selectedKey,
-          );
+          response.data.any((hadith) => hadithStableKey(hadith) == selectedKey);
 
       state = state.copyWith(
         query: value,
         searchOutcome: AsyncData(
-          HadithSearchPage(
-            results: response.data,
-            metadata: response.metadata,
-          ),
+          HadithSearchPage(results: response.data, metadata: response.metadata),
         ),
         clearSelectedHadith: selectedKey != null && !keepSelection,
       );
@@ -245,15 +246,16 @@ class HadithSessionController extends _$HadithSessionController {
       return;
     }
 
-    final generation = _searchGeneration;
+    final generation = ++_searchGeneration;
     final previousPage = state.searchPage;
     state = state.copyWith(isPaginating: true, clearPaginationError: true);
 
+    retryInitialization();
+    final params = _toSearchParams(query: value, page: page);
     try {
       final repository = await ref.read(hadithRepositoryProvider.future);
-      final response = await repository.searchDetailed(
-        _toSearchParams(query: value, page: page),
-      );
+      if (!ref.mounted || generation != _searchGeneration) return;
+      final response = await repository.searchDetailed(params);
 
       if (!ref.mounted || generation != _searchGeneration) return;
 
@@ -287,9 +289,7 @@ class HadithSessionController extends _$HadithSessionController {
       final selectedKey = state.selectedHadithKey;
       final keepSelection =
           selectedKey != null &&
-          response.data.any(
-            (hadith) => hadithStableKey(hadith) == selectedKey,
-          );
+          response.data.any((hadith) => hadithStableKey(hadith) == selectedKey);
 
       state = state.copyWith(
         isPaginating: false,
@@ -306,10 +306,7 @@ class HadithSessionController extends _$HadithSessionController {
     } catch (error) {
       if (!ref.mounted || generation != _searchGeneration) return;
       // Soft: keep prior AsyncData; surface a recoverable pagination error.
-      state = state.copyWith(
-        isPaginating: false,
-        paginationError: '$error',
-      );
+      state = state.copyWith(isPaginating: false, paginationError: '$error');
     }
   }
 
@@ -369,7 +366,7 @@ class HadithSessionController extends _$HadithSessionController {
 
     final current = _selectedFromVisible(ref, state);
     var index = current == null
-        ? (delta > 0 ? 0 : results.length - 1)
+        ? -1
         : results.indexWhere(
             (hadith) => hadithStableKey(hadith) == hadithStableKey(current),
           );
@@ -468,10 +465,7 @@ class HadithSessionController extends _$HadithSessionController {
   }
 
   HadithSearchSnapshot _captureSearchSnapshot() {
-    return HadithSearchSnapshot(
-      query: state.query,
-      filters: state.filters,
-    );
+    return HadithSearchSnapshot(query: state.query, filters: state.filters);
   }
 
   HadithSearchParams _toSearchParams({
@@ -612,11 +606,7 @@ enum HadithDetailKind {
 ///
 /// Auto-dispose family: disposes when the detail pane stops watching this key.
 @riverpod
-Future<Object?> hadithDetail(
-  Ref ref,
-  HadithDetailKind kind,
-  String id,
-) async {
+Future<Object?> hadithDetail(Ref ref, HadithDetailKind kind, String id) async {
   final client = await ref.watch(dorarClientProvider.future);
   return switch (kind) {
     HadithDetailKind.sharh => client.getSharhById(id),

@@ -1,5 +1,20 @@
 {
+  "hadithLookupPrompt": "Type at least two characters to search suggestions.",
+  "hadithLookupFailed": "Could not load suggestions. Try again.",
+  "hadithRecentsLoadFailed": "Could not load recent searches. Try again.",
+  "hadithRecentsUpdateFailed": "Could not update recent searches. Try again.",
+  "quranSearchPrompt": "Type at least two characters to search the Quran.",
+  "sharePageLoadFailed": "Could not load this page. Try again.",
+  "shareImageExportFailed": "Could not export the image. Try again.",
+  "reflectionsLoadFailed": "Could not load your reflections. Try again.",
+  "reflectionDeleteFailed": "Could not delete this reflection. Try again.",
+  "appStartupFailed": "Could not start Tawaq. Try again.",
+  "prayerAnalyticsLoadFailed": "Could not load prayer analytics. Try again.",
+  "prayerHistoryStartupFailed": "Could not prepare prayer history. Try again.",
+  "studySelectionHint": "Select an ayah in the Mushaf to open its tafsir, translation, and your reflection.",
+  "studySelectionLoadFailed": "Could not load the selected ayah. Try again.",
   "@@locale": "en",
+  "close": "Close",
   "globalPlaybackChooseMoshaf": "Choose a recitation",
   "globalPlaybackChooseReciter": "Choose a reciter",
   "globalPlaybackChooseSurah": "Choose a surah",
@@ -145,6 +160,7 @@
       }
     }
   },
+  "ayahActions": "Ayah actions",
   "ayahCopy": "Copy",
   "ayahLabel": "Ayah",
   "ayahShare": "Share",
@@ -160,13 +176,13 @@
   "chooseLocation": "Choose Location",
   "collapse": "Collapse",
   "collapsePanel": "Collapse panel",
-  "colorTheme": "Color Theme",
-  "colorThemeSubtitle": "Choose Manuscript or Neutral.",
+  "colorTheme": "Color palette",
+  "colorThemeSubtitle": "Choose a color palette.",
   "completed": "Completed",
   "completionStatus": "Completion Status",
   "coordinates": "Coordinates",
   "currentPrayer": "Current Prayer",
-  "currentEvent": "Current event",
+  "currentEvent": "Current time",
   "currentStreak": "Current Streak",
   "prayerTimeRemaining": "Time remaining",
   "prayerTimeSinceStart": "Since prayer began",
@@ -221,6 +237,7 @@
   "footnote": "Footnote",
   "fortressAllChapters": "All adhkar",
   "fortressBenefit": "Benefit",
+  "fortressShareDetailsFailed": "Could not load the selected study details. Retry, or deselect them to share the thikr.",
   "fortressShare": "Share dua",
   "fortressRepetition": "Repetition count",
   "fortressBrowseWeakHadith": "Weak & fabricated hadiths",
@@ -234,7 +251,7 @@
   "fortressFakeHadithIntro": "Reference list from Hisn al-Muslim of hadiths scholars warn against.",
   "fortressFavorites": "Favorites",
   "fortressFilterAuthenticity": "Filter by grading",
-  "fortressFilterChaptersHint": "Filter chapters...",
+  "fortressFilterChaptersHint": "Find a chapter",
   "fortressFinish": "Finish",
   "fortressHideDetails": "Hide details",
   "fortressLoadError": "Failed to load adhkar",
@@ -267,8 +284,8 @@
   },
   "fortressRetry": "Retry",
   "fortressSearchContents": "Adhkar",
-  "fortressSearchHint": "Search chapters and adhkar...",
-  "fortressSearchLabel": "Search",
+  "fortressSearchHint": "Search all adhkar",
+  "fortressSearchLabel": "Search all adhkar",
   "fortressSearchOpen": "Search adhkar",
   "fortressSearchTitles": "Chapters",
   "fortressSharh": "Explanation",
@@ -311,6 +328,7 @@
   "hadithBooks": "Books",
   "hadithClearAllFilters": "Clear all filters",
   "hadithClearAllRecents": "Clear all",
+  "hadithCopyFailed": "Could not copy the text. Try again.",
   "hadithCopied": "Hadith copied",
   "hadithDegreeAll": "All degrees",
   "hadithDegreeAuthenticChain": "Chains scholars ruled authentic",
@@ -329,6 +347,9 @@
   },
   "hadithFilterTab": "Filters",
   "hadithFoundations": "Foundations",
+  "hadithShareDetailsFailed": "Could not load: {sections}. Retry or turn off the selected detail to export the image.",
+  "@hadithShareDetailsFailed": {"placeholders": {"sections": {"type": "String"}}},
+  "hadithShareJudgmentRequired": "The source judgment stays visible for weak reports or warnings about their chain.",
   "hadithGradeExplanation": "Grade Explanation",
   "hadithLoadMore": "Load more",
   "hadithLoadSharh": "Load Explanation",
@@ -569,11 +590,15 @@
   "morocco": "Morocco",
   "muslimFortress": "Muslim Fortress",
   "muslimWorldLeague": "Muslim World League",
+  "sage": "Sage",
+  "@sage": {
+    "description": "Sage color palette inspired by the Turning ta icon"
+  },
   "neutral": "Neutral",
   "omarchy": "Omarchy",
   "next": "Next",
   "nextPrayer": "Next Prayer",
-  "nextEvent": "Next event",
+  "nextEvent": "Next time",
   "noDataAvailable": "No data available",
   "prayerAnalyticsPeriodLast7Days": "Last 7 days",
   "prayerAnalyticsPeriodLast30Days": "Last 30 days",
@@ -715,7 +740,7 @@
   "parametersSavedTitle": "Parameters Saved",
   "performanceIndicator": "Performance Indicator",
   "placeholdersHint": "Madhab and other options can be configured later. These inputs are placeholders.",
-  "playerAnalytics": "Player Analytics",
+  "playerAnalytics": "Prayer analytics",
   "pleaseSelectMethod": "Please select a calculation method.",
   "prayer": "Prayer",
   "prayerAlertDismiss": "Dismiss",
@@ -828,12 +853,22 @@
   "quranRecitationOfflineDeleteConfirm": "Delete {count} downloads ({size})? This cannot be undone.",
   "@quranRecitationOfflineDeleteConfirm": {
     "placeholders": {
-      "count": {"type": "int"},
-      "size": {"type": "String"}
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
     }
   },
   "quranRecitationOfflineDeleteFailed": "Could not delete {count} downloads. They remain selected for retry.",
-  "@quranRecitationOfflineDeleteFailed": {"placeholders": {"count": {"type": "int"}}},
+  "@quranRecitationOfflineDeleteFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quranRecitationOfflineDeleteSelected": "Delete selected",
   "quranRecitationOfflineDeleteTitle": "Delete downloads?",
   "quranRecitationOfflineEmpty": "No recitations saved yet.",
@@ -853,7 +888,13 @@
   "quranRecitationOfflineRiwayah": "Riwayah",
   "quranRecitationOfflineSelectAll": "Select all",
   "quranRecitationOfflineSelected": "{count} selected",
-  "@quranRecitationOfflineSelected": {"placeholders": {"count": {"type": "int"}}},
+  "@quranRecitationOfflineSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quranRecitationOfflineSize": "Size",
   "quranRecitationOfflineStorageUsed": "Storage used",
   "quranRecitationOfflineSurah": "Surah",
@@ -1193,7 +1234,7 @@
   "sourceLabel": "Source:",
   "status": "Status",
   "stone": "Stone",
-  "streakInDays": "{streak} days",
+  "streakInDays": "{streak, plural, one{1 day} other{{streak} days}}",
   "@streakInDays": {
     "placeholders": {
       "streak": {
@@ -1282,5 +1323,46 @@
   "welcomeToApp": "Welcome to the app!",
   "yearly": "Yearly",
   "yellow": "Yellow",
-  "zinc": "Zinc"
+  "zinc": "Zinc",
+  "onboardingSaveFailed": "Could not save setup. Your choices are still here; try again.",
+  "saving": "Saving…",
+  "onboardingStepCount": "Step {current} of {total}",
+  "@onboardingStepCount": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "themeModeLabel": "Theme mode",
+  "systemThemeLabel": "System",
+  "notesSavePending": "Unsaved changes",
+  "notesSaveSucceeded": "Saved",
+  "notesSaveFailed": "Could not save reflection. Try again.",
+  "quranNavigation": "More Quran controls",
+  "backToReading": "Back to reading",
+  "retryAction": "Retry",
+  "desktopAutostartRegistrationHint": "Registers Tawaq for XDG autostart. Your desktop session must run an autostart consumer. Direct Hyprland sessions may not; registration does not confirm startup at login.",
+  "fortressBackToCatalog": "Back to chapters",
+  "advancedLocationOptions": "Advanced location options",
+  "deviceLocationUnavailable": "Device location is unavailable. Choose a city or enter coordinates, or retry the service check.",
+  "deviceLocationTimedOut": "Device location timed out. Try again or choose a city.",
+  "checkingDeviceLocation": "Checking device location…",
+  "quranRecitationDurationUnknown": "Duration unavailable",
+  "hadithRequestFailed": "Could not load hadith. Check your connection and try again.",
+  "hadithBookmarkFailed": "Could not save the bookmark. Try again.",
+  "hadithClearRecentsConfirm": "Clear all recent searches?",
+  "quitSaveFailed": "Your reflection could not be saved. Tawaq is still open; your draft is retained.",
+  "quitRetry": "Save and quit again",
+  "clearSearchAction": "Clear search",
+  "quranUnifiedSearchHint": "Surah, juz, hizb, or ayah…",
+  "quranUnifiedSearchHelp": "Search a name or Quran text. Try “juz 3”, “hizb 7”, or “2:255”.",
+  "quranSearchSurahs": "Surahs",
+  "quranSearchJuzs": "Juz",
+  "quranSearchHizbs": "Hizb",
+  "quranSearchAyahs": "Ayahs",
+  "quranSearchFailed": "Search could not load. Try again."
 }

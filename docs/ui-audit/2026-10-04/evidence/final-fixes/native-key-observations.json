@@ -1,0 +1,72 @@
+{
+  "route": "Hyprland 0.56.2 send_shortcut to owned PID/address, real GTK key delivery",
+  "observations": {
+    "native-0-before": {
+      "page": 50,
+      "selection": null,
+      "primary_focus": "Quran reading",
+      "route": "/quran?page=50"
+    },
+    "native-1-left": {
+      "page": 51,
+      "selection": null,
+      "primary_focus": "Quran reading",
+      "route": "/quran?page=51"
+    },
+    "native-2-right": {
+      "page": 50,
+      "selection": null,
+      "primary_focus": "Quran reading",
+      "route": "/quran?page=50"
+    },
+    "native-3-space": {
+      "page": 51,
+      "selection": null,
+      "primary_focus": "Quran reading",
+      "route": "/quran?page=51"
+    },
+    "native-4-down": {
+      "page": 51,
+      "selection": 303,
+      "primary_focus": "Quran reading",
+      "route": "/quran?page=51"
+    },
+    "native-5-down-again": {
+      "page": 51,
+      "selection": 304,
+      "primary_focus": "Quran reading",
+      "route": "/quran?page=51"
+    },
+    "native-6-up": {
+      "page": 51,
+      "selection": 303,
+      "primary_focus": "Quran reading",
+      "route": "/quran?page=51"
+    },
+    "native-7-tab-search": {
+      "page": 51,
+      "selection": 303,
+      "primary_focus": "Root Focus Scope",
+      "route": "/quran?page=51"
+    },
+    "native-8-search-left": {
+      "page": 51,
+      "selection": 303,
+      "primary_focus": "Root Focus Scope",
+      "route": "/quran?page=51"
+    },
+    "native-9-tab-action": {
+      "page": 51,
+      "selection": 303,
+      "primary_focus": "Root Focus Scope",
+      "route": "/quran?page=51"
+    },
+    "native-10-button-space": {
+      "page": 51,
+      "selection": 303,
+      "primary_focus": "Root Focus Scope",
+      "route": "/quran?page=51"
+    }
+  },
+  "limitation": "Tab observations exposed root focus fallback; fixed afterward and verified by widget regression. Not a screen-reader or end-to-end Tab certification."
+}

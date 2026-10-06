@@ -21,11 +21,13 @@ class ScheduleStatusChips extends ConsumerWidget {
     required this.prayer,
     required this.completionDay,
     required this.prayerTime,
+    this.menu = false,
     super.key,
   });
 
   static const chipSize = 30.0;
 
+  final bool menu;
   final Prayer prayer;
   final DateTime completionDay;
   final DateTime prayerTime;
@@ -37,10 +39,52 @@ class ScheduleStatusChips extends ConsumerWidget {
       completionStatusProvider(prayer, dayKey),
     );
 
+    if (menu) {
+      final now = ref.watch(prayerMinuteSnapshotProvider)?.now;
+      final enabled = now != null && !prayerTime.isAfter(now);
+      final l10n = context.l10n;
+      return FPopoverMenu(
+        menu: [
+          FItemGroup(
+            children: [
+              for (final status in selectableCompletionStatuses)
+                FItem(
+                  title: Text(status.getLocaleName(l10n)),
+                  prefix: Icon(status.getIcon()),
+                  onPress: enabled
+                      ? () => unawaited(
+                          ref
+                              .read(prayerCompletionActionsProvider.notifier)
+                              .setPrayerStatus(
+                                prayer: prayer,
+                                completionDay: completionDay,
+                                status: status,
+                              ),
+                        )
+                      : null,
+                ),
+            ],
+          ),
+        ],
+        builder: (context, controller, _) => FButton.icon(
+          variant: .ghost,
+          size: .sm,
+          semanticsLabel: PrayerSemantics.statusMenuTrigger(
+            l10n: l10n,
+            status: completionStatus,
+          ),
+          onPress: enabled ? controller.toggle : null,
+          child: Icon(
+            completionStatus?.getIcon() ?? FLucideIcons.circleCheck,
+            size: 18,
+          ),
+        ),
+      );
+    }
     return Wrap(
       spacing: AppSpacing.xs,
       runSpacing: AppSpacing.xs,
-      children: CompletionStatus.values
+      children: selectableCompletionStatuses
           .where((status) => status != CompletionStatus.none)
           .map(
             (status) => _ScheduleStatusChip(
@@ -76,8 +120,7 @@ class _ScheduleStatusChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final colors = theme.colors;
-    ref.watch(currentMinuteBucketProvider);
-    final now = ref.read(prayerDayProvider).value?.now;
+    final now = ref.watch(prayerMinuteSnapshotProvider)?.now;
     final enable = now != null && prayerTime.isBefore(now);
     final accent = status.getBadgeColor(colors);
     final icon = status.getIcon();
@@ -114,9 +157,7 @@ class _ScheduleStatusChip extends ConsumerWidget {
                   ? accent
                   : colors.secondary.withValues(alpha: 0.5),
               shape: BoxShape.circle,
-              border: Border.all(
-                color: isSelected ? accent : colors.border,
-              ),
+              border: Border.all(color: isSelected ? accent : colors.border),
             ),
             child: Icon(
               icon,

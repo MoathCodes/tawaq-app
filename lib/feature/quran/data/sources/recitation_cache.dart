@@ -103,27 +103,22 @@ List<_CachedScanEntry> _scanCachedRecitations(String audioDirPath) {
   if (!dir.existsSync()) return result;
   for (final entity in dir.listSync()) {
     if (entity is! Directory) continue;
-    final ids = RegExp(
-      r'^(\d+)-(\d+)\b',
-    ).firstMatch(p.basename(entity.path));
+    final ids = RegExp(r'^(\d+)-(\d+)\b').firstMatch(p.basename(entity.path));
     if (ids == null) continue;
     final reciterId = int.parse(ids.group(1)!);
     final moshafId = int.parse(ids.group(2)!);
     for (final file in entity.listSync()) {
       if (file is! File || !file.path.endsWith('.mp3')) continue;
-      final surahMatch = RegExp(
-        r'^(\d{1,3})\b',
-      ).firstMatch(p.basenameWithoutExtension(file.path));
+      final surahMatch = RegExp(r'^(\d{1,3})\b')
+          .firstMatch(p.basenameWithoutExtension(file.path));
       if (surahMatch == null) continue;
-      result.add(
-        (
-          reciterId: reciterId,
-          moshafId: moshafId,
-          surah: int.parse(surahMatch.group(1)!),
-          path: file.path,
-          sizeBytes: file.lengthSync(),
-        ),
-      );
+      result.add((
+        reciterId: reciterId,
+        moshafId: moshafId,
+        surah: int.parse(surahMatch.group(1)!),
+        path: file.path,
+        sizeBytes: file.lengthSync(),
+      ));
     }
   }
   result.sort((a, b) {
@@ -133,6 +128,21 @@ List<_CachedScanEntry> _scanCachedRecitations(String audioDirPath) {
     return m != 0 ? m : a.surah.compareTo(b.surah);
   });
   return result;
+}
+
+class _AudioDownload {
+  final progress = StreamController<DownloadProgress>.broadcast(sync: true);
+  final done = Completer<void>();
+  final token = CancellationToken();
+  int owners = 0;
+  DownloadProgress? latest;
+  Object? error;
+  StackTrace? stack;
+
+  void publish(DownloadProgress event) {
+    latest = event;
+    progress.add(event);
+  }
 }
 
 /// On-disk cache for recitation audio plus the reciter catalog and ayah-timing
@@ -151,11 +161,7 @@ List<_CachedScanEntry> _scanCachedRecitations(String audioDirPath) {
 class RecitationCache {
   /// Creates a [RecitationCache]. [rootOverride] is for tests; production code
   /// leaves it null so the app-support directory is used.
-  new({
-    required this._client,
-    required this._logger,
-    this.rootOverride,
-  });
+  new({required this._client, required this._logger, this.rootOverride});
 
   final http.Client _client;
   final Logger _logger;
@@ -172,7 +178,7 @@ class RecitationCache {
   static const catalogVersion = 2;
 
   Directory? _root;
-  final Map<String, Future<void>> _inFlight = {};
+  final Map<String, _AudioDownload> _inFlight = {};
 
   Future<Directory> _ensureRoot() async {
     final cached = _root;
@@ -252,57 +258,9 @@ class RecitationCache {
     return file.existsSync() ? file : null;
   }
 
-  /// Minimum `.part` size considered playable when a download fails mid-way.
-  ///
-  /// Anything smaller is almost certainly not a decodable MP3 frame sequence,
-  /// so it is deleted and the caller falls back to the network URL.
-  static const kMinPlayablePartBytes = 1024;
-
-  /// Returns the partially-downloaded `.part` file for [surah] when it exists
-  /// and is at least [minBytes] large, else null.
-  ///
-  /// Used after a failed download to hand mpv the partial file so playback can
-  /// still proceed from whatever was received. An undersized `.part` is
-  /// deleted (cleaned up) so it does not accumulate.
-  Future<File?> partAudioIfLargeEnough({
-    required int reciterId,
-    required int moshafId,
-    required int surah,
-    required String reciterName,
-    required String riwayahName,
-    required String surahName,
-    int minBytes = kMinPlayablePartBytes,
-  }) async {
-    final file = await _audioFile(
-      reciterId: reciterId,
-      moshafId: moshafId,
-      surah: surah,
-      reciterName: reciterName,
-      riwayahName: riwayahName,
-      surahName: surahName,
-    );
-    final part = File('${file.path}.part');
-    if (!part.existsSync()) return null;
-    final size = await part.length();
-    if (size < minBytes) {
-      try {
-        await part.delete();
-      } on Object catch (_) {}
-      return null;
-    }
-    return part;
-  }
-
-  /// Downloads the surah audio, streaming [DownloadProgress].
-  ///
-  /// Streams to a `.part` file and atomically renames on success so a partial
-  /// file is never treated as cached. Safe to call repeatedly; concurrent
-  /// callers for the same path wait for the in-flight download, then yield the
-  /// final cached progress (or complete with no events if it did not land).
-  ///
-  /// On [cancellationToken] cancellation the `.part` file is deleted and the
-  /// stream ends without renaming. On other errors the error is added to the
-  /// stream and the `.part` file is deleted.
+  /// Saves a complete file. Callers share acquisition by exact cache path.
+  /// Each active subscriber owns a share; only the final cancellation aborts
+  /// the underlying request. Neither partial nor failed files become playable.
   Stream<DownloadProgress> downloadAudio({
     required int reciterId,
     required int moshafId,
@@ -313,6 +271,7 @@ class RecitationCache {
     required String url,
     required CancellationToken cancellationToken,
   }) async* {
+    if (cancellationToken.isCancelled) return;
     final file = await _audioFile(
       reciterId: reciterId,
       moshafId: moshafId,
@@ -321,93 +280,152 @@ class RecitationCache {
       riwayahName: riwayahName,
       surahName: surahName,
     );
+    if (cancellationToken.isCancelled) return;
     if (file.existsSync()) {
       final size = file.lengthSync();
       yield DownloadProgress(receivedBytes: size, totalBytes: size);
       return;
     }
-    final key = file.path;
-    final existing = _inFlight[key];
-    if (existing != null) {
-      // Join the in-flight download rather than silently no-oping, so an
-      // explicit "Save for offline" during auto-save still completes.
-      await existing;
-      if (file.existsSync()) {
-        final size = file.lengthSync();
-        yield DownloadProgress(receivedBytes: size, totalBytes: size);
-        return;
-      }
-      // Prior download did not land (cancelled/failed); fall through and
-      // attempt a fresh download below.
+    // A cancelled acquisition must finish cleaning its staging file before
+    // another request for the same identity can take ownership of that path.
+    final abandoned = _inFlight[file.path];
+    if (abandoned != null && abandoned.token.isCancelled) {
+      await abandoned.done.future;
     }
-    // Another waiter may have started a download while we were checking.
-    final raced = _inFlight[key];
-    if (raced != null) {
-      await raced;
-      if (file.existsSync()) {
-        final size = file.lengthSync();
-        yield DownloadProgress(receivedBytes: size, totalBytes: size);
+    if (cancellationToken.isCancelled) return;
+    final existing = _inFlight[file.path];
+    final download = existing ?? _AudioDownload();
+    _inFlight[file.path] = download;
+    download.owners++;
+    var released = false;
+    void release() {
+      if (released) return;
+      released = true;
+      if (--download.owners == 0 && !download.done.isCompleted) {
+        download.token.cancel();
       }
-      return;
     }
-    final done = Completer<void>();
-    _inFlight[key] = done.future;
+
+    final removeCancel = cancellationToken.onCancel(release);
+    final output = StreamController<DownloadProgress>();
+    final subscription = download.progress.stream.listen(
+      output.add,
+      onDone: output.close,
+    );
+    final latest = download.latest;
+    if (latest != null) output.add(latest);
+    final stopForwarding = cancellationToken.onCancel(() {
+      unawaited(subscription.cancel());
+      unawaited(output.close());
+    });
+    if (existing == null) unawaited(_downloadFile(file, url, download));
+    try {
+      yield* output.stream;
+      if (!cancellationToken.isCancelled && download.error != null) {
+        Error.throwWithStackTrace(download.error!, download.stack!);
+      }
+    } finally {
+      removeCancel();
+      stopForwarding();
+      release();
+      await subscription.cancel();
+      // The final subscriber acknowledges cancellation after actual cleanup.
+      if (download.owners == 0) await download.done.future;
+    }
+  }
+
+  Future<void> _downloadFile(
+    File file,
+    String url,
+    _AudioDownload download,
+  ) async {
     final part = File('${file.path}.part');
+    final token = download.token;
+    IOSink? sink;
+    StreamSubscription<List<int>>? body;
     try {
       await file.parent.create(recursive: true);
-      final request = http.Request('GET', Uri.parse(url));
-      final response = await _client.send(request);
+      if (token.isCancelled) return;
+      final request = http.AbortableRequest(
+        'GET',
+        Uri.parse(url),
+        abortTrigger: token.whenCancelled,
+      );
+      final response = await Future.any([
+        _client.send(request).then((response) {
+          if (token.isCancelled)
+            unawaited(response.stream.listen((_) {}).cancel());
+          return response;
+        }),
+        token.whenCancelled.then<http.StreamedResponse>(
+          (_) => throw http.RequestAbortedException(request.url),
+        ),
+      ]);
+      if (token.isCancelled) return;
       if (response.statusCode != 200) {
+        await response.stream.listen((_) {}).cancel();
         throw HttpException('GET $url failed with ${response.statusCode}');
       }
-      final totalBytes = response.contentLength;
-      yield DownloadProgress(receivedBytes: 0, totalBytes: totalBytes);
-      final sink = part.openWrite();
+      final total = response.contentLength;
       var received = 0;
-      try {
-        await for (final chunk in response.stream) {
-          if (cancellationToken.isCancelled) break;
-          sink.add(chunk);
+      sink = part.openWrite();
+      final destination = sink;
+      final complete = Completer<void>();
+      download.publish(DownloadProgress(receivedBytes: 0, totalBytes: total));
+      body = response.stream.listen(
+        (chunk) {
+          if (token.isCancelled) return;
+          destination.add(chunk);
           received += chunk.length;
-          yield DownloadProgress(
-            receivedBytes: received,
-            totalBytes: totalBytes,
+          download.publish(
+            DownloadProgress(receivedBytes: received, totalBytes: total),
           );
-        }
-        await sink.flush();
-      } finally {
-        await sink.close();
-      }
-      if (cancellationToken.isCancelled) {
-        if (part.existsSync()) {
-          try {
-            await part.delete();
-          } on Object catch (_) {}
-        }
-        _logger.i('Download canceled $reciterId/$surah');
-        return;
+        },
+        onError: complete.completeError,
+        onDone: complete.complete,
+      );
+      await Future.any([
+        complete.future,
+        token.whenCancelled,
+        destination.done,
+      ]);
+      await body.cancel();
+      body = null;
+      await sink.flush();
+      await sink.close();
+      sink = null;
+      if (token.isCancelled) return;
+      if (total != null && received != total) {
+        throw const HttpException('Incomplete recitation download');
       }
       await part.rename(file.path);
-      _logger.i('Cached recitation $reciterId/$surah');
-      yield DownloadProgress(
-        receivedBytes: received,
-        totalBytes: totalBytes ?? received,
+      download.publish(
+        DownloadProgress(
+          receivedBytes: received,
+          totalBytes: total ?? received,
+        ),
       );
     } on Object catch (error, stack) {
-      _logger.w(
-        'Failed to cache recitation $reciterId/$surah',
-        error: error,
-        stackTrace: stack,
-      );
-      // NOTE: the `.part` file is intentionally KEPT on error (not deleted)
-      // so a caller can hand mpv the partially-downloaded file when it is
-      // large enough to play. Callers inspect it via
-      // [partAudioIfLargeEnough], which cleans up undersized parts. Only
-      // explicit cancellation deletes the `.part` (handled above).
-      rethrow;
+      if (!token.isCancelled) {
+        download.error = error;
+        download.stack = stack;
+        _logger.w('Recitation save failed', error: error, stackTrace: stack);
+      }
     } finally {
-      _inFlight.remove(key);
-      if (!done.isCompleted) done.complete();
+      try {
+        await body?.cancel();
+        await sink?.close();
+        if (await part.exists()) await part.delete();
+      } on Object catch (error, stack) {
+        download.error ??= error;
+        download.stack ??= stack;
+        _logger.w('Recitation cleanup failed', error: error, stackTrace: stack);
+      } finally {
+        if (identical(_inFlight[file.path], download))
+          _inFlight.remove(file.path);
+        download.done.complete();
+        await download.progress.close();
+      }
     }
   }
 
@@ -454,7 +472,7 @@ class RecitationCache {
   }
 
   /// Reads the cached reciter catalog as raw JSON, or null when missing/stale.
-  Future<List<dynamic>?> readCatalog() async {
+  Future<List<dynamic>?> readCatalog({bool allowStale = false}) async {
     try {
       final file = await _catalogFile();
       if (!file.existsSync()) return null;
@@ -462,7 +480,8 @@ class RecitationCache {
       if (json is! Map<String, dynamic>) return null;
       if (json['version'] != catalogVersion) return null;
       final savedAt = DateTime.tryParse(json['savedAt'] as String? ?? '');
-      if (savedAt == null || DateTime.now().difference(savedAt) > catalogTtl) {
+      if (savedAt == null ||
+          (!allowStale && DateTime.now().difference(savedAt) > catalogTtl)) {
         return null;
       }
       return json['reciters'] as List<dynamic>?;
@@ -476,13 +495,16 @@ class RecitationCache {
   Future<void> writeCatalog(List<Map<String, dynamic>> reciters) async {
     try {
       final file = await _catalogFile();
-      await file.writeAsString(
+      final staging = File('${file.path}.staging');
+      await staging.writeAsString(
         jsonEncode({
           'version': catalogVersion,
           'savedAt': DateTime.now().toIso8601String(),
           'reciters': reciters,
         }),
+        flush: true,
       );
+      await staging.rename(file.path);
     } on Object catch (error) {
       _logger.w('Failed to write recitation catalog: $error');
     }

@@ -8,15 +8,15 @@ const List<CompletionStatus> kTrackerCycleStatuses = [
   CompletionStatus.jamaah,
   CompletionStatus.onTime,
   CompletionStatus.late,
-  CompletionStatus.missed,
 ];
 
 /// Presentation helpers for [CompletionStatus] badges and labels.
 extension CompletionStatusUi on CompletionStatus {
   /// Next status when tapping the today tracker chip.
   ///
-  /// Returns `null` when the current status should be cleared (after [missed]).
+  /// Returns `null` when late or a legacy missed status should be cleared.
   CompletionStatus? get trackerCycleNext {
+    if (this == CompletionStatus.missed) return null;
     if (this == CompletionStatus.none) {
       return CompletionStatus.jamaah;
     }

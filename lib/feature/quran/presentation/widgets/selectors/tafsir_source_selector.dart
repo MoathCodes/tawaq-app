@@ -14,10 +14,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Searchable select for choosing a Quran tafsir source.
 class TafsirSourceSelector extends ConsumerWidget {
   /// Creates a [TafsirSourceSelector].
-  const new({
-    this.enabled = true,
-    super.key,
-  });
+  const new({this.enabled = true, super.key});
 
   /// Whether the selector accepts input.
   final bool enabled;
@@ -32,9 +29,7 @@ class TafsirSourceSelector extends ConsumerWidget {
     const sources = TafsirId.values;
     final selected = ref.watch(
       quranScreenSettingsProvider.select(
-        (settings) =>
-            settings.value?.selectedTafsir ??
-            kDefaultTafsirId,
+        (settings) => settings.value?.selectedTafsir ?? kDefaultTafsirId,
       ),
     );
     final fieldLabel = l10n.tafsir;
@@ -44,7 +39,6 @@ class TafsirSourceSelector extends ConsumerWidget {
         name: fieldLabel,
         value: selected.displayLabel(isArabic: isArabic),
         enabled: enabled,
-        excludeChild: true,
         child: FSelect<TafsirId>.searchBuilder(
           enabled: enabled,
           contentConstraints: selectPopoverPortalConstraints(context),

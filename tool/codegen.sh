@@ -16,10 +16,10 @@ git submodule update --init --recursive --depth 1
 echo "==> codegen packages/mushaf_reader"
 (
   cd packages/mushaf_reader
-  flutter pub get
+  flutter pub get --enforce-lockfile
   dart run build_runner build
 )
 
 echo "==> codegen (app)"
-flutter pub get
+flutter pub get --enforce-lockfile
 dart run build_runner build

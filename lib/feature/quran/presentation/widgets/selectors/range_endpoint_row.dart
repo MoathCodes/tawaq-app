@@ -110,10 +110,7 @@ class RangeEndpointRow extends ConsumerWidget {
 
         return Row(
           children: [
-            SizedBox(
-              width: 44,
-              child: Text(prefix, style: prefixStyle),
-            ),
+            SizedBox(width: 44, child: Text(prefix, style: prefixStyle)),
             Expanded(child: controls(stacked: false)),
           ],
         );

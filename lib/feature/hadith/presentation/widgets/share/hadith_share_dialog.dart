@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dorar_hadith/dorar_hadith.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -10,10 +11,12 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/core/widgets/share_card_dialog_layout.dart';
 import 'package:tawaq/core/widgets/share_card_drag_surface.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_judgment.dart';
 import 'package:tawaq/feature/hadith/presentation/models/hadith_share_include.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_card.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_export.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_text.dart';
 import 'package:tawaq/theme/theme.dart';
 
 Future<void> showHadithShareDialog(
@@ -44,12 +47,21 @@ class HadithShareDialog extends HookConsumerWidget {
     final l10n = context.l10n;
     final theme = context.theme;
     final boundaryKey = useMemoized(GlobalKey.new);
-    final options = useState(HadithShareOptions.defaults());
+    final sharhAvailable =
+        hadith.hasSharhMetadata && hadith.sharhMetadata != null;
+    final options = useState(
+      HadithShareOptions.defaults().constrained(
+        hadith: hadith,
+        sharhAvailable: sharhAvailable,
+        usulAvailable: hadith.hasUsulHadith && hadith.hadithId != null,
+      ),
+    );
+    final judgmentRequired = requiresHadithJudgment(hadith);
     final isCapturing = useState(false);
 
     final sharhEnabled = options.value.contains(HadithShareInclude.sharh);
     final usulEnabled = options.value.contains(HadithShareInclude.usul);
-    final sharhState = sharhEnabled && hadith.hasSharhMetadata
+    final sharhState = sharhEnabled && sharhAvailable
         ? ref.watch(
             hadithDetailProvider(
               HadithDetailKind.sharh,
@@ -69,9 +81,15 @@ class HadithShareDialog extends HookConsumerWidget {
     final loading =
         (sharhEnabled && sharhState.isLoading) ||
         (usulEnabled && usulState.isLoading);
-    final error =
-        (sharhEnabled && sharhState.hasError) ||
-        (usulEnabled && usulState.hasError);
+    final sharhFailed =
+        sharhEnabled &&
+        (sharhState.hasError ||
+            (sharhState.hasValue && !hasHadithMetadata(sharh?.sharhText)));
+    final usulFailed =
+        usulEnabled &&
+        (usulState.hasError ||
+            (usulState.hasValue && (usul?.sources.isEmpty ?? true)));
+    final error = sharhFailed || usulFailed;
 
     Future<void> export({required bool copy}) async {
       if (isCapturing.value || loading || error) return;
@@ -85,12 +103,18 @@ class HadithShareDialog extends HookConsumerWidget {
           copyToClipboard: copy,
         );
       } finally {
-        isCapturing.value = false;
+        if (context.mounted) isCapturing.value = false;
       }
     }
 
     void update(Set<HadithShareInclude> next) {
-      options.value = options.value.copyWith(next);
+      options.value = options.value
+          .copyWith(next)
+          .constrained(
+            hadith: hadith,
+            sharhAvailable: sharhAvailable,
+            usulAvailable: hadith.hasUsulHadith && hadith.hadithId != null,
+          );
     }
 
     final busy = isCapturing.value || loading;
@@ -122,22 +146,71 @@ class HadithShareDialog extends HookConsumerWidget {
       ),
     );
 
-    final Widget settings = FSelectTileGroup<HadithShareInclude>(
+    final selection = FSelectTileGroup<HadithShareInclude>(
       label: Text(l10n.shareIncludeInImage),
       control: .lifted(value: options.value.includes, onChange: update),
       children: [
-        _tile(HadithShareInclude.narrator, l10n.hadithNarrator),
-        _tile(HadithShareInclude.muhaddith, l10n.hadithMuhaddith),
-        _tile(HadithShareInclude.source, l10n.hadithSource),
-        _tile(HadithShareInclude.number, l10n.hadithNumberOrPage),
-        _tile(HadithShareInclude.grade, l10n.hadithGradeExplanation),
-        if ((hadith.takhrij ?? '').trim().isNotEmpty)
+        if (hasHadithMetadata(hadith.rawi))
+          _tile(HadithShareInclude.narrator, l10n.hadithNarrator),
+        if (hasHadithMetadata(hadith.mohdith))
+          _tile(HadithShareInclude.muhaddith, l10n.hadithMuhaddith),
+        if (hasHadithMetadata(hadith.book))
+          _tile(HadithShareInclude.source, l10n.hadithSource),
+        if (hasHadithMetadata(hadith.numberOrPage))
+          _tile(HadithShareInclude.number, l10n.hadithNumberOrPage),
+        if (hasHadithMetadata(hadith.hukm))
+          FSelectTile(
+            value: HadithShareInclude.grade,
+            title: Text(l10n.hadithGradeExplanation),
+            enabled: !judgmentRequired,
+          ),
+        if (hasHadithMetadata(hadith.takhrij))
           _tile(HadithShareInclude.takhrij, l10n.hadithTakhrij),
-        if (hadith.hasSharhMetadata)
-          _tile(HadithShareInclude.sharh, l10n.hadithSharh),
+        if (sharhAvailable) _tile(HadithShareInclude.sharh, l10n.hadithSharh),
         if (hadith.hasUsulHadith && hadith.hadithId != null)
           _tile(HadithShareInclude.usul, l10n.hadithUsulHadith),
         _tile(HadithShareInclude.appName, l10n.shareAppName),
+      ],
+    );
+
+    void retryDetails() {
+      if (sharhFailed) {
+        ref.invalidate(
+          hadithDetailProvider(
+            HadithDetailKind.sharh,
+            hadith.sharhMetadata!.id,
+          ),
+        );
+      }
+      if (usulFailed) {
+        ref.invalidate(
+          hadithDetailProvider(HadithDetailKind.usul, hadith.hadithId!),
+        );
+      }
+    }
+
+    final failedSections = [
+      if (sharhFailed) l10n.hadithSharh,
+      if (usulFailed) l10n.hadithUsulHadith,
+    ];
+    final settings = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (judgmentRequired) ...[
+          Text(
+            l10n.hadithShareJudgmentRequired,
+            style: theme.typography.body.sm.copyWith(
+              color: theme.colors.foreground,
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+        selection,
+        if (loading) ...[
+          const SizedBox(height: AppSpacing.md),
+          const Center(child: FCircularProgress.loader()),
+        ],
       ],
     );
 
@@ -152,19 +225,82 @@ class HadithShareDialog extends HookConsumerWidget {
       ),
       builder: (context, dialogStyle) => ForuiDialogLayout(
         style: dialogStyle,
+        expandActions: true,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(l10n.hadithShare),
             FButton.icon(
+              semanticsLabel: l10n.close,
               onPress: () => Navigator.of(context).pop(),
               variant: .ghost,
               child: const Icon(FLucideIcons.x),
             ),
           ],
         ),
-        body: ShareCardDialogLayout(preview: preview, settings: settings),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ShareCardDialogLayout(
+                preview: preview,
+                settings: settings,
+              ),
+            ),
+            if (error) ...[
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: AppSpacing.md,
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.hadithShareDetailsFailed(failedSections.join(' • ')),
+                      style: theme.typography.body.sm.copyWith(
+                        color: theme.colors.foreground,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+                  FButton(
+                    variant: .secondary,
+                    onPress: retryDetails,
+                    child: Text(l10n.retryAction),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
         actions: [
+          FButton(
+            variant: .secondary,
+            onPress: isCapturing.value
+                ? null
+                : () async {
+                    try {
+                      await Clipboard.setData(
+                        ClipboardData(text: hadithShareText(hadith, l10n)),
+                      );
+                      if (context.mounted) {
+                        showFToast(
+                          context: context,
+                          title: Text(l10n.hadithCopied),
+                        );
+                      }
+                    } on Object {
+                      if (context.mounted) {
+                        showFToast(
+                          context: context,
+                          title: Text(l10n.hadithCopyFailed),
+                        );
+                      }
+                    }
+                  },
+            child: Flexible(
+              child: Text(l10n.menuCopyText, textAlign: TextAlign.center),
+            ),
+          ),
           FButton(
             variant: .secondary,
             onPress: busy || error
@@ -172,13 +308,23 @@ class HadithShareDialog extends HookConsumerWidget {
                 : () => unawaited(export(copy: false)),
             child: busy
                 ? const FCircularProgress.loader()
-                : Text(l10n.shareSaveImage),
+                : Flexible(
+                    child: Text(
+                      l10n.shareSaveImage,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
           ),
           FButton(
             onPress: busy || error ? null : () => unawaited(export(copy: true)),
             child: busy
                 ? const FCircularProgress.loader()
-                : Text(l10n.shareCopyImage),
+                : Flexible(
+                    child: Text(
+                      l10n.shareCopyImage,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
           ),
         ],
       ),

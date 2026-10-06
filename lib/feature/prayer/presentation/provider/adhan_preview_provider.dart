@@ -258,10 +258,7 @@ class AdhanPreview extends _$AdhanPreview {
   Future<void> _stopOwnedTrack({
     required bool restore,
     String? expectedTrackId,
-  }) => _finishOwnedTrack(
-    restore: restore,
-    expectedTrackId: expectedTrackId,
-  );
+  }) => _finishOwnedTrack(restore: restore, expectedTrackId: expectedTrackId);
 
   Future<void> _finishOwnedTrack({
     required bool restore,

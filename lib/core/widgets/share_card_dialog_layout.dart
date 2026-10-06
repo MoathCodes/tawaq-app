@@ -7,11 +7,7 @@ import 'package:tawaq/theme/theme.dart';
 /// The feature supplies the preview and settings widgets. This widget only
 /// standardizes the interaction model and responsive layout.
 class ShareCardDialogLayout extends StatelessWidget {
-  const new({
-    required this.preview,
-    required this.settings,
-    super.key,
-  });
+  const new({required this.preview, required this.settings, super.key});
 
   final Widget preview;
   final Widget settings;
@@ -27,7 +23,15 @@ class ShareCardDialogLayout extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                preview,
+                // Quran's preview contains an Expanded reading viewport. Give
+                // every preview a bounded height before putting the stacked
+                // preview/settings composition in its scrolling body.
+                SizedBox(
+                  height: constraints.hasBoundedHeight
+                      ? constraints.maxHeight.clamp(0.0, 240.0)
+                      : 240,
+                  child: preview,
+                ),
                 const SizedBox(height: AppSpacing.lg),
                 settings,
               ],
@@ -40,7 +44,7 @@ class ShareCardDialogLayout extends StatelessWidget {
           children: [
             Expanded(child: preview),
             const SizedBox(width: AppSpacing.xl),
-            SizedBox(width: 280, child: settings),
+            SizedBox(width: 280, child: SingleChildScrollView(child: settings)),
           ],
         );
       },

@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/core/widgets/merged_action_semantics.dart';
 import 'package:tawaq/core/widgets/page_shell/sidebar_settings_provider.dart';
 import 'package:tawaq/core/widgets/shell_a11y.dart';
@@ -15,20 +16,8 @@ import 'package:tawaq/theme/theme_extensions.dart';
 
 const _kCollapsed = 105.0;
 const _kExpanded = 250.0;
-const _kSlideOffset = Offset(-0.2, 0);
-
 Duration _sidebarAnimDuration(BuildContext context) =>
-    context.theme.durations.fast;
-
-Widget _sidebarSlideTransition(
-  BuildContext context,
-  Widget child,
-  Animation<double> animation,
-) => SlideTransition(
-  textDirection: Directionality.of(context),
-  position: Tween(begin: _kSlideOffset, end: Offset.zero).animate(animation),
-  child: FadeTransition(opacity: animation, child: child),
-);
+    reduceMotion(context) ? Duration.zero : context.theme.durations.fast;
 
 FSidebarItemStyleDelta _sidebarItemStyle(BuildContext context) {
   final theme = FTheme.of(context);
@@ -77,7 +66,7 @@ class ShellSidebar extends HookConsumerWidget {
     useEffect(() {
       isCollapsed ? controller.reverse() : controller.forward();
       return null;
-    }, [isCollapsed]);
+    }, [isCollapsed, duration]);
 
     useEffect(() {
       final previous = wasTablet.value;
@@ -127,10 +116,7 @@ class ShellSidebar extends HookConsumerWidget {
               ),
             ),
             headerPadding: const .value(
-              EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 8,
-              ),
+              EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             ),
             constraints: BoxConstraints.tightFor(width: width),
           ),
@@ -157,9 +143,7 @@ class ShellSidebar extends HookConsumerWidget {
           ),
           footer: Column(
             children: [
-              for (final (key, route) in [
-                ('secondary', secondaryRoutes),
-              ])
+              for (final (key, route) in [('secondary', secondaryRoutes)])
                 _RouteGroup(
                   routes: route,
                   groupKey: key,
@@ -167,51 +151,42 @@ class ShellSidebar extends HookConsumerWidget {
                 ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: AnimatedSwitcher(
-                  duration: duration,
-                  transitionBuilder: (child, anim) =>
-                      _sidebarSlideTransition(context, child, anim),
-                  child: isVisuallyExpanded
-                      ? FButton(
-                          key: ValueKey(isVisuallyExpanded),
+                child: isVisuallyExpanded
+                    ? FButton(
+                        key: ValueKey(isVisuallyExpanded),
+                        variant: .ghost,
+                        style: .delta(
+                          decoration: .delta([
+                            .all(.boxDelta(color: theme.colors.background)),
+                          ]),
+                          contentStyle: const .delta(
+                            padding: .value(EdgeInsets.all(AppSpacing.sm)),
+                          ),
+                        ),
+                        mainAxisAlignment: .spaceBetween,
+                        onPress: toggle,
+                        suffix: const Icon(FLucideIcons.panelRightOpen),
+                        child: Expanded(child: Text(context.l10n.collapse)),
+                      )
+                    : MergedActionSemantics(
+                        key: ValueKey(isVisuallyExpanded),
+                        label: ShellA11y.expandSidebarLabel(context.l10n),
+                        child: FButton.icon(
+                          onPress: toggle,
                           variant: .ghost,
                           style: .delta(
                             decoration: .delta([
                               .all(.boxDelta(color: theme.colors.background)),
                             ]),
-                            contentStyle: const .delta(
-                              padding: .value(
-                                EdgeInsets.all(AppSpacing.sm),
-                              ),
-                            ),
                           ),
-                          mainAxisAlignment: .spaceBetween,
-                          onPress: toggle,
-                          suffix: const Icon(FLucideIcons.panelRightOpen),
-                          child: Text(context.l10n.collapse, overflow: .clip),
-                        )
-                      : MergedActionSemantics(
-                          key: ValueKey(isVisuallyExpanded),
-                          label: ShellA11y.expandSidebarLabel(context.l10n),
-                          child: FButton.icon(
-                            onPress: toggle,
-                            variant: .ghost,
-                            style: .delta(
-                              decoration: .delta([
-                                .all(.boxDelta(color: theme.colors.background)),
-                              ]),
-                            ),
-                            child: const Icon(FLucideIcons.panelRightClose),
-                          ),
+                          child: const Icon(FLucideIcons.panelRightClose),
                         ),
-                ),
+                      ),
               ),
             ],
           ),
           children: [
-            for (final (key, routes) in [
-              ('main', mainRoutes),
-            ])
+            for (final (key, routes) in [('main', mainRoutes)])
               _RouteGroup(
                 routes: routes,
                 groupKey: key,
@@ -239,28 +214,19 @@ class _RouteGroup extends ConsumerWidget {
     final l10n = context.l10n;
     final itemStyle = _sidebarItemStyle(context);
 
-    return AnimatedSwitcher(
-      duration: _sidebarAnimDuration(context),
-      transitionBuilder: (child, anim) =>
-          _sidebarSlideTransition(context, child, anim),
-      child: FSidebarGroup(
-        key: ValueKey('$groupKey-${expanded ? 'expanded' : 'collapsed'}'),
-        children: [
-          for (final r in routes)
-            expanded
-                ? _expandedSidebarItem(
-                    context: context,
-                    route: r,
-                    itemStyle: itemStyle,
-                    l10n: l10n,
-                  )
-                : _collapsedSidebarItem(
-                    context: context,
-                    route: r,
-                    l10n: l10n,
-                  ),
-        ],
-      ),
+    return FSidebarGroup(
+      key: ValueKey('$groupKey-${expanded ? 'expanded' : 'collapsed'}'),
+      children: [
+        for (final r in routes)
+          expanded
+              ? _expandedSidebarItem(
+                  context: context,
+                  route: r,
+                  itemStyle: itemStyle,
+                  l10n: l10n,
+                )
+              : _collapsedSidebarItem(context: context, route: r, l10n: l10n),
+      ],
     );
   }
 }
@@ -271,7 +237,11 @@ Widget _expandedSidebarItem({
   required FSidebarItemStyleDelta itemStyle,
   required AppLocalizations l10n,
 }) {
-  final currentPath = GoRouter.of(context).state.fullPath;
+  final currentPath = GoRouter.of(context)
+      .routeInformationProvider
+      .value
+      .uri
+      .path;
   final selected = route.containsLocation(currentPath);
   final enabled = route.navigationEnabled;
   final item = FSidebarItem(
@@ -297,7 +267,11 @@ Widget _collapsedSidebarItem({
   required AppNavigationRoute route,
   required AppLocalizations l10n,
 }) {
-  final currentPath = GoRouter.of(context).state.fullPath;
+  final currentPath = GoRouter.of(context)
+      .routeInformationProvider
+      .value
+      .uri
+      .path;
   final selected = route.containsLocation(currentPath);
   final enabled = route.navigationEnabled;
   return MergedActionSemantics(

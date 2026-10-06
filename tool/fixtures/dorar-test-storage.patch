@@ -1,0 +1,42 @@
+diff --git a/test/client/dorar_client_test.dart b/test/client/dorar_client_test.dart
+index 3c560e3..0693c9e 100644
+--- a/test/client/dorar_client_test.dart
++++ b/test/client/dorar_client_test.dart
+@@ -1,7 +1,7 @@
+ import 'package:dorar_hadith/dorar_hadith.dart';
+ import 'package:dorar_hadith/src/database/cache_database.dart';
+ import 'package:dorar_hadith/src/services/cache_service.dart';
+-import 'package:drift/drift.dart' show driftRuntimeOptions;
++import 'package:drift/drift.dart' show driftRuntimeOptions, DatabaseConnection;
+ import 'package:drift/native.dart';
+ import 'package:http/testing.dart';
+ import 'package:test/test.dart';
+@@ -18,8 +18,11 @@ void main() {
+   setUpAll(() {
+     // Suppress drift multi-database warnings triggered by repeated in-memory database instantiations in tests.
+     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
++    CacheDatabase.configureConnection(() => DatabaseConnection(NativeDatabase.memory()));
+   });
+ 
++  tearDownAll(CacheDatabase.resetConnection);
++
+   setUp(() {
+     mockHttpClient = MockClient((request) async {
+       final url = request.url.toString();
+diff --git a/test/client/dorar_client_use_test.dart b/test/client/dorar_client_use_test.dart
+index 4ae8ffd..f4135c2 100644
+--- a/test/client/dorar_client_use_test.dart
++++ b/test/client/dorar_client_use_test.dart
+@@ -1,7 +1,12 @@
++import 'package:dorar_hadith/src/database/cache_database.dart';
++import 'package:drift/drift.dart';
++import 'package:drift/native.dart';
+ import 'package:dorar_hadith/dorar_hadith.dart';
+ import 'package:test/test.dart';
+ 
+ void main() {
++  setUpAll(() => CacheDatabase.configureConnection(() => DatabaseConnection(NativeDatabase.memory())));
++  tearDownAll(CacheDatabase.resetConnection);
+   group('DorarClient.use', () {
+     test('runs the provided callback and disposes client', () async {
+       final count = await DorarClient.use((c) async {

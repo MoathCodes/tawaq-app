@@ -18,6 +18,7 @@ final Map<String, List<FPlatformThemeData>> _palettesData = {
     ManuscriptTheme.darkManuscript,
     ManuscriptTheme.lightManuscript,
   ],
+  'Sage': [SageTheme.darkSage, SageTheme.lightSage],
   'Neutral': [FTheme.neutral.dark, FTheme.neutral.light],
 };
 
@@ -41,10 +42,8 @@ FPlatformThemeData resolvePlatformColorScheme(
   AppPalette palette,
   ThemeMode themeMode,
 ) {
-  final paletteKey = (palette == AppPalette.omarchy
-          ? AppPalette.manuscript
-          : palette)
-      .key;
+  final paletteKey =
+      (palette == AppPalette.omarchy ? AppPalette.manuscript : palette).key;
   final schemesList = _palettesData[paletteKey];
 
   if (schemesList == null || schemesList.length != 2) {
@@ -76,6 +75,9 @@ enum AppPalette {
   /// Forui neutral (shadcn) palette.
   neutral('Neutral'),
 
+  /// Sage and parchment inspired by the Turning ت icon.
+  sage('Sage'),
+
   /// Uses the active Omarchy desktop palette when running in an Omarchy
   /// session. This option is only exposed on Omarchy.
   omarchy('Omarchy');
@@ -104,6 +106,7 @@ extension AppPaletteLocale on AppPalette {
     return switch (this) {
       AppPalette.manuscript => locale.islamicTheme,
       AppPalette.neutral => locale.neutral,
+      AppPalette.sage => locale.sage,
       AppPalette.omarchy => locale.omarchy,
     };
   }

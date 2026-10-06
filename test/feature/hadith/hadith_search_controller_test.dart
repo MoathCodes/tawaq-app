@@ -63,6 +63,48 @@ void main() {
   });
 
   group('HadithSessionController search', () {
+    test('unselected navigation starts at the first or last result', () async {
+      final session = container.read(hadithSessionControllerProvider.notifier);
+      final results = [_hadith('first'), _hadith('middle'), _hadith('last')];
+      await session.openSpecificList(results);
+      session.clearSelection();
+      await session.selectAdjacentResult(1);
+      expect(session.state.selectedHadithKey, hadithStableKey(results.first));
+      session.clearSelection();
+      await session.selectAdjacentResult(-1);
+      expect(session.state.selectedHadithKey, hadithStableKey(results.last));
+    });
+
+    test('immediate submit consumes the pending filter debounce', () async {
+      when(() => repository.searchDetailed(any()))
+          .thenAnswer((_) async => _response('hit'));
+      final session = container.read(hadithSessionControllerProvider.notifier);
+      session.state = session.state.copyWith(query: 'query');
+      await session.setFilters(const HadithFilters(specialist: true));
+      await session.setQuery('query');
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      verify(() => repository.searchDetailed(any())).called(1);
+    });
+
+    test(
+      'disposal during repository hydration makes no search request',
+      () async {
+        final gate = Completer<HadithRepository>();
+        final isolated = ProviderContainer(
+          overrides: [
+            hadithRepositoryProvider.overrideWith((ref) => gate.future),
+          ],
+        );
+        isolated.listen(hadithSessionControllerProvider, (_, _) {});
+        final session = isolated.read(hadithSessionControllerProvider.notifier);
+        final pending = session.setQuery('query');
+        isolated.dispose();
+        gate.complete(repository);
+        await pending;
+        verifyNever(() => repository.searchDetailed(any()));
+      },
+    );
+
     test('ignores stale search when a newer search completes first', () async {
       final first = Completer<ApiResponse<List<DetailedHadith>>>();
       final second = Completer<ApiResponse<List<DetailedHadith>>>();
@@ -332,9 +374,8 @@ void main() {
     });
 
     test('setFilters commits the full selection set in one write', () async {
-      when(
-        () => repository.searchDetailed(any()),
-      ).thenAnswer((_) async => _response('hit'));
+      when(() => repository.searchDetailed(any()))
+          .thenAnswer((_) async => _response('hit'));
 
       final session = container.read(hadithSessionControllerProvider.notifier);
       session.state = session.state.copyWith(query: 'query');
@@ -355,9 +396,8 @@ void main() {
     test(
       'exitSpecificMode restores search snapshot from specificList',
       () async {
-        when(
-          () => repository.searchDetailed(any()),
-        ).thenAnswer((_) async => _response('restored'));
+        when(() => repository.searchDetailed(any()))
+            .thenAnswer((_) async => _response('restored'));
 
         final session = container.read(
           hadithSessionControllerProvider.notifier,
@@ -384,9 +424,8 @@ void main() {
     );
 
     test('selectHadith does not replace searchOutcome', () async {
-      when(
-        () => repository.searchDetailed(any()),
-      ).thenAnswer((_) async => _response('hit'));
+      when(() => repository.searchDetailed(any()))
+          .thenAnswer((_) async => _response('hit'));
 
       final session = container.read(hadithSessionControllerProvider.notifier);
       session.state = session.state.copyWith(query: 'q');
@@ -404,12 +443,10 @@ void main() {
     });
 
     test('toggleFavorite propagates repository failures', () async {
-      when(
-        () => repository.isFavoriteByKey(any()),
-      ).thenAnswer((_) async => false);
-      when(
-        () => repository.toggleFavorite(any()),
-      ).thenThrow(Exception('bookmark failed'));
+      when(() => repository.isFavoriteByKey(any()))
+          .thenAnswer((_) async => false);
+      when(() => repository.toggleFavorite(any()))
+          .thenThrow(Exception('bookmark failed'));
 
       final session = container.read(hadithSessionControllerProvider.notifier);
 

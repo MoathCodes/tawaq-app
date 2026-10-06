@@ -17,9 +17,7 @@ void main() {
   for (final language in ['en', 'ar']) {
     testWidgets(
       'Surah picker exposes searchable names in $language',
-      (
-        tester,
-      ) async {
+      (tester) async {
         final controller = _Controller();
         final surah = Surah(
           number: 2,
@@ -63,6 +61,16 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.text('Al-Baqara'), findsOneWidget);
         expect(find.text('سورة البقرة'), findsOneWidget);
+        await tester.enterText(
+          find.byType(TextField).last,
+          'unmatched fixture',
+        );
+        await tester.pumpAndSettle();
+        final l10n = await AppLocalizations.delegate.load(Locale(language));
+        expect(find.text(l10n.noResults), findsOneWidget);
+        expect(find.text('No matches found.'), findsNothing);
+        await tester.enterText(find.byType(TextField).last, '');
+        await tester.pumpAndSettle();
         if (language == 'en') {
           expect(find.text('The Cow'), findsOneWidget);
           await tester.enterText(find.byType(TextField).last, 'cow');

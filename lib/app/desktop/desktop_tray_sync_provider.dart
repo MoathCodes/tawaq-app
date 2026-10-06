@@ -21,7 +21,7 @@ part 'desktop_tray_sync_provider.g.dart';
 ///
 /// Minute-resolution next-adhan glance, or an “adhan playing” label while an
 /// alert is in flight. Falls back to the app name when prayer day is unknown.
-@Riverpod(keepAlive: true)
+@riverpod
 String trayTooltipText(Ref ref) {
   final lang = ref.watch(localeProvider).value ?? 'en';
   final l10n = lookupAppLocalizations(Locale(lang));
@@ -31,15 +31,7 @@ String trayTooltipText(Ref ref) {
     return l10n.adhanPlayingTitle(activePrayer.getLocaleName(l10n));
   }
 
-  // Watch only calendar/minute identity; read the full snapshot non-reactively.
-  ref.watch(
-    prayerDayProvider.select((value) {
-      final day = value.value;
-      if (day == null) return null;
-      return (day.calendarDayKey, day.now.hour, day.now.minute);
-    }),
-  );
-  final day = ref.read(prayerDayProvider).value;
+  final day = ref.watch(prayerMinuteSnapshotProvider);
   if (day == null) return l10n.appName;
 
   final glance = resolveNextAdhanGlance(day);
@@ -56,7 +48,7 @@ String trayTooltipText(Ref ref) {
 }
 
 /// Keeps tray menu labels and tooltip in sync with app state.
-@Riverpod(keepAlive: true)
+@riverpod
 void desktopTraySync(Ref ref) {
   if (!isDesktopPlatform) return;
 

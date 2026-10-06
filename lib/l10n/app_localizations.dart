@@ -98,6 +98,96 @@ abstract class AppLocalizations {
     Locale('en'),
   ];
 
+  /// No description provided for @hadithLookupPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least two characters to search suggestions.'**
+  String get hadithLookupPrompt;
+
+  /// No description provided for @hadithLookupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load suggestions. Try again.'**
+  String get hadithLookupFailed;
+
+  /// No description provided for @hadithRecentsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load recent searches. Try again.'**
+  String get hadithRecentsLoadFailed;
+
+  /// No description provided for @hadithRecentsUpdateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not update recent searches. Try again.'**
+  String get hadithRecentsUpdateFailed;
+
+  /// No description provided for @quranSearchPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Type at least two characters to search the Quran.'**
+  String get quranSearchPrompt;
+
+  /// No description provided for @sharePageLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load this page. Try again.'**
+  String get sharePageLoadFailed;
+
+  /// No description provided for @shareImageExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not export the image. Try again.'**
+  String get shareImageExportFailed;
+
+  /// No description provided for @reflectionsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your reflections. Try again.'**
+  String get reflectionsLoadFailed;
+
+  /// No description provided for @reflectionDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete this reflection. Try again.'**
+  String get reflectionDeleteFailed;
+
+  /// No description provided for @appStartupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start Tawaq. Try again.'**
+  String get appStartupFailed;
+
+  /// No description provided for @prayerAnalyticsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load prayer analytics. Try again.'**
+  String get prayerAnalyticsLoadFailed;
+
+  /// No description provided for @prayerHistoryStartupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not prepare prayer history. Try again.'**
+  String get prayerHistoryStartupFailed;
+
+  /// No description provided for @studySelectionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an ayah in the Mushaf to open its tafsir, translation, and your reflection.'**
+  String get studySelectionHint;
+
+  /// No description provided for @studySelectionLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the selected ayah. Try again.'**
+  String get studySelectionLoadFailed;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
   /// No description provided for @globalPlaybackChooseMoshaf.
   ///
   /// In en, this message translates to:
@@ -524,6 +614,12 @@ abstract class AppLocalizations {
   /// **'Copied {reference}'**
   String ayahCopied(String reference);
 
+  /// No description provided for @ayahActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Ayah actions'**
+  String get ayahActions;
+
   /// No description provided for @ayahCopy.
   ///
   /// In en, this message translates to:
@@ -617,13 +713,13 @@ abstract class AppLocalizations {
   /// No description provided for @colorTheme.
   ///
   /// In en, this message translates to:
-  /// **'Color Theme'**
+  /// **'Color palette'**
   String get colorTheme;
 
   /// No description provided for @colorThemeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Choose Manuscript or Neutral.'**
+  /// **'Choose a color palette.'**
   String get colorThemeSubtitle;
 
   /// No description provided for @completed.
@@ -653,7 +749,7 @@ abstract class AppLocalizations {
   /// No description provided for @currentEvent.
   ///
   /// In en, this message translates to:
-  /// **'Current event'**
+  /// **'Current time'**
   String get currentEvent;
 
   /// No description provided for @currentStreak.
@@ -938,6 +1034,12 @@ abstract class AppLocalizations {
   /// **'Benefit'**
   String get fortressBenefit;
 
+  /// No description provided for @fortressShareDetailsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the selected study details. Retry, or deselect them to share the thikr.'**
+  String get fortressShareDetailsFailed;
+
   /// No description provided for @fortressShare.
   ///
   /// In en, this message translates to:
@@ -1019,7 +1121,7 @@ abstract class AppLocalizations {
   /// No description provided for @fortressFilterChaptersHint.
   ///
   /// In en, this message translates to:
-  /// **'Filter chapters...'**
+  /// **'Find a chapter'**
   String get fortressFilterChaptersHint;
 
   /// No description provided for @fortressFinish.
@@ -1133,13 +1235,13 @@ abstract class AppLocalizations {
   /// No description provided for @fortressSearchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search chapters and adhkar...'**
+  /// **'Search all adhkar'**
   String get fortressSearchHint;
 
   /// No description provided for @fortressSearchLabel.
   ///
   /// In en, this message translates to:
-  /// **'Search'**
+  /// **'Search all adhkar'**
   String get fortressSearchLabel;
 
   /// No description provided for @fortressSearchOpen.
@@ -1310,6 +1412,12 @@ abstract class AppLocalizations {
   /// **'Clear all'**
   String get hadithClearAllRecents;
 
+  /// No description provided for @hadithCopyFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not copy the text. Try again.'**
+  String get hadithCopyFailed;
+
   /// No description provided for @hadithCopied.
   ///
   /// In en, this message translates to:
@@ -1375,6 +1483,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Foundations'**
   String get hadithFoundations;
+
+  /// No description provided for @hadithShareDetailsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load: {sections}. Retry or turn off the selected detail to export the image.'**
+  String hadithShareDetailsFailed(String sections);
+
+  /// No description provided for @hadithShareJudgmentRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'The source judgment stays visible for weak reports or warnings about their chain.'**
+  String get hadithShareJudgmentRequired;
 
   /// No description provided for @hadithGradeExplanation.
   ///
@@ -2150,6 +2270,12 @@ abstract class AppLocalizations {
   /// **'Muslim World League'**
   String get muslimWorldLeague;
 
+  /// Sage color palette inspired by the Turning ta icon
+  ///
+  /// In en, this message translates to:
+  /// **'Sage'**
+  String get sage;
+
   /// No description provided for @neutral.
   ///
   /// In en, this message translates to:
@@ -2177,7 +2303,7 @@ abstract class AppLocalizations {
   /// No description provided for @nextEvent.
   ///
   /// In en, this message translates to:
-  /// **'Next event'**
+  /// **'Next time'**
   String get nextEvent;
 
   /// No description provided for @noDataAvailable.
@@ -2633,7 +2759,7 @@ abstract class AppLocalizations {
   /// No description provided for @playerAnalytics.
   ///
   /// In en, this message translates to:
-  /// **'Player Analytics'**
+  /// **'Prayer analytics'**
   String get playerAnalytics;
 
   /// No description provided for @pleaseSelectMethod.
@@ -4203,7 +4329,7 @@ abstract class AppLocalizations {
   /// No description provided for @streakInDays.
   ///
   /// In en, this message translates to:
-  /// **'{streak} days'**
+  /// **'{streak, plural, one{1 day} other{{streak} days}}'**
   String streakInDays(int streak);
 
   /// No description provided for @studyMode.
@@ -4475,6 +4601,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Zinc'**
   String get zinc;
+
+  /// No description provided for @onboardingSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save setup. Your choices are still here; try again.'**
+  String get onboardingSaveFailed;
+
+  /// No description provided for @saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get saving;
+
+  /// No description provided for @onboardingStepCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {current} of {total}'**
+  String onboardingStepCount(int current, int total);
+
+  /// No description provided for @themeModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme mode'**
+  String get themeModeLabel;
+
+  /// No description provided for @systemThemeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get systemThemeLabel;
+
+  /// No description provided for @notesSavePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get notesSavePending;
+
+  /// No description provided for @notesSaveSucceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get notesSaveSucceeded;
+
+  /// No description provided for @notesSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save reflection. Try again.'**
+  String get notesSaveFailed;
+
+  /// No description provided for @quranNavigation.
+  ///
+  /// In en, this message translates to:
+  /// **'More Quran controls'**
+  String get quranNavigation;
+
+  /// No description provided for @backToReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to reading'**
+  String get backToReading;
+
+  /// No description provided for @retryAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retryAction;
+
+  /// No description provided for @desktopAutostartRegistrationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Registers Tawaq for XDG autostart. Your desktop session must run an autostart consumer. Direct Hyprland sessions may not; registration does not confirm startup at login.'**
+  String get desktopAutostartRegistrationHint;
+
+  /// No description provided for @fortressBackToCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to chapters'**
+  String get fortressBackToCatalog;
+
+  /// No description provided for @advancedLocationOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced location options'**
+  String get advancedLocationOptions;
+
+  /// No description provided for @deviceLocationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Device location is unavailable. Choose a city or enter coordinates, or retry the service check.'**
+  String get deviceLocationUnavailable;
+
+  /// No description provided for @deviceLocationTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Device location timed out. Try again or choose a city.'**
+  String get deviceLocationTimedOut;
+
+  /// No description provided for @checkingDeviceLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking device location…'**
+  String get checkingDeviceLocation;
+
+  /// No description provided for @quranRecitationDurationUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration unavailable'**
+  String get quranRecitationDurationUnknown;
+
+  /// No description provided for @hadithRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load hadith. Check your connection and try again.'**
+  String get hadithRequestFailed;
+
+  /// No description provided for @hadithBookmarkFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the bookmark. Try again.'**
+  String get hadithBookmarkFailed;
+
+  /// No description provided for @hadithClearRecentsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all recent searches?'**
+  String get hadithClearRecentsConfirm;
+
+  /// No description provided for @quitSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Your reflection could not be saved. Tawaq is still open; your draft is retained.'**
+  String get quitSaveFailed;
+
+  /// No description provided for @quitRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Save and quit again'**
+  String get quitRetry;
+
+  /// No description provided for @clearSearchAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get clearSearchAction;
+
+  /// No description provided for @quranUnifiedSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Surah, juz, hizb, or ayah…'**
+  String get quranUnifiedSearchHint;
+
+  /// No description provided for @quranUnifiedSearchHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Search a name or Quran text. Try “juz 3”, “hizb 7”, or “2:255”.'**
+  String get quranUnifiedSearchHelp;
+
+  /// No description provided for @quranSearchSurahs.
+  ///
+  /// In en, this message translates to:
+  /// **'Surahs'**
+  String get quranSearchSurahs;
+
+  /// No description provided for @quranSearchJuzs.
+  ///
+  /// In en, this message translates to:
+  /// **'Juz'**
+  String get quranSearchJuzs;
+
+  /// No description provided for @quranSearchHizbs.
+  ///
+  /// In en, this message translates to:
+  /// **'Hizb'**
+  String get quranSearchHizbs;
+
+  /// No description provided for @quranSearchAyahs.
+  ///
+  /// In en, this message translates to:
+  /// **'Ayahs'**
+  String get quranSearchAyahs;
+
+  /// No description provided for @quranSearchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Search could not load. Try again.'**
+  String get quranSearchFailed;
 }
 
 class _AppLocalizationsDelegate

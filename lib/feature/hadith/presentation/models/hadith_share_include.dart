@@ -1,4 +1,5 @@
 import 'package:dorar_hadith/dorar_hadith.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_judgment.dart';
 
 enum HadithShareInclude {
   narrator,
@@ -37,20 +38,29 @@ class HadithShareOptions {
     required bool usulAvailable,
   }) {
     final next = {...includes};
-    if (hadith.rawi.trim().isEmpty) next.remove(HadithShareInclude.narrator);
-    if (hadith.mohdith.trim().isEmpty) {
+    if (!hasHadithMetadata(hadith.rawi)) {
+      next.remove(HadithShareInclude.narrator);
+    }
+    if (!hasHadithMetadata(hadith.mohdith)) {
       next.remove(HadithShareInclude.muhaddith);
     }
-    if (hadith.book.trim().isEmpty) next.remove(HadithShareInclude.source);
-    if (hadith.numberOrPage.trim().isEmpty) {
+    if (!hasHadithMetadata(hadith.book)) next.remove(HadithShareInclude.source);
+    if (!hasHadithMetadata(hadith.numberOrPage)) {
       next.remove(HadithShareInclude.number);
     }
-    if (hadith.hukm.trim().isEmpty) next.remove(HadithShareInclude.grade);
-    if ((hadith.takhrij ?? '').trim().isEmpty) {
+    if (!hasHadithMetadata(hadith.hukm)) next.remove(HadithShareInclude.grade);
+    if (!hasHadithMetadata(hadith.takhrij)) {
       next.remove(HadithShareInclude.takhrij);
+    }
+    if (requiresHadithJudgment(hadith) && hasHadithMetadata(hadith.hukm)) {
+      next.add(HadithShareInclude.grade);
     }
     if (!sharhAvailable) next.remove(HadithShareInclude.sharh);
     if (!usulAvailable) next.remove(HadithShareInclude.usul);
     return HadithShareOptions(next);
   }
 }
+
+/// Check both source fields: the expanded ruling may qualify a short grade.
+bool requiresHadithJudgment(DetailedHadith hadith) =>
+    hadithSourceJudgmentTone(hadith) != HadithJudgmentTone.neutral;

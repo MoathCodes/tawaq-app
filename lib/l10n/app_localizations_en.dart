@@ -10,6 +10,61 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get hadithLookupPrompt =>
+      'Type at least two characters to search suggestions.';
+
+  @override
+  String get hadithLookupFailed => 'Could not load suggestions. Try again.';
+
+  @override
+  String get hadithRecentsLoadFailed =>
+      'Could not load recent searches. Try again.';
+
+  @override
+  String get hadithRecentsUpdateFailed =>
+      'Could not update recent searches. Try again.';
+
+  @override
+  String get quranSearchPrompt =>
+      'Type at least two characters to search the Quran.';
+
+  @override
+  String get sharePageLoadFailed => 'Could not load this page. Try again.';
+
+  @override
+  String get shareImageExportFailed => 'Could not export the image. Try again.';
+
+  @override
+  String get reflectionsLoadFailed =>
+      'Could not load your reflections. Try again.';
+
+  @override
+  String get reflectionDeleteFailed =>
+      'Could not delete this reflection. Try again.';
+
+  @override
+  String get appStartupFailed => 'Could not start Tawaq. Try again.';
+
+  @override
+  String get prayerAnalyticsLoadFailed =>
+      'Could not load prayer analytics. Try again.';
+
+  @override
+  String get prayerHistoryStartupFailed =>
+      'Could not prepare prayer history. Try again.';
+
+  @override
+  String get studySelectionHint =>
+      'Select an ayah in the Mushaf to open its tafsir, translation, and your reflection.';
+
+  @override
+  String get studySelectionLoadFailed =>
+      'Could not load the selected ayah. Try again.';
+
+  @override
+  String get close => 'Close';
+
+  @override
   String get globalPlaybackChooseMoshaf => 'Choose a recitation';
 
   @override
@@ -266,6 +321,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get ayahActions => 'Ayah actions';
+
+  @override
   String get ayahCopy => 'Copy';
 
   @override
@@ -311,10 +369,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get collapsePanel => 'Collapse panel';
 
   @override
-  String get colorTheme => 'Color Theme';
+  String get colorTheme => 'Color palette';
 
   @override
-  String get colorThemeSubtitle => 'Choose Manuscript or Neutral.';
+  String get colorThemeSubtitle => 'Choose a color palette.';
 
   @override
   String get completed => 'Completed';
@@ -329,7 +387,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentPrayer => 'Current Prayer';
 
   @override
-  String get currentEvent => 'Current event';
+  String get currentEvent => 'Current time';
 
   @override
   String get currentStreak => 'Current Streak';
@@ -487,6 +545,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fortressBenefit => 'Benefit';
 
   @override
+  String get fortressShareDetailsFailed =>
+      'Could not load the selected study details. Retry, or deselect them to share the thikr.';
+
+  @override
   String get fortressShare => 'Share dua';
 
   @override
@@ -528,7 +590,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fortressFilterAuthenticity => 'Filter by grading';
 
   @override
-  String get fortressFilterChaptersHint => 'Filter chapters...';
+  String get fortressFilterChaptersHint => 'Find a chapter';
 
   @override
   String get fortressFinish => 'Finish';
@@ -605,10 +667,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fortressSearchContents => 'Adhkar';
 
   @override
-  String get fortressSearchHint => 'Search chapters and adhkar...';
+  String get fortressSearchHint => 'Search all adhkar';
 
   @override
-  String get fortressSearchLabel => 'Search';
+  String get fortressSearchLabel => 'Search all adhkar';
 
   @override
   String get fortressSearchOpen => 'Search adhkar';
@@ -713,6 +775,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithClearAllRecents => 'Clear all';
 
   @override
+  String get hadithCopyFailed => 'Could not copy the text. Try again.';
+
+  @override
   String get hadithCopied => 'Hadith copied';
 
   @override
@@ -746,6 +811,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hadithFoundations => 'Foundations';
+
+  @override
+  String hadithShareDetailsFailed(String sections) {
+    return 'Could not load: $sections. Retry or turn off the selected detail to export the image.';
+  }
+
+  @override
+  String get hadithShareJudgmentRequired =>
+      'The source judgment stays visible for weak reports or warnings about their chain.';
 
   @override
   String get hadithGradeExplanation => 'Grade Explanation';
@@ -1185,6 +1259,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get muslimWorldLeague => 'Muslim World League';
 
   @override
+  String get sage => 'Sage';
+
+  @override
   String get neutral => 'Neutral';
 
   @override
@@ -1197,7 +1274,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nextPrayer => 'Next Prayer';
 
   @override
-  String get nextEvent => 'Next event';
+  String get nextEvent => 'Next time';
 
   @override
   String get noDataAvailable => 'No data available';
@@ -1487,7 +1564,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Madhab and other options can be configured later. These inputs are placeholders.';
 
   @override
-  String get playerAnalytics => 'Player Analytics';
+  String get playerAnalytics => 'Prayer analytics';
 
   @override
   String get pleaseSelectMethod => 'Please select a calculation method.';
@@ -2406,7 +2483,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String streakInDays(int streak) {
-    return '$streak days';
+    String _temp0 = intl.Intl.pluralLogic(
+      streak,
+      locale: localeName,
+      other: '$streak days',
+      one: '1 day',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2554,4 +2637,106 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get zinc => 'Zinc';
+
+  @override
+  String get onboardingSaveFailed =>
+      'Could not save setup. Your choices are still here; try again.';
+
+  @override
+  String get saving => 'Saving…';
+
+  @override
+  String onboardingStepCount(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get themeModeLabel => 'Theme mode';
+
+  @override
+  String get systemThemeLabel => 'System';
+
+  @override
+  String get notesSavePending => 'Unsaved changes';
+
+  @override
+  String get notesSaveSucceeded => 'Saved';
+
+  @override
+  String get notesSaveFailed => 'Could not save reflection. Try again.';
+
+  @override
+  String get quranNavigation => 'More Quran controls';
+
+  @override
+  String get backToReading => 'Back to reading';
+
+  @override
+  String get retryAction => 'Retry';
+
+  @override
+  String get desktopAutostartRegistrationHint =>
+      'Registers Tawaq for XDG autostart. Your desktop session must run an autostart consumer. Direct Hyprland sessions may not; registration does not confirm startup at login.';
+
+  @override
+  String get fortressBackToCatalog => 'Back to chapters';
+
+  @override
+  String get advancedLocationOptions => 'Advanced location options';
+
+  @override
+  String get deviceLocationUnavailable =>
+      'Device location is unavailable. Choose a city or enter coordinates, or retry the service check.';
+
+  @override
+  String get deviceLocationTimedOut =>
+      'Device location timed out. Try again or choose a city.';
+
+  @override
+  String get checkingDeviceLocation => 'Checking device location…';
+
+  @override
+  String get quranRecitationDurationUnknown => 'Duration unavailable';
+
+  @override
+  String get hadithRequestFailed =>
+      'Could not load hadith. Check your connection and try again.';
+
+  @override
+  String get hadithBookmarkFailed => 'Could not save the bookmark. Try again.';
+
+  @override
+  String get hadithClearRecentsConfirm => 'Clear all recent searches?';
+
+  @override
+  String get quitSaveFailed =>
+      'Your reflection could not be saved. Tawaq is still open; your draft is retained.';
+
+  @override
+  String get quitRetry => 'Save and quit again';
+
+  @override
+  String get clearSearchAction => 'Clear search';
+
+  @override
+  String get quranUnifiedSearchHint => 'Surah, juz, hizb, or ayah…';
+
+  @override
+  String get quranUnifiedSearchHelp =>
+      'Search a name or Quran text. Try “juz 3”, “hizb 7”, or “2:255”.';
+
+  @override
+  String get quranSearchSurahs => 'Surahs';
+
+  @override
+  String get quranSearchJuzs => 'Juz';
+
+  @override
+  String get quranSearchHizbs => 'Hizb';
+
+  @override
+  String get quranSearchAyahs => 'Ayahs';
+
+  @override
+  String get quranSearchFailed => 'Search could not load. Try again.';
 }

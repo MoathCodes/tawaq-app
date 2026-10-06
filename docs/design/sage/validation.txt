@@ -1,0 +1,8 @@
+Native Linux review: 80 render captures, 8 comparison sheets.
+Viewport matrix: en/ar × light/dark × 1200/800 × 5 routes × Manuscript/Sage.
+Second native process: Sage dark restored from disk after process restart.
+FVM analysis: passed, no errors/warnings; 181 informational diagnostics.
+FVM full test suite: 1,076 tests passed.
+FVM localization generation: completed.
+Runtime limitation: three transient 3.6px button overflows during Manuscript sidebar transitions; no overflow marks in settled captures.
+Capture-only semantics exclusion: screen-reader behavior unverified.

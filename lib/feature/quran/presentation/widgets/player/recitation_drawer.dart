@@ -11,6 +11,7 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/utils/format_byte_size.dart';
 import 'package:tawaq/core/utils/playback_duration.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/core/widgets/volume_slider.dart';
@@ -103,6 +104,7 @@ class RecitationDrawerSurfaceState extends State<RecitationDrawerSurface>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   late final Animation<double> _fade;
+  bool _reducedMotion = false;
 
   @override
   void initState() {
@@ -120,10 +122,19 @@ class RecitationDrawerSurfaceState extends State<RecitationDrawerSurface>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reducedMotion = reduceMotion(context);
+    if (_reducedMotion) _controller.value = widget.open ? 1 : 0;
+  }
+
+  @override
   void didUpdateWidget(covariant RecitationDrawerSurface oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.open != widget.open) {
-      if (widget.open) {
+      if (_reducedMotion) {
+        _controller.value = widget.open ? 1 : 0;
+      } else if (widget.open) {
         _controller.forward();
       } else {
         _controller.reverse();
@@ -163,14 +174,16 @@ class RecitationDrawerSurfaceState extends State<RecitationDrawerSurface>
               alignment: Alignment.topCenter,
               child: FadeTransition(
                 opacity: _fade,
-                child: AnimatedSize(
-                  duration: widget.duration,
-                  curve: Curves.easeOut,
-                  alignment: Alignment.topCenter,
-                  child: _controller.value > 0
-                      ? widget.child
-                      : const SizedBox.shrink(),
-                ),
+                child: _reducedMotion
+                    ? (widget.open ? widget.child : const SizedBox.shrink())
+                    : AnimatedSize(
+                        duration: widget.duration,
+                        curve: Curves.easeOut,
+                        alignment: Alignment.topCenter,
+                        child: _controller.value > 0
+                            ? widget.child
+                            : const SizedBox.shrink(),
+                      ),
               ),
             ),
           ],
@@ -276,57 +289,70 @@ class _DrawerPanel extends HookConsumerWidget {
             : 620.0;
         final isNarrow = width < 480;
 
-        return Container(
-          width: width,
-          margin: const EdgeInsets.only(bottom: AppSpacing.xl),
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: colors.card,
-            border: Border.all(color: colors.border),
-            borderRadius: BorderRadius.vertical(
-              bottom: context.theme.radii.xl.bottomLeft,
+        return ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: constraints.maxHeight),
+          child: Container(
+            width: width,
+            margin: const EdgeInsets.only(bottom: AppSpacing.xl),
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: colors.card,
+              border: Border.all(color: colors.border),
+              borderRadius: BorderRadius.vertical(
+                bottom: context.theme.radii.xl.bottomLeft,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: colors.barrier.withValues(alpha: 0.4),
+                  blurRadius: 40,
+                  offset: const Offset(0, 20),
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: colors.barrier.withValues(alpha: 0.4),
-                blurRadius: 40,
-                offset: const Offset(0, 20),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _DrawerHeader(
-                reciterName: reciterName,
-                riwayah: riwayah,
-                isInitializing: meta.isInitializing,
-                onGoToQuran: onGoToQuran,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _DrawerTransportSection(
-                surahLeftSlot: surahLeftSlot,
-                surahRightSlot: surahRightSlot,
-                ayahLeftSlot: ayahLeftSlot,
-                ayahRightSlot: ayahRightSlot,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              _DrawerActionsSection(
-                configuredRangeLabel: rangeLabel.isNotEmpty
-                    ? rangeLabel
-                    : surahName,
-                ayahRepeatCount: ayahRepeat,
-                rangeRepeatCount: rangeRepeat,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Container(height: 1, color: colors.border),
-              const SizedBox(height: AppSpacing.md),
-              _DrawerSettingsSection(
-                isNarrow: isNarrow,
-                persistedVolume: persistedVolume,
-              ),
-            ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _DrawerHeader(
+                  reciterName: reciterName,
+                  riwayah: riwayah,
+                  isInitializing: meta.isInitializing,
+                  onGoToQuran: onGoToQuran,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _DrawerTransportSection(
+                          surahLeftSlot: surahLeftSlot,
+                          surahRightSlot: surahRightSlot,
+                          ayahLeftSlot: ayahLeftSlot,
+                          ayahRightSlot: ayahRightSlot,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        _DrawerActionsSection(
+                          configuredRangeLabel: rangeLabel.isNotEmpty
+                              ? rangeLabel
+                              : surahName,
+                          ayahRepeatCount: ayahRepeat,
+                          rangeRepeatCount: rangeRepeat,
+                        ),
+                        const SizedBox(height: AppSpacing.lg),
+                        Container(height: 1, color: colors.border),
+                        const SizedBox(height: AppSpacing.md),
+                        _DrawerSettingsSection(
+                          isNarrow: isNarrow,
+                          persistedVolume: persistedVolume,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

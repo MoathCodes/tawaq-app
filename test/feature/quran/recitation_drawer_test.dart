@@ -47,10 +47,7 @@ Widget _wrap(Widget child, {TextDirection dir = TextDirection.ltr}) {
     child: MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        body: Directionality(
-          textDirection: dir,
-          child: child,
-        ),
+        body: Directionality(textDirection: dir, child: child),
       ),
     ),
   );
@@ -98,6 +95,45 @@ class _OfflineStoreConsumer extends ConsumerWidget {
 }
 
 void main() {
+  testWidgets('reduced-motion drawer opens and closes without delayed access', (
+    tester,
+  ) async {
+    var open = false;
+    late StateSetter update;
+    await tester.pumpWidget(
+      _wrap(
+        FAccessibilityScope(
+          data: const FAccessibility(
+            accessibleNavigation: false,
+            motion: FAccessibilityMotion.reduced,
+            focusHighlight: true,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return RecitationDrawerSurface(
+                open: open,
+                onClose: () {},
+                child: const Text('Playback controls'),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+    update(() => open = true);
+    await tester.pump();
+    final surface = tester.state<RecitationDrawerSurfaceState>(
+      find.byType(RecitationDrawerSurface),
+    );
+    expect(surface.controller.isCompleted, isTrue);
+    expect(surface.controller.isAnimating, isFalse);
+    expect(find.text('Playback controls'), findsOneWidget);
+    update(() => open = false);
+    await tester.pump();
+    expect(surface.controller.isDismissed, isTrue);
+    expect(find.text('Playback controls'), findsNothing);
+  });
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUpAll(() async {
@@ -317,9 +353,7 @@ void main() {
 
       // Closed initially: controller at 0, no panel in tree.
       final stateClosed = tester.state<RecitationDrawerSurfaceState>(
-        find.byType(
-          RecitationDrawerSurface,
-        ),
+        find.byType(RecitationDrawerSurface),
       );
       expect(stateClosed.controller.value, 0);
       expect(find.byType(SizedBox), findsWidgets);
@@ -337,9 +371,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
 
       final stateOpen = tester.state<RecitationDrawerSurfaceState>(
-        find.byType(
-          RecitationDrawerSurface,
-        ),
+        find.byType(RecitationDrawerSurface),
       );
       // Forward animation has advanced past 0.
       expect(stateOpen.controller.value, greaterThan(0));
@@ -364,9 +396,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final stateOpen = tester.state<RecitationDrawerSurfaceState>(
-        find.byType(
-          RecitationDrawerSurface,
-        ),
+        find.byType(RecitationDrawerSurface),
       );
       expect(stateOpen.controller.value, 1);
 
@@ -383,9 +413,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
 
       final stateClosing = tester.state<RecitationDrawerSurfaceState>(
-        find.byType(
-          RecitationDrawerSurface,
-        ),
+        find.byType(RecitationDrawerSurface),
       );
       // Reverse animation has started: value dropped below 1 but above 0.
       expect(stateClosing.controller.value, lessThan(1));
@@ -433,9 +461,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       final state = tester.state<RecitationDrawerSurfaceState>(
-        find.byType(
-          RecitationDrawerSurface,
-        ),
+        find.byType(RecitationDrawerSurface),
       );
       expect(state.controller.value, 1);
     });
@@ -451,46 +477,33 @@ void main() {
       stream = _FakePlayerStream();
       player = _FakePlayer();
       demuxerCacheState = StreamController<DemuxerCacheState>.broadcast();
-      when(
-        () => stream.demuxerCacheState,
-      ).thenAnswer((_) => demuxerCacheState.stream);
+      when(() => stream.demuxerCacheState)
+          .thenAnswer((_) => demuxerCacheState.stream);
       when(() => stream.playing).thenAnswer((_) => const Stream<bool>.empty());
-      when(
-        () => stream.playWhenReady,
-      ).thenAnswer((_) => const Stream<bool>.empty());
-      when(
-        () => stream.completed,
-      ).thenAnswer((_) => const Stream<bool>.empty());
-      when(
-        () => stream.eofReached,
-      ).thenAnswer((_) => const Stream<bool>.empty());
-      when(
-        () => stream.error,
-      ).thenAnswer((_) => const Stream<MpvPlayerError>.empty());
-      when(
-        () => stream.endFile,
-      ).thenAnswer((_) => const Stream<MpvFileEndedEvent>.empty());
-      when(
-        () => stream.buffering,
-      ).thenAnswer((_) => const Stream<bool>.empty());
-      when(
-        () => stream.pausedForCache,
-      ).thenAnswer((_) => const Stream<bool>.empty());
-      when(
-        () => stream.seekCompleted,
-      ).thenAnswer((_) => const Stream<void>.empty());
-      when(
-        () => stream.position,
-      ).thenAnswer((_) => const Stream<Duration>.empty());
-      when(
-        () => stream.duration,
-      ).thenAnswer((_) => const Stream<Duration>.empty());
-      when(
-        () => stream.remainingAbLoops,
-      ).thenAnswer((_) => const Stream<int?>.empty());
-      when(
-        () => stream.mediaSessionCommands,
-      ).thenAnswer((_) => const Stream<MediaSessionCommand>.empty());
+      when(() => stream.playWhenReady)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.completed)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.eofReached)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.error)
+          .thenAnswer((_) => const Stream<MpvPlayerError>.empty());
+      when(() => stream.endFile)
+          .thenAnswer((_) => const Stream<MpvFileEndedEvent>.empty());
+      when(() => stream.buffering)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.pausedForCache)
+          .thenAnswer((_) => const Stream<bool>.empty());
+      when(() => stream.seekCompleted)
+          .thenAnswer((_) => const Stream<void>.empty());
+      when(() => stream.position)
+          .thenAnswer((_) => const Stream<Duration>.empty());
+      when(() => stream.duration)
+          .thenAnswer((_) => const Stream<Duration>.empty());
+      when(() => stream.remainingAbLoops)
+          .thenAnswer((_) => const Stream<int?>.empty());
+      when(() => stream.mediaSessionCommands)
+          .thenAnswer((_) => const Stream<MediaSessionCommand>.empty());
       when(() => player.stream).thenReturn(stream);
       when(() => player.state).thenReturn(const PlayerState());
       when(() => player.setAudioClientName(any())).thenAnswer((_) async {});
@@ -503,7 +516,11 @@ void main() {
       await audioService.dispose();
     });
 
-    Widget scopeWrap(Widget child) {
+    Widget scopeWrap(
+      Widget child, {
+      VoidCallback? onGoToQuran,
+      RecitationController Function()? playback,
+    }) {
       final theme = buildAppTheme(
         palette: AppPalette.neutral,
         themeMode: ThemeMode.light,
@@ -516,7 +533,7 @@ void main() {
             _TestRecitationDrawerNotifier.new,
           ),
           recitationControllerProvider.overrideWith(
-            _TestRecitationControllerNotifier.new,
+            playback ?? _TestRecitationControllerNotifier.new,
           ),
           recitationSettingsProvider.overrideWith(
             _TestRecitationSettingsNotifier.new,
@@ -538,7 +555,7 @@ void main() {
         ],
         child: FTheme(
           data: theme,
-          child: const MaterialApp(
+          child: MaterialApp(
             debugShowCheckedModeBanner: false,
             localizationsDelegates: appLocalizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
@@ -547,7 +564,7 @@ void main() {
               child: Scaffold(
                 body: SizedBox(
                   width: 400,
-                  child: RecitationDrawerOverlay(),
+                  child: RecitationDrawerOverlay(onGoToQuran: onGoToQuran),
                 ),
               ),
             ),
@@ -555,6 +572,55 @@ void main() {
         ),
       );
     }
+
+    testWidgets(
+      'Go to Quran closes the overlay before routing and preserves the destination route',
+      (tester) async {
+        tester.view.physicalSize = const Size(400, 2000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final playback = _NavigableRecitationController();
+        var routed = false;
+        late BuildContext destination;
+        await tester.pumpWidget(
+          scopeWrap(
+            const SizedBox.shrink(),
+            playback: () => playback,
+            onGoToQuran: () {
+              final context = tester.element(
+                find.byType(RecitationDrawerOverlay),
+              );
+              expect(
+                ProviderScope.containerOf(context)
+                    .read(recitationDrawerProvider),
+                isFalse,
+              );
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) {
+                    destination = context;
+                    return const Scaffold(
+                      body: Text('Quran destination fixture'),
+                    );
+                  },
+                ),
+              );
+              routed = true;
+            },
+          ),
+        );
+        await tester.pumpAndSettle();
+        final l10n = lookupAppLocalizations(const Locale('en'));
+        await tester.tap(find.bySemanticsLabel(l10n.quranRecitationGoToQuran));
+        await tester.pumpAndSettle();
+        expect(routed, isTrue);
+        expect(playback.navigationCount, 1);
+        expect(find.text('Quran destination fixture'), findsOneWidget);
+        expect(ModalRoute.of(destination)?.isCurrent, isTrue);
+        expect(tester.takeException(), isNull);
+      },
+    );
 
     testWidgets('shows cache tile with formatted total bytes', (tester) async {
       tester.view.physicalSize = const Size(400, 2000);
@@ -722,4 +788,14 @@ class _FakePlayerStream extends Mock implements PlayerStream {}
 class _TestLocaleNotifier extends LocaleNotifier {
   @override
   Future<String> build() async => 'en';
+}
+
+class _NavigableRecitationController extends _TestRecitationControllerNotifier {
+  int navigationCount = 0;
+  @override
+  RecitationState build() => const RecitationState(surah: 2);
+  @override
+  Future<void> goToPlaybackInMushaf() async {
+    navigationCount++;
+  }
 }

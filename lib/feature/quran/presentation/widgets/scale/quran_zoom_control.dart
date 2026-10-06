@@ -14,10 +14,7 @@ import 'package:tawaq/theme/theme.dart';
 /// value, live preview while dragging, commit on release.
 class QuranZoomControl extends HookConsumerWidget {
   /// Creates a [QuranZoomControl].
-  const new({
-    this.showHeader = false,
-    super.key,
-  });
+  const new({this.showHeader = false, super.key});
 
   /// When true, renders a title row with the live percentage and reset.
   ///
@@ -153,10 +150,7 @@ class QuranZoomControl extends HookConsumerWidget {
         ] else ...[
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              percentLabel,
-              resetButton,
-            ],
+            children: [percentLabel, resetButton],
           ),
           const SizedBox(height: AppSpacing.sm),
         ],
@@ -165,7 +159,9 @@ class QuranZoomControl extends HookConsumerWidget {
           child: slider,
         ),
         AnimatedSize(
-          duration: theme.durations.fast,
+          duration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : theme.durations.fast,
           alignment: Alignment.topCenter,
           child: pastFit
               ? Padding(

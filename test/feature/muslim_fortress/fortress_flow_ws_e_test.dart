@@ -15,7 +15,7 @@ FortressCategory _category(int chapterId, {String title = 'title'}) =>
     );
 
 void main() {
-  group('FortressScreenController search vs filter isolation', () {
+  group('FortressScreenController unified sidebar search', () {
     late ProviderContainer container;
 
     setUp(() {
@@ -24,7 +24,7 @@ void main() {
 
     tearDown(() => container.dispose());
 
-    test('session query starts empty (sidebar filter is local-only)', () {
+    test('session query starts empty', () {
       final state = container.read(fortressScreenControllerProvider);
       expect(state.query, isEmpty);
       expect(state.query.length < fortressSearchMinQueryLength, isTrue);

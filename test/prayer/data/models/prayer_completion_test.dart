@@ -149,7 +149,7 @@ void main() {
           CompletionStatus.onTime.trackerCycleNext,
           CompletionStatus.late,
         );
-        expect(CompletionStatus.late.trackerCycleNext, CompletionStatus.missed);
+        expect(CompletionStatus.late.trackerCycleNext, isNull);
         expect(CompletionStatus.missed.trackerCycleNext, isNull);
       });
     });

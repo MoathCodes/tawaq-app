@@ -17,7 +17,7 @@ class ShellBottomNavigationBar extends HookConsumerWidget {
     final router = GoRouter.of(context);
     // go_router 17: rebuild when routeInformationProvider notifies (sidebar).
     useListenable(router.routeInformationProvider);
-    final currentLocation = router.state.fullPath;
+    final currentLocation = router.routeInformationProvider.value.uri.path;
     final selectedIndex = routes.indexWhere(
       (route) => route.containsLocation(currentLocation),
     );

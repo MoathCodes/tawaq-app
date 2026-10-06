@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 /// A cooperative cancellation token. Once canceled it cannot be un-canceled.
@@ -9,6 +11,10 @@ class CancellationToken {
   new();
 
   bool _cancelled = false;
+  final Completer<void> _cancelledSignal = Completer<void>();
+
+  /// Completes immediately on cancellation, including while a request stalls.
+  Future<void> get whenCancelled => _cancelledSignal.future;
   final List<VoidCallback> _callbacks = [];
 
   /// Whether [cancel] has been called.
@@ -20,6 +26,7 @@ class CancellationToken {
   void cancel() {
     if (_cancelled) return;
     _cancelled = true;
+    _cancelledSignal.complete();
     for (final cb in List<VoidCallback>.of(_callbacks)) {
       try {
         cb();
@@ -32,12 +39,14 @@ class CancellationToken {
 
   /// Registers [callback] to run when [cancel] is called. If already canceled,
   /// [callback] runs immediately.
-  void onCancel(VoidCallback callback) {
+  /// Returns a function that removes this listener after its operation ends.
+  VoidCallback onCancel(VoidCallback callback) {
     if (_cancelled) {
       callback();
-      return;
+      return () {};
     }
     _callbacks.add(callback);
+    return () => _callbacks.remove(callback);
   }
 }
 

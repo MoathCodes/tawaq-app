@@ -17,7 +17,10 @@ import 'package:tawaq/theme/theme.dart';
 /// Displays global Hisn search results for titles and dhikr contents.
 class FortressSearchResultsPane extends ConsumerWidget {
   /// Creates a search results pane.
-  const new({super.key});
+  const new({this.onSelected, super.key});
+
+  /// Opens the chosen chapter in a compact reading destination.
+  final VoidCallback? onSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,6 +34,7 @@ class FortressSearchResultsPane extends ConsumerWidget {
       data: (results) => _FortressSearchResultsBody(
         results: results,
         query: query,
+        onSelected: onSelected,
       ),
       loading: () => const Center(child: FCircularProgress.loader()),
       error: (_, _) => Center(
@@ -45,13 +49,11 @@ class FortressSearchResultsPane extends ConsumerWidget {
 }
 
 class _FortressSearchResultsBody extends StatelessWidget {
-  const new({
-    required this.results,
-    required this.query,
-  });
+  const new({required this.results, required this.query, this.onSelected});
 
   final FortressSearchResults results;
   final String query;
+  final VoidCallback? onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +76,7 @@ class _FortressSearchResultsBody extends StatelessWidget {
         child: _FortressSearchResultsList(
           results: results,
           l10n: l10n,
+          onSelected: onSelected,
         ),
       ),
     );
@@ -81,13 +84,11 @@ class _FortressSearchResultsBody extends StatelessWidget {
 }
 
 class _FortressSearchResultsList extends StatelessWidget {
-  const new({
-    required this.results,
-    required this.l10n,
-  });
+  const new({required this.results, required this.l10n, this.onSelected});
 
   final FortressSearchResults results;
   final AppLocalizations l10n;
+  final VoidCallback? onSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +103,10 @@ class _FortressSearchResultsList extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           for (var i = 0; i < results.titles.length; i++) ...[
-            _TitleResultTile(category: results.titles[i]),
+            _TitleResultTile(
+              category: results.titles[i],
+              onSelected: onSelected,
+            ),
             SizedBox(
               height: i == results.titles.length - 1
                   ? AppSpacing.xl
@@ -120,9 +124,7 @@ class _FortressSearchResultsList extends StatelessWidget {
           for (var i = 0; i < results.contents.length; i++)
             Padding(
               padding: EdgeInsets.only(
-                bottom: i == results.contents.length - 1
-                    ? 0
-                    : AppSpacing.sm,
+                bottom: i == results.contents.length - 1 ? 0 : AppSpacing.sm,
               ),
               child: _ContentResultTile(hit: results.contents[i]),
             ),
@@ -133,11 +135,7 @@ class _FortressSearchResultsList extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const new({
-    required this.icon,
-    required this.title,
-    required this.count,
-  });
+  const new({required this.icon, required this.title, required this.count});
 
   final IconData icon;
   final String title;
@@ -172,9 +170,10 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _TitleResultTile extends ConsumerWidget {
-  const new({required this.category});
+  const new({required this.category, this.onSelected});
 
   final FortressCategory category;
+  final VoidCallback? onSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -182,12 +181,15 @@ class _TitleResultTile extends ConsumerWidget {
     final l10n = context.l10n;
 
     return MouseClick(
-      onClick: () => ref
-          .read(fortressScreenControllerProvider.notifier)
-          .selectSearchTitle(category),
+      onClick: () {
+        ref
+            .read(fortressScreenControllerProvider.notifier)
+            .selectSearchTitle(category);
+        onSelected?.call();
+      },
       semanticsLabel: category.title,
       child: ExcludeSemantics(
-          child: StaticCard(
+        child: StaticCard(
           padding: const EdgeInsets.all(AppSpacing.lg),
           borderRadius: theme.radii.md,
           backgroundColor: theme.colors.secondary.withAlpha(80),
@@ -196,7 +198,9 @@ class _TitleResultTile extends ConsumerWidget {
             category: category,
             l10n: l10n,
             trailing: Icon(
-              FLucideIcons.chevronLeft,
+              Directionality.of(context) == TextDirection.rtl
+                  ? FLucideIcons.chevronLeft
+                  : FLucideIcons.chevronRight,
               size: 16,
               color: theme.colors.mutedForeground,
             ),

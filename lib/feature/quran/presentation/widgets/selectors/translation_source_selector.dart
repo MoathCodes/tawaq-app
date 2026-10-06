@@ -14,11 +14,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Searchable select for choosing a Quran translation source.
 class TranslationSourceSelector extends ConsumerWidget {
   /// Creates a [TranslationSourceSelector].
-  const new({
-    this.enabled = true,
-    this.showLabel = true,
-    super.key,
-  });
+  const new({this.enabled = true, this.showLabel = true, super.key});
 
   /// Whether the selector accepts input.
   final bool enabled;
@@ -46,7 +42,6 @@ class TranslationSourceSelector extends ConsumerWidget {
         name: fieldLabel,
         value: selected.displayName,
         enabled: enabled,
-        excludeChild: true,
         child: FSelect<TranslationId>.searchBuilder(
           enabled: enabled,
           label: showLabel
@@ -90,11 +85,8 @@ class TranslationSourceSelector extends ConsumerWidget {
                   source.language.toLowerCase().contains(normalized),
             );
           },
-          contentBuilder: (_, _, values) => _buildTranslationSections(
-            values,
-            colors,
-            typography,
-          ),
+          contentBuilder: (_, _, values) =>
+              _buildTranslationSections(values, colors, typography),
           contentEmptyBuilder: (_, _) => const SelectEmptyContent(),
         ),
       ),

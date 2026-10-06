@@ -4,7 +4,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/core/hooks/hooks.dart';
+import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
@@ -84,9 +85,7 @@ class _SpecificModeHeader extends ConsumerWidget {
         ),
         Text(
           title,
-          style: theme.typography.body.lg.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: theme.typography.body.lg.copyWith(fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -118,10 +117,9 @@ class _QueryField extends HookConsumerWidget {
     useListenable(queryController);
     final screenController = ref.read(hadithSessionControllerProvider.notifier);
     final searchFocusNode = useFocusNode();
-    final focusSearch = useCallback(
-      searchFocusNode.requestFocus,
-      [searchFocusNode],
-    );
+    final focusSearch = useCallback(searchFocusNode.requestFocus, [
+      searchFocusNode,
+    ]);
 
     useRegisterAppSearchFocus(focusSearch, enabled: isSearchMode);
 
@@ -216,10 +214,7 @@ class _QueryField extends HookConsumerWidget {
                         mainAxisSize: MainAxisSize.min,
                         spacing: AppSpacing.xs,
                         children: [
-                          const Icon(
-                            FLucideIcons.slidersHorizontal,
-                            size: 18,
-                          ),
+                          const Icon(FLucideIcons.slidersHorizontal, size: 18),
                           if (activeFilterCount > 0)
                             _FilterCountBadge(count: activeFilterCount),
                         ],
@@ -320,25 +315,33 @@ class _SearchMeta extends ConsumerWidget {
     final activeFilterCount = ref.watch(
       hadithSessionControllerProvider.select((s) => s.filters.activeCount),
     );
-    final resultsCount = ref.watch(
-      hadithSessionControllerProvider.select(
-        (s) => s.searchOutcome.value?.results.length ?? 0,
-      ),
+    final outcome = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.searchOutcome),
+    );
+    final searchBusy = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.searchBusy),
     );
     final l10n = context.l10n;
     final showRecents = sessionQuery.trim().isEmpty;
+    final resultsCount = outcome.value?.results.length ?? 0;
+    final status = searchBusy
+        ? l10n.loading
+        : outcome.hasError || !outcome.hasValue
+        ? null
+        : l10n.hadithResultsCount(resultsCount);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: AppSpacing.xs),
-        if (sessionQuery.trim().isNotEmpty || activeFilterCount > 0)
+        if (status != null &&
+            (sessionQuery.trim().isNotEmpty || activeFilterCount > 0))
           Semantics(
-            label: l10n.hadithResultsCount(resultsCount),
+            label: status,
             child: HadithDecorExcludeSemantics(
               child: FBadge(
                 variant: resultsCount > 0 ? .secondary : .outline,
-                child: Text(l10n.hadithResultsCount(resultsCount)),
+                child: Text(status),
               ),
             ),
           ),
@@ -525,11 +528,55 @@ class _RecentSearchesSection extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 onPress: searchBusy
                     ? null
-                    : () => unawaited(
-                        ref
-                            .read(hadithRecentSearchesStoreProvider.notifier)
-                            .clearAll(),
-                      ),
+                    : () async {
+                        final confirmed = await showFDialog<bool>(
+                          context: context,
+                          builder: (dialogContext, style, animation) => FDialog(
+                            style: style,
+                            animation: animation,
+                            builder: (context, dialogStyle) =>
+                                ForuiDialogLayout(
+                                  style: dialogStyle,
+                                  expandActions: true,
+                                  title: Text(l10n.hadithClearRecentsConfirm),
+                                  body: const SizedBox.shrink(),
+                                  actions: [
+                                    FButton(
+                                      variant: .secondary,
+                                      onPress: () =>
+                                          Navigator.of(dialogContext)
+                                              .pop(false),
+                                      child: Flexible(child: Text(l10n.cancel)),
+                                    ),
+                                    FButton(
+                                      variant: .destructive,
+                                      onPress: () =>
+                                          Navigator.of(dialogContext).pop(true),
+                                      child: Flexible(
+                                        child: Text(l10n.hadithClearAllRecents),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                          ),
+                        );
+                        if (confirmed == true && context.mounted) {
+                          try {
+                            await ref
+                                .read(
+                                  hadithRecentSearchesStoreProvider.notifier,
+                                )
+                                .clearAll();
+                          } on Object {
+                            if (context.mounted) {
+                              showFToast(
+                                context: context,
+                                title: Text(l10n.hadithRecentsUpdateFailed),
+                              );
+                            }
+                          }
+                        }
+                      },
                 child: Text(l10n.hadithClearAllRecents),
               ),
             ),
@@ -549,17 +596,28 @@ class _RecentSearchesSection extends ConsumerWidget {
           ],
         );
       },
-      error: (_, _) => const SizedBox.shrink(),
-      loading: () => const SizedBox.shrink(),
+      error: (_, _) => ErrorStatePanel(
+        message: l10n.hadithRecentsLoadFailed,
+        retryLabel: l10n.retryAction,
+        onRetry: () {
+          ref
+              .read(hadithSessionControllerProvider.notifier)
+              .retryInitialization();
+          ref.invalidate(hadithRecentSearchesStoreProvider);
+        },
+      ),
+      loading: () => Text(
+        l10n.loading,
+        style: theme.typography.body.xs.copyWith(
+          color: theme.colors.mutedForeground,
+        ),
+      ),
     );
   }
 }
 
 class _RecentSearchChip extends HookConsumerWidget {
-  const new({
-    required this.query,
-    required this.useSplitLayout,
-  });
+  const new({required this.query, required this.useSplitLayout});
 
   final String query;
   final bool useSplitLayout;
@@ -572,12 +630,10 @@ class _RecentSearchChip extends HookConsumerWidget {
       hadithSessionControllerProvider.select((s) => s.searchBusy),
     );
     final screenController = ref.read(hadithSessionControllerProvider.notifier);
-    final (:isHovered, :setHovered) = useHoverState();
-    final showRemove = isHovered || !useSplitLayout;
+
+    final showRemove = true;
 
     return MouseRegion(
-      onEnter: (_) => setHovered(value: true),
-      onExit: (_) => setHovered(value: false),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -619,12 +675,19 @@ class _RecentSearchChip extends HookConsumerWidget {
                         query,
                         l10n,
                       ),
-                      onPress: () {
-                        unawaited(
-                          ref
+                      onPress: () async {
+                        try {
+                          await ref
                               .read(hadithRecentSearchesStoreProvider.notifier)
-                              .removeQuery(query),
-                        );
+                              .removeQuery(query);
+                        } on Object {
+                          if (context.mounted) {
+                            showFToast(
+                              context: context,
+                              title: Text(l10n.hadithRecentsUpdateFailed),
+                            );
+                          }
+                        }
                       },
                       child: const HadithDecorExcludeSemantics(
                         child: Icon(FLucideIcons.x, size: 12),
@@ -640,11 +703,7 @@ class _RecentSearchChip extends HookConsumerWidget {
 }
 
 class _SearchMetaSectionHeader extends StatelessWidget {
-  const new({
-    required this.icon,
-    required this.title,
-    this.trailing,
-  });
+  const new({required this.icon, required this.title, this.trailing});
 
   final IconData icon;
   final String title;
@@ -665,10 +724,7 @@ class _SearchMetaSectionHeader extends StatelessWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        if (trailing != null) ...[
-          const Spacer(),
-          trailing!,
-        ],
+        if (trailing != null) ...[const Spacer(), trailing!],
       ],
     );
   }

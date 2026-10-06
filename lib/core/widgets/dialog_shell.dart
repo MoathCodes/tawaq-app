@@ -2,6 +2,7 @@ import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
 
 /// Shared title row for player-style modal dialogs.
 class PlayerDialogHeader extends StatelessWidget {
@@ -76,6 +77,8 @@ class PlayerDialogHeader extends StatelessWidget {
               ),
               FButton.icon(
                 variant: .ghost,
+                semanticsLabel: context.l10n.close,
+                semanticsTooltip: context.l10n.close,
                 onPress: () => Navigator.of(context).maybePop(),
                 child: Icon(
                   FLucideIcons.x,
@@ -232,10 +235,7 @@ class ForuiDialogLayout extends StatelessWidget {
     final actionSpacing = touch ? 10.0 : 8.0;
 
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: touch ? 18 : 14,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: touch ? 18 : 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,

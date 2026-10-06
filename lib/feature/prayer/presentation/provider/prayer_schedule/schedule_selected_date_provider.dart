@@ -12,16 +12,12 @@ part 'schedule_selected_date_provider.g.dart';
 /// "today".
 @riverpod
 class ScheduleSelectedDate extends _$ScheduleSelectedDate {
+  bool _followingToday = true;
   @override
   DateTime build() {
     ref.listen(prayerCalendarDayKeyProvider, (previous, next) {
-      if (previous == null || previous == 0 || next == 0 || previous == next) {
-        return;
-      }
-
-      if (isSameCalendarDayKey(state, previous)) {
-        state = dateFromCalendarDayKey(next);
-      }
+      if (next == 0 || previous == next) return;
+      if (_followingToday) state = dateFromCalendarDayKey(next);
     });
 
     return _initialSelectedDate();
@@ -47,6 +43,10 @@ class ScheduleSelectedDate extends _$ScheduleSelectedDate {
 
   /// Updates the schedule list to [date] (date component only).
   void select(DateTime date) {
+    _followingToday = isSameCalendarDayKey(
+      date,
+      ref.read(prayerCalendarDayKeyProvider),
+    );
     state = DateTime(date.year, date.month, date.day);
   }
 }

@@ -1,24 +1,23 @@
 import 'package:forui/forui.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
-import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
 import 'package:tawaq/theme/theme.dart';
 
 const _kMaxAlertWidth = 420.0;
 
 /// Soft prompt to set prayer location when coordinates are still unset.
 ///
-/// Does not force onboarding on every launch — only reopens after the user
-/// taps and [OnboardingStateNotifier.reset] succeeds.
-class PrayerLocationSetupAlert extends ConsumerWidget {
+/// Opens focused location recovery without changing first-run completion.
+class PrayerLocationSetupAlert extends StatelessWidget {
   /// Creates [PrayerLocationSetupAlert].
-  const new({super.key});
+  const new({required this.onSetLocation, super.key});
+
+  /// Opens the location destination supplied by app composition.
+  final VoidCallback? onSetLocation;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
@@ -76,13 +75,7 @@ class PrayerLocationSetupAlert extends ConsumerWidget {
             ),
             FButton(
               mainAxisSize: MainAxisSize.min,
-              onPress: () async {
-                final cleared = await ref
-                    .read(onboardingStateProvider.notifier)
-                    .reset();
-                if (!cleared || !context.mounted) return;
-                const OnboardingRoute().go(context);
-              },
+              onPress: onSetLocation,
               prefix: const Icon(FLucideIcons.mapPin, size: 16),
               child: Text(l10n.onboardingOpenSetupAction),
             ),

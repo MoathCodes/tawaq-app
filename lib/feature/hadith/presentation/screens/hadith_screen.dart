@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -12,7 +11,6 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_detail_pane.dart';
@@ -32,10 +30,7 @@ class HadithPage extends HookConsumerWidget {
 
     return AppShortcutScope(
       autofocus: true,
-      shortcuts: {
-        AppShortcut.hadithResultNext,
-        AppShortcut.hadithResultPrev,
-      },
+      shortcuts: {AppShortcut.hadithResultNext, AppShortcut.hadithResultPrev},
       handlers: {
         AppShortcut.hadithResultNext: () =>
             unawaited(screenController.selectAdjacentResult(1)),
@@ -58,9 +53,8 @@ class _HadithResponsiveBody extends ConsumerWidget {
     return ResponsiveHorizontalSplitGate(
       sideMin: kStudyPanelMinExtent,
       mainMin: kMainPaneMinExtent,
-      builder: (context, useSplitLayout) => _HadithSplitGateBody(
-        useSplitLayout: useSplitLayout,
-      ),
+      builder: (context, useSplitLayout) =>
+          _HadithSplitGateBody(useSplitLayout: useSplitLayout),
     );
   }
 }
@@ -149,10 +143,7 @@ class _HadithSplitLayout extends ConsumerWidget {
 }
 
 class _HadithSidePanel extends ConsumerWidget {
-  const new({
-    required this.onCollapse,
-    required this.collapseSemanticLabel,
-  });
+  const new({required this.onCollapse, required this.collapseSemanticLabel});
 
   final VoidCallback onCollapse;
   final String collapseSemanticLabel;
@@ -162,20 +153,6 @@ class _HadithSidePanel extends ConsumerWidget {
     final session = ref.watch(hadithSessionControllerProvider);
     final isSearchMode = session.isSearchMode;
     final selectedHadith = ref.watch(selectedHadithProvider);
-    final visibleResults = switch (session.mode) {
-      HadithViewMode.search => session.results,
-      HadithViewMode.bookmarks =>
-        ref.watch(hadithFavoritesProvider).value ?? const <DetailedHadith>[],
-      HadithViewMode.specificList => session.specificHadiths,
-    };
-    final selectedOrdinal = selectedHadith == null
-        ? null
-        : visibleResults.indexWhere(
-                (item) =>
-                    hadithStableKey(item) == hadithStableKey(selectedHadith),
-              ) +
-              1;
-    final selectedResultOrdinal = selectedOrdinal == 0 ? null : selectedOrdinal;
     final settings =
         ref.watch(hadithScreenSettingsProvider).asData?.value ??
         HadithPersistedSettings.initial();
@@ -209,7 +186,6 @@ class _HadithSidePanel extends ConsumerWidget {
                   'hadith-detail-${hadithStableKey(selectedHadith)}',
                 ),
                 hadith: selectedHadith,
-                resultOrdinal: selectedResultOrdinal,
               ),
       ),
       if (isSearchMode)
@@ -231,9 +207,7 @@ class _HadithSidePanel extends ConsumerWidget {
 
     return FSidebar.raw(
       style: .delta(
-        decoration: .boxDelta(
-          border: .all(color: Colors.transparent),
-        ),
+        decoration: .boxDelta(border: .all(color: Colors.transparent)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -271,10 +245,7 @@ class _HadithSidePanel extends ConsumerWidget {
 }
 
 class _SidePanelCollapseHandle extends StatelessWidget {
-  const new({
-    required this.semanticLabel,
-    required this.onPress,
-  });
+  const new({required this.semanticLabel, required this.onPress});
 
   final String semanticLabel;
   final VoidCallback onPress;

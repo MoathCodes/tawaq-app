@@ -170,8 +170,8 @@ abstract final class AppShortcut {
   static final quranAyahNext = ShortcutDef(
     id: 'quranAyahNext',
     category: AppShortcutCategory.quran,
-    scope: ShortcutScope.contextual,
-    contextTag: 'quran.studyPanel',
+    scope: ShortcutScope.route,
+    routePath: '/quran',
     activators: [
       plainShortcut(LogicalKeyboardKey.arrowDown),
     ],
@@ -180,8 +180,8 @@ abstract final class AppShortcut {
   static final quranAyahPrev = ShortcutDef(
     id: 'quranAyahPrev',
     category: AppShortcutCategory.quran,
-    scope: ShortcutScope.contextual,
-    contextTag: 'quran.studyPanel',
+    scope: ShortcutScope.route,
+    routePath: '/quran',
     activators: [
       plainShortcut(LogicalKeyboardKey.arrowUp),
     ],

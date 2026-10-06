@@ -4,6 +4,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
+import 'package:tawaq/core/widgets/localized_search_clear_button.dart';
 import 'package:forui_hooks/forui_hooks.dart';
 import 'package:free_map/free_map.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -40,9 +41,10 @@ String resolveLocationDisplayName(AppLocalizations l10n, String locationName) {
 
 /// Maps [error] to a localized message when it is a [LocationException].
 String localizeLocationFailure(AppLocalizations l10n, Object error) {
-  if (error is! LocationException) return error.toString();
+  if (error is! LocationException) return l10n.deviceLocationUnavailable;
 
   return switch (error.code) {
+    LocationFailureCode.timedOut => l10n.deviceLocationTimedOut,
     LocationFailureCode.servicesDisabled => l10n.locationServicesDisabled,
     LocationFailureCode.permissionDenied => l10n.locationPermissionDenied,
     LocationFailureCode.permissionDeniedForever =>
@@ -68,9 +70,7 @@ void showLocationError(BuildContext context, String action, Object error) {
 
 /// Whether manual location controls are editable.
 bool manualLocationControlsEnabled(WidgetRef ref) {
-  final ready = ref.watch(
-    prayerSettingsProvider.select((v) => v.hasValue),
-  );
+  final ready = ref.watch(prayerSettingsProvider.select((v) => v.hasValue));
   final autoLocation = ref.watch(
     prayerSettingsProvider.select((v) => v.value?.autoLocation ?? false),
   );
@@ -86,10 +86,7 @@ class LocationControlsRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return const NonSelectable(
       child: ResponsiveFieldRow(
-        children: [
-          PlaceSearchField(),
-          TimezoneSelect(),
-        ],
+        children: [PlaceSearchField(), TimezoneSelect()],
       ),
     );
   }
@@ -135,19 +132,16 @@ class PlaceSearchField extends HookConsumerWidget {
     }
 
     // Drop open/in-flight results when auto-location locks the controls.
-    useEffect(
-      () {
-        if (enabled) return null;
-        if (searchState.value == null &&
-            popoverController.status == AnimationStatus.dismissed) {
-          return null;
-        }
-        invalidateSearch();
-        unawaited(popoverController.hide());
+    useEffect(() {
+      if (enabled) return null;
+      if (searchState.value == null &&
+          popoverController.status == AnimationStatus.dismissed) {
         return null;
-      },
-      [enabled],
-    );
+      }
+      invalidateSearch();
+      unawaited(popoverController.hide());
+      return null;
+    }, [enabled]);
 
     Future<void> submit() async {
       if (!enabled || inFlight.value) return;
@@ -221,10 +215,8 @@ class PlaceSearchField extends HookConsumerWidget {
       ),
       constraints: selectPopoverPortalConstraints(context),
       autofocus: true,
-      popoverBuilder: (context, _) => _PlaceSearchResults(
-        state: searchState.value,
-        onSelect: selectPlace,
-      ),
+      popoverBuilder: (context, _) =>
+          _PlaceSearchResults(state: searchState.value, onSelect: selectPlace),
       child: FTextField(
         enabled: enabled,
         focusNode: focusNode,
@@ -243,13 +235,11 @@ class PlaceSearchField extends HookConsumerWidget {
         // ),
         textInputAction: TextInputAction.search,
         onSubmit: canSubmit ? (_) => unawaited(submit()) : null,
+        clearIconBuilder: localizedSearchClearButton,
         clearable: (value) => enabled && value.text.isNotEmpty,
         prefixBuilder: (_, _, _) => Padding(
           padding: const EdgeInsets.all(AppSpacing.sm),
-          child: Icon(
-            FLucideIcons.search,
-            color: colors.secondaryForeground,
-          ),
+          child: Icon(FLucideIcons.search, color: colors.secondaryForeground),
         ),
         suffixBuilder: (_, _, _) {
           if (isSearching) {
@@ -284,10 +274,7 @@ class PlaceSearchField extends HookConsumerWidget {
 }
 
 class _PlaceSearchResults extends StatelessWidget {
-  const new({
-    required this.state,
-    required this.onSelect,
-  });
+  const new({required this.state, required this.onSelect});
 
   final AsyncValue<List<FmData>>? state;
   final ValueChanged<FmData> onSelect;
@@ -376,10 +363,7 @@ class TimezoneSelect extends ConsumerWidget {
       ),
       prefixBuilder: (_, _, _) => Padding(
         padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Icon(
-          FLucideIcons.clock,
-          color: colors.secondaryForeground,
-        ),
+        child: Icon(FLucideIcons.clock, color: colors.secondaryForeground),
       ),
       filter: (query) async {
         final catalog = ref.read(timezoneCatalogProvider);
@@ -479,57 +463,48 @@ class _CoordinateField extends HookConsumerWidget {
       return;
     });
 
-    useEffect(
-      () {
-        void onFocusChanged() {
-          if (focusNode.hasFocus) return;
-          final parsed = double.tryParse(controller.text);
-          if (parsed == null) {
-            controller.text = value;
-            return;
-          }
-          final coords = ref.read(
-            prayerSettingsProvider.select((s) => s.value?.coordinates),
-          );
-          if (coords == null) return;
-
-          final newCoords = isLatitude
-              ? Coordinates(parsed, coords.longitude)
-              : Coordinates(coords.latitude, parsed);
-          if (newCoords.latitude == coords.latitude &&
-              newCoords.longitude == coords.longitude) {
-            return;
-          }
-          unawaited(() async {
-            try {
-              await ref
-                  .read(prayerSettingsProvider.notifier)
-                  .applyLocationBundle(coordinates: newCoords);
-            } catch (e) {
-              controller.text = value;
-              if (context.mounted) {
-                showLocationError(
-                  context,
-                  context.l10n.changingTimezone,
-                  e,
-                );
-              }
-            }
-          }());
+    useEffect(() {
+      void onFocusChanged() {
+        if (focusNode.hasFocus) return;
+        final parsed = double.tryParse(controller.text);
+        if (parsed == null) {
+          controller.text = value;
+          return;
         }
+        final coords = ref.read(
+          prayerSettingsProvider.select((s) => s.value?.coordinates),
+        );
+        if (coords == null) return;
 
-        focusNode.addListener(onFocusChanged);
-        return () => focusNode.removeListener(onFocusChanged);
-      },
-      [focusNode, controller, value, isLatitude],
-    );
+        final newCoords = isLatitude
+            ? Coordinates(parsed, coords.longitude)
+            : Coordinates(coords.latitude, parsed);
+        if (newCoords.latitude == coords.latitude &&
+            newCoords.longitude == coords.longitude) {
+          return;
+        }
+        unawaited(() async {
+          try {
+            await ref
+                .read(prayerSettingsProvider.notifier)
+                .applyLocationBundle(coordinates: newCoords);
+          } catch (e) {
+            controller.text = value;
+            if (context.mounted) {
+              showLocationError(context, context.l10n.changingTimezone, e);
+            }
+          }
+        }());
+      }
+
+      focusNode.addListener(onFocusChanged);
+      return () => focusNode.removeListener(onFocusChanged);
+    }, [focusNode, controller, value, isLatitude]);
 
     return FTextField(
       enabled: enabled,
       focusNode: focusNode,
-      control: .managed(
-        controller: controller,
-      ),
+      control: .managed(controller: controller),
       label: Text(label),
       keyboardType: const TextInputType.numberWithOptions(
         decimal: true,

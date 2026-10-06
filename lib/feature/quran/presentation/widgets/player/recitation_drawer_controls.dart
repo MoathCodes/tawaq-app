@@ -151,20 +151,20 @@ class _DrawerHeader extends ConsumerWidget {
             tipBuilder: (_, _) => Text(l10n.quranRecitationGoToQuran),
             child: FButton.icon(
               variant: .ghost,
+              semanticsLabel: l10n.quranRecitationGoToQuran,
               onPress: isMetadataLoading || surah == null
                   ? null
-                  : () => unawaited(
-                      Future<void>(() {
-                        onGoToQuran?.call();
-                      }).then((_) {
-                        unawaited(
-                          ref
-                              .read(recitationControllerProvider.notifier)
-                              .goToPlaybackInMushaf(),
-                        );
-                        if (context.mounted) Navigator.of(context).pop();
-                      }),
-                    ),
+                  : () {
+                      // This drawer is a shell overlay, not a Navigator route.
+                      // Popping here removes the destination instead of closing it.
+                      ref.read(recitationDrawerProvider.notifier).close();
+                      onGoToQuran?.call();
+                      unawaited(
+                        ref
+                            .read(recitationControllerProvider.notifier)
+                            .goToPlaybackInMushaf(),
+                      );
+                    },
               child: const Icon(FLucideIcons.book),
             ),
           ),
@@ -175,7 +175,15 @@ class _DrawerHeader extends ConsumerWidget {
                 ? null
                 : () => _selectReciterThenMaybeRange(context, ref),
             variant: .outline,
-            child: Text(l10n.quranRecitationSwitchReciter),
+            child: Text(
+              ref.watch(
+                    recitationControllerProvider.select(
+                      (p) => p.reciter != null,
+                    ),
+                  )
+                  ? l10n.quranRecitationSwitchReciter
+                  : l10n.globalPlaybackChooseReciter,
+            ),
           ),
         ],
       ),
@@ -336,10 +344,7 @@ class _DrawerTransportSection extends HookConsumerWidget {
 /// Seek bar + elapsed/duration labels — the only drawer subtree that watches
 /// position so chrome does not rebuild on every tick.
 class _DrawerSeekAndTime extends ConsumerWidget {
-  const new({
-    required this.bufferedRanges,
-    required this.onSeek,
-  });
+  const new({required this.bufferedRanges, required this.onSeek});
 
   final List<PlaybackBufferRange> bufferedRanges;
   final ValueChanged<Duration> onSeek;
@@ -377,7 +382,11 @@ class _DrawerSeekAndTime extends ConsumerWidget {
                         '${l10n.ayahLabel} ${playback.currentAyah}'
                   : formatPlaybackDuration(view.position),
             ),
-            _DrawerTimeLabel(formatPlaybackDuration(view.duration)),
+            _DrawerTimeLabel(
+              view.duration > Duration.zero
+                  ? formatPlaybackDuration(view.duration)
+                  : l10n.quranRecitationDurationUnknown,
+            ),
           ],
         ),
       ],
@@ -513,10 +522,7 @@ class _RecitationSegmentedSeekBar extends HookConsumerWidget {
 /// Download progress row shown while a surah is caching.
 class _DrawerDownloadProgress extends StatelessWidget {
   /// Creates the download progress row.
-  const new({
-    required this.progress,
-    required this.onCancel,
-  });
+  const new({required this.progress, required this.onCancel});
 
   final DownloadProgress progress;
   final Future<void> Function() onCancel;
@@ -754,10 +760,7 @@ class _DrawerCacheSizeSubtitle extends StatelessWidget {
 /// Volume slider and playback toggles in the recitation drawer.
 class _DrawerSettingsSection extends ConsumerWidget {
   /// Creates the settings section.
-  const new({
-    required this.isNarrow,
-    required this.persistedVolume,
-  });
+  const new({required this.isNarrow, required this.persistedVolume});
 
   final bool isNarrow;
   final double persistedVolume;
@@ -781,48 +784,58 @@ class _DrawerSettingsSection extends ConsumerWidget {
       onCommit: (v) => unawaited(controller.commitVolume(v)),
     );
 
-    final autoScrollToggle = FTooltip(
-      tipBuilder: (_, _) => Text(l10n.quranRecitationAutoScrollDesc),
-      child: FSwitch(
-        leadingLabel: true,
-        label: Text(l10n.quranRecitationAutoScroll),
-        value: settings?.autoScroll ?? true,
-        onChange: (v) => ref
-            .read(recitationSettingsProvider.notifier)
-            .setAutoScroll(value: v),
-      ),
-    );
-
-    final highlightToggle = Row(
-      mainAxisSize: MainAxisSize.min,
+    Widget toggle({
+      required String label,
+      required String description,
+      required bool value,
+      required ValueChanged<bool> onChange,
+      bool enabled = true,
+      Widget? trailing,
+    }) => Row(
       children: [
+        Expanded(child: Text(label, style: theme.typography.body.sm)),
+        if (trailing != null) ...[
+          trailing,
+          const SizedBox(width: AppSpacing.sm),
+        ],
         FTooltip(
-          tipBuilder: (_, _) => Text(l10n.quranRecitationHighlightDesc),
+          tipBuilder: (_, _) => Text(description),
           child: FSwitch(
-            semanticsLabel: l10n.quranRecitationHighlightDesc,
-            leadingLabel: true,
-            enabled: hasAyahTiming,
-            label: Text(l10n.quranRecitationHighlight),
-            value: highlightOn,
-            onChange: (v) => ref
-                .read(recitationSettingsProvider.notifier)
-                .setHighlightAyah(value: v),
+            semanticsLabel: label,
+            value: value,
+            enabled: enabled,
+            onChange: onChange,
           ),
         ),
-        if (nonHafs) ...[
-          const SizedBox(width: AppSpacing.xs),
-          FTooltip(
-            tipBuilder: (_, _) =>
-                Text(l10n.quranRecitationHighlightNonHafsWarning),
-            child: Icon(
-              FLucideIcons.triangleAlert,
-              semanticLabel: l10n.quranRecitationHighlightNonHafsWarning,
-              size: 16,
-              // color: colors.destructive,
-            ),
-          ),
-        ],
       ],
+    );
+    final autoScrollToggle = toggle(
+      label: l10n.quranRecitationAutoScroll,
+      description: l10n.quranRecitationAutoScrollDesc,
+      value: settings?.autoScroll ?? true,
+      enabled: hasAyahTiming,
+      onChange: (v) =>
+          ref.read(recitationSettingsProvider.notifier).setAutoScroll(value: v),
+    );
+    final highlightToggle = toggle(
+      label: l10n.quranRecitationHighlight,
+      description: l10n.quranRecitationHighlightDesc,
+      value: highlightOn,
+      enabled: hasAyahTiming,
+      onChange: (v) => ref
+          .read(recitationSettingsProvider.notifier)
+          .setHighlightAyah(value: v),
+      trailing: nonHafs
+          ? FTooltip(
+              tipBuilder: (_, _) =>
+                  Text(l10n.quranRecitationHighlightNonHafsWarning),
+              child: Icon(
+                FLucideIcons.triangleAlert,
+                size: 16,
+                semanticLabel: l10n.quranRecitationHighlightNonHafsWarning,
+              ),
+            )
+          : null,
     );
 
     final highlightWarningAlert = showHighlightWarning
@@ -841,32 +854,6 @@ class _DrawerSettingsSection extends ConsumerWidget {
           )
         : null;
 
-    if (isNarrow) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ?highlightWarningAlert,
-          Row(
-            children: [
-              Icon(
-                FLucideIcons.volume2,
-                size: 17,
-                color: colors.mutedForeground,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(child: volumeSlider),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.md,
-            runSpacing: AppSpacing.sm,
-            children: [autoScrollToggle, highlightToggle],
-          ),
-        ],
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -874,17 +861,15 @@ class _DrawerSettingsSection extends ConsumerWidget {
         ?highlightWarningAlert,
         Row(
           children: [
-            Expanded(flex: 2, child: volumeSlider),
-            const Spacer(),
-            Expanded(
-              flex: 4,
-              child: Row(
-                spacing: AppSpacing.md,
-                children: [autoScrollToggle, highlightToggle],
-              ),
-            ),
+            Icon(FLucideIcons.volume2, size: 17, color: colors.mutedForeground),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(child: volumeSlider),
           ],
         ),
+        const SizedBox(height: AppSpacing.md),
+        autoScrollToggle,
+        const SizedBox(height: AppSpacing.sm),
+        highlightToggle,
       ],
     );
   }

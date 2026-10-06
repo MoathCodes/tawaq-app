@@ -101,17 +101,11 @@ Future<List<PrayerCompletion>> prayerCompletionsForDate(
 /// Returns `null` while completions are loading/unknown so UI does not treat
 /// loading as [CompletionStatus.none].
 @riverpod
-CompletionStatus? completionStatus(
-  Ref ref,
-  Prayer prayer,
-  int dayKey,
-) {
+CompletionStatus? completionStatus(Ref ref, Prayer prayer, int dayKey) {
   final location = ref.watch(prayerTimeInputsProvider)?.location;
   if (location == null) return null;
 
-  final completionsAsync = ref.watch(
-    prayerCompletionsForDateProvider(dayKey),
-  );
+  final completionsAsync = ref.watch(prayerCompletionsForDateProvider(dayKey));
   if (!completionsAsync.hasValue) return null;
   return mapPrayerStatuses(
         completionsAsync.requireValue,

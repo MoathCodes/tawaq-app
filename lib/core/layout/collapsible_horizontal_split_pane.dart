@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/persisted_horizontal_split_pane.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 
 /// Width of the slim peek tab shown in place of a collapsed side pane.
 const double _kPeekTabWidth = 22;
@@ -166,7 +167,9 @@ class CollapsibleHorizontalSplitPane extends StatelessWidget {
       builder: (context, constraints) {
         final totalWidth = constraints.maxWidth;
         return TweenAnimationBuilder<double>(
-          duration: const Duration(milliseconds: 240),
+          duration: reduceMotion(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 240),
           curve: Curves.easeOutCubic,
           tween: Tween<double>(
             begin: collapsed ? 0 : 1,

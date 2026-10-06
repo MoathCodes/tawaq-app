@@ -1,11 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/app/desktop/desktop_tray_service.dart';
 import 'package:tawaq/core/audio/audio_player_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_notes_provider.dart';
 
 Future<void>? _shutdownFuture;
+
+/// A failed reflection flush keeps the window open and offers a real retry.
+final desktopQuitFailureProvider = NotifierProvider<DesktopQuitFailure, bool>(
+  DesktopQuitFailure.new,
+);
+
+class DesktopQuitFailure extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void setFailed(bool value) => state = value;
+}
 
 /// Ordered teardown for desktop quit paths (window close, tray quit).
 ///
@@ -18,10 +31,29 @@ Future<void>? _shutdownFuture;
 /// asserts ("A provider cannot depend on itself").
 Future<void> shutdownDesktop(Ref ref, {DesktopTrayService? tray}) {
   if (!isDesktopPlatform) return Future<void>.value();
-  return _shutdownFuture ??= _runShutdownDesktop(ref, tray: tray);
+  return _shutdownFuture ??= _runShutdownDesktop(ref, tray: tray).whenComplete(
+    () {
+      _shutdownFuture = null;
+    },
+  );
 }
 
 Future<void> _runShutdownDesktop(Ref ref, {DesktopTrayService? tray}) async {
+  ref.read(desktopQuitFailureProvider.notifier).setFailed(false);
+  try {
+    await ref.read(quranNotesStoreProvider.notifier).flush();
+  } catch (error, stack) {
+    ref
+        .read(loggerProvider)
+        .e(
+          'Quit deferred: reflection write failed',
+          error: error,
+          stackTrace: stack,
+        );
+    ref.read(desktopQuitFailureProvider.notifier).setFailed(true);
+    await windowManager.show();
+    return;
+  }
   await ref.read(prayerAlertDispatcherProvider.notifier).forceShutdown();
   final audio = ref.read(tawaqAudioServiceProvider);
   // Stop via the service (no lease owner) so recitation or adhan both halt,

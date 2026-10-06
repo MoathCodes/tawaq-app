@@ -11,6 +11,8 @@ import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/core/widgets/empty_state_panel.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
@@ -106,7 +108,10 @@ List<_NotesListItem> _buildGroupedItems(List<QuranNoteEntry> entries) {
 /// Searchable, surah-grouped browser of all saved Quran reflections.
 class NotesBrowser extends HookConsumerWidget {
   /// Creates a [NotesBrowser].
-  const new({super.key});
+  const new({this.onSelected, super.key});
+
+  /// Called after a reflection opens its ayah.
+  final VoidCallback? onSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -140,12 +145,13 @@ class NotesBrowser extends HookConsumerWidget {
 
     return notesAsync.when(
       loading: () => const Center(child: FCircularProgress()),
-      error: (error, _) => Center(
-        child: Text(
-          error.toString(),
-          style: typography.body.sm.copyWith(color: colors.destructive),
-          textAlign: TextAlign.center,
-        ),
+      error: (_, _) => ErrorStatePanel(
+        message: l10n.reflectionsLoadFailed,
+        retryLabel: l10n.retryAction,
+        onRetry: () {
+          ref.invalidate(quranNotesStoreProvider);
+          ref.invalidate(quranAllNotesProvider);
+        },
       ),
       data: (allEntries) {
         final filtered = filterQuranNotes(
@@ -216,12 +222,14 @@ class NotesBrowser extends HookConsumerWidget {
                             animateOnce: true,
                             delay: Duration(milliseconds: staggerIndex * 40),
                             child: _NoteCard(
+                              onSelected: onSelected,
                               entry: entry,
                               surahName: surahNameOf(entry.surahNumber),
                             ),
                           )
                         : _NoteCard(
                             key: ValueKey(entry.ayahId),
+                            onSelected: onSelected,
                             entry: entry,
                             surahName: surahNameOf(entry.surahNumber),
                           ),
@@ -292,7 +300,9 @@ class NotesBrowser extends HookConsumerWidget {
             ],
             Expanded(
               child: AnimatedSwitcher(
-                duration: theme.durations.fast,
+                duration: reduceMotion(context)
+                    ? Duration.zero
+                    : theme.durations.fast,
                 switchInCurve: Curves.easeOut,
                 switchOutCurve: Curves.easeIn,
                 // Default layout builder stacks with Clip.hardEdge, which is a
@@ -350,8 +360,17 @@ class _NotesEmptyState extends StatelessWidget {
   }
 }
 
+enum _DeleteState { idle, confirming, deleting }
+
 class _NoteCard extends HookConsumerWidget {
-  const new({required this.entry, required this.surahName, super.key});
+  const new({
+    required this.entry,
+    required this.surahName,
+    this.onSelected,
+    super.key,
+  });
+
+  final VoidCallback? onSelected;
 
   final QuranNoteEntry entry;
   final String surahName;
@@ -362,54 +381,86 @@ class _NoteCard extends HookConsumerWidget {
     final colors = theme.colors;
     final typography = theme.typography;
     final l10n = context.l10n;
-    final (:isHovered, :setHovered) = useHoverState();
+    final deleteState = useState(_DeleteState.idle);
 
     Future<void> openAyah() async {
-      final mushaf = ref.read(quranMushafControllerProvider);
-      final ayah = await mushaf.getAyah(entry.ayahId);
-      if (!context.mounted) return;
-      await jumpToQuranAyah(ref, ayah);
-      ref
-          .read(quranScreenSettingsProvider.notifier)
-          .setActiveStudyTab(StudyPanelTab.currentAyah);
+      try {
+        final mushaf = ref.read(quranMushafControllerProvider);
+        final ayah = await mushaf.getAyah(entry.ayahId);
+        if (!context.mounted) return;
+        await jumpToQuranAyah(ref, ayah);
+        ref
+            .read(quranScreenSettingsProvider.notifier)
+            .setActiveStudyTab(StudyPanelTab.currentAyah);
+        onSelected?.call();
+      } on Object {
+        if (context.mounted) {
+          showFToast(
+            context: context,
+            variant: .destructive,
+            title: Text(l10n.studySelectionLoadFailed),
+          );
+        }
+      }
     }
 
     Future<void> confirmDelete() async {
-      final confirmed = await showFDialog<bool>(
-        context: context,
-        builder: (dialogContext, style, animation) {
-          final constraints = dialogConstraints(
-            dialogContext,
-            preferredWidth: 400,
-            preferredHeight: 220,
-            minWidth: 280,
+      if (deleteState.value != _DeleteState.idle) return;
+      deleteState.value = _DeleteState.confirming;
+      try {
+        final confirmed = await showFDialog<bool>(
+          context: context,
+          builder: (dialogContext, style, animation) {
+            final constraints = dialogConstraints(
+              dialogContext,
+              preferredWidth: 400,
+              preferredHeight: 220,
+              minWidth: 280,
+            );
+            return FDialog(
+              style: style,
+              animation: animation,
+              constraints: constraints,
+              builder: (context, dialogStyle) => ForuiDialogLayout(
+                style: dialogStyle,
+                title: Text(l10n.deleteReflection),
+                expandActions: true,
+                body: Text(l10n.deleteReflectionConfirm),
+                actions: [
+                  FButton(
+                    variant: .secondary,
+                    onPress: () => Navigator.of(dialogContext).pop(false),
+                    child: Text(l10n.cancel),
+                  ),
+                  FButton(
+                    variant: .destructive,
+                    onPress: () => Navigator.of(dialogContext).pop(true),
+                    child: Flexible(
+                      child: Text(
+                        l10n.deleteReflection,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+        if (confirmed != true || !context.mounted) return;
+        deleteState.value = _DeleteState.deleting;
+        await ref.read(quranNotesStoreProvider.notifier).delete(entry.ayahId);
+      } on Object {
+        if (context.mounted) {
+          showFToast(
+            context: context,
+            variant: .destructive,
+            title: Text(l10n.reflectionDeleteFailed),
           );
-          return FDialog(
-            style: style,
-            animation: animation,
-            constraints: constraints,
-            builder: (context, dialogStyle) => ForuiDialogLayout(
-              style: dialogStyle,
-              title: Text(l10n.deleteReflection),
-              body: Text(l10n.deleteReflectionConfirm),
-              actions: [
-                FButton(
-                  variant: .secondary,
-                  onPress: () => Navigator.of(dialogContext).pop(false),
-                  child: Text(l10n.cancel),
-                ),
-                FButton(
-                  variant: .destructive,
-                  onPress: () => Navigator.of(dialogContext).pop(true),
-                  child: Text(l10n.deleteReflection),
-                ),
-              ],
-            ),
-          );
-        },
-      );
-      if (confirmed != true || !context.mounted) return;
-      await ref.read(quranNotesStoreProvider.notifier).delete(entry.ayahId);
+        }
+      } finally {
+        if (context.mounted) deleteState.value = _DeleteState.idle;
+      }
     }
 
     final ayahBadge = '${l10n.ayahLabel} ${entry.numberInSurah}';
@@ -425,92 +476,86 @@ class _NoteCard extends HookConsumerWidget {
       // list reads as distinct rows instead of one flat block.
       backgroundColor: colors.background,
       borderColor: colors.border,
-      child: MouseRegion(
-        onEnter: (_) => setHovered(value: true),
-        onExit: (_) => setHovered(value: false),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Text(
-                  ayahBadge,
-                  style: typography.body.xs.copyWith(
-                    color: colors.mutedForeground,
-                    fontWeight: FontWeight.w600,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(
+                ayahBadge,
+                style: typography.body.xs.copyWith(
+                  color: colors.mutedForeground,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                timeLabel,
+                style: typography.body.xs.copyWith(
+                  color: Color.lerp(
+                    colors.mutedForeground,
+                    colors.foreground,
+                    0.2,
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  timeLabel,
-                  style: typography.body.xs.copyWith(
-                    color: Color.lerp(
-                      colors.mutedForeground,
-                      colors.foreground,
-                      0.2,
-                    ),
-                  ),
-                ),
-                AnimatedOpacity(
-                  opacity: isHovered ? 1 : 0,
-                  duration: theme.durations.fast,
-                  child: IgnorePointer(
-                    ignoring: !isHovered,
-                    child: Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        start: AppSpacing.sm,
-                      ),
-                      child: FTooltip(
-                        tipBuilder: (_, _) => Text(l10n.deleteReflection),
-                        child: FButton.icon(
-                          variant: .ghost,
-                          onPress: () => unawaited(confirmDelete()),
-                          child: Icon(
+              ),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
+                child: FTooltip(
+                  tipBuilder: (_, _) => Text(l10n.deleteReflection),
+                  child: FButton.icon(
+                    variant: .ghost,
+                    semanticsLabel: l10n.deleteReflection,
+                    onPress: deleteState.value != _DeleteState.idle
+                        ? null
+                        : () => unawaited(confirmDelete()),
+                    child: deleteState.value == _DeleteState.deleting
+                        ? const FCircularProgress(
+                            size: FCircularProgressSizeVariant.sm,
+                          )
+                        : Icon(
                             FLucideIcons.trash2,
                             size: 16,
                             color: colors.destructive,
                           ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (entry.ayahPreview.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                entry.ayahPreview,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textDirection: TextDirection.rtl,
-                // Uthmani glyphs render small at body sizes and need extra
-                // line height to keep marks from clipping.
-                style: typography.body.sm.copyWith(
-                  fontFamily: FontFamily.uthmanicHafs,
-                  fontSize: 15,
-                  height: 1.9,
-                  color: Color.lerp(
-                    colors.foreground,
-                    colors.mutedForeground,
-                    0.3,
                   ),
                 ),
               ),
             ],
-            const SizedBox(height: AppSpacing.xs),
+          ),
+          if (entry.ayahPreview.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.sm),
             Text(
-              entry.note.text,
-              maxLines: 3,
+              entry.ayahPreview,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              textDirection: TextDirection.rtl,
+              // Uthmani glyphs render small at body sizes and need extra
+              // line height to keep marks from clipping.
               style: typography.body.sm.copyWith(
-                fontWeight: FontWeight.w500,
-                height: 1.5,
-                color: colors.foreground,
+                fontFamily: FontFamily.uthmanicHafs,
+                fontSize: 15,
+                height: 1.9,
+                color: Color.lerp(
+                  colors.foreground,
+                  colors.mutedForeground,
+                  0.3,
+                ),
               ),
             ),
           ],
-        ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            entry.note.text,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: typography.body.sm.copyWith(
+              fontWeight: FontWeight.w500,
+              height: 1.5,
+              color: colors.foreground,
+            ),
+          ),
+        ],
       ),
     );
   }

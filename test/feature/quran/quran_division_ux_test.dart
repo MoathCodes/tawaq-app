@@ -37,6 +37,7 @@ void main() {
       controller = MushafReaderController.withRepository(
         repository: _SearchHizbsTestRepo(),
       );
+      addTearDown(controller.dispose);
       await controller.ensureReady();
       hizbs = [
         Hizb(number: 10, startSurahNumber: 5, startAyahInSurah: 1),
@@ -208,6 +209,7 @@ void main() {
       final controller = MushafReaderController.withRepository(
         repository: _SubtitleTestRepo(),
       );
+      addTearDown(controller.dispose);
       await controller.ensureReady();
       const uthmani = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
 
@@ -236,6 +238,7 @@ void main() {
       final controller = MushafReaderController.withRepository(
         repository: _SubtitleTestRepo(),
       );
+      addTearDown(controller.dispose);
       await controller.ensureReady();
       const uthmani = 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ';
 
@@ -261,10 +264,12 @@ void main() {
   });
 
   group('hizbNumberForAyahId', () {
-    test('resolves hizb from ayah bounds', () {
+    test('resolves hizb from ayah bounds', () async {
       final controller = MushafReaderController.withRepository(
         repository: _HizbBoundsTestRepo(),
       );
+      addTearDown(controller.dispose);
+      await controller.ensureReady();
 
       expect(hizbNumberForAyahId(controller, 5), 1);
       expect(hizbNumberForAyahId(controller, 50), 2);
@@ -470,7 +475,13 @@ class _HizbBoundsTestRepo implements IQuranRepository {
   }
 
   @override
-  Future<QuranPage> getPage(int page) => throw UnimplementedError();
+  Future<QuranPage> getPage(int page) async => QuranPage(
+    pageNumber: page,
+    glyphText: '',
+    lines: const [],
+    surahs: const [],
+    juzNumber: 1,
+  );
 
   @override
   QuranPage? peekCachedPage(int page) => null;

@@ -18,12 +18,21 @@ enum CompletionStatus {
   /// The prayer was performed late.
   late,
 
-  /// The prayer was missed.
+  /// Legacy wire value only. Retained at index 3 for compatible Hive decoding.
+  /// A missed prayer is not a completion record; never offer this as input.
   missed,
 
   /// The prayer has not been performed yet.
   none,
 }
+
+/// User-selectable completion statuses; none clears a record.
+const selectableCompletionStatuses = [
+  CompletionStatus.jamaah,
+  CompletionStatus.onTime,
+  CompletionStatus.late,
+  CompletionStatus.none,
+];
 
 /// A prayer completion.
 @freezed

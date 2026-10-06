@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:adhan_dart/adhan_dart.dart';
+import 'package:free_map/free_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -119,6 +122,52 @@ void main() {
       verify(
         () => mock.getLocationFromCoordinatesOffline(any()),
       ).called(1);
+    });
+  });
+
+  group('device location enrichment', () {
+    test('commits GPS and zone while geocoder is stalled; ignores old name', () async {
+      final storage = Storage<String, String>.inMemory();
+      final service = _MockLocationService();
+      final name = Completer<FmData>();
+      when(service.getCurrentPosition).thenAnswer((_) async => const LatLng(24.471153, 39.6111216));
+      when(() => service.getLocationFromCoordinatesOffline(any()))
+          .thenReturn(tz.getLocation('Asia/Riyadh'));
+      when(() => service.getPlaceDetails(any())).thenAnswer((_) => name.future);
+      final container = _container(storage: storage, locationService: service);
+      addTearDown(container.dispose);
+      await container.read(prayerSettingsProvider.future);
+      final notifier = container.read(prayerSettingsProvider.notifier);
+      await notifier.applyCurrentDeviceLocation(autoLocation: true);
+      final gps = container.read(prayerSettingsProvider).requireValue;
+      expect(gps.coordinates.latitude, 24.471153);
+      expect(gps.location.name, 'Asia/Riyadh');
+      expect(gps.locationName, LocationConstants.unknownLocationName);
+      await notifier.applyLocationBundle(coordinates: Coordinates(51.5074, -0.1278),
+        location: tz.getLocation('Europe/London'), locationName: 'London', autoLocation: false);
+      name.complete(FmData.fromJSON({'name': 'Old city', 'lat': '24.47', 'lon': '39.61'}));
+      await pumpEventQueue();
+      final manual = container.read(prayerSettingsProvider).requireValue;
+      expect(manual.locationName, 'London');
+      expect(manual.location.name, 'Europe/London');
+      expect(manual.autoLocation, false);
+    });
+
+    test('name failure preserves the valid coordinates/timezone pair', () async {
+      final service = _MockLocationService();
+      when(service.getCurrentPosition).thenAnswer((_) async => const LatLng(24.471153, 39.6111216));
+      when(() => service.getLocationFromCoordinatesOffline(any()))
+          .thenReturn(tz.getLocation('Asia/Riyadh'));
+      when(() => service.getPlaceDetails(any())).thenThrow(StateError('offline'));
+      final container = _container(storage: Storage<String, String>.inMemory(), locationService: service);
+      addTearDown(container.dispose);
+      await container.read(prayerSettingsProvider.future);
+      await container.read(prayerSettingsProvider.notifier).applyCurrentDeviceLocation();
+      await pumpEventQueue();
+      final settings = container.read(prayerSettingsProvider).requireValue;
+      expect(settings.coordinates.latitude, 24.471153);
+      expect(settings.location.name, 'Asia/Riyadh');
+      expect(settings.locationName, LocationConstants.unknownLocationName);
     });
   });
 

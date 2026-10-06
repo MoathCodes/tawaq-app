@@ -4,7 +4,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/storage/settings_storage.dart';
-import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/feature/settings/data/models/desktop_settings.dart';
 
 part 'desktop_settings_provider.g.dart';
@@ -15,6 +14,7 @@ const _logPrefix = '[DesktopSettingsNotifier]';
 @Riverpod(keepAlive: true)
 @JsonPersist()
 class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
+  Future<bool>? _loginUpdate;
   @override
   Future<DesktopSettings> build() async {
     try {
@@ -63,38 +63,39 @@ class DesktopSettingsNotifier extends _$DesktopSettingsNotifier {
   /// cannot show enabled while registration failed.
   ///
   /// Returns `true` when the one-time tray hint should be shown.
-  Future<bool> setLaunchAtLogin({required bool value}) async {
+  Future<bool> setLaunchAtLogin({required bool value}) {
+    return _loginUpdate ??= _applyLaunchAtLogin(value)
+        .whenComplete(() => _loginUpdate = null);
+  }
+
+  Future<bool> _applyLaunchAtLogin(bool value) async {
     if (!state.hasValue) return false;
 
     final current = state.value!;
     final showHint = value && !current.launchAtLoginHintSeen;
 
-    var next = current.copyWith(
-      launchAtLogin: value,
-      launchAtLoginHintSeen: current.launchAtLoginHintSeen || value,
+    if (current.launchAtLogin == value) return false;
+    try {
+      await ref.read(launchAtLoginUpdateProvider)(value);
+    } on Object catch (error, stack) {
+      ref
+          .read(loggerProvider)
+          .e(
+            '$_logPrefix launch-at-login OS update failed; not committing',
+            error: error,
+            stackTrace: stack,
+          );
+      rethrow;
+    }
+    if (!ref.mounted) return false;
+    _commit(
+      (latest) => latest.copyWith(
+        launchAtLogin: value,
+        launchAtLoginHintSeen: latest.launchAtLoginHintSeen || value,
+        launchToTray: value || latest.launchToTray,
+      ),
+      'Launch at login',
     );
-    if (value && !current.launchToTray) {
-      next = next.copyWith(launchToTray: true);
-    }
-
-    if (next == current) return false;
-
-    if (isDesktopPlatform) {
-      try {
-        await LaunchAtLoginService.setEnabled(value: value);
-      } on Object catch (error, stack) {
-        ref
-            .read(loggerProvider)
-            .e(
-              '$_logPrefix launch-at-login OS update failed; not committing',
-              error: error,
-              stackTrace: stack,
-            );
-        rethrow;
-      }
-    }
-
-    _commit((_) => next, 'Launch at login');
     return showHint;
   }
 

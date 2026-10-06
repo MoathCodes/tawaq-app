@@ -25,17 +25,12 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
   Future<QuranScreenState> build() async {
     await persist(
       ref.watch(settingsStorageProvider.future),
-      options: const StorageOptions(
-        cacheTime: StorageCacheTime.unsafe_forever,
-      ),
+      options: const StorageOptions(cacheTime: StorageCacheTime.unsafe_forever),
     ).future;
     return state.value ?? QuranScreenState.initial();
   }
 
-  void _commit(
-    QuranScreenState Function(QuranScreenState) fn,
-    String field,
-  ) {
+  void _commit(QuranScreenState Function(QuranScreenState) fn, String field) {
     if (!state.hasValue) return;
     final current = state.value!;
     final next = fn(current);
@@ -88,10 +83,8 @@ class QuranScreenSettingsNotifier extends _$QuranScreenSettingsNotifier {
   );
 
   /// Sets the selected tafsir source.
-  void setSelectedTafsir(TafsirId source) => _commit(
-    (s) => s.copyWith(selectedTafsir: source),
-    'Tafsir source',
-  );
+  void setSelectedTafsir(TafsirId source) =>
+      _commit((s) => s.copyWith(selectedTafsir: source), 'Tafsir source');
 
   /// Sets the active study panel tab.
   void setActiveStudyTab(StudyPanelTab tab) =>
@@ -120,16 +113,15 @@ Future<Ayah?> quranSelectedAyah(Ref ref) async {
 }
 
 /// Persisted Quran recitation preferences.
-@riverpod
+// App coordinators retain this hydrated preference owner across routes.
+@Riverpod(keepAlive: true)
 @JsonPersist()
 class RecitationSettingsNotifier extends _$RecitationSettingsNotifier {
   @override
   Future<RecitationSettings> build() async {
     await persist(
       ref.watch(settingsStorageProvider.future),
-      options: const StorageOptions(
-        cacheTime: StorageCacheTime.unsafe_forever,
-      ),
+      options: const StorageOptions(cacheTime: StorageCacheTime.unsafe_forever),
     ).future;
     return state.value ?? RecitationSettings.initial();
   }

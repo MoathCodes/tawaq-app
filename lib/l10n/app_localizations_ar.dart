@@ -10,6 +10,57 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get hadithLookupPrompt => 'اكتب حرفين على الأقل للبحث عن اقتراحات.';
+
+  @override
+  String get hadithLookupFailed => 'تعذّر تحميل الاقتراحات. حاول مرة أخرى.';
+
+  @override
+  String get hadithRecentsLoadFailed =>
+      'تعذّر تحميل عمليات البحث الأخيرة. حاول مرة أخرى.';
+
+  @override
+  String get hadithRecentsUpdateFailed =>
+      'تعذّر تحديث عمليات البحث الأخيرة. حاول مرة أخرى.';
+
+  @override
+  String get quranSearchPrompt => 'اكتب حرفين على الأقل للبحث في القرآن.';
+
+  @override
+  String get sharePageLoadFailed => 'تعذّر تحميل هذه الصفحة. حاول مرة أخرى.';
+
+  @override
+  String get shareImageExportFailed => 'تعذّر تصدير الصورة. حاول مرة أخرى.';
+
+  @override
+  String get reflectionsLoadFailed => 'تعذّر تحميل خواطرك. حاول مرة أخرى.';
+
+  @override
+  String get reflectionDeleteFailed => 'تعذّر حذف هذه الخاطرة. حاول مرة أخرى.';
+
+  @override
+  String get appStartupFailed => 'تعذّر بدء توّاق. حاول مرة أخرى.';
+
+  @override
+  String get prayerAnalyticsLoadFailed =>
+      'تعذّر تحميل إحصاءات الصلاة. حاول مرة أخرى.';
+
+  @override
+  String get prayerHistoryStartupFailed =>
+      'تعذّر تجهيز سجل الصلاة. حاول مرة أخرى.';
+
+  @override
+  String get studySelectionHint =>
+      'اختر آية من المصحف لعرض تفسيرها وترجمتها وكتابة تدبّرك.';
+
+  @override
+  String get studySelectionLoadFailed =>
+      'تعذّر تحميل الآية المحددة. حاول مرة أخرى.';
+
+  @override
+  String get close => 'إغلاق';
+
+  @override
   String get globalPlaybackChooseMoshaf => 'اختر تلاوة';
 
   @override
@@ -285,6 +336,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get ayahActions => 'إجراءات الآية';
+
+  @override
   String get ayahCopy => 'نسخ';
 
   @override
@@ -330,10 +384,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get collapsePanel => 'طي اللوحة';
 
   @override
-  String get colorTheme => 'نمط الألوان';
+  String get colorTheme => 'لوحة الألوان';
 
   @override
-  String get colorThemeSubtitle => 'اختر المخطوطة أو المحايد.';
+  String get colorThemeSubtitle => 'اختر لوحة ألوان.';
 
   @override
   String get completed => 'مكتملة';
@@ -348,7 +402,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get currentPrayer => 'الصلاة الحالية';
 
   @override
-  String get currentEvent => 'الحدث الحالي';
+  String get currentEvent => 'الوقت الحالي';
 
   @override
   String get currentStreak => 'الإنجاز الحالي';
@@ -504,6 +558,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fortressBenefit => 'الفائدة';
 
   @override
+  String get fortressShareDetailsFailed =>
+      'تعذّر تحميل تفاصيل الدراسة المحددة. أعد المحاولة، أو ألغِ تحديدها لمشاركة الذكر.';
+
+  @override
   String get fortressShare => 'مشاركة الدعاء';
 
   @override
@@ -545,7 +603,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fortressFilterAuthenticity => 'تصفية حسب الحكم';
 
   @override
-  String get fortressFilterChaptersHint => 'تصفية الأبواب...';
+  String get fortressFilterChaptersHint => 'البحث عن باب';
 
   @override
   String get fortressFinish => 'إنهاء';
@@ -624,10 +682,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fortressSearchContents => 'الأذكار';
 
   @override
-  String get fortressSearchHint => 'ابحث في الأذكار والأبواب...';
+  String get fortressSearchHint => 'البحث في جميع الأذكار';
 
   @override
-  String get fortressSearchLabel => 'بحث';
+  String get fortressSearchLabel => 'البحث في جميع الأذكار';
 
   @override
   String get fortressSearchOpen => 'البحث في الأذكار';
@@ -739,6 +797,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithClearAllRecents => 'مسح الكل';
 
   @override
+  String get hadithCopyFailed => 'تعذر نسخ النص. حاول مرة أخرى.';
+
+  @override
   String get hadithCopied => 'تم نسخ الحديث';
 
   @override
@@ -776,6 +837,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hadithFoundations => 'الأصول';
+
+  @override
+  String hadithShareDetailsFailed(String sections) {
+    return 'تعذر تحميل: $sections. أعد المحاولة أو ألغِ تضمين القسم المحدد لتصدير الصورة.';
+  }
+
+  @override
+  String get hadithShareJudgmentRequired =>
+      'يبقى حكم المصدر ظاهرًا للروايات الضعيفة أو التي ورد تحذير بشأن إسنادها.';
 
   @override
   String get hadithGradeExplanation => 'شرح الحكم';
@@ -1221,6 +1291,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get muslimWorldLeague => 'رابطة العالم الإسلامي';
 
   @override
+  String get sage => 'المريمية';
+
+  @override
   String get neutral => 'محايد';
 
   @override
@@ -1233,7 +1306,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nextPrayer => 'الصلاة القادمة';
 
   @override
-  String get nextEvent => 'الحدث القادم';
+  String get nextEvent => 'الوقت القادم';
 
   @override
   String get noDataAvailable => 'لا توجد بيانات';
@@ -2637,4 +2710,107 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get zinc => 'الخارصين';
+
+  @override
+  String get onboardingSaveFailed =>
+      'تعذّر حفظ الإعداد. خياراتك ما زالت هنا؛ حاول مرة أخرى.';
+
+  @override
+  String get saving => 'جارٍ الحفظ…';
+
+  @override
+  String onboardingStepCount(int current, int total) {
+    return 'الخطوة $current من $total';
+  }
+
+  @override
+  String get themeModeLabel => 'وضع المظهر';
+
+  @override
+  String get systemThemeLabel => 'النظام';
+
+  @override
+  String get notesSavePending => 'تغييرات غير محفوظة';
+
+  @override
+  String get notesSaveSucceeded => 'تم الحفظ';
+
+  @override
+  String get notesSaveFailed => 'تعذّر حفظ التأمل. حاول مرة أخرى.';
+
+  @override
+  String get quranNavigation => 'المزيد من أدوات القرآن';
+
+  @override
+  String get backToReading => 'العودة إلى القراءة';
+
+  @override
+  String get retryAction => 'إعادة المحاولة';
+
+  @override
+  String get desktopAutostartRegistrationHint =>
+      'يسجّل توّاق للتشغيل التلقائي عبر XDG. يجب أن تدعم جلسة سطح المكتب تشغيل هذه التسجيلات؛ قد لا تفعل جلسات Hyprland المباشرة ذلك. التسجيل لا يؤكّد التشغيل عند الدخول.';
+
+  @override
+  String get fortressBackToCatalog => 'العودة إلى الأبواب';
+
+  @override
+  String get advancedLocationOptions => 'خيارات الموقع المتقدمة';
+
+  @override
+  String get deviceLocationUnavailable =>
+      'موقع الجهاز غير متاح. اختر مدينة أو أدخل الإحداثيات، أو أعد فحص الخدمة.';
+
+  @override
+  String get deviceLocationTimedOut =>
+      'انتهت مهلة تحديد الموقع. حاول مجددًا أو اختر مدينة.';
+
+  @override
+  String get checkingDeviceLocation => 'جارٍ فحص خدمة موقع الجهاز…';
+
+  @override
+  String get quranRecitationDurationUnknown => 'المدة غير متاحة';
+
+  @override
+  String get hadithRequestFailed =>
+      'تعذر تحميل الحديث. تحقق من الاتصال ثم حاول مرة أخرى.';
+
+  @override
+  String get hadithBookmarkFailed =>
+      'تعذر حفظ العلامة المرجعية. حاول مرة أخرى.';
+
+  @override
+  String get hadithClearRecentsConfirm => 'مسح جميع عمليات البحث الأخيرة؟';
+
+  @override
+  String get quitSaveFailed =>
+      'تعذر حفظ التأمل. لا يزال تواق مفتوحًا، والمسودة محفوظة في المحرر.';
+
+  @override
+  String get quitRetry => 'الحفظ والخروج مجددًا';
+
+  @override
+  String get clearSearchAction => 'مسح البحث';
+
+  @override
+  String get quranUnifiedSearchHint => 'سورة، جزء، حزب، أو آية…';
+
+  @override
+  String get quranUnifiedSearchHelp =>
+      'ابحث بالاسم أو بنص القرآن. جرّب «جزء ٣» أو «حزب ٧» أو «٢:٢٥٥».';
+
+  @override
+  String get quranSearchSurahs => 'السور';
+
+  @override
+  String get quranSearchJuzs => 'الأجزاء';
+
+  @override
+  String get quranSearchHizbs => 'الأحزاب';
+
+  @override
+  String get quranSearchAyahs => 'الآيات';
+
+  @override
+  String get quranSearchFailed => 'تعذّر تحميل البحث. حاول مجددًا.';
 }

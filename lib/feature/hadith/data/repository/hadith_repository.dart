@@ -24,7 +24,8 @@ Future<DorarClient> dorarClient(Ref ref) async {
 }
 
 /// Provides the repository used by the hadith feature.
-@riverpod
+// Used by app-lived state owners outside this feature route.
+@Riverpod(keepAlive: true)
 Future<HadithRepository> hadithRepository(Ref ref) async {
   final log = ref.read(loggerProvider);
   final client = await ref.watch(dorarClientProvider.future);
@@ -32,14 +33,25 @@ Future<HadithRepository> hadithRepository(Ref ref) async {
   return HadithRepository(client: client, local: local, log: log);
 }
 
+/// Clears only failed initialization owners before an explicit user retry.
+/// Successful clients remain alive; request failures do not recreate them.
+void retryFailedHadithInitialization(Ref ref) {
+  final initFailed =
+      ref.exists(dorarInitProvider) && ref.read(dorarInitProvider).hasError;
+  final clientFailed =
+      ref.exists(dorarClientProvider) && ref.read(dorarClientProvider).hasError;
+  final repositoryFailed =
+      ref.exists(hadithRepositoryProvider) &&
+      ref.read(hadithRepositoryProvider).hasError;
+  if (initFailed) ref.invalidate(dorarInitProvider);
+  if (clientFailed) ref.invalidate(dorarClientProvider);
+  if (repositoryFailed) ref.invalidate(hadithRepositoryProvider);
+}
+
 /// Coordinates hadith persistence and remote API access.
 class HadithRepository {
   /// Creates the repository.
-  new({
-    required this._client,
-    required this._local,
-    required this._log,
-  });
+  new({required this._client, required this._local, required this._log});
 
   final DorarClient _client;
   final HadithLocalDatabase _local;

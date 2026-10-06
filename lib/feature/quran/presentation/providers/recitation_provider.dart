@@ -96,10 +96,7 @@ class RecitationOfflineState {
 
 /// The per-file outcome of one offline-cache deletion operation.
 class RecitationOfflineDeletionResult {
-  const new({
-    required this.deletedPaths,
-    required this.failedPaths,
-  });
+  const new({required this.deletedPaths, required this.failedPaths});
 
   final Set<String> deletedPaths;
   final Map<String, Object> failedPaths;
@@ -199,7 +196,8 @@ class RecitationOfflineStore extends _$RecitationOfflineStore {
 /// Driven by RecitationController via resolveSurahUri's `onProgress`
 /// callback; the drawer renders a Cancel button while the controller is
 /// loading and this value is non-null.
-@riverpod
+// The app-lived recitation session writes progress while its drawer is closed.
+@Riverpod(keepAlive: true)
 class RecitationDownloadProgress extends _$RecitationDownloadProgress {
   @override
   DownloadProgress? build() => null;
@@ -444,6 +442,8 @@ class RecitationController extends _$RecitationController {
     ref
       ..onDispose(() {
         _persistPlaybackCheckpoint();
+        _downloadToken?.cancel();
+        _offlineSaveToken?.cancel();
         _sleepTimer?.cancel();
         _seekPipeline.dispose();
       })
@@ -497,8 +497,7 @@ class RecitationController extends _$RecitationController {
   /// Cancels the in-flight surah download, if one is active.
   ///
   /// The download stream observes its cancellation token and deletes the
-  /// partial `.part` file; resolveSurahUri then falls back to the network
-  /// URL (or a usable `.part`) and playback proceeds.
+  /// partial `.part` file; the foreground stream continues independently.
   Future<void> cancelDownload() async {
     _downloadToken?.cancel();
   }
@@ -860,9 +859,7 @@ class RecitationController extends _$RecitationController {
   /// Stops and releases a local source before that cached file is removed.
   Future<void> stopAndReleaseForOfflineDeletion() async {
     _dispatch(const Stop());
-    await _enqueueIo(
-      () => _service.release(owner: kRecitationLeaseOwner),
-    );
+    await _enqueueIo(() => _service.release(owner: kRecitationLeaseOwner));
   }
 
   /// Seeks within the current surah audio.
@@ -1223,6 +1220,7 @@ class RecitationController extends _$RecitationController {
           await _service.pause(owner: kRecitationLeaseOwner);
           _persistPlaybackCheckpoint();
         case ReleaseAudioLease():
+          _downloadToken?.cancel();
           await _service.release(owner: kRecitationLeaseOwner);
         case ResumeAudio():
           await _service.resume(owner: kRecitationLeaseOwner);
@@ -1235,6 +1233,7 @@ class RecitationController extends _$RecitationController {
             );
           }
         case StopAudio():
+          _downloadToken?.cancel();
           await _service.stop(
             fadeOut: kAudioDefaultFadeOut,
             owner: kRecitationLeaseOwner,
@@ -1389,12 +1388,11 @@ class RecitationController extends _$RecitationController {
       moshaf: moshaf,
       surah: surah,
       surahName: _surahFileName(surah),
-      persist: persist,
+      persist: false,
       cancellationToken: token,
       onProgress: (p) =>
           ref.read(recitationDownloadProgressProvider.notifier).progress = p,
     );
-    _finishDownload(token);
     if (newGen != state.loadGeneration) return;
     _invalidateIfDownloaded(
       uri: resolved.uri,
@@ -1457,6 +1455,20 @@ class RecitationController extends _$RecitationController {
     );
     if (newGen != state.loadGeneration || state.suspendedSnapshot != null) {
       return;
+    }
+
+    if (persist) {
+      unawaited(
+        _saveWhileListening(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: surah,
+          token: token,
+          generation: newGen,
+        ),
+      );
+    } else {
+      _finishDownload(token);
     }
 
     await _publishRecitationMediaSession(
@@ -1547,7 +1559,7 @@ class RecitationController extends _$RecitationController {
       moshaf: moshaf,
       surah: fromSurah,
       surahName: _surahFileName(fromSurah),
-      persist: persist,
+      persist: false,
       cancellationToken: token,
       onProgress: (p) =>
           ref.read(recitationDownloadProgressProvider.notifier).progress = p,
@@ -1569,12 +1581,11 @@ class RecitationController extends _$RecitationController {
       moshaf: moshaf,
       surah: toSurah,
       surahName: _surahFileName(toSurah),
-      persist: persist,
+      persist: false,
       cancellationToken: token,
       onProgress: (p) =>
           ref.read(recitationDownloadProgressProvider.notifier).progress = p,
     );
-    _finishDownload(token);
     if (newGen != state.loadGeneration) return;
     _invalidateIfDownloaded(
       uri: nextResolved.uri,
@@ -1621,6 +1632,19 @@ class RecitationController extends _$RecitationController {
       owner: kRecitationLeaseOwner,
     );
     if (newGen != state.loadGeneration) return;
+    if (persist) {
+      unawaited(
+        _saveWhileListening(
+          reciter: reciter,
+          moshaf: moshaf,
+          surah: fromSurah,
+          token: token,
+          generation: newGen,
+        ),
+      );
+    } else {
+      _finishDownload(token);
+    }
     await _publishRecitationMediaSession(
       surah: toSurah,
       reciterName: reciter.name,
@@ -1771,6 +1795,47 @@ class RecitationController extends _$RecitationController {
     _downloadToken = token;
     ref.read(recitationDownloadProgressProvider.notifier).clear();
     return token;
+  }
+
+  Future<void> _saveWhileListening({
+    required Reciter reciter,
+    required Moshaf moshaf,
+    required int surah,
+    required CancellationToken token,
+    required int generation,
+  }) async {
+    try {
+      // Streaming and saving intentionally use separate transfers. The user's
+      // off switch disables this optional acquisition entirely.
+      await _repo.saveSurahAudio(
+        reciter: reciter,
+        moshaf: moshaf,
+        surah: surah,
+        surahName: _surahFileName(surah),
+        cancellationToken: token,
+        onProgress: (progress) {
+          if (!ref.mounted ||
+              token.isCancelled ||
+              generation != state.loadGeneration)
+            return;
+          ref.read(recitationDownloadProgressProvider.notifier).progress =
+              progress;
+        },
+      );
+      if (ref.mounted && !token.isCancelled) _invalidateCachedRecitations();
+    } on Object catch (error, stack) {
+      if (!ref.mounted || token.isCancelled) return;
+      ref
+          .read(loggerProvider)
+          .w(
+            'Optional recitation save failed',
+            error: error,
+            stackTrace: stack,
+          );
+      ref.read(recitationOfflineStoreProvider.notifier).setError('$error');
+    } finally {
+      if (ref.mounted) _finishDownload(token);
+    }
   }
 
   void _finishDownload(CancellationToken token) {

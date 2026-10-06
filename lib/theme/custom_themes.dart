@@ -144,3 +144,68 @@ class ManuscriptTheme {
     );
   }
 }
+
+/// Parchment and sage roles derived from the approved Turning ت artwork.
+///
+/// The icon's #F7F4ED parchment and #37583C fold anchor the light theme.
+/// Pale leaf highlights become the dark action color, paired with deep green
+/// ink; they are never used as light-theme text. Surfaces carry tonal depth
+/// without changing the app's spacing, typography, or component geometry.
+class SageTheme {
+  /// Light Sage in desktop and touch densities.
+  static final FPlatformThemeData lightSage = FPlatformThemeData(
+    touch: () => _build(lightColors, touch: true),
+    desktop: () => _build(lightColors, touch: false),
+  );
+
+  /// Dark Sage in desktop and touch densities.
+  static final FPlatformThemeData darkSage = FPlatformThemeData(
+    touch: () => _build(darkColors, touch: true),
+    desktop: () => _build(darkColors, touch: false),
+  );
+
+  /// Shared semantic light roles, also consumed by the Material bridge.
+  static final FColors lightColors = FColors(
+    brightness: Brightness.light,
+    systemOverlayStyle: SystemUiOverlayStyle.dark,
+    barrier: const Color(0xFF19251D).withValues(alpha: 0.20),
+    background: const Color(0xFFF7F4ED),
+    foreground: const Color(0xFF24382B),
+    primary: const Color(0xFF37583C),
+    primaryForeground: const Color(0xFFFFFDF7),
+    card: const Color(0xFFFFFDF7),
+    secondary: const Color(0xFFE4E8DA),
+    secondaryForeground: const Color(0xFF2E4533),
+    muted: const Color(0xFFEEEDE3),
+    mutedForeground: const Color(0xFF52604C),
+    border: const Color(0xFFBEC5B2),
+    destructive: const Color(0xFFA33332),
+    destructiveForeground: const Color(0xFFFFFDF7),
+    error: const Color(0xFFA33332),
+    errorForeground: const Color(0xFFFFFDF7),
+  );
+
+  /// Shared semantic dark roles with green charcoal and elevated olive planes.
+  static final FColors darkColors = FColors(
+    brightness: Brightness.dark,
+    systemOverlayStyle: SystemUiOverlayStyle.light,
+    barrier: const Color(0xFF0C120E).withValues(alpha: 0.75),
+    background: const Color(0xFF171F19),
+    foreground: const Color(0xFFF0EADF),
+    primary: const Color(0xFFB9C78D),
+    primaryForeground: const Color(0xFF1C2B20),
+    card: const Color(0xFF212C23),
+    secondary: const Color(0xFF303B2C),
+    secondaryForeground: const Color(0xFFE6EAD9),
+    muted: const Color(0xFF293329),
+    mutedForeground: const Color(0xFFB6BDAA),
+    border: const Color(0xFF475442),
+    destructive: const Color(0xFFFFA49A),
+    destructiveForeground: const Color(0xFF351C18),
+    error: const Color(0xFFFFA49A),
+    errorForeground: const Color(0xFF351C18),
+  );
+
+  static FThemeData _build(FColors colors, {required bool touch}) =>
+      FThemeData(colors: colors, touch: touch);
+}

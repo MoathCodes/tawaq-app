@@ -4,6 +4,7 @@ import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:tawaq/app/desktop/alerts/prayer_alert_readiness.dart';
 import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
 import 'package:tawaq/app/desktop/alerts/prayer_alert_scheduler_provider.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
@@ -108,6 +109,7 @@ void main() {
     dispatcher = _CountingDispatcher();
     container = ProviderContainer(
       overrides: [
+        prayerAlertsReadyProvider.overrideWithValue(true),
         prayerDayProvider.overrideWith(_ManualPrayerDay.new),
         effectivePrayerSettingsProvider.overrideWithValue(settings),
         adhanSettingsProvider.overrideWith(_AdhanOverride.new),
@@ -149,6 +151,7 @@ void main() {
     final localDispatcher = _CountingDispatcher();
     final local = ProviderContainer(
       overrides: [
+        prayerAlertsReadyProvider.overrideWithValue(true),
         prayerDayProvider.overrideWith(_ManualPrayerDay.new),
         effectivePrayerSettingsProvider.overrideWithValue(settings),
         adhanSettingsProvider.overrideWith(() => delayed),

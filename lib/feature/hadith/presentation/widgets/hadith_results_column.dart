@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
@@ -56,7 +57,7 @@ class HadithResultsColumn extends ConsumerWidget {
       _ => 0,
     };
     final hardError = searchOutcome.hasError && !searchOutcome.hasValue
-        ? '${searchOutcome.error}'
+        ? l10n.hadithRequestFailed
         : null;
     final isPaginating = ref.watch(
       hadithSessionControllerProvider.select((s) => s.isPaginating),
@@ -93,7 +94,9 @@ class HadithResultsColumn extends ConsumerWidget {
         : content;
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 200),
+      duration: reduceMotion(context)
+          ? Duration.zero
+          : context.theme.durations.fast,
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (child, animation) {
@@ -156,17 +159,19 @@ class HadithResultsColumn extends ConsumerWidget {
             child: Center(child: FCircularProgress.loader()),
           ),
         ),
-        error: (error, _) {
-          return Center(
-            child: Text(
-              '$error',
-              textAlign: TextAlign.center,
-              style: theme.typography.body.md.copyWith(
-                color: theme.colors.destructive,
-              ),
-            ),
-          );
-        },
+        error: (error, _) => Center(
+          child: ErrorStatePanel(
+            message: l10n.hadithRequestFailed,
+            onRetry: () {
+              ref
+                  .read(hadithSessionControllerProvider.notifier)
+                  .retryInitialization();
+              ref.invalidate(hadithFavoritesStoreProvider);
+              ref.invalidate(hadithFavoritesProvider);
+            },
+            retryLabel: l10n.retryAction,
+          ),
+        ),
         data: (hadithList) {
           if (hadithList.isEmpty) {
             final emptyMessage = mode == HadithViewMode.bookmarks
@@ -205,9 +210,12 @@ class HadithResultsColumn extends ConsumerWidget {
 
     if (hardError != null) {
       return Center(
-        child: EmptyStatePanel(
-          icon: FLucideIcons.circleAlert,
-          title: hardError,
+        child: ErrorStatePanel(
+          message: hardError,
+          onRetry: () => unawaited(
+            ref.read(hadithSessionControllerProvider.notifier).setQuery(query),
+          ),
+          retryLabel: l10n.retryAction,
         ),
       );
     }
@@ -355,10 +363,7 @@ class _ResultTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final card = HadithResultCard(
-      hadith: hadith,
-      resultOrdinal: resultOrdinal,
-    );
+    final card = HadithResultCard(hadith: hadith, resultOrdinal: resultOrdinal);
 
     if (useSplitLayout) return card;
 
@@ -372,7 +377,6 @@ class _ResultTile extends ConsumerWidget {
         child: HadithSelectedDetailsPane(
           key: ValueKey('hadith-detail-${hadithStableKey(hadith)}'),
           hadith: hadith,
-          resultOrdinal: resultOrdinal,
         ),
       ),
       builder: (_, controller, child) => MouseClick(

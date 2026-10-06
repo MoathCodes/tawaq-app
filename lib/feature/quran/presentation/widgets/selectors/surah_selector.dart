@@ -8,63 +8,12 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/quran/domain/services/ayah_reference_logic.dart';
 import 'package:tawaq/feature/quran/domain/services/quran_search_query.dart';
+export 'package:tawaq/feature/quran/domain/services/quran_search_query.dart'
+    show searchSurahs;
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_division_search_select.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/surah_name_text.dart';
-
-/// Ranks [surahs] by relevance to [query] using the shared Quran surah search.
-Iterable<Surah> searchSurahs(List<Surah> surahs, String query) {
-  final normalized = normalizeQuranSearchQuery(query);
-  if (normalized.isEmpty) return surahs;
-  final queryNum = int.tryParse(normalized);
-
-  final results = <(Surah, int)>[];
-  for (final surah in surahs) {
-    var score = 0;
-
-    if (queryNum != null && surah.number == queryNum) {
-      score = 100;
-    } else if (surah.number.toString().startsWith(normalized)) {
-      score = 80;
-    } else if (surah.nameEnglish?.toLowerCase().startsWith(normalized) ??
-        false) {
-      score = 70;
-    } else if (surah.nameArabicSimplified != null &&
-        normalizeQuranSearchQuery(
-          surah.nameArabicSimplified!,
-        ).startsWith(normalized)) {
-      score = 70;
-    } else if (surah.englishNameTranslation?.toLowerCase().startsWith(
-          normalized,
-        ) ??
-        false) {
-      score = 65;
-    } else if (surah.nameEnglish?.toLowerCase().contains(normalized) ?? false) {
-      score = 50;
-    } else if (surah.englishNameTranslation?.toLowerCase().contains(
-          normalized,
-        ) ??
-        false) {
-      score = 45;
-    } else if (surah.nameArabicSimplified != null &&
-        normalizeQuranSearchQuery(
-          surah.nameArabicSimplified!,
-        ).contains(normalized)) {
-      score = 50;
-    }
-
-    if (score > 0) results.add((surah, score));
-  }
-
-  results.sort((a, b) {
-    final scoreCompare = b.$2.compareTo(a.$2);
-    if (scoreCompare != 0) return scoreCompare;
-    return a.$1.number.compareTo(b.$1.number);
-  });
-
-  return results.map((e) => e.$1);
-}
 
 /// Searchable surah picker shared by the Quran header and range dialog.
 class SurahSearchSelect extends HookConsumerWidget {
@@ -145,12 +94,8 @@ class SurahSearchSelect extends HookConsumerWidget {
             (v) => FSelectItem<Surah>(
               value: v,
               title: isArabic
-                  ? SurahNameText(
-                      localizedName(v),
-                    )
-                  : Text(
-                      localizedName(v),
-                    ),
+                  ? SurahNameText(localizedName(v))
+                  : Text(localizedName(v)),
               subtitle: isArabic
                   ? Text(v.nameEnglish ?? v.englishNameTranslation ?? '')
                   : Column(
@@ -171,11 +116,7 @@ class SurahSearchSelect extends HookConsumerWidget {
 /// A dropdown selector for choosing a Surah in the Quran reader.
 class SurahSelector extends HookConsumerWidget {
   /// Creates a [SurahSelector] instance.
-  const new({
-    this.showLabel = true,
-    this.inlineLabel = false,
-    super.key,
-  });
+  const new({this.showLabel = true, this.inlineLabel = false, super.key});
 
   /// Whether the field label is shown above the select.
   final bool showLabel;
@@ -188,9 +129,7 @@ class SurahSelector extends HookConsumerWidget {
     final controller = ref.watch(quranMushafControllerProvider);
     final l10n = context.l10n;
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    final allSurahs = useFuture(
-      useMemoized(controller.getAllSurahs),
-    );
+    final allSurahs = useFuture(useMemoized(controller.getAllSurahs));
     return ListenableBuilder(
       listenable: controller.page,
       builder: (context, _) {
@@ -220,7 +159,6 @@ class SurahSelector extends HookConsumerWidget {
           name: surahFieldName,
           value: displayedValue,
           enabled: selectorReady,
-          excludeChild: true,
           child: SurahSearchSelect(
             value: currentSurahNumber,
             label: surahFieldName,

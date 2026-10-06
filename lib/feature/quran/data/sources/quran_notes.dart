@@ -47,6 +47,7 @@ class QuranNotes {
         updatedAt: now,
       );
       await _box.put(ayahId, note);
+      await _box.flushBox();
       _log.d('$logPrefix Note saved successfully');
     } catch (e, stackTrace) {
       _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
@@ -74,6 +75,7 @@ class QuranNotes {
     try {
       _log.d('$logPrefix Deleting note for ayahId: $ayahId');
       await _box.delete(ayahId);
+      await _box.flushBox();
       _log.d('$logPrefix Note deleted successfully');
     } catch (e, stackTrace) {
       _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);

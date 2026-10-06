@@ -42,14 +42,18 @@ void _expectNonTextContrast(
   );
 }
 
-FThemeData _manuscriptTheme(ThemeMode mode) => buildAppTheme(
-  palette: AppPalette.manuscript,
+FThemeData _paletteTheme(
+  AppPalette palette,
+  ThemeMode mode, {
+  bool touch = false,
+}) => buildAppTheme(
+  palette: palette,
   themeMode: mode,
-  touch: false,
+  touch: touch,
   textScale: 1,
 );
 
-void _expectManuscriptContrast(FThemeData theme) {
+void _expectPaletteContrast(FThemeData theme) {
   final colors = theme.colors;
 
   // These are normal metadata/supporting-copy surfaces used by result cards,
@@ -154,10 +158,7 @@ void _expectManuscriptContrast(FThemeData theme) {
   );
   _expectTextContrast(
     colors.foreground,
-    Color.alphaBlend(
-      colors.primary.withValues(alpha: 0.18),
-      colors.background,
-    ),
+    Color.alphaBlend(colors.primary.withValues(alpha: 0.18), colors.background),
     pair: 'foreground/compact selected tab indicator',
   );
 
@@ -172,14 +173,68 @@ void _expectManuscriptContrast(FThemeData theme) {
 }
 
 void main() {
+  for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+    for (final touch in [false, true]) {
+      test('Sage ${mode.name} contrast and Material roles (touch: $touch)', () {
+        final theme = _paletteTheme(AppPalette.sage, mode, touch: touch);
+        _expectPaletteContrast(theme);
+        final colors = theme.colors;
+        for (final surface in [
+          colors.background,
+          colors.card,
+          colors.secondary,
+          colors.muted,
+        ]) {
+          _expectTextContrast(
+            colors.foreground,
+            surface,
+            pair: 'foreground/content',
+          );
+          _expectTextContrast(
+            colors.secondaryForeground,
+            surface,
+            pair: 'secondaryForeground/content',
+          );
+        }
+        final material = buildAppMaterialTheme(theme, palette: AppPalette.sage);
+        expect(material.colorScheme.primary, colors.primary);
+        expect(material.colorScheme.onPrimary, colors.primaryForeground);
+        expect(material.colorScheme.surface, colors.background);
+        expect(material.colorScheme.onSurface, colors.foreground);
+        expect(material.colorScheme.error, colors.error);
+        expect(material.colorScheme.surfaceContainer, colors.card);
+        expect(material.colorScheme.outline, colors.border);
+        expect(material.textSelectionTheme.cursorColor, colors.primary);
+        _expectTextContrast(
+          colors.foreground,
+          Color.alphaBlend(
+            material.textSelectionTheme.selectionColor!,
+            colors.background,
+          ),
+          pair: 'selected text',
+        );
+        _expectTextContrast(
+          colors.primaryForeground,
+          colors.hover(colors.primary),
+          pair: 'hovered primary control',
+        );
+        expect(material.colorScheme.brightness, colors.brightness);
+      });
+    }
+  }
+
   test(
     'Manuscript light roles meet contrast through the app theme builder',
-    () => _expectManuscriptContrast(_manuscriptTheme(ThemeMode.light)),
+    () => _expectPaletteContrast(
+      _paletteTheme(AppPalette.manuscript, ThemeMode.light),
+    ),
   );
 
   test(
     'Manuscript dark roles meet contrast through the app theme builder',
-    () => _expectManuscriptContrast(_manuscriptTheme(ThemeMode.dark)),
+    () => _expectPaletteContrast(
+      _paletteTheme(AppPalette.manuscript, ThemeMode.dark),
+    ),
   );
 
   test('alternate palette remains resolved by the app theme builder', () {

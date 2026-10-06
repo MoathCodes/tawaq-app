@@ -12,7 +12,8 @@ const String _localeLogPrefix = '[LocaleNotifier]';
 /// Notifier for the application locale.
 ///
 /// Persisted as a plain language-code string via [persist].
-@riverpod
+// App coordinators retain this hydrated preference owner across routes.
+@Riverpod(keepAlive: true)
 @JsonPersist()
 class LocaleNotifier extends _$LocaleNotifier {
   @override

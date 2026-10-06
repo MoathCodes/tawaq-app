@@ -141,11 +141,44 @@ class _OfflineFilesDialog extends HookConsumerWidget {
       width: 900,
       maxHeight: 700,
       scrollableBody: true,
+      headerBottom: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: colors.secondary,
+          border: Border.all(color: colors.border),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FSwitch(
+              leadingLabel: true,
+              label: Text(l10n.quranRecitationOfflineAutoSave),
+              value: autoSave,
+              onChange: (value) => ref
+                  .read(recitationSettingsProvider.notifier)
+                  .setAutoSaveRecitations(value: value),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            FButton(
+              variant: .outline,
+              size: .sm,
+              prefix: const Icon(FLucideIcons.externalLink, size: 16),
+              onPress: deleting.value
+                  ? null
+                  : () => unawaited(_reveal(context, ref)),
+              child: Text(l10n.quranRecitationOfflineOpenFolder),
+            ),
+          ],
+        ),
+      ),
+
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SizedBox(height: AppSpacing.md),
             Wrap(
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
@@ -254,38 +287,6 @@ class _OfflineFilesDialog extends HookConsumerWidget {
                   );
                 },
               ),
-            const SizedBox(height: AppSpacing.xl),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: colors.secondary,
-                border: Border.all(color: colors.border),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  FSwitch(
-                    leadingLabel: true,
-                    label: Text(l10n.quranRecitationOfflineAutoSave),
-                    value: autoSave,
-                    onChange: (value) => ref
-                        .read(recitationSettingsProvider.notifier)
-                        .setAutoSaveRecitations(value: value),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  FButton(
-                    variant: .outline,
-                    size: .sm,
-                    prefix: const Icon(FLucideIcons.externalLink, size: 16),
-                    onPress: deleting.value
-                        ? null
-                        : () => unawaited(_reveal(context, ref)),
-                    child: Text(l10n.quranRecitationOfflineOpenFolder),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
@@ -339,6 +340,7 @@ class _OfflineFilesDialog extends HookConsumerWidget {
       tipBuilder: (context, controller) =>
           Text(context.l10n.quranRecitationOfflineDelete),
       child: FButton.icon(
+        semanticsLabel: context.l10n.quranRecitationOfflineDelete,
         variant: .ghost,
         size: .sm,
         onPress: enabled ? onDelete : null,
@@ -405,10 +407,7 @@ class _OfflineFilesDialog extends HookConsumerWidget {
           style: dialogStyle,
           title: Text(context.l10n.quranRecitationOfflineDeleteTitle),
           body: Text(
-            '${context.l10n.quranRecitationOfflineDeleteConfirm(
-              files.length,
-              formatByteSize(files.fold(0, (sum, file) => sum + file.sizeBytes)),
-            )}${stopsPlayback ? ' ${context.l10n.quranRecitationOfflinePlaybackStops}' : ''}',
+            '${context.l10n.quranRecitationOfflineDeleteConfirm(files.length, formatByteSize(files.fold(0, (sum, file) => sum + file.sizeBytes)))}${stopsPlayback ? ' ${context.l10n.quranRecitationOfflinePlaybackStops}' : ''}',
           ),
           actions: [
             FButton(

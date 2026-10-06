@@ -1,0 +1,112 @@
+{
+  "date": "2026-10-06",
+  "base_revision": "717f1248c6c448f06b1f67f32df202e7ea8f676d",
+  "dirty_worktree": true,
+  "root_tests": {
+    "passed": 1213,
+    "log": "/tmp/tawaq-fortress-all-tests.log",
+    "scope": "Before final unused-import/order/const cleanup; final focused tests, analysis and normal app build also pass."
+  },
+  "focused_tests": {
+    "passed": 30,
+    "new_browse_regressions": 9,
+    "repository_title_regressions": 1,
+    "header_and_flow_tests": 9,
+    "golden_cases": 10,
+    "log": "/tmp/tawaq-fortress-final-focused.log",
+    "existing_repository_tests": 1
+  },
+  "analysis": {
+    "errors": 0,
+    "warnings": 0,
+    "infos": 429,
+    "log": "/tmp/tawaq-fortress-analysis.log"
+  },
+  "generation": {
+    "command": "fvm dart run build_runner build",
+    "result": "passed",
+    "log": "/tmp/tawaq-fortress-codegen.log",
+    "schema_changes": false,
+    "localization_changes": false
+  },
+  "composition": {
+    "candidate": "/tmp/tawaq-fortress-confirmed-2026-10-06",
+    "candidate_metadata": "/tmp/tawaq-fortress-confirmed-2026-10-06/candidate-metadata.json",
+    "captures": 128,
+    "combinations": 16,
+    "errors": 0,
+    "native_exit": 0,
+    "review": "Four contact sheets and full-resolution Arabic dark XL selected/collapsed/content-search images inspected, plus first-pass English title/content/empty and wide/compact selection.",
+    "scope": "Mounted app callbacks/text controllers and render buffers; native OS input/accessibility unverified",
+    "matrix": "Arabic/English; manuscript light/dark; 800x600/1200x860; normal/extra-large text",
+    "after_capture_changes": [
+      "lib/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart",
+      "lib/feature/muslim_fortress/presentation/widgets/browse/fortress_browse_sidebar.dart",
+      "lib/feature/muslim_fortress/data/repository/fortress_repository.dart"
+    ],
+    "compatibility": "Later cached title matching preserves full vowelled catalog queries. Tests compare all three captured queries with the prior title path and prove identical title IDs/order. Content search and all captured UI behavior are unchanged; two other file differences are mechanical import cleanup."
+  },
+  "initial_runtime_attempt": {
+    "candidate": "/tmp/tawaq-fortress-review-2026-10-06",
+    "captures": 11,
+    "exit": 1,
+    "result": "Compact CtrlK focus request deferred to an unscheduled frame; changed to direct focus request, with a no-new-frame regression. Complete confirmation succeeds."
+  },
+  "ordinary_app_build": {
+    "command": "fvm flutter build linux --debug -t lib/main.dart",
+    "result": "passed",
+    "log": "/tmp/tawaq-fortress-main-build.log",
+    "artifact_sha256": {
+      "build/linux/x64/debug/bundle/Tawaq": "fa4b506073c8def0f1a9bef5de4127121ab3fc0202eabd82bd1bd788bd8a898c",
+      "build/linux/x64/debug/bundle/data/flutter_assets/kernel_blob.bin": "3d12f731900cc5e1d637b2c0fd2d83260a1f169872703baf8ad59dde9fd080b5"
+    }
+  },
+  "logs_sha256": {
+    "/tmp/tawaq-fortress-before.log": "5197beb8c2cc53810c181be2e86a3de2d3f14b5dc1ae02eca4b8df1c4af79a1d",
+    "/tmp/tawaq-fortress-all-tests.log": "6fc1ffb8f4f9476c6c2082d8164d6c81a0fed03e44924f4d9be9f853d9fecbd2",
+    "/tmp/tawaq-fortress-final-focused.log": "f711bf66463d79fff433ac566dc6c3a0dc712f3eb0d0034b2ee1853d332f864e",
+    "/tmp/tawaq-fortress-analysis.log": "82951f2cff75380dbd0dc913b4f2b3b110630f23acfeee5ab8fcb746d8f0ef1e",
+    "/tmp/tawaq-fortress-codegen.log": "0e471359450186cb093fed9d30f5cbadbfd88db6edbd9e14a4e49b1cda4f8bbc",
+    "/tmp/tawaq-fortress-main-build.log": "5831bb0921fae7b7fbd703a6f5a8c1bbf86824e748565d69b014450ea83b6886",
+    "/tmp/tawaq-fortress-review-build.log": "5831bb0921fae7b7fbd703a6f5a8c1bbf86824e748565d69b014450ea83b6886"
+  },
+  "final_feature_source_sha256": {
+    "lib/feature/muslim_fortress/domain/fortress_models.dart": "604f1867587cf585d09114e954cd4a21bacab5681aabf5a48f694449f705cbde",
+    "lib/feature/muslim_fortress/presentation/fortress_category_ui.dart": "6f3a6d3ce99f8273e9a959b4d0e07a46e0e56679354024eb12fccf2f0453327c",
+    "lib/feature/muslim_fortress/presentation/fortress_layout.dart": "b68944c93f50b3491ff731925360cb634aff8510b129ce6717eb2eb532308d67",
+    "lib/feature/muslim_fortress/presentation/models/fortress_share_include.dart": "a3f19dbeadf555975e220c304cd6efb36e18aa6a39fc6c4fe9f09a0bb3efbc26",
+    "lib/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart": "97c9010a4b23c47f16575d7ad2f043b0f4ce565904132aec46a90183674409f6",
+    "lib/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart": "e35f696590522ec913d973e9d2f61713d6582eadd6e1c78707c3466fc560ac78",
+    "lib/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.freezed.dart": "22bedfcb443a53316b45dde053c35c50c30f02744183e4675dd8f12ff5c67ad3",
+    "lib/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.g.dart": "a636c69da3d60349d953b105fef4465f453438dc8a51aea47eeecd563c38d681",
+    "lib/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.g.dart": "f806f9cb435de26ab4927990966b99978e66fffbfb0fa1d30401f3d856238514",
+    "lib/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart": "c183cb947c64ee1536a7aa82fe7465f595b2cdf3111501bc217dd4e571a4112f",
+    "lib/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart": "e85274a2d58c57943bb90c81653f9d5c86cb22951685ac0ba2e72d0e7b120087",
+    "lib/feature/muslim_fortress/presentation/widgets/fortress_category_row.dart": "ee18579b1e9e424250571a9645a3b594c2236a35800cc56f322aae2082df5353",
+    "lib/feature/muslim_fortress/presentation/widgets/fortress_favorite_toggle.dart": "5cae8a49a832f2b651bf4e3b0e01146afae7d18a2adf088cc760eab1b22908e2",
+    "lib/feature/muslim_fortress/presentation/widgets/fortress_nav_controls.dart": "a13c8ceed4f16fbf3ae200a01ba398b8b6231e21f4bf483a443477232285b7aa",
+    "lib/feature/muslim_fortress/presentation/widgets/browse/fortress_browse_sidebar.dart": "02a874cdd530c1f5e32de0ab64a64d80531d2bae623e3029d0dab0c3016ef570",
+    "lib/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart": "7276568b3ab3a09e0309870cc31ee13ac7e2bf89184218b3667be3233deca27a",
+    "lib/feature/muslim_fortress/presentation/widgets/browse/muslim_fortress_welcome_pane.dart": "03594a4cfcfd1fc0f605a5915eda65fe0ba56eada911a56332dff506ad46c4ec",
+    "lib/feature/muslim_fortress/presentation/widgets/reading/fortress_dua_content.dart": "44d2d61bac5fb3ca947bc744399db23523478845db99651c0a19f0df9d6f29f1",
+    "lib/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart": "c30e5b0b199fb4b14b59f00ebf821cf390b8d36001f7334524902d0e8455f4dc",
+    "lib/feature/muslim_fortress/presentation/widgets/search/fortress_search_results.dart": "367180867a71e8ad137df686d103c5b49f961e3d60d4d6874b3a1b337c751b1e",
+    "lib/feature/muslim_fortress/presentation/widgets/share/fortress_share_card.dart": "ef6668d8044310d4b15cd9f7897818a2c29a63f197b5932911a41b590bf7e313",
+    "lib/feature/muslim_fortress/presentation/widgets/share/fortress_share_dialog.dart": "de56cc5b2886ee191959f3a4ecbe1cae11b885080c61569c401cbf4f154bb3be",
+    "lib/feature/muslim_fortress/presentation/widgets/share/fortress_share_export.dart": "b82447beef50178d0cc816ef81af9f415e1ff7e1db48f5dc3ff5274d39a88d57",
+    "lib/feature/muslim_fortress/presentation/widgets/study/fortress_commentary_text.dart": "38157badb4c54503c24061cfdb76ebf5113cfdfbe8d6bb39068b86aeed497718",
+    "lib/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart": "0a12dace9cd6e2843804333223a33d094a11768b20e51a41a4d744e3a71fd5fb",
+    "lib/feature/muslim_fortress/domain/models/fortress_dua_item.dart": "69df5db424795d50f213b33d92d3076f3e8510638230ea7cbd0a72988798e2f0",
+    "lib/feature/muslim_fortress/domain/models/fortress_screen_state.dart": "b1051ccc2074974dc23dd182cbe62cde676d2bd8f8f302b34b7c214c49a868c7",
+    "lib/feature/muslim_fortress/domain/models/fortress_search_results.dart": "99654020d9bfd2f9edeaa0079e86f4bdb1bc58f0aba077b62ebd69f3cc2e69ba",
+    "lib/feature/muslim_fortress/domain/models/fortress_screen_state.freezed.dart": "740b48149b5fe086e008bed586275f0273750109978c794ae3bcc81cc0c6576e",
+    "lib/feature/muslim_fortress/domain/models/fortress_screen_state.g.dart": "d36efac905cc82d52839eb8ae26a32d85cf7dc936d8eb242278715783fff09aa",
+    "lib/feature/muslim_fortress/domain/services/fortress_commentary_parser.dart": "fd9f8e1fd1dc5dcd1b299de1e9afca25c1ca98b05d55828378d168134130cf67",
+    "lib/feature/muslim_fortress/domain/services/fortress_time_recommendations.dart": "23fd6b0152d57435ab68ef943ff730ba77e28768970e8c2703b00542b866b477",
+    "lib/feature/muslim_fortress/data/repository/fortress_repository.dart": "b61f92377d07f10e0b65530a7fa5b936573d004f2a8bcca2706ea11ac9783f2b",
+    "lib/feature/muslim_fortress/data/repository/fortress_repository.g.dart": "1fce322a5280e46b54558838df2b001f0f44cef8045f52764b4c3fee2ed08deb"
+  },
+  "package_source_changes": false,
+  "religious_source_changes": false,
+  "publication": "No commit, push, PR or release performed."
+}

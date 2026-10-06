@@ -28,6 +28,9 @@ enum StudyPanelTab {
   reflections,
 }
 
+/// Legacy reflections destinations now open the per-ayah companion.
+StudyPanelTab studyPanelTabFromJson(Object? value) => StudyPanelTab.currentAyah;
+
 /// Lower bound for [QuranScreenState.mushafZoom] (matches package
 /// `MushafScale.minReadingBoost`).
 const double kMushafZoomMin = 0.85;
@@ -140,7 +143,9 @@ abstract class QuranScreenState with _$QuranScreenState {
     TafsirId selectedTafsir,
     @Default(SidePanelDefaults.quranRatio) double sidePanelRatio,
     @Default(SidePanelDefaults.collapsed) bool sidePanelCollapsed,
-    @Default(StudyPanelTab.currentAyah) StudyPanelTab activeStudyTab,
+    @JsonKey(fromJson: studyPanelTabFromJson)
+    @Default(StudyPanelTab.currentAyah)
+    StudyPanelTab activeStudyTab,
   }) = _QuranScreenState;
 
   const new _();

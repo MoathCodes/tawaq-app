@@ -34,8 +34,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('assetDatabaseNeedsCopy / version key', () {
-    test('version key is size fingerprint', () {
-      expect(assetDatabaseVersionKey(1024), 'size:1024');
+    test('version key distinguishes equal-size content', () {
+      expect(assetDatabaseVersionKey([1]), isNot(assetDatabaseVersionKey([2])));
+      expect(assetDatabaseVersionKey([1]), startsWith('sha256:'));
     });
 
     test('needs copy when missing or version mismatch', () {
@@ -92,7 +93,7 @@ void main() {
       final versionFile = File('${onDisk.path}.version.json');
       expect(
         jsonDecode(versionFile.readAsStringSync())['version_key'],
-        assetDatabaseVersionKey(v1.length),
+        assetDatabaseVersionKey(v1),
       );
 
       // Larger bundled asset → different size fingerprint → re-copy.
@@ -133,9 +134,70 @@ void main() {
       );
       expect(
         jsonDecode(versionFile.readAsStringSync())['version_key'],
-        assetDatabaseVersionKey(bundled.length),
+        assetDatabaseVersionKey(bundled),
       );
     });
+
+    test(
+      'equal-size content update replaces rows without touching user data',
+      () async {
+        final docs = await Directory.systemTemp.createTemp('tawaq_equal_size_');
+        addTearDown(() => docs.delete(recursive: true));
+        final userData = File(p.join(docs.path, 'notes.data'))
+          ..writeAsStringSync('my notes');
+        var bundled = _sqliteBytes(rowCount: 1);
+        AssetDatabaseService service() => AssetDatabaseService(
+          documentsDirectory: () async => docs,
+          loadAsset: (_) async => ByteData.sublistView(bundled),
+        );
+        final first = service();
+        final database = await first.openDatabase('assets/database/demo.db');
+        expect(database.select('SELECT x FROM t').single['x'], 0);
+        first.dispose();
+        final fixture = File(p.join(docs.path, 'updated.db'))
+          ..writeAsBytesSync(bundled);
+        final updated = sqlite3.open(fixture.path);
+        updated.execute('UPDATE t SET x = 7');
+        updated.close();
+        final next = fixture.readAsBytesSync();
+        expect(next.length, bundled.length);
+        bundled = next;
+        final second = service();
+        addTearDown(second.dispose);
+        final replaced = await second.openDatabase('assets/database/demo.db');
+        expect(replaced.select('SELECT x FROM t').single['x'], 7);
+        expect(userData.readAsStringSync(), 'my notes');
+      },
+    );
+
+    test(
+      'invalid staged source preserves installed database and version',
+      () async {
+        final docs = await Directory.systemTemp.createTemp('tawaq_bad_stage_');
+        addTearDown(() => docs.delete(recursive: true));
+        var bundled = _sqliteBytes(rowCount: 1);
+        AssetDatabaseService service() => AssetDatabaseService(
+          documentsDirectory: () async => docs,
+          loadAsset: (_) async => ByteData.sublistView(bundled),
+        );
+        final first = service();
+        await first.openDatabase('assets/database/demo.db');
+        first.dispose();
+        final path = p.join(docs.path, 'tawaq', 'databases', 'demo.db');
+        final before = File(path).readAsBytesSync();
+        final marker = File('$path.version.json').readAsStringSync();
+        bundled = Uint8List.fromList([1, 2, 3]);
+        final second = service();
+        addTearDown(second.dispose);
+        await expectLater(
+          second.openDatabase('assets/database/demo.db'),
+          throwsA(isA<SqliteException>()),
+        );
+        expect(File(path).readAsBytesSync(), before);
+        expect(File('$path.version.json').readAsStringSync(), marker);
+        expect(File('$path.staging').existsSync(), false);
+      },
+    );
 
     test('closes an in-flight open when disposed', () async {
       final docs = await Directory.systemTemp.createTemp('tawaq_asset_db_');

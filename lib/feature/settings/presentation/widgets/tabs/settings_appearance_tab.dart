@@ -21,22 +21,22 @@ class SettingsAppearanceTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.lg,
       children: [
-        const OnboardingRerunTile(),
-        const DesktopSettingsSection(),
-        SettingsSection(
-          title: l10n.languageLabel,
-          subtitle: l10n.onboardingLanguageStepHint,
-          child: const LocaleSelectTileGroup(),
-        ),
         SettingsSection(
           title: l10n.appearance,
-          subtitle: l10n.colorThemeSubtitle,
+          subtitle: l10n.appearanceSubtitle,
           child: const ColorThemeSelectorContent(),
         ),
         SettingsSection(
           title: l10n.typographySectionTitle,
           subtitle: l10n.typographySectionSubtitle,
           child: const TypographySettingsSection(),
+        ),
+        const OnboardingRerunTile(),
+        const DesktopSettingsSection(),
+        SettingsSection(
+          title: l10n.languageLabel,
+          subtitle: l10n.onboardingLanguageStepHint,
+          child: const LocaleSelectTileGroup(),
         ),
       ],
     );

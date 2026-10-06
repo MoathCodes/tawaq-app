@@ -111,12 +111,10 @@ class TrendChart extends ConsumerWidget {
                     final jamaah = counts[CompletionStatus.jamaah] ?? 0;
                     final onTime = counts[CompletionStatus.onTime] ?? 0;
                     final late = counts[CompletionStatus.late] ?? 0;
-                    final missed = counts[CompletionStatus.missed] ?? 0;
-                    final total = jamaah + onTime + late + missed;
+                    final total = jamaah + onTime + late;
 
-                    final title = DateFormat.MMMd(
-                      l10n.localeName,
-                    ).format(bucket.start);
+                    final title = DateFormat.MMMd(l10n.localeName)
+                        .format(bucket.start);
 
                     return BarTooltipItem(
                       '$title\n',
@@ -152,14 +150,6 @@ class TrendChart extends ConsumerWidget {
                           text: '\u25cf ${l10n.late}: $late\n',
                           style: theme.typography.body.xs.copyWith(
                             color: CompletionStatus.late.getBadgeColor(
-                              theme.colors,
-                            ),
-                          ),
-                        ),
-                        TextSpan(
-                          text: '\u25cf ${l10n.missed}: $missed',
-                          style: theme.typography.body.xs.copyWith(
-                            color: CompletionStatus.missed.getBadgeColor(
                               theme.colors,
                             ),
                           ),
@@ -239,7 +229,6 @@ class TrendChart extends ConsumerWidget {
     final jamaahColor = CompletionStatus.jamaah.getBadgeColor(colors);
     final onTimeColor = CompletionStatus.onTime.getBadgeColor(colors);
     final lateColor = CompletionStatus.late.getBadgeColor(colors);
-    final missedColor = CompletionStatus.missed.getBadgeColor(colors);
     const borderRadius = BorderRadius.vertical(top: Radius.circular(8));
 
     return List.generate(buckets.length, (index) {
@@ -247,8 +236,7 @@ class TrendChart extends ConsumerWidget {
       final jamaah = (counts[CompletionStatus.jamaah] ?? 0).toDouble();
       final onTime = (counts[CompletionStatus.onTime] ?? 0).toDouble();
       final late = (counts[CompletionStatus.late] ?? 0).toDouble();
-      final missed = (counts[CompletionStatus.missed] ?? 0).toDouble();
-      final total = jamaah + onTime + late + missed;
+      final total = jamaah + onTime + late;
 
       return BarChartGroupData(
         x: index,
@@ -272,12 +260,6 @@ class TrendChart extends ConsumerWidget {
                 lateColor,
                 borderSide: .none,
               ),
-              BarChartRodStackItem(
-                jamaah + onTime + late,
-                total,
-                missedColor,
-                borderSide: .none,
-              ),
             ],
           ),
         ],
@@ -287,11 +269,7 @@ class TrendChart extends ConsumerWidget {
 }
 
 class _BottomTitle extends ConsumerWidget {
-  const new({
-    required this.index,
-    required this.buckets,
-    required this.meta,
-  });
+  const new({required this.index, required this.buckets, required this.meta});
 
   final int index;
   final List<PrayerTrendBucket> buckets;
@@ -335,11 +313,7 @@ class _BottomTitle extends ConsumerWidget {
           if (showStreakMarker)
             Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-              child: Icon(
-                FLucideIcons.flame,
-                size: 12,
-                color: colors.primary,
-              ),
+              child: Icon(FLucideIcons.flame, size: 12, color: colors.primary),
             ),
           Text(
             label,
@@ -361,7 +335,6 @@ class _LegendRow extends StatelessWidget {
     CompletionStatus.jamaah,
     CompletionStatus.onTime,
     CompletionStatus.late,
-    CompletionStatus.missed,
   ];
 
   @override

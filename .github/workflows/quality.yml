@@ -25,14 +25,8 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Generate package and app code
-        run: bash tool/codegen.sh
-
-      - name: Analyze app
-        run: flutter analyze --no-fatal-infos
-
-      - name: Test app
-        run: flutter test
+      - name: App checks
+        run: bash tool/checks.sh app
 
   packages:
     name: Local package quality
@@ -48,31 +42,5 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Check dorar_hadith
-        working-directory: packages/dorar_hadith
-        run: |
-          dart pub get
-          dart analyze lib test
-          dart test
-
-      - name: Check dorar_hadith_flutter
-        working-directory: packages/dorar_hadith/dorar_hadith_flutter
-        run: |
-          flutter pub get
-          flutter analyze --no-fatal-infos
-          flutter test
-
-      - name: Generate mushaf_reader code
-        working-directory: packages/mushaf_reader
-        run: |
-          flutter pub get
-          dart run build_runner build
-          cd example
-          flutter pub get
-          dart run slang
-
-      - name: Check mushaf_reader
-        working-directory: packages/mushaf_reader
-        run: |
-          flutter analyze --no-fatal-infos
-          flutter test
+      - name: Local package checks
+        run: bash tool/checks.sh packages

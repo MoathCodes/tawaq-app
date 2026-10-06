@@ -5,7 +5,7 @@ void main() {
   group('PrayerAnalyticsPeriod', () {
     group('duration', () {
       // test('daily returns 1 day', () {
-      //   expect(PrayerAnalyticsPeriod.daily.duration, 
+      //   expect(PrayerAnalyticsPeriod.daily.duration,
       //const Duration(days: 1));
       // });
 
@@ -58,7 +58,6 @@ void main() {
         expect(analytics.bestStreak, 0);
         expect(analytics.jamaahPercentage, 0);
         expect(analytics.onTimePercentage, 0);
-        expect(analytics.missedPercentage, 0);
         expect(analytics.latePercentage, 0);
       });
     });
@@ -72,7 +71,6 @@ void main() {
           bestStreak: 14,
           jamaahPercentage: 0.5,
           onTimePercentage: 0.35,
-          missedPercentage: 0.1,
           latePercentage: 0.05,
         );
 
@@ -82,7 +80,6 @@ void main() {
         expect(analytics.bestStreak, 14);
         expect(analytics.jamaahPercentage, 0.5);
         expect(analytics.onTimePercentage, 0.35);
-        expect(analytics.missedPercentage, 0.1);
         expect(analytics.latePercentage, 0.05);
       });
     });
@@ -91,7 +88,7 @@ void main() {
       // test('updates period while preserving other fields', () {
       //   final original = PrayerAnalytics.empty();
 
-      //   final updated = original.copyWith(period: 
+      //   final updated = original.copyWith(period:
       // PrayerAnalyticsPeriod.daily);
 
       //   expect(updated.period, PrayerAnalyticsPeriod.daily);
@@ -115,14 +112,12 @@ void main() {
           jamaahPercentage: 0.6,
           onTimePercentage: 0.3,
           latePercentage: 0.05,
-          missedPercentage: 0.05,
         );
 
         expect(updated.completionPercentage, 0.9);
         expect(updated.jamaahPercentage, 0.6);
         expect(updated.onTimePercentage, 0.3);
         expect(updated.latePercentage, 0.05);
-        expect(updated.missedPercentage, 0.05);
       });
     });
 
@@ -135,7 +130,6 @@ void main() {
           bestStreak: 5,
           jamaahPercentage: 0.4,
           onTimePercentage: 0.4,
-          missedPercentage: 0.1,
           latePercentage: 0.1,
         );
         const b = PrayerAnalytics(
@@ -145,7 +139,6 @@ void main() {
           bestStreak: 5,
           jamaahPercentage: 0.4,
           onTimePercentage: 0.4,
-          missedPercentage: 0.1,
           latePercentage: 0.1,
         );
 
@@ -160,7 +153,6 @@ void main() {
           bestStreak: 5,
           jamaahPercentage: 0.4,
           onTimePercentage: 0.4,
-          missedPercentage: 0.1,
           latePercentage: 0.1,
         );
         const b = PrayerAnalytics(
@@ -170,7 +162,6 @@ void main() {
           bestStreak: 5,
           jamaahPercentage: 0.4,
           onTimePercentage: 0.4,
-          missedPercentage: 0.1,
           latePercentage: 0.1,
         );
 

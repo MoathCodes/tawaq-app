@@ -3,6 +3,9 @@ enum LocationFailureCode {
   /// Device location services are turned off.
   servicesDisabled,
 
+  /// Position acquisition did not complete within the bounded request.
+  timedOut,
+
   /// The user denied location permission.
   permissionDenied,
 

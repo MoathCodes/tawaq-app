@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:adhan_dart/adhan_dart.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -8,14 +8,16 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/app/onboarding/onboarding_scaffold.dart';
 import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/locale/locale_select_tile_group.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/semantics_scale_step_picker.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
-import 'package:tawaq/feature/prayer/presentation/provider/date_formatter.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/adhan_settings_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_schedule/prayer_schedule_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/data/models/app_text_scale.dart';
 import 'package:tawaq/feature/settings/presentation/provider/iqamah_draft_provider.dart';
@@ -31,7 +33,7 @@ import 'package:tawaq/theme/theme.dart';
 part 'onboarding_screen.g.dart';
 
 /// Full-screen first-run onboarding flow.
-class OnboardingScreen extends ConsumerWidget {
+class OnboardingScreen extends HookConsumerWidget {
   /// Creates [OnboardingScreen].
   const new({super.key});
 
@@ -47,30 +49,41 @@ class OnboardingScreen extends ConsumerWidget {
     // Keep iqamah draft alive across steps so Continue/Back does not drop edits.
     ref.watch(iqamahDraftProvider);
 
-    Future<void> dismissOnboarding() async {
-      final finished = await ref
-          .read(onboardingStateProvider.notifier)
-          .finish();
-      if (!finished || !context.mounted) return;
-      const PrayerRoute().go(context);
-    }
+    final saving = useState(false);
+    final saveFailed = useState(false);
 
-    Future<void> completeOnboarding() async {
-      // Draft buffers iqamah text fields; commit without settings toasts.
-      ref.read(iqamahDraftProvider.notifier).commitPending();
-      final finished = await ref
-          .read(onboardingStateProvider.notifier)
-          .finish();
-      if (!finished || !context.mounted) return;
-      const PrayerRoute().go(context);
+    Future<void> finishSetup({required bool applyDraft}) async {
+      if (saving.value) return;
+      saving.value = true;
+      saveFailed.value = false;
+      try {
+        if (applyDraft) ref.read(iqamahDraftProvider.notifier).commitPending();
+        await ref.read(adhanSettingsProvider.future);
+        if (!context.mounted) return;
+        await ref.read(adhanSettingsProvider.notifier).flush();
+        if (!context.mounted) return;
+        final finished = await ref
+            .read(onboardingStateProvider.notifier)
+            .finish();
+        if (!finished || !context.mounted) return;
+        const PrayerRoute().go(context);
+      } on Object catch (error, stack) {
+        if (!context.mounted) return;
+        ref
+            .read(loggerProvider)
+            .e('Could not save setup', error: error, stackTrace: stack);
+        saveFailed.value = true;
+      } finally {
+        if (context.mounted) saving.value = false;
+      }
     }
 
     void handleContinue() {
-      if (step == OnboardingStep.iqamah) {
+      if (step == OnboardingStep.notifications) {
         ref.read(iqamahDraftProvider.notifier).commitPending();
       }
       if (step.isLast) {
-        unawaited(completeOnboarding());
+        unawaited(finishSetup(applyDraft: true));
         return;
       }
       controller.next();
@@ -84,11 +97,24 @@ class OnboardingScreen extends ConsumerWidget {
       subtitle: stepDef.subtitle(l10n, appName),
       slideDirection: uiState.slideDirection,
       stepContent: stepDef.builder(appName),
-      navigation: OnboardingNavigationBar(
-        step: step,
-        onContinue: handleContinue,
-        onBack: controller.back,
-        onDismiss: dismissOnboarding,
+      navigation: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        spacing: AppSpacing.sm,
+        children: [
+          if (saveFailed.value)
+            FAlert(
+              variant: .destructive,
+              title: Text(l10n.onboardingSaveFailed),
+            ),
+          OnboardingNavigationBar(
+            step: step,
+            onContinue: handleContinue,
+            onBack: controller.back,
+            onDismiss: () => unawaited(finishSetup(applyDraft: false)),
+            busy: saving.value,
+          ),
+        ],
       ),
     );
   }
@@ -99,17 +125,8 @@ enum OnboardingStep {
   /// Welcome hero.
   welcome,
 
-  /// Language selection.
-  locale,
-
   /// Prayer location.
   location,
-
-  /// Calculation method and time format.
-  prayerTimes,
-
-  /// Iqamah offsets.
-  iqamah,
 
   /// Adhan notifications (desktop).
   notifications,
@@ -157,37 +174,31 @@ List<OnboardingStepDef> onboardingStepDefs(AppLocalizations l10n) {
       step: OnboardingStep.welcome,
       title: (l10n, _) => l10n.onboardingStepWelcome,
       subtitle: (l10n, appName) => l10n.onboardingStepWelcomeSubtitle(appName),
-      builder: (_) => const OnboardingWelcomeStep(),
-    ),
-    OnboardingStepDef(
-      step: OnboardingStep.locale,
-      title: (l10n, _) => l10n.onboardingStepLanguage,
-      subtitle: (l10n, _) => l10n.onboardingStepLanguageSubtitle,
-      builder: (_) => const OnboardingLocaleStep(),
+      builder: (_) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.lg,
+        children: [OnboardingWelcomeStep(), OnboardingLocaleStep()],
+      ),
     ),
     OnboardingStepDef(
       step: OnboardingStep.location,
       title: (l10n, _) => l10n.onboardingStepLocation,
       subtitle: (l10n, _) => l10n.onboardingStepLocationSubtitle,
-      builder: (_) => const OnboardingLocationStep(),
-    ),
-    OnboardingStepDef(
-      step: OnboardingStep.prayerTimes,
-      title: (l10n, _) => l10n.onboardingStepPrayerTimes,
-      subtitle: (l10n, _) => l10n.onboardingStepPrayerTimesSubtitle,
-      builder: (_) => const PrayerCalculationSettings(),
-    ),
-    OnboardingStepDef(
-      step: OnboardingStep.iqamah,
-      title: (l10n, _) => l10n.onboardingStepIqamah,
-      subtitle: (l10n, _) => l10n.onboardingStepIqamahSubtitle,
-      builder: (_) => const PrayerIqamahSettings(),
+      builder: (_) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.lg,
+        children: [OnboardingLocationStep(), PrayerCalculationSettings()],
+      ),
     ),
     OnboardingStepDef(
       step: OnboardingStep.notifications,
       title: (l10n, _) => l10n.onboardingStepNotifications,
       subtitle: (l10n, _) => l10n.onboardingStepNotificationsSubtitle,
-      builder: (_) => const PrayerAdhanSettings(),
+      builder: (_) => const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: AppSpacing.lg,
+        children: [PrayerAdhanSettings(), PrayerIqamahSettings()],
+      ),
     ),
     OnboardingStepDef(
       step: OnboardingStep.theme,
@@ -215,10 +226,7 @@ OnboardingStepDef onboardingStepDefFor(
 /// UI state for the onboarding stepper.
 class OnboardingControllerState {
   /// Creates [OnboardingControllerState].
-  const new({
-    required this.step,
-    required this.slideDirection,
-  });
+  const new({required this.step, required this.slideDirection});
 
   /// Active onboarding step.
   final OnboardingStep step;
@@ -243,20 +251,19 @@ class OnboardingController extends _$OnboardingController {
   void next() {
     if (state.step.isLast) return;
     final nextStep = OnboardingStep.values[state.step.index + 1];
-    state = OnboardingControllerState(
-      step: nextStep,
-      slideDirection: -1,
-    );
+    state = OnboardingControllerState(step: nextStep, slideDirection: -1);
   }
 
   /// Goes back one step.
   void back() {
     if (state.step == OnboardingStep.welcome) return;
     final previousStep = OnboardingStep.values[state.step.index - 1];
-    state = OnboardingControllerState(
-      step: previousStep,
-      slideDirection: 1,
-    );
+    state = OnboardingControllerState(step: previousStep, slideDirection: 1);
+  }
+
+  /// Opens a stage for review without resetting any persisted choice.
+  void review(OnboardingStep step) {
+    state = OnboardingControllerState(step: step, slideDirection: 1);
   }
 }
 
@@ -268,8 +275,11 @@ class OnboardingNavigationBar extends ConsumerWidget {
     required this.onContinue,
     required this.onBack,
     required this.onDismiss,
+    this.busy = false,
     super.key,
   });
+
+  final bool busy;
 
   /// Active step.
   final OnboardingStep step;
@@ -287,12 +297,13 @@ class OnboardingNavigationBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final canContinue =
-        !step.requiresLocation ||
-        ref.watch(
-          prayerSettingsProvider.select(
-            (s) => s.value?.isLocationReady ?? false,
-          ),
-        );
+        !busy &&
+        (!step.requiresLocation ||
+            ref.watch(
+              prayerSettingsProvider.select(
+                (s) => s.value?.isLocationReady ?? false,
+              ),
+            ));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -305,7 +316,7 @@ class OnboardingNavigationBar extends ConsumerWidget {
               Expanded(
                 child: FButton(
                   variant: .ghost,
-                  onPress: onBack,
+                  onPress: busy ? null : onBack,
                   child: Text(l10n.back),
                 ),
               ),
@@ -314,7 +325,11 @@ class OnboardingNavigationBar extends ConsumerWidget {
               child: FButton(
                 onPress: canContinue ? onContinue : null,
                 child: Text(
-                  step.isLast ? l10n.onboardingFinishAction : l10n.next,
+                  busy
+                      ? l10n.saving
+                      : step.isLast
+                      ? l10n.onboardingFinishAction
+                      : l10n.next,
                 ),
               ),
             ),
@@ -325,7 +340,7 @@ class OnboardingNavigationBar extends ConsumerWidget {
             alignment: AlignmentDirectional.center,
             child: FButton(
               variant: .ghost,
-              onPress: onDismiss,
+              onPress: busy ? null : onDismiss,
               child: Text(l10n.onboardingSetUpLater),
             ),
           ),
@@ -388,10 +403,7 @@ class OnboardingLocationStep extends StatelessWidget {
       spacing: AppSpacing.md,
       children: [
         OnboardingLocationAlert(),
-        PrayerLocationSettings(
-          chrome: SettingsChrome.none,
-          compactMap: true,
-        ),
+        PrayerLocationSettings(chrome: SettingsChrome.none, compactMap: true),
       ],
     );
   }
@@ -470,7 +482,9 @@ class OnboardingFinishStep extends ConsumerWidget {
     final theme = context.theme;
     final day = ref.watch(prayerDayProvider).value;
     final bundle = day?.bundle;
-    final formatter = ref.watch(timeFormatterProvider);
+    final dayKey = ref.watch(prayerCalendarDayKeyProvider);
+    final rows = ref.watch(prayerScheduleProvider(dayKey));
+    final settings = ref.watch(prayerSettingsProvider).value;
 
     if (bundle == null) {
       final loading = ref.watch(prayerDayIsLoadingProvider);
@@ -483,42 +497,57 @@ class OnboardingFinishStep extends ConsumerWidget {
       );
     }
 
-    final prayers = <Prayer>[
-      Prayer.fajr,
-      Prayer.dhuhr,
-      Prayer.asr,
-      Prayer.maghrib,
-      Prayer.isha,
-    ];
-
-    return StaticCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppSpacing.sm,
-        children: [
-          Text(
-            l10n.todaysSchedule,
-            style: theme.typography.body.sm.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colors.mutedForeground,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.md,
+      children: [
+        FTile(
+          prefix: const Icon(FLucideIcons.mapPin),
+          title: Text(l10n.onboardingStepLocation),
+          subtitle: Text(
+            '${settings?.locationName ?? ''} · ${settings?.location.name ?? ''}\n${settings?.method.getLocaleName(l10n) ?? ''}',
           ),
-          for (final prayer in prayers)
-            _PrayerPreviewRow(
-              label: prayer.getLocaleName(l10n, date: day?.now),
-              time: formatter.format(bundle.today.timeForPrayer(prayer)),
-            ),
-        ],
-      ),
+          suffix: const Icon(FLucideIcons.pencil),
+          onPress: () => ref
+              .read(onboardingControllerProvider.notifier)
+              .review(OnboardingStep.location),
+        ),
+        FTile(
+          prefix: const Icon(FLucideIcons.bell),
+          title: Text(l10n.onboardingStepNotifications),
+          subtitle: Text(l10n.onboardingStepNotificationsSubtitle),
+          suffix: const Icon(FLucideIcons.pencil),
+          onPress: () => ref
+              .read(onboardingControllerProvider.notifier)
+              .review(OnboardingStep.notifications),
+        ),
+        StaticCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpacing.sm,
+            children: [
+              Text(
+                l10n.todaysSchedule,
+                style: theme.typography.body.sm.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colors.mutedForeground,
+                ),
+              ),
+              for (final row in rows)
+                _PrayerPreviewRow(
+                  label: row.prayer.getLocaleName(l10n, date: day?.now),
+                  time: row.formattedAdhanTime,
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _PrayerPreviewRow extends StatelessWidget {
-  const new({
-    required this.label,
-    required this.time,
-  });
+  const new({required this.label, required this.time});
 
   final String label;
   final String time;

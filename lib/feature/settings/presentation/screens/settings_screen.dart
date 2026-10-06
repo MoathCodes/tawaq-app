@@ -1,4 +1,3 @@
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -11,7 +10,8 @@ import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 import 'package:tawaq/core/widgets/icon_label.dart';
 import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
 import 'package:tawaq/feature/settings/presentation/provider/settings_screen_settings_provider.dart';
-import 'package:tawaq/theme/spacing.dart';
+import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 
 /// Screen for application settings.
 class SettingsScreen extends HookConsumerWidget {
@@ -55,6 +55,7 @@ class SettingsScreen extends HookConsumerWidget {
         length: tabs.length,
         initialIndex: initialIndex,
         vsync: vsync,
+        animationDuration: context.theme.durations.normal,
       ),
     );
     useEffect(() => tabController.dispose, [tabController]);
@@ -82,7 +83,12 @@ class SettingsScreen extends HookConsumerWidget {
             onTabChanged?.call(canonical);
           }
           if (!tabController.indexIsChanging && tabController.index != index) {
-            tabController.animateTo(index);
+            tabController.animateTo(
+              index,
+              duration: reduceMotion(context)
+                  ? Duration.zero
+                  : context.theme.durations.normal,
+            );
           }
           ref
               .read(settingsScreenSettingsProvider.notifier)
@@ -118,11 +124,15 @@ class SettingsScreen extends HookConsumerWidget {
       }
 
       tabController.addListener(handleTabChanged);
-      return () => tabController.removeListener(handleTabChanged);
+      tabController.animation?.addListener(handleTabChanged);
+      return () {
+        tabController.removeListener(handleTabChanged);
+        tabController.animation?.removeListener(handleTabChanged);
+      };
     }, [tabController, tabs, tabKey, onTabChanged]);
 
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: CenteredViewportShell(
         maxContentWidth: _maxContentWidth,
         header: LayoutBuilder(
@@ -137,6 +147,10 @@ class SettingsScreen extends HookConsumerWidget {
               decoration: tabsStyle.decoration,
               child: TabBar(
                 controller: tabController,
+                onTap: (index) {
+                  if (reduceMotion(context))
+                    tabController.animateTo(index, duration: Duration.zero);
+                },
                 isScrollable: scrollable,
                 tabAlignment: scrollable
                     ? TabAlignment.start
@@ -184,18 +198,10 @@ class SettingsScreen extends HookConsumerWidget {
                       child: LazyPanelContent.tab(
                         controller: tabController,
                         index: i,
+                        activateDuringDrag: true,
                         builder: () => KeyedSubtree(
                           key: ValueKey('settings-tab-${tab.key}-$i'),
-                          child: tab
-                              .builder(l10n)
-                              .animate()
-                              .fadeIn(duration: 200.ms, curve: Curves.easeOut)
-                              .moveY(
-                                begin: 12,
-                                end: 0,
-                                duration: 280.ms,
-                                curve: Curves.easeOutCubic,
-                              ),
+                          child: tab.builder(l10n),
                         ),
                       ),
                     ),

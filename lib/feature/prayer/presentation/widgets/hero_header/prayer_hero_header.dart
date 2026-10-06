@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
@@ -51,6 +52,43 @@ class _HeroBody extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        if (MediaQuery.sizeOf(context).height <= 700 &&
+            constraints.maxWidth >= 520) {
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: theme.colors.card,
+              border: Border.all(color: theme.colors.border),
+              borderRadius: PrayerHeroHeader.kBorderRadius,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: AppSpacing.xs,
+                    children: [
+                      _HeroStateLabel(prayer: card.prayer),
+                      Text(
+                        card.prayer.getLocaleName(l10n),
+                        style: theme.typography.body.xl.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      _HeroScheduledTime(
+                        time: card.adhanTime,
+                        label: l10n.adhan,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                _HeroCountdownLabel(prayer: card.prayer),
+              ],
+            ),
+          );
+        }
         final stacked =
             constraints.maxWidth < 600 ||
             MediaQuery.textScalerOf(context).scale(16) > 22;
@@ -361,7 +399,7 @@ class _HeroStatusPopover extends ConsumerWidget {
     return FPopoverMenu(
       menu: [
         FItemGroup(
-          children: CompletionStatus.values
+          children: selectableCompletionStatuses
               .where((v) => v != CompletionStatus.none)
               .map(
                 (e) => FItem(
@@ -391,7 +429,9 @@ class _HeroStatusPopover extends ConsumerWidget {
           semanticsLabel: menuTriggerLabel,
           onClick: controller.toggle,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: reduceMotion(context)
+                ? Duration.zero
+                : context.theme.durations.normal,
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.lg,
               vertical: AppSpacing.sm,

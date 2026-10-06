@@ -3,7 +3,10 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/core/widgets/animation_entry.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tawaq/core/utils/package_metadata_provider.dart';
+import 'package:tawaq/core/utils/external_link_provider.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/feature/about/domain/models/about_content.dart';
 import 'package:tawaq/feature/about/presentation/about_strings.dart';
 import 'package:tawaq/gen/assets.gen.dart';
@@ -13,7 +16,7 @@ import 'package:tawaq/theme/theme.dart';
 ///
 /// Pure presentation over an [AboutContent]; every section is hidden when its
 /// backing list is empty, so it adapts to whatever lives in `about_info.dart`.
-class AboutView extends StatelessWidget {
+class AboutView extends ConsumerWidget {
   /// Creates an [AboutView].
   const new({required this.content, super.key});
 
@@ -21,15 +24,27 @@ class AboutView extends StatelessWidget {
   final AboutContent content;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final colors = theme.colors;
 
     final sections = <Widget>[
-      _AboutHeader(content: content),
+      _AboutHeader(
+        content: content,
+        version: content.version.isNotEmpty
+            ? content.version
+            : ref
+                  .watch(packageMetadataProvider)
+                  .when(
+                    data: (info) => '${info.version}+${info.buildNumber}',
+                    loading: () => AboutStrings.versionLoading.resolve(context),
+                    error: (_, _) =>
+                        AboutStrings.versionUnavailable.resolve(context),
+                  ),
+      ),
       Text(
         content.description.resolve(context),
-        textAlign: TextAlign.center,
+        textAlign: TextAlign.start,
         style: theme.typography.body.sm.copyWith(
           color: colors.mutedForeground,
           height: 1.6,
@@ -82,13 +97,7 @@ class AboutView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.xl,
-      children: [
-        for (final (index, section) in sections.indexed)
-          AnimationEntry(
-            delay: Duration(milliseconds: 40 * index),
-            child: section,
-          ),
-      ],
+      children: [...sections],
     );
   }
 
@@ -112,26 +121,23 @@ class AboutView extends StatelessWidget {
         : () => unawaited(_openAboutLink(context, credit.url!)),
   );
 
-  FTile _acknowledgementTile(
-    BuildContext context,
-    AboutAcknowledgement ack,
-  ) => FTile(
-    prefix: const Icon(FLucideIcons.layers),
-    title: Text(ack.name),
-    subtitle: ack.description == null
-        ? null
-        : Text(ack.description!.resolve(context)),
-    suffix: ack.url == null ? null : const Icon(FLucideIcons.arrowUpRight),
-    onPress: ack.url == null
-        ? null
-        : () => unawaited(_openAboutLink(context, ack.url!)),
-  );
+  FTile _acknowledgementTile(BuildContext context, AboutAcknowledgement ack) =>
+      FTile(
+        prefix: const Icon(FLucideIcons.layers),
+        title: Text(ack.name),
+        subtitle: ack.description == null
+            ? null
+            : Text(ack.description!.resolve(context)),
+        suffix: ack.url == null ? null : const Icon(FLucideIcons.arrowUpRight),
+        onPress: ack.url == null
+            ? null
+            : () => unawaited(_openAboutLink(context, ack.url!)),
+      );
 }
 
-const _kLogoSize = 84.0;
-
 class _AboutHeader extends StatelessWidget {
-  const new({required this.content});
+  const new({required this.content, required this.version});
+  final String version;
 
   final AboutContent content;
 
@@ -141,59 +147,29 @@ class _AboutHeader extends StatelessWidget {
     final colors = theme.colors;
     final typography = theme.typography;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Row(
+      spacing: AppSpacing.md,
       children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: theme.radii.xl,
-            border: Border.all(color: colors.border),
-            boxShadow: [
-              BoxShadow(
-                color: colors.primary.withValues(alpha: 0.18),
-                blurRadius: 28,
-                spreadRadius: 1,
-                offset: const Offset(0, 12),
+        ClipRRect(
+          borderRadius: theme.radii.md,
+          child: Assets.images.appIcon.image(width: 48, height: 48),
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                content.appName,
+                style: typography.body.lg.copyWith(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                version,
+                style: typography.body.sm.copyWith(
+                  color: colors.mutedForeground,
+                ),
               ),
             ],
           ),
-          child: ClipRRect(
-            borderRadius: theme.radii.xl,
-            child: Assets.images.appIcon.image(
-              width: _kLogoSize,
-              height: _kLogoSize,
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          content.appName,
-          textAlign: TextAlign.center,
-          style: typography.body.xl2.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          content.latinName,
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: typography.body.sm.copyWith(
-            color: colors.mutedForeground,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 4,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        FBadge(
-          variant: FBadgeVariant.secondary,
-          child: Text(content.version),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          content.tagline.resolve(context),
-          textAlign: TextAlign.center,
-          style: typography.body.sm.copyWith(color: colors.mutedForeground),
         ),
       ],
     );
@@ -201,6 +177,39 @@ class _AboutHeader extends StatelessWidget {
 }
 
 Future<void> _openAboutLink(BuildContext context, String url) async {
+  final container = ProviderScope.containerOf(context, listen: false);
+  try {
+    if (await container.read(externalLinkLauncherProvider)(Uri.parse(url)))
+      return;
+  } catch (error, stack) {
+    container
+        .read(loggerProvider)
+        .w('Could not open external link', error: error, stackTrace: stack);
+  }
+  if (!context.mounted) return;
+  await showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(AboutStrings.linkFailed.resolve(context)),
+      content: SelectableText(url),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: Text(AboutStrings.close.resolve(context)),
+        ),
+        TextButton(
+          onPressed: () async {
+            await _copyAboutLink(context, url);
+            if (dialogContext.mounted) Navigator.of(dialogContext).pop();
+          },
+          child: Text(AboutStrings.copyLink.resolve(context)),
+        ),
+      ],
+    ),
+  );
+}
+
+Future<void> _copyAboutLink(BuildContext context, String url) async {
   await Clipboard.setData(ClipboardData(text: url));
   if (!context.mounted) return;
   showFToast(
@@ -211,11 +220,7 @@ Future<void> _openAboutLink(BuildContext context, String url) async {
 
 /// A labelled section: a small icon + heading above arbitrary [child] content.
 class _AboutSection extends StatelessWidget {
-  const new({
-    required this.icon,
-    required this.title,
-    required this.child,
-  });
+  const new({required this.icon, required this.title, required this.child});
 
   final IconData icon;
   final String title;

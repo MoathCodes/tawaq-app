@@ -51,11 +51,7 @@ PrayerCardStaticInfo prayerCardStatic(Ref ref) {
   } on Object catch (error, stack) {
     ref
         .read(loggerProvider)
-        .e(
-          'prayerCardStatic failed',
-          error: error,
-          stackTrace: stack,
-        );
+        .e('prayerCardStatic failed', error: error, stackTrace: stack);
     return _emptyPrayerCardStatic;
   }
 }
@@ -121,7 +117,5 @@ String _formatCountdown({
         .difference(day.now)
         .toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals);
   }
-  return '+${day.now.difference(static.referenceTime).toHHMMSS(
-    useHinduArabicNumerals: useHinduArabicNumerals,
-  )}';
+  return '+${day.now.difference(static.referenceTime).toHHMMSS(useHinduArabicNumerals: useHinduArabicNumerals)}';
 }

@@ -36,9 +36,6 @@ class ColorThemeSelectorContent extends ConsumerWidget {
       (palette) => palette != AppPalette.omarchy || omarchyAvailable,
     );
     final l10n = context.l10n;
-    final isLight = omarchySelected
-        ? buildOmarchyColors(omarchyTheme!).brightness == Brightness.light
-        : selectedMode != ThemeMode.dark;
     final notifier = ref.read(themeProvider.notifier);
 
     return Column(
@@ -46,55 +43,83 @@ class ColorThemeSelectorContent extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SettingsGroup(
-          child: Row(
-            spacing: AppSpacing.sm,
-            children: [
-              Expanded(
-                child: FButton(
-                  variant: isLight ? .primary : .outline,
-                  onPress: themeReady && !omarchySelected
-                      ? () => notifier.setThemeMode(ThemeMode.light)
-                      : null,
-                  prefix: const Icon(FLucideIcons.sun, size: 16),
-                  child: Text(l10n.light),
-                ),
-              ),
-              Expanded(
-                child: FButton(
-                  variant: isLight ? .outline : .primary,
-                  onPress: themeReady && !omarchySelected
-                      ? () => notifier.setThemeMode(ThemeMode.dark)
-                      : null,
-                  prefix: const Icon(FLucideIcons.moon, size: 16),
-                  child: Text(l10n.dark),
-                ),
-              ),
-            ],
+          title: l10n.themeModeLabel,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 480;
+              final width =
+                  (constraints.maxWidth - AppSpacing.sm * (compact ? 1 : 2)) /
+                  (compact ? 2 : 3);
+              return Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final mode in [
+                    ThemeMode.system,
+                    ThemeMode.light,
+                    ThemeMode.dark,
+                  ])
+                    SizedBox(
+                      width: compact && mode == ThemeMode.system
+                          ? constraints.maxWidth
+                          : width,
+                      child: FButton(
+                        variant: selectedMode == mode ? .primary : .outline,
+                        onPress: themeReady && !omarchySelected
+                            ? () => notifier.setThemeMode(mode)
+                            : null,
+                        prefix: Icon(switch (mode) {
+                          ThemeMode.system => FLucideIcons.monitor,
+                          ThemeMode.light => FLucideIcons.sun,
+                          ThemeMode.dark => FLucideIcons.moon,
+                        }, size: 16),
+                        child: Text(switch (mode) {
+                          ThemeMode.system => l10n.systemThemeLabel,
+                          ThemeMode.light => l10n.light,
+                          ThemeMode.dark => l10n.dark,
+                        }),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ),
         SettingsGroup(
           title: l10n.colorTheme,
           subtitle: l10n.colorThemeSubtitle,
-          child: Row(
-            spacing: AppSpacing.sm,
-            children: [
-              for (final palette in visiblePalettes)
-                Expanded(
-                  child: FButton(
-                    variant: effectiveSelectedPalette == palette
-                        ? .primary
-                        : .outline,
-                    onPress: themeReady
-                        ? () => notifier.setPalette(palette)
-                        : null,
-                    prefix: _PaletteSwatch(
-                      palette: palette,
-                      omarchyTheme: omarchyTheme,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth < 640
+                  ? 2
+                  : visiblePalettes.length;
+              final width =
+                  (constraints.maxWidth - AppSpacing.sm * (columns - 1)) /
+                  columns;
+              return Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: [
+                  for (final palette in visiblePalettes)
+                    SizedBox(
+                      width: width,
+                      child: FButton(
+                        variant: effectiveSelectedPalette == palette
+                            ? .primary
+                            : .outline,
+                        onPress: themeReady
+                            ? () => notifier.setPalette(palette)
+                            : null,
+                        prefix: _PaletteSwatch(
+                          palette: palette,
+                          omarchyTheme: omarchyTheme,
+                        ),
+                        child: Text(palette.getLocaleName(l10n)),
+                      ),
                     ),
-                    child: Text(palette.getLocaleName(l10n)),
-                  ),
-                ),
-            ],
+                ],
+              );
+            },
           ),
         ),
       ],

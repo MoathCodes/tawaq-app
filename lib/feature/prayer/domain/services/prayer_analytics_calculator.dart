@@ -71,9 +71,7 @@ class PrayerAnalyticsCalculator {
 
   /// Empty status counts for trend buckets.
   static Map<CompletionStatus, int> emptyStatusCounts() {
-    return {
-      for (final status in CompletionStatus.values) status: 0,
-    };
+    return {for (final status in CompletionStatus.values) status: 0};
   }
 
   /// Initializes empty trend buckets for [period] over [rangeStart, rangeEnd].
@@ -120,10 +118,7 @@ class PrayerAnalyticsCalculator {
         }
       case PrayerAnalyticsPeriod.yearly:
         for (var i = 11; i >= 0; i--) {
-          final monthStart = DateTime(
-            rangeEnd.year,
-            rangeEnd.month - i,
-          );
+          final monthStart = DateTime(rangeEnd.year, rangeEnd.month - i);
           final monthEnd = DateTime(
             monthStart.year,
             monthStart.month + 1,
@@ -190,9 +185,7 @@ class PrayerAnalyticsCalculator {
 
     final bucket = buckets[bucketIndex];
     final dayCompletions = completions
-        .where(
-          (c) => c.completionTime.isSameCalendarDay(date, location),
-        )
+        .where((c) => c.completionTime.isSameCalendarDay(date, location))
         .toList();
     final updated = [...buckets];
     updated[bucketIndex] = PrayerTrendBucket(
@@ -316,22 +309,22 @@ class PrayerAnalyticsCalculator {
     return (current: activeStreak, best: bestStreak);
   }
 
-  /// Calculates all analytics metrics at once.
+  /// Calculates period rates among recorded completions (jamaah/on-time/late).
+  /// Unrecorded days and legacy missed/none rows never enter the denominator.
   static PrayerAnalytics calculateAnalytics({
     required PrayerAnalyticsPeriod period,
     required Map<CompletionStatus, int> statusCounts,
-    required int expectedPrayers,
     required int currentStreak,
     required int bestStreak,
   }) {
     final jamaahCount = statusCounts[CompletionStatus.jamaah] ?? 0;
     final onTimeCount = statusCounts[CompletionStatus.onTime] ?? 0;
     final lateCount = statusCounts[CompletionStatus.late] ?? 0;
-    final missedCount = statusCounts[CompletionStatus.missed] ?? 0;
+    final recorded = jamaahCount + onTimeCount + lateCount;
 
     final completionPct = calculateCompletionPercentage(
       statusCounts: statusCounts,
-      expectedPrayers: expectedPrayers,
+      expectedPrayers: recorded,
     );
 
     return PrayerAnalytics(
@@ -340,26 +333,17 @@ class PrayerAnalyticsCalculator {
       jamaahPercentage: _formatPercentage(
         calculateStatusPercentage(
           count: jamaahCount,
-          expectedPrayers: expectedPrayers,
+          expectedPrayers: recorded,
         ),
       ),
       onTimePercentage: _formatPercentage(
         calculateStatusPercentage(
           count: onTimeCount,
-          expectedPrayers: expectedPrayers,
+          expectedPrayers: recorded,
         ),
       ),
       latePercentage: _formatPercentage(
-        calculateStatusPercentage(
-          count: lateCount,
-          expectedPrayers: expectedPrayers,
-        ),
-      ),
-      missedPercentage: _formatPercentage(
-        calculateStatusPercentage(
-          count: missedCount,
-          expectedPrayers: expectedPrayers,
-        ),
+        calculateStatusPercentage(count: lateCount, expectedPrayers: recorded),
       ),
       currentStreak: currentStreak,
       bestStreak: bestStreak,
@@ -367,7 +351,7 @@ class PrayerAnalyticsCalculator {
   }
 
   static double _formatPercentage(double value) {
-    return double.parse(value.toStringAsFixed(1));
+    return value;
   }
 
   static bool _isSameDate(DateTime a, DateTime b) {
