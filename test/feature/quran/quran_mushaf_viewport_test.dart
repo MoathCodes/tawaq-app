@@ -10,6 +10,7 @@ import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_mushaf_pane.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/quran_header_widget.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/l10n/app_localizations_en.dart';
@@ -181,11 +182,7 @@ void main() {
           localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
-            body: SizedBox(
-              width: width,
-              height: 700,
-              child: child,
-            ),
+            body: SizedBox(width: width, height: 700, child: child),
           ),
         ),
       ),
@@ -198,9 +195,7 @@ void main() {
       await tester.pumpWidget(
         wrap(
           width: 700,
-          child: QuranMushafPane(
-            onPageChanged: (page) => publishedPage = page,
-          ),
+          child: QuranMushafPane(onPageChanged: (page) => publishedPage = page),
         ),
       );
       await tester.pump();
@@ -234,83 +229,79 @@ void main() {
       expect(publishedPage, 2);
     });
 
-    testWidgets(
-      'falls back to single page below 2× mushaf minimum width',
-      (tester) async {
-        await tester.pumpWidget(
-          wrap(
-            width: 700,
-            child: const QuranMushafPane(),
-          ),
-        );
-        await tester.pump();
+    testWidgets('falls back to single page below 2× mushaf minimum width', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(width: 700, child: const QuranMushafPane()));
+      await tester.pump();
 
-        final reader = tester.widget<MushafReader>(find.byType(MushafReader));
-        expect(reader.pagesPerViewport, 1);
-        expect(
-          find.text(AppLocalizationsEn().quranDoublePageWidthFallback),
-          findsOneWidget,
-        );
-      },
-    );
+      final reader = tester.widget<MushafReader>(find.byType(MushafReader));
+      expect(reader.pagesPerViewport, 1);
+      expect(
+        find.text(AppLocalizationsEn().quranDoublePageWidthFallback),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('keeps two-page spread when container is wide enough', (
+      tester,
+    ) async {
+      await tester.pumpWidget(wrap(width: 800, child: const QuranMushafPane()));
+      await tester.pump();
+
+      final reader = tester.widget<MushafReader>(find.byType(MushafReader));
+      expect(reader.pagesPerViewport, 2);
+      expect(find.byType(FAlert), findsNothing);
+    });
 
     testWidgets(
-      'keeps two-page spread when container is wide enough',
+      'opens selected actions from header without taking reader height',
       (tester) async {
+        final ayah = Ayah(
+          ayahId: 1,
+          juz: 1,
+          page: 1,
+          surahNumber: 1,
+          numberInSurah: 1,
+          text: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
+          textPlain: 'In the name of Allah',
+        );
         await tester.pumpWidget(
           wrap(
             width: 800,
-            child: const QuranMushafPane(),
+            selectedAyah: ayah,
+            child: const Column(
+              children: [
+                QuranHeaderWidget(),
+                Expanded(child: QuranMushafPane()),
+              ],
+            ),
           ),
         );
-        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        final semanticsHandle = tester.ensureSemantics();
 
-        final reader = tester.widget<MushafReader>(find.byType(MushafReader));
-        expect(reader.pagesPerViewport, 2);
-        expect(find.byType(FAlert), findsNothing);
+        expect(find.text('Play'), findsNothing);
+        final readerHeight = tester.getSize(find.byType(MushafReader)).height;
+        await tester.tap(find.byIcon(FLucideIcons.ellipsis));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(tester.getSize(find.byType(MushafReader)).height, readerHeight);
+        expect(find.text('Play'), findsOneWidget);
+        expect(find.text('Share'), findsOneWidget);
+        expect(find.text('Copy'), findsOneWidget);
+        expect(find.byIcon(FLucideIcons.chevronDown), findsOneWidget);
+        final surfaceRect = tester.getRect(
+          find.byKey(const ValueKey('ayah-selection-actions-surface')),
+        );
+        final playRect = tester.getRect(find.text('Play'));
+        final shareRect = tester.getRect(find.text('Share'));
+        final copyRect = tester.getRect(find.text('Copy'));
+        expect(playRect.top, closeTo(shareRect.top, 1));
+        expect(shareRect.top, closeTo(copyRect.top, 1));
+        expect(surfaceRect.height, lessThan(150));
+        semanticsHandle.dispose();
       },
     );
-
-    testWidgets('attaches wide selected actions to the real reader flow', (
-      tester,
-    ) async {
-      final ayah = Ayah(
-        ayahId: 1,
-        juz: 1,
-        page: 1,
-        surahNumber: 1,
-        numberInSurah: 1,
-        text: 'بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ',
-        textPlain: 'In the name of Allah',
-      );
-      await tester.pumpWidget(
-        wrap(
-          width: 800,
-          selectedAyah: ayah,
-          child: const QuranMushafPane(),
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 300));
-      final semanticsHandle = tester.ensureSemantics();
-
-      expect(find.text('Play'), findsOneWidget);
-      expect(find.text('Share'), findsOneWidget);
-      expect(find.text('Copy'), findsOneWidget);
-      expect(find.byIcon(FLucideIcons.chevronDown), findsOneWidget);
-      final surfaceRect = tester.getRect(
-        find.byKey(const ValueKey('ayah-selection-actions-surface')),
-      );
-      final playRect = tester.getRect(find.text('Play'));
-      final shareRect = tester.getRect(find.text('Share'));
-      final copyRect = tester.getRect(find.text('Copy'));
-      expect(playRect.top, closeTo(shareRect.top, 1));
-      expect(shareRect.top, closeTo(copyRect.top, 1));
-      expect(surfaceRect.height, lessThan(150));
-      expect(
-        tester.getTopLeft(find.text('Copy')).dy,
-        greaterThan(tester.getBottomLeft(find.byType(MushafReader)).dy),
-      );
-      semanticsHandle.dispose();
-    });
   });
 }

@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-05",
+  "base_revision": "717f1248c6c448f06b1f67f32df202e7ea8f676d",
+  "root_tests": {
+    "passed": 1199,
+    "log": "/tmp/tawaq-quran-final-all-tests.log"
+  },
+  "analysis": {
+    "errors": 0,
+    "warnings": 0,
+    "infos": 414,
+    "log": "/tmp/tawaq-quran-final-analysis.log"
+  },
+  "focused_regressions": 15,
+  "generation": [
+    "fvm flutter gen-l10n"
+  ],
+  "profile": {
+    "baseline": "/tmp/tawaq-quran-profile-clean-2026-10-05",
+    "candidate": "/tmp/tawaq-quran-profile-current-2026-10-05",
+    "memory_samples": "/tmp/tawaq-quran-profile-current-memory-2026-10-05.jsonl",
+    "candidate_note": "Before final commentary reduced-motion change; measured closed-Study flow unchanged."
+  },
+  "scope": "Mounted callbacks and render-buffer composition only; OS input/accessibility and Windows/macOS unverified. RSS objective unmet. No release published.",
+  "logs_sha256": {
+    "/tmp/tawaq-quran-final-all-tests.log": "3b0245bd8a6b9bd370032e5b94cde21259ca117478d191322d7ffca189040a59",
+    "/tmp/tawaq-quran-final-analysis.log": "c962a6c7afd92087e6a1b9f989333d9ef628252909c09b0c6281db8f09090488"
+  },
+  "motion": {
+    "normal": "/tmp/tawaq-quran-motion-confirmed-2026-10-05",
+    "reduced": "/tmp/tawaq-quran-motion-reduced-current-2026-10-05",
+    "clips": 8,
+    "decoding": "all clips decoded fully; 32 representative decoded frames inspected",
+    "scope": "Readback overhead affects transitions; no performance/native input certification"
+  },
+  "composition": {
+    "candidate": "/tmp/tawaq-quran-ui-settled-2026-10-05",
+    "captures": 208,
+    "combinations": 16,
+    "errors": 0,
+    "review": "four contact sheets and critical full-resolution images inspected",
+    "scope": "Arabic/English, manuscript light/dark, 800x600/1200x860, normal/XL text; mounted callbacks, no OS input certification"
+  },
+  "ordinary_app_build": {
+    "command": "fvm flutter build linux --debug -t lib/main.dart",
+    "result": "passed",
+    "log": "/tmp/tawaq-quran-regular-build.log",
+    "artifact_sha256": {
+      "build/linux/x64/debug/bundle/Tawaq": "fa4b506073c8def0f1a9bef5de4127121ab3fc0202eabd82bd1bd788bd8a898c",
+      "build/linux/x64/debug/bundle/data/flutter_assets/kernel_blob.bin": "84dc98a60df6f312d869d141a5586349c7bb738041b4f2dc00a35c81d07ecd0e"
+    }
+  }
+}

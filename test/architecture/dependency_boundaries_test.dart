@@ -78,8 +78,6 @@ const _legacyViolations = <String>{
   'feature/onboarding/presentation/providers/onboarding_state_provider.dart -> feature/prayer/presentation/provider/prayer_settings_provider.dart',
   'feature/onboarding/presentation/providers/onboarding_state_provider.dart -> feature/settings/presentation/provider/theme_settings_provider.dart',
   'feature/onboarding/presentation/widgets/onboarding_rerun_tile.dart -> app/routing/route_provider.dart',
-  'feature/prayer/presentation/widgets/prayer_location_setup_alert.dart -> app/routing/route_provider.dart',
-  'feature/prayer/presentation/widgets/prayer_location_setup_alert.dart -> feature/onboarding/presentation/providers/onboarding_state_provider.dart',
   'feature/settings/presentation/widgets/tabs/settings_appearance_tab.dart -> feature/onboarding/presentation/widgets/onboarding_rerun_tile.dart',
   'feature/settings/presentation/widgets/typography/typography_settings_section.dart -> feature/quran/presentation/models/quran_ui_models.dart',
   'feature/settings/presentation/widgets/typography/typography_settings_section.dart -> feature/quran/presentation/providers/quran_screen_settings_provider.dart',

@@ -30,22 +30,24 @@ const _availableTheme = OmarchyThemeSnapshot(
   },
 );
 
-Widget _host(ProviderContainer container) => UncontrolledProviderScope(
-  container: container,
-  child: FTheme(
-    data: buildAppTheme(
-      palette: AppPalette.manuscript,
-      themeMode: ThemeMode.light,
-      touch: false,
-      textScale: 1,
-    ),
-    child: const MaterialApp(
-      localizationsDelegates: appLocalizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      home: Scaffold(body: ColorThemeSelectorContent()),
-    ),
-  ),
-);
+Widget _host(ProviderContainer container, {Locale? locale}) =>
+    UncontrolledProviderScope(
+      container: container,
+      child: FTheme(
+        data: buildAppTheme(
+          palette: AppPalette.manuscript,
+          themeMode: ThemeMode.light,
+          touch: false,
+          textScale: 1,
+        ),
+        child: MaterialApp(
+          locale: locale,
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(body: ColorThemeSelectorContent()),
+        ),
+      ),
+    );
 
 ProviderContainer _container({required bool available}) => ProviderContainer(
   overrides: [
@@ -59,6 +61,35 @@ ProviderContainer _container({required bool available}) => ProviderContainer(
 );
 
 void main() {
+  testWidgets('four palettes fit a narrow Arabic settings viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final container = _container(available: true);
+    addTearDown(container.dispose);
+    await tester.pumpWidget(_host(container, locale: const Locale('ar')));
+    await tester.pumpAndSettle();
+    expect(find.text('المريمية'), findsOneWidget);
+    await tester.tap(find.text('المريمية'));
+    await tester.pumpAndSettle();
+    expect(container.read(themeProvider).value?.appPalette, AppPalette.sage);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('selects Sage alongside existing palettes', (tester) async {
+    final container = _container(available: false);
+    addTearDown(container.dispose);
+    await tester.pumpWidget(_host(container));
+    await tester.pump();
+    expect(find.text('Sage'), findsOneWidget);
+    await tester.tap(find.text('Sage'));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(container.read(themeProvider).value?.appPalette, AppPalette.sage);
+  });
+
   testWidgets('hides Omarchy when no active Omarchy palette is available', (
     tester,
   ) async {

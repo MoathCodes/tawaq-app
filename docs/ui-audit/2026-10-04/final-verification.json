@@ -1,0 +1,41 @@
+{
+  "app_tests_passed": 1184,
+  "reader_tests_passed": 138,
+  "release_validator_tests_passed": 5,
+  "flutter_analysis_infos": 401,
+  "dart_analysis_infos": 418,
+  "analysis_errors": 0,
+  "analysis_warnings": 0,
+  "reader_analysis_infos": 33,
+  "linux_main_debug_build": "passed",
+  "logs": {
+    "app_tests": {
+      "file": "evidence/final-app_tests.log",
+      "sha256": "14513e703952f86a09d1c9589b62e730c6c5a0e00203c79c50bb2d8ba8e94300"
+    },
+    "flutter_analysis": {
+      "file": "evidence/final-flutter_analysis.log",
+      "sha256": "9cc67e30ba738c92800196ea1d80f74559128af5f36eb35c27e7d00259ef74e0"
+    },
+    "dart_analysis": {
+      "file": "evidence/final-dart_analysis.log",
+      "sha256": "43efe3f8e4597768d48f0b119278d9b8dbcc5f6ec496092e77604832dc759381"
+    },
+    "reader_tests": {
+      "file": "evidence/final-reader_tests.log",
+      "sha256": "ed9eb19d65e60cdbb89b5752af0a18932b521f5162df918ed17c962d45b77cbf"
+    },
+    "reader_analysis": {
+      "file": "evidence/final-reader_analysis.log",
+      "sha256": "068a60d01b38f00a31a5332b0fb128a4110c8aa0e0ac3ffbc4c693233eda84b0"
+    },
+    "release_validator": {
+      "file": "evidence/final-release_validator.log",
+      "sha256": "9f169aa04896ef0203477ff61d8d57406ec0dab00b71ec15cf38cdae22509147"
+    },
+    "linux_main_build": {
+      "file": "evidence/final-linux_main_build.log",
+      "sha256": "5831bb0921fae7b7fbd703a6f5a8c1bbf86824e748565d69b014450ea83b6886"
+    }
+  }
+}

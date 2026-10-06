@@ -12,7 +12,8 @@ import 'package:tawaq/feature/prayer/presentation/widgets/schedule_row/prayer_sc
 import 'package:tawaq/theme/theme.dart';
 
 class _LocationSetupScreen extends StatelessWidget {
-  const new();
+  const new({required this.onSetLocation});
+  final VoidCallback? onSetLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -25,8 +26,8 @@ class _LocationSetupScreen extends StatelessWidget {
           padding: padding,
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: minHeight),
-            child: const Center(
-              child: PrayerLocationSetupAlert(),
+            child: Center(
+              child: PrayerLocationSetupAlert(onSetLocation: onSetLocation),
             ),
           ),
         );
@@ -55,10 +56,7 @@ double prayerAnalysisColumnWidth({
 }
 
 /// Whether daily and trend analysis cards render side-by-side.
-bool prayerAnalysisCardsSideBySide(
-  BuildContext context,
-  double analysisWidth,
-) {
+bool prayerAnalysisCardsSideBySide(BuildContext context, double analysisWidth) {
   final lg = context.theme.breakpoints.lg;
   return analysisWidth >= 2 * kMainPaneMinExtent || analysisWidth >= lg;
 }
@@ -66,12 +64,15 @@ bool prayerAnalysisCardsSideBySide(
 /// Screen that displays prayer times with hero header, schedule, and stats.
 class PrayerScreen extends ConsumerWidget {
   /// Creates a [PrayerScreen] instance.
-  const new({super.key});
+  const new({this.onSetLocation, super.key});
+
+  /// Focused location recovery, supplied by the app router.
+  final VoidCallback? onSetLocation;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(prayerLocationSetupNeededProvider)) {
-      return const _LocationSetupScreen();
+      return _LocationSetupScreen(onSetLocation: onSetLocation);
     }
 
     final maxContentWidth = responsiveValue<double>(
@@ -111,10 +112,7 @@ class PrayerScreen extends ConsumerWidget {
 }
 
 class _PrayerMainContent extends StatelessWidget {
-  const new({
-    required this.pageSplit,
-    required this.analysisSideBySide,
-  });
+  const new({required this.pageSplit, required this.analysisSideBySide});
 
   final bool pageSplit;
   final bool analysisSideBySide;
@@ -148,23 +146,21 @@ class _PrayerMainContent extends StatelessWidget {
         children: [
           const Expanded(
             flex: 6,
-            child: Column(
-              spacing: AppSpacing.lg,
-              children: [_hero, _schedule],
-            ),
+            child: Column(spacing: AppSpacing.lg, children: [_hero, _schedule]),
           ),
           const SizedBox(width: AppSpacing.lg),
-          Expanded(
-            flex: 4,
-            child: analysis,
-          ),
+          Expanded(flex: 4, child: analysis),
         ],
       );
     }
 
     return Column(
-      spacing: AppSpacing.lg,
-      children: [_hero, _schedule, analysis],
+      spacing: AppSpacing.md,
+      children: [
+        _hero,
+        PrayerScheduleList(compact: MediaQuery.sizeOf(context).height <= 700),
+        analysis,
+      ],
     );
   }
 }

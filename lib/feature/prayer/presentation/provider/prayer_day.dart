@@ -146,7 +146,7 @@ PrayerDayBundle? prayerDayBundleForDate(Ref ref, DateTime date) {
   final todayKey = ref.watch(prayerCalendarDayKeyProvider);
   if (todayKey != 0 && calendarDayKeyFromDate(normalized) == todayKey) {
     // Day-key watch above already throttles; read cached bundle non-reactively.
-    return ref.read(prayerDayProvider).value?.bundle;
+    return ref.watch(prayerDayProvider.select((day) => day.value?.bundle));
   }
 
   final anchor = TZDateTime(
@@ -156,10 +156,7 @@ PrayerDayBundle? prayerDayBundleForDate(Ref ref, DateTime date) {
     date.day,
     12,
   );
-  return computePrayerDayBundle(
-    inputs: inputs,
-    anchorNow: anchor,
-  );
+  return computePrayerDayBundle(inputs: inputs, anchorNow: anchor);
 }
 
 /// Day-boundary signal from the live prayer-day stream.
@@ -169,9 +166,7 @@ PrayerDayBundle? prayerDayBundleForDate(Ref ref, DateTime date) {
 @riverpod
 int prayerCalendarDayKey(Ref ref) {
   return ref.watch(
-    prayerDayProvider.select(
-      (asyncDay) => asyncDay.value?.calendarDayKey ?? 0,
-    ),
+    prayerDayProvider.select((asyncDay) => asyncDay.value?.calendarDayKey ?? 0),
   );
 }
 
@@ -186,6 +181,21 @@ int currentMinuteBucket(Ref ref) {
       (asyncDay) => (asyncDay.value?.now.millisecondsSinceEpoch ?? 0) ~/ 60000,
     ),
   );
+}
+
+/// Minute-resolution snapshot that also invalidates on timeline replacement.
+/// Settings/location changes must not wait for the next clock bucket.
+@Riverpod(keepAlive: true)
+PrayerDaySnapshot? prayerMinuteSnapshot(Ref ref) {
+  ref.watch(
+    prayerDayProvider.select((value) {
+      final day = value.value;
+      return day == null
+          ? null
+          : (day.bundle, day.now.millisecondsSinceEpoch ~/ 60000);
+    }),
+  );
+  return ref.read(prayerDayProvider).value;
 }
 
 /// Whether the live prayer-day stream has yet to produce its first snapshot.
@@ -205,8 +215,7 @@ bool prayerDayIsLoading(Ref ref) {
 ({String sunrise, String fajrAfter, String ishaBefore})? sunnahTimeLabels(
   Ref ref,
 ) {
-  ref.watch(currentMinuteBucketProvider);
-  final day = ref.read(prayerDayProvider).value;
+  final day = ref.watch(prayerMinuteSnapshotProvider);
   if (day == null) return null;
   final formatter = ref.watch(timeFormatterProvider);
   String label(Prayer prayer) =>

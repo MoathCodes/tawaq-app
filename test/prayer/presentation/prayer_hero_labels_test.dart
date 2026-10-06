@@ -32,11 +32,7 @@ void main() {
       final l10n = AppLocalizationsEn();
 
       expect(
-        prayerCardStateLabel(
-          l10n: l10n,
-          prayer: Prayer.asr,
-          isCountdown: true,
-        ),
+        prayerCardStateLabel(l10n: l10n, prayer: Prayer.asr, isCountdown: true),
         'Next Prayer',
       );
       expect(
@@ -86,7 +82,7 @@ void main() {
       );
     });
 
-    test('uses neutral event wording for pseudo-prayer slots', () {
+    test('uses neutral time wording for pseudo-prayer slots', () {
       final l10n = AppLocalizationsEn();
 
       for (final prayer in [
@@ -95,12 +91,8 @@ void main() {
         Prayer.ishaBefore,
       ]) {
         expect(
-          prayerCardStateLabel(
-            l10n: l10n,
-            prayer: prayer,
-            isCountdown: false,
-          ),
-          'Current event',
+          prayerCardStateLabel(l10n: l10n, prayer: prayer, isCountdown: false),
+          'Current time',
         );
         expect(
           prayerCardDurationLabel(
@@ -111,12 +103,8 @@ void main() {
           'Since event began',
         );
         expect(
-          prayerCardStateLabel(
-            l10n: l10n,
-            prayer: prayer,
-            isCountdown: true,
-          ),
-          'Next event',
+          prayerCardStateLabel(l10n: l10n, prayer: prayer, isCountdown: true),
+          'Next time',
         );
       }
     });
@@ -126,10 +114,7 @@ void main() {
 
       expect(Prayer.sunrise.getLocaleName(l10n), 'Sunrise');
       expect(Prayer.fajrAfter.getLocaleName(l10n), 'Midnight');
-      expect(
-        Prayer.ishaBefore.getLocaleName(l10n),
-        'Last Third Of The Night',
-      );
+      expect(Prayer.ishaBefore.getLocaleName(l10n), 'Last Third Of The Night');
     });
   });
 }

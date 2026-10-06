@@ -19,8 +19,8 @@ import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart'
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_favorite_toggle.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_dua_content.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/share/fortress_share_dialog.dart';
 import 'package:tawaq/theme/theme.dart';
 
 class FortressCategoryDetailView extends ConsumerWidget {
@@ -89,23 +89,11 @@ class FortressCategoryDetailHeader extends StatelessWidget {
           final titleAndMeta = Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      category.title,
-                      style: theme.typography.body.xl2.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  FortressFavoriteToggle(
-                    chapterId: category.chapterId,
-                    iconSize: 22,
-                  ),
-                ],
+              Text(
+                category.title,
+                style: theme.typography.body.xl2.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: AppSpacing.xs),
               Wrap(
@@ -318,7 +306,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
     final theme = context.theme;
     final l10n = context.l10n;
     final colors = theme.colors;
-    final hasInsights = dua.hasVirtue || dua.hasStudyContent;
+    final hasInsights = dua.hasBenefit;
 
     final content = FortressDuaContent(
       dua: dua,
@@ -333,15 +321,10 @@ class FortressDuaPreviewCard extends StatelessWidget {
               spacing: AppSpacing.xs,
               runSpacing: AppSpacing.xs,
               children: [
-                if (dua.hasSharh)
-                  _FortressPreviewMeta(
-                    icon: FLucideIcons.bookOpenText,
-                    label: l10n.fortressSharh,
-                  ),
-                if (dua.hasVirtue)
+                if (dua.hasBenefit)
                   _FortressPreviewMeta(
                     icon: FLucideIcons.sparkles,
-                    label: l10n.fortressVirtue,
+                    label: l10n.fortressBenefit,
                   ),
               ],
             ),
@@ -371,11 +354,14 @@ class FortressDuaPreviewCard extends StatelessWidget {
             ),
           )
         : ExcludeSemantics(
-            child: _FortressDuaPreviewFooter(
-              targetCount: dua.targetCount,
-              isExpanded: isExpanded,
-              colors: colors,
-              typography: theme.typography,
+            child: GestureDetector(
+              onTap: onToggleExpanded,
+              child: _FortressDuaPreviewFooter(
+                targetCount: dua.targetCount,
+                isExpanded: isExpanded,
+                colors: colors,
+                typography: theme.typography,
+              ),
             ),
           );
     final subtitle = Column(
@@ -386,10 +372,6 @@ class FortressDuaPreviewCard extends StatelessWidget {
           insightMeta,
           const SizedBox(height: AppSpacing.xs),
         ],
-        Align(
-          alignment: AlignmentDirectional.centerEnd,
-          child: disclosure,
-        ),
       ],
     );
     final prefix = ExcludeSemantics(
@@ -403,12 +385,12 @@ class FortressDuaPreviewCard extends StatelessWidget {
     );
 
     // Collapsed rows own one semantic button with the sourced dhikr text.
-    // Expanded rows expose their content and nested study tabs as descendants;
-    // Only the footer remains interactive so tab activation never collapses it.
+    // Expanded rows expose benefit text and independent footer actions.
+    // Sharing never changes the disclosure state.
     final tile = FTile(
       prefix: prefix,
       title: title,
-      subtitle: subtitle,
+      subtitle: insightMeta == null ? null : subtitle,
       selected: isExpanded,
       semanticsLabel: isExpanded
           ? null
@@ -417,15 +399,50 @@ class FortressDuaPreviewCard extends StatelessWidget {
               oneBasedIndex: index + 1,
               isExpanded: false,
               targetCount: dua.targetCount,
-              text: dua.text,
+              text: [
+                dua.text,
+                if (dua.hasDistinctVirtue)
+                  '${l10n.fortressVirtue}: ${dua.virtue}',
+              ].join('\n'),
             ),
       semanticsExpanded: isExpanded,
-      // Nested controls (e.g. FTabs) are not FTappableGroup entries; disable
-      // tile press while expanded so tab taps do not collapse the row.
+      // Keep expanded prose selectable; the footer owns collapse.
       onPress: isExpanded ? null : onToggleExpanded,
     );
 
-    if (!isExpanded) return tile;
+    final card = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        tile,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Row(
+            children: [
+              FTooltip(
+                tipBuilder: (_, _) => Text(l10n.fortressShare),
+                child: FButton.icon(
+                  size: .sm,
+                  variant: .ghost,
+                  semanticsLabel: l10n.fortressShare,
+                  onPress: () => showFortressShareDialog(context, dua),
+                  child: const Icon(FLucideIcons.share2, size: 16),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: disclosure,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+      ],
+    );
+    if (!isExpanded) return card;
 
     return Semantics(
       container: true,
@@ -437,7 +454,7 @@ class FortressDuaPreviewCard extends StatelessWidget {
         targetCount: dua.targetCount,
       ),
       expanded: true,
-      child: tile,
+      child: card,
     );
   }
 }

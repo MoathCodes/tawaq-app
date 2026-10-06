@@ -8,6 +8,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/share_card_dialog_layout.dart';
 import 'package:tawaq/core/widgets/share_card_drag_surface.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
@@ -48,11 +49,13 @@ class FortressShareDialog extends HookConsumerWidget {
     final options = useState(
       FortressShareOptions.defaults(
         hasSource: dua.hasSource,
-        hasRepetition: dua.targetCount > 1,
+        hasRepetition: true,
+        hasVirtue: dua.hasDistinctVirtue,
       ),
     );
     final commentary = useState<HisnCommentary?>(dua.commentary);
     final loading = useState(false);
+    final capturing = useState(false);
     final error = useState<Object?>(null);
 
     final commentarySelected = options.value.includes.any(
@@ -63,36 +66,58 @@ class FortressShareDialog extends HookConsumerWidget {
       }.contains(value),
     );
 
-    Future<void> loadCommentary() async {
-      if (commentary.value != null || loading.value || !dua.hasCommentary) {
+    Future<void> loadCommentary({bool retry = false}) async {
+      if ((!retry && commentary.value != null) ||
+          loading.value ||
+          !dua.hasCommentary) {
         return;
       }
       loading.value = true;
       error.value = null;
       try {
         final repository = await ref.read(fortressRepositoryProvider.future);
+        if (!context.mounted) return;
         commentary.value = repository.loadCommentaryForContent(dua.contentId);
       } on Object catch (value) {
-        error.value = value;
+        if (context.mounted) error.value = value;
       } finally {
-        loading.value = false;
+        if (context.mounted) loading.value = false;
       }
     }
 
-    useEffect(() {
-      if (commentarySelected) unawaited(loadCommentary());
-      return null;
-    }, [commentarySelected]);
+    final missingCommentary =
+        commentarySelected &&
+        !loading.value &&
+        options.value.includes.any(
+          (value) => switch (value) {
+            FortressShareInclude.sharh =>
+              commentary.value?.sharh.trim().isEmpty ?? true,
+            FortressShareInclude.hadith =>
+              commentary.value?.hadith.trim().isEmpty ?? true,
+            FortressShareInclude.benefit =>
+              commentary.value?.benefit.trim().isEmpty ?? true,
+            _ => false,
+          },
+        );
+    final failed =
+        commentarySelected && (error.value != null || missingCommentary);
+    final busy = capturing.value || (commentarySelected && loading.value);
+    final disabled = busy || failed;
 
     Future<void> export({required bool copy}) async {
-      if (loading.value || error.value != null) return;
-      await exportFortressShareImage(
-        context: context,
-        boundaryKey: boundaryKey,
-        l10n: l10n,
-        primaryColor: theme.colors.primary,
-        copyToClipboard: copy,
-      );
+      if (disabled || capturing.value) return;
+      capturing.value = true;
+      try {
+        await exportFortressShareImage(
+          context: context,
+          boundaryKey: boundaryKey,
+          l10n: l10n,
+          primaryColor: theme.colors.primary,
+          copyToClipboard: copy,
+        );
+      } finally {
+        if (context.mounted) capturing.value = false;
+      }
     }
 
     void update(Set<FortressShareInclude> next) {
@@ -108,8 +133,6 @@ class FortressShareDialog extends HookConsumerWidget {
       }
     }
 
-    final busy = loading.value;
-    final disabled = busy || error.value != null;
     final preview = DecoratedBox(
       decoration: BoxDecoration(
         color: theme.colors.secondary.withAlpha(60),
@@ -138,20 +161,20 @@ class FortressShareDialog extends HookConsumerWidget {
     );
 
     final settings = FSelectTileGroup<FortressShareInclude>(
+      enabled: !capturing.value,
       label: Text(l10n.shareIncludeInImage),
       control: .lifted(value: options.value.includes, onChange: update),
       children: [
-        if (dua.targetCount > 1)
-          FSelectTile(
-            value: FortressShareInclude.repetition,
-            title: Text(l10n.fortressRepetition),
-          ),
+        FSelectTile(
+          value: FortressShareInclude.repetition,
+          title: Text(l10n.fortressRepetition),
+        ),
         if (dua.hasSource)
           FSelectTile(
             value: FortressShareInclude.source,
             title: Text(l10n.fortressSourceReference),
           ),
-        if (dua.hasVirtue)
+        if (dua.hasDistinctVirtue)
           FSelectTile(
             value: FortressShareInclude.virtue,
             title: Text(l10n.fortressVirtue),
@@ -189,31 +212,59 @@ class FortressShareDialog extends HookConsumerWidget {
       ),
       builder: (context, dialogStyle) => ForuiDialogLayout(
         style: dialogStyle,
+        expandActions: true,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(l10n.fortressShare),
+            Expanded(child: Text(l10n.fortressShare)),
             FButton.icon(
               onPress: () => Navigator.of(context).pop(),
               variant: .ghost,
+              semanticsLabel: l10n.close,
               child: const Icon(FLucideIcons.x),
             ),
           ],
         ),
-        body: ShareCardDialogLayout(preview: preview, settings: settings),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: ShareCardDialogLayout(
+                preview: preview,
+                settings: settings,
+              ),
+            ),
+            if (failed)
+              ErrorStatePanel(
+                message: l10n.fortressShareDetailsFailed,
+                retryLabel: l10n.fortressRetry,
+                onRetry: () => unawaited(loadCommentary(retry: true)),
+              ),
+          ],
+        ),
         actions: [
           FButton(
             variant: .secondary,
             onPress: disabled ? null : () => unawaited(export(copy: false)),
             child: busy
                 ? const FCircularProgress.loader()
-                : Text(l10n.shareSaveImage),
+                : Flexible(
+                    child: Text(
+                      l10n.shareSaveImage,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
           ),
           FButton(
             onPress: disabled ? null : () => unawaited(export(copy: true)),
             child: busy
                 ? const FCircularProgress.loader()
-                : Text(l10n.shareCopyImage),
+                : Flexible(
+                    child: Text(
+                      l10n.shareCopyImage,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
           ),
         ],
       ),

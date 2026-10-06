@@ -15,7 +15,8 @@ const String _themeLogPrefix = '[ThemeNotifier]';
 /// Notifier for theme settings.
 ///
 /// Persisted [ThemePrefs] (palette + mode) via [JsonPersist].
-@riverpod
+// App coordinators retain this hydrated preference owner across routes.
+@Riverpod(keepAlive: true)
 @JsonPersist()
 class ThemeNotifier extends _$ThemeNotifier {
   @override

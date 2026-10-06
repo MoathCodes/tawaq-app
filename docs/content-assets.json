@@ -1,0 +1,201 @@
+{
+  "snapshot": "2026-10-04",
+  "metadata_authority": "Repository TafsirId / TranslationId; not a bibliographic certification",
+  "assets": [
+    {
+      "path": "assets/database/tafseer_ar/tafseer_mouaser.db",
+      "repository_edition_name": "Tafsir Al-Muyassar / التفسير الميسر",
+      "sha256": "762757dda7c2becc9d2a1c6de48dd9955da6f4fe81b15d5be3c0abd6a51833c1",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "edf6c4ba2881f8ad0d30012506fe4d465a537aa4",
+      "repository_import_path": "assets/database/tafseer_mouaser.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/tafseer_ar/Quraan_Ba.db",
+      "repository_edition_name": "Tafsir Al-Baghawi / تفسير البغوي",
+      "sha256": "94c7a9f8aeaa8e2650b881c22f9887be93aa4bfdc07141abf9ea431418a5d4a9",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/tafseer_ar/Quraan_Ba.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/tafseer_ar/Quraan_IK.db",
+      "repository_edition_name": "Tafsir Ibn Kathir / تفسير ابن كثير",
+      "sha256": "a6823537084d53fa48e868e70ea38702557d99e2b4d175af73c1cf2c7c1461c9",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/tafseer_ar/Quraan_IK.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/tafseer_ar/Quraan_AS.db",
+      "repository_edition_name": "Tafsir As-Sa’di / تفسير السعدي",
+      "sha256": "c53a06141c8723665741772516bdd049e3d9f3cccd9d9e5ded62440a5b581f35",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/tafseer_ar/Quraan_AS.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/saheeh_international.db",
+      "repository_edition_name": "Saheeh International (English)",
+      "sha256": "be0cebf869c992dc5c718efc96b152ce85c235015b53692843c07edd1f55e183",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "edf6c4ba2881f8ad0d30012506fe4d465a537aa4",
+      "repository_import_path": "assets/database/saheeh_international.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en",
+        "https://islamhouse.com/en/books/78592/"
+      ]
+    },
+    {
+      "path": "assets/database/quran_bn.db",
+      "repository_edition_name": "Muhiuddin Khan (Bengali)",
+      "sha256": "fea4b0d5f78e13bb4556740612dd192f4d7d251fc5851434c1d13db30e8ce1d5",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/quran_bn.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/quran_es.db",
+      "repository_edition_name": "Muhammad Isa García (Spanish)",
+      "sha256": "00b64d2af8a6369ace548e81ce40c34c0e32d9e702056ec67ab9864c0462b428",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/quran_es.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/quran_fr.db",
+      "repository_edition_name": "Muhammad Hamidullah (French)",
+      "sha256": "256a1413ca251196a76137d0f1b0170150ecfe3f0f28a8d0ef1087f1b27ad8d3",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/quran_fr.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/quran_id.db",
+      "repository_edition_name": "DEPAGIS (Indonesian)",
+      "sha256": "454067e32f65dc2bef916965a25c3c67cf1636f1eab3e34a013b17d88142c70e",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/quran_id.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/quran_ru.db",
+      "repository_edition_name": "Elmir Kuliev (Russian)",
+      "sha256": "5b34200ff2b7a458d6ce870886cf97d13f550be9541365b0fa89bd3e0566645b",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/quran_ru.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/quran_sv.db",
+      "repository_edition_name": "Knut Bernström (Swedish)",
+      "sha256": "d96824600bb57ae5954d9fddaec16a8af2ff20c1708db5764ed9f9bcf8fd56c9",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/quran_sv.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/quran_tr.db",
+      "repository_edition_name": "Diyanet İşleri (Turkish)",
+      "sha256": "69e51ad403b65c10139fa0b39947e0ecc118ecbfa593ac558cc1fb1cb96900d1",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/quran_tr.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/quran_ur.db",
+      "repository_edition_name": "Fateh Muhammad Jalandhari (Urdu)",
+      "sha256": "f4e97f78e0b48368ffd5efe411ee8b1da8d9d83cf863e561de2e10b348f8984f",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/quran_ur.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    },
+    {
+      "path": "assets/database/quran_zh.db",
+      "repository_edition_name": "Ma Jian (Chinese)",
+      "sha256": "3167882b82d699a38c7bee1e373c0089a1c8a7561d313e91d0b952101a9ec001",
+      "upstream_revision": null,
+      "redistribution_terms_verified": false,
+      "repository_import_revision": "beac94b45dcf30c90f240de37ba0e9635763556b",
+      "repository_import_path": "assets/database/quran_zh.db",
+      "provenance_review": "Repository import traced; original publisher/source revision and applicable permission remain unverified.",
+      "source_leads": [
+        "https://islamhouse.com/en"
+      ]
+    }
+  ],
+  "reviewed_on": "2026-10-05",
+  "terms_research": {
+    "source": "https://tanzil.net/trans/",
+    "accessed_on": "2026-10-05",
+    "finding": "Tanzil describes its translation downloads as non-commercial, requires translator/publisher permission for other use, and requires a backlink for apps using more than three translations. These conditions do not establish that Tawaq databases originated there or that this distribution is authorized."
+  },
+  "source_lead": {
+    "url": "https://islamhouse.com/en",
+    "reported_by": "Project owner on 2026-10-05",
+    "scope": "Potential original source for bundled databases; exact item/download/conversion records and publisher permissions not supplied.",
+    "verified_database_origin": false
+  }
+}

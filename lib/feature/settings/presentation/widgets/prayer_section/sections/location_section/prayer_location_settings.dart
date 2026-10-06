@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:forui/forui.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/location_service_provider.dart';
 import 'package:free_map/fm_map.dart' show FmMap;
 import 'package:free_map/free_map.dart' show FmMap;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -17,7 +19,7 @@ import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.d
 import 'package:tawaq/theme/theme.dart';
 
 /// Prayer location controls with optional settings section chrome.
-class PrayerLocationSettings extends ConsumerWidget {
+class PrayerLocationSettings extends HookConsumerWidget {
   /// Creates [PrayerLocationSettings].
   const new({
     this.chrome = SettingsChrome.section,
@@ -41,6 +43,13 @@ class PrayerLocationSettings extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final availability = ref.watch(deviceLocationAvailableProvider);
+    // Use availability only for the initial default. A person's explicit
+    // collapse/expand choice survives later service checks and rebuilds.
+    final expansionChoice = useState<bool?>(null);
+    final advancedExpanded =
+        expansionChoice.value ??
+        (!availability.isLoading && availability.value != true);
     final mapActive =
         !gateMapToSettingsTab ||
         ref.watch(
@@ -53,13 +62,26 @@ class PrayerLocationSettings extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.lg,
       children: [
-        const _UseLocationTile(),
-        const FDivider(),
         const LocationControlsRow(),
-        const FDivider(),
-        LocationMapSection(compact: compactMap, mapActive: mapActive),
-        const FDivider(),
-        const CoordinatesRow(),
+        const _UseLocationTile(),
+        FAccordion(
+          control: .lifted(
+            expanded: (_) => advancedExpanded,
+            onChange: (_, value) => expansionChoice.value = value,
+          ),
+          children: [
+            FAccordionItem(
+              title: Text(context.l10n.advancedLocationOptions),
+              child: Column(
+                spacing: AppSpacing.md,
+                children: [
+                  const CoordinatesRow(),
+                  LocationMapSection(compact: compactMap, mapActive: mapActive),
+                ],
+              ),
+            ),
+          ],
+        ),
       ],
     );
 
@@ -76,7 +98,7 @@ class PrayerLocationSettings extends ConsumerWidget {
 }
 
 /// Auto-detect location toggle tile.
-class _UseLocationTile extends ConsumerWidget {
+class _UseLocationTile extends HookConsumerWidget {
   const new();
 
   Future<void> _onToggle(
@@ -102,6 +124,8 @@ class _UseLocationTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pending = useState(false);
+    final availability = ref.watch(deviceLocationAvailableProvider);
     final autoLocation = ref.watch(
       prayerSettingsProvider.select((v) => v.value?.autoLocation ?? false),
     );
@@ -125,12 +149,46 @@ class _UseLocationTile extends ConsumerWidget {
         ),
         title: Text(l10n.useMyLocation),
         subtitle: Text(
-          autoLocation ? l10n.autoLocationEnabled : l10n.autoLocationDisabled,
+          pending.value
+              ? l10n.gettingLocation
+              : availability.isLoading
+              ? l10n.checkingDeviceLocation
+              : availability.value != true && !autoLocation
+              ? l10n.deviceLocationUnavailable
+              : autoLocation
+              ? l10n.autoLocationEnabled
+              : l10n.autoLocationDisabled,
         ),
-        suffix: FSwitch(
-          enabled: prayerSettingsReady,
-          value: autoLocation,
-          onChange: (v) => _onToggle(context, ref, v),
+        suffix: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (!availability.isLoading && availability.value != true)
+              Semantics(
+                label: l10n.retryAction,
+                child: FButton.icon(
+                  variant: .ghost,
+                  onPress: () =>
+                      ref.invalidate(deviceLocationAvailableProvider),
+                  child: const Icon(FLucideIcons.refreshCw, size: 16),
+                ),
+              ),
+            FSwitch(
+              enabled:
+                  prayerSettingsReady &&
+                  !pending.value &&
+                  (autoLocation || availability.value == true),
+              value: autoLocation,
+              onChange: (v) async {
+                if (pending.value) return;
+                pending.value = true;
+                try {
+                  await _onToggle(context, ref, v);
+                } finally {
+                  if (context.mounted) pending.value = false;
+                }
+              },
+            ),
+          ],
         ),
       ),
     );

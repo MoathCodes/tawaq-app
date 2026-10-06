@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 
 /// Directional slide transition for paginated reading content (RTL-aware).
 ///
@@ -24,6 +25,7 @@ class DirectionalContentSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (reduceMotion(context)) return child;
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 260),
       switchInCurve: Curves.easeOutCubic,
@@ -37,7 +39,9 @@ class DirectionalContentSwitcher extends StatelessWidget {
           return const ExcludeSemantics(child: SizedBox.shrink());
         }
 
-        final dir = slideDirection.toDouble();
+        final dir =
+            slideDirection.toDouble() *
+            (Directionality.of(context) == TextDirection.rtl ? -1 : 1);
         final slide = animation.drive(
           Tween<Offset>(
             begin: Offset(dir * 0.18, 0),
@@ -47,26 +51,18 @@ class DirectionalContentSwitcher extends StatelessWidget {
 
         final opacity = animation.drive(
           Tween<double>(begin: 0, end: 1).chain(
-            CurveTween(
-              curve: const Interval(0.15, 1, curve: Curves.easeOut),
-            ),
+            CurveTween(curve: const Interval(0.15, 1, curve: Curves.easeOut)),
           ),
         );
 
         return ClipRect(
           child: SlideTransition(
             position: slide,
-            child: FadeTransition(
-              opacity: opacity,
-              child: child,
-            ),
+            child: FadeTransition(opacity: opacity, child: child),
           ),
         );
       },
-      child: KeyedSubtree(
-        key: ValueKey<Object?>(currentKey),
-        child: child,
-      ),
+      child: KeyedSubtree(key: ValueKey<Object?>(currentKey), child: child),
     );
   }
 }

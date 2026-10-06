@@ -1,6 +1,7 @@
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 
 /// Skeleton effect type for [FSkeletonizer].
 enum SkeletonEffectType {
@@ -69,7 +70,9 @@ class FSkeletonizer extends StatelessWidget {
     final colors = FTheme.of(context).colors;
     return Skeletonizer(
       enabled: enabled,
-      effect: effect ?? ShimmerEffect(baseColor: colors.secondary),
+      effect: reduceMotion(context)
+          ? SolidColorEffect(color: colors.secondary)
+          : effect ?? ShimmerEffect(baseColor: colors.secondary),
       ignoreContainers: ignoreContainers,
       ignorePointers: ignorePointers,
       justifyMultiLineText: justifyMultiLineText,

@@ -1,0 +1,91 @@
+{
+  "date": "2026-10-06",
+  "source": {
+    "base": "717f1248c6c448f06b1f67f32df202e7ea8f676d",
+    "branch": "t3code/implement-launch-readiness-spec",
+    "state": "Pre-commit working tree; exact source hashes in evidence/final-fixes/source-sha256.json",
+    "flutter": "3.47.5",
+    "dorar_gitlink": "e08eb666697c2d2fb986d825f14d46042ec259ea"
+  },
+  "checks": {
+    "generation": {
+      "command": "fvm exec bash tool/codegen.sh",
+      "result": "passed"
+    },
+    "app_analysis": {
+      "command": "fvm flutter analyze --no-fatal-infos",
+      "result": "passed",
+      "errors": 0,
+      "warnings": 0,
+      "infos": 451
+    },
+    "app_tests": {
+      "command": "fvm flutter test",
+      "result": "passed",
+      "passed": 1249
+    },
+    "local_packages": {
+      "command": "fvm exec bash tool/checks.sh packages",
+      "result": "passed",
+      "passed": {
+        "dorar_hadith": 324,
+        "dorar_hadith_flutter": 1,
+        "mushaf_reader": 138,
+        "hisn_elmoslem": 18,
+        "adhan_dart": 51,
+        "desktop_tray": 3
+      },
+      "skipped": {
+        "adhan_dart": 2
+      }
+    },
+    "release_validation": {
+      "command": "python3 -m unittest discover -s tool/release -p 'test_*.py'",
+      "result": "passed",
+      "passed": 6
+    },
+    "linux_debug_build": {
+      "command": "fvm flutter build linux --debug",
+      "result": "passed",
+      "entrypoint": "lib/main.dart"
+    },
+    "fortress_goldens": {
+      "command": "fvm flutter test --update-goldens test/feature/muslim_fortress/fortress_review_screenshots_test.dart",
+      "result": "passed",
+      "passed": 10,
+      "note": "Reviewed the sourced-virtue layout before updating expectations."
+    },
+    "dart_analysis": {
+      "command": "fvm dart analyze",
+      "result": "passed",
+      "errors": 0,
+      "warnings": 0
+    }
+  },
+  "visual": {
+    "accepted_compositions": 26,
+    "final_confirmation_compositions": 8,
+    "locales": [
+      "ar",
+      "en"
+    ],
+    "viewports": [
+      "1200x860 dark normal",
+      "800x600 light extra-large"
+    ],
+    "confirmation_flutter_errors": 0
+  },
+  "native_keyboard": {
+    "observed_valid_steps": 7,
+    "input": "Hyprland exact-window send_shortcut; Cua production input plugin unavailable",
+    "scope": "Left/Right/Space page changes and Up/Down selection",
+    "root_focus_fix": "Widget regression passes; subsequent native Tab certification not claimed"
+  },
+  "remaining_release_gates": [
+    "Windows/macOS native acceptance: machines unavailable",
+    "Broader native audio, accessibility and installer acceptance",
+    "Verified redistribution permissions for 14 bundled databases",
+    "RSS target not proven"
+  ],
+  "dorar_0_6": "Migration plan only; dependency not upgraded."
+}

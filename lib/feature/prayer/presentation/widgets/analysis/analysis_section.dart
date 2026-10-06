@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
+import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics/prayer_analytics_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/daily_achievement_card.dart';
@@ -22,6 +22,7 @@ class AnalysisSection extends ConsumerWidget {
     final analysisState = ref.watch(prayerAnalysisSectionProvider);
 
     return analysisState.when(
+      skipLoadingOnRefresh: false,
       data: (data) => data.isReady
           ? _AnalysisContent(sideBySide: sideBySide)
           : _AnalysisLoadingContent(sideBySide: sideBySide),
@@ -32,12 +33,12 @@ class AnalysisSection extends ConsumerWidget {
         }
         return _AnalysisLoadingContent(sideBySide: sideBySide);
       },
-      error: (e, _) => StaticCard(
-        child: FAlert(
-          title: Text(
-            context.l10n.errorOccurredWhile(context.l10n.loadingAnalytics),
-          ),
-          subtitle: Text(e.toString()),
+      error: (_, _) => StaticCard(
+        child: ErrorStatePanel(
+          message: context.l10n.prayerAnalyticsLoadFailed,
+          retryLabel: context.l10n.retryAction,
+          onRetry: () =>
+              ref.read(prayerAnalysisSectionProvider.notifier).retry(),
         ),
       ),
     );
@@ -52,9 +53,7 @@ class _AnalysisLoadingContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Semantics(
     label: context.l10n.loadingAnalytics,
-    child: FSkeletonizer(
-      child: _AnalysisContent(sideBySide: sideBySide),
-    ),
+    child: FSkeletonizer(child: _AnalysisContent(sideBySide: sideBySide)),
   );
 }
 
@@ -78,10 +77,7 @@ class _AnalysisContent extends StatelessWidget {
 
     return const Column(
       spacing: AppSpacing.md,
-      children: [
-        DailyAchievementCard(),
-        TrendAnalysisCard(),
-      ],
+      children: [DailyAchievementCard(), TrendAnalysisCard()],
     );
   }
 }

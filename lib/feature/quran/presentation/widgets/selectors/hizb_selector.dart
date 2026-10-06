@@ -54,9 +54,8 @@ Iterable<Hizb> searchHizbs({
         if (surah?.nameEnglish?.toLowerCase().startsWith(normalized) ?? false) {
           score = 70;
         } else if (surah?.nameArabicSimplified != null &&
-            normalizeQuranSearchQuery(
-              surah!.nameArabicSimplified!,
-            ).contains(normalized)) {
+            normalizeQuranSearchQuery(surah!.nameArabicSimplified!)
+                .contains(normalized)) {
           score = 70;
         } else if (surah?.englishNameTranslation?.toLowerCase().startsWith(
               normalized,
@@ -93,10 +92,7 @@ Widget hizbSelectTitle({
   TextStyle? style,
 }) {
   final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-  return Text(
-    localizedHizbTitle(number, isArabic: isArabic),
-    style: style,
-  );
+  return Text(localizedHizbTitle(number, isArabic: isArabic), style: style);
 }
 
 /// Subtitle row for a Hizb list item (Uthmani ayah preview).
@@ -157,11 +153,7 @@ Widget hizbSelectSubtitle({
 /// Hizb selector with rich tiles (hizb label + starting ayah Uthmani preview).
 class HizbSelector extends HookConsumerWidget {
   /// Creates a [HizbSelector] instance.
-  const new({
-    this.showLabel = true,
-    this.inlineLabel = false,
-    super.key,
-  });
+  const new({this.showLabel = true, this.inlineLabel = false, super.key});
 
   /// Whether the field label is shown above the select.
   final bool showLabel;
@@ -222,10 +214,7 @@ class HizbSelector extends HookConsumerWidget {
               .map(
                 (v) => FSelectItem<Hizb>(
                   value: v,
-                  title: hizbSelectTitle(
-                    context: context,
-                    number: v.number,
-                  ),
+                  title: hizbSelectTitle(context: context, number: v.number),
                   subtitle: hizbSelectSubtitle(
                     context: context,
                     controller: controller,

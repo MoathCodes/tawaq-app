@@ -19,11 +19,7 @@ import 'package:tawaq/theme/theme.dart';
 /// Ayah search field for searching through the Quran.
 class AyahSearchSelector extends HookConsumerWidget {
   /// Creates an [AyahSearchSelector] instance.
-  const new({
-    this.focusNode,
-    this.showLabel = true,
-    super.key,
-  });
+  const new({this.focusNode, this.showLabel = true, super.key});
 
   /// Optional focus node for keyboard shortcut focus (Ctrl+K).
   final FocusNode? focusNode;
@@ -73,7 +69,6 @@ class AyahSearchSelector extends HookConsumerWidget {
 
     return QuranSemantics.labeledControl(
       name: l10n.searchQuran,
-      excludeChild: true,
       child: FAutocomplete<Ayah>.builder(
         focusNode: effectiveFocusNode,
         hint: l10n.searchQuran,
@@ -84,11 +79,7 @@ class AyahSearchSelector extends HookConsumerWidget {
         prefixBuilder: (context, style, states) => Padding(
           padding: const EdgeInsets.all(AppSpacing.xs),
           child: QuranSemantics.decorative(
-            Icon(
-              FLucideIcons.search,
-              color: colors.mutedForeground,
-              size: 14,
-            ),
+            Icon(FLucideIcons.search, color: colors.mutedForeground, size: 14),
           ),
         ),
         contentConstraints: selectPopoverPortalConstraints(
@@ -109,13 +100,18 @@ class AyahSearchSelector extends HookConsumerWidget {
         control: FAutocompleteControl.managed(
           controller: autocompleteController,
         ),
-        contentEmptyBuilder: (context, style) => EmptyStatePanel(
-          icon: FLucideIcons.searchX,
-          title: l10n.noResultsFound,
-          hint: l10n.tryDifferentSearchTerm,
-          iconSize: 32,
-          padding: const EdgeInsets.all(AppSpacing.lg),
-        ),
+        contentEmptyBuilder: (context, style) {
+          final emptyQuery =
+              autocompleteController.text.trim().length <
+              kAyahSearchMinQueryLength;
+          return EmptyStatePanel(
+            icon: emptyQuery ? FLucideIcons.search : FLucideIcons.searchX,
+            title: emptyQuery ? l10n.quranSearchPrompt : l10n.noResultsFound,
+            hint: emptyQuery ? null : l10n.tryDifferentSearchTerm,
+            iconSize: 32,
+            padding: const EdgeInsets.all(AppSpacing.lg),
+          );
+        },
         contentLoadingBuilder: (context, style) => const Padding(
           padding: EdgeInsets.all(24),
           child: FCircularProgress.loader(),

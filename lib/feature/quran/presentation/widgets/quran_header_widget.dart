@@ -1,278 +1,187 @@
-import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/core/layout/responsive.dart';
+import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/shortcuts/shortcuts.dart';
-import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/scale/quran_text_scale_popover.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/ayah_search_selector.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/hizb_selector.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/juz_selector.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/selectors/surah_selector.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/scale/quran_zoom_control.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/ayah_selection_actions.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_search_field.dart';
+import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel.dart';
 import 'package:tawaq/theme/theme.dart';
 
-const _kSearchMinWidth = 280.0;
-const _kSurahSelectMaxWidth = 200.0;
-
-const _kInlineNavSelect = SurahSelector(inlineLabel: true);
-const _kInlineJuzSelect = JuzSelector(inlineLabel: true);
-const _kInlineHizbSelect = HizbSelector(inlineLabel: true);
-
-/// Header widget for the Quran screen containing navigation controls.
-class QuranHeaderWidget extends HookConsumerWidget {
-  /// Creates a [QuranHeaderWidget] instance.
-  const new({super.key});
+/// Reading navigation with secondary controls in a bounded surface.
+class QuranHeaderWidget extends ConsumerWidget {
+  const new({
+    this.onStudy,
+    this.onNotes,
+    this.studyOpen = false,
+    this.studyInPopover = false,
+    this.onStudyDismiss,
+    super.key,
+  });
+  final bool studyOpen;
+  final bool studyInPopover;
+  final VoidCallback? onStudyDismiss;
+  final VoidCallback? onStudy;
+  final VoidCallback? onNotes;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = context.theme;
-    final layout = ref.watch(
-      quranScreenSettingsProvider.select(
-        (v) => v.value?.layout ?? QuranReadingLayout.studyMode,
-      ),
-    );
-
-    final searchFocusNode = useFocusNode();
-    final focusSearch = useCallback(
-      searchFocusNode.requestFocus,
-      [searchFocusNode],
-    );
-    useRegisterAppSearchFocus(focusSearch);
-
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(
-        AppSpacing.lg,
         AppSpacing.md,
-        AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.md,
         AppSpacing.sm,
       ),
       child: NonSelectable(
-        child: StaticCard(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          borderRadius: theme.radii.lg,
-          backgroundColor: theme.colors.secondary.withAlpha(72),
-          borderColor: theme.colors.border.withAlpha(96),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final wide = isContainerAtLeast(
-                context,
-                constraints,
-                FBreakpoint.xl,
-              );
-              final medium = isContainerAtLeast(
-                context,
-                constraints,
-                FBreakpoint.md,
-              );
-
-              final layoutSegment = _LayoutSegment(
-                layout: layout,
-                showLabels: medium,
-                onLayoutChanged: (index) => ref
-                    .read(quranScreenSettingsProvider.notifier)
-                    .setLayout(QuranReadingLayout.values[index]),
-              );
-
-              final displayTools = _DisplayToolsRow(
-                layoutSegment: layoutSegment,
-              );
-
-              final navigation = _QuranLocationRail(
-                stacked: !medium,
-              );
-
-              final search = _HeaderSearchField(
-                focusNode: searchFocusNode,
-              );
-
-              if (wide) {
-                return Row(
-                  children: [
-                    displayTools,
-                    const _HeaderDivider(),
-                    Expanded(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          minWidth: _kSearchMinWidth,
-                        ),
-                        child: search,
-                      ),
-                    ),
-                    const _HeaderDivider(),
-                    Expanded(child: navigation),
-                  ],
-                );
-              }
-
-              if (medium) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  spacing: AppSpacing.sm,
-                  children: [
-                    Row(
-                      children: [
-                        displayTools,
-                        const _HeaderDivider(),
-                        Expanded(child: navigation),
-                      ],
-                    ),
-                    search,
-                  ],
-                );
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: AppSpacing.sm,
-                children: [
-                  displayTools,
-                  navigation,
-                  search,
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DisplayToolsRow extends StatelessWidget {
-  const new({required this.layoutSegment});
-
-  final Widget layoutSegment;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: AppSpacing.sm,
-      children: [
-        layoutSegment,
-        const QuranTextScalePopover(),
-      ],
-    );
-  }
-}
-
-class _QuranLocationRail extends StatelessWidget {
-  const new({required this.stacked});
-
-  final bool stacked;
-
-  @override
-  Widget build(BuildContext context) {
-    return stacked ? _buildStacked() : _buildRow();
-  }
-
-  Widget _buildRow() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 3,
-      children: [
-        Flexible(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _kSurahSelectMaxWidth),
-            child: _kInlineNavSelect,
-          ),
-        ),
-        const _RailHairline(axis: Axis.vertical),
-        const Flexible(
-          child: _kInlineJuzSelect,
-        ),
-        const _RailHairline(axis: Axis.vertical),
-        const Flexible(
-          child: _kInlineHizbSelect,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStacked() {
-    return const Column(
-      mainAxisSize: MainAxisSize.min,
-      spacing: 3,
-      children: [
-        _kInlineNavSelect,
-        _RailHairline(axis: Axis.horizontal),
-        Row(
-          spacing: 3,
+        child: Row(
+          spacing: AppSpacing.sm,
           children: [
-            Expanded(child: _kInlineJuzSelect),
-            _RailHairline(axis: Axis.vertical),
-            Expanded(child: _kInlineHizbSelect),
+            const Expanded(child: QuranSearchField()),
+            if (ref.watch(quranSelectedAyahIdProvider) != null)
+              FPopover(
+                semanticsLabel: l10n.ayahActions,
+                popoverBuilder: (context, _) => ConstrainedBox(
+                  constraints: dialogConstraints(context, preferredWidth: 440),
+                  child: const Padding(
+                    padding: EdgeInsets.all(AppSpacing.sm),
+                    child: AyahSelectionActionsBar(),
+                  ),
+                ),
+                builder: (context, controller, _) => _HeaderAction(
+                  label: l10n.ayahActions,
+                  icon: FLucideIcons.ellipsis,
+                  onPress: controller.toggle,
+                ),
+              ),
+            if (studyInPopover)
+              FPopover(
+                // The reader stays interactive while choosing an ayah.
+                // Close through the trigger, Back to reading, or Escape.
+                hideRegion: .none,
+                control: FPopoverControl.lifted(
+                  shown: studyOpen,
+                  onChange: (shown) {
+                    if (!shown) onStudyDismiss?.call();
+                  },
+                ),
+                semanticsLabel: l10n.studyMode,
+                popoverBuilder: (context, controller) => Consumer(
+                  builder: (context, ref, _) {
+                    final hasSelection =
+                        ref.watch(quranSelectedAyahIdProvider) != null;
+                    final bounds = dialogConstraints(
+                      context,
+                      preferredWidth: hasSelection ? 620 : 320,
+                    );
+                    final panel = StudyPanel(onBackToReading: controller.hide);
+                    return SizedBox(
+                      width: bounds.maxWidth,
+                      height: hasSelection ? bounds.maxHeight : null,
+                      child: panel,
+                    );
+                  },
+                ),
+                child: _HeaderAction(
+                  label: studyOpen ? l10n.collapsePanel : l10n.studyMode,
+                  selected: studyOpen,
+                  icon: FLucideIcons.bookOpen,
+                  onPress: onStudy,
+                ),
+              )
+            else
+              _HeaderAction(
+                label: studyOpen ? l10n.collapsePanel : l10n.studyMode,
+                selected: studyOpen,
+                icon: FLucideIcons.bookOpen,
+                onPress: onStudy,
+              ),
+            _HeaderAction(
+              label: l10n.studyTabMyReflections,
+              icon: FLucideIcons.notebookPen,
+              onPress: onNotes,
+            ),
+            FPopover(
+              semanticsLabel: l10n.quranNavigation,
+              popoverBuilder: (context, _) => ConstrainedBox(
+                constraints: dialogConstraints(context, preferredWidth: 380),
+                child: const Padding(
+                  padding: EdgeInsets.all(AppSpacing.lg),
+                  child: _DisplayControls(),
+                ),
+              ),
+              builder: (context, controller, _) => _HeaderAction(
+                label: l10n.quranNavigation,
+                icon: FLucideIcons.slidersHorizontal,
+                onPress: controller.toggle,
+              ),
+            ),
           ],
         ),
-      ],
-    );
-  }
-}
-
-class _RailHairline extends StatelessWidget {
-  const new({required this.axis});
-
-  final Axis axis;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = context.theme.colors.border.withValues(alpha: 0.55);
-
-    if (axis == Axis.vertical) {
-      return SizedBox(
-        height: 30,
-        child: VerticalDivider(
-          width: 1,
-          thickness: 1,
-          color: color,
-        ),
-      );
-    }
-
-    return Divider(
-      height: 1,
-      thickness: 1,
-      color: color,
-    );
-  }
-}
-
-class _HeaderSearchField extends StatelessWidget {
-  const new({required this.focusNode});
-
-  final FocusNode focusNode;
-
-  @override
-  Widget build(BuildContext context) {
-    return AyahSearchSelector(
-      showLabel: false,
-      focusNode: focusNode,
-    );
-  }
-}
-
-class _HeaderDivider extends StatelessWidget {
-  const new();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-      child: SizedBox(
-        height: 28,
-        child: VerticalDivider(
-          width: 1,
-          thickness: 1,
-          color: colors.border.withValues(alpha: 0.65),
-        ),
       ),
+    );
+  }
+}
+
+class _HeaderAction extends StatelessWidget {
+  const new({
+    required this.label,
+    required this.icon,
+    required this.onPress,
+    this.selected = false,
+  });
+  final bool selected;
+  final String label;
+  final IconData icon;
+  final VoidCallback? onPress;
+
+  @override
+  Widget build(BuildContext context) => FTooltip(
+    tipBuilder: (_, _) => Text(label),
+    child: Semantics(
+      label: label,
+      selected: selected,
+      child: FButton.icon(
+        variant: selected ? .secondary : .ghost,
+        onPress: onPress,
+        child: Icon(icon, size: 18),
+      ),
+    ),
+  );
+}
+
+class _DisplayControls extends ConsumerWidget {
+  const new();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final layout =
+        ref.watch(quranScreenSettingsProvider).value?.layout ??
+        QuranReadingLayout.studyMode;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.lg,
+      children: [
+        Text(
+          context.l10n.quranNavigation,
+          style: context.theme.typography.body.md.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        _LayoutSegment(
+          layout: layout,
+          showLabels: true,
+          onLayoutChanged: (index) => ref
+              .read(quranScreenSettingsProvider.notifier)
+              .setLayout(QuranReadingLayout.values[index]),
+        ),
+        const QuranZoomControl(showHeader: true),
+      ],
     );
   }
 }
@@ -344,10 +253,7 @@ class _LayoutTabLabel extends StatelessWidget {
 
     if (!showLabel) {
       return FTooltip(
-        tipBuilder: (_, _) => Text(
-          label,
-          semanticsLabel: label,
-        ),
+        tipBuilder: (_, _) => Text(label, semanticsLabel: label),
         child: icon,
       );
     }
@@ -355,7 +261,10 @@ class _LayoutTabLabel extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       spacing: AppSpacing.xs,
-      children: [icon, Text(label)],
+      children: [
+        icon,
+        Flexible(child: Text(label, maxLines: 2, textAlign: TextAlign.center)),
+      ],
     );
   }
 }

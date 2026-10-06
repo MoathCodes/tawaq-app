@@ -58,11 +58,7 @@ const _style = SegmentedSeekBarStyle(
 );
 
 List<SeekBarSegment> _segments() => const [
-  SeekBarSegment(
-    index: 1,
-    start: Duration.zero,
-    end: Duration(seconds: 5),
-  ),
+  SeekBarSegment(index: 1, start: Duration.zero, end: Duration(seconds: 5)),
   SeekBarSegment(
     index: 2,
     start: Duration(seconds: 5),
@@ -119,10 +115,7 @@ SegmentedSeekBar _bar({
   );
 }
 
-Future<TestGesture> _hoverAt(
-  WidgetTester tester,
-  double localX,
-) async {
+Future<TestGesture> _hoverAt(WidgetTester tester, double localX) async {
   final bar = find.byType(SegmentedSeekBar);
   final box = tester.renderObject<RenderBox>(bar);
   final gesture = await tester.createGesture(kind: PointerDeviceKind.mouse);
@@ -130,24 +123,51 @@ Future<TestGesture> _hoverAt(
     location: box.localToGlobal(Offset(localX, box.size.height / 2)),
   );
   await tester.pump();
-  await gesture.moveTo(
-    box.localToGlobal(Offset(localX, box.size.height / 2)),
-  );
+  await gesture.moveTo(box.localToGlobal(Offset(localX, box.size.height / 2)));
   await tester.pump();
   return gesture;
 }
 
 void main() {
+  testWidgets(
+    'untimed recitation supports continuous keyboard seeking without an ayah lens',
+    (tester) async {
+      final seeks = <Duration>[];
+      await tester.pumpWidget(
+        _wrap(
+          SegmentedSeekBar(
+            duration: const Duration(minutes: 1),
+            position: const Duration(seconds: 15),
+            segments: const [],
+            segmentLabel: (index) => 'Ayah $index',
+            repeatLabel: (count, total) => 'Repeat $count of $total',
+            remainingLabel: (count) => '$count remaining',
+            semanticsLabel: 'Seek',
+            unavailableLabel: 'Unavailable',
+            style: _style,
+            onSeek: seeks.add,
+          ),
+        ),
+      );
+      await tester.tap(find.byType(SegmentedSeekBar));
+      seeks.clear();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
+      expect(seeks.last, const Duration(seconds: 25));
+      await tester.sendKeyEvent(LogicalKeyboardKey.home);
+      expect(seeks.last, Duration.zero);
+      await tester.sendKeyEvent(LogicalKeyboardKey.end);
+      expect(seeks.last, const Duration(minutes: 1));
+      expect(find.byKey(const Key('ayah-preview-card')), findsNothing);
+      await tester.pumpAndSettle();
+    },
+  );
   group('timeline helpers', () {
     test('position resolves containing ayah and clamps at the edges', () {
       final segments = _segments();
       expect(segmentIndexForPosition(segments, const Duration(seconds: 4)), 1);
       expect(segmentIndexForPosition(segments, const Duration(seconds: 5)), 2);
       expect(segmentIndexForPosition(segments, const Duration(seconds: 20)), 3);
-      expect(
-        segmentIndexForPosition(segments, const Duration(seconds: -1)),
-        1,
-      );
+      expect(segmentIndexForPosition(segments, const Duration(seconds: -1)), 1);
     });
 
     test('seek target snaps to the containing ayah start', () {
@@ -159,18 +179,27 @@ void main() {
 
     test('preview window stays full and shifts at both ends', () {
       final segments = _longSurahSegments(10, const Duration(seconds: 100));
-      expect(
-        previewSegmentsForFocus(segments, 1).map((s) => s.index),
-        [1, 2, 3, 4, 5],
-      );
-      expect(
-        previewSegmentsForFocus(segments, 6).map((s) => s.index),
-        [4, 5, 6, 7, 8],
-      );
-      expect(
-        previewSegmentsForFocus(segments, 10).map((s) => s.index),
-        [6, 7, 8, 9, 10],
-      );
+      expect(previewSegmentsForFocus(segments, 1).map((s) => s.index), [
+        1,
+        2,
+        3,
+        4,
+        5,
+      ]);
+      expect(previewSegmentsForFocus(segments, 6).map((s) => s.index), [
+        4,
+        5,
+        6,
+        7,
+        8,
+      ]);
+      expect(previewSegmentsForFocus(segments, 10).map((s) => s.index), [
+        6,
+        7,
+        8,
+        9,
+        10,
+      ]);
     });
 
     test('repeat status derives the current pass from remaining plays', () {
@@ -191,11 +220,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         _wrap(
-          _bar(
-            duration: Duration.zero,
-            segments: const [],
-            enabled: false,
-          ),
+          _bar(duration: Duration.zero, segments: const [], enabled: false),
         ),
       );
       await tester.pump();
@@ -260,9 +285,7 @@ void main() {
       await tester.pump();
       expect(find.text('Ayah 286'), findsOneWidget);
 
-      await gesture.moveTo(
-        box.localToGlobal(Offset(_style.thumbRadius, 18)),
-      );
+      await gesture.moveTo(box.localToGlobal(Offset(_style.thumbRadius, 18)));
       await tester.pump();
       expect(find.text('Ayah 1'), findsOneWidget);
 
@@ -374,9 +397,7 @@ void main() {
         ),
       );
       await tester.pump();
-      final box = tester.renderObject<RenderBox>(
-        find.byType(SegmentedSeekBar),
-      );
+      final box = tester.renderObject<RenderBox>(find.byType(SegmentedSeekBar));
       const targetValue = 0.75;
       final x =
           _style.thumbRadius +
@@ -389,14 +410,10 @@ void main() {
 
     testWidgets(
       'repeat keeps real thumb position and shows final-pass details',
-      (
-        tester,
-      ) async {
+      (tester) async {
         const repeat = RepeatStatus(remaining: 1, total: 3, segmentIndex: 1);
         await tester.pumpWidget(
-          _wrap(
-            _bar(position: const Duration(seconds: 4), repeat: repeat),
-          ),
+          _wrap(_bar(position: const Duration(seconds: 4), repeat: repeat)),
         );
         await tester.pump();
 
@@ -429,11 +446,7 @@ void main() {
         _wrap(
           _bar(
             position: const Duration(seconds: 4),
-            repeat: const RepeatStatus(
-              remaining: 2,
-              total: 3,
-              segmentIndex: 1,
-            ),
+            repeat: const RepeatStatus(remaining: 2, total: 3, segmentIndex: 1),
           ),
         ),
       );
@@ -517,16 +530,11 @@ void main() {
 
     testWidgets(
       'RTL mirrors position and maps the left edge to the last ayah',
-      (
-        tester,
-      ) async {
+      (tester) async {
         final seeks = <Duration>[];
         await tester.pumpWidget(
           _wrap(
-            _bar(
-              position: const Duration(seconds: 3),
-              onSeek: seeks.add,
-            ),
+            _bar(position: const Duration(seconds: 3), onSeek: seeks.add),
             direction: TextDirection.rtl,
           ),
         );
@@ -548,9 +556,7 @@ void main() {
     testWidgets('keyboard arrows and end seek by ayah', (tester) async {
       final seeks = <Duration>[];
       await tester.pumpWidget(
-        _wrap(
-          _bar(position: const Duration(seconds: 7), onSeek: seeks.add),
-        ),
+        _wrap(_bar(position: const Duration(seconds: 7), onSeek: seeks.add)),
       );
       await tester.pump();
 

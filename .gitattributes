@@ -1,0 +1,2 @@
+# Patch context lines contain a required leading space, including blank lines.
+tool/fixtures/*.patch whitespace=-blank-at-eol

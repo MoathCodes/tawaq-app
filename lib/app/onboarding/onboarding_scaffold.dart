@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+import 'dart:io';
 
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -6,7 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/app/desktop/widgets/title_bar_drag_area.dart';
 import 'package:tawaq/app/desktop/widgets/window_controls.dart';
 import 'package:tawaq/core/layout/centered_viewport_shell.dart';
-import 'package:tawaq/core/layout/responsive.dart';
+import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/directional_content_switcher.dart';
@@ -53,14 +53,6 @@ class OnboardingScaffold extends ConsumerWidget {
   /// Bottom or side navigation bar.
   final Widget navigation;
 
-  static const _compactMaxWidth = 640.0;
-  static const _desktopMaxWidth = 1120.0;
-  static const _desktopRailWidth = 340.0;
-  static const _compactMinHeight = 600.0;
-
-  static double _maxPanelHeight(double viewportHeight) =>
-      math.min(viewportHeight, math.max(480, viewportHeight - AppSpacing.xl));
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final desktopSettings = ref.watch(desktopSettingsProvider).value;
@@ -82,9 +74,12 @@ class OnboardingScaffold extends ConsumerWidget {
     final showDesktopTopBar = isDesktopPlatform;
     final colors = context.theme.colors;
     final borderWidth = context.theme.style.borderWidth;
-    final controlsOnLeft = forceMacStyle;
+    final controlsOnLeft = Platform.isMacOS || forceMacStyle;
 
     return FScaffold(
+      scaffoldStyle: FScaffoldStyleDelta.delta(
+        childPadding: const .value(.zero),
+      ),
       child: Column(
         children: [
           if (showDesktopTopBar)
@@ -120,72 +115,29 @@ class OnboardingScaffold extends ConsumerWidget {
           Expanded(
             child: SafeArea(
               top: !showDesktopTopBar,
-              child: Center(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final wide =
-                        isContainerAtLeast(
-                          context,
-                          constraints,
-                          FBreakpoint.lg,
-                        ) &&
-                        constraints.maxHeight >= _compactMinHeight;
-                    final maxWidth = wide ? _desktopMaxWidth : _compactMaxWidth;
-                    final panelHeight = _maxPanelHeight(constraints.maxHeight);
-
-                    return ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: maxWidth,
-                        maxHeight: panelHeight,
-                      ),
-                      child: wide
-                          ? Row(
-                              spacing: AppSpacing.xxl,
-                              children: [
-                                SizedBox(
-                                  width: _desktopRailWidth,
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.stretch,
-                                      children: [
-                                        header,
-                                        const SizedBox(height: AppSpacing.xxxl),
-                                        navigation,
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _OnboardingStepViewport(
-                                    resetTrigger: stepKey,
-                                    maxWidth: maxWidth,
-                                    alignment: Alignment.center,
-                                    child: content,
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                header,
-                                const SizedBox(height: AppSpacing.lg),
-                                Flexible(
-                                  child: _OnboardingStepViewport(
-                                    resetTrigger: stepKey,
-                                    maxWidth: maxWidth,
-                                    child: content,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.lg),
-                                navigation,
-                              ],
-                            ),
-                    );
-                  },
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        header,
+                        const SizedBox(height: AppSpacing.lg),
+                        Expanded(
+                          child: _OnboardingStepViewport(
+                            resetTrigger: stepKey,
+                            maxWidth: 720,
+                            child: content,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        navigation,
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -203,12 +155,7 @@ class _OnboardingStepCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FCard(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: child,
-      ),
-    );
+    return child;
   }
 }
 
@@ -217,13 +164,11 @@ class _OnboardingStepViewport extends StatelessWidget {
     required this.resetTrigger,
     required this.maxWidth,
     required this.child,
-    this.alignment,
   });
 
   final Object resetTrigger;
   final double maxWidth;
   final Widget child;
-  final Alignment? alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -232,7 +177,7 @@ class _OnboardingStepViewport extends StatelessWidget {
       builder: (controller) => CenteredViewportShell.scrollTab(
         maxContentWidth: maxWidth,
         controller: controller,
-        alignment: alignment ?? Alignment.topCenter,
+        alignment: Alignment.topCenter,
         child: child,
       ),
     );
@@ -260,6 +205,10 @@ class _OnboardingHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.md,
       children: [
+        Text(
+          context.l10n.onboardingStepCount(stepIndex + 1, stepCount),
+          style: theme.typography.body.sm,
+        ),
         FDeterminateProgress(value: (stepIndex + 1) / stepCount),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

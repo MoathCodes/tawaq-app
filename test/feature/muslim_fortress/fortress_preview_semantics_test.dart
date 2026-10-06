@@ -1,5 +1,6 @@
 import 'dart:ui' show SemanticsAction, Tristate;
 
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
@@ -10,6 +11,7 @@ import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/share/fortress_share_dialog.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/l10n/app_localizations_delegates.dart';
@@ -25,6 +27,7 @@ FortressDuaItem _fixtureDua() => const FortressDuaItem(
   category: 'Fixture category',
   text: _fixtureText,
   targetCount: 3,
+  source: 'Fixture source reference',
   lines: [HisnPlainLine(_fixtureText)],
   commentary: HisnCommentary(
     id: 8,
@@ -62,6 +65,107 @@ const _bundledArabicPassage =
     'ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلۡحَيُّ ٱلۡقَيُّومُۚ لَا تَأۡخُذُهُۥ سِنَةٞ وَلَا نَوۡمٞۚ لَّهُۥ مَا فِي ٱلسَّمَٰوَٰتِ وَمَا فِي ٱلۡأَرۡضِۗ مَن ذَا ٱلَّذِي يَشۡفَعُ عِندَهُۥٓ إِلَّا بِإِذۡنِهِۦۚ يَعۡلَمُ مَا بَيۡنَ أَيۡدِيهِمۡ وَمَا خَلۡفَهُمۡۖ وَلَا يُحِيطُونَ بِشَيۡءٖ مِّنۡ عِلۡمِهِۦٓ إِلَّا بِمَا شَآءَۚ وَسِعَ كُرۡسِيُّهُ ٱلسَّمَٰوَٰتِ وَٱلۡأَرۡضَۖ وَلَا يَـُٔودُهُۥ حِفۡظُهُمَاۚ وَهُوَ ٱلۡعَلِيُّ ٱلۡعَظِيمُ';
 
 void main() {
+  testWidgets(
+    'collapsed preview always exposes sourced virtue, not source reference',
+    (tester) async {
+      const dua = FortressDuaItem(
+        contentId: 17,
+        category: 'Fixture',
+        text: 'Fixture thikr',
+        targetCount: 1,
+        lines: [HisnPlainLine('Fixture thikr')],
+        source: 'Fixture citation',
+        virtue: 'Fixture sourced virtue',
+      );
+      await tester.pumpWidget(
+        _wrap(
+          FortressDuaPreviewCard(
+            index: 0,
+            dua: dua,
+            isExpanded: false,
+            onToggleExpanded: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Fixture sourced virtue', findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Fixture citation', findRichText: true),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'expanded tile reads every line of long prose instead of inheriting title truncation',
+    (tester) async {
+      final text = List.filled(30, 'Synthetic long thikr fixture.').join(' ');
+      final dua = FortressDuaItem(
+        contentId: 19,
+        category: 'Synthetic category',
+        text: text,
+        targetCount: 1,
+        lines: [HisnPlainLine(text)],
+      );
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: 320,
+            child: FortressDuaPreviewCard(
+              index: 0,
+              dua: dua,
+              isExpanded: true,
+              onToggleExpanded: () {},
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final paragraph = tester.renderObject<RenderParagraph>(find.text(text));
+      expect(paragraph.maxLines, isNull);
+      expect(paragraph.didExceedMaxLines, isFalse);
+      expect(paragraph.size.height, greaterThan(200));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets('collapsed grouped preview shares without expanding the thikr', (
+    tester,
+  ) async {
+    var expanded = false;
+    await tester.pumpWidget(
+      _wrap(
+        StatefulBuilder(
+          builder: (context, setState) => FTileGroup.builder(
+            count: 1,
+            tileBuilder: (context, _) => FortressDuaPreviewCard(
+              index: 0,
+              dua: _fixtureDua(),
+              isExpanded: expanded,
+              onToggleExpanded: () => setState(() => expanded = !expanded),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final l10n = lookupAppLocalizations(const Locale('en'));
+    await tester.tap(find.bySemanticsLabel(l10n.fortressShare));
+    await tester.pumpAndSettle();
+    expect(find.byType(FortressShareDialog), findsOneWidget);
+    expect(expanded, isFalse);
+    await tester.tap(find.bySemanticsLabel(l10n.close));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(_fixtureText));
+    await tester.pumpAndSettle();
+    expect(expanded, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
   setUpAll(() async {
     final loader = FontLoader(FontFamily.uthmanicHafs)
       ..addFont(
@@ -112,7 +216,7 @@ void main() {
   );
 
   testWidgets(
-    'expanded preview exposes content, tabs, and one keyboard-safe collapse action',
+    'expanded preview exposes benefit and independent sharing and collapse actions',
     (tester) async {
       for (final locale in [const Locale('en'), const Locale('ar')]) {
         var expanded = false;
@@ -152,10 +256,7 @@ void main() {
             .first;
         final tileFocusContext = tester.element(
           find
-              .descendant(
-                of: tileFocusFinder,
-                matching: find.byType(Semantics),
-              )
+              .descendant(of: tileFocusFinder, matching: find.byType(Semantics))
               .first,
         );
         final tileFocus = Focus.of(tileFocusContext);
@@ -195,52 +296,15 @@ void main() {
           isFalse,
         );
 
-        final benefitTab = tester.getSemantics(
-          find.bySemanticsLabel(
-            RegExp('^${RegExp.escape(l10n.fortressBenefit)}\\n'),
-          ),
-        );
-        final hadithTab = tester.getSemantics(
-          find.bySemanticsLabel(
-            RegExp('^${RegExp.escape(l10n.fortressRelatedHadith)}\\n'),
-          ),
-        );
-        expect(
-          benefitTab.getSemanticsData().hasAction(SemanticsAction.tap),
-          isTrue,
-        );
-        expect(
-          benefitTab.getSemanticsData().hasAction(SemanticsAction.focus),
-          isTrue,
-        );
-        expect(
-          hadithTab.getSemanticsData().hasAction(SemanticsAction.tap),
-          isTrue,
-        );
-        expect(
-          hadithTab.getSemanticsData().hasAction(SemanticsAction.focus),
-          isTrue,
-        );
+        expect(find.text('Fixture source reference'), findsNothing);
+        expect(find.text(l10n.fortressSourceReference), findsNothing);
+        expect(find.byType(FTabs), findsNothing);
+        expect(find.semantics.byValue(_fixtureHadith).evaluate(), isEmpty);
 
-        // Activate the tab through its semantic action, not its visual Text.
-        tester.binding.renderViews.first.owner!.semanticsOwner!.performAction(
-          hadithTab.id,
-          SemanticsAction.tap,
-        );
+        await tester.tap(find.bySemanticsLabel(l10n.fortressShare));
         await tester.pumpAndSettle();
-        expect(find.bySemanticsLabel(expandedLabel), findsOneWidget);
-        final hadithSemantics = find.semantics
-            .byValue(_fixtureHadith)
-            .evaluate()
-            .single;
-        expect(hadithSemantics.value, _fixtureHadith);
-        expect(
-          hadithSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
-          isFalse,
-        );
-
-        // Pointer selection of the nested tab must leave the row expanded.
-        await tester.tap(find.text(l10n.fortressBenefit));
+        expect(find.byType(FortressShareDialog), findsOneWidget);
+        await tester.tap(find.bySemanticsLabel(l10n.close));
         await tester.pumpAndSettle();
         expect(find.bySemanticsLabel(expandedLabel), findsOneWidget);
         expect(

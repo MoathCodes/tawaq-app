@@ -1,5 +1,6 @@
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_judgment.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 
 /// Maximum characters included in narrator snippets for list semantics.
@@ -29,7 +30,7 @@ String hadithResultRowSemanticsLabel(
   final parts = <String>[
     if (resultOrdinal != null) l10n.hadithResultIdentity(resultOrdinal),
     l10n.hadithSourceCitation(hadith.book, hadith.numberOrPage),
-    narrator,
+    if (hasHadithMetadata(hadith.rawi)) narrator,
     hadith.hukm,
   ];
   if (isFavorite) {

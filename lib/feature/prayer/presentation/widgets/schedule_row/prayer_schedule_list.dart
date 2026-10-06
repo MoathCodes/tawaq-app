@@ -1,4 +1,3 @@
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -18,7 +17,9 @@ import 'package:tawaq/theme/theme.dart';
 /// Users can navigate back up to a week to view and edit prayer statuses.
 class PrayerScheduleList extends ConsumerWidget {
   /// Creates a [PrayerScheduleList] instance.
-  const new({super.key});
+  const new({this.compact = false, super.key});
+
+  final bool compact;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -39,9 +40,7 @@ class PrayerScheduleList extends ConsumerWidget {
     final todayDate = dateFromCalendarDayKey(todayKey);
     final selectedKey = calendarDayKeyFromDate(selectedDate);
 
-    final scheduleRows = ref.watch(
-      prayerScheduleProvider(selectedKey),
-    );
+    final scheduleRows = ref.watch(prayerScheduleProvider(selectedKey));
 
     final isToday = selectedKey == todayKey;
     final currentPrayer = isToday
@@ -58,10 +57,7 @@ class PrayerScheduleList extends ConsumerWidget {
           child: Text(
             isToday
                 ? l10n.todaysSchedule
-                : HijriFormat.formatDate(
-                    selectedDate,
-                    l10n.localeName,
-                  ),
+                : HijriFormat.formatDate(selectedDate, l10n.localeName),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.typography.body.lg.copyWith(
@@ -93,10 +89,8 @@ class PrayerScheduleList extends ConsumerWidget {
         start: todayDate.subtract(const Duration(days: 6)),
         end: todayDate,
       ),
-      builder: (context, data, _) => _HijriLineCalendarItem(
-        data: data,
-        languageCode: l10n.localeName,
-      ),
+      builder: (context, data, _) =>
+          _HijriLineCalendarItem(data: data, languageCode: l10n.localeName),
     );
 
     return Column(
@@ -116,10 +110,7 @@ class PrayerScheduleList extends ConsumerWidget {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   spacing: AppSpacing.md,
-                  children: [
-                    titleColumn,
-                    calendar,
-                  ],
+                  children: [titleColumn, calendar],
                 );
               }
 
@@ -134,31 +125,30 @@ class PrayerScheduleList extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
-        const SunnahTimesCard(),
-        const SizedBox(height: AppSpacing.lg),
+
         Column(
           key: ValueKey(selectedDate),
-          spacing: AppSpacing.md,
+          spacing: compact ? AppSpacing.xs : AppSpacing.md,
           children: scheduleRows
               .map(
                 (row) => SchedulePrayerRow(
                   row: row,
+                  compact: compact,
                   isToday: isToday,
                   currentPrayer: currentPrayer,
                 ),
               )
               .toList(),
-        ).animate().fadeIn(duration: 200.ms),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        const SunnahTimesCard(),
       ],
     );
   }
 }
 
 class _HijriLineCalendarItem extends StatelessWidget {
-  const new({
-    required this.data,
-    required this.languageCode,
-  });
+  const new({required this.data, required this.languageCode});
 
   final FLineCalendarItemData data;
   final String languageCode;

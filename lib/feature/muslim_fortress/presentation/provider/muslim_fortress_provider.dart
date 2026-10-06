@@ -19,7 +19,7 @@ abstract class FortressFlowState with _$FortressFlowState {
     @Default(false) bool isFocusMode,
     @Default(0) int focusStartIndex,
 
-    /// Global Hisn search query (main pane). Sidebar chapter filter is local.
+    /// Hisn query shared by sidebar title filtering and full content search.
     @Default('') String query,
   }) = _FortressFlowState;
 }
@@ -45,7 +45,7 @@ class FortressScreenController extends _$FortressScreenController {
     state = state.copyWith(
       selectedChapterId: category.chapterId,
       isFocusMode: false,
-      // Opening a chapter exits global search so the detail pane shows.
+      // Opening a chapter restores the sidebar catalog.
       query: '',
     );
   }
@@ -68,9 +68,7 @@ class FortressScreenController extends _$FortressScreenController {
     state = state.copyWith(isFocusMode: false);
   }
 
-  /// Updates the active **global** Hisn search query (trimmed).
-  ///
-  /// Sidebar chapter filtering is local and must not call this.
+  /// Updates the single sidebar Hisn search query (trimmed).
   void setQuery(String query) {
     final trimmed = query.trim();
     if (state.query == trimmed) return;
@@ -147,8 +145,7 @@ Future<FortressSearchResults> fortressSearchResults(
 /// “no recommendations”, until [fortressRepositoryProvider] has data.
 @riverpod
 List<FortressCategory> fortressRecommendedCategories(Ref ref) {
-  ref.watch(currentMinuteBucketProvider);
-  final day = ref.read(prayerDayProvider).value;
+  final day = ref.watch(prayerMinuteSnapshotProvider);
   final now = day?.now ?? ref.watch(appClockProvider).value;
   if (now == null) return const <FortressCategory>[];
   final fragments = recommendTitleFragments(

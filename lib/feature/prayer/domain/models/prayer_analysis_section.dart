@@ -79,7 +79,7 @@ class PrayerAnalysisSectionData {
   /// Whether the selected period contains at least one recorded prayer row.
   ///
   /// This is intentionally separate from completion percentage: an explicit
-  /// missed or late row is data even when the success percentage is zero.
+  /// late row is data even when the on-time success percentage is zero.
   final bool hasRecordedData;
 
   /// Completion counts for the current day.
@@ -99,9 +99,7 @@ class PrayerAnalysisSectionData {
   final List<PrayerTrendBucket> trendBuckets;
 
   static Map<CompletionStatus, int> _emptyCounts() {
-    return {
-      for (final status in CompletionStatus.values) status: 0,
-    };
+    return {for (final status in CompletionStatus.values) status: 0};
   }
 
   static Map<Prayer, CompletionStatus> _emptyPrayerStatuses() {

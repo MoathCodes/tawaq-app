@@ -7,6 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_models.dart';
 import 'package:tawaq/feature/quran/presentation/extensions/ayah_reference_formatter.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
@@ -24,7 +25,7 @@ const _actionButtonShortcuts = <ShortcutActivator, Intent>{
   SingleActivator(LogicalKeyboardKey.space): ActivateIntent(),
 };
 
-/// Animated contextual actions attached to the bottom of the Quran reader.
+/// Contextual ayah actions shown in the Quran header popover.
 class AyahSelectionActionsBar extends ConsumerWidget {
   /// Creates the selection actions bar.
   const new({super.key});
@@ -36,10 +37,11 @@ class AyahSelectionActionsBar extends ConsumerWidget {
     final selectedAyah = ref.watch(quranSelectedAyahProvider).value;
 
     return AnimatedSwitcher(
-      duration: durations.normal,
+      duration: reduceMotion(context) ? Duration.zero : durations.normal,
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (child, animation) {
+        if (reduceMotion(context)) return child;
         final slide =
             Tween<Offset>(
               begin: const Offset(0, 0.35),
@@ -235,16 +237,19 @@ class _AyahSelectionActionsContent extends ConsumerWidget {
           ),
         );
         return Align(
+          heightFactor: 1,
           alignment: AlignmentDirectional.center,
-          child: surface
-              .animate()
-              .fadeIn(duration: durations.fast, curve: Curves.easeOut)
-              .scale(
-                begin: const Offset(0.9, 0.9),
-                end: const Offset(1, 1),
-                duration: durations.normal,
-                curve: Curves.easeOutBack,
-              ),
+          child: reduceMotion(context)
+              ? surface
+              : surface
+                    .animate()
+                    .fadeIn(duration: durations.fast, curve: Curves.easeOut)
+                    .scale(
+                      begin: const Offset(0.9, 0.9),
+                      end: const Offset(1, 1),
+                      duration: durations.normal,
+                      curve: Curves.easeOutBack,
+                    ),
         );
       },
     );

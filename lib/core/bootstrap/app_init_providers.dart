@@ -3,6 +3,8 @@ import 'package:hivez_flutter/hivez_flutter.dart';
 import 'package:local_notifier/local_notifier.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mpv_audio_kit/mpv_audio_kit.dart';
+import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
 import 'package:tawaq/core/desktop/single_instance.dart';
@@ -13,9 +15,17 @@ import 'package:window_manager/window_manager.dart';
 
 part 'app_init_providers.g.dart';
 
+/// Prepares the reader before app Hive hydration, with retryable ownership.
+@Riverpod(keepAlive: true)
+Future<void> mushafInit(Ref ref) async {
+  await initFileLogging();
+  await MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq');
+}
+
 /// Initializes Hive and registers adapters for persisted settings and data.
 @Riverpod(keepAlive: true)
 Future<void> hiveCoreInit(Ref ref) async {
+  await ref.watch(mushafInitProvider.future);
   await Hive.initFlutter();
   Hive.registerAdapters();
 }

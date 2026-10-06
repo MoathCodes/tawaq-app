@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart' show Locale;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/app/desktop/alerts/prayer_alert_dispatcher.dart';
+import 'package:tawaq/app/desktop/alerts/prayer_alert_readiness.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/utils/platform.dart';
@@ -45,7 +46,15 @@ void prayerAlertScheduler(Ref ref) {
   PrayerSettings? cachedSettings;
   var cachedTargets = <PrayerAlertTarget>[];
 
+  ref.listen(prayerAlertsReadyProvider, (_, ready) {
+    if (!ready) bootstrapped = false;
+  });
+
   ref.listen(prayerDayProvider, (previous, next) {
+    if (!ref.read(prayerAlertsReadyProvider)) {
+      bootstrapped = false;
+      return;
+    }
     // Use asData so AsyncLoading/AsyncError (which may still expose a previous
     // `.value`) count as a gap and force re-bootstrap — no stale catch-up.
     final snapshot = next.asData?.value;

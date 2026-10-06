@@ -2,14 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
+import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
 void main() {
-  Widget wrap({
-    required Size viewport,
-    required Widget child,
-  }) {
+  Widget wrap({required Size viewport, required Widget child}) {
     final theme = buildAppTheme(
       palette: AppPalette.neutral,
       themeMode: ThemeMode.light,
@@ -21,7 +20,11 @@ void main() {
       data: theme,
       child: MediaQuery(
         data: MediaQueryData(size: viewport),
-        child: MaterialApp(home: Scaffold(body: child)),
+        child: MaterialApp(
+          localizationsDelegates: appLocalizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: child),
+        ),
       ),
     );
   }
@@ -40,6 +43,7 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
       final shellBox = tester.renderObject<RenderBox>(
         find.descendant(
           of: find.byType(TawaqDialogShell),
@@ -64,6 +68,7 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
       final shellBox = tester.renderObject<RenderBox>(
         find.descendant(
           of: find.byType(TawaqDialogShell),

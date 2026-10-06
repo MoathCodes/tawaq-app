@@ -9,7 +9,7 @@ on:
       action:
         description: 'Action to perform'
         required: true
-        default: 'release'
+        default: 'build'
         type: choice
         options:
           - release
@@ -21,13 +21,17 @@ on:
         default: 'macos,windows,linux'
         type: string
       release_version:
-        description: 'Shorebird patch target release version (e.g. 1.0.0+1). Leave blank for latest.'
+        description: 'Explicit reviewed Shorebird patch target (required for patch).'
+        required: false
+        type: string
+      native_acceptance:
+        description: 'Reviewed JSON: exact SHA/SDK, all native RC scenarios, signing policy, full staged artifact URLs/checksums. Required for release/patch.'
         required: false
         type: string
 
 concurrency:
   group: desktop-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   checks:
@@ -44,12 +48,48 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Codegen (packages then app)
-        run: bash tool/codegen.sh
-      - run: flutter analyze --no-fatal-infos
-      - run: flutter test
+      - name: App and local package checks
+        run: bash tool/checks.sh all
+
+  native_gate:
+    name: Verify coordinated native candidate
+    needs: [checks]
+    if: github.event_name == 'push' || github.event.inputs.action != 'build'
+    runs-on: ubuntu-latest
+    environment: coordinated-desktop-release
+    outputs:
+      build_name: ${{ steps.review.outputs.build_name }}
+      build_number: ${{ steps.review.outputs.build_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify reviewed evidence and download every candidate artifact
+        id: review
+        env:
+          NATIVE_ACCEPTANCE: ${{ github.event.inputs.native_acceptance }}
+          TARGET_PLATFORMS: ${{ github.event.inputs.platforms || 'macos,windows,linux' }}
+          DISTRIBUTION_ACTION: ${{ github.event.inputs.action || 'release' }}
+          PATCH_TARGET: ${{ github.event.inputs.release_version }}
+        run: |
+          python3 -c 'import os,pathlib; pathlib.Path("native-acceptance.json").write_text(os.environ["NATIVE_ACCEPTANCE"])'
+          SDK=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flutter"])')
+          python3 tool/release/validate_acceptance.py --record native-acceptance.json \
+            --revision "$GITHUB_SHA" --sdk "$SDK" --platforms "$TARGET_PLATFORMS" \
+            --action "$DISTRIBUTION_ACTION" --release-version "$PATCH_TARGET" --download-to reviewed-candidate
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            python3 -c 'import json,os; record=json.load(open("native-acceptance.json")); assert os.environ["GITHUB_REF_NAME"] == "v" + record["build_name"], "Tag differs from reviewed build name"'
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-candidate
+          path: reviewed-candidate/*
+          if-no-files-found: error
+
 
   macos:
+    needs: [checks, native_gate]
+    env:
+      REVIEWED_BUILD_NAME: ${{ needs.native_gate.outputs.build_name }}
+      BUILD_NUMBER: ${{ needs.native_gate.outputs.build_number || github.run_number }}
     name: macOS (${{ matrix.architecture }})
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -61,8 +101,9 @@ jobs:
           - architecture: x64
             runner: macos-15-intel
     if: >-
-      github.event_name == 'push' ||
-      contains(github.event.inputs.platforms || 'macos,windows,linux', 'macos')
+      always() && needs.checks.result == 'success' &&
+      (needs.native_gate.result == 'success' || needs.native_gate.result == 'skipped') &&
+      (github.event_name == 'push' || contains(github.event.inputs.platforms || 'macos,windows,linux', 'macos'))
     steps:
       - uses: actions/checkout@v4
         with:
@@ -74,15 +115,15 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Set version from release tag
-        if: github.event_name == 'push'
-        run: dart tool/set_pubspec_version.dart "${GITHUB_REF_NAME#v}+${{ github.run_number }}"
+      - name: Apply candidate build identity
+        run: dart tool/set_pubspec_version.dart --build-number "$BUILD_NUMBER" --build-name "$REVIEWED_BUILD_NAME"
 
       - name: Setup Shorebird
         if: >-
           github.event_name == 'push' ||
           github.event.inputs.action == 'release' ||
-          github.event.inputs.action == 'patch'
+          github.event.inputs.action == 'patch' ||
+          github.event.inputs.action == 'build'
         uses: shorebirdtech/setup-shorebird@v1
         with:
           cache: true
@@ -101,12 +142,10 @@ jobs:
           )
         run: |
           BUILD_NAME="$(sed -n "s/^version: *\([^+]*\).*/\1/p" pubspec.yaml | head -n1)"
-          if [ "${{ github.event_name }}" = "push" ]; then
-            BUILD_NAME="${GITHUB_REF_NAME#v}"
-          fi
           shorebird release macos \
+            --flutter-version 3.47.5 \
             --build-name "$BUILD_NAME" \
-            --build-number "${{ github.run_number }}"
+            --build-number "$BUILD_NUMBER"
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
@@ -115,18 +154,19 @@ jobs:
         if: matrix.architecture == 'arm64' && github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
         run: |
           shorebird patch macos \
-            ${{ github.event.inputs.release_version != '' && format('--release-version {0}', github.event.inputs.release_version) || '' }}
+            --release-version "$PATCH_TARGET"
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+          PATCH_TARGET: ${{ github.event.inputs.release_version }}
 
       # Flutter Build (Manual 'build')
-      - name: Flutter build (no Shorebird)
+      - name: Candidate build (no upload)
         if: matrix.architecture == 'arm64' && github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
-        run: flutter build macos --release --build-number ${{ github.run_number }}
+        run: shorebird release macos --dry-run --flutter-version 3.47.5 --build-number ${{ env.BUILD_NUMBER }}
 
       - name: Flutter build (Intel)
         if: matrix.architecture == 'x64' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch'))
-        run: flutter build macos --release --build-number ${{ github.run_number }}
+        run: flutter build macos --release --build-number ${{ env.BUILD_NUMBER }}
 
       # Packaging (.dmg) - Only for release or build (not patch)
       - name: Ad-hoc sign
@@ -167,19 +207,30 @@ jobs:
           mkdir -p dist
           ditto -c -k --sequesterRsrc --keepParent "$STAGING" "dist/$ARCHIVE_ROOT-installer.zip"
 
+      - name: Record actual candidate toolchain
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
+        shell: bash
+        run: python3 tool/release/record_toolchain.py --platform macos-${{ matrix.architecture }} --output dist/toolchain-macos-${{ matrix.architecture }}.json --tool 'shorebird=shorebird --version' --tool 'create-dmg=brew list --versions create-dmg' --tool 'xcode=xcodebuild -version'
+
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         with:
           name: tawaq-macos-${{ matrix.architecture }}
           path: dist/*
+          if-no-files-found: error
           retention-days: 7
 
   windows:
+    needs: [checks, native_gate]
+    env:
+      REVIEWED_BUILD_NAME: ${{ needs.native_gate.outputs.build_name }}
+      BUILD_NUMBER: ${{ needs.native_gate.outputs.build_number || github.run_number }}
     name: Windows
     runs-on: windows-latest
     if: >-
-      github.event_name == 'push' ||
-      contains(github.event.inputs.platforms || 'macos,windows,linux', 'windows')
+      always() && needs.checks.result == 'success' &&
+      (needs.native_gate.result == 'success' || needs.native_gate.result == 'skipped') &&
+      (github.event_name == 'push' || contains(github.event.inputs.platforms || 'macos,windows,linux', 'windows'))
     steps:
       - uses: actions/checkout@v4
         with:
@@ -191,16 +242,16 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Set version from release tag
-        if: github.event_name == 'push'
+      - name: Apply candidate build identity
         shell: bash
-        run: dart tool/set_pubspec_version.dart "${GITHUB_REF_NAME#v}+${{ github.run_number }}"
+        run: dart tool/set_pubspec_version.dart --build-number "$BUILD_NUMBER" --build-name "$REVIEWED_BUILD_NAME"
 
       - name: Setup Shorebird
         if: >-
           github.event_name == 'push' ||
           github.event.inputs.action == 'release' ||
-          github.event.inputs.action == 'patch'
+          github.event.inputs.action == 'patch' ||
+          github.event.inputs.action == 'build'
         uses: shorebirdtech/setup-shorebird@v1
         with:
           cache: true
@@ -219,28 +270,28 @@ jobs:
         shell: bash
         run: |
           BUILD_NAME="$(sed -n "s/^version: *\([^+]*\).*/\1/p" pubspec.yaml | head -n1)"
-          if [ "${{ github.event_name }}" = "push" ]; then
-            BUILD_NAME="${GITHUB_REF_NAME#v}"
-          fi
           shorebird release windows \
+            --flutter-version 3.47.5 \
             --build-name "$BUILD_NAME" \
-            --build-number "${{ github.run_number }}"
+            --build-number "$BUILD_NUMBER"
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
       # Shorebird Patch (Manual 'patch')
       - name: Shorebird patch
+        shell: bash
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
         run: |
           shorebird patch windows \
-            ${{ github.event.inputs.release_version != '' && format('--release-version {0}', github.event.inputs.release_version) || '' }}
+            --release-version "$PATCH_TARGET"
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+          PATCH_TARGET: ${{ github.event.inputs.release_version }}
 
       # Flutter Build (Manual 'build')
-      - name: Flutter build (no Shorebird)
+      - name: Candidate build (no upload)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
-        run: flutter build windows --release --build-number ${{ github.run_number }}
+        run: shorebird release windows --dry-run --flutter-version 3.47.5 --build-number ${{ env.BUILD_NUMBER }}
 
       # Packaging (Inno Setup EXE) - Only for release or build (not patch)
       - name: Install Inno Setup
@@ -253,21 +304,34 @@ jobs:
         shell: pwsh
         run: |
           $version = (Select-String -Path pubspec.yaml -Pattern '^version: (.+)\+').Matches[0].Groups[1].Value
-          iscc /DAppVersion="$version" /DBuildNumber="${{ github.run_number }}" tool/packaging/inno-setup.iss
+          iscc /DAppVersion="$version" /DBuildNumber="$env:BUILD_NUMBER" tool/packaging/inno-setup.iss
+
+      - name: Record actual candidate toolchain
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
+        shell: bash
+        run: python3 tool/release/record_toolchain.py --platform windows-x64 --output dist/toolchain-windows-x64.json --tool 'shorebird=shorebird --version' --tool 'inno-setup=powershell -NoProfile -Command "(Get-Item (Get-Command iscc).Source).VersionInfo.FileVersion"'
 
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         with:
           name: tawaq-windows
-          path: dist/tawaq-*-setup.exe
+          path: |
+            dist/tawaq-*-setup.exe
+            dist/toolchain-*.json
+          if-no-files-found: error
           retention-days: 7
 
   linux:
+    needs: [checks, native_gate]
+    env:
+      REVIEWED_BUILD_NAME: ${{ needs.native_gate.outputs.build_name }}
+      BUILD_NUMBER: ${{ needs.native_gate.outputs.build_number || github.run_number }}
     name: Linux
     runs-on: ubuntu-latest
     if: >-
-      github.event_name == 'push' ||
-      contains(github.event.inputs.platforms || 'macos,windows,linux', 'linux')
+      always() && needs.checks.result == 'success' &&
+      (needs.native_gate.result == 'success' || needs.native_gate.result == 'skipped') &&
+      (github.event_name == 'push' || contains(github.event.inputs.platforms || 'macos,windows,linux', 'linux'))
     steps:
       - uses: actions/checkout@v4
         with:
@@ -279,9 +343,8 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Set version from release tag
-        if: github.event_name == 'push'
-        run: dart tool/set_pubspec_version.dart "${GITHUB_REF_NAME#v}+${{ github.run_number }}"
+      - name: Apply candidate build identity
+        run: dart tool/set_pubspec_version.dart --build-number "$BUILD_NUMBER" --build-name "$REVIEWED_BUILD_NAME"
 
       - name: Install Linux build & packaging dependencies
         run: |
@@ -300,7 +363,8 @@ jobs:
         if: >-
           github.event_name == 'push' ||
           github.event.inputs.action == 'release' ||
-          github.event.inputs.action == 'patch'
+          github.event.inputs.action == 'patch' ||
+          github.event.inputs.action == 'build'
         uses: shorebirdtech/setup-shorebird@v1
         with:
           cache: true
@@ -317,12 +381,10 @@ jobs:
           (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
         run: |
           BUILD_NAME="$(sed -n "s/^version: *\([^+]*\).*/\1/p" pubspec.yaml | head -n1)"
-          if [ "${{ github.event_name }}" = "push" ]; then
-            BUILD_NAME="${GITHUB_REF_NAME#v}"
-          fi
           shorebird release linux \
+            --flutter-version 3.47.5 \
             --build-name "$BUILD_NAME" \
-            --build-number "${{ github.run_number }}"
+            --build-number "$BUILD_NUMBER"
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
@@ -331,20 +393,20 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'patch'
         run: |
           shorebird patch linux \
-            ${{ github.event.inputs.release_version != '' && format('--release-version {0}', github.event.inputs.release_version) || '' }}
+            --release-version "$PATCH_TARGET"
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+          PATCH_TARGET: ${{ github.event.inputs.release_version }}
 
       # Flutter Build (Manual 'build')
-      - name: Flutter build (no Shorebird)
+      - name: Candidate build (no upload)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
-        run: flutter build linux --release --build-number ${{ github.run_number }}
+        run: shorebird release linux --dry-run --flutter-version 3.47.5 --build-number ${{ env.BUILD_NUMBER }}
 
       # Packaging (.deb, .rpm, .pkg.tar.zst, portable ZIP) - Only for release or build (not patch)
       - name: Package Linux installers and portable ZIP
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         run: |
-          export BUILD_NUMBER="${{ github.run_number }}"
           bash tool/packaging/build-deb.sh
           bash tool/packaging/build-rpm.sh
           bash tool/packaging/build-arch.sh
@@ -363,6 +425,11 @@ jobs:
             zip -r -q "$GITHUB_WORKSPACE/dist/$ARCHIVE_ROOT.zip" "$ARCHIVE_ROOT"
           )
 
+      - name: Record actual candidate toolchain
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
+        shell: bash
+        run: python3 tool/release/record_toolchain.py --platform linux-x64 --output dist/toolchain-linux-x64.json --tool 'shorebird=shorebird --version' --tool 'clang=clang --version' --tool 'cmake=cmake --version' --tool 'rpm=rpm --version' --tool 'zstd=zstd --version'
+
       - uses: actions/upload-artifact@v4
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         with:
@@ -372,6 +439,8 @@ jobs:
             dist/*.rpm
             dist/*.pkg.tar.zst
             dist/*.zip
+            dist/toolchain-*.json
+          if-no-files-found: error
           retention-days: 7
 
   release:
@@ -379,21 +448,18 @@ jobs:
     if: >-
       (startsWith(github.ref, 'refs/tags/v') ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release'))
-    needs: [checks, macos, windows, linux]
+    needs: [checks, native_gate, macos, windows, linux]
     runs-on: ubuntu-latest
+    env:
+      REVIEWED_BUILD_NAME: ${{ needs.native_gate.outputs.build_name }}
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dart-lang/setup-dart@v1
-
-      - name: Install Fastforge
-        run: dart pub global activate fastforge
-
       - uses: actions/download-artifact@v4
         with:
-          merge-multiple: true
+          name: reviewed-candidate
 
       - name: Detect prerelease & tag
         id: meta
@@ -401,8 +467,7 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             TAG="${GITHUB_REF_NAME}"
           else
-            VERSION=$(grep '^version:' pubspec.yaml | head -n1 | sed 's/version: //' | sed 's/+.*//' | tr -d '"' | tr -d "'")
-            TAG="v${VERSION}"
+            TAG="v${REVIEWED_BUILD_NAME}"
           fi
 
           if [[ "$TAG" == *-* ]]; then
@@ -412,36 +477,32 @@ jobs:
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Create release checksums
+      - name: Verify complete artifact set against native acceptance
+        env:
+          NATIVE_ACCEPTANCE: ${{ github.event.inputs.native_acceptance }}
         run: |
-          shopt -s nullglob
-          assets=(
-            tawaq-macos-*.dmg
-            tawaq-*-macos-*-installer.zip
-            tawaq-*-windows-x64-setup.exe
-            tawaq-*-linux-x64.zip
-            *.deb
-            *.rpm
-            *.pkg.tar.zst
-          )
-          sha256sum "${assets[@]}" > SHA256SUMS
+          python3 -c 'import os,pathlib; pathlib.Path("native-acceptance.json").write_text(os.environ["NATIVE_ACCEPTANCE"])'
+          SDK=$(python3 -c 'import json; print(json.load(open(".fvmrc"))["flutter"])')
+          python3 tool/release/validate_acceptance.py --record native-acceptance.json \
+            --revision "$GITHUB_SHA" --sdk "$SDK" --platforms macos,windows,linux \
+            --action release --verify-directory .
 
-      - name: Publish installers via Fastforge
+      - name: Stage and verify a coordinated GitHub release before publication
         run: |
+          set -euo pipefail
           REPO="MoathCodes/tawaq-app"
           TAG="${{ steps.meta.outputs.tag }}"
           PRERELEASE="${{ steps.meta.outputs.prerelease }}"
-
-          for file in tawaq-macos-*.dmg tawaq-*-macos-*-installer.zip tawaq-*-windows-x64-setup.exe tawaq-*-linux-x64.zip *.deb *.rpm *.pkg.tar.zst SHA256SUMS; do
-            if [ -f "$file" ]; then
-              echo "==> Publishing $file to $REPO ($TAG, prerelease=$PRERELEASE)"
-              fastforge publish \
-                --path "$file" \
-                --targets github \
-                --github-repo "$REPO" \
-                --github-release-title "$TAG" \
-                --github-release-prerelease "$PRERELEASE"
-            fi
-          done
+          gh --version > release-tools.txt
+          # Refuse replacing any existing release. A partial draft remains
+          # private for an operator to inspect/withdraw; it is never announced.
+          if gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1; then
+            echo "Release already exists; inspect it before retrying" >&2
+            exit 1
+          fi
+          gh release create "$TAG" --repo "$REPO" --target "$GITHUB_SHA" \
+            --draft --title "$TAG" --notes "Coordinated desktop release. See release-manifest.json for reviewed build identity and evidence."
+          python3 tool/release/publish_assets.py --directory . --repo "$REPO" --tag "$TAG"
+          gh release edit "$TAG" --repo "$REPO" --prerelease="$PRERELEASE" --draft=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

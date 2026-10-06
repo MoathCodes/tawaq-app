@@ -20,6 +20,8 @@ final class _RecordingStorage extends Storage<String, String> {
 
   final Storage<String, String> _inner = Storage.inMemory();
   final List<String> writeKeys = [];
+  String? failingKey;
+  Completer<void>? completionGate;
 
   @override
   FutureOr<PersistedData<String>?> read(String key) => _inner.read(key);
@@ -27,6 +29,11 @@ final class _RecordingStorage extends Storage<String, String> {
   @override
   FutureOr<void> write(String key, String value, StorageOptions options) async {
     writeKeys.add(key);
+    if (key == failingKey) throw StateError('disk unavailable');
+    if (key == 'OnboardingStateNotifier' &&
+        value.contains('"completed":true')) {
+      await completionGate?.future;
+    }
     await _inner.write(key, value, options);
   }
 
@@ -42,6 +49,82 @@ void main() {
   setUpAll(tzdata.initializeTimeZones);
 
   group('onboarding finish flush order', () {
+    for (final key in [
+      'PrayerSettingsNotifier',
+      'ThemeNotifier',
+      'locale',
+      'OnboardingStateNotifier',
+    ]) {
+      test('failed $key flush leaves completion retryable', () async {
+        final storage = _RecordingStorage();
+        final container = ProviderContainer(
+          overrides: [
+            hiveCoreInitProvider.overrideWith((ref) async {}),
+            settingsStorageProvider.overrideWith((ref) async => storage),
+          ],
+        );
+        addTearDown(container.dispose);
+        final subscriptions = [
+          container.listen(themeProvider, (_, _) {}),
+          container.listen(localeProvider, (_, _) {}),
+        ];
+        addTearDown(() {
+          for (final sub in subscriptions) {
+            sub.close();
+          }
+        });
+        await container.read(prayerSettingsProvider.future);
+        await container.read(themeProvider.future);
+        await container.read(localeProvider.future);
+        await container.read(onboardingStateProvider.future);
+        await pumpEventQueue();
+        storage.failingKey = key;
+        final notifier = container.read(onboardingStateProvider.notifier);
+        await expectLater(notifier.finish(), throwsA(isA<StateError>()));
+        expect(
+          container.read(onboardingStateProvider).requireValue.completed,
+          false,
+        );
+        expect(
+          (await storage.read('OnboardingStateNotifier'))?.data,
+          isNot(contains('"completed":true')),
+        );
+        storage.failingKey = null;
+        expect(await notifier.finish(), true);
+      });
+    }
+
+    test('completion remains false until its durable write succeeds', () async {
+      final storage = _RecordingStorage();
+      final container = ProviderContainer(
+        overrides: [
+          hiveCoreInitProvider.overrideWith((ref) async {}),
+          settingsStorageProvider.overrideWith((ref) async => storage),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.listen(themeProvider, (_, _) {});
+      container.listen(localeProvider, (_, _) {});
+      await container.read(prayerSettingsProvider.future);
+      await container.read(themeProvider.future);
+      await container.read(localeProvider.future);
+      await container.read(onboardingStateProvider.future);
+      await pumpEventQueue();
+      storage.completionGate = Completer<void>();
+      final finish = container.read(onboardingStateProvider.notifier).finish();
+      await pumpEventQueue();
+      expect(
+        container.read(onboardingStateProvider).requireValue.completed,
+        false,
+      );
+      storage.completionGate!.complete();
+      expect(await finish, true);
+      expect(
+        container.read(onboardingStateProvider).requireValue.completed,
+        true,
+      );
+    });
+
     test('flushes prayer then theme then locale then completed', () async {
       final storage = _RecordingStorage();
       final container = ProviderContainer(

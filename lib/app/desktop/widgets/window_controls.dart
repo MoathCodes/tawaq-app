@@ -87,11 +87,14 @@ class WindowControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // AppKit supplies the real traffic lights, including native fullscreen.
+    // Reserve their physical leading area rather than drawing a second set.
+    if (Platform.isMacOS) return const SizedBox(width: 80, height: 28);
     final maximized =
         ref.watch(nativeWindowStateProvider).value?.maximized ?? false;
     final theme = FTheme.of(context);
     final l10n = context.l10n;
-    final isMacStyle = Platform.isMacOS || (forceMacStyle ?? false);
+    final isMacStyle = forceMacStyle ?? false;
 
     if (isMacStyle) {
       return MacOSWindowControls(
@@ -203,6 +206,8 @@ class _MacOSControlButton extends HookWidget {
 
     return MergedActionSemantics(
       label: semanticsLabel,
+      enabled: onPressed != null,
+      onTap: onPressed,
       child: MouseRegion(
         onEnter: (_) => setHovered(value: true),
         onExit: (_) => setHovered(value: false),

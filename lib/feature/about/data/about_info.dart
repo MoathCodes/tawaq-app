@@ -1,111 +1,106 @@
 import 'package:forui/forui.dart';
 import 'package:tawaq/feature/about/domain/models/about_content.dart';
 
-/// The content shown by the about dialog.
-///
-/// ────────────────────────────────────────────────────────────────────────
-/// THIS IS THE ONE FILE TO EDIT.
-/// ────────────────────────────────────────────────────────────────────────
-/// Everything below is placeholder/mock data — swap the strings, links and
-/// people for the real details. To add a row, append another entry to the
-/// relevant list. To hide a whole section, leave its list empty.
-///
-/// Icons come from [FLucideIcons]; browse them at https://lucide.dev/icons.
+/// Destinations and attribution recorded in README.en.md and bundled licenses.
+/// Version is supplied from installed package metadata by AboutView.
 const aboutContent = AboutContent(
   appName: 'توّاق',
-  latinName: 'TAWAQ',
-  version: 'v1.0.0',
+  latinName: 'Tawaq',
+  version: '',
   tagline: AboutText(
-    en: 'Your companion for prayer, Qurʼan and remembrance',
-    ar: 'رفيقك في الصلاة والقرآن والذكر',
+    en: 'Prayer, Quran and remembrance',
+    ar: 'الصلاة والقرآن والذكر',
   ),
   description: AboutText(
-    en: 'Tawaq gathers accurate prayer times, the Mushaf, hadith and the '
-        'fortress of the Muslim into one calm, distraction-free space — '
-        'crafted for both desktop and mobile.',
-    ar: 'يجمع توّاق مواقيت الصلاة الدقيقة والمصحف والأحاديث وحصن المسلم في '
-        'مكانٍ واحدٍ هادئ خالٍ من المشتتات — صُمّم للحاسوب والهاتف معًا.',
+    en: 'A desktop companion for prayer times, Quran reading and study, Hadith search, and Hisn al-Muslim.',
+    ar: 'رفيق للحاسوب لمواقيت الصلاة وقراءة القرآن وتدبّره والبحث في الأحاديث وحصن المسلم.',
   ),
-
-  // ── Quick facts strip ──────────────────────────────────────────────────
-  facts: [
-    AboutFact(
-      icon: FLucideIcons.tag,
-      label: AboutText(en: 'Version', ar: 'الإصدار'),
-      value: AboutText.shared('1.0.0'),
-    ),
-    AboutFact(
-      icon: FLucideIcons.calendar,
-      label: AboutText(en: 'Released', ar: 'تاريخ الإصدار'),
-      value: AboutText.shared('2026'),
-    ),
-    AboutFact(
-      icon: FLucideIcons.monitorSmartphone,
-      label: AboutText(en: 'Platform', ar: 'المنصّة'),
-      value: AboutText(en: 'Desktop & Mobile', ar: 'حاسوب وهاتف'),
-    ),
-  ],
-
-  // ── Links ────────────────────────────────────────────────────────────────
   links: [
-    AboutLink(
-      icon: FLucideIcons.globe,
-      label: AboutText(en: 'Website', ar: 'الموقع الإلكتروني'),
-      url: 'https://example.com',
-      description: AboutText.shared('tawaq.app'),
-    ),
     AboutLink(
       icon: FLucideIcons.gitBranch,
       label: AboutText(en: 'Source code', ar: 'الشيفرة المصدرية'),
-      url: 'https://github.com/example/tawaq',
+      url: 'https://github.com/MoathCodes/tawaq-app',
     ),
     AboutLink(
       icon: FLucideIcons.bug,
       label: AboutText(en: 'Report an issue', ar: 'الإبلاغ عن مشكلة'),
-      url: 'https://github.com/example/tawaq/issues',
-    ),
-    AboutLink(
-      icon: FLucideIcons.mail,
-      label: AboutText(en: 'Contact', ar: 'تواصل معنا'),
-      url: 'mailto:hello@example.com',
-      description: AboutText.shared('hello@example.com'),
+      url: 'https://github.com/MoathCodes/tawaq-app/issues',
     ),
   ],
-
-  // ── Credits ────────────────────────────────────────────────────────────
   credits: [
     AboutCredit(
-      icon: FLucideIcons.penTool,
-      name: AboutText(en: 'Your Name', ar: 'اسمك هنا'),
-      role: AboutText(en: 'Design & development', ar: 'التصميم والتطوير'),
-      url: 'https://example.com',
+      icon: FLucideIcons.users,
+      name: AboutText(
+        en: 'Application contributors',
+        ar: 'المساهمون في التطبيق',
+      ),
+      url: 'https://github.com/MoathCodes/tawaq-app/graphs/contributors',
     ),
   ],
-
-  // ── Acknowledgements ─────────────────────────────────────────────────────
   acknowledgements: [
     AboutAcknowledgement(
-      name: 'Forui',
-      description: AboutText(en: 'UI component library', ar: 'مكتبة الواجهات'),
-      url: 'https://forui.dev',
+      name: 'adhan_dart',
+      description: AboutText(
+        en: 'Prayer calculations',
+        ar: 'حساب مواقيت الصلاة',
+      ),
+      url: 'https://github.com/prayer-timetable/adhan_dart',
     ),
     AboutAcknowledgement(
-      name: 'Dorar.net',
+      name: 'Dorar / dorar_hadith',
       description: AboutText(
-        en: 'Hadith database',
-        ar: 'قاعدة بيانات الأحاديث',
+        en: 'Hadith search and references',
+        ar: 'البحث في الأحاديث ومراجعها',
       ),
       url: 'https://dorar.net',
     ),
     AboutAcknowledgement(
-      name: 'Hisn al-Muslim',
-      description: AboutText(en: 'Supplications content', ar: 'محتوى الأذكار'),
+      name: 'MP3Quran',
+      description: AboutText(
+        en: 'Reciter catalog and audio',
+        ar: 'قائمة القرّاء والتلاوات',
+      ),
+      url: 'https://www.mp3quran.net',
+    ),
+    AboutAcknowledgement(
+      name: 'HisnElmoslem_App',
+      description: AboutText(
+        en: 'Bundled Hisn al-Muslim content',
+        ar: 'محتوى حصن المسلم المضمّن',
+      ),
+      url: 'https://github.com/muslimpack/HisnElmoslem_App',
+    ),
+    AboutAcknowledgement(
+      name: 'King Fahd Quran Printing Complex',
+      description: AboutText(
+        en: 'Mushaf and Quran fonts; separate source terms',
+        ar: 'المصحف وخطوط القرآن؛ وفق شروط المصدر',
+      ),
+      url: 'https://qurancomplex.gov.sa',
+    ),
+    AboutAcknowledgement(
+      name: 'Athan-MP3',
+      description: AboutText(
+        en: 'Bundled Adhan recordings',
+        ar: 'تسجيلات الأذان المضمّنة',
+      ),
+      url: 'https://github.com/abodehq/Athan-MP3',
+    ),
+    AboutAcknowledgement(
+      name: 'IBM Plex Sans Arabic / Noto',
+      description: AboutText(
+        en: 'Interface fonts; included SIL Open Font Licenses',
+        ar: 'خطوط الواجهة؛ تراخيص SIL المرفقة',
+      ),
+    ),
+    AboutAcknowledgement(
+      name: 'Forui',
+      description: AboutText(en: 'Interface components', ar: 'مكوّنات الواجهة'),
+      url: 'https://forui.dev',
     ),
   ],
-
-  // ── Legal footer ───────────────────────────────────────────────────────
   legal: AboutText(
-    en: '© 2026 Tawaq. All rights reserved.',
-    ar: '© ٢٠٢٦ توّاق. جميع الحقوق محفوظة.',
+    en: 'Tawaq-owned code: MIT. Third-party content, software and assets retain their own terms.',
+    ar: 'شيفرة توّاق: MIT. يبقى المحتوى والبرمجيات والأصول الخارجية خاضعًا لشروط مصادرها.',
   ),
 );

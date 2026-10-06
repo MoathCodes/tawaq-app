@@ -1,0 +1,425 @@
+{
+  "audit_date": "2026-10-03",
+  "head": "e9293e32b489c2d5811cdf682f7e872029fa2adf",
+  "baseline": "current dirty working tree, no audit UI edits",
+  "screenshots": 47,
+  "videos": 2,
+  "notes": [
+    "Most screenshots are true app framebuffer captures; the language compositor capture includes desktop opacity.",
+    "quran-compact-study.mp4: crop 804x604 at monitor coordinate 558,240; eight seconds from raw recording second 1.",
+    "quran-verse-selection.mp4: crop 1204x864 at monitor coordinate 174,58; approximately 17.5 seconds.",
+    "Both videos are silent and at original speed.",
+    "Task-owned raw recorder clips were excluded where placement or frames did not support the intended claim.",
+    "Two owner-supplied screenshots are attributed separately; six additional framebuffer captures reproduce title-bar and Medina schedule issues."
+  ],
+  "files": [
+    {
+      "file": "about-copy-feedback.png",
+      "bytes": 243244,
+      "sha256": "d6ed71751ef11628dbafef3ad6239071f720cc9da3081a432df2f85da73e13ce",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "about-placeholder-credits.png",
+      "bytes": 99723,
+      "sha256": "751e6267aa22350243dc1f6549b450cd3ddb8c58705675cace8d68b81ba82b73",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "about-top.png",
+      "bytes": 237470,
+      "sha256": "2953f28ed9477f7b77e6a237139fe145362baa5d92e1116b6d77397a520f7268",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "fortress-reading-english.png",
+      "bytes": 52142,
+      "sha256": "48552bc58d39c3af000c901111f7d8987867bec600aa2481a3814795e71144f3",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "fortress-selected-800x600.png",
+      "bytes": 64144,
+      "sha256": "c718b61083f6094163032728b2842adc3b42f555a195dc4ffbad82b60ec46550",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "fortress-welcome-800x600.png",
+      "bytes": 51569,
+      "sha256": "ef471dcecc29dee95fdc6f096b3c0a3facd051f816ea57743f3eba7ce20e994b",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "fortress-welcome-wide.png",
+      "bytes": 127828,
+      "sha256": "d9b4efc45567b11b72b92e69db7abb3c7662a029dee555ce8c4030e8750133f1",
+      "width": 1896,
+      "height": 1030,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "hadith-empty-compact.png",
+      "bytes": 30491,
+      "sha256": "9c4b48f20383fbff4cd6cd7e98c82d4a64b9aac2fc9786be090287b65154b12d",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "hadith-empty-wide.png",
+      "bytes": 43090,
+      "sha256": "6b809bba23a4845b6e54549a1e18fdc6f017cfe500f26c76e4534eda2b3f4657",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "hadith-filters-compact.png",
+      "bytes": 45065,
+      "sha256": "3ac79058361ffa18f59ea13890b7800f50f80a484b24a5aa4e441da8d1891c01",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "hadith-results-1366x768.png",
+      "bytes": 113926,
+      "sha256": "9c21b4ff997a91ca01b12b96b6ca7c0600982a17439e1fb04222cb9d7620cdb4",
+      "width": 1366,
+      "height": 768,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "location-ar-map-ready.png",
+      "bytes": 407148,
+      "sha256": "b4e4785e6377b95fb342af51a2679319f8e6a23abc11ef655fc68276b4b237c1",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "location-settings-map-pending.png",
+      "bytes": 69484,
+      "sha256": "ef0a9ce1fe57e9e7c25fef2ea1a992108341048437ed7146c9c714196bb52fec",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "madinah-prayer-after-finish.png",
+      "bytes": 133047,
+      "sha256": "7c311b9e56540a3713dfef9fc6c4996b43ee815040abd034abc7a22073d475df",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "madinah-schedule-after-finish.png",
+      "bytes": 113085,
+      "sha256": "4cf6239ae9cf03bad7165e915e7d4ce9dd4986ca09d2b8c96a1c1f1b031925dc",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-appearance.png",
+      "bytes": 46946,
+      "sha256": "83e6b7838a95509294832b62cb507525e25ecab2895da3e588c71205d321cbca",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-inset-titlebar-sage.png",
+      "bytes": 29244,
+      "sha256": "1f8729e10bbb4a85e4ce6e7d6f36af2acbb26f0284b8ab4103da374797b79dc4",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-interrupted-by-adhan.png",
+      "bytes": 38654,
+      "sha256": "25723324ff2126c5a132a6b75f8fc42bab01980857ea63690b4ae827cb0a82a2",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-iqamah.png",
+      "bytes": 44129,
+      "sha256": "e83f296a8f2c3e905d9df6c05bdbbb7693d8b9dcb1e6d6006892e839a19eb73c",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-language-compositor.png",
+      "bytes": 240046,
+      "sha256": "5e9699cf1d0e595e27587239dbf35fba2d2506749f015e4cc58f8c57bbe9299c",
+      "width": 1200,
+      "height": 860,
+      "capture": "compositor"
+    },
+    {
+      "file": "onboarding-location.png",
+      "bytes": 62079,
+      "sha256": "2bfaf5356488508cd31388e500f94a4631168b4790cbbd385d315e2aa3cb3f39",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-madinah-location.png",
+      "bytes": 62297,
+      "sha256": "297f77e299f7700ea9b649b1345b1b635cab24d125810201cecc5550c803f956",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-madinah-method.png",
+      "bytes": 31955,
+      "sha256": "1a499041dd4cd5b5fc070900664fc2f620e8b7574b5ac32d06adeb12cf6c422b",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-madinah-utc-preview.png",
+      "bytes": 32791,
+      "sha256": "1aa35c16872fd69e37703b48b781301e1725d464c64fadffa881f6360cf580c5",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-method.png",
+      "bytes": 32217,
+      "sha256": "51ede2fa0a1a9eac10a62d8e6b1fb0610efbe076fc8464269274660a20de9a55",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-notifications.png",
+      "bytes": 44316,
+      "sha256": "144194f9012667b4dbb0bf0c505fe2aaef4f24a183972fd2235b266600d0555f",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "onboarding-welcome.png",
+      "bytes": 29351,
+      "sha256": "e71506a642b206e4aa95e024db6cee4fa875f497833bc7f04741767cad4f65ca",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "player-labels-wide.png",
+      "bytes": 70291,
+      "sha256": "fc56795aa1923140c92d93a48146e2463843d1ab83c04dba5bc75050e17ac142",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "player-overflow-800x600.png",
+      "bytes": 48756,
+      "sha256": "2006373982e336755fdd8912aec129eb29f572e3bfa9decfcdaf2ac47db05027",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "prayer-missing-location.png",
+      "bytes": 47491,
+      "sha256": "db7a284b25bc4804283d227eac5cbac4cb8d125df2febefb6b8828dc65dced85",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "prayer-status-wide.png",
+      "bytes": 133479,
+      "sha256": "17eb31322d34cd7b1092d189fc8c0174aa38c4942ea547b55e295c7632446db5",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "quran-compact-study.mp4",
+      "bytes": 133468,
+      "sha256": "cc1fe694c018a0a6da4ef1e6da0afedea0c77ef150e1f5b1214dadf562df2a62",
+      "duration_seconds": 8.0,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 804,
+          "height": 604
+        }
+      ],
+      "capture": "cropped compositor recording",
+      "decode_check": "passed"
+    },
+    {
+      "file": "quran-empty-study-ar-dark.png",
+      "bytes": 132521,
+      "sha256": "ec276e6a9f8a982f763595e6cf2e536503a1e46b5c72a70bd733887ae19aceb9",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "quran-empty-study-wide.png",
+      "bytes": 144193,
+      "sha256": "2d6ed59f2873e9c7805418a7e827fac3aecfce3ea2705588a4da83002903960f",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "quran-selection-active.png",
+      "bytes": 156545,
+      "sha256": "556238ae1b9548cb3f9e2d61771c3e3d72dd06c22f1ad751c0b4348b4c09e69f",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "quran-selection-cleared.png",
+      "bytes": 132521,
+      "sha256": "ec276e6a9f8a982f763595e6cf2e536503a1e46b5c72a70bd733887ae19aceb9",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "quran-study-800x600.png",
+      "bytes": 55908,
+      "sha256": "3cce96f4cb686d8f3c45626c5b879900f13ee833794acc00d035ad90cc54c1b4",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "quran-study-ar-800x600.png",
+      "bytes": 55403,
+      "sha256": "55f113e34e5142f1acc5c6b73b5a7609f79d04efaea48206ee69fb526d83af8b",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "quran-study-collapsed-wide.png",
+      "bytes": 109714,
+      "sha256": "d56ff5f80bf144daebd68ff6ac546b8dc195d4c0e0b67b998fea33bc0452e168",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "quran-verse-selection.mp4",
+      "bytes": 398771,
+      "sha256": "afbe5684c140acbdea85e35fcccd1d91c8bcd47d8436c4abf396731c42fca49a",
+      "duration_seconds": 17.516992,
+      "streams": [
+        {
+          "codec_name": "h264",
+          "codec_type": "video",
+          "width": 1204,
+          "height": 864
+        }
+      ],
+      "capture": "cropped compositor recording",
+      "decode_check": "passed"
+    },
+    {
+      "file": "range-repeat-800x600.png",
+      "bytes": 71267,
+      "sha256": "a16287ecea1ef1e64b40c931ad2c21644760d208a393578e84d866ef61f9bfa8",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "range-repeat-wide.png",
+      "bytes": 105785,
+      "sha256": "d6bdb2bf8013e8bf4491f6dab0e187a65e9152afedb9199a7bd63bfb7d7c28ad",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "reciter-800x600.png",
+      "bytes": 62827,
+      "sha256": "fb2d0dc36add86ff53335d65cb6719a40e9ce6839bc0f971a223cb0d5e44ca6a",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "sage-appearance-ar-dark.png",
+      "bytes": 90705,
+      "sha256": "5895844cd926aac5580357e2821dd4e8c8a61bb99f486811ce3c4224dfb3c134",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "sage-fortress-ar-xl-800x600.png",
+      "bytes": 52176,
+      "sha256": "dc14c1f45ab90d20b6fd3fda7165dbb64f38709b932900054e3c51698a8eee60",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "sage-settings-ar-xl-800x600.png",
+      "bytes": 66242,
+      "sha256": "37a675a146c2c27711cdbb0986406cbdbb50a6123bb943581aec88fe446726d5",
+      "width": 800,
+      "height": 600,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "settings-appearance-top.png",
+      "bytes": 92284,
+      "sha256": "376ffea932a5120ba4dfa9fb3cce076f8f4b092e689d6da6b7a64f6991d54fe5",
+      "width": 1200,
+      "height": 860,
+      "capture": "native Flutter framebuffer"
+    },
+    {
+      "file": "user-onboarding-inset-titlebar.png",
+      "bytes": 378580,
+      "sha256": "7560d8e784825e00d61039f3bdbba62aa7c274e5ec5aa115371f4b80fe20eee7",
+      "width": 1200,
+      "height": 860,
+      "capture": "owner-supplied screenshot; original runtime baseline unknown"
+    },
+    {
+      "file": "user-onboarding-wrong-times.png",
+      "bytes": 411084,
+      "sha256": "174d8148d9c58ffb4a51c0b0b4d23097d07f31b286ff1e2e34359aac744ced64",
+      "width": 1249,
+      "height": 923,
+      "capture": "owner-supplied screenshot; original runtime baseline unknown"
+    }
+  ]
+}

@@ -425,7 +425,7 @@ void main() {
         expect(result[CompletionStatus.jamaah], 2);
         expect(result[CompletionStatus.onTime], 1);
         expect(result[CompletionStatus.late], 1);
-        expect(result[CompletionStatus.missed], 1);
+        expect(result[CompletionStatus.missed], 0);
         expect(result[CompletionStatus.none], 0);
       });
 

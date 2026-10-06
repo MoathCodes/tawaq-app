@@ -102,14 +102,13 @@ class _StaticAnalyticsSettingsNotifier extends PrayerAnalyticsSettingsNotifier {
       PrayerAnalyticsPrefs(period: period);
 }
 
-PrayerAnalysisSectionData _recordedMissedData() {
+PrayerAnalysisSectionData _recordedLateData() {
   final analytics = PrayerAnalyticsCalculator.calculateAnalytics(
     period: PrayerAnalyticsPeriod.monthly,
     statusCounts: {
       for (final status in CompletionStatus.values) status: 0,
-      CompletionStatus.missed: 1,
+      CompletionStatus.late: 1,
     },
-    expectedPrayers: 1,
     currentStreak: 0,
     bestStreak: 0,
   );
@@ -125,7 +124,7 @@ PrayerAnalysisSectionData _recordedMissedData() {
       PrayerTrendBucket(
         start: DateTime(2026, 9, 13),
         end: DateTime(2026, 9, 13, 23, 59, 59),
-        statusCounts: const {CompletionStatus.missed: 1},
+        statusCounts: const {CompletionStatus.late: 1},
       ),
     ],
   );
@@ -141,21 +140,16 @@ void main() {
       );
     await loader.load();
     final iconLoader = FontLoader('ForuiLucideIcons')
-      ..addFont(
-        rootBundle.load('packages/forui_lucide/assets/lucide.ttf'),
-      );
+      ..addFont(rootBundle.load('packages/forui_lucide/assets/lucide.ttf'));
     await iconLoader.load();
-    final packageIconLoader =
-        FontLoader('packages/forui_lucide/ForuiLucideIcons')..addFont(
-          rootBundle.load('packages/forui_lucide/assets/lucide.ttf'),
-        );
+    final packageIconLoader = FontLoader(
+      'packages/forui_lucide/ForuiLucideIcons',
+    )..addFont(rootBundle.load('packages/forui_lucide/assets/lucide.ttf'));
     await packageIconLoader.load();
   });
 
   test('empty periods are distinct from explicit zero-success records', () {
-    final empty = PrayerAnalysisSectionData.empty(
-      PrayerAnalyticsPeriod.weekly,
-    );
+    final empty = PrayerAnalysisSectionData.empty(PrayerAnalyticsPeriod.weekly);
     expect(empty.hasRecordedData, isFalse);
 
     final analytics = PrayerAnalyticsCalculator.calculateAnalytics(
@@ -163,9 +157,7 @@ void main() {
       statusCounts: {
         for (final status in CompletionStatus.values) status: 0,
         CompletionStatus.late: 1,
-        CompletionStatus.missed: 1,
       },
-      expectedPrayers: 10,
       currentStreak: 0,
       bestStreak: 0,
     );
@@ -183,8 +175,7 @@ void main() {
     expect(recorded.period, PrayerAnalyticsPeriod.monthly);
     expect(recorded.hasRecordedData, isTrue);
     expect(recorded.periodAnalytics.completionPercentage, 0);
-    expect(recorded.periodAnalytics.latePercentage, 0.1);
-    expect(recorded.periodAnalytics.missedPercentage, 0.1);
+    expect(recorded.periodAnalytics.latePercentage, 1.0);
   });
 
   testWidgets('empty state keeps the selected period scope and hides zeros', (
@@ -210,10 +201,10 @@ void main() {
     expect(find.byType(TrendChart), findsNothing);
   });
 
-  testWidgets('explicit missed records keep zero-success analytics visible', (
+  testWidgets('explicit late records keep zero-success analytics visible', (
     tester,
   ) async {
-    final data = _recordedMissedData();
+    final data = _recordedLateData();
 
     await tester.pumpWidget(
       _analysisHost(
@@ -224,7 +215,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(TrendChart), findsOneWidget);
-    expect(find.text('Missed Rate'), findsOneWidget);
+    expect(find.text('Missed Rate'), findsNothing);
     expect(find.text('0%'), findsWidgets);
     expect(find.text('No prayer records for this period'), findsNothing);
   });
@@ -252,7 +243,7 @@ void main() {
     await tester.pumpWidget(
       _analysisHost(
         key: const ValueKey('prayer-data-review'),
-        analysis: AsyncData(_recordedMissedData()),
+        analysis: AsyncData(_recordedLateData()),
         period: PrayerAnalyticsPeriod.monthly,
         locale: const Locale('ar'),
         themeMode: ThemeMode.dark,

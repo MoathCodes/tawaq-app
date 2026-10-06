@@ -73,6 +73,28 @@ class $AssetsDatabaseGen {
   ];
 }
 
+class $AssetsFontsGen {
+  const $AssetsFontsGen();
+
+  /// Directory path: assets/fonts/IBM_Plex_Sans_Arabic
+  $AssetsFontsIBMPlexSansArabicGen get iBMPlexSansArabic =>
+      const $AssetsFontsIBMPlexSansArabicGen();
+
+  /// Directory path: assets/fonts/Noto_Nastaliq_Urdu
+  $AssetsFontsNotoNastaliqUrduGen get notoNastaliqUrdu =>
+      const $AssetsFontsNotoNastaliqUrduGen();
+
+  /// Directory path: assets/fonts/Noto_Sans
+  $AssetsFontsNotoSansGen get notoSans => const $AssetsFontsNotoSansGen();
+
+  /// Directory path: assets/fonts/Noto_Sans_Bengali
+  $AssetsFontsNotoSansBengaliGen get notoSansBengali =>
+      const $AssetsFontsNotoSansBengaliGen();
+
+  /// Directory path: assets/fonts/Noto_Sans_SC
+  $AssetsFontsNotoSansSCGen get notoSansSC => const $AssetsFontsNotoSansSCGen();
+}
+
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
@@ -195,9 +217,60 @@ class $AssetsDatabaseTafseerArGen {
   List<String> get values => [quraanAS, quraanBa, quraanIK, tafseerMouaser];
 }
 
+class $AssetsFontsIBMPlexSansArabicGen {
+  const $AssetsFontsIBMPlexSansArabicGen();
+
+  /// File path: assets/fonts/IBM_Plex_Sans_Arabic/OFL.txt
+  String get ofl => 'assets/fonts/IBM_Plex_Sans_Arabic/OFL.txt';
+
+  /// List of all assets
+  List<String> get values => [ofl];
+}
+
+class $AssetsFontsNotoNastaliqUrduGen {
+  const $AssetsFontsNotoNastaliqUrduGen();
+
+  /// File path: assets/fonts/Noto_Nastaliq_Urdu/OFL.txt
+  String get ofl => 'assets/fonts/Noto_Nastaliq_Urdu/OFL.txt';
+
+  /// List of all assets
+  List<String> get values => [ofl];
+}
+
+class $AssetsFontsNotoSansGen {
+  const $AssetsFontsNotoSansGen();
+
+  /// File path: assets/fonts/Noto_Sans/OFL.txt
+  String get ofl => 'assets/fonts/Noto_Sans/OFL.txt';
+
+  /// List of all assets
+  List<String> get values => [ofl];
+}
+
+class $AssetsFontsNotoSansBengaliGen {
+  const $AssetsFontsNotoSansBengaliGen();
+
+  /// File path: assets/fonts/Noto_Sans_Bengali/OFL.txt
+  String get ofl => 'assets/fonts/Noto_Sans_Bengali/OFL.txt';
+
+  /// List of all assets
+  List<String> get values => [ofl];
+}
+
+class $AssetsFontsNotoSansSCGen {
+  const $AssetsFontsNotoSansSCGen();
+
+  /// File path: assets/fonts/Noto_Sans_SC/OFL.txt
+  String get ofl => 'assets/fonts/Noto_Sans_SC/OFL.txt';
+
+  /// List of all assets
+  List<String> get values => [ofl];
+}
+
 abstract final class Assets {
   static const $AssetsAudioGen audio = $AssetsAudioGen();
   static const $AssetsDatabaseGen database = $AssetsDatabaseGen();
+  static const $AssetsFontsGen fonts = $AssetsFontsGen();
   static const $AssetsImagesGen images = $AssetsImagesGen();
   static const String shorebird = 'shorebird.yaml';
 

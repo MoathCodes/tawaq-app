@@ -1,4 +1,5 @@
 import 'package:flutter/semantics.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
@@ -143,6 +144,7 @@ void main() {
   Future<MushafReaderController> pumpReaderComposition(
     WidgetTester tester, {
     required double width,
+    bool disableAnimations = false,
     _TestQuranSelectedAyahId? selectedState,
   }) async {
     final controller = MushafReaderController.withRepository(
@@ -162,6 +164,11 @@ void main() {
           child: FToaster(
             child: MaterialApp(
               locale: const Locale('en'),
+              builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context)
+                    .copyWith(disableAnimations: disableAnimations),
+                child: child!,
+              ),
               localizationsDelegates: appLocalizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(
@@ -206,16 +213,34 @@ void main() {
     );
   }
 
+  testWidgets(
+    'reduced motion presents ayah actions without slide or scale effects',
+    (tester) async {
+      final controller = await pumpReaderComposition(
+        tester,
+        width: 600,
+        disableAnimations: true,
+      );
+      final bar = find.byType(AyahSelectionActionsBar);
+      expect(
+        find.descendant(of: bar, matching: find.byType(Animate)),
+        findsNothing,
+      );
+      expect(
+        find.descendant(of: bar, matching: find.byType(SlideTransition)),
+        findsNothing,
+      );
+      expect(find.bySemanticsLabel('Play'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      controller.dispose();
+    },
+  );
+
   testWidgets('reader composition keeps actions named and wraps when narrow', (
     tester,
   ) async {
     final controller = await pumpReaderComposition(tester, width: 320);
-    for (final label in [
-      'Play',
-      'Share',
-      'Copy',
-      'Dismiss ayah selection',
-    ]) {
+    for (final label in ['Play', 'Share', 'Copy', 'Dismiss ayah selection']) {
       expect(find.bySemanticsLabel(label), findsOneWidget);
     }
     expect(find.byType(Wrap), findsWidgets);

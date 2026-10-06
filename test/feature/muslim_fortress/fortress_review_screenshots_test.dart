@@ -13,8 +13,9 @@ import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
+import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_browse_sidebar.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -56,11 +57,9 @@ Widget _gallery({
   required AppPalette palette,
   required double textScale,
   bool expanded = false,
-  bool includeToolbar = true,
-  bool searchOpen = false,
 }) {
   final key = ValueKey(
-    '${locale.languageCode}-${themeMode.name}-$width-${expanded ? 'expanded' : 'collapsed'}-${includeToolbar ? 'toolbar' : 'header'}${searchOpen ? '-search' : ''}',
+    '${locale.languageCode}-${themeMode.name}-$width-${expanded ? 'expanded' : 'collapsed'}-header',
   );
   return ProviderScope(
     overrides: [
@@ -68,10 +67,6 @@ Widget _gallery({
       settingsStorageProvider.overrideWith(
         (ref) async => Storage<String, String>.inMemory(),
       ),
-      if (searchOpen)
-        fortressScreenControllerProvider.overrideWith(
-          _SearchToolbarController.new,
-        ),
     ],
     child: FTheme(
       data: buildAppTheme(
@@ -94,10 +89,6 @@ Widget _gallery({
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (includeToolbar) ...[
-                      const ExcludeSemantics(child: FortressBrowseToolbar()),
-                      const SizedBox(height: 16),
-                    ],
                     FortressCategoryDetailHeader(
                       category: _category,
                       duaCount: 24,
@@ -162,9 +153,7 @@ Widget _baselineGallery({
                       padding: EdgeInsets.all(24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _BaselineHeader(),
-                        ],
+                        children: [_BaselineHeader()],
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -247,14 +236,11 @@ void main() {
       );
     await quranLoader.load();
     final iconLoader = FontLoader('ForuiLucideIcons')
-      ..addFont(
-        rootBundle.load('packages/forui_lucide/assets/lucide.ttf'),
-      );
+      ..addFont(rootBundle.load('packages/forui_lucide/assets/lucide.ttf'));
     await iconLoader.load();
-    final packageIconLoader =
-        FontLoader('packages/forui_lucide/ForuiLucideIcons')..addFont(
-          rootBundle.load('packages/forui_lucide/assets/lucide.ttf'),
-        );
+    final packageIconLoader = FontLoader(
+      'packages/forui_lucide/ForuiLucideIcons',
+    )..addFont(rootBundle.load('packages/forui_lucide/assets/lucide.ttf'));
     await packageIconLoader.load();
   });
 
@@ -306,28 +292,49 @@ void main() {
     file: 'goldens/fortress_expanded_narrow_ar_manuscript_dark_large.png',
   );
 
-  testWidgets('composed browse toolbar renders its existing search field', (
+  testWidgets('sidebar owns the only search field with a search icon', (
     tester,
   ) async {
     await tester.pumpWidget(
-      _gallery(
-        width: 720,
-        locale: const Locale('en'),
-        themeMode: ThemeMode.light,
-        palette: AppPalette.manuscript,
-        textScale: 1,
-        searchOpen: true,
+      ProviderScope(
+        overrides: [
+          fortressScreenSettingsProvider.overrideWith(_SidebarSettings.new),
+        ],
+        child: FTheme(
+          data: buildAppTheme(
+            palette: AppPalette.manuscript,
+            themeMode: ThemeMode.light,
+            touch: false,
+            textScale: 1,
+          ),
+          child: const MaterialApp(
+            locale: const Locale('en'),
+            localizationsDelegates: appLocalizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const Scaffold(
+              body: Center(
+                child: RepaintBoundary(
+                  key: ValueKey('fortress-sidebar-search'),
+                  child: SizedBox(
+                    width: 320,
+                    height: 480,
+                    child: ExcludeSemantics(
+                      child: FortressBrowseSidebar(categories: [_category]),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
     await tester.pumpAndSettle();
     expect(find.byType(FTextField), findsOneWidget);
+    expect(find.byIcon(FLucideIcons.search), findsOneWidget);
     expect(tester.takeException(), isNull);
     await expectLater(
-      find.byKey(
-        const ValueKey(
-          'en-light-720.0-collapsed-toolbar-search',
-        ),
-      ),
+      find.byKey(const ValueKey('fortress-sidebar-search')),
       matchesGoldenFile(
         'goldens/fortress_browse_search_en_manuscript_light.png',
       ),
@@ -372,9 +379,9 @@ void main() {
   );
 }
 
-class _SearchToolbarController extends FortressScreenController {
+class _SidebarSettings extends FortressScreenSettingsNotifier {
   @override
-  FortressFlowState build() => const FortressFlowState(query: 'fixture');
+  Future<FortressScreenState> build() async => FortressScreenState.initial();
 }
 
 void _goldenTest(
@@ -403,7 +410,7 @@ void _goldenTest(
     await expectLater(
       find.byKey(
         ValueKey(
-          '${locale.languageCode}-${themeMode.name}-$width-${expanded ? 'expanded' : 'collapsed'}-toolbar',
+          '${locale.languageCode}-${themeMode.name}-$width-${expanded ? 'expanded' : 'collapsed'}-header',
         ),
       ),
       matchesGoldenFile(file),

@@ -11,7 +11,7 @@ import 'package:timezone/timezone.dart';
 part 'prayer_completion_provider.g.dart';
 
 /// Write actions for prayer completion records.
-@Riverpod(keepAlive: true)
+@riverpod
 class PrayerCompletionActions extends _$PrayerCompletionActions {
   @override
   void build() {}
@@ -37,10 +37,7 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
     if (status == CompletionStatus.none) {
       await ref
           .read(prayerCompletionStoreProvider.notifier)
-          .deletePrayer(
-            prayer,
-            dayInstant,
-          );
+          .deletePrayer(prayer, dayInstant);
     } else {
       final existing = await _loadCanonical(prayer, dayKey);
       final completion = PrayerCompletion(
@@ -55,7 +52,7 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
 
   /// Cycles [prayer]'s completion on today's calendar day.
   ///
-  /// Order: none → jamaah → onTime → late → missed → cleared.
+  /// Order: none → jamaah → onTime → late → cleared.
   Future<void> cycleTodayPrayerStatus({
     required Prayer prayer,
     required CompletionStatus currentStatus,
@@ -76,10 +73,7 @@ class PrayerCompletionActions extends _$PrayerCompletionActions {
     );
   }
 
-  Future<PrayerCompletion?> _loadCanonical(
-    Prayer prayer,
-    int dayKey,
-  ) async {
+  Future<PrayerCompletion?> _loadCanonical(Prayer prayer, int dayKey) async {
     final location = _location;
     if (location == null) return null;
 

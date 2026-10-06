@@ -34,11 +34,7 @@ http.StreamedResponse _response({
 }
 
 RecitationCache _cache(Directory root, http.Client client) {
-  return RecitationCache(
-    client: client,
-    logger: Logger(),
-    rootOverride: root,
-  );
+  return RecitationCache(client: client, logger: Logger(), rootOverride: root);
 }
 
 RecitationRepository _repo(Directory root, http.Client client) {
@@ -81,6 +77,104 @@ void main() {
   });
 
   group('downloadAudio progress + cancellation', () {
+    for (final stallHeaders in [true, false]) {
+      test(
+        'cancellation acknowledges cleanup while ${stallHeaders ? 'headers' : 'body'} never arrive',
+        () async {
+          final headers = Completer<http.StreamedResponse>();
+          final requested = Completer<void>();
+          final started = Completer<void>();
+          final body = StreamController<List<int>>();
+          final client = http_testing.MockClient.streaming((request, _) async {
+            requested.complete();
+            if (stallHeaders) return headers.future;
+            return http.StreamedResponse(body.stream, 200, contentLength: 10);
+          });
+          final cache = _cache(tempDir, client);
+          final token = CancellationToken();
+          final operation = cache
+              .downloadAudio(
+                reciterId: 1,
+                moshafId: 1,
+                surah: 1,
+                reciterName: 'Test',
+                riwayahName: 'Hafs',
+                surahName: 'Al-Fatiha',
+                url: kSurah1Url,
+                cancellationToken: token,
+              )
+              .map((event) {
+                if (!started.isCompleted) started.complete();
+                return event;
+              })
+              .toList();
+          await requested.future;
+          if (!stallHeaders) await started.future;
+          final timer = Stopwatch()..start();
+          token.cancel();
+          await operation.timeout(const Duration(milliseconds: 250));
+          timer.stop();
+          expect(timer.elapsedMilliseconds, lessThan(250));
+          final files = tempDir.listSync(recursive: true).whereType<File>();
+          expect(
+            files.where(
+              (f) => f.path.endsWith('.part') || f.path.endsWith('.mp3'),
+            ),
+            isEmpty,
+          );
+          if (stallHeaders)
+            headers.complete(http.StreamedResponse(body.stream, 200));
+          await body.close();
+          client.close();
+        },
+      );
+    }
+
+    test('one cancelled subscriber leaves another owner downloading', () async {
+      final body = StreamController<List<int>>();
+      var requests = 0;
+      final cache = _cache(
+        tempDir,
+        _client((_) {
+          requests++;
+          return http.StreamedResponse(body.stream, 200, contentLength: 5);
+        }),
+      );
+      final a = CancellationToken();
+      final b = CancellationToken();
+      final joinedA = Completer<void>();
+      final joinedB = Completer<void>();
+      Stream<DownloadProgress> download(
+        CancellationToken token,
+        Completer<void> joined,
+      ) => cache
+          .downloadAudio(
+            reciterId: 1,
+            moshafId: 1,
+            surah: 1,
+            reciterName: 'Test',
+            riwayahName: 'Hafs',
+            surahName: 'Al-Fatiha',
+            url: kSurah1Url,
+            cancellationToken: token,
+          )
+          .map((event) {
+            if (!joined.isCompleted) joined.complete();
+            return event;
+          });
+      final first = download(a, joinedA).toList();
+      await joinedA.future;
+      final second = download(b, joinedB).toList();
+      await joinedB.future;
+      a.cancel();
+      await first.timeout(const Duration(milliseconds: 250));
+      body.add([1, 2, 3, 4, 5]);
+      await body.close();
+      expect((await second).last.receivedBytes, 5);
+      expect(requests, 1);
+      expect(await cache.listCached(), hasLength(1));
+    });
+
     test('emits 0% then 50% then 100% and atomically renames .part', () async {
       // Two equal chunks of 5 bytes each -> 0, 5/10, 10/10, then a final
       // post-rename progress event == 10/10.
@@ -135,11 +229,8 @@ void main() {
       () async {
         final controller = StreamController<List<int>>();
         final client = _client(
-          (_) => http.StreamedResponse(
-            controller.stream,
-            200,
-            contentLength: 5,
-          ),
+          (_) =>
+              http.StreamedResponse(controller.stream, 200, contentLength: 5),
         );
         final cache = _cache(tempDir, client);
         final tokenA = CancellationToken();
@@ -160,13 +251,10 @@ void main() {
               url: 'https://example.com/001.mp3',
               cancellationToken: tokenA,
             )
-            .listen(
-              (e) {
-                firstEvents.add(e);
-                if (!secondStarted.isCompleted) secondStarted.complete();
-              },
-              onDone: firstDone.complete,
-            );
+            .listen((e) {
+              firstEvents.add(e);
+              if (!secondStarted.isCompleted) secondStarted.complete();
+            }, onDone: firstDone.complete);
 
         await secondStarted.future.timeout(const Duration(seconds: 2));
 
@@ -209,11 +297,8 @@ void main() {
       final controller = StreamController<List<int>>()
         ..add(Uint8List.fromList([1, 2, 3, 4, 5]));
       final client = _client(
-        (_) => http.StreamedResponse(
-          controller.stream,
-          200,
-          contentLength: 100,
-        ),
+        (_) =>
+            http.StreamedResponse(controller.stream, 200, contentLength: 100),
       );
       final cache = _cache(tempDir, client);
       final token = CancellationToken();
@@ -264,10 +349,7 @@ void main() {
 
     test('non-200 emits an error and deletes .part', () async {
       final client = _client(
-        (_) => http.StreamedResponse(
-          const Stream<List<int>>.empty(),
-          404,
-        ),
+        (_) => http.StreamedResponse(const Stream<List<int>>.empty(), 404),
       );
       final cache = _cache(tempDir, client);
 
@@ -386,7 +468,7 @@ void main() {
     });
 
     test(
-      'mid-download failure with large .part hands mpv the .part path',
+      'mid-download failure never hands playback an incomplete file',
       () async {
         // >1024 bytes then a stream error: the .part is large enough to play.
         final controller = StreamController<List<int>>()
@@ -410,8 +492,12 @@ void main() {
           surahName: 'Al-Fatiha',
         );
 
-        expect(result.uri, startsWith('file://'));
-        expect(result.uri, endsWith('.mp3.part'));
+        expect(result.uri, kSurah1Url);
+        final parts = tempDir
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.part'));
+        expect(parts, isEmpty);
         expect(result.progress, isNotNull);
         final events = await result.progress!.toList();
         // initial(0) then chunk(2048). No final-after-rename event.
@@ -420,44 +506,38 @@ void main() {
       },
     );
 
-    test(
-      'mid-download failure with small .part falls back to network and '
-      'cleans up',
-      () async {
-        // 10 bytes (<1024) then a stream error: .part too small to play.
-        final controller = StreamController<List<int>>()
-          ..add(Uint8List.fromList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
-          ..addError(Exception('network drop'));
-        final client = _client(
-          (_) => http.StreamedResponse(
-            controller.stream,
-            200,
-            contentLength: 4096,
-          ),
-        );
-        final repo = _repo(tempDir, client);
-        final reciter = _reciter();
-        final moshaf = reciter.moshaf.first;
+    test('mid-download failure with small .part falls back to network and '
+        'cleans up', () async {
+      // 10 bytes (<1024) then a stream error: .part too small to play.
+      final controller = StreamController<List<int>>()
+        ..add(Uint8List.fromList([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]))
+        ..addError(Exception('network drop'));
+      final client = _client(
+        (_) =>
+            http.StreamedResponse(controller.stream, 200, contentLength: 4096),
+      );
+      final repo = _repo(tempDir, client);
+      final reciter = _reciter();
+      final moshaf = reciter.moshaf.first;
 
-        final result = await repo.resolveSurahUri(
-          reciter: reciter,
-          moshaf: moshaf,
-          surah: 1,
-          surahName: 'Al-Fatiha',
-        );
+      final result = await repo.resolveSurahUri(
+        reciter: reciter,
+        moshaf: moshaf,
+        surah: 1,
+        surahName: 'Al-Fatiha',
+      );
 
-        expect(result.uri, kSurah1Url);
-        // The undersized .part must be deleted.
-        final audioDir = Directory('${tempDir.path}/audio');
-        if (audioDir.existsSync()) {
-          final parts = audioDir
-              .listSync(recursive: true)
-              .whereType<File>()
-              .where((f) => f.path.endsWith('.part'));
-          expect(parts, isEmpty, reason: 'undersized .part must be deleted');
-        }
-      },
-    );
+      expect(result.uri, kSurah1Url);
+      // The undersized .part must be deleted.
+      final audioDir = Directory('${tempDir.path}/audio');
+      if (audioDir.existsSync()) {
+        final parts = audioDir
+            .listSync(recursive: true)
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.part'));
+        expect(parts, isEmpty, reason: 'undersized .part must be deleted');
+      }
+    });
 
     test(
       'onProgress fires live during the download and matches replayed events',
@@ -506,11 +586,8 @@ void main() {
         final controller = StreamController<List<int>>()
           ..add(Uint8List.fromList([1, 2, 3, 4, 5]));
         final client = _client(
-          (_) => http.StreamedResponse(
-            controller.stream,
-            200,
-            contentLength: 100,
-          ),
+          (_) =>
+              http.StreamedResponse(controller.stream, 200, contentLength: 100),
         );
         final repo = _repo(tempDir, client);
         final reciter = _reciter();

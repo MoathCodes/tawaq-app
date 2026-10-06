@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
@@ -148,30 +149,29 @@ class StudyContentSection<T> extends StatelessWidget {
           );
         }
 
+        final content = Padding(
+          key: ValueKey(contentKey),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _selectorHeader(context, sourceSelector),
+              contentBuilder(data),
+            ],
+          ),
+        );
+        if (reduceMotion(context)) return content;
         return AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
-          child:
-              Padding(
-                    key: ValueKey(contentKey),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.md,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _selectorHeader(context, sourceSelector),
-                        contentBuilder(data),
-                      ],
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(duration: 250.ms, curve: Curves.easeOut)
-                  .slideY(
-                    begin: 0.02,
-                    end: 0,
-                    duration: 250.ms,
-                    curve: Curves.easeOut,
-                  ),
+          child: content
+              .animate()
+              .fadeIn(duration: 250.ms, curve: Curves.easeOut)
+              .slideY(
+                begin: 0.02,
+                end: 0,
+                duration: 250.ms,
+                curve: Curves.easeOut,
+              ),
         );
       },
     );

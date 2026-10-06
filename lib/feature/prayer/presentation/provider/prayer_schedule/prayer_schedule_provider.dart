@@ -14,8 +14,7 @@ part 'prayer_schedule_provider.g.dart';
 /// Current obligatory prayer for the live schedule.
 @riverpod
 Prayer? scheduleCurrentPrayer(Ref ref) {
-  ref.watch(currentMinuteBucketProvider);
-  final day = ref.read(prayerDayProvider).value;
+  final day = ref.watch(prayerMinuteSnapshotProvider);
   if (day == null) return null;
   return getCurrentPrayer(
     currentTime: day.now,
@@ -29,10 +28,7 @@ Prayer? scheduleCurrentPrayer(Ref ref) {
 /// Call sites resolve “today” via [prayerCalendarDayKeyProvider] — there is no
 /// null/today dual cache on this family.
 @riverpod
-List<PrayerScheduleRow> prayerSchedule(
-  Ref ref,
-  int dayKey,
-) {
+List<PrayerScheduleRow> prayerSchedule(Ref ref, int dayKey) {
   final settings = ref.watch(effectivePrayerSettingsProvider);
   if (settings == null) return [];
 

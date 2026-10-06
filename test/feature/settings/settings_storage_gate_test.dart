@@ -1,12 +1,55 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/storage/settings_storage.dart';
+import 'package:tawaq/feature/settings/data/models/theme_prefs.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
+import 'package:tawaq/theme/theme_model.dart';
 
 void main() {
+  test(
+    'Sage selection and mode restore after a flushed provider restart',
+    () async {
+      final storage = Storage<String, String>.inMemory();
+      ProviderContainer create() => ProviderContainer(
+        overrides: [
+          hiveCoreInitProvider.overrideWith((ref) async {}),
+          settingsStorageProvider.overrideWith((ref) async => storage),
+        ],
+      );
+      final first = create();
+      await first.read(themeProvider.future);
+      first.read(themeProvider.notifier)
+        ..setPalette(AppPalette.sage)
+        ..setThemeMode(ThemeMode.dark);
+      await first.read(themeProvider.notifier).flush();
+      first.dispose();
+      final restarted = create();
+      addTearDown(restarted.dispose);
+      final prefs = await restarted.read(themeProvider.future);
+      expect(prefs.appPalette, AppPalette.sage);
+      expect(prefs.themeMode, ThemeMode.dark);
+    },
+  );
+
+  test('all saved palette names remain compatible', () {
+    for (final palette in AppPalette.values) {
+      for (final key in [palette.name, palette.key]) {
+        final prefs = ThemePrefs.fromJson({
+          'appPalette': key,
+          'themeMode': 'light',
+        });
+        expect(prefs.appPalette, palette);
+        expect(ThemePrefs.fromJson(prefs.toJson()).appPalette, palette);
+      }
+    }
+    expect(appPaletteFromJson('unknown'), AppPalette.manuscript);
+    expect(ThemePrefs.defaults().appPalette, AppPalette.manuscript);
+  });
+
   group('settingsStorage gate', () {
     test(
       'locale hydrate awaits storage decode (not sync default race)',

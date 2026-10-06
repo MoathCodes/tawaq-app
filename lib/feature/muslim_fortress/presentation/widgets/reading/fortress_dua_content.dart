@@ -5,8 +5,11 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/empty_state_panel.dart';
+import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_commentary_text.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
@@ -22,7 +25,7 @@ enum FortressDuaContentMode {
   /// Category list: plain excerpt or full text (no mushaf widgets).
   previewCollapsed,
 
-  /// Category list: expanded row with virtue and inline study.
+  /// Category list: expanded row with sourced virtue and benefit.
   previewExpanded,
 
   /// Focus reading: mushaf-backed thikr only (virtue shown separately).
@@ -50,21 +53,27 @@ class FortressDuaContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return switch (mode) {
-      FortressDuaContentMode.previewCollapsed => _ThikrPreviewText(
-        dua: dua,
-        isExpanded: false,
+      FortressDuaContentMode.previewCollapsed => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _ThikrPreviewText(dua: dua, isExpanded: false),
+          if (dua.hasDistinctVirtue) ...[
+            const SizedBox(height: AppSpacing.md),
+            FortressDuaVirtueLine(virtue: dua.virtue!),
+          ],
+        ],
       ),
       FortressDuaContentMode.previewExpanded => Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _ThikrPreviewText(dua: dua, isExpanded: true),
-          if (dua.hasVirtue) ...[
+          if (dua.hasDistinctVirtue) ...[
             const SizedBox(height: AppSpacing.md),
             FortressDuaVirtueLine(virtue: dua.virtue!),
           ],
-          if (dua.hasStudyContent) ...[
-            const SizedBox(height: AppSpacing.lg),
-            FortressDuaStudyContent(dua: dua, compact: true),
+          if (dua.hasBenefit) ...[
+            const SizedBox(height: AppSpacing.md),
+            _FortressPreviewBenefit(dua: dua),
           ],
         ],
       ),
@@ -78,11 +87,52 @@ class FortressDuaContent extends ConsumerWidget {
   }
 }
 
+/// Browse previews show benefits, while the study destination owns attribution
+/// and explanation. Never substitute a source reference for a missing benefit.
+class _FortressPreviewBenefit extends ConsumerWidget {
+  const new({required this.dua});
+
+  final FortressDuaItem dua;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    Widget content(String? text) {
+      if (text == null || text.trim().isEmpty) return const SizedBox.shrink();
+      return FortressCommentaryText(
+        text: text,
+        baseStyle: context.theme.typography.body.sm.copyWith(
+          color: context.theme.colors.mutedForeground,
+          height: 1.75,
+        ),
+      );
+    }
+
+    if (dua.commentary != null) return content(dua.commentary!.benefit);
+    Widget loadError() => ErrorStatePanel(
+      message: context.l10n.fortressLoadError,
+      retryLabel: context.l10n.fortressRetry,
+      onRetry: () => ref.invalidate(fortressRepositoryProvider),
+    );
+    return ref
+        .watch(fortressRepositoryProvider)
+        .when(
+          data: (repository) {
+            try {
+              return content(
+                repository.loadCommentaryForContent(dua.contentId)?.benefit,
+              );
+            } on Object {
+              return loadError();
+            }
+          },
+          loading: () => const Center(child: FCircularProgress.loader()),
+          error: (_, _) => loadError(),
+        );
+  }
+}
+
 class _ThikrPreviewText extends StatelessWidget {
-  const new({
-    required this.dua,
-    required this.isExpanded,
-  });
+  const new({required this.dua, required this.isExpanded});
 
   final FortressDuaItem dua;
   final bool isExpanded;
@@ -103,12 +153,17 @@ class _ThikrPreviewText extends StatelessWidget {
       style = style.copyWith(fontFamily: FontFamily.uthmanicHafs);
     }
 
-    return Text(
-      dua.text,
-      style: style,
-      textAlign: TextAlign.start,
-      maxLines: isExpanded ? null : 4,
-      overflow: isExpanded ? null : TextOverflow.ellipsis,
+    // Tile titles default to one line. Expanded prose must override that
+    // inherited limit rather than treating Text.maxLines == null as unlimited.
+    return DefaultTextStyle(
+      style: DefaultTextStyle.of(context).style,
+      child: Text(
+        dua.text,
+        style: style,
+        textAlign: TextAlign.start,
+        maxLines: isExpanded ? null : 4,
+        overflow: isExpanded ? null : TextOverflow.ellipsis,
+      ),
     );
   }
 }
@@ -116,11 +171,7 @@ class _ThikrPreviewText extends StatelessWidget {
 /// Virtue line constrained for focus-reading footer chrome.
 class FortressFocusVirtueFooter extends StatelessWidget {
   /// Creates a virtue footer.
-  const new({
-    required this.virtue,
-    required this.horizontalPadding,
-    super.key,
-  });
+  const new({required this.virtue, required this.horizontalPadding, super.key});
 
   final String virtue;
   final double horizontalPadding;
@@ -179,11 +230,7 @@ class _FortressThikrBody extends HookConsumerWidget {
         );
 
     if (!dua.isQuranicPassage) {
-      return Text(
-        dua.text,
-        style: fallbackStyle,
-        textAlign: textAlign,
-      );
+      return Text(dua.text, style: fallbackStyle, textAlign: textAlign);
     }
 
     final ayahColor = muted ? colors.mutedForeground : colors.foreground;
@@ -192,11 +239,7 @@ class _FortressThikrBody extends HookConsumerWidget {
       height: ayahFontSize * 1.6,
       child: const Center(child: FCircularProgress.loader()),
     );
-    final error = Text(
-      dua.text,
-      style: fallbackStyle,
-      textAlign: textAlign,
-    );
+    final error = Text(dua.text, style: fallbackStyle, textAlign: textAlign);
 
     return Column(
       mainAxisSize: MainAxisSize.min,

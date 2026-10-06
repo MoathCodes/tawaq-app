@@ -24,7 +24,8 @@ class HadithLookupSection extends HookConsumerWidget {
   final String hint;
   final HadithLookupKind kind;
   final List<HadithLookupRef> Function(HadithFilters) selected;
-  final HadithFilters Function(HadithFilters, List<HadithLookupRef>) withSelected;
+  final HadithFilters Function(HadithFilters, List<HadithLookupRef>)
+  withSelected;
 
   static const _lookupDebounceDuration = Duration(milliseconds: 200);
   static const _lookupMinLength = 2;
@@ -34,23 +35,18 @@ class HadithLookupSection extends HookConsumerWidget {
     String query,
     ObjectRef<int> requestId,
   ) async {
+    final currentRequest = ++requestId.value;
     final trimmed = query.trim();
     if (trimmed.length < _lookupMinLength) {
       return const <HadithLookupRef>[];
     }
 
-    final currentRequest = ++requestId.value;
     await Future<void>.delayed(_lookupDebounceDuration);
-    if (currentRequest != requestId.value) {
+    if (!ref.context.mounted || currentRequest != requestId.value) {
       return const <HadithLookupRef>[];
     }
 
-    try {
-      return await ref.read(hadithLookupProvider(kind, trimmed).future);
-    } catch (_) {
-      // Soft-fail: keep the select usable with an empty suggestion list.
-      return const <HadithLookupRef>[];
-    }
+    return await ref.read(hadithLookupProvider(kind, trimmed).future);
   }
 
   @override
@@ -65,9 +61,12 @@ class HadithLookupSection extends HookConsumerWidget {
     final selected = this.selected(filters);
     final selectedSet = selected.toSet();
     final lookupRequestId = useRef(0);
+    final lookupController = useState(useMemoized(TextEditingController.new));
+    useEffect(() => lookupController.value.dispose, [lookupController.value]);
 
     useEffect(
-      () => () => lookupRequestId.value++,
+      () =>
+          () => lookupRequestId.value++,
       const [],
     );
 
@@ -103,7 +102,42 @@ class HadithLookupSection extends HookConsumerWidget {
               );
             },
           ),
+          searchFieldProperties: FSelectSearchFieldProperties(
+            control: .managed(controller: lookupController.value),
+          ),
           filter: (query) => _debouncedLookup(ref, query, lookupRequestId),
+          contentErrorBuilder: (_, _, _) => Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: AppSpacing.md,
+              children: [
+                Text(
+                  context.l10n.hadithLookupFailed,
+                  textAlign: TextAlign.center,
+                ),
+                FButton(
+                  onPress: () {
+                    ref
+                        .read(hadithSessionControllerProvider.notifier)
+                        .retryInitialization();
+                    ref.invalidate(
+                      hadithLookupProvider(
+                        kind,
+                        lookupController.value.text.trim(),
+                      ),
+                    );
+                    // Forui reruns the filter when its search controller changes.
+                    // Keep the query and selection while retrying the same request.
+                    lookupController.value = TextEditingController.fromValue(
+                      lookupController.value.value,
+                    );
+                  },
+                  child: Text(context.l10n.retryAction),
+                ),
+              ],
+            ),
+          ),
           contentBuilder: (_, _, data) => [
             for (final item in data)
               FSelectItem(title: Text(item.name), value: item),
@@ -112,7 +146,9 @@ class HadithLookupSection extends HookConsumerWidget {
           contentEmptyBuilder: (_, _) => Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             child: Text(
-              context.l10n.noResults,
+              lookupController.value.text.trim().length < _lookupMinLength
+                  ? context.l10n.hadithLookupPrompt
+                  : context.l10n.noResults,
               style: theme.typography.body.sm.copyWith(
                 color: theme.colors.mutedForeground,
               ),

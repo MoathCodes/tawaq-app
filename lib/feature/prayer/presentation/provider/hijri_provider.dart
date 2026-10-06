@@ -16,9 +16,5 @@ String hijriClock(Ref ref) {
   final langCode = ref.watch(localeProvider).value ?? 'en';
   final now = ref.read(prayerDayProvider).value?.now;
   if (now == null) return '';
-  return HijriFormat.formatDate(
-    now,
-    langCode,
-    pattern: 'DDDD, dd MMMM yyyy',
-  );
+  return HijriFormat.formatDate(now, langCode, pattern: 'DDDD, dd MMMM yyyy');
 }

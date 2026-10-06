@@ -8,11 +8,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_judgment.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_meta_field.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_hukm_badge.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_dialog.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_actions.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Detail pane for the selected hadith, with lazy accordion remote sections.
@@ -21,12 +23,9 @@ import 'package:tawaq/theme/theme.dart';
 /// [hadithDetailProvider] watches are gated via [FAccordionControl.lifted]
 /// expanded tracking so collapsed sections do not fetch.
 class HadithSelectedDetailsPane extends HookConsumerWidget {
-  const new({required this.hadith, this.resultOrdinal, super.key});
+  const new({required this.hadith, super.key});
 
   final DetailedHadith hadith;
-
-  /// Honest page-local position for the selected result, when available.
-  final int? resultOrdinal;
 
   Widget _sectionTitle(FColors colors, IconData icon, String text) => Row(
     children: [
@@ -55,12 +54,23 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
       return null;
     }, [stableKey, scrollController]);
 
+    void retryDetail(HadithDetailProvider provider) {
+      ref.read(hadithSessionControllerProvider.notifier).retryInitialization();
+      ref.invalidate(provider);
+    }
+
     final sections = <({IconData icon, String title, Widget Function() child})>[
       if (hadith.hasSharhMetadata)
         (
           icon: FLucideIcons.bookOpenText,
           title: l10n.hadithSharh,
           child: () => HadithAsyncDetailsSection<Sharh>(
+            onRetry: () => retryDetail(
+              hadithDetailProvider(
+                HadithDetailKind.sharh,
+                hadith.sharhMetadata!.id,
+              ),
+            ),
             value: ref
                 .watch(
                   hadithDetailProvider(
@@ -83,10 +93,11 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
           icon: FLucideIcons.sparkles,
           title: l10n.hadithUsulHadith,
           child: () => HadithAsyncDetailsSection<UsulHadith>(
+            onRetry: () => retryDetail(
+              hadithDetailProvider(HadithDetailKind.usul, hadithId),
+            ),
             value: ref
-                .watch(
-                  hadithDetailProvider(HadithDetailKind.usul, hadithId),
-                )
+                .watch(hadithDetailProvider(HadithDetailKind.usul, hadithId))
                 .whenData((value) => value! as UsulHadith),
             dataBuilder: (usul) {
               if (usul.sources.isEmpty) {
@@ -107,10 +118,11 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
           icon: FLucideIcons.eye,
           title: l10n.hadithSimilarHadith,
           child: () => HadithAsyncDetailsSection<List<DetailedHadith>>(
+            onRetry: () => retryDetail(
+              hadithDetailProvider(HadithDetailKind.similar, hadithId),
+            ),
             value: ref
-                .watch(
-                  hadithDetailProvider(HadithDetailKind.similar, hadithId),
-                )
+                .watch(hadithDetailProvider(HadithDetailKind.similar, hadithId))
                 .whenData((value) => value! as List<DetailedHadith>),
             dataBuilder: (similarItems) {
               if (similarItems.isEmpty) {
@@ -145,6 +157,9 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
           icon: FLucideIcons.arrowRightFromLine,
           title: l10n.hadithAlternateHadithSahih,
           child: () => HadithAsyncDetailsSection<DetailedHadith?>(
+            onRetry: () => retryDetail(
+              hadithDetailProvider(HadithDetailKind.alternate, hadithId),
+            ),
             value: ref
                 .watch(
                   hadithDetailProvider(HadithDetailKind.alternate, hadithId),
@@ -161,7 +176,7 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
                   unawaited(
                     ref
                         .read(hadithSessionControllerProvider.notifier)
-                        .selectHadith(alternate),
+                        .openSpecificList([alternate], selected: alternate),
                   );
                 },
               );
@@ -176,53 +191,6 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Semantics(
-            header: true,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.only(
-                start: AppSpacing.xs,
-                end: AppSpacing.xs,
-                bottom: AppSpacing.sm,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: AppSpacing.xs,
-                children: [
-                  Text(
-                    resultOrdinal == null
-                        ? l10n.hadithSelectedHadith
-                        : l10n.hadithSelectedResult(resultOrdinal!),
-                    style: theme.typography.body.lg.copyWith(
-                      color: colors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(
-                    l10n.hadithSourceCitation(
-                      hadith.book,
-                      hadith.numberOrPage,
-                    ),
-                    softWrap: true,
-                    style: theme.typography.body.sm.copyWith(
-                      color: colors.mutedForeground,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: FTooltip(
-              tipBuilder: (_, _) => Text(l10n.hadithShare),
-              child: FButton.icon(
-                semanticsTooltip: l10n.hadithShare,
-                variant: .ghost,
-                onPress: () => showHadithShareDialog(context, hadith),
-                child: const Icon(FLucideIcons.share2),
-              ),
-            ),
-          ),
           LayoutBuilder(
             builder: (context, constraints) {
               final narrow =
@@ -239,20 +207,26 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
           HadithMetaField(label: l10n.hadithMuhaddith, value: hadith.mohdith),
           HadithMetaField(
             label: l10n.hadithSource,
-            value: l10n.hadithSourceCitation(
-              hadith.book,
-              hadith.numberOrPage,
+            value: l10n.hadithSourceCitation(hadith.book, hadith.numberOrPage),
+          ),
+          if (hasHadithMetadata(hadith.hukm)) ...[
+            Text(
+              l10n.hadithGradeExplanation,
+              style: theme.typography.body.sm.copyWith(
+                color: colors.mutedForeground,
+              ),
             ),
-          ),
-          HadithMetaField(
-            label: l10n.hadithGradeExplanation,
-            value: hadith.hukm,
-          ),
+            const SizedBox(height: AppSpacing.sm),
+            HadithHukmBadge(
+              hukm: hadith.hukm,
+              tone: hadithSourceJudgmentTone(hadith),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
           if ((hadith.takhrij ?? '').trim().isNotEmpty)
-            HadithMetaField(
-              label: l10n.hadithTakhrij,
-              value: hadith.takhrij!,
-            ),
+            HadithMetaField(label: l10n.hadithTakhrij, value: hadith.takhrij!),
+          const SizedBox(height: AppSpacing.sm),
+          HadithShareActions(hadith: hadith),
           if (sections.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.lg),
             FAccordion(
@@ -295,9 +269,11 @@ class HadithAsyncDetailsSection<T> extends StatelessWidget {
   const new({
     required this.value,
     required this.dataBuilder,
+    required this.onRetry,
     super.key,
   });
 
+  final VoidCallback onRetry;
   final AsyncValue<T> value;
   final Widget Function(T value) dataBuilder;
 
@@ -310,13 +286,24 @@ class HadithAsyncDetailsSection<T> extends StatelessWidget {
         padding: EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Center(child: FCircularProgress.loader()),
       ),
-      AsyncError(:final error) => Padding(
+      AsyncError() => Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Text(
-          '$error',
-          style: theme.typography.body.sm.copyWith(
-            color: theme.colors.destructive,
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: AppSpacing.sm,
+          children: [
+            Text(
+              context.l10n.hadithRequestFailed,
+              style: theme.typography.body.sm.copyWith(
+                color: theme.colors.destructive,
+              ),
+            ),
+            FButton(
+              variant: .secondary,
+              onPress: onRetry,
+              child: Text(context.l10n.retryAction),
+            ),
+          ],
         ),
       ),
       AsyncData(:final value) => dataBuilder(value),

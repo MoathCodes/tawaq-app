@@ -38,6 +38,7 @@ List<PrayerCompletion> dedupeCompletions(
 ) {
   final groups = <String, List<PrayerCompletion>>{};
   for (final row in rows) {
+    if (row.status == CompletionStatus.missed) continue;
     groups.putIfAbsent(completionGroupKey(row, location), () => []).add(row);
   }
   return [
@@ -56,12 +57,12 @@ Map<Prayer, CompletionStatus> mapPrayerStatuses(
   };
   for (final prayer in kObligatoryPrayers) {
     final canonical = pickCanonical(
-      rows,
+      rows.where((row) => row.status != CompletionStatus.missed).toList(),
       prayer: prayer,
       location: location,
       day: day,
     );
-    if (canonical != null) {
+    if (canonical != null && canonical.status != CompletionStatus.missed) {
       statuses[prayer] = canonical.status;
     }
   }
@@ -73,10 +74,9 @@ Map<CompletionStatus, int> countDedupedStatuses(
   List<PrayerCompletion> rows,
   Location location,
 ) {
-  final counts = {
-    for (final status in CompletionStatus.values) status: 0,
-  };
+  final counts = {for (final status in CompletionStatus.values) status: 0};
   for (final completion in dedupeCompletions(rows, location)) {
+    if (completion.status == CompletionStatus.none) continue;
     counts[completion.status] = (counts[completion.status] ?? 0) + 1;
   }
   return counts;

@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_ce_flutter/adapters.dart';
-import 'package:mushaf_reader/src/data/hive/hive_registrar.g.dart';
+import 'package:mushaf_reader/src/data/hive/hive_adapters.dart';
 import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:mushaf_reader/src/data/models/hizb.dart';
 import 'package:mushaf_reader/src/data/models/juz.dart';
@@ -245,6 +245,10 @@ class HiveBoxManager {
     _configuredSubDirectory = subDirectory;
     final initCompleter = Completer<void>();
     _initCompleter = initCompleter;
+    // The initiating caller receives the rethrow below. Observe the shared
+    // future even when no concurrent caller awaits it, without changing the
+    // error delivered to callers that do await that original future.
+    initCompleter.future.ignore();
 
     try {
       // Keep package boxes independent of the host's global Hive directory.
@@ -257,7 +261,18 @@ class HiveBoxManager {
       await Directory(_hivePath).create(recursive: true);
 
       // Register all adapters
-      Hive.registerAdapters();
+      void registerIfAbsent<T>(TypeAdapter<T> adapter) {
+        if (!Hive.isAdapterRegistered(adapter.typeId)) {
+          Hive.registerAdapter<T>(adapter);
+        }
+      }
+
+      registerIfAbsent(AyahAdapter());
+      registerIfAbsent(HizbAdapter());
+      registerIfAbsent(JuzAdapter());
+      registerIfAbsent(PageLayoutsAdapter());
+      registerIfAbsent(RevelationTypeAdapter());
+      registerIfAbsent(SurahAdapter());
 
       // Copy pre-populated boxes from assets if needed
       await _copyBoxesFromAssets();
@@ -393,7 +408,9 @@ class HiveBoxManager {
       final localHash = localManifest[hiveFile];
 
       if (assetHash == null) continue;
-      if (assetHash == localHash) continue;
+      if (assetHash == localHash &&
+          File(p.join(_hivePath, hiveFile)).existsSync())
+        continue;
 
       debugPrint('$hiveFile changed, copying...');
       await _copyBoxFromAssets(name);
@@ -422,9 +439,7 @@ class HiveBoxManager {
     } catch (e, st) {
       final message = 'Failed to copy $boxName.hive from assets: $e';
       debugPrint('HiveBoxManager: $message');
-      if (kDebugMode) {
-        Error.throwWithStackTrace(StateError(message), st);
-      }
+      Error.throwWithStackTrace(StateError(message), st);
     }
   }
 

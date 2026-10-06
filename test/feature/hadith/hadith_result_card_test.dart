@@ -9,9 +9,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_hukm_badge.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_dialog.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
@@ -58,9 +61,7 @@ Widget _wrapCard(
   return ProviderScope(
     // The complete card watches favorites during build. Keep this visual
     // fixture independent of the real Hive-backed repository and user data.
-    overrides: [
-      hadithFavoritesProvider.overrideWith((ref) async => const []),
-    ],
+    overrides: [hadithFavoritesProvider.overrideWith((ref) async => const [])],
     child: FTheme(
       data: buildAppTheme(
         palette: AppPalette.manuscript,
@@ -72,11 +73,10 @@ Widget _wrapCard(
         locale: locale,
         localizationsDelegates: appLocalizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
+        builder: (context, child) => FToaster(child: child!),
         home: Scaffold(
           body: SingleChildScrollView(
-            child: Center(
-              child: SizedBox(width: 280, child: child),
-            ),
+            child: Center(child: SizedBox(width: 280, child: child)),
           ),
         ),
       ),
@@ -85,6 +85,51 @@ Widget _wrapCard(
 }
 
 void main() {
+  testWidgets(
+    'footer copy preserves complete source judgment without selecting the result',
+    (tester) async {
+      String? clipboard;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData')
+            clipboard = (call.arguments as Map)['text'] as String;
+          return null;
+        },
+      );
+      addTearDown(
+        () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        ),
+      );
+      var selected = false;
+      final hadith = _fixtureHadith(_longJudgmentFixture);
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      await tester.pumpWidget(
+        _wrapCard(
+          HadithResultCard(
+            hadith: hadith,
+            isFavorite: false,
+            isSelected: false,
+            onSelect: () => selected = true,
+          ),
+          themeMode: ThemeMode.dark,
+          locale: const Locale('en'),
+          textScale: 1,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel(l10n.menuCopyText));
+      await tester.pumpAndSettle();
+      expect(clipboard, contains(hadith.hadith));
+      expect(clipboard, contains(hadith.hukm));
+      expect(clipboard, contains(hadith.book));
+      expect(selected, isFalse);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets(
     'judgment badge keeps full qualified wording and neutral contrast in both themes',
     (tester) async {
@@ -123,6 +168,66 @@ void main() {
     },
   );
 
+  testWidgets(
+    'negative source badges use destructive text with readable softer chain tint',
+    (tester) async {
+      for (final palette in [
+        AppPalette.manuscript,
+        AppPalette.sage,
+        AppPalette.neutral,
+      ]) {
+        for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+          final theme = buildAppTheme(
+            palette: palette,
+            themeMode: mode,
+            touch: false,
+            textScale: 1,
+          );
+          Color? weakBackground;
+          for (final judgment in ['ضعيف', 'فيه أبو داود النخعي كذاب']) {
+            await tester.pumpWidget(
+              FTheme(
+                data: theme,
+                child: MaterialApp(
+                  home: Scaffold(body: HadithHukmBadge(hukm: judgment)),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            final text = tester.widget<Text>(find.text(judgment));
+            final box =
+                tester.widget<Container>(find.byType(Container)).decoration!
+                    as BoxDecoration;
+            expect(text.style!.color, isNot(theme.colors.foreground));
+            final a = text.style!.color!.computeLuminance();
+            final b = box.color!.computeLuminance();
+            expect(
+              ((a > b ? a : b) + .05) / ((a < b ? a : b) + .05),
+              greaterThanOrEqualTo(4.5),
+              reason: '$palette $mode $judgment',
+            );
+            if (judgment == 'ضعيف')
+              weakBackground = box.color;
+            else
+              expect(box.color, isNot(weakBackground));
+          }
+        }
+      }
+    },
+  );
+
+  test('missing narrator is omitted from result semantics too', () {
+    final l10n = lookupAppLocalizations(const Locale('en'));
+    final label = hadithResultRowSemanticsLabel(
+      _fixtureHadith(_qualifiedFixture).copyWith(rawi: '-'),
+      l10n,
+      isFavorite: false,
+      isSelected: false,
+    );
+    expect(label, isNot(contains(l10n.hadithNarrator)));
+    expect(label, contains(_qualifiedFixture));
+  });
+
   test('result-row semantics preserves the complete source judgment', () {
     final l10n = lookupAppLocalizations(const Locale('en'));
     final hadith = _fixtureHadith(_qualifiedFixture);
@@ -139,7 +244,7 @@ void main() {
   });
 
   testWidgets(
-    'result identity and selected state stay visible alongside the source',
+    'source appears once without a numbered heading while selection stays accessible',
     (tester) async {
       final hadith = _fixtureHadith(_qualifiedFixture);
       final l10n = lookupAppLocalizations(const Locale('en'));
@@ -168,15 +273,71 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Result 2'), findsOneWidget);
+      expect(find.text('Result 2'), findsNothing);
       expect(
-        find.text('Fixture source (Fixture reference)'),
+        find.textContaining(
+          'Fixture source (Fixture reference)',
+          findRichText: true,
+        ),
         findsOneWidget,
       );
       final semantics = tester.getSemantics(find.bySemanticsLabel(rowLabel));
       expect(semantics.flagsCollection.isSelected, ui.Tristate.isTrue);
     },
   );
+
+  testWidgets('hover stays flat and selected borders remain uniform', (
+    tester,
+  ) async {
+    final mouse = await tester.createGesture(kind: ui.PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    addTearDown(mouse.removePointer);
+    for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+      for (final locale in [const Locale('ar'), const Locale('en')]) {
+        for (final selected in [false, true]) {
+          await mouse.moveTo(Offset.zero);
+          await tester.pumpWidget(
+            _wrapCard(
+              HadithResultCard(
+                hadith: _fixtureHadith(_qualifiedFixture),
+                isFavorite: false,
+                isSelected: selected,
+                onSelect: () {},
+                showFavoriteAction: false,
+              ),
+              themeMode: mode,
+              locale: locale,
+              textScale: 1.6,
+            ),
+          );
+          await tester.pumpAndSettle();
+          final surface = find
+              .descendant(
+                of: find.byType(HadithResultCard).first,
+                matching: find.byType(Container),
+              )
+              .first;
+          BoxDecoration decoration() =>
+              tester.widget<Container>(surface).decoration! as BoxDecoration;
+          final before = decoration();
+          await mouse.moveTo(tester.getCenter(find.byType(MouseClick).first));
+          await tester.pumpAndSettle();
+          final after = decoration();
+          expect(before.boxShadow, isNull);
+          expect(after.boxShadow, isNull);
+          expect(after.border!.isUniform, isTrue);
+          expect(after.border!.top.width, 1);
+          if (selected) {
+            expect(after.color, before.color);
+            expect(after.border, before.border);
+          } else {
+            expect(after.color, isNot(before.color));
+          }
+          expect(tester.takeException(), isNull);
+        }
+      }
+    }
+  });
 
   testWidgets(
     'keyboard selection and visible actions stay independently reachable',
@@ -208,15 +369,27 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.enter);
       expect(selected, isTrue);
 
+      // Footer order is Share, Copy text, then Bookmark.
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.sendKeyEvent(LogicalKeyboardKey.space);
       expect(favorited, isTrue);
 
-      await tester.tap(find.bySemanticsLabel(l10n.hadithMoreActions));
+      await tester.tap(find.bySemanticsLabel(l10n.hadithShare));
       await tester.pumpAndSettle();
-      expect(find.text(l10n.menuCopyText), findsOneWidget);
-      expect(find.text(l10n.menuOpen), findsOneWidget);
+      expect(find.byType(HadithShareDialog), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(HadithShareDialog),
+          matching: find.text(l10n.menuCopyText),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text(l10n.menuOpen), findsNothing);
 
+      await tester.tap(find.bySemanticsLabel(l10n.close));
+      await tester.pumpAndSettle();
       await tester.pumpWidget(
         _wrapCard(
           HadithResultCard(
@@ -232,10 +405,17 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.bySemanticsLabel(l10n.hadithMoreActions));
+      await tester.tap(find.bySemanticsLabel(l10n.hadithShare));
       await tester.pumpAndSettle();
-      expect(find.text(l10n.menuCopyText), findsOneWidget);
-      expect(find.text(l10n.menuOpen), findsOneWidget);
+      expect(find.byType(HadithShareDialog), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(HadithShareDialog),
+          matching: find.text(l10n.menuCopyText),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text(l10n.menuOpen), findsNothing);
       expect(find.text(l10n.menuAddBookmark), findsNothing);
     },
   );
@@ -289,9 +469,7 @@ void main() {
           );
 
           final cardRect = tester.getRect(find.bySemanticsLabel(rowLabel));
-          final judgmentRect = tester.getRect(
-            find.text(_longJudgmentFixture),
-          );
+          final judgmentRect = tester.getRect(find.text(_longJudgmentFixture));
           expect(judgmentRect.left, greaterThanOrEqualTo(cardRect.left));
           expect(judgmentRect.right, lessThanOrEqualTo(cardRect.right));
           expect(

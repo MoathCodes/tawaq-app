@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/app/desktop/alerts/prayer_alert_readiness.dart';
 import 'package:tawaq/app/desktop/adhan_alert_controller.dart';
 import 'package:tawaq/app/desktop/alerts/os_notification_channel.dart';
 import 'package:tawaq/app/desktop/alerts/sound_alert_channel.dart';
@@ -66,12 +67,16 @@ class PrayerAlertCoordinator {
     required this._playbackStream,
     required this._soundSafetyCap,
     this._currentPlayback,
+    this.canDeliver,
     this._onError,
     this.onFinished,
     this.onSessionChanged,
     this.onActiveChanged,
     this.notifyOnlyTimeout = const Duration(seconds: 30),
   });
+
+  /// Rechecked at delivery time so queued events cannot interrupt setup.
+  final bool Function()? canDeliver;
 
   final List<PrayerAlertChannel> _channels;
   final Stream<PlaybackState> _playbackStream;
@@ -158,7 +163,7 @@ class PrayerAlertCoordinator {
   }
 
   Future<void> _deliver(PrayerAlertEvent event) async {
-    if (_disposed) return;
+    if (_disposed || canDeliver?.call() == false) return;
 
     final prayerKey = event.prayer.name;
     if (event.kind == PrayerAlertKind.iqamah &&
@@ -173,13 +178,13 @@ class PrayerAlertCoordinator {
     final generation = ++_generation;
     await _teardown();
     _activeEvent = null;
-    if (_disposed || generation != _generation) return;
+    if (_disposed || generation != _generation || canDeliver?.call() == false) return;
 
     _activeEvent = event;
     _emitActive(event);
 
     for (final channel in _channels) {
-      if (_disposed || generation != _generation) {
+      if (_disposed || generation != _generation || canDeliver?.call() == false) {
         await _teardown();
         return;
       }
@@ -192,7 +197,7 @@ class PrayerAlertCoordinator {
           stack,
         );
       }
-      if (_disposed || generation != _generation) {
+      if (_disposed || generation != _generation || canDeliver?.call() == false) {
         await _teardown();
         return;
       }
@@ -315,6 +320,7 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
 
     _coordinator = PrayerAlertCoordinator(
       channels: [os, inApp, sound],
+      canDeliver: () => ref.mounted && ref.read(prayerAlertsReadyProvider),
       playbackStream: ref.read(tawaqAudioServiceProvider).stateStream,
       currentPlayback: () => service.state,
       onError: (message, error, stack) =>
@@ -339,6 +345,10 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
       },
     );
 
+    ref.listen(prayerAlertsReadyProvider, (_, ready) {
+      if (!ready) unawaited(_coordinator.dismiss());
+    });
+
     ref.onDispose(() {
       unawaited(_coordinator.dispose());
     });
@@ -346,7 +356,7 @@ class PrayerAlertDispatcher extends _$PrayerAlertDispatcher {
   }
 
   Future<void> dispatch(PrayerAlertEvent event) {
-    if (!isDesktopPlatform) return Future<void>.value();
+    if (!isDesktopPlatform || !ref.read(prayerAlertsReadyProvider)) return Future<void>.value();
     return state.dispatch(event);
   }
 

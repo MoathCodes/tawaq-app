@@ -15,11 +15,7 @@ import 'package:tawaq/theme/theme.dart';
 /// not shared across ayah changes (no clear-then-assign races).
 class NotesSection extends HookConsumerWidget {
   /// Creates a [NotesSection] instance.
-  const new({
-    required this.ayahId,
-    required this.narrowPanel,
-    super.key,
-  });
+  const new({required this.ayahId, required this.narrowPanel, super.key});
 
   /// Ayah this editor is bound to, or null when nothing is selected.
   final int? ayahId;
@@ -37,74 +33,29 @@ class NotesSection extends HookConsumerWidget {
     final enabled = ayahId != null;
     final note = ref
         .watch(quranNotesStoreProvider)
-        .whenData(
-          (notes) => ayahId == null ? null : notes[ayahId],
-        );
-    final initialText = note.hasValue ? (note.value?.text ?? '') : '';
+        .whenData((notes) => ayahId == null ? null : notes[ayahId]);
+    final draft = ref.watch(quranNotesStoreProvider).value?.drafts[ayahId];
+    final initialText = draft?.text ?? note.value?.text ?? '';
     final controller = useTextEditingController(text: initialText);
     final hasSynced = useRef(note.hasValue);
-    final lastPersistedText = useRef(initialText);
-    final debounceTimer = useRef<Timer?>(null);
-
-    useEffect(
-      () {
-        return () {
-          final pending = debounceTimer.value;
-          debounceTimer.value = null;
-          pending?.cancel();
-          // Flush unsaved edits when the editor unmounts (ayah change / leave).
-          final id = ayahId;
-          final text = controller.text;
-          if (id != null &&
-              hasSynced.value &&
-              text != lastPersistedText.value) {
-            lastPersistedText.value = text;
-            unawaited(
-              ref.read(quranNotesStoreProvider.notifier).save(id, text),
-            );
-          }
-        };
-      },
-      [ayahId],
-    );
-
-    // Sync once when the note finishes loading for this remounted editor.
-    useEffect(
-      () {
-        if (note.hasValue && !hasSynced.value) {
-          final text = note.value?.text ?? '';
-          controller.text = text;
-          lastPersistedText.value = text;
-          hasSynced.value = true;
-          debounceTimer.value?.cancel();
-          debounceTimer.value = null;
+    final store = ref.read(quranNotesStoreProvider.notifier);
+    useEffect(() {
+      return () {
+        if (ayahId != null) {
+          unawaited(store.flushAyah(ayahId!).catchError((Object _) {}));
         }
-        return null;
-      },
-      [note],
-    );
-
-    void saveNote(int id) {
-      final text = controller.text;
-      lastPersistedText.value = text;
-      unawaited(
-        ref.read(quranNotesStoreProvider.notifier).save(id, text),
-      );
-    }
-
-    void scheduleSave() {
-      final id = ayahId;
-      if (id == null) return;
-      debounceTimer.value?.cancel();
-      debounceTimer.value = Timer(
-        const Duration(milliseconds: 500),
-        () => saveNote(id),
-      );
-    }
+      };
+    }, [ayahId]);
+    useEffect(() {
+      if (note.hasValue && !hasSynced.value) {
+        controller.text = draft?.text ?? note.value?.text ?? '';
+        hasSynced.value = true;
+      }
+      return null;
+    }, [note]);
 
     final noteMinLines = narrowPanel ? 3 : 5;
     final noteMaxLines = narrowPanel ? 6 : 10;
-    final persistedText = note.value?.text ?? '';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,9 +83,7 @@ class NotesSection extends HookConsumerWidget {
           control: FTextFieldControl.managed(
             controller: controller,
             onChange: (value) {
-              if (persistedText != value.text) {
-                scheduleSave();
-              }
+              if (ayahId != null) store.edit(ayahId!, value.text);
             },
           ),
           enabled: enabled && !note.isLoading,
@@ -144,12 +93,39 @@ class NotesSection extends HookConsumerWidget {
           hint: l10n.reflectionPlaceholder,
           onEditingComplete: () {
             final id = ayahId;
-            if (id != null) saveNote(id);
+            if (id != null) {
+              unawaited(store.flushAyah(id).catchError((Object _) {}));
+            }
           },
           style: const .delta(
             contentPadding: .value(EdgeInsets.all(AppSpacing.md)),
           ),
         ),
+        if (draft != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              switch (draft.status) {
+                QuranNoteSaveStatus.pending ||
+                QuranNoteSaveStatus.saving => l10n.notesSavePending,
+                QuranNoteSaveStatus.saved => l10n.notesSaveSucceeded,
+                QuranNoteSaveStatus.failed => l10n.notesSaveFailed,
+              },
+              style: typography.body.sm.copyWith(
+                color: draft.status == QuranNoteSaveStatus.failed
+                    ? colors.destructive
+                    : colors.mutedForeground,
+              ),
+            ),
+          ),
+          if (draft.status == QuranNoteSaveStatus.failed)
+            FButton(
+              variant: .secondary,
+              onPress: () => store.flushAyah(ayahId!).catchError((Object _) {}),
+              child: Text(l10n.retryAction),
+            ),
+        ],
       ],
     );
   }

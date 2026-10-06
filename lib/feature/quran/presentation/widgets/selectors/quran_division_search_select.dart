@@ -2,6 +2,7 @@ import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
+import 'package:tawaq/core/widgets/select_empty_content.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -94,10 +95,8 @@ class QuranDivisionSearchSelect<T> extends StatelessWidget {
   final Iterable<T> Function(String query) filter;
 
   /// Builds select items for the filtered values.
-  final List<FSelectItem<T>> Function(
-    BuildContext context,
-    List<T> values,
-  ) contentBuilder;
+  final List<FSelectItem<T>> Function(BuildContext context, List<T> values)
+  contentBuilder;
 
   /// Called when the user picks a value.
   final ValueChanged<T?> onChanged;
@@ -122,29 +121,27 @@ class QuranDivisionSearchSelect<T> extends StatelessWidget {
     final theme = context.theme;
 
     final select = FSelect<T>.searchBuilder(
-          enabled: ready && enabled,
-          label: showLabel && !inlineLabel
-              ? Text(fieldName)
-              : const SizedBox.shrink(),
-          prefixBuilder: inlineLabel
-              ? _quranInlineSelectPrefixBuilder(fieldName)
-              : null,
-          size: size,
-          contentConstraints: selectPopoverPortalConstraints(context),
-          style: selectStyle(
-            colors: theme.colors,
-            style: theme.style,
-            typography: theme.typography,
-            useQuranFont: useQuranFont,
-          ),
-          control: FSelectControl.lifted(
-            value: value,
-            onChange: onChanged,
-          ),
-          format: format,
-          filter: filter,
-          contentBuilder: (context, _, vals) =>
-              contentBuilder(context, vals.toList()),
+      enabled: ready && enabled,
+      label: showLabel && !inlineLabel
+          ? Text(fieldName)
+          : const SizedBox.shrink(),
+      prefixBuilder: inlineLabel
+          ? _quranInlineSelectPrefixBuilder(fieldName)
+          : null,
+      size: size,
+      contentConstraints: selectPopoverPortalConstraints(context),
+      style: selectStyle(
+        colors: theme.colors,
+        style: theme.style,
+        typography: theme.typography,
+        useQuranFont: useQuranFont,
+      ),
+      control: FSelectControl.lifted(value: value, onChange: onChanged),
+      format: format,
+      filter: filter,
+      contentEmptyBuilder: (_, _) => const SelectEmptyContent(),
+      contentBuilder: (context, _, vals) =>
+          contentBuilder(context, vals.toList()),
     );
 
     final wrapped = includeSemantics
@@ -152,14 +149,10 @@ class QuranDivisionSearchSelect<T> extends StatelessWidget {
             name: fieldName,
             value: closedValue,
             enabled: ready && enabled,
-            excludeChild: true,
             child: select,
           )
         : select;
 
-    return FSkeletonizer(
-      enabled: loading,
-      child: wrapped,
-    );
+    return FSkeletonizer(enabled: loading, child: wrapped);
   }
 }

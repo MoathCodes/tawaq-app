@@ -1,9 +1,9 @@
 import 'dart:async';
+
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/core/layout/lazy_tab_content.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
@@ -11,11 +11,8 @@ import 'package:tawaq/core/widgets/directional_content_switcher.dart';
 import 'package:tawaq/core/widgets/reading_swipe_viewport.dart';
 import 'package:tawaq/feature/quran/domain/models/translation_source.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
-import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
-import 'package:tawaq/feature/quran/presentation/providers/quran_notes_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/study/notes_browser.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/notes_section.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_content_section.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/study/study_panel_header.dart';
@@ -25,58 +22,75 @@ import 'package:tawaq/theme/theme.dart';
 /// A study companion panel for the Quran screen.
 class StudyPanel extends HookConsumerWidget {
   /// Creates a study panel.
-  const new({super.key});
+  const new({this.onBackToReading, super.key});
+
+  /// Returns to the reader when this panel is presented as a dialog.
+  final VoidCallback? onBackToReading;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selectedAyah = ref.watch(quranSelectedAyahProvider).value;
+    final selection = ref.watch(quranSelectedAyahProvider);
+    final selectedId = ref.watch(quranSelectedAyahIdProvider);
+    final selectedAyah = selection.value;
     final ayaId = selectedAyah?.ayahId;
     final navigation = useStudyAyahNavigation(ref);
-    final activeTab = ref.watch(
-      quranScreenSettingsProvider.select(
-        (v) => v.value?.activeStudyTab ?? StudyPanelTab.currentAyah,
-      ),
-    );
-    final notesCount = ref.watch(
-      quranAllNotesProvider.select((v) => v.value?.length ?? 0),
-    );
-
     final prevAyahId = usePrevious(ayaId);
     final slideDirection = useState(0);
 
-    useEffect(
-      () {
-        if (prevAyahId != null && ayaId != null && prevAyahId != ayaId) {
-          slideDirection.value = ayaId > prevAyahId ? -1 : 1;
-        }
-        return null;
-      },
-      [ayaId],
-    );
+    useEffect(() {
+      if (prevAyahId != null && ayaId != null && prevAyahId != ayaId) {
+        slideDirection.value = ayaId > prevAyahId ? -1 : 1;
+      }
+      return null;
+    }, [ayaId]);
 
-    // Selecting an ayah anywhere (mushaf tap, search, note card) surfaces its
-    // study content instead of leaving the reflections list open.
-    // Deferred: Riverpod forbids provider writes during build/effect flush.
-    useEffect(
-      () {
-        if (ayaId == null || activeTab == StudyPanelTab.currentAyah) {
-          return null;
-        }
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ref
-              .read(quranScreenSettingsProvider.notifier)
-              .setActiveStudyTab(StudyPanelTab.currentAyah);
-        });
-        return null;
-      },
-      [ayaId],
-    );
-
-    final theme = context.theme;
     final l10n = context.l10n;
-    final tabIndex = activeTab.index;
-    final onCurrentAyahTab = activeTab == StudyPanelTab.currentAyah;
-
+    if (selectedId == null || selectedAyah == null) {
+      return QuranSemantics.landmark(
+        label: l10n.studyMode,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpacing.lg,
+            children: [
+              Padding(
+                padding: const EdgeInsetsDirectional.only(
+                  end: AppSpacing.xl + AppSpacing.sm,
+                ),
+                child: Text(
+                  l10n.studyMode,
+                  style: context.theme.typography.body.lg.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              if (selectedId != null && selection.isLoading)
+                const Center(child: FCircularProgress.loader())
+              else
+                Text(
+                  selectedId == null
+                      ? l10n.studySelectionHint
+                      : l10n.studySelectionLoadFailed,
+                  style: context.theme.typography.body.md,
+                ),
+              if (selectedId != null && !selection.isLoading)
+                FButton(
+                  variant: .secondary,
+                  onPress: () => ref.invalidate(quranSelectedAyahProvider),
+                  child: Text(l10n.retryAction),
+                ),
+              if (onBackToReading != null)
+                FButton(
+                  onPress: onBackToReading,
+                  child: Text(l10n.backToReading),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
     final panelContent = QuranSemantics.landmark(
       label: l10n.studyMode,
       child: StaticCard(
@@ -88,82 +102,30 @@ class StudyPanel extends HookConsumerWidget {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                child: FTabs(
-                  expands: true,
-                  style: theme.tabs.primary,
-                  control: FTabControl.lifted(
-                    index: tabIndex,
-                    onChange: (index) {
-                      final tab = StudyPanelTab.values[index];
-                      ref
-                          .read(quranScreenSettingsProvider.notifier)
-                          .setActiveStudyTab(tab);
-                    },
-                  ),
-                  children: [
-                    FTabEntry(
-                      label: Text(l10n.studyTabCurrentAyah),
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final narrowPanel =
-                              constraints.maxWidth <
-                              context.theme.breakpoints.sm;
-                          return ReadingSwipeViewport(
-                            viewportMinHeight: constraints.maxHeight,
-                            horizontalPadding: 0,
-                            topPadding: AppSpacing.md,
-                            bottomPadding: AppSpacing.lg + AppSpacing.xl,
-                            textDirection: kReadingPageTurnDirection,
-                            canGoNext: onCurrentAyahTab && navigation.canGoNext,
-                            canGoPrevious:
-                                onCurrentAyahTab && navigation.canGoPrevious,
-                            onNext: () => unawaited(navigation.navigateAyah(1)),
-                            onPrevious: () =>
-                                unawaited(navigation.navigateAyah(-1)),
-                            child: DirectionalContentSwitcher(
-                              currentKey: ayaId,
-                              slideDirection: slideDirection.value,
-                              child: _StudyPanelBody(
-                                ayahId: ayaId,
-                                narrowPanel: narrowPanel,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    FTabEntry(
-                      label: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(l10n.studyTabMyReflections),
-                          if (notesCount > 0) ...[
-                            const SizedBox(width: AppSpacing.sm),
-                            Text(
-                              '$notesCount',
-                              style: theme.typography.body.xs.copyWith(
-                                color: theme.colors.mutedForeground,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                      child: LazyPanelContent.indexed(
-                        selectedIndex: tabIndex,
-                        index: StudyPanelTab.reflections.index,
-                        builder: () => const Padding(
-                          padding: EdgeInsets.only(
-                            top: AppSpacing.md,
-                            bottom: AppSpacing.lg,
-                          ),
-                          child: NotesBrowser(),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final narrowPanel =
+                        constraints.maxWidth < context.theme.breakpoints.sm;
+                    return ReadingSwipeViewport(
+                      viewportMinHeight: constraints.maxHeight,
+                      horizontalPadding: 0,
+                      topPadding: AppSpacing.md,
+                      bottomPadding: AppSpacing.lg + AppSpacing.xl,
+                      textDirection: kReadingPageTurnDirection,
+                      canGoNext: navigation.canGoNext,
+                      canGoPrevious: navigation.canGoPrevious,
+                      onNext: () => unawaited(navigation.navigateAyah(1)),
+                      onPrevious: () => unawaited(navigation.navigateAyah(-1)),
+                      child: DirectionalContentSwitcher(
+                        currentKey: ayaId,
+                        slideDirection: slideDirection.value,
+                        child: _StudyPanelBody(
+                          ayahId: ayaId,
+                          narrowPanel: narrowPanel,
                         ),
                       ),
-                    ),
-                  ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -173,15 +135,11 @@ class StudyPanel extends HookConsumerWidget {
     );
 
     return AppShortcutScope(
-      autofocus: true,
       shortcuts: {
-        if (onCurrentAyahTab) ...{
-          AppShortcut.quranAyahNext,
-          AppShortcut.quranAyahPrev,
-        },
+        ...{AppShortcut.quranAyahNext, AppShortcut.quranAyahPrev},
       },
       handlers: {
-        if (onCurrentAyahTab) ...{
+        ...{
           AppShortcut.quranAyahNext: () =>
               unawaited(navigation.navigateAyah(1)),
           AppShortcut.quranAyahPrev: () =>
@@ -194,10 +152,7 @@ class StudyPanel extends HookConsumerWidget {
 }
 
 class _StudyPanelBody extends StatelessWidget {
-  const new({
-    required this.ayahId,
-    required this.narrowPanel,
-  });
+  const new({required this.ayahId, required this.narrowPanel});
 
   final int? ayahId;
   final bool narrowPanel;
@@ -238,9 +193,7 @@ class _StudyContentAccordion extends ConsumerWidget {
     final aya = selectedAyah?.numberInSurah ?? 1;
 
     final tafsirEnabled = ref.watch(
-      quranScreenSettingsProvider.select(
-        (v) => v.value?.tafsirEnabled ?? true,
-      ),
+      quranScreenSettingsProvider.select((v) => v.value?.tafsirEnabled ?? true),
     );
     final translationEnabled = ref.watch(
       quranScreenSettingsProvider.select(

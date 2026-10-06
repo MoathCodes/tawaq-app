@@ -14,9 +14,11 @@ class FortressShareOptions {
   factory defaults({
     required bool hasSource,
     required bool hasRepetition,
+    bool hasVirtue = false,
   }) {
     return FortressShareOptions({
       if (hasSource) FortressShareInclude.source,
+      if (hasVirtue) FortressShareInclude.virtue,
       if (hasRepetition) FortressShareInclude.repetition,
       FortressShareInclude.appName,
     });

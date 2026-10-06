@@ -20,9 +20,7 @@ void main() {
 
       test('returns 0 when expectedPrayers is negative', () {
         final result = PrayerAnalyticsCalculator.calculateCompletionPercentage(
-          statusCounts: {
-            CompletionStatus.jamaah: 5,
-          },
+          statusCounts: {CompletionStatus.jamaah: 5},
           expectedPrayers: -5,
         );
 
@@ -40,9 +38,7 @@ void main() {
 
       test('returns 1.0 when all prayers are jamaah', () {
         final result = PrayerAnalyticsCalculator.calculateCompletionPercentage(
-          statusCounts: {
-            CompletionStatus.jamaah: 35,
-          },
+          statusCounts: {CompletionStatus.jamaah: 35},
           expectedPrayers: 35,
         );
 
@@ -78,9 +74,7 @@ void main() {
 
       test('clamps result to 1.0 when count exceeds expected', () {
         final result = PrayerAnalyticsCalculator.calculateCompletionPercentage(
-          statusCounts: {
-            CompletionStatus.jamaah: 50,
-          },
+          statusCounts: {CompletionStatus.jamaah: 50},
           expectedPrayers: 35,
         );
 
@@ -351,7 +345,6 @@ void main() {
             CompletionStatus.late: 3,
             CompletionStatus.missed: 2,
           },
-          expectedPrayers: 35,
           currentStreak: 5,
           bestStreak: 10,
         );
@@ -359,11 +352,10 @@ void main() {
         expect(result.period, PrayerAnalyticsPeriod.weekly);
         expect(result.currentStreak, 5);
         expect(result.bestStreak, 10);
-        expect(result.completionPercentage, closeTo(0.9, 0.001)); // 30/35
-        expect(result.jamaahPercentage, closeTo(0.6, 0.001)); // 20/35
-        expect(result.onTimePercentage, closeTo(0.3, 0.001)); // 10/35
-        expect(result.latePercentage, closeTo(0.1, 0.001)); // 3/35
-        expect(result.missedPercentage, closeTo(0.1, 0.001)); // 2/35
+        expect(result.completionPercentage, closeTo(30 / 33, 0.001));
+        expect(result.jamaahPercentage, closeTo(20 / 33, 0.001));
+        expect(result.onTimePercentage, closeTo(10 / 33, 0.001));
+        expect(result.latePercentage, closeTo(3 / 33, 0.001));
       });
 
       // test('handles empty status counts', () {
@@ -379,23 +371,25 @@ void main() {
       //   expect(result.jamaahPercentage, 0.0);
       //   expect(result.onTimePercentage, 0.0);
       //   expect(result.latePercentage, 0.0);
-      //   expect(result.missedPercentage, 0.0);
       // });
 
-      test('handles zero expected prayers', () {
-        final result = PrayerAnalyticsCalculator.calculateAnalytics(
-          period: PrayerAnalyticsPeriod.weekly,
-          statusCounts: {
-            CompletionStatus.jamaah: 10,
-          },
-          expectedPrayers: 0,
-          currentStreak: 0,
-          bestStreak: 0,
-        );
+      test(
+        'legacy missed and none rows never create recorded-completion rates',
+        () {
+          final result = PrayerAnalyticsCalculator.calculateAnalytics(
+            period: PrayerAnalyticsPeriod.weekly,
+            statusCounts: {
+              CompletionStatus.missed: 10,
+              CompletionStatus.none: 22,
+            },
+            currentStreak: 0,
+            bestStreak: 0,
+          );
 
-        expect(result.completionPercentage, 0.0);
-        expect(result.jamaahPercentage, 0.0);
-      });
+          expect(result.completionPercentage, 0.0);
+          expect(result.jamaahPercentage, 0.0);
+        },
+      );
     });
   });
 }

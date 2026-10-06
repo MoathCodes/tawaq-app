@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -15,7 +13,6 @@ import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart'
 import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
-import 'package:tawaq/feature/quran/presentation/widgets/ayah_selection_actions.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
@@ -117,35 +114,18 @@ class QuranMushafPane extends HookConsumerWidget {
         );
 
         final mushaf = AppShortcutScope(
-          autofocus: true,
           shortcuts: {
-            AppShortcut.quranPageNext,
-            AppShortcut.quranPagePrev,
-            AppShortcut.quranPageNextSpace,
             AppShortcut.quranZoomIn,
             AppShortcut.quranZoomOut,
             AppShortcut.quranZoomReset,
           },
           handlers: {
-            AppShortcut.quranPageNext: () => unawaited(
-              controller.animateToPage(controller.currentPage + 1),
-            ),
-            AppShortcut.quranPagePrev: () => unawaited(
-              controller.animateToPage(controller.currentPage - 1),
-            ),
-            AppShortcut.quranPageNextSpace: () => unawaited(
-              controller.animateToPage(controller.currentPage + 1),
-            ),
             // Package CallbackShortcuts usually win when the reader is focused;
             // these handlers keep the cheatsheet live and cover edge cases.
-            AppShortcut.quranZoomIn: () => controller.nudgeReadingBoost(
-              0.04,
-              scale: style.scale,
-            ),
-            AppShortcut.quranZoomOut: () => controller.nudgeReadingBoost(
-              -0.04,
-              scale: style.scale,
-            ),
+            AppShortcut.quranZoomIn: () =>
+                controller.nudgeReadingBoost(0.04, scale: style.scale),
+            AppShortcut.quranZoomOut: () =>
+                controller.nudgeReadingBoost(-0.04, scale: style.scale),
             AppShortcut.quranZoomReset: () {
               debouncedZoomCommit.cancel();
               pendingZoom.value = null;
@@ -156,9 +136,8 @@ class QuranMushafPane extends HookConsumerWidget {
             },
           },
           child: MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.noScaling,
-            ),
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.noScaling),
             // Only the a11y label needs page notifies — keep the reader stack
             // as ListenableBuilder.child so page changes do not rebuild it.
             child: ListenableBuilder(
@@ -191,33 +170,6 @@ class QuranMushafPane extends HookConsumerWidget {
           ),
         );
 
-        // Keep selection actions in the reader's flow so they never cover a
-        // Quran line or the page metadata. The group remains attached to the
-        // reader in both study and double-page layouts.
-        final readerWithActions = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: mushaf),
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.xs,
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                ),
-                // Let the action bar measure the actual reader width. It
-                // applies its own compact threshold, while this full-width
-                // anchor keeps wide labels and the play chevron reachable.
-                child: SizedBox(
-                  width: double.infinity,
-                  child: AyahSelectionActionsBar(),
-                ),
-              ),
-            ),
-          ],
-        );
-
         if (wantsDoubleSpread && !canFitDoubleSpread) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -237,12 +189,12 @@ class QuranMushafPane extends HookConsumerWidget {
                   ),
                 ),
               ),
-              Expanded(child: readerWithActions),
+              Expanded(child: mushaf),
             ],
           );
         }
 
-        return readerWithActions;
+        return mushaf;
       },
     );
   }

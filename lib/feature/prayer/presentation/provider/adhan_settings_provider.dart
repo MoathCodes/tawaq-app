@@ -37,6 +37,15 @@ class AdhanSettingsNotifier extends _$AdhanSettingsNotifier {
     return state.value ?? AdhanSettings.defaults();
   }
 
+  /// Acknowledges the durable setup/quit boundary for alert preferences.
+  Future<void> flush() async {
+    final value = state.value;
+    if (value == null) return;
+    final storage = await ref.read(settingsStorageProvider.future);
+    if (!ref.mounted) return;
+    await flushPersistedValue(storage, key, value);
+  }
+
   void _commit(AdhanSettings Function(AdhanSettings) fn, String field) {
     if (!state.hasValue) return;
     final next = fn(state.value!);

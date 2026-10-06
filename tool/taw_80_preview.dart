@@ -131,7 +131,6 @@ void main() {
                               width: paneWidth,
                               child: const HadithSelectedDetailsPane(
                                 hadith: hadith,
-                                resultOrdinal: 2,
                               ),
                             ),
                           ],

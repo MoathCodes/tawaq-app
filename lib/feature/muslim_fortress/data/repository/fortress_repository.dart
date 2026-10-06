@@ -1,6 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
+import 'package:tawaq/core/database/bundled_database_set_installer.dart';
+import 'package:tawaq/core/text/arabic_search_normalize.dart';
+
 import 'package:flutter/services.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:path/path.dart' as p;
@@ -14,7 +18,6 @@ part 'fortress_repository.g.dart';
 
 const _assetPrefix = 'packages/hisn_elmoslem/assets/database/';
 const _lockAssetPath = 'packages/hisn_elmoslem/assets/upstream.lock.json';
-const _persistedLockFileName = 'install.lock.json';
 
 const List<String> _databaseFiles = [
   HisnDatabaseNames.hisn,
@@ -47,68 +50,39 @@ Future<String> _ensureDatabasesDirectory() async {
   await Directory(dbDir).create(recursive: true);
 
   final bundledVersion = await _resolveBundledVersionKey();
-  final persistedVersion = await _readPersistedVersionKey(dbDir);
-  final missingFile = _databaseFiles.any(
-    (fileName) => !File(p.join(dbDir, fileName)).existsSync(),
+  return installBundledDatabaseSet(
+    root: Directory(dbDir),
+    versionKey: bundledVersion,
+    fileNames: _databaseFiles,
+    load: (name) async {
+      final data = await rootBundle.load('$_assetPrefix$name');
+      return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    },
   );
-  final needsSync = missingFile || bundledVersion != persistedVersion;
-
-  if (needsSync) {
-    for (final fileName in _databaseFiles) {
-      final target = File(p.join(dbDir, fileName));
-      final data = await rootBundle.load('$_assetPrefix$fileName');
-      await target.writeAsBytes(data.buffer.asUint8List(), flush: true);
-    }
-    await _writePersistedVersionKey(dbDir, bundledVersion);
-  }
-
-  return dbDir;
 }
 
-/// Upstream commit from the bundled lock file, or a DB size fingerprint.
+/// Keep the upstream commit identity; malformed metadata uses content digests.
 Future<String> _resolveBundledVersionKey() async {
   try {
-    final lockJson = await rootBundle.loadString(_lockAssetPath);
-    final lock = jsonDecode(lockJson) as Map<String, dynamic>;
+    final lock = jsonDecode(
+      await rootBundle.loadString(_lockAssetPath),
+    ) as Map<String, dynamic>;
     final commit = lock['source_commit'];
-    if (commit is String && commit.isNotEmpty && commit != 'unknown') {
+    if (commit is String && RegExp(r'^[a-fA-F0-9]{40}$').hasMatch(commit))
       return commit;
-    }
   } on Object {
-    // Missing or invalid lock asset — fall back to size fingerprint.
+    /* Preserve usable installed data until staging succeeds. */
   }
-  return _bundledDatabasesSizeFingerprint();
-}
-
-Future<String> _bundledDatabasesSizeFingerprint() async {
   final parts = <String>[];
-  for (final fileName in _databaseFiles) {
-    final data = await rootBundle.load('$_assetPrefix$fileName');
-    parts.add('$fileName:${data.lengthInBytes}');
+  for (final name in _databaseFiles) {
+    final data = await rootBundle.load('$_assetPrefix$name');
+    final bytes = data.buffer.asUint8List(
+      data.offsetInBytes,
+      data.lengthInBytes,
+    );
+    parts.add('$name:${sha256.convert(bytes)}');
   }
-  return 'size:${parts.join('|')}';
-}
-
-Future<String?> _readPersistedVersionKey(String dbDir) async {
-  final file = File(p.join(dbDir, _persistedLockFileName));
-  if (!file.existsSync()) return null;
-
-  try {
-    final persisted =
-        jsonDecode(await file.readAsString()) as Map<String, dynamic>;
-    final versionKey = persisted['version_key'];
-    return versionKey is String && versionKey.isNotEmpty ? versionKey : null;
-  } on Object {
-    return null;
-  }
-}
-
-Future<void> _writePersistedVersionKey(String dbDir, String versionKey) async {
-  final file = File(p.join(dbDir, _persistedLockFileName));
-  await file.writeAsString(
-    const JsonEncoder.withIndent('  ').convert({'version_key': versionKey}),
-    flush: true,
-  );
+  return 'sha256:${parts.join('|')}';
 }
 
 /// Maps Hisn al-Muslim package data to Muslim Fortress domain models.
@@ -197,41 +171,27 @@ class FortressRepository {
       return FortressSearchResults.empty;
     }
 
-    final titleQuery = HisnSearchQuery(
-      value: trimmed,
-      target: HisnSearchTarget.title,
-      limit: limit,
-    );
-    final contentQuery = HisnSearchQuery(
-      value: trimmed,
-      limit: limit,
-    );
+    // Keep the catalog's symmetric title matching when the single field
+    // switches from browsing to content search. The upstream title index only
+    // strips tashkeel, so passing a sourced vowelled title to it loses matches.
+    final titles = loadChapters()
+        .where((chapter) => arabicSearchContains(chapter.title, trimmed))
+        .toList();
+    final contentQuery = HisnSearchQuery(value: trimmed, limit: limit);
 
-    final (totalTitles, titles) = _client.search.searchTitles(titleQuery);
     final (totalContents, contents) = _client.search.searchContents(
       contentQuery,
     );
     _ensureChapterCaches();
-    final counts = _countsByTitleId!;
     final titleNames = _titleNamesById!;
-    final featuredIds = _featuredTitleIds!;
     final flagsById = _client.commentary.flagsForContentIds({
       for (final item in contents) item.id,
     });
 
     return FortressSearchResults(
-      totalTitles: totalTitles,
+      totalTitles: titles.length,
       totalContents: totalContents,
-      titles: [
-        for (final title in titles)
-          FortressCategory(
-            chapterId: title.id,
-            title: title.name.trim(),
-            recurrence: title.recurrence,
-            supplicationCount: counts[title.id] ?? 0,
-            featured: featuredIds.contains(title.id),
-          ),
-      ],
+      titles: titles.take(limit).toList(),
       contents: [
         for (final item in contents)
           FortressSearchContentHit(

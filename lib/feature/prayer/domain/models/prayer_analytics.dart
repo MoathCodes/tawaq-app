@@ -26,9 +26,6 @@ abstract class PrayerAnalytics with _$PrayerAnalytics {
     /// The percentage of prayers performed on time.
     required double onTimePercentage,
 
-    /// The percentage of missed prayers.
-    required double missedPercentage,
-
     /// The percentage of late prayers.
     required double latePercentage,
   }) = _PrayerAnalytics;
@@ -41,7 +38,6 @@ abstract class PrayerAnalytics with _$PrayerAnalytics {
     bestStreak: 0,
     jamaahPercentage: 0,
     onTimePercentage: 0,
-    missedPercentage: 0,
     latePercentage: 0,
   );
 
@@ -63,8 +59,7 @@ enum PrayerAnalyticsPeriod {
   monthly,
 
   /// The analytics for the last 365 days.
-  yearly
-  ;
+  yearly;
 
   /// The duration of the period.
   Duration get duration {

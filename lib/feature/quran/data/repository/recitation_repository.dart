@@ -12,33 +12,44 @@ import 'package:tawaq/feature/quran/domain/services/recitation_url_builder.dart'
 /// Coordinates the mp3quran API and the on-disk cache for recitation data.
 class RecitationRepository {
   /// Creates a [RecitationRepository].
-  new({
-    required this._api,
-    required this._cache,
-    required this._logger,
-  });
+  new({required this._api, required this._cache, required this._logger});
 
   final Mp3QuranApi _api;
   final RecitationCache _cache;
   final Logger _logger;
 
   List<Reciter>? _memoryCatalog;
+  Future<void>? _catalogRefresh;
+  Future<List<Reciter>>? _catalogLoad;
   final LruMap<String, SurahTiming> _timingLru = LruMap(32);
 
   /// Returns the reciter catalog with timing links merged in. Served from the
   /// in-memory copy, then the disk cache, then the network.
-  Future<List<Reciter>> reciters() async {
+  Future<List<Reciter>> reciters() {
+    if (_memoryCatalog case final memory?) return Future.value(memory);
+    return _catalogLoad ??= _loadCatalog().whenComplete(
+      () => _catalogLoad = null,
+    );
+  }
+
+  Future<List<Reciter>> _loadCatalog() async {
     final memory = _memoryCatalog;
     if (memory != null) return memory;
 
-    final cached = await _cache.readCatalog();
+    final cached = await _cache.readCatalog(allowStale: true);
     if (cached != null) {
-      final reciters = cached
-          .whereType<Map<String, dynamic>>()
-          .map(Reciter.fromJson)
-          .toList();
-      _memoryCatalog = reciters;
-      return reciters;
+      try {
+        final reciters = cached
+            .map((entry) => Reciter.fromJson(entry as Map<String, dynamic>))
+            .toList();
+        _validateCatalog(reciters);
+        _memoryCatalog = reciters;
+        // Freshness controls refresh, never whether saved choices can restore.
+        unawaited(_refreshIfStale());
+        return reciters;
+      } on Object catch (error) {
+        _logger.w('Invalid cached reciter catalog: $error');
+      }
     }
 
     final reciters = await _fetchAndMerge();
@@ -47,8 +58,27 @@ class RecitationRepository {
     return reciters;
   }
 
+  Future<void> _refreshIfStale() async {
+    if (await _cache.readCatalog() != null) return;
+    await (_catalogRefresh ??= _refreshCatalog().whenComplete(() {
+      _catalogRefresh = null;
+    }));
+  }
+
+  Future<void> _refreshCatalog() async {
+    try {
+      final next = await _fetchAndMerge();
+      if (next.isEmpty) return;
+      await _cache.writeCatalog(next.map((r) => r.toJson()).toList());
+      _memoryCatalog = next;
+    } on Object catch (error) {
+      _logger.w('Catalog refresh failed; retaining last-known catalog: $error');
+    }
+  }
+
   Future<List<Reciter>> _fetchAndMerge() async {
     final reciters = await _api.fetchReciters();
+    _validateCatalog(reciters);
     List<TimingRead> reads;
     try {
       reads = await _api.fetchTimingReads();
@@ -68,15 +98,42 @@ class RecitationRepository {
                 .map(
                   (m) => m.copyWith(
                     timingReadId:
-                        readByServer[normalizeRecitationServerUrl(
-                          m.server,
-                        )],
+                        readByServer[normalizeRecitationServerUrl(m.server)],
                   ),
                 )
                 .toList(),
           ),
         )
         .toList();
+  }
+
+  void _validateCatalog(List<Reciter> reciters) {
+    final reciterIds = <int>{};
+    if (reciters.isEmpty) throw const FormatException('Empty reciter catalog');
+    for (final reciter in reciters) {
+      if (reciter.id <= 0 ||
+          reciter.name.trim().isEmpty ||
+          !reciterIds.add(reciter.id) ||
+          reciter.moshaf.isEmpty) {
+        throw const FormatException('Invalid reciter identity');
+      }
+      final moshafIds = <int>{};
+      for (final moshaf in reciter.moshaf) {
+        final server = Uri.tryParse(moshaf.server);
+        if (moshaf.id <= 0 ||
+            !moshafIds.add(moshaf.id) ||
+            moshaf.name.trim().isEmpty ||
+            server == null ||
+            !['http', 'https'].contains(server.scheme) ||
+            server.host.isEmpty ||
+            moshaf.surahList.isEmpty ||
+            moshaf.surahList.any((s) => s < 1 || s > 114)) {
+          throw const FormatException(
+            'Invalid moshaf identity or audio source',
+          );
+        }
+      }
+    }
   }
 
   /// Returns per-ayah timing for [surah] from [readId], or null on failure.
@@ -117,11 +174,8 @@ class RecitationRepository {
   /// - Otherwise the download is attempted (honoring [cancellationToken]);
   ///   the `progress` stream carries the emitted [DownloadProgress] events.
   ///   - On success the cached `file://` URI is returned.
-  ///   - On a mid-download failure, if the partial `.part` file is large
-  ///     enough to play, its `file://` URI is handed to mpv so playback can
-  ///     proceed from whatever was received.
-  ///   - Otherwise (cancellation, or failure with no usable `.part`) the
-  ///     network `url` is returned as a fallback.
+  ///   - A failed or cancelled save returns the stream URL. Partial files are
+  ///     never used for playback.
   ///
   /// [reciter] and [surahName] are used only to build the human-readable,
   /// riwayah-scoped cache path.
@@ -158,7 +212,6 @@ class RecitationRepository {
 
     final token = cancellationToken ?? CancellationToken();
     final events = <DownloadProgress>[];
-    Object? failure;
     try {
       // Drain the download stream, collecting progress events to replay on the
       // returned `progress` stream. `Stream.forEach` propagates download
@@ -181,7 +234,6 @@ class RecitationRepository {
             onProgress?.call(event);
           });
     } on Object catch (error, stack) {
-      failure = error;
       _logger.w(
         'Recitation download failed, evaluating fallback: $error',
         stackTrace: stack,
@@ -201,22 +253,6 @@ class RecitationRepository {
     );
     if (file != null) {
       return (uri: file.uri.toString(), progress: progressStream);
-    }
-
-    // Download failed mid-way -> hand mpv the partial .part if playable.
-    if (failure != null) {
-      final part = await _cache.partAudioIfLargeEnough(
-        reciterId: reciter.id,
-        moshafId: moshaf.id,
-        surah: surah,
-        reciterName: reciter.name,
-        riwayahName: moshaf.name,
-        surahName: surahName,
-      );
-      if (part != null) {
-        _logger.i('Streaming from partial .part for surah $surah');
-        return (uri: part.uri.toString(), progress: progressStream);
-      }
     }
 
     // Cancelled, or failed with no usable .part -> fall back to network.
@@ -244,9 +280,7 @@ class RecitationRepository {
     );
     if (cached != null) {
       final size = cached.lengthSync();
-      onProgress?.call(
-        DownloadProgress(receivedBytes: size, totalBytes: size),
-      );
+      onProgress?.call(DownloadProgress(receivedBytes: size, totalBytes: size));
       return;
     }
 

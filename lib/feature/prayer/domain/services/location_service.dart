@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:geoclue/geoclue.dart';
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:free_map/free_map.dart';
 import 'package:geolocator/geolocator.dart';
@@ -18,12 +22,33 @@ class LocationService {
   final String? languageCode;
   final FmService _service;
 
+  /// Checks the actual Linux service, rather than the plugin's stubbed flag.
+  /// This does not request position or permission.
+  Future<bool> isDeviceLocationAvailable() async {
+    try {
+      if (!await Geolocator.isLocationServiceEnabled().timeout(
+        const Duration(seconds: 3),
+      ))
+        return false;
+      if (!Platform.isLinux) return true;
+      final manager = GeoClueManager();
+      try {
+        await manager.connect().timeout(const Duration(seconds: 3));
+        return true;
+      } finally {
+        await manager.close();
+      }
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Returns the current device position.
   Future<LatLng> getCurrentPosition() async {
     try {
       _log.i('[LocationService] Getting current position...');
 
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final serviceEnabled = await isDeviceLocationAvailable();
       if (!serviceEnabled) {
         throw const LocationException(LocationFailureCode.servicesDisabled);
       }
@@ -43,12 +68,17 @@ class LocationService {
       }
 
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: .high),
+        locationSettings: const LocationSettings(
+          accuracy: .high,
+          timeLimit: Duration(seconds: 20),
+        ),
       );
 
       final result = LatLng(position.latitude, position.longitude);
       _log.i('[LocationService] Position obtained: $result');
       return result;
+    } on TimeoutException {
+      throw const LocationException(LocationFailureCode.timedOut);
     } catch (e, stackTrace) {
       _log.e(
         '[LocationService] Error getting position',

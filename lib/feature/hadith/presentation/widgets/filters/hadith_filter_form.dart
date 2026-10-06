@@ -9,6 +9,7 @@ import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/core/widgets/select_empty_content.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_locale_extensions.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
@@ -45,10 +46,7 @@ class HadithFilterPanel extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    l10n.hadithFilterTab,
-                    style: theme.typography.body.xl,
-                  ),
+                  Text(l10n.hadithFilterTab, style: theme.typography.body.xl),
                   FButton.icon(
                     variant: FButtonVariant.ghost,
                     semanticsLabel: hadithCloseFiltersSemanticsLabel(l10n),
@@ -106,10 +104,7 @@ class HadithFilterPanel extends ConsumerWidget {
 
 /// A single removable active-filter chip action.
 class HadithFilterChipAction {
-  const new({
-    required this.label,
-    required this.nextFilters,
-  });
+  const new({required this.label, required this.nextFilters});
 
   final String label;
   final HadithFilters nextFilters;
@@ -301,6 +296,7 @@ class HadithFilterForm extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         FSelect<SearchZone>.search(
+          contentEmptyBuilder: (_, _) => const SelectEmptyContent(),
           enabled: panelEnabled,
           hint: l10n.hadithScope,
           contentConstraints: selectPopoverPortalConstraints(context),
@@ -310,7 +306,8 @@ class HadithFilterForm extends ConsumerWidget {
             typography: theme.typography,
           ),
           items: {
-            for (final zone in SearchZone.values) zone.getLocaleName(l10n): zone,
+            for (final zone in SearchZone.values)
+              zone.getLocaleName(l10n): zone,
           },
           control: FSelectControl<SearchZone>.lifted(
             value: filters.zone,
@@ -345,6 +342,7 @@ class HadithFilterForm extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         FMultiSelect<HadithDegree>.search(
+          contentEmptyBuilder: (_, _) => const SelectEmptyContent(),
           enabled: panelEnabled,
           {
             for (final degree in HadithDegree.values.where(
@@ -391,7 +389,8 @@ class HadithFilterForm extends ConsumerWidget {
           hint: l10n.hadithTypeToSearch,
           kind: HadithLookupKind.books,
           selected: (filters) => filters.books,
-          withSelected: (filters, selected) => filters.copyWith(books: selected),
+          withSelected: (filters, selected) =>
+              filters.copyWith(books: selected),
         ),
         const SizedBox(height: AppSpacing.md),
         HadithLookupSection(

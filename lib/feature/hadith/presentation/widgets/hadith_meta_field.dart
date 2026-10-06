@@ -1,6 +1,7 @@
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_judgment.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Layout for a hadith metadata label/value pair.
@@ -34,6 +35,7 @@ class HadithMetaField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    if (!hasHadithMetadata(value)) return const SizedBox.shrink();
 
     return switch (layout) {
       HadithMetaFieldLayout.inline => RichText(
@@ -64,10 +66,7 @@ class HadithMetaField extends StatelessWidget {
                 color: theme.colors.mutedForeground,
               ),
             ),
-            Text(
-              value,
-              style: theme.typography.body.md,
-            ),
+            Text(value, style: theme.typography.body.md),
           ],
         ),
       ),

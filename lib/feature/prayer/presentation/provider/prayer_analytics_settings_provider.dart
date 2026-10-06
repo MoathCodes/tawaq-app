@@ -19,9 +19,7 @@ class PrayerAnalyticsSettingsNotifier
   Future<PrayerAnalyticsPrefs> build() async {
     await persist(
       ref.watch(settingsStorageProvider.future),
-      options: const StorageOptions(
-        cacheTime: StorageCacheTime.unsafe_forever,
-      ),
+      options: const StorageOptions(cacheTime: StorageCacheTime.unsafe_forever),
     ).future;
     return state.value ?? PrayerAnalyticsPrefs.defaults();
   }

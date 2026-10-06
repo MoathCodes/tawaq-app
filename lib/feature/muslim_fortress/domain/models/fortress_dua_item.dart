@@ -51,8 +51,7 @@ class FortressDuaItem {
   String? get reference => source;
 
   /// Whether this thikr contains Quranic passages.
-  bool get isQuranicPassage =>
-      lines.any((line) => line is HisnQuranLine);
+  bool get isQuranicPassage => lines.any((line) => line is HisnQuranLine);
 
   /// Whether loaded commentary has any sharh/hadith/benefit text.
   bool get hasCommentary =>
@@ -67,6 +66,11 @@ class FortressDuaItem {
 
   /// Whether [virtue] is present.
   bool get hasVirtue => virtue != null && virtue!.trim().isNotEmpty;
+
+  /// Whether the supplied virtue adds content beyond the source reference.
+  /// Raw fields remain available; previews and sharing omit exact duplicates.
+  bool get hasDistinctVirtue =>
+      hasVirtue && virtue!.trim() != reference?.trim();
 
   /// Whether [commentary] includes non-empty related hadith.
   bool get hasHadith {
@@ -83,8 +87,7 @@ class FortressDuaItem {
   }
 
   /// Sharh, hadith, benefit, or مصدر (not including الفضل).
-  bool get hasStudyContent =>
-      hasSharh || hasHadith || hasBenefit || hasSource;
+  bool get hasStudyContent => hasSharh || hasHadith || hasBenefit || hasSource;
 
   /// Study affordance in focus nav (sharh / hadith / benefit — not مصدر alone).
   bool get hasFocusStudyAction => hasSharh || hasHadith || hasBenefit;

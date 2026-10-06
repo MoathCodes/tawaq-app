@@ -78,10 +78,12 @@ class SchedulePrayerRow extends ConsumerWidget {
     required this.row,
     required this.isToday,
     required this.currentPrayer,
+    this.compact = false,
     super.key,
   });
 
   /// The prayer schedule row data.
+  final bool compact;
   final PrayerScheduleRow row;
 
   /// Whether the schedule list is showing today's calendar day.
@@ -98,11 +100,7 @@ class SchedulePrayerRow extends ConsumerWidget {
     final colors = theme.colors;
     final completionDay =
         row.completionDate ??
-        DateTime(
-          row.prayerTime.year,
-          row.prayerTime.month,
-          row.prayerTime.day,
-        );
+        DateTime(row.prayerTime.year, row.prayerTime.month, row.prayerTime.day);
     final completionStatus = ref.watch(
       completionStatusProvider(
         row.prayer,
@@ -126,6 +124,7 @@ class SchedulePrayerRow extends ConsumerWidget {
       prayer: row.prayer,
       completionDay: completionDay,
       prayerTime: row.prayerTime,
+      menu: compact,
     );
     final timeRail = _TimeRail(row: row);
 
@@ -148,6 +147,25 @@ class SchedulePrayerRow extends ConsumerWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
+          if (compact && constraints.maxWidth >= 520) {
+            return Row(
+              children: [
+                icon,
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    schedulePrayerName(row, context.l10n),
+                    style: theme.typography.body.sm.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                statusChips,
+                const SizedBox(width: AppSpacing.sm),
+                timeRail,
+              ],
+            );
+          }
           final isWide = isContainerAtLeast(
             context,
             constraints,
@@ -174,7 +192,13 @@ class SchedulePrayerRow extends ConsumerWidget {
             isToday: isToday,
             statusChips: statusChips,
             timeRail: timeRail,
-            footerInlineWithTrailing: row.formattedIqamahTime == null,
+            footerInlineWithTrailing:
+                constraints.maxWidth >=
+                360 *
+                    ((theme.typography.body.sm.fontSize ?? 14) / 14).clamp(
+                      1,
+                      2,
+                    ),
           );
         },
       ),
@@ -304,10 +328,7 @@ class _NarrowScheduleRow extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         statusChips,
         const SizedBox(height: AppSpacing.sm),
-        Align(
-          alignment: AlignmentDirectional.centerEnd,
-          child: timeRail,
-        ),
+        Align(alignment: AlignmentDirectional.centerEnd, child: timeRail),
       ],
     );
   }
@@ -343,9 +364,7 @@ class _IdentityColumn extends StatelessWidget {
           schedulePrayerName(row, l10n),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: theme.typography.body.sm.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: theme.typography.body.sm.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 2),
         _RelativeTimeSubtitle(
@@ -354,10 +373,7 @@ class _IdentityColumn extends StatelessWidget {
           isCurrentPrayer: isActive,
           isToday: isToday,
         ),
-        if (showStatus) ...[
-          const SizedBox(height: AppSpacing.sm),
-          statusChips,
-        ],
+        if (showStatus) ...[const SizedBox(height: AppSpacing.sm), statusChips],
       ],
     );
   }
@@ -382,8 +398,7 @@ class _RelativeTimeSubtitle extends ConsumerWidget {
     final colors = theme.colors;
     final l10n = context.l10n;
 
-    ref.watch(currentMinuteBucketProvider);
-    final clockNow = ref.read(prayerDayProvider).value?.now;
+    final clockNow = ref.watch(prayerMinuteSnapshotProvider)?.now;
     if (isToday && clockNow == null) {
       return const SizedBox.shrink();
     }
@@ -419,24 +434,18 @@ class _TimeRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      alignment: WrapAlignment.end,
+      spacing: AppSpacing.md,
+      runSpacing: AppSpacing.sm,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        if (row.formattedIqamahTime != null) ...[
+        if (row.formattedIqamahTime != null)
           _ObligatoryAlertTimeSlot(
             row: row,
             time: row.formattedIqamahTime!,
             kind: PrayerAlertKind.iqamah,
           ),
-          Container(
-            width: 1,
-            height: 28,
-            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            color: colors.border.withValues(alpha: 0.65),
-          ),
-        ],
         _ObligatoryAlertTimeSlot(
           row: row,
           time: row.formattedAdhanTime,
@@ -448,11 +457,7 @@ class _TimeRail extends StatelessWidget {
 }
 
 class _ObligatoryAlertTimeSlot extends ConsumerWidget {
-  const new({
-    required this.row,
-    required this.time,
-    required this.kind,
-  });
+  const new({required this.row, required this.time, required this.kind});
 
   final PrayerScheduleRow row;
   final String time;
@@ -467,21 +472,14 @@ class _ObligatoryAlertTimeSlot extends ConsumerWidget {
     final prayerName = schedulePrayerName(row, l10n);
     final mode = settings == null
         ? ScheduleAlertMode.off
-        : adhanSettingsModeFor(
-            settings,
-            kind,
-            row.prayer,
-          );
+        : adhanSettingsModeFor(settings, kind, row.prayer);
 
     final (label, eventLabel) = switch (kind) {
       PrayerAlertKind.iqamah => (
         l10n.iqamah,
         l10n.scheduleAlertEventIqamah(prayerName),
       ),
-      _ => (
-        l10n.adhan,
-        l10n.scheduleAlertEventAdhan(prayerName),
-      ),
+      _ => (l10n.adhan, l10n.scheduleAlertEventAdhan(prayerName)),
     };
 
     return Row(

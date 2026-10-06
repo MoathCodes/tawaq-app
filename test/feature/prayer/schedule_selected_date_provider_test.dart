@@ -41,10 +41,7 @@ void main() {
       );
       // Seed a valid day key before mounting the autoDispose notifier.
       container.read(testDayKeyProvider.notifier).setKey(20260618);
-      keepAlive = container.listen(
-        scheduleSelectedDateProvider,
-        (_, _) {},
-      );
+      keepAlive = container.listen(scheduleSelectedDateProvider, (_, _) {});
     });
 
     tearDown(() {
@@ -80,6 +77,28 @@ void main() {
       expect(
         container.read(scheduleSelectedDateProvider),
         DateTime(2026, 6, 19),
+      );
+    });
+
+    test('configured date follows month and year boundaries; Today restores following', () {
+      container.read(testDayKeyProvider.notifier).setKey(20261231);
+      container.read(testDayKeyProvider.notifier).setKey(20270101);
+      expect(container.read(scheduleSelectedDateProvider), DateTime(2027));
+      container
+          .read(scheduleSelectedDateProvider.notifier)
+          .select(DateTime(2026, 12, 2));
+      container.read(testDayKeyProvider.notifier).setKey(20270102);
+      expect(
+        container.read(scheduleSelectedDateProvider),
+        DateTime(2026, 12, 2),
+      );
+      container
+          .read(scheduleSelectedDateProvider.notifier)
+          .select(DateTime(2027, 1, 2));
+      container.read(testDayKeyProvider.notifier).setKey(20270103);
+      expect(
+        container.read(scheduleSelectedDateProvider),
+        DateTime(2027, 1, 3),
       );
     });
 

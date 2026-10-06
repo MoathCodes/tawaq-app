@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:hivez_flutter/hivez_flutter.dart';
+import 'package:path/path.dart' as p;
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/prayer/data/database/prayer_history_migration.dart';
 import 'package:tawaq/feature/prayer/domain/completion_dedup.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:timezone/timezone.dart';
@@ -12,23 +16,71 @@ part 'prayer_database.g.dart';
 /// Provides a singleton instance of the [PrayerDatabase].
 @Riverpod(keepAlive: true)
 PrayerDatabase prayerDatabase(Ref ref) {
-  ref.watch(hiveCoreInitProvider);
+  final storageReady = ref.watch(hiveCoreInitProvider.future);
   final completionBox = Box<int, PrayerCompletion>('prayer_completions');
-  final prayerDatabase = PrayerDatabase(completionBox);
+  final prayerDatabase = PrayerDatabase(
+    completionBox,
+    initialize: () async {
+      await storageReady;
+      // The database gates every consumer until the approved cleanup finishes.
+      await completionBox.getAllKeys();
+      final boxPath = completionBox.path;
+      if (boxPath == null)
+        throw StateError('Prayer history has no storage path');
+      final migration = PrayerHistoryMigration(
+        completionBox,
+        Directory(p.join(p.dirname(boxPath), 'migrations', 'prayer-history')),
+      );
+      final digest = await migration.prepare();
+      await migration.apply(approvedBackupSha256: digest);
+    },
+  );
   ref.onDispose(() async {
-    await completionBox.closeBox();
+    await prayerDatabase.close();
   });
   return prayerDatabase;
 }
 
+/// Prevents mounting the app's history consumers before storage migration.
+@Riverpod(keepAlive: true)
+Future<void> prayerHistoryReady(Ref ref) =>
+    ref.watch(prayerDatabaseProvider).ready;
+
 /// The database for the prayer data.
 class PrayerDatabase {
   /// Creates a new instance of the [PrayerDatabase].
-  new(this._box);
+  new(this._box, {Future<void> Function()? initialize})
+    : _initialize = initialize;
   final Box<int, PrayerCompletion> _box;
+  final Future<void> Function()? _initialize;
+
+  /// Shared initialization barrier for reads, writes, analytics and repair.
+  Future<void> get ready => _ready ??= _initializeOnce();
+  Future<void>? _ready;
+
+  Future<void> _initializeOnce() async {
+    try {
+      final initialize = _initialize;
+      if (initialize != null) await Future<void>.sync(initialize);
+    } on Object {
+      _ready = null;
+      rethrow;
+    }
+  }
+
+  /// Waits for an active migration before closing its storage handle.
+  Future<void> close() async {
+    try {
+      await _ready;
+    } on Object {
+      // A failed initialization has already retained its recovery journal.
+    }
+    await _box.closeBox();
+  }
 
   /// Deletes a prayer completion by Hive key.
   Future<void> deleteCompletion(int id) async {
+    await ready;
     await _box.delete(id);
   }
 
@@ -38,6 +90,7 @@ class PrayerDatabase {
     DateTime date,
     Location location,
   ) async {
+    await ready;
     final keys = await _findAllMatchingKeys(prayer, date, location);
     for (final key in keys) {
       await _box.delete(key);
@@ -46,12 +99,14 @@ class PrayerDatabase {
 
   /// Returns all prayer completions.
   Future<List<PrayerCompletion>> getAllCompletions() async {
+    await ready;
     final values = await _box.getAllValues();
     return values.toList();
   }
 
   /// Returns the earliest logged completion time, if any.
   Future<DateTime?> getEarliestCompletionTime() async {
+    await ready;
     final values = await _box.getAllValues();
     if (values.isEmpty) return null;
 
@@ -66,6 +121,7 @@ class PrayerDatabase {
 
   /// Returns a prayer completion by its ID.
   Future<PrayerCompletion?> getCompletionById(int id) async {
+    await ready;
     return _box.get(id);
   }
 
@@ -74,6 +130,7 @@ class PrayerDatabase {
     DateTime date,
     Location location,
   ) async {
+    await ready;
     final completions = await _box.getValuesWhere((value) {
       return value.completionTime.isSameCalendarDay(date, location);
     });
@@ -88,6 +145,7 @@ class PrayerDatabase {
     PrayerCompletion completion,
     Location location,
   ) async {
+    await ready;
     final matchingKeys = await _findAllMatchingKeys(
       completion.prayer,
       completion.completionTime,
@@ -136,6 +194,7 @@ class PrayerDatabase {
 
   /// Removes duplicate rows, keeping the canonical row per prayer+day.
   Future<int> repairDuplicates(Location location) async {
+    await ready;
     final keys = await _box.getAllKeys();
     final groups = <String, List<({int key, PrayerCompletion value})>>{};
 
@@ -148,6 +207,10 @@ class PrayerDatabase {
 
     var removed = 0;
     for (final entries in groups.values) {
+      // Fixtures and imported legacy rows can bypass startup migration.
+      // Never discard a positive row behind a missed row during repair.
+      if (entries.any((entry) => entry.value.status == CompletionStatus.missed))
+        continue;
       if (entries.length <= 1) continue;
 
       final rows = [

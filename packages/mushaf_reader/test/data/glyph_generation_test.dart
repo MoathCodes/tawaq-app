@@ -40,6 +40,7 @@ void main() {
     late Map<String, dynamic> quranFullJson;
     late List<dynamic> pagesData;
     late Box<Ayah> ayahsBox;
+    late Directory fixture;
 
     setUpAll(() async {
       // Find project root (navigate up from test directory)
@@ -56,21 +57,25 @@ void main() {
         'jsons',
         'quran_full.json',
       );
-      quranFullJson =
-          json.decode(File(quranFullPath).readAsStringSync())
-              as Map<String, dynamic>;
+      quranFullJson = json.decode(
+        File(quranFullPath).readAsStringSync(),
+      ) as Map<String, dynamic>;
       final fullData = quranFullJson['data'] as Map<String, dynamic>;
       pagesData = fullData['pages'] as List<dynamic>;
 
       // Initialize Hive
       final hivePath = p.join(projectRoot, 'assets', 'hive');
-      Hive.init(hivePath);
+      fixture = await Directory.systemTemp.createTemp('mushaf-glyph-fixture-');
+      await File(p.join(hivePath, 'ayahs.hive'))
+          .copy(p.join(fixture.path, 'ayahs.hive'));
+      Hive.init(fixture.path);
       Hive.registerAdapter(AyahAdapter());
       ayahsBox = await Hive.openBox<Ayah>('ayahs');
     });
 
     tearDownAll(() async {
       await ayahsBox.close();
+      await fixture.delete(recursive: true);
     });
 
     test('Compare glyphs from JSON vs Hive for all pages', () async {

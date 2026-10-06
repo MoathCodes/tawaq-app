@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-06",
+  "base_revision": "717f1248c6c448f06b1f67f32df202e7ea8f676d",
+  "dirty_worktree": true,
+  "root_tests": {
+    "passed": 1203,
+    "log": "/tmp/tawaq-quran-oct6-all-tests.log"
+  },
+  "focused_regressions": {
+    "passed": 19,
+    "log": "/tmp/tawaq-quran-oct6-focused.log",
+    "before_failure": "Original empty-pane collapse rule reintroduced temporarily; selection/visibility regression failed. Source restored in finally."
+  },
+  "analysis": {
+    "errors": 0,
+    "warnings": 0,
+    "infos": 424,
+    "log": "/tmp/tawaq-quran-oct6-analysis.log"
+  },
+  "generation": [],
+  "local_package_changes": false,
+  "religious_source_changes": false,
+  "persisted_schema_changes": false,
+  "composition": {
+    "candidate": "/tmp/tawaq-quran-refinement-completed-2026-10-06",
+    "candidate_metadata": "/tmp/tawaq-quran-refinement-completed-2026-10-06/candidate-metadata.json",
+    "captures": 272,
+    "combinations": 16,
+    "errors": 0,
+    "native_exit": 0,
+    "review": "Four contact sheets and full-resolution English/Arabic search, division context and Study states inspected.",
+    "matrix": "Arabic/English, manuscript light/dark, 800x600/1200x860, normal/extra-large text",
+    "scope": "Mounted app callbacks/text controllers and render buffers. Native pointer/key delivery, screen readers, audio and full desktop chrome remain unverified. Some early Study captures precede settled commentary; later loaded Study captures also inspected."
+  },
+  "ordinary_app_build": {
+    "command": "fvm flutter build linux --debug -t lib/main.dart",
+    "result": "passed",
+    "log": "/tmp/tawaq-quran-oct6-main-build.log",
+    "artifact_sha256": {
+      "build/linux/x64/debug/bundle/Tawaq": "fa4b506073c8def0f1a9bef5de4127121ab3fc0202eabd82bd1bd788bd8a898c",
+      "build/linux/x64/debug/bundle/data/flutter_assets/kernel_blob.bin": "bed80ce2b07e55ca2f7fd449a4892957acab2510ec8d72e45a9249810eb8578a"
+    }
+  },
+  "logs_sha256": {
+    "/tmp/tawaq-quran-oct6-all-tests.log": "492488ab8ba4cdfaef10b9edfcda79b5b9b198fa5c9bffb089faa9f560be180f",
+    "/tmp/tawaq-quran-oct6-focused.log": "34ee093c7d259d1ba3caa39a215648ed727b7d629fc42a450356dbb6fa6083b8",
+    "/tmp/tawaq-quran-oct6-analysis.log": "a05f6f5745b433cacc2e0f1b012ae190cb110adaadde56e2f8d7dc998b78e8b2",
+    "/tmp/tawaq-quran-oct6-main-build.log": "5831bb0921fae7b7fbd703a6f5a8c1bbf86824e748565d69b014450ea83b6886",
+    "/tmp/tawaq-quran-oct6-confirm-build.log": "5831bb0921fae7b7fbd703a6f5a8c1bbf86824e748565d69b014450ea83b6886",
+    "/tmp/tawaq-quran-oct6-before-regression.log": "575822562caf2a7b4130a67169b36a356e03f3d43a718c7978d2d33ee3deadad"
+  },
+  "initial_visual_pass": {
+    "candidate": "/tmp/tawaq-quran-refinement-review-2026-10-06",
+    "captures": 272,
+    "errors": 0,
+    "result": "Inactive Forui row backgrounds created rectangular surface blocks; fixed in one batch before confirmation."
+  },
+  "interrupted_checks": {
+    "native_candidate": "/tmp/tawaq-quran-refinement-confirmed-2026-10-06",
+    "reason": "Externally terminated with exit143 before completion; excluded from complete-matrix proof. Confirmation resumed with unchanged source in the completed candidate.",
+    "test_attempt": "Latest test rerun also terminated with exit143 after846 cases; subsequent full run passed."
+  },
+  "publication": "No commit, push, PR or release performed."
+}

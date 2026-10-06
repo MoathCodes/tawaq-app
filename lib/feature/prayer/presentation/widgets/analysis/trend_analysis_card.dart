@@ -152,11 +152,7 @@ class _PeriodTrendBody extends ConsumerWidget {
 }
 
 class _NoPrayerRecordsState extends StatelessWidget {
-  const new({
-    required this.scope,
-    required this.title,
-    required this.hint,
-  });
+  const new({required this.scope, required this.title, required this.hint});
 
   final String scope;
   final String title;
@@ -209,10 +205,7 @@ class _NoPrayerRecordsState extends StatelessWidget {
 }
 
 class _PeriodCompletionSummary extends StatelessWidget {
-  const new({
-    required this.completionPercentage,
-    required this.subtitle,
-  });
+  const new({required this.completionPercentage, required this.subtitle});
 
   final double completionPercentage;
   final String subtitle;
@@ -311,22 +304,13 @@ class _PeriodRateBars extends ConsumerWidget {
           value: analytics.latePercentage,
           status: CompletionStatus.late,
         ),
-        _RateBarRow(
-          label: l10n.missedRate,
-          value: analytics.missedPercentage,
-          status: CompletionStatus.missed,
-        ),
       ],
     );
   }
 }
 
 class _RateBarRow extends StatelessWidget {
-  const new({
-    required this.label,
-    required this.value,
-    required this.status,
-  });
+  const new({required this.label, required this.value, required this.status});
 
   final String label;
   final double value;
@@ -362,15 +346,14 @@ class _RateBarRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
-        SizedBox(
-          width: 36,
-          child: Text(
-            '$percent%',
-            textAlign: TextAlign.end,
-            style: theme.typography.body.xs.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
+        Text(
+          '$percent%',
+          maxLines: 1,
+          softWrap: false,
+          textAlign: TextAlign.end,
+          style: theme.typography.body.xs.copyWith(
+            color: color,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ],

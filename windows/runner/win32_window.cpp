@@ -159,10 +159,6 @@ LRESULT CALLBACK Win32Window::WndProc(HWND const window,
                                       UINT const message,
                                       WPARAM const wparam,
                                       LPARAM const lparam) noexcept {
-  if (message == WM_NCCALCSIZE && wparam) {
-    return 0;
-  }
-
   if (message == WM_NCCREATE) {
     auto window_struct = reinterpret_cast<CREATESTRUCT*>(lparam);
     SetWindowLongPtr(window, GWLP_USERDATA,
@@ -278,6 +274,13 @@ void Win32Window::OnDestroy() {
 }
 
 void Win32Window::UpdateTheme(HWND const window) {
+  // Windows 11 opts into native rounded corners. Older Windows versions
+  // reject this optional attribute and retain their normal corner policy.
+  // Values are stable SDK constants; keep compatibility with older SDKs.
+  constexpr DWORD kWindowCornerPreference = 33;
+  const DWORD round_corners = 2;
+  DwmSetWindowAttribute(window, kWindowCornerPreference,
+                       &round_corners, sizeof(round_corners));
   DWORD light_mode;
   DWORD light_mode_size = sizeof(light_mode);
   LSTATUS result = RegGetValue(HKEY_CURRENT_USER, kGetPreferredBrightnessRegKey,

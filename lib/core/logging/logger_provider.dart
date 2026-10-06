@@ -69,7 +69,8 @@ Future<void> initFileLogging() async {
 }
 
 /// Exposes the shared [Logger] instance to Riverpod widgets and services.
-@riverpod
+// Wraps the app-wide logger; no route-owned resource.
+@Riverpod(keepAlive: true)
 Logger loggerNotifier(Ref ref) {
   return logger;
 }

@@ -9,6 +9,8 @@ import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/storage/settings_storage.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
 import 'package:tawaq/feature/prayer/domain/models/location_constants.dart';
+import 'package:tawaq/feature/prayer/domain/models/location_failure.dart';
+import 'package:tawaq/feature/prayer/domain/services/location_service.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/location_service_provider.dart';
 import 'package:timezone/timezone.dart';
@@ -42,6 +44,8 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     }
     return state.value ?? PrayerSettings.defaultSettings();
   }
+
+  int _locationGeneration = 0;
 
   void _commit(PrayerSettings Function(PrayerSettings) fn, String field) {
     if (state.value == null) return;
@@ -82,59 +86,40 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
       onError: (err, st) {
         ref
             .read(loggerProvider)
-            .e(
-              '$_prayerLogPrefix Update error',
-              error: err,
-              stackTrace: st,
-            );
+            .e('$_prayerLogPrefix Update error', error: err, stackTrace: st);
         if (onError != null) return onError(err, st);
         throw Exception(err);
       },
     );
   }
 
-  /// Resolves IANA timezone for [coordinates], falling back to device TZ.
-  ///
-  /// Throws when neither offline lookup nor device TZ succeeds — callers must
-  /// not commit coords without a matching timezone (no stale-pair writes).
+  /// Resolves the timezone belonging to the coordinates, never the host zone.
   Future<Location> _resolveTimezone(Coordinates coordinates) async {
-    try {
-      final resolved = ref
-          .read(locationServiceProvider)
-          .getLocationFromCoordinatesOffline(coordinates);
-      if (resolved != null) return resolved;
-    } on Object catch (error, stack) {
-      ref
-          .read(loggerProvider)
-          .w(
-            '$_prayerLogPrefix coord TZ lookup failed; trying device TZ',
-            error: error,
-            stackTrace: stack,
-          );
+    final resolved = ref
+        .read(locationServiceProvider)
+        .getLocationFromCoordinatesOffline(coordinates);
+    if (resolved == null) {
+      throw const LocationException(
+        LocationFailureCode.coordinatesLookupFailed,
+      );
     }
-    final tz = await FlutterTimezone.getLocalTimezone();
-    return getLocation(tz.identifier);
+    return resolved;
   }
 
-  /// Atomically applies location fields in a single persist write.
-  ///
-  /// When [coordinates] change without an explicit [location], timezone is
-  /// resolved from coords (device TZ only if offline lookup fails). On resolve
-  /// failure the previous coords+tz pair is left untouched and the error
-  /// propagates.
+  /// Commits coordinates and timezone together. New choices invalidate pending
+  /// device-location and name requests, even while timezone lookup is pending.
   Future<void> applyLocationBundle({
     Coordinates? coordinates,
     String? locationName,
     Location? location,
     bool? autoLocation,
   }) async {
-    if (state.value == null) return;
-
-    var loc = location;
-    if (coordinates != null && loc == null) {
-      loc = await _resolveTimezone(coordinates);
-    }
-
+    if (!state.hasValue) return;
+    final generation = ++_locationGeneration;
+    final loc =
+        location ??
+        (coordinates == null ? null : await _resolveTimezone(coordinates));
+    if (!ref.mounted || generation != _locationGeneration) return;
     _commit(
       (current) => current.copyWith(
         coordinates: coordinates ?? current.coordinates,
@@ -150,23 +135,47 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     );
   }
 
-  /// Fetches GPS + place details and applies via [applyLocationBundle].
-  ///
-  /// Pass [autoLocation] to set the flag in the same commit (e.g. `true` when
-  /// enabling auto-location). Omitting it leaves the flag unchanged.
+  /// Applies a valid GPS/timezone pair without waiting for name enrichment.
   Future<void> applyCurrentDeviceLocation({bool? autoLocation}) async {
-    final svc = ref.read(locationServiceProvider);
-    final pos = await svc.getCurrentPosition();
-    logger.i('$_prayerLogPrefix GPS coords: ${pos.coordinates}');
-    final details = await svc.getPlaceDetails(pos.coordinates);
-    logger.i('$_prayerLogPrefix Place details: ${details.name}');
-    await applyLocationBundle(
-      coordinates: pos.coordinates,
-      locationName: details.name.isNotEmpty
-          ? details.name
-          : LocationConstants.unknownLocationName,
-      autoLocation: autoLocation,
+    final generation = ++_locationGeneration;
+    final service = ref.read(locationServiceProvider);
+    final position = await service.getCurrentPosition();
+    if (!ref.mounted || generation != _locationGeneration) return;
+    final coordinates = position.coordinates;
+    final location = await _resolveTimezone(coordinates);
+    if (!ref.mounted || generation != _locationGeneration) return;
+    _commit(
+      (current) => current.copyWith(
+        coordinates: coordinates,
+        location: location,
+        locationName: LocationConstants.unknownLocationName,
+        autoLocation: autoLocation ?? current.autoLocation,
+      ),
+      'Device location',
     );
+    unawaited(_enrichLocationName(service, coordinates, generation));
+  }
+
+  Future<void> _enrichLocationName(
+    LocationService service,
+    Coordinates coordinates,
+    int generation,
+  ) async {
+    try {
+      final details = await service.getPlaceDetails(coordinates);
+      if (!ref.mounted || generation != _locationGeneration) return;
+      final name = details.name;
+      if (name.isEmpty) return;
+      _commit(
+        (current) => current.copyWith(locationName: name),
+        'Location name',
+      );
+    } on Object catch (error, stack) {
+      if (!ref.mounted || generation != _locationGeneration) return;
+      ref
+          .read(loggerProvider)
+          .w('Location name unavailable', error: error, stackTrace: stack);
+    }
   }
 
   /// Sets timezone from [loc], or from the device when [loc] is null.

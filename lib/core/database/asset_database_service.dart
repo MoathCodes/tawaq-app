@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -13,8 +14,9 @@ part 'asset_database_service.g.dart';
 
 const _persistedVersionFileSuffix = '.version.json';
 
-/// Bundled-asset version key (size fingerprint), mirrored after fortress.
-String assetDatabaseVersionKey(int byteLength) => 'size:$byteLength';
+/// Content identity; legacy size-only markers deliberately require a refresh.
+String assetDatabaseVersionKey(List<int> bytes) =>
+    'sha256:${sha256.convert(bytes)}';
 
 /// Whether the on-disk copy must be replaced from the asset bundle.
 bool assetDatabaseNeedsCopy({
@@ -23,10 +25,19 @@ bool assetDatabaseNeedsCopy({
   required String bundledVersion,
 }) => !fileExists || persistedVersion != bundledVersion;
 
-void _copyDatabaseBytes((String path, Uint8List bytes) args) {
+void _stageDatabaseBytes((String path, Uint8List bytes) args) {
   final file = File(args.$1);
   Directory(p.dirname(args.$1)).createSync(recursive: true);
   file.writeAsBytesSync(args.$2, flush: true);
+  final staged = sqlite3.open(file.path, mode: OpenMode.readOnly);
+  try {
+    final check = staged.select('PRAGMA quick_check');
+    if (check.length != 1 || check.first.values.single != 'ok') {
+      throw StateError('Bundled database failed integrity validation');
+    }
+  } finally {
+    staged.close();
+  }
 }
 
 Future<String?> _readPersistedVersionKey(String versionPath) async {
@@ -48,10 +59,12 @@ Future<void> _writePersistedVersionKey(
 ) async {
   final file = File(versionPath);
   await file.parent.create(recursive: true);
-  await file.writeAsString(
+  final staging = File('$versionPath.staging');
+  await staging.writeAsString(
     jsonEncode({'version_key': versionKey}),
     flush: true,
   );
+  await staging.rename(versionPath);
 }
 
 /// Provides a singleton instance of [AssetDatabaseService].
@@ -68,7 +81,7 @@ AssetDatabaseService assetDatabaseService(Ref ref) {
 /// a writable directory (app documents) and opening them with sqlite3.
 /// Databases are cached to avoid repeated copying and opening.
 ///
-/// Copies are versioned (size fingerprint, same idea as fortress
+/// Copies are versioned (SHA-256 content digest, unlike fortress
 /// `version_key`): a mismatch or missing on-disk file triggers replace.
 class AssetDatabaseService {
   /// Creates an [AssetDatabaseService].
@@ -143,7 +156,10 @@ class AssetDatabaseService {
         data.offsetInBytes,
         data.lengthInBytes,
       );
-      final bundledVersion = assetDatabaseVersionKey(bytes.lengthInBytes);
+      final bundledVersion = await Isolate.run(
+        () => assetDatabaseVersionKey(bytes),
+      );
+      if (_disposed) throw StateError('AssetDatabaseService has been disposed');
       final persistedVersion = await _readPersistedVersionKey(versionPath);
       final dbFile = File(dbPath);
       final needsCopy = assetDatabaseNeedsCopy(
@@ -153,10 +169,17 @@ class AssetDatabaseService {
       );
 
       if (needsCopy) {
-        await Isolate.run(() => _copyDatabaseBytes((dbPath, bytes)));
-        await _writePersistedVersionKey(versionPath, bundledVersion);
-        if (_disposed) {
-          throw StateError('AssetDatabaseService has been disposed');
+        final staging = File('$dbPath.staging');
+        try {
+          await Isolate.run(() => _stageDatabaseBytes((staging.path, bytes)));
+          if (_disposed)
+            throw StateError('AssetDatabaseService has been disposed');
+          // No connection is published until the validated copy and marker land.
+          // A crash between them is safe: the old marker forces another refresh.
+          await staging.rename(dbPath);
+          await _writePersistedVersionKey(versionPath, bundledVersion);
+        } finally {
+          if (await staging.exists()) await staging.delete();
         }
       }
 

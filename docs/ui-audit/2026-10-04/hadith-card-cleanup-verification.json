@@ -1,0 +1,287 @@
+{
+  "date": "2026-10-06",
+  "base_revision": "717f1248c6c448f06b1f67f32df202e7ea8f676d",
+  "dirty_worktree": true,
+  "behavior": "Flat Hadith hover/selection feedback; remove thick directional accent, visible numbered result/detail headings and duplicate source headers. Source citation remains once per result/detail view; ordinal retained for result accessibility only.",
+  "fanout": [
+    "result cards",
+    "embedded result cards",
+    "wide detail pane",
+    "compact detail popover",
+    "preview tool",
+    "keyboard and semantics regression coverage"
+  ],
+  "source_sha256": {
+    "lib/feature/hadith/presentation/widgets/results/hadith_result_card.dart": "d946ff899597ba1c1265e21914a44bf1581a69036a312319bb0875871704b9f2",
+    "lib/feature/hadith/presentation/widgets/detail/hadith_detail_pane.dart": "aa1b716e854c3e84223990d7c50f2f11cf66d9a7bf019088026998b391b725b3",
+    "lib/feature/hadith/presentation/screens/hadith_screen.dart": "bbccd61bd82e49b2793bd86481925f42ed85cd19b9adc78260de5cdaa2d07f59",
+    "lib/feature/hadith/presentation/widgets/hadith_results_column.dart": "54d4763f729fc9d212605a3977ce748f66ae84e8ab6194cca8a354c5ea288d5d",
+    "test/feature/hadith/hadith_result_card_test.dart": "fba46f37b201b1bacdfd0ec65ec6f13f745d737361196aad3446dd6afa785e68",
+    "test/feature/hadith/hadith_detail_selection_test.dart": "b5e7df1723525705671b8678b88f52e3dc89426a11f9cc4b1cb17d5153c982d4",
+    "tool/taw_80_preview.dart": "6f645b71151955fc6d21e74c4e6bf9bc56b6ed32ab9d4e61f5fd855af985d23f",
+    "tool/launch_visual_harness.dart": "399e27247513c612f84bb8048a855c4970ad4d8c505a5d0103992f34ff66684d"
+  },
+  "checks": [
+    {
+      "name": "hadith-tests",
+      "command": [
+        "fvm",
+        "flutter",
+        "test",
+        "test/feature/hadith"
+      ],
+      "log": "/tmp/tawaq-hadith-card-hadith-tests.log",
+      "state": "finished",
+      "child_pid": 4150231,
+      "exit": 0,
+      "passed": 101,
+      "log_sha256": "e2bd21ef2ab8ba3bdbc490c4922f38d3e631b0c10caf7b0648a6f1b59d2a15ee"
+    },
+    {
+      "name": "analysis",
+      "command": [
+        "fvm",
+        "flutter",
+        "analyze",
+        "--no-fatal-infos"
+      ],
+      "log": "/tmp/tawaq-hadith-card-analysis.log",
+      "state": "finished",
+      "child_pid": 4159347,
+      "exit": 0,
+      "log_sha256": "a6bede4291ae61b738770ff0c2583708f2d29de6c657c6a048195f588f6fa53b"
+    },
+    {
+      "name": "review-build",
+      "command": [
+        "fvm",
+        "flutter",
+        "build",
+        "linux",
+        "--debug",
+        "-t",
+        "tool/launch_visual_harness.dart",
+        "--dart-define=HADITH_REVIEW=true",
+        "--dart-define=HADITH_CARD_REVIEW=true"
+      ],
+      "log": "/tmp/tawaq-hadith-card-review-build.log",
+      "state": "finished",
+      "child_pid": 4164274,
+      "exit": 0,
+      "log_sha256": "5831bb0921fae7b7fbd703a6f5a8c1bbf86824e748565d69b014450ea83b6886"
+    },
+    {
+      "name": "native",
+      "command": [
+        "python",
+        "/tmp/tawaq-run-final-review.py",
+        "/tmp/tawaq-hadith-card-review-2026-10-06",
+        "HADITH_REVIEW=true",
+        "HADITH_CARD_REVIEW=true"
+      ],
+      "log": "/tmp/tawaq-hadith-card-native.log",
+      "state": "finished",
+      "child_pid": 4180081,
+      "exit": 0,
+      "log_sha256": "e623290b7b0aaff058005e123e6c0c30024cacc79d89a2bdd493d71dc9e3a7c1"
+    },
+    {
+      "name": "main-build",
+      "command": [
+        "fvm",
+        "flutter",
+        "build",
+        "linux",
+        "--debug",
+        "-t",
+        "lib/main.dart"
+      ],
+      "log": "/tmp/tawaq-hadith-card-main-build.log",
+      "state": "finished",
+      "child_pid": 8761,
+      "exit": 0,
+      "log_sha256": "5831bb0921fae7b7fbd703a6f5a8c1bbf86824e748565d69b014450ea83b6886"
+    },
+    {
+      "name": "full-tests",
+      "command": [
+        "fvm",
+        "flutter",
+        "test",
+        "--concurrency",
+        "2"
+      ],
+      "log": "/tmp/tawaq-hadith-card-full-tests.log",
+      "state": "finished",
+      "child_pid": 15632,
+      "exit": 0,
+      "passed": 1224,
+      "log_sha256": "4005f996fee5b697f0aca8e29a4e4963da335449c9c375837dbaf1066f1616b4"
+    },
+    {
+      "name": "confirmed-analysis",
+      "command": [
+        "fvm",
+        "flutter",
+        "analyze",
+        "--no-fatal-infos"
+      ],
+      "log": "/tmp/tawaq-hadith-card-confirmed-analysis.log",
+      "state": "finished",
+      "child_pid": 87796,
+      "exit": 0,
+      "log_sha256": "836d2df0998641549697c28114484a22595d06c71426d28d8330ccda63cbffad"
+    },
+    {
+      "name": "confirmed-review-build",
+      "command": [
+        "fvm",
+        "flutter",
+        "build",
+        "linux",
+        "--debug",
+        "-t",
+        "tool/launch_visual_harness.dart",
+        "--dart-define=HADITH_REVIEW=true",
+        "--dart-define=HADITH_CARD_REVIEW=true"
+      ],
+      "log": "/tmp/tawaq-hadith-card-confirmed-review-build.log",
+      "state": "finished",
+      "child_pid": 92230,
+      "exit": 0,
+      "log_sha256": "5831bb0921fae7b7fbd703a6f5a8c1bbf86824e748565d69b014450ea83b6886"
+    },
+    {
+      "name": "confirmed-native",
+      "command": [
+        "python",
+        "/tmp/tawaq-run-final-review.py",
+        "/tmp/tawaq-hadith-card-confirmed-2026-10-06",
+        "HADITH_REVIEW=true",
+        "HADITH_CARD_REVIEW=true"
+      ],
+      "log": "/tmp/tawaq-hadith-card-confirmed-native.log",
+      "state": "finished",
+      "child_pid": 98493,
+      "exit": 0,
+      "log_sha256": "0e9c1449642d51be58f3ba7437d84e2837cf0bf1d5111a4b45f7675e43314ba1"
+    },
+    {
+      "name": "confirmed-main-build",
+      "command": [
+        "fvm",
+        "flutter",
+        "build",
+        "linux",
+        "--debug",
+        "-t",
+        "lib/main.dart"
+      ],
+      "log": "/tmp/tawaq-hadith-card-confirmed-main-build.log",
+      "state": "finished",
+      "child_pid": 121083,
+      "exit": 0,
+      "log_sha256": "5831bb0921fae7b7fbd703a6f5a8c1bbf86824e748565d69b014450ea83b6886"
+    }
+  ],
+  "analysis": {
+    "errors": 0,
+    "warnings": 0,
+    "infos": 439
+  },
+  "native": {
+    "candidate": "/tmp/tawaq-hadith-card-confirmed-2026-10-06",
+    "metadata": "/tmp/tawaq-hadith-card-confirmed-2026-10-06/candidate-metadata.json",
+    "captures": 64,
+    "errors": [],
+    "exit": 0,
+    "matrix": "16 combinations: Arabic/English, Manuscript light/dark, 800x600/1200x860, normal/extra-large text. Idle/hover/selected/selected-hover in each.",
+    "scope": "Real mounted native app, Forui pointer callbacks and render buffers with isolated XDG/Hive data. Native OS pointer/keyboard/accessibility unverified; widget tests drive Flutter pointer and keyboard events.",
+    "review": "Four contact sheets and complete Arabic dark wide selected-hover plus English light compact hover inspected.",
+    "source_fixture": "Prior user-supplied Hadith screenshot fixture retained; no independent authentication or source edits.",
+    "candidate_artifacts_sha256": {
+      "build/linux/x64/debug/bundle/Tawaq": "fa4b506073c8def0f1a9bef5de4127121ab3fc0202eabd82bd1bd788bd8a898c",
+      "build/linux/x64/debug/bundle/lib/libflutter_linux_gtk.so": "7a5698608a3c79ad3f123a74bce8074339ffa1a83c896d73ae853c9f92a43cc3",
+      "build/linux/x64/debug/bundle/data/flutter_assets/kernel_blob.bin": "fb21c8e2a9879fa1918e8ab75540cfb6c42a36a4af345322b283d4e1de7ac6c3"
+    }
+  },
+  "before_evidence": "/home/moath/.t3/userdata/attachments/05a3f978-6b9d-42c3-a788-2af31d637346-00f7302e-38f4-401f-a58d-5a2d7ae1c387.png",
+  "generation": "No generator inputs changed; no generation required.",
+  "initial_native": "64-capture first round entered all row pointer regions, including adjacent actions. Confirmation narrows hover to the card body; app source is unchanged.",
+  "initial_analysis": "Preview still passed removed detail ordinal; updated consumer and removed unused import before passing final analysis.",
+  "publication": "No commit, PR, push or release performed.",
+  "evidence_sha256": {
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-1200-normal-hover.png": "2c36ce80417706404703b521bba22b95624b3cc03cf17a1088bda324c759dead",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-1200-normal-idle.png": "cb3194d4c76e5aa8510d39538e6ce476bb9f25458d47518340af8c68d8473040",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-1200-normal-selected-hover.png": "9ddefb9130f7e114716432ac1be51b300a25f0b8a0f2261c9fe73a42398563dc",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-1200-normal-selected.png": "9ddefb9130f7e114716432ac1be51b300a25f0b8a0f2261c9fe73a42398563dc",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-1200-xl-hover.png": "ae04ca195fefca30b75cd3c422bc561b262a5ce27e532bd82ccddb128a1d9cff",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-1200-xl-idle.png": "053e89c5b87cf16f8f90bac6d183dff5506f6ce1e1b67f0986fe4f9820dc7025",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-1200-xl-selected-hover.png": "58d7aad06e18de66c15c4bd6b980a5242e7592b340f1e434b52570c0f64e568b",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-1200-xl-selected.png": "58d7aad06e18de66c15c4bd6b980a5242e7592b340f1e434b52570c0f64e568b",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-800-normal-hover.png": "4def46a017c9d3a10e0f3bf99ed3f76c31ecd5a961d9b52fddc5a52bde73156a",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-800-normal-idle.png": "f37678a33539a63f59667fdb28a01cd704b50d488cf28a0131f1336f5c049687",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-800-normal-selected-hover.png": "d28b483257eb54c1b91bfaaa87c30b1bec378b85a0102d844e5e42a1ec2da5b8",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-800-normal-selected.png": "d28b483257eb54c1b91bfaaa87c30b1bec378b85a0102d844e5e42a1ec2da5b8",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-800-xl-hover.png": "45ba5da9b298c0684526bde5a9cfa450cc477e3794dd3d297b4ef587f4b9a7a9",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-800-xl-idle.png": "9d1619d3de50c7fa0f33f4785f20b6811e783e30b3caba1d56af760115a86129",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-800-xl-selected-hover.png": "bdfca1208c7673972351217dbde6544b5bde7b8cf0b177ee3884fb205f6e297a",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-dark-800-xl-selected.png": "bdfca1208c7673972351217dbde6544b5bde7b8cf0b177ee3884fb205f6e297a",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-1200-normal-hover.png": "c18cb337a4b7d118593c67dd0de83e96cd3864747fbf97cf4a294a1c295b5ee7",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-1200-normal-idle.png": "740f08e9bca27ce0d876279a0736925bdbbd4834fbf798afc51452ac571c24c5",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-1200-normal-selected-hover.png": "8f6047b4251a89cf8341feca11d93780fda958c5790931a4a4cf5a5563d2d711",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-1200-normal-selected.png": "8f6047b4251a89cf8341feca11d93780fda958c5790931a4a4cf5a5563d2d711",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-1200-xl-hover.png": "d823ec27b93f1ddb52636602ce75dd61e330ef4209dfb50aae25697dcfe5671a",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-1200-xl-idle.png": "b8de702a45a9620a5f2fb1ff2603badf40d56c363b3041c6cb3645577b5fc27e",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-1200-xl-selected-hover.png": "b6fb5bbc7b92589b334ef307786a93e637fb85f4dc966d6c631466a9c2e97604",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-1200-xl-selected.png": "b6fb5bbc7b92589b334ef307786a93e637fb85f4dc966d6c631466a9c2e97604",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-800-normal-hover.png": "d7bc5521ce296a5170eaf2e225a424ccebec6ef147d47680ad26d4007edb4634",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-800-normal-idle.png": "9b233db062a8df309b8dbd0153c6693801468d63f10b828bd973f4d7fb1f0f75",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-800-normal-selected-hover.png": "bc35ae90f2ed512467bc3412924813feddbc1c220951f42acaa66f01ed5e0a77",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-800-normal-selected.png": "bc35ae90f2ed512467bc3412924813feddbc1c220951f42acaa66f01ed5e0a77",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-800-xl-hover.png": "fb0293da213897cc191e99aead163ecc3117c3a97dc55e0208e3d2adbc2cba33",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-800-xl-idle.png": "7f5ecd8c6dbc4cc9adffc6c1b942f0f3acfb6595f0ab005640a0e8ae96864c6f",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-800-xl-selected-hover.png": "e9f67cb02b0feea8ad528860532011bf6946b154b2657b185c652879c32a0b52",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-ar-light-800-xl-selected.png": "e9f67cb02b0feea8ad528860532011bf6946b154b2657b185c652879c32a0b52",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-1200-normal-hover.png": "281e040744154bca2b0ea80b765c69887725f4fc3793528f4a087bffd07f197c",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-1200-normal-idle.png": "26babfd2d27620ab919968ff92eafa228a30df326e60776a8712c9557d67c023",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-1200-normal-selected-hover.png": "5c92e051057119596896ee8eb390d6eb54e07dd295600b3bc154506169170d9d",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-1200-normal-selected.png": "5c92e051057119596896ee8eb390d6eb54e07dd295600b3bc154506169170d9d",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-1200-xl-hover.png": "bdae495be124320cf192e1c80c65b91319b3d03c5ddcb16c3146d7cefadc5314",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-1200-xl-idle.png": "73bf836d675de978b024b8d421a4d0a307372142e04232979214d160735062c2",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-1200-xl-selected-hover.png": "aa3f0db1a549d3f5da934898831817867e35ef206881eeb03999b535dbb4b77d",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-1200-xl-selected.png": "aa3f0db1a549d3f5da934898831817867e35ef206881eeb03999b535dbb4b77d",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-800-normal-hover.png": "26f07a2e29361afe1fc275e8cae77dc6ab6d3f6660c9c30b2b33233707652407",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-800-normal-idle.png": "46e0664bc5342ac2515a690dc83cbbb99a42325f9c6fc12684dc259ab104a07d",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-800-normal-selected-hover.png": "7d3f38bf7b0e37fb161581874f34f6d64e595d325175fc635c6548bfa255f82f",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-800-normal-selected.png": "7d3f38bf7b0e37fb161581874f34f6d64e595d325175fc635c6548bfa255f82f",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-800-xl-hover.png": "1f901d2bf9e1a1ac201295c3454fc35ae6631c0c5c4bc6c26cfc7498e88b9936",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-800-xl-idle.png": "8196ce765b038f321bde6fbfe009c84a2b4a75efa2c064ac9b39d8d309906d94",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-800-xl-selected-hover.png": "89ccdd5d1a0853ed583ff7b7242cf6cd1ab1990909180a066bde520f0833695d",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-dark-800-xl-selected.png": "89ccdd5d1a0853ed583ff7b7242cf6cd1ab1990909180a066bde520f0833695d",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-1200-normal-hover.png": "6cc31932aedef72ee3bbdabb6e9c80e16f37074e41df6ba39fc61c199fa32097",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-1200-normal-idle.png": "ae1a22185ac4a3391bd05a9d0c6c85dbd29810764db9e4a566c1c4f4d828b4f7",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-1200-normal-selected-hover.png": "6f3af2c396d0c5f60c15f99fe21ce6ebfb1f757f3dd6248fd91fc8afea093791",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-1200-normal-selected.png": "6f3af2c396d0c5f60c15f99fe21ce6ebfb1f757f3dd6248fd91fc8afea093791",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-1200-xl-hover.png": "339937764bd463f8c4cda64fd29f59d572c5187e066367be9709a76e964104ca",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-1200-xl-idle.png": "56bfabd200c11d73931eb7d6bde1ffe22a4f54f54ed8fe5afe17d4b7a1f3242d",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-1200-xl-selected-hover.png": "820fc84f991479d5ea4926aad60066d6cd31d876ddc7345d68b80eea97033999",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-1200-xl-selected.png": "820fc84f991479d5ea4926aad60066d6cd31d876ddc7345d68b80eea97033999",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-800-normal-hover.png": "cd532e52dbaab761ba3b936edbbfb20592d247d12fe542f91a830eb6eaf959ce",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-800-normal-idle.png": "47125ad478e27c1166b4f41ff3c56c8c4f348a5107bd1e41773b49df1e2fc80b",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-800-normal-selected-hover.png": "1b22932ad1f19bd50553760348834605578448f2e67f4ed4eee2df6ba2cca492",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-800-normal-selected.png": "1b22932ad1f19bd50553760348834605578448f2e67f4ed4eee2df6ba2cca492",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-800-xl-hover.png": "030626aec63b2a465ff3b2f861c0b476e1a5e24cf6b43491cb8c34e52ac12e62",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-800-xl-idle.png": "c5d4e45fdbe5dc84b7c2ff70234bf6ce212dabab8b212b517b59c8aa12a4a36a",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-800-xl-selected-hover.png": "92c437dd3110c950ad8875e16d9386446d775819d3aaaf205424c47b0f40f63d",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/hadith-en-light-800-xl-selected.png": "92c437dd3110c950ad8875e16d9386446d775819d3aaaf205424c47b0f40f63d",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/contact-ar-normal.jpg": "7a7bb04b3795f4c413bed0cdbb1b1353906b784203d6644c705a7daf74cf64fb",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/contact-ar-xl.jpg": "9b55786c0cc1d511715d631f04f0532093c3e8d1f928b35b974a1f7877288ed0",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/contact-en-normal.jpg": "e40f9787114daf9a38bd5be91d8ba7dc571c375d63bdb45270f91eb246439d4f",
+    "/tmp/tawaq-hadith-card-confirmed-2026-10-06/contact-en-xl.jpg": "3f45b3ee51ff61dd02aca09d15afa4f4bc29aa8274c6361fd82623eb36d7219a"
+  },
+  "normal_app_artifacts_sha256": {
+    "build/linux/x64/debug/bundle/Tawaq": "fa4b506073c8def0f1a9bef5de4127121ab3fc0202eabd82bd1bd788bd8a898c",
+    "build/linux/x64/debug/bundle/data/flutter_assets/kernel_blob.bin": "f0c6879cfda5fbb28acc2bfca3eb9cd93ce4bc21f6feed45a61eea577a411f72"
+  }
+}

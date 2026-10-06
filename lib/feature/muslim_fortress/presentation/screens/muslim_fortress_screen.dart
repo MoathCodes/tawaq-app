@@ -2,35 +2,41 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/layout/collapsible_horizontal_split_pane.dart';
 import 'package:tawaq/core/layout/responsive_horizontal_split.dart';
 import 'package:tawaq/core/layout/side_panel_ui_state.dart';
 import 'package:tawaq/core/layout/split_pane_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
-import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_browse_sidebar.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/muslim_fortress_welcome_pane.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/search/fortress_search_results.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Muslim Fortress screen — sidebar browse, welcome home, and focus reading.
-class MuslimFortressScreen extends ConsumerWidget {
+class MuslimFortressScreen extends HookConsumerWidget {
   /// Creates a Muslim Fortress screen.
   const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final compactReading = useState(false);
+    final sidebarKey = useMemoized(GlobalKey.new);
+    final searchFocusNode = useFocusNode();
+    final mainKey = useMemoized(GlobalKey.new);
+    ref.listen(fortressScreenControllerProvider, (previous, next) {
+      if (previous?.selectedChapterId != next.selectedChapterId &&
+          next.selectedChapterId != null) {
+        compactReading.value = true;
+      }
+    });
     final theme = context.theme;
     final l10n = context.l10n;
     final repositoryAsync = ref.watch(fortressRepositoryProvider);
@@ -44,16 +50,27 @@ class MuslimFortressScreen extends ConsumerWidget {
       error: (_, _) => const <FortressCategory>[],
     );
 
+    useRegisterAppSearchFocus(
+      useCallback(() {
+        compactReading.value = false;
+        ref
+            .read(fortressScreenSettingsProvider.notifier)
+            .setSidePanelCollapsed(collapsed: false);
+        // An unattached node retains this request until the pane remounts.
+        // A mounted field focuses immediately even if revealing it made no
+        // state change (and therefore did not schedule another frame).
+        searchFocusNode.requestFocus();
+      }, [searchFocusNode]),
+      enabled: !isFocusMode,
+    );
+
     if (isFocusMode) {
-      return const Directionality(
-        textDirection: TextDirection.rtl,
-        child: FortressFocusReadingView(),
-      );
+      return const FortressFocusReadingView();
     }
 
     if (repositoryAsync.hasError) {
       return Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: Directionality.of(context),
         child: FScaffold(
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.xl),
@@ -74,7 +91,7 @@ class MuslimFortressScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  '${repositoryAsync.error}',
+                  l10n.fortressEmptySearchHint,
                   style: theme.typography.body.sm.copyWith(
                     color: theme.colors.mutedForeground,
                   ),
@@ -100,10 +117,10 @@ class MuslimFortressScreen extends ConsumerWidget {
     );
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
-        AppSpacing.sm,
+      padding: EdgeInsetsDirectional.fromSTEB(
         collapsed ? 0 : AppSpacing.lg,
+        AppSpacing.sm,
+        AppSpacing.lg,
         AppSpacing.sm,
       ),
       child: LayoutBuilder(
@@ -119,29 +136,74 @@ class MuslimFortressScreen extends ConsumerWidget {
               return FSkeletonizer(
                 enabled: repositoryAsync.isLoading,
                 child: Directionality(
-                  textDirection: TextDirection.rtl,
+                  textDirection: Directionality.of(context),
                   child: SizedBox(
                     height: contentHeight,
-                    child: useSplit
+                    child: useSplit && contentHeight >= 480
                         ? _FortressDesktopSplitLayout(
-                            mainPane: const _FortressBrowseMainPane(),
+                            mainPane: _FortressBrowseMainPane(key: mainKey),
                             sidebar: FortressBrowseSidebar(
+                              key: sidebarKey,
                               categories: allCategories,
+                              onCollapse: () => ref
+                                  .read(fortressScreenSettingsProvider.notifier)
+                                  .setSidePanelCollapsed(collapsed: true),
+                              searchFocusNode: searchFocusNode,
                             ),
                           )
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                        : Stack(
                             children: [
-                              Expanded(
-                                flex: 2,
-                                child: FortressBrowseSidebar(
-                                  categories: allCategories,
+                              Positioned.fill(
+                                child: Offstage(
+                                  offstage: compactReading.value,
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                        child: FortressBrowseSidebar(
+                                          key: sidebarKey,
+                                          categories: allCategories,
+                                          onSelected: () =>
+                                              compactReading.value = true,
+                                          searchFocusNode: searchFocusNode,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
-                              const SizedBox(height: AppSpacing.md),
-                              const Expanded(
-                                flex: 3,
-                                child: _FortressBrowseMainPane(),
+                              Positioned.fill(
+                                child: Offstage(
+                                  offstage: !compactReading.value,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      Align(
+                                        alignment:
+                                            AlignmentDirectional.centerStart,
+                                        child: FButton(
+                                          variant: .ghost,
+                                          onPress: () =>
+                                              compactReading.value = false,
+                                          prefix: Icon(
+                                            Directionality.of(context) ==
+                                                    TextDirection.rtl
+                                                ? FLucideIcons.arrowRight
+                                                : FLucideIcons.arrowLeft,
+                                          ),
+                                          child: Text(
+                                            l10n.fortressBackToCatalog,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: _FortressBrowseMainPane(
+                                          key: mainKey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -156,147 +218,26 @@ class MuslimFortressScreen extends ConsumerWidget {
   }
 }
 
-/// Search toolbar for the Fortress browse pane.
-///
-/// Kept public so the composed browse affordance can be rendered and verified
-/// independently without creating a second search flow.
-class FortressBrowseToolbar extends HookConsumerWidget {
-  /// Creates the Fortress browse search toolbar.
+/// Owns chapter selection while browse/search stays in the sidebar.
+class _FortressBrowseMainPane extends ConsumerWidget {
   const new({super.key});
 
-  static const _globalSearchDebounce = Duration(milliseconds: 300);
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = context.l10n;
-    final committedQuery = ref.watch(
-      fortressScreenControllerProvider.select((s) => s.query),
-    );
-    final searchController = useTextEditingController(text: committedQuery);
-    useListenable(searchController);
-    useEffect(() {
-      if (searchController.text != committedQuery) {
-        searchController.text = committedQuery;
-      }
-      return null;
-    }, [committedQuery]);
-
-    final debouncedCommit = useDebouncedCallback(
-      () => ref
-          .read(fortressScreenControllerProvider.notifier)
-          .setQuery(searchController.text),
-      duration: _globalSearchDebounce,
-    );
-    useEffect(() {
-      debouncedCommit();
-      return null;
-    }, [searchController.text]);
-
-    // Keep the global search affordance in the browse toolbar so it is
-    // discoverable without adding another search/controller path.
-    final searchFocusNode = useFocusNode();
-    final expanded = useState(committedQuery.isNotEmpty);
-    final openSearch = useCallback(() {
-      expanded.value = true;
-      searchFocusNode.requestFocus();
-    }, [searchFocusNode]);
-    useRegisterAppSearchFocus(openSearch);
-    useEffect(() {
-      void collapseWhenEmpty() {
-        if (!searchFocusNode.hasFocus && searchController.text.isEmpty) {
-          expanded.value = false;
-        }
-      }
-
-      searchFocusNode.addListener(collapseWhenEmpty);
-      return () => searchFocusNode.removeListener(collapseWhenEmpty);
-    }, [searchFocusNode]);
-
-    final theme = context.theme;
-
-    // Matches the results column width below so the field never spans the
-    // full pane on wide desktops.
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: kFortressReadingMaxWidth),
-        child: NonSelectable(
-          child: AnimatedSize(
-            duration: theme.durations.fast,
-            alignment: AlignmentDirectional.topStart,
-            child: expanded.value
-                ? FTextField(
-                    focusNode: searchFocusNode,
-                    hint: l10n.fortressSearchHint,
-                    textInputAction: TextInputAction.search,
-                    control: FTextFieldControl.managed(
-                      controller: searchController,
-                    ),
-                    clearable: (value) => value.text.isNotEmpty,
-                    prefixBuilder: (context, style, variants) => Padding(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      child: Icon(
-                        FLucideIcons.search,
-                        color: theme.colors.mutedForeground,
-                      ),
-                    ),
-                  )
-                : Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: FButton(
-                      variant: FButtonVariant.ghost,
-                      onPress: openSearch,
-                      prefix: const Icon(FLucideIcons.search),
-                      child: Text(l10n.fortressSearchLabel),
-                    ),
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Owns selection/global-search watches so the screen only tracks focus + repo.
-class _FortressBrowseMainPane extends HookConsumerWidget {
-  const new();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = context.theme;
     final selectedCategory = ref.watch(fortressSelectedCategoryProvider);
-    final committedQuery = ref.watch(
-      fortressScreenControllerProvider.select((s) => s.query),
-    );
-    final isGlobalSearch =
-        committedQuery.length >= fortressSearchMinQueryLength;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const FortressBrowseToolbar(),
-        const SizedBox(height: AppSpacing.lg),
-        Expanded(
-          child: AnimatedSwitcher(
-            duration: theme.durations.normal,
-            child: isGlobalSearch
-                ? const FortressSearchResultsPane()
-                : selectedCategory == null
-                ? const MuslimFortressWelcomePane(key: ValueKey('welcome'))
-                : FortressCategoryDetailView(
-                    key: ValueKey(selectedCategory.chapterId),
-                  ),
-          ),
-        ),
-      ],
+    return AnimatedSwitcher(
+      duration: context.theme.durations.normal,
+      child: selectedCategory == null
+          ? const MuslimFortressWelcomePane(key: ValueKey('welcome'))
+          : FortressCategoryDetailView(
+              key: ValueKey(selectedCategory.chapterId),
+            ),
     );
   }
 }
 
 class _FortressDesktopSplitLayout extends ConsumerWidget {
-  const new({
-    required this.mainPane,
-    required this.sidebar,
-  });
+  const new({required this.mainPane, required this.sidebar});
 
   final Widget mainPane;
   final Widget sidebar;
@@ -319,12 +260,8 @@ class _FortressDesktopSplitLayout extends ConsumerWidget {
 
     return CollapsibleHorizontalSplitPane.feature(
       sidePanelRatio: sidePanelRatio,
-      sideOnStart: false,
-      floatingButtonOffset: (
-        top: -12,
-        left: 0,
-        right: 0,
-      ),
+      sideOnStart: Directionality.of(context) == TextDirection.ltr,
+      collapsePlacement: CollapsePlacement.none,
       collapsed: collapsed,
       onCollapsedChanged: (value) => ref
           .read(fortressScreenSettingsProvider.notifier)
@@ -336,16 +273,20 @@ class _FortressDesktopSplitLayout extends ConsumerWidget {
           .read(fortressScreenSettingsProvider.notifier)
           .setSidePanelRatio(ratio),
       mainPane: Padding(
-        padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
+        padding: Directionality.of(context) == TextDirection.ltr
+            ? const EdgeInsets.only(left: AppSpacing.lg)
+            : const EdgeInsets.only(right: AppSpacing.lg),
         child: Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: Directionality.of(context),
           child: mainPane,
         ),
       ),
       sidePane: Padding(
-        padding: const EdgeInsetsDirectional.only(start: AppSpacing.sm),
+        padding: Directionality.of(context) == TextDirection.ltr
+            ? const EdgeInsets.only(right: AppSpacing.lg)
+            : const EdgeInsets.only(left: AppSpacing.lg),
         child: Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: Directionality.of(context),
           child: sidebar,
         ),
       ),

@@ -67,12 +67,9 @@ Future<void> exportShareCardImage({
         child: Text(l10n.openFolder),
       ),
     );
-  } on Object catch (error) {
+  } on Object {
     if (context.mounted) {
-      showFToast(
-        context: context,
-        title: Text(l10n.shareExportFailed('$error')),
-      );
+      showFToast(context: context, title: Text(l10n.shareImageExportFailed));
     }
   }
 }

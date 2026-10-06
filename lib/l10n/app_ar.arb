@@ -1,5 +1,20 @@
 {
+  "hadithLookupPrompt": "اكتب حرفين على الأقل للبحث عن اقتراحات.",
+  "hadithLookupFailed": "تعذّر تحميل الاقتراحات. حاول مرة أخرى.",
+  "hadithRecentsLoadFailed": "تعذّر تحميل عمليات البحث الأخيرة. حاول مرة أخرى.",
+  "hadithRecentsUpdateFailed": "تعذّر تحديث عمليات البحث الأخيرة. حاول مرة أخرى.",
+  "quranSearchPrompt": "اكتب حرفين على الأقل للبحث في القرآن.",
+  "sharePageLoadFailed": "تعذّر تحميل هذه الصفحة. حاول مرة أخرى.",
+  "shareImageExportFailed": "تعذّر تصدير الصورة. حاول مرة أخرى.",
+  "reflectionsLoadFailed": "تعذّر تحميل خواطرك. حاول مرة أخرى.",
+  "reflectionDeleteFailed": "تعذّر حذف هذه الخاطرة. حاول مرة أخرى.",
+  "appStartupFailed": "تعذّر بدء توّاق. حاول مرة أخرى.",
+  "prayerAnalyticsLoadFailed": "تعذّر تحميل إحصاءات الصلاة. حاول مرة أخرى.",
+  "prayerHistoryStartupFailed": "تعذّر تجهيز سجل الصلاة. حاول مرة أخرى.",
+  "studySelectionHint": "اختر آية من المصحف لعرض تفسيرها وترجمتها وكتابة تدبّرك.",
+  "studySelectionLoadFailed": "تعذّر تحميل الآية المحددة. حاول مرة أخرى.",
   "@@locale": "ar",
+  "close": "إغلاق",
   "globalPlaybackChooseMoshaf": "اختر تلاوة",
   "globalPlaybackChooseReciter": "اختر القارئ",
   "globalPlaybackChooseSurah": "اختر السورة",
@@ -128,6 +143,7 @@
       }
     }
   },
+  "ayahActions": "إجراءات الآية",
   "ayahCopy": "نسخ",
   "ayahLabel": "الآية",
   "ayahShare": "مشاركة",
@@ -143,13 +159,13 @@
   "chooseLocation": "اختر الموقع",
   "collapse": "طي",
   "collapsePanel": "طي اللوحة",
-  "colorTheme": "نمط الألوان",
-  "colorThemeSubtitle": "اختر المخطوطة أو المحايد.",
+  "colorTheme": "لوحة الألوان",
+  "colorThemeSubtitle": "اختر لوحة ألوان.",
   "completed": "مكتملة",
   "completionStatus": "حالة الإكمال",
   "coordinates": "الإحداثيات الجغرافية",
   "currentPrayer": "الصلاة الحالية",
-  "currentEvent": "الحدث الحالي",
+  "currentEvent": "الوقت الحالي",
   "currentStreak": "الإنجاز الحالي",
   "prayerTimeRemaining": "الوقت المتبقي",
   "prayerTimeSinceStart": "منذ بداية الصلاة",
@@ -205,6 +221,7 @@
   "footnote": "الحاشية",
   "fortressAllChapters": "كل الأذكار",
   "fortressBenefit": "الفائدة",
+  "fortressShareDetailsFailed": "تعذّر تحميل تفاصيل الدراسة المحددة. أعد المحاولة، أو ألغِ تحديدها لمشاركة الذكر.",
   "fortressShare": "مشاركة الدعاء",
   "fortressRepetition": "عدد التكرار",
   "fortressBrowseWeakHadith": "الأحاديث الضعيفة والموضوعة",
@@ -218,7 +235,7 @@
   "fortressFakeHadithIntro": "قائمة مرجعية من تطبيق حصن المسلم للأحاديث التي يُحذّر منها العلماء.",
   "fortressFavorites": "المفضلة",
   "fortressFilterAuthenticity": "تصفية حسب الحكم",
-  "fortressFilterChaptersHint": "تصفية الأبواب...",
+  "fortressFilterChaptersHint": "البحث عن باب",
   "fortressFinish": "إنهاء",
   "fortressHideDetails": "إخفاء التفاصيل",
   "fortressLoadError": "تعذّر تحميل الأذكار",
@@ -251,8 +268,8 @@
   },
   "fortressRetry": "إعادة المحاولة",
   "fortressSearchContents": "الأذكار",
-  "fortressSearchHint": "ابحث في الأذكار والأبواب...",
-  "fortressSearchLabel": "بحث",
+  "fortressSearchHint": "البحث في جميع الأذكار",
+  "fortressSearchLabel": "البحث في جميع الأذكار",
   "fortressSearchOpen": "البحث في الأذكار",
   "fortressSearchTitles": "الأبواب",
   "fortressSharh": "الشرح",
@@ -295,6 +312,7 @@
   "hadithBooks": "الكتب",
   "hadithClearAllFilters": "مسح جميع المرشّحات",
   "hadithClearAllRecents": "مسح الكل",
+  "hadithCopyFailed": "تعذر نسخ النص. حاول مرة أخرى.",
   "hadithCopied": "تم نسخ الحديث",
   "hadithDegreeAll": "جميع الدرجات",
   "hadithDegreeAuthenticChain": "أحاديث حكم المحدثون على أسانيدها بالصحة، ونحو ذلك",
@@ -313,6 +331,9 @@
   },
   "hadithFilterTab": "التصفية",
   "hadithFoundations": "الأصول",
+  "hadithShareDetailsFailed": "تعذر تحميل: {sections}. أعد المحاولة أو ألغِ تضمين القسم المحدد لتصدير الصورة.",
+  "@hadithShareDetailsFailed": {"placeholders": {"sections": {"type": "String"}}},
+  "hadithShareJudgmentRequired": "يبقى حكم المصدر ظاهرًا للروايات الضعيفة أو التي ورد تحذير بشأن إسنادها.",
   "hadithGradeExplanation": "شرح الحكم",
   "hadithLoadMore": "تحميل المزيد",
   "hadithLoadSharh": "تحميل الشرح",
@@ -539,11 +560,15 @@
   "muslimFortress": "حصن المسلم",
   "@muslimFortress": {},
   "muslimWorldLeague": "رابطة العالم الإسلامي",
+  "sage": "المريمية",
+  "@sage": {
+    "description": "Sage color palette inspired by the Turning ta icon"
+  },
   "neutral": "محايد",
   "omarchy": "أومارتشي",
   "next": "التالي",
   "nextPrayer": "الصلاة القادمة",
-  "nextEvent": "الحدث القادم",
+  "nextEvent": "الوقت القادم",
   "noDataAvailable": "لا توجد بيانات",
   "prayerAnalyticsPeriodLast7Days": "آخر 7 أيام",
   "prayerAnalyticsPeriodLast30Days": "آخر 30 يومًا",
@@ -797,9 +822,24 @@
   "quranRecitationOfflineDelete": "حذف التلاوات",
   "quranRecitationOfflineDeleteAll": "حذف جميع التلاوات",
   "quranRecitationOfflineDeleteConfirm": "هل تريد حذف {count} من التلاوات ({size})؟ لا يمكن التراجع عن ذلك.",
-  "@quranRecitationOfflineDeleteConfirm": {"placeholders": {"count": {"type": "int"}, "size": {"type": "String"}}},
+  "@quranRecitationOfflineDeleteConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "quranRecitationOfflineDeleteFailed": "تعذر حذف {count} من التلاوات. ستبقى محددة لإعادة المحاولة.",
-  "@quranRecitationOfflineDeleteFailed": {"placeholders": {"count": {"type": "int"}}},
+  "@quranRecitationOfflineDeleteFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quranRecitationOfflineDeleteSelected": "حذف المحدد",
   "quranRecitationOfflineDeleteTitle": "حذف التلاوات؟",
   "quranRecitationOfflineEmpty": "لا توجد تلاوات محفوظة بعد.",
@@ -819,7 +859,13 @@
   "quranRecitationOfflineRiwayah": "الرواية",
   "quranRecitationOfflineSelectAll": "تحديد الكل",
   "quranRecitationOfflineSelected": "{count} محدد",
-  "@quranRecitationOfflineSelected": {"placeholders": {"count": {"type": "int"}}},
+  "@quranRecitationOfflineSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "quranRecitationOfflineSize": "الحجم",
   "quranRecitationOfflineStorageUsed": "التخزين المستخدم",
   "quranRecitationOfflineSurah": "السورة",
@@ -1228,5 +1274,46 @@
   "welcomeToApp": "مرحبًا بك في التطبيق!",
   "yearly": "سنوي",
   "yellow": "أصفر",
-  "zinc": "الخارصين"
+  "zinc": "الخارصين",
+  "onboardingSaveFailed": "تعذّر حفظ الإعداد. خياراتك ما زالت هنا؛ حاول مرة أخرى.",
+  "saving": "جارٍ الحفظ…",
+  "onboardingStepCount": "الخطوة {current} من {total}",
+  "@onboardingStepCount": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "themeModeLabel": "وضع المظهر",
+  "systemThemeLabel": "النظام",
+  "notesSavePending": "تغييرات غير محفوظة",
+  "notesSaveSucceeded": "تم الحفظ",
+  "notesSaveFailed": "تعذّر حفظ التأمل. حاول مرة أخرى.",
+  "quranNavigation": "المزيد من أدوات القرآن",
+  "backToReading": "العودة إلى القراءة",
+  "retryAction": "إعادة المحاولة",
+  "desktopAutostartRegistrationHint": "يسجّل توّاق للتشغيل التلقائي عبر XDG. يجب أن تدعم جلسة سطح المكتب تشغيل هذه التسجيلات؛ قد لا تفعل جلسات Hyprland المباشرة ذلك. التسجيل لا يؤكّد التشغيل عند الدخول.",
+  "fortressBackToCatalog": "العودة إلى الأبواب",
+  "advancedLocationOptions": "خيارات الموقع المتقدمة",
+  "deviceLocationUnavailable": "موقع الجهاز غير متاح. اختر مدينة أو أدخل الإحداثيات، أو أعد فحص الخدمة.",
+  "deviceLocationTimedOut": "انتهت مهلة تحديد الموقع. حاول مجددًا أو اختر مدينة.",
+  "checkingDeviceLocation": "جارٍ فحص خدمة موقع الجهاز…",
+  "quranRecitationDurationUnknown": "المدة غير متاحة",
+  "hadithRequestFailed": "تعذر تحميل الحديث. تحقق من الاتصال ثم حاول مرة أخرى.",
+  "hadithBookmarkFailed": "تعذر حفظ العلامة المرجعية. حاول مرة أخرى.",
+  "hadithClearRecentsConfirm": "مسح جميع عمليات البحث الأخيرة؟",
+  "quitSaveFailed": "تعذر حفظ التأمل. لا يزال تواق مفتوحًا، والمسودة محفوظة في المحرر.",
+  "quitRetry": "الحفظ والخروج مجددًا",
+  "clearSearchAction": "مسح البحث",
+  "quranUnifiedSearchHint": "سورة، جزء، حزب، أو آية…",
+  "quranUnifiedSearchHelp": "ابحث بالاسم أو بنص القرآن. جرّب «جزء ٣» أو «حزب ٧» أو «٢:٢٥٥».",
+  "quranSearchSurahs": "السور",
+  "quranSearchJuzs": "الأجزاء",
+  "quranSearchHizbs": "الأحزاب",
+  "quranSearchAyahs": "الآيات",
+  "quranSearchFailed": "تعذّر تحميل البحث. حاول مجددًا."
 }

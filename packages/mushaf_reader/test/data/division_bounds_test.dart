@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:path/path.dart' as p;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
@@ -5,10 +8,12 @@ import 'package:mushaf_reader/src/data/hive/hive_adapters.dart';
 import 'package:mushaf_reader/src/data/models/ayah.dart';
 import 'package:mushaf_reader/src/data/models/hizb.dart';
 import 'package:mushaf_reader/src/data/models/juz.dart';
+
 import '../hive_test_support.dart';
 
 void main() {
   group('division bounds', () {
+    late Directory fixture;
     late Box<Juz> juzsBox;
     late Box<Hizb> hizbsBox;
     late LazyBox<Ayah> ayahsBox;
@@ -16,7 +21,14 @@ void main() {
     setUpAll(() async {
       TestWidgetsFlutterBinding.ensureInitialized();
 
-      Hive.init(bundledHiveAssetsPath());
+      fixture = await Directory.systemTemp.createTemp(
+        'mushaf-division-fixture-',
+      );
+      for (final name in ['juzs', 'hizbs', 'ayahs']) {
+        await File(p.join(bundledHiveAssetsPath(), '$name.hive'))
+            .copy(p.join(fixture.path, '$name.hive'));
+      }
+      Hive.init(fixture.path);
       Hive
         ..registerAdapter(JuzAdapter())
         ..registerAdapter(HizbAdapter())
@@ -31,6 +43,7 @@ void main() {
       await juzsBox.close();
       await hizbsBox.close();
       await ayahsBox.close();
+      await fixture.delete(recursive: true);
       await Hive.close();
     });
 

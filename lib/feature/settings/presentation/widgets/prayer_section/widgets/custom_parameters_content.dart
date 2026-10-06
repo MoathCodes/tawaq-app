@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:forui/forui.dart';
-import 'package:forui_hooks/forui_hooks.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/responsive_field_row.dart';
@@ -23,11 +23,15 @@ class CustomParametersAccordion extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(customParametersDraftProvider);
     final l10n = context.l10n;
+    final expanded = useState(false);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 2),
       child: FAccordion(
-        control: .managed(controller: useFAccordionController()),
+        control: .lifted(
+          expanded: (_) => expanded.value,
+          onChange: (_, value) => expanded.value = value,
+        ),
         style: const .delta(
           dividerStyle: .delta(
             color: Colors.transparent,
@@ -66,9 +70,7 @@ class CustomParametersContent extends ConsumerWidget {
           unawaited(
             ref
                 .read(prayerSettingsProvider.notifier)
-                .update(
-                  (s) => s.copyWith(method: newMethod),
-                ),
+                .update((s) => s.copyWith(method: newMethod)),
           );
         }
         showFToast(
@@ -232,24 +234,19 @@ class CustomParametersContent extends ConsumerWidget {
               FButton(
                 variant: .secondary,
                 onPress: enabled ? reset : null,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: AppSpacing.sm,
-                  children: [
-                    const Icon(FLucideIcons.rotateCcw, size: 16),
-                    Text(l10n.resetToDefaults),
-                  ],
+                prefix: const Icon(FLucideIcons.rotateCcw, size: 16),
+                child: Flexible(
+                  child: Text(
+                    l10n.resetToDefaults,
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
               FButton(
                 onPress: enabled ? save : null,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  spacing: AppSpacing.sm,
-                  children: [
-                    const Icon(FLucideIcons.save, size: 16),
-                    Text(l10n.saveParameters),
-                  ],
+                prefix: const Icon(FLucideIcons.save, size: 16),
+                child: Flexible(
+                  child: Text(l10n.saveParameters, textAlign: TextAlign.center),
                 ),
               ),
             ],

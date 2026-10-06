@@ -8,6 +8,7 @@ import 'package:tawaq/feature/prayer/domain/prayer_calendar.dart';
 import 'package:tawaq/feature/prayer/domain/services/prayer_analytics_calculator.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_analytics_settings_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_for_date_provider.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_repair_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
 import 'package:timezone/timezone.dart';
 
@@ -25,6 +26,17 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
         PrayerAnalyticsPeriod.weekly;
     final index = await ref.watch(prayerCompletionStoreProvider.future);
     return _computeSection(period, index);
+  }
+
+  /// Retries failed history dependencies before rebuilding the analysis.
+  void retry() {
+    if (ref.read(prayerCompletionsRepairProvider).hasError) {
+      ref.invalidate(prayerCompletionsRepairProvider);
+    }
+    if (ref.read(prayerCompletionStoreProvider).hasError) {
+      ref.invalidate(prayerCompletionStoreProvider);
+    }
+    ref.invalidateSelf();
   }
 
   PrayerAnalysisSectionData _computeSection(
@@ -86,16 +98,9 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       fullyCompletedDays: completedDays,
       today: todayStart,
     );
-    final firstRecordedDate = _earliestCompletion(index, location);
-    final expectedPrayers = PrayerAnalyticsCalculator.calculateExpectedPrayers(
-      period: period,
-      firstRecordedDate: firstRecordedDate,
-      now: now,
-    );
     final periodAnalytics = PrayerAnalyticsCalculator.calculateAnalytics(
       period: period,
       statusCounts: periodCounts,
-      expectedPrayers: expectedPrayers,
       currentStreak: streaks.current,
       bestStreak: streaks.best,
     );
@@ -140,14 +145,5 @@ class PrayerAnalysisSectionNotifier extends _$PrayerAnalysisSectionNotifier {
       return status != CompletionStatus.none &&
           status != CompletionStatus.missed;
     });
-  }
-
-  DateTime? _earliestCompletion(
-    Map<int, List<PrayerCompletion>> index,
-    Location location,
-  ) {
-    if (index.isEmpty) return null;
-    final firstKey = index.keys.reduce((a, b) => a < b ? a : b);
-    return calendarDayFromKey(firstKey, location);
   }
 }

@@ -25,9 +25,7 @@ Future<void> prayerCompletionsRepair(Ref ref) async {
   if (removed > 0) {
     ref
         .read(loggerProvider)
-        .i(
-          'Repaired $removed duplicate prayer completion row(s)',
-        );
+        .i('Repaired $removed duplicate prayer completion row(s)');
   }
   await repairedBox.put(_repairMetaKey, 1);
 }

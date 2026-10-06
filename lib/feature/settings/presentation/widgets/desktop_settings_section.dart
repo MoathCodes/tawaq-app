@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:forui/forui.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
@@ -12,7 +13,7 @@ import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dar
 import 'package:tawaq/theme/theme.dart';
 
 /// Desktop tray and window behaviour settings.
-class DesktopSettingsSection extends ConsumerWidget {
+class DesktopSettingsSection extends HookConsumerWidget {
   /// Creates [DesktopSettingsSection].
   const new({super.key});
 
@@ -28,10 +29,7 @@ class DesktopSettingsSection extends ConsumerWidget {
           .setLaunchAtLogin(value: value);
       if (!context.mounted || !showHint) return;
 
-      showFToast(
-        context: context,
-        title: Text(l10n.desktopLaunchAtLoginHint),
-      );
+      showFToast(context: context, title: Text(l10n.desktopLaunchAtLoginHint));
     } catch (_) {
       if (!context.mounted) return;
       showFToast(
@@ -43,6 +41,7 @@ class DesktopSettingsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final updatingLogin = useState(false);
     if (!isDesktopPlatform) return const SizedBox.shrink();
 
     final l10n = context.l10n;
@@ -86,11 +85,14 @@ class DesktopSettingsSection extends ConsumerWidget {
             ),
           NonSelectable(
             child: FSwitch(
-              enabled: ready,
+              enabled: ready && !updatingLogin.value,
               value: launchAtLogin,
-              onChange: (value) => unawaited(
-                _handleLaunchAtLoginChange(context, ref, value),
-              ),
+              onChange: (value) async {
+                if (updatingLogin.value) return;
+                updatingLogin.value = true;
+                await _handleLaunchAtLoginChange(context, ref, value);
+                if (context.mounted) updatingLogin.value = false;
+              },
               label: Text(l10n.desktopLaunchAtLogin),
             ),
           ),

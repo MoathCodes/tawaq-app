@@ -5,16 +5,13 @@ import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/utils/playback_duration.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 
 /// One ayah (or arbitrary) segment on the seek timeline.
 class SeekBarSegment {
   /// Creates a [SeekBarSegment].
-  const new({
-    required this.index,
-    required this.start,
-    required this.end,
-  });
+  const new({required this.index, required this.start, required this.end});
 
   /// Segment identifier (ayah number for recitation).
   final int index;
@@ -37,10 +34,7 @@ List<SeekBarSegment> _sortedSegments(List<SeekBarSegment> segments) {
 
 /// Resolves the segment containing [position], clamping outside the timeline.
 @visibleForTesting
-int? segmentIndexForPosition(
-  List<SeekBarSegment> segments,
-  Duration position,
-) {
+int? segmentIndexForPosition(List<SeekBarSegment> segments, Duration position) {
   if (segments.isEmpty) return null;
 
   final sorted = _sortedSegments(segments);
@@ -307,6 +301,7 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
   late final AnimationController _pulseController;
   late final AnimationController _snapController;
   late final Animation<double> _snapScale;
+  bool _reducedMotion = false;
 
   @override
   void initState() {
@@ -321,10 +316,22 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
     );
     _cacheSegments();
     _cacheBufferedRanges();
-    _snapScale = Tween<double>(begin: 1, end: 1.22).animate(
-      CurvedAnimation(parent: _snapController, curve: Curves.easeOut),
-    );
+    _snapScale = Tween<double>(
+      begin: 1,
+      end: 1.22,
+    ).animate(CurvedAnimation(parent: _snapController, curve: Curves.easeOut));
     _syncFocusedSegmentFromPosition();
+    _updateAnimations();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reducedMotion = reduceMotion(context);
+    if (_reducedMotion)
+      _snapController
+        ..stop()
+        ..value = 0;
     _updateAnimations();
   }
 
@@ -369,16 +376,13 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
   int? get _previewSegmentIndex {
     final value = _previewValue;
     if (value == null) return null;
-    return segmentIndexForPosition(
-      _segments,
-      _positionForValue(value),
-    );
+    return segmentIndexForPosition(_segments, _positionForValue(value));
   }
 
   int? get _playbackSegmentIndex => _segmentIndexForPosition(widget.position);
 
   void _updateAnimations() {
-    if (widget.repeat != null && widget.repeat!.total > 1) {
+    if (!_reducedMotion && widget.repeat != null && widget.repeat!.total > 1) {
       if (!_pulseController.isAnimating) {
         _pulseController.repeat(reverse: true);
       }
@@ -482,16 +486,13 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
   Future<String?>? _excerptFor(int? index) {
     final loader = widget.segmentUthmaniExcerpt;
     if (index == null || loader == null) return null;
-    return _uthmaniExcerptCache.putIfAbsent(
-      index,
-      () async {
-        try {
-          return await loader(index);
-        } on Object {
-          return null;
-        }
-      },
-    );
+    return _uthmaniExcerptCache.putIfAbsent(index, () async {
+      try {
+        return await loader(index);
+      } on Object {
+        return null;
+      }
+    });
   }
 
   void _setHoverValue(double? value) {
@@ -531,11 +532,12 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
       _hoverValue = _mouseInside ? _dragValue : null;
     });
     _updateAnimations();
-    unawaited(
-      _snapController.forward(from: 0).then((_) {
-        if (mounted) _snapController.reverse();
-      }),
-    );
+    if (!_reducedMotion)
+      unawaited(
+        _snapController.forward(from: 0).then((_) {
+          if (mounted) _snapController.reverse();
+        }),
+      );
     _commitSeek(target);
   }
 
@@ -553,10 +555,34 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
   }
 
   KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
-    if (!widget.enabled || widget.segments.isEmpty || event is! KeyDownEvent) {
+    if (!widget.enabled || event is! KeyDownEvent) {
       return KeyEventResult.ignored;
     }
 
+    if (widget.segments.isEmpty) {
+      final backward = _isRtl
+          ? LogicalKeyboardKey.arrowRight
+          : LogicalKeyboardKey.arrowLeft;
+      final forward = _isRtl
+          ? LogicalKeyboardKey.arrowLeft
+          : LogicalKeyboardKey.arrowRight;
+      final key = event.logicalKey;
+      final target = key == LogicalKeyboardKey.home
+          ? 0
+          : key == LogicalKeyboardKey.end
+          ? widget.duration.inMilliseconds
+          : key == backward || key == LogicalKeyboardKey.arrowDown
+          ? max(0, widget.position.inMilliseconds - 10000)
+          : key == forward || key == LogicalKeyboardKey.arrowUp
+          ? min(
+              widget.duration.inMilliseconds,
+              widget.position.inMilliseconds + 10000,
+            )
+          : null;
+      if (target == null) return KeyEventResult.ignored;
+      _commitSeek(Duration(milliseconds: target));
+      return KeyEventResult.handled;
+    }
     final segments = _segments;
     var focus = segments.indexWhere((s) => s.index == _focusedSegmentIndex);
     if (focus < 0) focus = 0;
@@ -617,6 +643,40 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
       label: widget.semanticsLabel,
       value: enabled ? semanticParts.join(', ') : widget.unavailableLabel,
       enabled: enabled,
+      increasedValue: enabled
+          ? formatPlaybackDuration(
+              Duration(
+                milliseconds: min(
+                  widget.duration.inMilliseconds,
+                  widget.position.inMilliseconds + 10000,
+                ),
+              ),
+            )
+          : null,
+      decreasedValue: enabled
+          ? formatPlaybackDuration(
+              Duration(
+                milliseconds: max(0, widget.position.inMilliseconds - 10000),
+              ),
+            )
+          : null,
+      onIncrease: enabled
+          ? () => widget.onSeek(
+              Duration(
+                milliseconds: min(
+                  widget.duration.inMilliseconds,
+                  widget.position.inMilliseconds + 10000,
+                ),
+              ),
+            )
+          : null,
+      onDecrease: enabled
+          ? () => widget.onSeek(
+              Duration(
+                milliseconds: max(0, widget.position.inMilliseconds - 10000),
+              ),
+            )
+          : null,
       child: Focus(
         onKeyEvent: _handleKey,
         child: LayoutBuilder(
@@ -737,7 +797,7 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
                       ),
                       TweenAnimationBuilder<double>(
                         tween: Tween(end: thumbCenter),
-                        duration: _dragging
+                        duration: _dragging || _reducedMotion
                             ? Duration.zero
                             : widget.style.thumbTweenDuration,
                         curve: Curves.easeOutCubic,
@@ -775,7 +835,9 @@ class _SegmentedSeekBarState extends State<SegmentedSeekBar>
                           ),
                         ),
                       ),
-                      if (previewAnchor != null && previewPosition != null)
+                      if (widget.segments.isNotEmpty &&
+                          previewAnchor != null &&
+                          previewPosition != null)
                         _AyahPreviewCard(
                           style: widget.style,
                           anchorCenterX: previewAnchor,
@@ -864,7 +926,7 @@ class _AyahPreviewCard extends StatelessWidget {
         child: TweenAnimationBuilder<double>(
           key: const Key('ayah-preview-card'),
           tween: Tween(begin: 0.97, end: 1),
-          duration: previewDuration,
+          duration: reduceMotion(context) ? Duration.zero : previewDuration,
           curve: Curves.easeOutCubic,
           builder: (context, scale, child) => Transform.scale(
             scale: scale,
@@ -1009,7 +1071,9 @@ class _PreviewAyahChip extends StatelessWidget {
       key: selected
           ? const Key('preview-ayah-focused')
           : ValueKey('preview-ayah-$segmentIndex'),
-      duration: style.thumbTweenDuration,
+      duration: reduceMotion(context)
+          ? Duration.zero
+          : style.thumbTweenDuration,
       height: 28,
       alignment: Alignment.center,
       decoration: BoxDecoration(
@@ -1188,11 +1252,7 @@ class SegmentedTrackPainter extends CustomPainter {
 
   /// True-timeline rect for one ayah, expanded only for visibility.
   @visibleForTesting
-  Rect? segmentRectOnTrack(
-    int index,
-    Size size, {
-    double minimumWidth = 0,
-  }) {
+  Rect? segmentRectOnTrack(int index, Size size, {double minimumWidth = 0}) {
     if (totalDurationMs <= 0) return null;
     for (final segment in segments) {
       if (segment.index != index) continue;
@@ -1248,9 +1308,7 @@ class SegmentedTrackPainter extends CustomPainter {
     }
 
     final progressX = _fractionToX(progress.clamp(0.0, 1.0), size.width);
-    line.color = activeColor.withValues(
-      alpha: activeColor.a * disabledAlpha,
-    );
+    line.color = activeColor.withValues(alpha: activeColor.a * disabledAlpha);
     canvas.drawLine(
       isRtl ? Offset(size.width, centerY) : Offset(0, centerY),
       Offset(progressX, centerY),
@@ -1275,9 +1333,7 @@ class SegmentedTrackPainter extends CustomPainter {
         canvas.drawRRect(
           RRect.fromRectAndRadius(glow, Radius.circular(height / 2)),
           Paint()
-            ..color = ayahGlowColor.withValues(
-              alpha: 0.14 + glowPhase * 0.16,
-            ),
+            ..color = ayahGlowColor.withValues(alpha: 0.14 + glowPhase * 0.16),
         );
       }
     }
@@ -1344,11 +1400,7 @@ class SegmentedTrackPainter extends CustomPainter {
             ..strokeWidth = 1.5
             ..strokeCap = StrokeCap.round,
         )
-        ..drawCircle(
-          Offset(x, centerY),
-          2.5,
-          Paint()..color = activeColor,
-        );
+        ..drawCircle(Offset(x, centerY), 2.5, Paint()..color = activeColor);
     }
   }
 

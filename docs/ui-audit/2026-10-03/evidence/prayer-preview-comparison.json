@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-03",
+  "coordinates": {
+    "latitude": 24.471153,
+    "longitude": 39.6111216
+  },
+  "city_lookup_result": "Medina",
+  "zone": "Asia/Riyadh",
+  "zone_offset_minutes": 180,
+  "calculation_method": "UmmAlQura",
+  "user_offsets": "none introduced; deterministic zero-offset math matches all runtime values",
+  "round_to_minutes": false,
+  "locale": "en",
+  "format": "12-hour",
+  "source": "Native before/after screenshots and independent FVM Dart computation from checked-out repository; not external timetable certification",
+  "prayers": [
+    {
+      "prayer": "Fajr",
+      "raw_utc": "01:56:28Z",
+      "preview": "1:56 AM",
+      "schedule": "4:56 AM"
+    },
+    {
+      "prayer": "Dhuhr",
+      "raw_utc": "09:10:36Z",
+      "preview": "9:10 AM",
+      "schedule": "12:10 PM"
+    },
+    {
+      "prayer": "Asr",
+      "raw_utc": "12:33:30Z",
+      "preview": "12:33 PM",
+      "schedule": "3:33 PM"
+    },
+    {
+      "prayer": "Maghrib",
+      "raw_utc": "15:06:40Z",
+      "preview": "3:06 PM",
+      "schedule": "6:06 PM"
+    },
+    {
+      "prayer": "Isha",
+      "raw_utc": "16:36:40Z",
+      "preview": "4:36 PM",
+      "schedule": "7:36 PM"
+    }
+  ]
+}

@@ -1,12 +1,13 @@
 // Fixture overrides belong to an independent root test scope.
 // ignore_for_file: riverpod_lint/scoped_providers_should_specify_dependencies
 
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/feature/quran/data/models/quran_note.dart';
 import 'package:tawaq/feature/quran/data/models/translation.dart';
 import 'package:tawaq/feature/quran/domain/models/recitation_state.dart';
 import 'package:tawaq/feature/quran/domain/models/tafsir_models.dart';
@@ -33,7 +34,7 @@ class _TestQuranScreenSettings extends QuranScreenSettingsNotifier {
 class _TestQuranSelectedAyahId extends QuranSelectedAyahId {
   new(this._ayahId);
 
-  final int _ayahId;
+  final int? _ayahId;
 
   @override
   int? build() => _ayahId;
@@ -41,7 +42,7 @@ class _TestQuranSelectedAyahId extends QuranSelectedAyahId {
 
 class _TestQuranNotesStore extends QuranNotesStore {
   @override
-  Future<Map<int, QuranNote>> build() async => const {};
+  Future<QuranNotesState> build() async => QuranNotesState({});
 }
 
 class _StudyPanelTestRepo implements IQuranRepository {
@@ -173,6 +174,8 @@ void main() {
   Widget wrap({
     required RecitationState recitationState,
     required Widget child,
+    bool hasSelection = true,
+    Future<Ayah?> Function()? loadSelection,
   }) {
     final theme = buildAppTheme(
       palette: AppPalette.neutral,
@@ -182,11 +185,14 @@ void main() {
     );
 
     return ProviderScope(
+      retry: (_, _) => null,
       overrides: [
         quranScreenSettingsProvider.overrideWith(_TestQuranScreenSettings.new),
         quranSelectedAyahIdProvider.overrideWith(
-          () => _TestQuranSelectedAyahId(selected.ayahId),
+          () => _TestQuranSelectedAyahId(hasSelection ? selected.ayahId : null),
         ),
+        if (loadSelection != null)
+          quranSelectedAyahProvider.overrideWith((ref) => loadSelection()),
         quranMushafControllerProvider.overrideWithValue(controller),
         recitationControllerProvider.overrideWithValue(recitationState),
         quranNotesStoreProvider.overrideWith(_TestQuranNotesStore.new),
@@ -195,22 +201,22 @@ void main() {
           kDefaultTranslationId,
           1,
           1,
-        ).overrideWithValue(
-          const AsyncData<Translation?>(null),
-        ),
+        ).overrideWithValue(const AsyncData<Translation?>(null)),
         ayahTranslationRowProvider(
           kDefaultTranslationId,
           1,
           7,
-        ).overrideWithValue(
-          const AsyncData<Translation?>(null),
-        ),
-        tafsirForAyahProvider(TafsirId.tafseerMouaser, 1, 1).overrideWithValue(
-          const AsyncData<TafsirParseResult?>(null),
-        ),
-        tafsirForAyahProvider(TafsirId.tafseerMouaser, 1, 7).overrideWithValue(
-          const AsyncData<TafsirParseResult?>(null),
-        ),
+        ).overrideWithValue(const AsyncData<Translation?>(null)),
+        tafsirForAyahProvider(
+          TafsirId.tafseerMouaser,
+          1,
+          1,
+        ).overrideWithValue(const AsyncData<TafsirParseResult?>(null)),
+        tafsirForAyahProvider(
+          TafsirId.tafseerMouaser,
+          1,
+          7,
+        ).overrideWithValue(const AsyncData<TafsirParseResult?>(null)),
         appThemeDataProvider.overrideWithValue(theme),
       ],
       child: FTheme(
@@ -219,17 +225,82 @@ void main() {
           locale: const Locale('en'),
           localizationsDelegates: appLocalizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(
-            body: SizedBox(
-              width: 600,
-              height: 800,
-              child: child,
-            ),
-          ),
+          home: Scaffold(body: SizedBox(width: 600, height: 800, child: child)),
         ),
       ),
     );
   }
+
+  testWidgets('empty Study explains selection without disabled editors', (
+    tester,
+  ) async {
+    var returned = false;
+    await tester.pumpWidget(
+      wrap(
+        recitationState: const RecitationState(),
+        hasSelection: false,
+        child: StudyPanel(onBackToReading: () => returned = true),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Select an ayah in the Mushaf'), findsOneWidget);
+    expect(find.byType(FAccordion), findsNothing);
+    expect(find.byType(FTextField), findsNothing);
+    await tester.tap(find.text('Back to reading'));
+    await tester.pumpAndSettle();
+    expect(returned, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('selected ayah loading is distinct from empty selection', (
+    tester,
+  ) async {
+    final pending = Completer<Ayah?>();
+    await tester.pumpWidget(
+      wrap(
+        recitationState: const RecitationState(),
+        loadSelection: () => pending.future,
+        child: const StudyPanel(),
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(FCircularProgress), findsOneWidget);
+    expect(find.textContaining('Select an ayah in the Mushaf'), findsNothing);
+    pending.complete(selected);
+    await tester.pumpAndSettle();
+    expect(find.byType(FAccordion), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Study retries selected ayah errors without losing selection', (
+    tester,
+  ) async {
+    var attempts = 0;
+    await tester.pumpWidget(
+      wrap(
+        recitationState: const RecitationState(),
+        loadSelection: () async {
+          if (++attempts == 1) throw StateError('fixture failure');
+          return selected;
+        },
+        child: const StudyPanel(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Could not load the selected ayah'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Retry'));
+    await tester.pumpAndSettle();
+    expect(attempts, 2);
+    expect(find.byType(FAccordion), findsOneWidget);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(StudyPanel)),
+    );
+    expect(container.read(quranSelectedAyahIdProvider), 1);
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'StudyPanel keeps session selection when recitation has surah-local ayah',
@@ -253,43 +324,37 @@ void main() {
     },
   );
 
-  testWidgets(
-    'StudyPanel does not sync selection from inactive recitation',
-    (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          recitationState: const RecitationState(
-            currentAyah: 7,
-          ),
-          child: const StudyPanel(),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 50));
+  testWidgets('StudyPanel does not sync selection from inactive recitation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        recitationState: const RecitationState(currentAyah: 7),
+        child: const StudyPanel(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
-      final element = tester.element(find.byType(StudyPanel));
-      final container = ProviderScope.containerOf(element);
-      expect(container.read(quranSelectedAyahIdProvider), 1);
-    },
-  );
+    final element = tester.element(find.byType(StudyPanel));
+    final container = ProviderScope.containerOf(element);
+    expect(container.read(quranSelectedAyahIdProvider), 1);
+  });
 
-  testWidgets(
-    'StudyPanel does not sync when recitation has no currentAyah',
-    (tester) async {
-      await tester.pumpWidget(
-        wrap(
-          recitationState: const RecitationState(
-            active: true,
-          ),
-          child: const StudyPanel(),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 50));
+  testWidgets('StudyPanel does not sync when recitation has no currentAyah', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      wrap(
+        recitationState: const RecitationState(active: true),
+        child: const StudyPanel(),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
-      final element = tester.element(find.byType(StudyPanel));
-      final container = ProviderScope.containerOf(element);
-      expect(container.read(quranSelectedAyahIdProvider), 1);
-    },
-  );
+    final element = tester.element(find.byType(StudyPanel));
+    final container = ProviderScope.containerOf(element);
+    expect(container.read(quranSelectedAyahIdProvider), 1);
+  });
 }
