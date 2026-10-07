@@ -89,6 +89,12 @@ dependencies:
     sdk: flutter
 
 
+# The published Flutter adapter requests hosted core. Use the pinned local core
+# throughout the app's dependency graph.
+dependency_overrides:
+  dorar_hadith:
+    path: packages/dorar_hadith
+
 dev_dependencies:
   yaml: 3.1.3
   build_runner: ^2.16.1

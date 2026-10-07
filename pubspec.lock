@@ -285,14 +285,14 @@ packages:
       path: "packages/dorar_hadith"
       relative: true
     source: path
-    version: "0.5.0"
+    version: "0.6.1"
   dorar_hadith_flutter:
     dependency: "direct main"
     description:
       path: "packages/dorar_hadith/dorar_hadith_flutter"
       relative: true
     source: path
-    version: "0.5.0"
+    version: "0.6.1"
   drift:
     dependency: transitive
     description:
