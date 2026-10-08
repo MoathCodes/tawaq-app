@@ -4961,6 +4961,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Explanation of a similar hadith'**
   String get hadithSimilarExplanation;
+
+  /// No description provided for @fortressExitFocus.
+  ///
+  /// In en, this message translates to:
+  /// **'Exit reading'**
+  String get fortressExitFocus;
+
+  /// No description provided for @fortressCountProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} of {target}'**
+  String fortressCountProgress(int completed, int target);
+
+  /// No description provided for @fortressStudyPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading details · counting paused'**
+  String get fortressStudyPaused;
+
+  /// No description provided for @fortressReachedEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Reached the end'**
+  String get fortressReachedEnd;
+
+  /// No description provided for @fortressChapterProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed} of {total} adhkar completed'**
+  String fortressChapterProgress(int completed, int total);
+
+  /// No description provided for @fortressContinueUnfinished.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue unfinished'**
+  String get fortressContinueUnfinished;
+
+  /// No description provided for @fortressReadAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Read again'**
+  String get fortressReadAgain;
+
+  /// No description provided for @fortressReturnChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to chapter'**
+  String get fortressReturnChapter;
+
+  /// No description provided for @fortressUndoCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo last count'**
+  String get fortressUndoCount;
+
+  /// No description provided for @fortressExpandDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand details'**
+  String get fortressExpandDetails;
+
+  /// No description provided for @fortressRestoreDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore panel'**
+  String get fortressRestoreDetails;
+
+  /// No description provided for @fortressShareChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Share chapter'**
+  String get fortressShareChapter;
+
+  /// No description provided for @fortressShareThisDhikr.
+  ///
+  /// In en, this message translates to:
+  /// **'This dhikr'**
+  String get fortressShareThisDhikr;
+
+  /// No description provided for @fortressEntireChapter.
+  ///
+  /// In en, this message translates to:
+  /// **'Entire chapter'**
+  String get fortressEntireChapter;
+
+  /// No description provided for @fortressReadingEdition.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading edition'**
+  String get fortressReadingEdition;
+
+  /// No description provided for @fortressStudyEdition.
+  ///
+  /// In en, this message translates to:
+  /// **'Study edition'**
+  String get fortressStudyEdition;
+
+  /// No description provided for @fortressBooklet.
+  ///
+  /// In en, this message translates to:
+  /// **'Chapter booklet'**
+  String get fortressBooklet;
+
+  /// No description provided for @fortressSavePages.
+  ///
+  /// In en, this message translates to:
+  /// **'Save all pages'**
+  String get fortressSavePages;
+
+  /// No description provided for @fortressSavePdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Save PDF'**
+  String get fortressSavePdf;
+
+  /// No description provided for @fortressCopyText.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy complete text'**
+  String get fortressCopyText;
+
+  /// No description provided for @fortressExportSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{pages} pages · {format}'**
+  String fortressExportSummary(int pages, String format);
+
+  /// No description provided for @fortressPreparingPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing PDF…'**
+  String get fortressPreparingPdf;
+
+  /// No description provided for @fortressExportTextSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get fortressExportTextSize;
+
+  /// No description provided for @fortressPagePosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {page} of {total}'**
+  String fortressPagePosition(int page, int total);
+
+  /// No description provided for @fortressContinued.
+  ///
+  /// In en, this message translates to:
+  /// **'Continued'**
+  String get fortressContinued;
+
+  /// No description provided for @fortressExportCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Export cancelled'**
+  String get fortressExportCancelled;
+
+  /// No description provided for @fortressExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not create the booklet. Retry or remove unavailable details.'**
+  String get fortressExportFailed;
+
+  /// No description provided for @fortressExportReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Booklet saved'**
+  String get fortressExportReady;
+
+  /// No description provided for @fortressPdfVisualNote.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF preserves these pages as images. Use Copy complete text for text.'**
+  String get fortressPdfVisualNote;
+
+  /// No description provided for @fortressPreparingPages.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing pages…'**
+  String get fortressPreparingPages;
+
+  /// No description provided for @fortressDragBooklet.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag all pages to another app'**
+  String get fortressDragBooklet;
+
+  /// No description provided for @fortressImages.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get fortressImages;
+
+  /// No description provided for @fortressExportFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'Format'**
+  String get fortressExportFormat;
+
+  /// No description provided for @fortressExportScope.
+  ///
+  /// In en, this message translates to:
+  /// **'Content'**
+  String get fortressExportScope;
+
+  /// No description provided for @fortressExportEdition.
+  ///
+  /// In en, this message translates to:
+  /// **'Edition'**
+  String get fortressExportEdition;
+
+  /// No description provided for @fortressFocusInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Click the counter or reading space · Space / Enter to count · ← / ↓ next · → / ↑ previous · Esc to exit'**
+  String get fortressFocusInputHint;
+
+  /// No description provided for @shortcutFortressUndoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo count'**
+  String get shortcutFortressUndoLabel;
+
+  /// No description provided for @shortcutFortressUndoDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo the last repetition in focus reading'**
+  String get shortcutFortressUndoDescription;
+
+  /// No description provided for @fortressItemPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Item {item} of {total}'**
+  String fortressItemPosition(int item, int total);
+
+  /// No description provided for @fortressItemIdentity.
+  ///
+  /// In en, this message translates to:
+  /// **'Item {item}'**
+  String fortressItemIdentity(int item);
+
+  /// No description provided for @fortressExportDetailFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load {field} for item {item}. Retry, or deselect this field to omit it.'**
+  String fortressExportDetailFailed(int item, String field);
 }
 
 class _AppLocalizationsDelegate

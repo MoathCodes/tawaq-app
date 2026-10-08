@@ -1385,5 +1385,113 @@
   "hadithDorarOrder": "Dorar order",
   "hadithDegreeOrderHelp": "Orders results by source degree as presented by Dorar.",
   "hadithSpecialistHelp": "Shows narrations with takhrij information using Dorar’s specialist mode.",
-  "hadithSimilarExplanation": "Explanation of a similar hadith"
+  "hadithSimilarExplanation": "Explanation of a similar hadith",
+  "fortressExitFocus": "Exit reading",
+  "fortressCountProgress": "{completed} of {target}",
+  "@fortressCountProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressStudyPaused": "Reading details · counting paused",
+  "fortressReachedEnd": "Reached the end",
+  "fortressChapterProgress": "{completed} of {total} adhkar completed",
+  "@fortressChapterProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressContinueUnfinished": "Continue unfinished",
+  "fortressReadAgain": "Read again",
+  "fortressReturnChapter": "Return to chapter",
+  "fortressUndoCount": "Undo last count",
+  "fortressExpandDetails": "Expand details",
+  "fortressRestoreDetails": "Restore panel",
+  "fortressShareChapter": "Share chapter",
+  "fortressShareThisDhikr": "This dhikr",
+  "fortressEntireChapter": "Entire chapter",
+  "fortressReadingEdition": "Reading edition",
+  "fortressStudyEdition": "Study edition",
+  "fortressBooklet": "Chapter booklet",
+  "fortressSavePages": "Save all pages",
+  "fortressSavePdf": "Save PDF",
+  "fortressCopyText": "Copy complete text",
+  "fortressExportSummary": "{pages} pages · {format}",
+  "@fortressExportSummary": {
+    "placeholders": {
+      "pages": {
+        "type": "int"
+      },
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "fortressPreparingPdf": "Preparing PDF…",
+  "fortressExportTextSize": "Text size",
+  "fortressPagePosition": "Page {page} of {total}",
+  "@fortressPagePosition": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressContinued": "Continued",
+  "fortressExportCancelled": "Export cancelled",
+  "fortressExportFailed": "Could not create the booklet. Retry or remove unavailable details.",
+  "fortressExportReady": "Booklet saved",
+  "fortressPdfVisualNote": "PDF preserves these pages as images. Use Copy complete text for text.",
+  "fortressPreparingPages": "Preparing pages…",
+  "fortressDragBooklet": "Drag all pages to another app",
+  "fortressImages": "Images",
+  "fortressExportFormat": "Format",
+  "fortressExportScope": "Content",
+  "fortressExportEdition": "Edition",
+  "fortressFocusInputHint": "Click the counter or reading space · Space / Enter to count · ← / ↓ next · → / ↑ previous · Esc to exit",
+  "shortcutFortressUndoLabel": "Undo count",
+  "shortcutFortressUndoDescription": "Undo the last repetition in focus reading",
+  "fortressItemPosition": "Item {item} of {total}",
+  "@fortressItemPosition": {
+    "placeholders": {
+      "item": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressItemIdentity": "Item {item}",
+  "@fortressItemIdentity": {
+    "placeholders": {
+      "item": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressExportDetailFailed": "Could not load {field} for item {item}. Retry, or deselect this field to omit it.",
+  "@fortressExportDetailFailed": {
+    "placeholders": {
+      "item": {
+        "type": "int"
+      },
+      "field": {
+        "type": "String"
+      }
+    }
+  }
 }

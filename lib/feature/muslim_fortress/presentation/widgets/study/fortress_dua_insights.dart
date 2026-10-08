@@ -1,477 +1,223 @@
 import 'dart:async';
+import 'dart:math' as math;
 
-import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:flutter/scheduler.dart' show TickerCanceled;
 import 'package:forui/forui.dart';
-import 'package:hisn_elmoslem/hisn_elmoslem.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/core/widgets/dialog_shell.dart';
-import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_nav_controls.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/share/fortress_share_dialog.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_commentary_text.dart';
-import 'package:tawaq/l10n/app_localizations.dart';
-import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_study_panel.dart';
 
-String _fortressStudyLabel(
-  FortressDuaItem dua,
-  AppLocalizations l10n, {
-  bool forDialog = false,
-}) {
-  if (dua.studySectionLabels(l10n).length > 1) {
-    return l10n.fortressShowDetails;
-  }
-  return switch (dua) {
-    _ when dua.hasSharh =>
-      forDialog ? l10n.fortressSharh : l10n.fortressShowSharh,
-    _ when dua.hasSource =>
-      forDialog ? l10n.fortressSourceReference : l10n.fortressShowSource,
-    _ when dua.hasHadith => l10n.fortressRelatedHadith,
-    _ when dua.hasBenefit => l10n.fortressBenefit,
-    _ => l10n.fortressShowDetails,
-  };
+/// Owns the persistent side-sheet lifetime for the chapter reader.
+class FortressStudyHost extends StatefulWidget {
+  const FortressStudyHost({required this.child, this.chapterId, super.key});
+  final Widget child;
+  final int? chapterId;
+  @override
+  State<FortressStudyHost> createState() => _FortressStudyHostState();
 }
 
-/// Opens sharh / source / supplements in a dialog (focus reading).
-Future<void> showFortressStudySheet(
-  BuildContext context,
-  FortressDuaItem dua,
-) {
-  if (!dua.hasStudyContent) return Future.value();
+class _FortressStudyHostState extends State<FortressStudyHost> {
+  FPersistentSheetController? _sheet;
+  final _closingSheets = <FPersistentSheetController>{};
+  final _selections =
+      <FPersistentSheetController, ValueNotifier<FortressDetailKind>>{};
+  BuildContext? _sheetContext;
+  Completer<void>? _closed;
+  final _bucket = PageStorageBucket();
 
-  final l10n = context.l10n;
-  return showFDialog<void>(
-    context: context,
-    builder: (dialogContext, style, animation) {
-      final constraints = dialogConstraints(
-        dialogContext,
-        preferredWidth: 640,
-        preferredHeight: 520,
-        minWidth: 280,
-      );
-
-      return FDialog(
-        style: style,
-        animation: animation,
-        constraints: constraints,
-        builder: (context, dialogStyle) => ForuiDialogLayout(
-          style: dialogStyle,
-          title: Text(_fortressStudyLabel(dua, l10n, forDialog: true)),
-          body: DesktopSelectionArea(
-            child: SingleChildScrollView(
-              child: FortressDuaStudyContent(dua: dua),
-            ),
+  Future<void> open(FortressDuaItem dua, FortressDetailKind? initial) {
+    close();
+    final kinds = FortressDetailKind.available(dua);
+    if (kinds.isEmpty) return Future.value();
+    final selected = ValueNotifier(initial ?? kinds.first);
+    _closed = Completer<void>();
+    final context = _sheetContext!;
+    late final FPersistentSheetController created;
+    created = showFPersistentSheet(
+      context: context,
+      side: Directionality.of(context) == TextDirection.rtl ? .ltr : .rtl,
+      draggable: false,
+      mainAxisMaxRatio: 1,
+      onClosing: () {
+        if (_sheet == created) close();
+      },
+      builder: (context, controller) => SizedBox(
+        width: math.min(480, MediaQuery.sizeOf(context).width),
+        height: double.infinity,
+        child: ValueListenableBuilder(
+          valueListenable: selected,
+          builder: (_, kind, _) => FortressStudyPanel(
+            dua: dua,
+            kind: kind,
+            bucket: _bucket,
+            onKindChanged: (kind) {
+              selected.value = kind;
+            },
+            onClose: close,
           ),
-          actions: [
-            FButton(
-              variant: .secondary,
-              onPress: () {
-                Navigator.of(dialogContext).pop();
-                unawaited(showFortressShareDialog(context, dua));
-              },
-              child: Text(l10n.fortressShare),
-            ),
-            FButton(
-              onPress: () => Navigator.of(dialogContext).pop(),
-              child: Text(l10n.cancel),
+        ),
+      ),
+    );
+    _selections[created] = selected;
+    _sheet = created;
+    setState(() {});
+    return _closed!.future;
+  }
+
+  void close() {
+    final sheet = _sheet;
+    _sheet = null;
+    if (sheet != null) {
+      _closingSheets.add(sheet);
+      unawaited(_finishClosingSheet(sheet));
+    }
+    if (mounted) setState(() {});
+    final closed = _closed;
+    _closed = null;
+    if (closed != null && !closed.isCompleted) closed.complete();
+  }
+
+  Future<void> _finishClosingSheet(FPersistentSheetController sheet) async {
+    try {
+      await sheet.hide().orCancel;
+    } on TickerCanceled {
+      // Removing the chapter reader cancels any sheet still closing.
+    } finally {
+      if (_closingSheets.remove(sheet)) {
+        sheet.dispose();
+        _selections.remove(sheet)?.dispose();
+      }
+    }
+  }
+
+  void _disposeSheets() {
+    _sheet?.dispose();
+    _selections.remove(_sheet)?.dispose();
+    _sheet = null;
+    final closing = _closingSheets.toList();
+    _closingSheets.clear();
+    for (final sheet in closing) {
+      sheet.dispose();
+      _selections.remove(sheet)?.dispose();
+    }
+    if (_closed != null && !_closed!.isCompleted) _closed!.complete();
+    _closed = null;
+  }
+
+  @override
+  void didUpdateWidget(covariant FortressStudyHost oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.chapterId != widget.chapterId) close();
+  }
+
+  @override
+  void deactivate() {
+    // FSheets is a child: cancel its tickers before children unmount.
+    _disposeSheets();
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    _disposeSheets();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => FSheets(
+    child: Builder(
+      builder: (context) {
+        _sheetContext = context;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            widget.child,
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: _sheet == null,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: _sheet == null ? 0 : 1),
+                  duration: reduceMotion(context)
+                      ? Duration.zero
+                      : context
+                            .theme
+                            .persistentSheetStyle
+                            .motion
+                            .expandDuration,
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, _) => value == 0
+                      ? const SizedBox.shrink()
+                      : FModalBarrier(
+                          key: const ValueKey('fortress-study-backdrop'),
+                          filter: context.theme.dialogRouteStyle.barrierFilter
+                              ?.call(context, value),
+                          semanticsLabel: context.l10n.close,
+                          onDismiss: close,
+                        ),
+                ),
+              ),
             ),
           ],
-        ),
-      );
-    },
+        );
+      },
+    ),
   );
 }
 
-/// Compact study control in the focus-reading nav cluster.
+Future<void> showFortressStudySheet(
+  BuildContext context,
+  FortressDuaItem dua, {
+  FortressDetailKind? kind,
+}) {
+  final host = context.findAncestorStateOfType<_FortressStudyHostState>();
+  if (host == null)
+    throw FlutterError('Fortress details require a FortressStudyHost.');
+  return host.open(dua, kind);
+}
+
 class FortressDuaStudyNavAction extends StatelessWidget {
-  /// Creates a study nav action.
-  const new({required this.dua, super.key});
-
+  const FortressDuaStudyNavAction({required this.dua, super.key});
   final FortressDuaItem dua;
-
   @override
-  Widget build(BuildContext context) {
-    if (!dua.hasStudyContent) {
-      return const SizedBox.shrink();
-    }
-
-    final theme = context.theme;
-    final l10n = context.l10n;
-    final sections = dua.studySectionLabels(l10n);
-    final showIncludes = sections.length > 1;
-
-    final label = _fortressStudyLabel(dua, l10n);
-
-    return Center(
-      child: IntrinsicWidth(
-        child: FortressLabeledNavButton(
-          label: '${dua.category}. $label',
-          enabled: true,
+  Widget build(BuildContext context) =>
+      FortressDetailKind.available(dua).isEmpty
+      ? const SizedBox.shrink()
+      : FButton(
+          variant: .ghost,
+          prefix: const Icon(FLucideIcons.bookOpenText),
           onPress: () => unawaited(showFortressStudySheet(context, dua)),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.sm,
-              vertical: AppSpacing.xs,
-            ),
-            child: showIncludes
-                ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            FLucideIcons.bookOpenText,
-                            size: 16,
-                            color: theme.colors.foreground,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Flexible(
-                            child: Text(
-                              label,
-                              style: theme.typography.body.sm.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        sections.join(' · '),
-                        style: theme.typography.body.xs.copyWith(
-                          color: theme.colors.mutedForeground,
-                          height: 1.3,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        FLucideIcons.bookOpenText,
-                        size: 16,
-                        color: theme.colors.foreground,
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Flexible(
-                        child: Text(
-                          label,
-                          style: theme.typography.body.sm.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Always-visible الفضل line (focus reading footer).
-class FortressDuaVirtueLine extends StatelessWidget {
-  /// Creates a virtue line.
-  const new({
-    required this.virtue,
-    super.key,
-  });
-
-  /// Fadl text.
-  final String virtue;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final proseStyle = theme.typography.body.sm.copyWith(
-      color: theme.colors.mutedForeground,
-      height: 1.75,
-    );
-
-    return FortressCommentaryText(
-      text: virtue,
-      baseStyle: proseStyle,
-      textAlign: TextAlign.center,
-    );
-  }
-}
-
-/// Takhreej / مصدر line (shown inside on-demand study content).
-class FortressDuaSourceLine extends StatelessWidget {
-  /// Creates a source line.
-  const new({
-    required this.reference,
-    super.key,
-  });
-
-  /// Takhreej text.
-  final String reference;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-
-    return ScopedSelectableText(
-      reference,
-      style: theme.typography.body.sm.copyWith(
-        color: theme.colors.mutedForeground,
-        height: 1.6,
-      ),
-      textAlign: TextAlign.center,
-    );
-  }
-}
-
-/// Sharh-first study body (used in sheet or inline expansion).
-class FortressDuaStudyContent extends HookConsumerWidget {
-  /// Creates study content.
-  const new({
-    required this.dua,
-    this.compact = false,
-    super.key,
-  });
-
-  final FortressDuaItem dua;
-  final bool compact;
-
-  TextStyle _proseStyle(FTypography typography, FColors colors) {
-    final scale = compact ? typography.body.sm : typography.body.md;
-    return scale.copyWith(
-      color: colors.foreground,
-      height: 1.75,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = context.theme;
-    final colors = theme.colors;
-    final typography = theme.typography;
-    final l10n = context.l10n;
-    final proseStyle = _proseStyle(typography, colors);
-    final commentaryState = useState<HisnCommentary?>(dua.commentary);
-    final isLoading = useState(dua.commentary == null && dua.hasCommentary);
-
-    useEffect(
-      () {
-        if (dua.commentary != null || !dua.hasCommentary) {
-          return null;
-        }
-
-        var cancelled = false;
-        unawaited(
-          ref.read(fortressRepositoryProvider.future).then((repository) {
-            if (cancelled) return;
-            commentaryState.value = repository.loadCommentaryForContent(
-              dua.contentId,
-            );
-            isLoading.value = false;
-          }),
+          child: Text(context.l10n.fortressShowDetails),
         );
-
-        return () => cancelled = true;
-      },
-      [dua.contentId],
-    );
-
-    if (isLoading.value) {
-      return const Center(child: FCircularProgress.loader());
-    }
-
-    final commentary = commentaryState.value;
-    final sharh = commentary?.sharh;
-    final hasSharh = sharh != null && sharh.isNotEmpty;
-    final source = dua.reference;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (hasSharh) ...[
-          _StudySectionHeader(
-            icon: FLucideIcons.bookOpenText,
-            title: l10n.fortressSharh,
-            prominent: true,
-          ),
-          SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
-          FortressCommentaryText(
-            text: sharh,
-            baseStyle: proseStyle,
-          ),
-        ],
-        if (hasSharh) SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
-        _FortressSecondaryInsights(
-          hadith: commentary?.hadith,
-          benefit: commentary?.benefit,
-          proseStyle: proseStyle,
-        ),
-        if (dua.hasSource) ...[
-          SizedBox(height: compact ? AppSpacing.md : AppSpacing.lg),
-          _StudySectionHeader(
-            icon: FLucideIcons.bookMarked,
-            title: l10n.fortressSourceReference,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          FortressDuaSourceLine(reference: source!),
-        ],
-      ],
-    );
-  }
 }
 
-/// Hadith and benefit supplements — tabbed only when both are present.
-class _FortressSecondaryInsights extends HookWidget {
-  const new({
-    required this.hadith,
-    required this.benefit,
-    required this.proseStyle,
-  });
-
-  final String? hadith;
-  final String? benefit;
-  final TextStyle proseStyle;
-
+class FortressDuaVirtueLine extends StatelessWidget {
+  const FortressDuaVirtueLine({required this.virtue, super.key});
+  final String virtue;
   @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colors = theme.colors;
-    final l10n = context.l10n;
-    final tabIndex = useState(0);
-
-    final hasHadith = hadith != null && hadith!.trim().isNotEmpty;
-    final hasBenefit = benefit != null && benefit!.trim().isNotEmpty;
-
-    if (!hasHadith && !hasBenefit) {
-      return const SizedBox.shrink();
-    }
-
-    Widget body(String content) {
-      return FortressCommentaryText(
-        text: content,
-        baseStyle: proseStyle,
-      );
-    }
-
-    if (hasHadith && hasBenefit) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          NonSelectable(
-            child: FTabs(
-              control: FTabControl.lifted(
-                index: tabIndex.value,
-                onChange: (index) => tabIndex.value = index,
-              ),
-              style: theme.tabs.compact,
-              children: [
-                .entry(
-                  label: Text(l10n.fortressBenefit),
-                  child: const SizedBox.shrink(),
-                ),
-                .entry(
-                  label: Text(l10n.fortressRelatedHadith),
-                  child: const SizedBox.shrink(),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: colors.secondary.withAlpha(60),
-              borderRadius: theme.radii.md,
-              border: Border.all(color: colors.border.withAlpha(120)),
-            ),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: tabIndex.value == 0 ? body(benefit!) : body(hadith!),
-            ),
-          ),
-        ],
-      );
-    }
-
-    final singleTitle = hasHadith
-        ? l10n.fortressRelatedHadith
-        : l10n.fortressBenefit;
-    final singleIcon = hasHadith
-        ? FLucideIcons.scrollText
-        : FLucideIcons.sparkles;
-    final singleText = hasHadith ? hadith! : benefit!;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: colors.secondary.withAlpha(60),
-        borderRadius: theme.radii.md,
-        border: Border.all(color: colors.border.withAlpha(120)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _StudySectionHeader(
-            icon: singleIcon,
-            title: singleTitle,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          body(singleText),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => FortressCommentaryText(
+    text: virtue,
+    baseStyle: context.theme.typography.body.sm.copyWith(
+      color: context.theme.colors.mutedForeground,
+      height: 1.75,
+    ),
+    textAlign: TextAlign.center,
+  );
 }
 
-class _StudySectionHeader extends StatelessWidget {
-  const new({
-    required this.icon,
-    required this.title,
-    this.prominent = false,
-  });
-
-  final IconData icon;
-  final String title;
-  final bool prominent;
-
+class FortressDuaSourceLine extends StatelessWidget {
+  const FortressDuaSourceLine({required this.reference, super.key});
+  final String reference;
   @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colors = theme.colors;
-    final typography = theme.typography;
-
-    return Semantics(
-      header: true,
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: prominent ? 20 : 16,
-            color: prominent ? colors.primary : colors.mutedForeground,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Text(
-            title,
-            style: (prominent ? typography.body.md : typography.body.sm)
-                .copyWith(
-                  fontWeight: prominent ? FontWeight.w700 : FontWeight.w600,
-                  color: prominent ? colors.primary : colors.foreground,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ScopedSelectableText(
+    reference,
+    style: context.theme.typography.body.sm.copyWith(
+      color: context.theme.colors.mutedForeground,
+      height: 1.6,
+    ),
+    textAlign: TextAlign.center,
+  );
 }

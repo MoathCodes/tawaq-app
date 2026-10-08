@@ -1,12 +1,16 @@
 // Fixture overrides belong to an independent root test scope.
 // ignore_for_file: riverpod_lint/scoped_providers_should_specify_dependencies
 
+import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
+import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:riverpod_annotation/experimental/persist.dart';
 import 'package:tawaq/core/bootstrap/app_init_providers.dart';
 import 'package:tawaq/core/storage/settings_storage.dart';
@@ -221,6 +225,33 @@ class _BaselineHeader extends StatelessWidget {
 
 void main() {
   setUpAll(() async {
+    final directory = await Directory.systemTemp.createTemp(
+      'fortress-golden-mushaf-',
+    );
+    const channel = MethodChannel('plugins.flutter.io/path_provider');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(channel, (_) async => directory.path);
+    MushafReaderController? controller;
+    addTearDown(() async {
+      // Keep the repository lease until durable box shutdown finishes.
+      await Hive.close();
+      controller?.dispose();
+      messenger.setMockMethodCallHandler(channel, null);
+      await directory.delete(recursive: true);
+    });
+    await MushafReaderLibrary.ensureInitialized(subDirectory: 'reader');
+    controller = MushafReaderController();
+    await controller.ensureReady();
+    final ayah = await controller.getAyahBySurah(2, 255);
+    final pageFont = MushafFonts.forPage(ayah.page);
+    final loaderQcf = FontLoader('packages/mushaf_reader/$pageFont')
+      ..addFont(
+        rootBundle.load(
+          'packages/mushaf_reader/assets/otf_fonts/$pageFont.otf',
+        ),
+      );
+    await loaderQcf.load();
     final loader = FontLoader('IBMPlexSansArabic')
       ..addFont(
         rootBundle.load(
@@ -395,16 +426,28 @@ void _goldenTest(
   bool expanded = false,
 }) {
   testWidgets(description, (tester) async {
-    await tester.pumpWidget(
-      _gallery(
-        width: width,
-        locale: locale,
-        themeMode: themeMode,
-        palette: palette,
-        textScale: textScale,
-        expanded: expanded,
-      ),
+    final gallery = _gallery(
+      width: width,
+      locale: locale,
+      themeMode: themeMode,
+      palette: palette,
+      textScale: textScale,
+      expanded: expanded,
     );
+    if (expanded) {
+      // Hive's lazy Quran reads must start in the real IO zone, including
+      // controller initialization, rather than holding a fake-clock read lock.
+      await tester.runAsync(() async {
+        await tester.pumpWidget(gallery);
+        for (var attempt = 0; attempt < 30; attempt++) {
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+          await tester.pump();
+          if (find.byType(FCircularProgress).evaluate().isEmpty) break;
+        }
+      });
+    } else {
+      await tester.pumpWidget(gallery);
+    }
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await expectLater(

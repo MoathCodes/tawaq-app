@@ -29,6 +29,19 @@ fvm exec bash tool/codegen.sh
 
 The script regenerates `mushaf_reader` before the root package.
 
+On Linux machines with a small or quota-limited `/tmp`, use the repository runner.
+It invokes the pinned FVM SDK with compiler temporary files on the home disk:
+
+```bash
+tool/flutter.sh run -d linux
+tool/flutter.sh test
+tool/flutter.sh analyze --no-fatal-infos
+```
+
+Its default directory is `${XDG_CACHE_HOME:-$HOME/.cache}/tawaq/flutter-tmp`.
+Set `TAWAQ_FLUTTER_TMPDIR` to override it for a run. Existing Flutter sessions
+keep their original temporary directory until restarted.
+
 ## Generator map
 
 | Change | Required generation |

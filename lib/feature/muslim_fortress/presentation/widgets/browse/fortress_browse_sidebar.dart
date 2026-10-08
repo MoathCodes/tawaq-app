@@ -13,7 +13,6 @@ import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_screen_state.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/fortress_screen_settings_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
@@ -335,7 +334,6 @@ class FortressCategoryListTile extends ConsumerWidget {
             l10n: l10n,
             compact: compact,
             selected: isSelected,
-            icon: category.icon,
             trailing: FortressFavoriteToggle(chapterId: chapterId),
           ),
         ),

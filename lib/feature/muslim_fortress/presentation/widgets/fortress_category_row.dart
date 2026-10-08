@@ -1,11 +1,10 @@
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/fortress_category_ui.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 
-/// Shared category row content: icon, title, meta, optional trailing widget.
+/// Shared category row content: title, meta, optional trailing widget.
 class FortressCategoryRow extends StatelessWidget {
   /// Creates a category row.
   const new({
@@ -14,7 +13,6 @@ class FortressCategoryRow extends StatelessWidget {
     this.compact = false,
     this.selected = false,
     this.trailing,
-    this.icon,
     super.key,
   });
 
@@ -23,23 +21,14 @@ class FortressCategoryRow extends StatelessWidget {
   final bool compact;
   final bool selected;
   final Widget? trailing;
-  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final colors = theme.colors;
-    final rowIcon = icon ?? category.icon;
-    final accent = selected ? colors.primary : colors.mutedForeground;
 
     return Row(
       children: [
-        Icon(
-          rowIcon,
-          size: compact ? 18 : 20,
-          color: selected ? colors.primary : accent,
-        ),
-        SizedBox(width: compact ? AppSpacing.sm : AppSpacing.md),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

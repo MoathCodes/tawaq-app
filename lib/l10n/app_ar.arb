@@ -1336,5 +1336,113 @@
   "hadithDorarOrder": "ترتيب الدرر",
   "hadithDegreeOrderHelp": "يرتب النتائج بحسب درجة المصدر كما تعرضها الدرر.",
   "hadithSpecialistHelp": "يعرض روايات تتضمن معلومات التخريج في وضع الدرر المتخصص.",
-  "hadithSimilarExplanation": "شرح حديث مشابه"
+  "hadithSimilarExplanation": "شرح حديث مشابه",
+  "fortressExitFocus": "الخروج من القراءة",
+  "fortressCountProgress": "{completed} من {target}",
+  "@fortressCountProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressStudyPaused": "قراءة التفاصيل · العد متوقف",
+  "fortressReachedEnd": "وصلت إلى نهاية الباب",
+  "fortressChapterProgress": "أتممت {completed} من {total} أذكار",
+  "@fortressChapterProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressContinueUnfinished": "إكمال الأذكار المتبقية",
+  "fortressReadAgain": "القراءة من جديد",
+  "fortressReturnChapter": "العودة إلى الباب",
+  "fortressUndoCount": "التراجع عن آخر عدّة",
+  "fortressExpandDetails": "توسيع التفاصيل",
+  "fortressRestoreDetails": "استعادة اللوحة",
+  "fortressShareChapter": "مشاركة الباب",
+  "fortressShareThisDhikr": "هذا الذكر",
+  "fortressEntireChapter": "الباب كاملًا",
+  "fortressReadingEdition": "نسخة القراءة",
+  "fortressStudyEdition": "نسخة الدراسة",
+  "fortressBooklet": "كتيّب الأذكار",
+  "fortressSavePages": "حفظ جميع الصفحات",
+  "fortressSavePdf": "حفظ PDF",
+  "fortressCopyText": "نسخ النص كاملًا",
+  "fortressExportSummary": "{pages} صفحة · {format}",
+  "@fortressExportSummary": {
+    "placeholders": {
+      "pages": {
+        "type": "int"
+      },
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "fortressPreparingPdf": "جارٍ تجهيز ملف PDF…",
+  "fortressExportTextSize": "حجم النص",
+  "fortressPagePosition": "الصفحة {page} من {total}",
+  "@fortressPagePosition": {
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressContinued": "يتبع",
+  "fortressExportCancelled": "أُلغي التصدير",
+  "fortressExportFailed": "تعذّر إنشاء الكتيّب. أعد المحاولة أو أزل التفاصيل غير المتاحة.",
+  "fortressExportReady": "حُفظ الكتيّب",
+  "fortressPdfVisualNote": "يحفظ PDF هذه الصفحات كصور. استخدم نسخ النص كاملًا للحصول على النص.",
+  "fortressPreparingPages": "جارٍ إعداد الصفحات…",
+  "fortressDragBooklet": "اسحب جميع الصفحات إلى تطبيق آخر",
+  "fortressImages": "صور",
+  "fortressExportFormat": "الصيغة",
+  "fortressExportScope": "المحتوى",
+  "fortressExportEdition": "النسخة",
+  "fortressFocusInputHint": "انقر على العداد أو مساحة القراءة · مسافة / Enter للعد · ← / ↓ التالي · → / ↑ السابق · Esc للخروج",
+  "shortcutFortressUndoLabel": "التراجع عن العد",
+  "shortcutFortressUndoDescription": "التراجع عن آخر تكرار في وضع القراءة",
+  "fortressItemPosition": "الذكر {item} من {total}",
+  "@fortressItemPosition": {
+    "placeholders": {
+      "item": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressItemIdentity": "الذكر {item}",
+  "@fortressItemIdentity": {
+    "placeholders": {
+      "item": {
+        "type": "int"
+      }
+    }
+  },
+  "fortressExportDetailFailed": "تعذّر تحميل {field} للذكر {item}. أعد المحاولة أو ألغِ اختيار هذا الحقل لاستبعاده.",
+  "@fortressExportDetailFailed": {
+    "placeholders": {
+      "item": {
+        "type": "int"
+      },
+      "field": {
+        "type": "String"
+      }
+    }
+  }
 }

@@ -63,6 +63,10 @@ _Avoid_: social post, visual template
 An ordered group of share cards created only when the selected content cannot remain readable within one card. Cards use explicit section headings and retain enough context to remain understandable when shared together.
 _Avoid_: document, carousel
 
+**Chapter booklet**:
+A complete chapter of sourced adhkar, in canonical order, paginated for comfortable reading. It can be exported as an ordered PNG share set or one visual PDF. Repetition counts, supplied virtue, and app attribution are included by default; sources, commentary, benefits, and related hadith are individual optional inclusions. The PDF contains rendered image pages; complete text can be copied separately.
+_Avoid_: summary, generated religious guide
+
 **Share bundle**:
 The draggable desktop representation of one share card or an entire share set. It lets a person transfer the generated PNG files together to another application.
 _Avoid_: WhatsApp share, share button

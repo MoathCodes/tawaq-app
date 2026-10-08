@@ -7,11 +7,12 @@ import 'package:forui/forui.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/share/fortress_share_dialog.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_study_panel.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/l10n/app_localizations_delegates.dart';
@@ -65,6 +66,252 @@ const _bundledArabicPassage =
     'ٱللَّهُ لَآ إِلَٰهَ إِلَّا هُوَ ٱلۡحَيُّ ٱلۡقَيُّومُۚ لَا تَأۡخُذُهُۥ سِنَةٞ وَلَا نَوۡمٞۚ لَّهُۥ مَا فِي ٱلسَّمَٰوَٰتِ وَمَا فِي ٱلۡأَرۡضِۗ مَن ذَا ٱلَّذِي يَشۡفَعُ عِندَهُۥٓ إِلَّا بِإِذۡنِهِۦۚ يَعۡلَمُ مَا بَيۡنَ أَيۡدِيهِمۡ وَمَا خَلۡفَهُمۡۖ وَلَا يُحِيطُونَ بِشَيۡءٖ مِّنۡ عِلۡمِهِۦٓ إِلَّا بِمَا شَآءَۚ وَسِعَ كُرۡسِيُّهُ ٱلسَّمَٰوَٰتِ وَٱلۡأَرۡضَۖ وَلَا يَـُٔودُهُۥ حِفۡظُهُمَاۚ وَهُوَ ٱلۡعَلِيُّ ٱلۡعَظِيمُ';
 
 void main() {
+  for (final locale in [const Locale('ar'), const Locale('en')]) {
+    testWidgets(
+      'expanded actions follow logical start in ${locale.languageCode}',
+      (tester) async {
+        await tester.binding.setSurfaceSize(const Size(1000, 850));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+        await tester.pumpWidget(
+          _wrap(
+            SizedBox(
+              width: 720,
+              height: 800,
+              child: FortressStudyHost(
+                child: FortressDuaPreviewCard(
+                  index: 0,
+                  dua: _fixtureDua(),
+                  isExpanded: true,
+                  onToggleExpanded: () {},
+                ),
+              ),
+            ),
+            locale: locale,
+          ),
+        );
+        await tester.pumpAndSettle();
+        final l10n = lookupAppLocalizations(locale);
+        final benefit = tester.getRect(find.text(l10n.fortressBenefit));
+        final share = tester.getRect(find.text(l10n.fortressShare));
+        expect(
+          benefit.center.dx,
+          locale.languageCode == 'ar'
+              ? greaterThan(share.center.dx)
+              : lessThan(share.center.dx),
+        );
+        final card = tester.getRect(find.byType(FortressDuaPreviewCard));
+        final collapse = tester.getRect(find.text(l10n.fortressShowLess));
+        expect(
+          (locale.languageCode == 'ar'
+              ? card.right - collapse.right
+              : collapse.left - card.left),
+          lessThan(100),
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+  testWidgets('all five study labels remain readable in a narrow pane', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(1000, 850));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    const dua = FortressDuaItem(
+      contentId: 7,
+      category: 'Fixture',
+      text: 'Fixture',
+      targetCount: 1,
+      lines: [HisnPlainLine('Fixture')],
+      source: 'Fixture source',
+      virtue: 'Fixture virtue',
+      commentary: HisnCommentary(
+        id: 1,
+        contentId: 7,
+        sharh: 'Fixture sharh',
+        hadith: 'Fixture hadith',
+        benefit: 'Fixture benefit',
+      ),
+    );
+    for (final locale in [const Locale('ar'), const Locale('en')]) {
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: 420,
+            height: 800,
+            child: FortressStudyPanel(
+              dua: dua,
+              kind: FortressDetailKind.virtue,
+              onKindChanged: (_) {},
+              onClose: () {},
+              bucket: PageStorageBucket(),
+            ),
+          ),
+          locale: locale,
+        ),
+      );
+      await tester.pumpAndSettle();
+      for (final kind in FortressDetailKind.values) {
+        final label = find.descendant(
+          of: find.byType(FTabs),
+          matching: find.text(kind.label(lookupAppLocalizations(locale))),
+        );
+        final paragraph = tester.renderObject<RenderParagraph>(
+          find.descendant(of: label, matching: find.byType(RichText)).first,
+        );
+        expect(
+          paragraph.didExceedMaxLines,
+          isFalse,
+          reason: '${locale.languageCode} $kind',
+        );
+      }
+      expect(tester.takeException(), isNull);
+    }
+  });
+  testWidgets(
+    'persistent sheet tabs replace visible content and outside tap dismisses',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 850));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: 1000,
+            height: 800,
+            child: FortressStudyHost(
+              child: Builder(
+                builder: (context) => Align(
+                  alignment: Alignment.topLeft,
+                  child: FButton(
+                    onPress: () =>
+                        showFortressStudySheet(context, _fixtureDua()),
+                    child: const Text('Open fixture details'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Open fixture details'));
+      await tester.pumpAndSettle();
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(FTabs),
+          matching: find.text(l10n.fortressBenefit),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining(_fixtureBenefit, findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Fixture source reference', findRichText: true),
+        findsNothing,
+      );
+      await tester.tap(
+        find.descendant(
+          of: find.byType(FTabs),
+          matching: find.text(l10n.fortressRelatedHadith),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining(_fixtureHadith, findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining(_fixtureBenefit, findRichText: true),
+        findsNothing,
+      );
+      await tester.tapAt(const Offset(100, 300));
+      await tester.pumpAndSettle();
+      expect(find.byType(FTabs), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'expanded reading surface collapses on short tap but preserves controls and selection drags',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 850));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      var expanded = true;
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: 720,
+            height: 800,
+            child: FortressStudyHost(
+              child: StatefulBuilder(
+                builder: (context, setState) => FortressDuaPreviewCard(
+                  index: 0,
+                  dua: _fixtureDua(),
+                  isExpanded: expanded,
+                  onToggleExpanded: () => setState(() => expanded = !expanded),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.drag(find.text(_fixtureText), const Offset(40, 0));
+      await tester.pumpAndSettle();
+      expect(expanded, isTrue);
+      await tester.tap(find.textContaining('Fixture source reference'));
+      await tester.pumpAndSettle();
+      expect(expanded, isTrue);
+      expect(find.byType(FTabs), findsOneWidget);
+      await tester.tapAt(const Offset(100, 700));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(_fixtureText));
+      await tester.pumpAndSettle();
+      expect(expanded, isFalse);
+      final l10n = lookupAppLocalizations(const Locale('en'));
+      expect(find.text(l10n.fortressBenefit), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  for (final duringClose in [false, true]) {
+    testWidgets('chapter sheet host safely unmounts (closing: $duringClose)', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 850));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        _wrap(
+          SizedBox(
+            width: 1000,
+            height: 800,
+            child: FortressStudyHost(
+              child: Builder(
+                builder: (context) => FButton(
+                  onPress: () => showFortressStudySheet(context, _fixtureDua()),
+                  child: const Text('Open fixture details'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Open fixture details'));
+      await tester.pumpAndSettle();
+      if (duringClose) {
+        final l10n = lookupAppLocalizations(const Locale('en'));
+        await tester.tap(find.bySemanticsLabel(l10n.close).last);
+        await tester.pump(const Duration(milliseconds: 40));
+      }
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets(
     'collapsed preview always exposes sourced virtue, not source reference',
     (tester) async {
@@ -216,7 +463,7 @@ void main() {
   );
 
   testWidgets(
-    'expanded preview exposes benefit and independent sharing and collapse actions',
+    'expanded preview exposes bounded details and independent sharing and collapse actions',
     (tester) async {
       for (final locale in [const Locale('en'), const Locale('ar')]) {
         var expanded = false;
@@ -286,16 +533,10 @@ void main() {
           isFalse,
         );
 
-        final benefitSemantics = find.semantics
-            .byValue(_fixtureBenefit)
-            .evaluate()
-            .single;
-        expect(benefitSemantics.value, _fixtureBenefit);
-        expect(
-          benefitSemantics.getSemanticsData().hasAction(SemanticsAction.tap),
-          isFalse,
-        );
-
+        expect(find.semantics.byValue(_fixtureBenefit).evaluate(), isEmpty);
+        expect(find.text(l10n.fortressBenefit), findsOneWidget);
+        expect(find.text(l10n.fortressRelatedHadith), findsOneWidget);
+        expect(find.textContaining('Fixture source reference'), findsOneWidget);
         expect(find.text('Fixture source reference'), findsNothing);
         expect(find.text(l10n.fortressSourceReference), findsNothing);
         expect(find.byType(FTabs), findsNothing);
@@ -307,10 +548,7 @@ void main() {
         await tester.tap(find.bySemanticsLabel(l10n.close));
         await tester.pumpAndSettle();
         expect(find.bySemanticsLabel(expandedLabel), findsOneWidget);
-        expect(
-          find.semantics.byValue(_fixtureBenefit).evaluate(),
-          hasLength(1),
-        );
+        expect(find.semantics.byValue(_fixtureBenefit).evaluate(), isEmpty);
 
         final collapseLabel = FortressA11y.previewCollapseLabel(
           l10n,
@@ -333,37 +571,27 @@ void main() {
               .where((node) => node.label == collapseLabel),
           hasLength(1),
         );
-        expect(
-          tester
-              .getSemantics(find.bySemanticsLabel(collapseLabel))
-              .getSemanticsData()
-              .hasAction(SemanticsAction.focus),
-          isFalse,
-        );
-
-        // Space must still reach MouseClick's focusable adapter, even though
-        // its duplicate semantics are excluded from the tree.
-        final mouseFocusFinder = find
+        // The independent collapse button also responds to keyboard input.
+        final button = find
+            .ancestor(of: collapseSemantics, matching: find.byType(FButton))
+            .first;
+        final focusFinder = find
             .descendant(
-              of: find.byType(MouseClick),
+              of: button,
               matching: find.byWidgetPredicate(
                 (widget) => widget is Focus && widget.debugLabel == 'FTappable',
               ),
             )
             .first;
-        final mouseFocus = Focus.of(
+        final collapseFocus = Focus.of(
           tester.element(
             find
-                .descendant(
-                  of: mouseFocusFinder,
-                  matching: find.byType(Semantics),
-                )
+                .descendant(of: focusFinder, matching: find.byType(Semantics))
                 .first,
           ),
         );
-        mouseFocus.requestFocus();
+        collapseFocus.requestFocus();
         await tester.pump();
-        expect(mouseFocus.hasFocus, isTrue);
         await tester.sendKeyEvent(LogicalKeyboardKey.space);
         await tester.pumpAndSettle();
         expect(find.bySemanticsLabel(collapsedLabel), findsOneWidget);

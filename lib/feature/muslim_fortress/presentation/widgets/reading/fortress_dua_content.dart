@@ -1,21 +1,23 @@
 import 'package:forui/forui.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_reading_tap_region.dart';
 import 'package:tawaq/core/hooks/hooks.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
-import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/fortress_layout.dart';
-import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_commentary_text.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_study_panel.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_mushaf_style.dart';
 import 'package:tawaq/feature/quran/presentation/models/quran_ui_models.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/quran_semantics.dart';
 import 'package:tawaq/gen/fonts.gen.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_text_spans.dart';
 import 'package:tawaq/theme/theme.dart';
 
 const _kFortressAyahBaseFontSize = 32.0;
@@ -30,6 +32,31 @@ enum FortressDuaContentMode {
 
   /// Focus reading: mushaf-backed thikr only (virtue shown separately).
   focusReading,
+}
+
+class FortressDhikrText extends StatelessWidget {
+  const FortressDhikrText(
+    this.text, {
+    required this.style,
+    this.textAlign = TextAlign.start,
+    this.maxLines,
+    this.overflow,
+    super.key,
+  });
+  final String text;
+  final TextStyle style;
+  final TextAlign textAlign;
+  final int? maxLines;
+  final TextOverflow? overflow;
+  @override
+  Widget build(BuildContext context) => Text.rich(
+    fortressDhikrSpan(text, style),
+    style: style,
+    textDirection: TextDirection.rtl,
+    textAlign: textAlign,
+    maxLines: maxLines,
+    overflow: overflow,
+  );
 }
 
 /// Unified thikr + virtue + study presentation for browse and reading flows.
@@ -67,16 +94,62 @@ class FortressDuaContent extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _ThikrPreviewText(dua: dua, isExpanded: true),
-          if (dua.hasDistinctVirtue) ...[
-            const SizedBox(height: AppSpacing.md),
-            FortressDuaVirtueLine(virtue: dua.virtue!),
+          if (dua.hasVirtue) ...[
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.theme.colors.primary.withValues(alpha: .07),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    context.l10n.fortressVirtue,
+                    style: context.theme.typography.body.sm.copyWith(
+                      color: context.theme.colors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  FortressDuaVirtueLine(virtue: dua.virtue!),
+                ],
+              ),
+            ),
           ],
-          if (dua.hasBenefit) ...[
-            const SizedBox(height: AppSpacing.md),
-            _FortressPreviewBenefit(dua: dua),
+          if (dua.hasSource) ...[
+            const SizedBox(height: 12),
+            FortressReadingTapControl(
+              child: FTappable(
+                onPress: () => showFortressStudySheet(
+                  context,
+                  dua,
+                  kind: FortressDetailKind.source,
+                ),
+                builder: (_, _, _) => Text(
+                  '${context.l10n.fortressSourceReference}: ${dua.source}',
+                  textDirection: TextDirection.rtl,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.theme.typography.body.sm.copyWith(
+                    color: context.theme.colors.mutedForeground,
+                    height: 1.65,
+                  ),
+                ),
+              ),
+            ),
           ],
         ],
       ),
+      FortressDuaContentMode.focusReading when !dua.isQuranicPassage =>
+        FortressDhikrText(
+          dua.text,
+          style:
+              proseStyle ??
+              context.theme.typography.body.xl3.copyWith(height: 2),
+          textAlign: textAlign,
+        ),
       FortressDuaContentMode.focusReading => _FortressThikrBody(
         dua: dua,
         muted: muted,
@@ -84,50 +157,6 @@ class FortressDuaContent extends ConsumerWidget {
         textAlign: textAlign,
       ),
     };
-  }
-}
-
-/// Browse previews show benefits, while the study destination owns attribution
-/// and explanation. Never substitute a source reference for a missing benefit.
-class _FortressPreviewBenefit extends ConsumerWidget {
-  const new({required this.dua});
-
-  final FortressDuaItem dua;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    Widget content(String? text) {
-      if (text == null || text.trim().isEmpty) return const SizedBox.shrink();
-      return FortressCommentaryText(
-        text: text,
-        baseStyle: context.theme.typography.body.sm.copyWith(
-          color: context.theme.colors.mutedForeground,
-          height: 1.75,
-        ),
-      );
-    }
-
-    if (dua.commentary != null) return content(dua.commentary!.benefit);
-    Widget loadError() => ErrorStatePanel(
-      message: context.l10n.fortressLoadError,
-      retryLabel: context.l10n.fortressRetry,
-      onRetry: () => ref.invalidate(fortressRepositoryProvider),
-    );
-    return ref
-        .watch(fortressRepositoryProvider)
-        .when(
-          data: (repository) {
-            try {
-              return content(
-                repository.loadCommentaryForContent(dua.contentId)?.benefit,
-              );
-            } on Object {
-              return loadError();
-            }
-          },
-          loading: () => const Center(child: FCircularProgress.loader()),
-          error: (_, _) => loadError(),
-        );
   }
 }
 
@@ -141,23 +170,36 @@ class _ThikrPreviewText extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final isQuran = dua.isQuranicPassage;
+    if (isExpanded && isQuran)
+      return _FortressThikrBody(
+        dua: dua,
+        quranFontSize: 26,
+        proseStyle: theme.typography.body.lg.copyWith(
+          fontFamily: FontFamily.uthmanTN,
+          fontSize: 24,
+          fontWeight: FontWeight.w400,
+          height: 1.8,
+        ),
+      );
 
     var style = (isQuran ? theme.typography.body.sm : theme.typography.body.md)
         .copyWith(
           color: theme.colors.foreground,
           height: isQuran ? 2 : 1.75,
           fontSize: isQuran ? (isExpanded ? 22 : 20) : null,
-          fontWeight: isExpanded && isQuran ? FontWeight.w600 : FontWeight.w500,
+          fontWeight: FontWeight.w400,
         );
-    if (isQuran) {
-      style = style.copyWith(fontFamily: FontFamily.uthmanicHafs);
-    }
+    style = style.copyWith(
+      fontFamily: isExpanded
+          ? FontFamily.uthmanTN
+          : FontFamily.iBMPlexSansArabic,
+    );
 
     // Tile titles default to one line. Expanded prose must override that
     // inherited limit rather than treating Text.maxLines == null as unlimited.
     return DefaultTextStyle(
       style: DefaultTextStyle.of(context).style,
-      child: Text(
+      child: FortressDhikrText(
         dua.text,
         style: style,
         textAlign: TextAlign.start,
@@ -202,8 +244,10 @@ class _FortressThikrBody extends HookConsumerWidget {
     this.textAlign = TextAlign.center,
     this.proseStyle,
     this.muted = false,
+    this.quranFontSize,
   });
 
+  final double? quranFontSize;
   final FortressDuaItem dua;
   final TextAlign textAlign;
   final TextStyle? proseStyle;
@@ -212,12 +256,14 @@ class _FortressThikrBody extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mushafController = useMushafController();
+    final retry = useState(0);
     final mushafZoom = ref.watch(
       quranScreenSettingsProvider.select(
         (v) => v.value?.mushafZoom ?? kMushafZoomDefault,
       ),
     );
-    final ayahFontSize = _kFortressAyahBaseFontSize * mushafZoom;
+    final ayahFontSize =
+        (quranFontSize ?? _kFortressAyahBaseFontSize) * mushafZoom;
     final theme = context.theme;
     final colors = theme.colors;
 
@@ -230,7 +276,11 @@ class _FortressThikrBody extends HookConsumerWidget {
         );
 
     if (!dua.isQuranicPassage) {
-      return Text(dua.text, style: fallbackStyle, textAlign: textAlign);
+      return FortressDhikrText(
+        dua.text,
+        style: fallbackStyle,
+        textAlign: textAlign,
+      );
     }
 
     final ayahColor = muted ? colors.mutedForeground : colors.foreground;
@@ -239,7 +289,11 @@ class _FortressThikrBody extends HookConsumerWidget {
       height: ayahFontSize * 1.6,
       child: const Center(child: FCircularProgress.loader()),
     );
-    final error = Text(dua.text, style: fallbackStyle, textAlign: textAlign);
+    final error = ErrorStatePanel(
+      message: context.l10n.fortressLoadError,
+      retryLabel: context.l10n.fortressRetry,
+      onRetry: () => retry.value++,
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -247,13 +301,15 @@ class _FortressThikrBody extends HookConsumerWidget {
       children: [
         for (final line in dua.lines) ...[
           switch (line) {
-            HisnPlainLine(:final text) when text.trim().isNotEmpty => Text(
-              text,
-              style: fallbackStyle,
-              textAlign: textAlign,
-            ),
+            HisnPlainLine(:final text) when text.trim().isNotEmpty =>
+              FortressDhikrText(
+                text,
+                style: fallbackStyle,
+                textAlign: textAlign,
+              ),
             HisnQuranLine(:final presentation) => switch (presentation) {
               HisnQuranSingleAyah(:final range) => AyahWidget.fromSurahAyah(
+                key: ValueKey((dua.contentId, range, retry.value)),
                 surah: range.surah,
                 ayah: range.startAyah,
                 fontSize: ayahFontSize,
@@ -267,6 +323,7 @@ class _FortressThikrBody extends HookConsumerWidget {
                 loadingWidget: loading,
               ),
               HisnQuranPassage(:final ranges) => _FortressQuranPassage(
+                key: ValueKey((dua.contentId, ranges, retry.value)),
                 ranges: ranges,
                 controller: mushafController,
                 fontSize: ayahFontSize,
@@ -291,10 +348,6 @@ class _FortressMushafPages extends ConsumerWidget {
     required this.loadingWidget,
   });
 
-  static const _referenceWidth = 500.0;
-  static const _referenceHeight = 850.0;
-  static const _maxViewportHeightFraction = 0.55;
-
   final List<int> pages;
   final MushafReaderController controller;
   final Widget loadingWidget;
@@ -310,11 +363,6 @@ class _FortressMushafPages extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final paneHeight = constraints.maxHeight.isFinite
-            ? constraints.maxHeight
-            : MediaQuery.sizeOf(context).height;
-        final maxPageHeight = paneHeight * _maxViewportHeightFraction;
-
         return Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -323,15 +371,15 @@ class _FortressMushafPages extends ConsumerWidget {
               if (i > 0) const SizedBox(height: AppSpacing.lg),
               QuranSemantics.mushafReadingRegion(
                 label: context.l10n.pageLabel(pages[i]),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxHeight: maxPageHeight),
-                  child: AspectRatio(
-                    aspectRatio: _referenceWidth / _referenceHeight,
-                    child: MushafPage(
+                child: Center(
+                  child: SizedBox(
+                    width: constraints.maxWidth.clamp(0, 640),
+                    child: MushafPageRange.onPage(
                       page: pages[i],
                       controller: controller,
-                      hideHeader: true,
-                      enableAyahHighlight: false,
+                      preserveMushafLineBreaks: true,
+                      showSurahHeader: true,
+                      showBasmalah: true,
                       loadingWidget: loadingWidget,
                       style: buildQuranMushafStyle(theme, zoom: mushafZoom),
                     ),
@@ -354,6 +402,7 @@ class _FortressQuranPassage extends StatefulWidget {
     required this.textStyle,
     required this.loadingWidget,
     required this.errorWidget,
+    super.key,
   });
 
   final List<HisnVerseRange> ranges;

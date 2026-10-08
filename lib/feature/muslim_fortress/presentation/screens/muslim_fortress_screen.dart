@@ -19,6 +19,7 @@ import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortre
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/muslim_fortress_welcome_pane.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_focus_reading.dart';
 import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
 
 /// Muslim Fortress screen — sidebar browse, welcome home, and focus reading.
 class MuslimFortressScreen extends HookConsumerWidget {
@@ -116,103 +117,112 @@ class MuslimFortressScreen extends HookConsumerWidget {
       ),
     );
 
-    return Padding(
-      padding: EdgeInsetsDirectional.fromSTEB(
-        collapsed ? 0 : AppSpacing.lg,
-        AppSpacing.sm,
-        AppSpacing.lg,
-        AppSpacing.sm,
+    return FortressStudyHost(
+      chapterId: ref.watch(
+        fortressScreenControllerProvider.select(
+          (state) => state.selectedChapterId,
+        ),
       ),
-      child: LayoutBuilder(
-        builder: (context, viewport) {
-          return ResponsiveHorizontalSplitGate(
-            sideMin: kStudyPanelMinExtent,
-            mainMin: kMainPaneMinExtent,
-            builder: (context, useSplit) {
-              final contentHeight = viewport.maxHeight.isFinite
-                  ? viewport.maxHeight - AppSpacing.md * 2
-                  : MediaQuery.sizeOf(context).height - AppSpacing.md * 2;
+      child: Padding(
+        padding: EdgeInsetsDirectional.fromSTEB(
+          collapsed ? 0 : AppSpacing.lg,
+          AppSpacing.sm,
+          AppSpacing.lg,
+          AppSpacing.sm,
+        ),
+        child: LayoutBuilder(
+          builder: (context, viewport) {
+            return ResponsiveHorizontalSplitGate(
+              sideMin: kStudyPanelMinExtent,
+              mainMin: kMainPaneMinExtent,
+              builder: (context, useSplit) {
+                final contentHeight = viewport.maxHeight.isFinite
+                    ? viewport.maxHeight - AppSpacing.md * 2
+                    : MediaQuery.sizeOf(context).height - AppSpacing.md * 2;
 
-              return FSkeletonizer(
-                enabled: repositoryAsync.isLoading,
-                child: Directionality(
-                  textDirection: Directionality.of(context),
-                  child: SizedBox(
-                    height: contentHeight,
-                    child: useSplit && contentHeight >= 480
-                        ? _FortressDesktopSplitLayout(
-                            mainPane: _FortressBrowseMainPane(key: mainKey),
-                            sidebar: FortressBrowseSidebar(
-                              key: sidebarKey,
-                              categories: allCategories,
-                              onCollapse: () => ref
-                                  .read(fortressScreenSettingsProvider.notifier)
-                                  .setSidePanelCollapsed(collapsed: true),
-                              searchFocusNode: searchFocusNode,
+                return FSkeletonizer(
+                  enabled: repositoryAsync.isLoading,
+                  child: Directionality(
+                    textDirection: Directionality.of(context),
+                    child: SizedBox(
+                      height: contentHeight,
+                      child: useSplit && contentHeight >= 480
+                          ? _FortressDesktopSplitLayout(
+                              mainPane: _FortressBrowseMainPane(key: mainKey),
+                              sidebar: FortressBrowseSidebar(
+                                key: sidebarKey,
+                                categories: allCategories,
+                                onCollapse: () => ref
+                                    .read(
+                                      fortressScreenSettingsProvider.notifier,
+                                    )
+                                    .setSidePanelCollapsed(collapsed: true),
+                                searchFocusNode: searchFocusNode,
+                              ),
+                            )
+                          : Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: Offstage(
+                                    offstage: compactReading.value,
+                                    child: Column(
+                                      children: [
+                                        Expanded(
+                                          child: FortressBrowseSidebar(
+                                            key: sidebarKey,
+                                            categories: allCategories,
+                                            onSelected: () =>
+                                                compactReading.value = true,
+                                            searchFocusNode: searchFocusNode,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Positioned.fill(
+                                  child: Offstage(
+                                    offstage: !compactReading.value,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        Align(
+                                          alignment:
+                                              AlignmentDirectional.centerStart,
+                                          child: FButton(
+                                            variant: .ghost,
+                                            onPress: () =>
+                                                compactReading.value = false,
+                                            prefix: Icon(
+                                              Directionality.of(context) ==
+                                                      TextDirection.rtl
+                                                  ? FLucideIcons.arrowRight
+                                                  : FLucideIcons.arrowLeft,
+                                            ),
+                                            child: Text(
+                                              l10n.fortressBackToCatalog,
+                                            ),
+                                          ),
+                                        ),
+                                        Expanded(
+                                          child: _FortressBrowseMainPane(
+                                            key: mainKey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          )
-                        : Stack(
-                            children: [
-                              Positioned.fill(
-                                child: Offstage(
-                                  offstage: compactReading.value,
-                                  child: Column(
-                                    children: [
-                                      Expanded(
-                                        child: FortressBrowseSidebar(
-                                          key: sidebarKey,
-                                          categories: allCategories,
-                                          onSelected: () =>
-                                              compactReading.value = true,
-                                          searchFocusNode: searchFocusNode,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Positioned.fill(
-                                child: Offstage(
-                                  offstage: !compactReading.value,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Align(
-                                        alignment:
-                                            AlignmentDirectional.centerStart,
-                                        child: FButton(
-                                          variant: .ghost,
-                                          onPress: () =>
-                                              compactReading.value = false,
-                                          prefix: Icon(
-                                            Directionality.of(context) ==
-                                                    TextDirection.rtl
-                                                ? FLucideIcons.arrowRight
-                                                : FLucideIcons.arrowLeft,
-                                          ),
-                                          child: Text(
-                                            l10n.fortressBackToCatalog,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        child: _FortressBrowseMainPane(
-                                          key: mainKey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                    ),
                   ),
-                ),
-              );
-            },
-          );
-        },
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
