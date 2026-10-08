@@ -4,7 +4,7 @@
   "scripts": [
     {
       "name": "Setup Worktree",
-      "command": "fvm exec bash tool/codegen.sh",
+      "command": "fvm exec python3 tool/setup_worktree.py",
       "icon": "configure",
       "runOnWorktreeCreate": true,
       "async": false
