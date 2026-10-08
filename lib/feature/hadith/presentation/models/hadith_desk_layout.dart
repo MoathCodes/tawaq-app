@@ -8,7 +8,7 @@ class HadithDeskLayout {
   );
   factory HadithDeskLayout.resolve(double width, double textScale) {
     final scale = textScale.clamp(1.0, 2.0);
-    final filter = 260 * scale;
+    final filter = 300 * scale;
     final results = 380 * scale;
     final reader = 360 * scale;
     return HadithDeskLayout._(

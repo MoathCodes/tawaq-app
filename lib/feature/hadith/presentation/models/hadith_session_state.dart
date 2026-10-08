@@ -14,7 +14,10 @@ sealed class HadithCollectionContext {
 }
 
 class SearchCollection extends HadithCollectionContext {
-  const SearchCollection();
+  const SearchCollection({this.home = false});
+
+  /// Explicit study desk navigation, independent of unfinished filter drafts.
+  final bool home;
 }
 
 class SavedCollection extends HadithCollectionContext {

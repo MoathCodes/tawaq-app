@@ -267,17 +267,6 @@ class HadithResultsColumn extends HookConsumerWidget {
               ref.watch(hadithFavoritesStoreProvider).value?.length ?? 0,
             ),
           ),
-        if (session.searchOutcome.isLoading && session.searchPage != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Semantics(
-              liveRegion: true,
-              child: Text(
-                l10n.hadithUpdating,
-                style: context.theme.typography.body.sm,
-              ),
-            ),
-          ),
         if (session.searchOutcome.hasError && session.searchPage != null)
           _Retry(
             message: hadithFailureMessage(session.searchOutcome.error, l10n),
@@ -326,7 +315,7 @@ class _ResultTools extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(
       hadithSessionControllerProvider.select(
-        (s) => (s.context, s.target, s.filters, s.searchPage),
+        (s) => (s.context, s.target, s.filters, s.searchPage, s.searchBusy),
       ),
     );
     final session = ref.read(hadithSessionControllerProvider);
@@ -338,92 +327,125 @@ class _ResultTools extends ConsumerWidget {
     };
     final supported =
         session.supportsFilters || session.context is CategoryCollection;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: session.searchPage == null
-                ? const SizedBox.shrink()
-                : Text(
-                    l10n.hadithResultsCount(
-                      session.searchPage!.results.length +
-                          session.searchPage!.snippets.length,
-                    ),
-                    style: context.theme.typography.body.sm,
-                  ),
-          ),
-          if (supported)
-            FPopoverMenu(
-              menuBuilder: (_, popover, _) => [
-                FItemGroup(
-                  children: [
-                    if (session.supportsFilters)
-                      for (final degreeOrder in [false, true])
+    final refreshing = session.searchBusy && session.searchPage != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: session.searchPage == null
+                    ? const SizedBox.shrink()
+                    : Semantics(
+                        liveRegion: refreshing,
+                        child: Text(
+                          refreshing
+                              ? l10n.hadithUpdating
+                              : l10n.hadithResultsCount(
+                                  session.searchPage!.results.length +
+                                      session.searchPage!.snippets.length,
+                                ),
+                          style: context.theme.typography.body.sm.copyWith(
+                            fontWeight: refreshing ? FontWeight.w600 : null,
+                          ),
+                        ),
+                      ),
+              ),
+              if (supported)
+                FPopoverMenu(
+                  menuBuilder: (_, popover, _) => [
+                    FItemGroup(
+                      children: [
+                        if (session.supportsFilters)
+                          for (final degreeOrder in [false, true])
+                            FItem(
+                              prefix: Icon(
+                                session.filters.sort ==
+                                        (degreeOrder ? HadithSort.degree : null)
+                                    ? FLucideIcons.check
+                                    : FLucideIcons.arrowDownWideNarrow,
+                                size: 16,
+                              ),
+                              title: HadithHelpLabel(
+                                label: degreeOrder
+                                    ? l10n.hadithDegreeOrder
+                                    : l10n.hadithDorarOrder,
+                                help: l10n.hadithDegreeOrderHelp,
+                              ),
+                              onPress: () {
+                                popover.hide();
+                                controller.setFilters(
+                                  session.filters.copyWith(
+                                    sort: degreeOrder
+                                        ? HadithSort.degree
+                                        : null,
+                                  ),
+                                );
+                              },
+                            ),
                         FItem(
                           prefix: Icon(
-                            session.filters.sort ==
-                                    (degreeOrder ? HadithSort.degree : null)
-                                ? FLucideIcons.check
-                                : FLucideIcons.arrowDownWideNarrow,
+                            specialist ? FLucideIcons.check : FLucideIcons.link,
                             size: 16,
                           ),
                           title: HadithHelpLabel(
-                            label: degreeOrder
-                                ? l10n.hadithDegreeOrder
-                                : l10n.hadithDorarOrder,
-                            help: l10n.hadithDegreeOrderHelp,
+                            label: l10n.hadithSpecialist,
+                            help: l10n.hadithSpecialistHelp,
                           ),
                           onPress: () {
                             popover.hide();
-                            controller.setFilters(
-                              session.filters.copyWith(
-                                sort: degreeOrder ? HadithSort.degree : null,
-                              ),
-                            );
+                            if (session.context is CategoryCollection) {
+                              controller.setCategorySpecialist(!specialist);
+                            } else {
+                              controller.setFilters(
+                                session.filters.copyWith(
+                                  specialist: !specialist,
+                                ),
+                              );
+                            }
                           },
                         ),
-                    FItem(
-                      prefix: Icon(
-                        specialist ? FLucideIcons.check : FLucideIcons.link,
-                        size: 16,
-                      ),
-                      title: HadithHelpLabel(
-                        label: l10n.hadithSpecialist,
-                        help: l10n.hadithSpecialistHelp,
-                      ),
-                      onPress: () {
-                        popover.hide();
-                        if (session.context is CategoryCollection) {
-                          controller.setCategorySpecialist(!specialist);
-                        } else {
-                          controller.setFilters(
-                            session.filters.copyWith(specialist: !specialist),
-                          );
-                        }
-                      },
+                      ],
                     ),
                   ],
+                  builder: (_, popover, _) => FButton(
+                    variant: .ghost,
+                    size: .sm,
+                    mainAxisSize: MainAxisSize.min,
+                    prefix: const Icon(
+                      FLucideIcons.arrowDownWideNarrow,
+                      size: 16,
+                    ),
+                    onPress: popover.toggle,
+                    child: Text(
+                      session.supportsFilters &&
+                              session.filters.sort == HadithSort.degree
+                          ? l10n.hadithDegreeOrder
+                          : specialist
+                          ? l10n.hadithSpecialist
+                          : l10n.hadithDorarOrder,
+                    ),
+                  ),
                 ),
-              ],
-              builder: (_, popover, _) => FButton(
-                variant: .ghost,
-                size: .sm,
-                mainAxisSize: MainAxisSize.min,
-                prefix: const Icon(FLucideIcons.arrowDownWideNarrow, size: 16),
-                onPress: popover.toggle,
-                child: Text(
-                  session.supportsFilters &&
-                          session.filters.sort == HadithSort.degree
-                      ? l10n.hadithDegreeOrder
-                      : specialist
-                      ? l10n.hadithSpecialist
-                      : l10n.hadithDorarOrder,
-                ),
-              ),
-            ),
-        ],
-      ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 4,
+          child: refreshing
+              ? ExcludeSemantics(
+                  child: FProgress(
+                    key: const ValueKey('hadith-refresh-progress'),
+                    style: .delta(
+                      constraints: const BoxConstraints.tightFor(height: 2),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 }

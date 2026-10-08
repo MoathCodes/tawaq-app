@@ -60,6 +60,7 @@ import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_dialog.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_card.dart';
 import 'package:tawaq/feature/hadith/presentation/models/hadith_share_include.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_interaction.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_form.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
@@ -108,6 +109,15 @@ class _DeskReviewSession extends HadithSessionController {
     state = state.copyWith(
       searchOutcome: const AsyncLoading(),
       clearCommittedPage: true,
+    );
+    return previous;
+  }
+
+  HadithSessionState beginRefinementPreview() {
+    final previous = state;
+    state = state.copyWith(
+      committedPage: state.searchPage,
+      searchOutcome: const AsyncLoading(),
     );
     return previous;
   }
@@ -2307,6 +2317,72 @@ Future<void> reviewHadith(
   final controller = container.read(hadithSessionControllerProvider.notifier);
   container.read(appRouterProvider).go('/hadith');
   await ready(() => elements(HadithPage).isNotEmpty);
+  if (const bool.fromEnvironment('HADITH_SIDEBAR_REVIEW')) {
+    final preferences = container.read(hadithScreenSettingsProvider.notifier);
+    Future<void> pressSidebar(String key) async {
+      await ready(
+        () => elements(FSidebarItem).any((e) => e.widget.key == ValueKey(key)),
+      );
+      (elements(FSidebarItem)
+                  .singleWhere((e) => e.widget.key == ValueKey(key))
+                  .widget
+              as FSidebarItem)
+          .onPress!();
+      await WidgetsBinding.instance.endOfFrame;
+    }
+
+    for (final language in ['ar', 'en']) {
+      container.read(localeProvider.notifier).setLocale(Locale(language));
+      for (final mode in [ThemeMode.dark, ThemeMode.light]) {
+        final prefix = 'sidebar-$language-${mode.name}';
+        container
+            .read(sidebarSettingsProvider.notifier)
+            .setCollapsed(collapsed: false);
+        container.read(themeProvider.notifier).setThemeMode(mode);
+        preferences.setFiltersVisible(false);
+        await resizeOwnedWindow(const Size(1440, 900));
+        await pressSidebar('/hadith');
+        await snap('$prefix-home');
+        await controller.setQuery('إنما');
+        preferences.setFiltersVisible(true);
+        await controller.setFilters(
+          const HadithFilters(
+            degrees: [HadithDegree.weakHadith, HadithDegree.weakChain],
+          ),
+          debounced: false,
+        );
+        await snap('$prefix-long-tags');
+        final preview = (controller as _DeskReviewSession)
+            .beginRefinementPreview();
+        await snap('$prefix-refresh');
+        if (language == 'ar' && mode == ThemeMode.dark) {
+          for (var frame = 0; frame < 24; frame++) {
+            await snap('refresh-frame-${frame.toString().padLeft(3, '0')}');
+          }
+        }
+        controller.endLoadingPreview(preview);
+        preferences.setFiltersVisible(false);
+        await pressSidebar('hadith-sidebar-topics');
+        await container.read(hadithTopicRootsProvider.future);
+        await snap('$prefix-topics');
+        await pressSidebar('hadith-sidebar-saved');
+        await snap('$prefix-saved');
+        await pressSidebar('/hadith');
+        await snap('$prefix-home-return');
+      }
+    }
+    await File('${output.path}/sidebar-review.json').writeAsString(
+      jsonEncode({
+        'captures': captures,
+        'errors': errors,
+        'pid': pid,
+        'scope': 'Native Linux app; real SDK results; mounted sidebar callbacks; pending refresh preview with committed results; OS pointer and keyboard unverified',
+      }),
+    );
+    subscription.close();
+    settings.close();
+    return;
+  }
   if (const bool.fromEnvironment('HADITH_DESKTOP_DENSITY')) {
     final preferences = container.read(hadithScreenSettingsProvider.notifier);
     for (final language in ['ar', 'en']) {

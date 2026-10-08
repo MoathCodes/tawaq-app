@@ -1,3 +1,4 @@
+import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_interaction.dart';
 
 import 'dart:async';
@@ -134,9 +135,12 @@ class _HadithPageState extends ConsumerState<HadithPage> {
     _previousSelection = session.reader?.selection;
     final landing =
         session.isSearchMode &&
-        session.query.isEmpty &&
-        session.searchPage?.isEmpty == true &&
-        session.filters.optionalPhrases.every((p) => p.trim().isEmpty);
+        ((session.context as SearchCollection).home ||
+            (session.query.isEmpty &&
+                session.searchPage?.isEmpty == true &&
+                session.filters.optionalPhrases.every(
+                  (p) => p.trim().isEmpty,
+                )));
     return FSheets(
       child: Builder(
         builder: (sheetContext) => LayoutBuilder(
@@ -245,8 +249,10 @@ class _HadithPageState extends ConsumerState<HadithPage> {
             final main = Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const _DeskNavigation(),
-                const FDivider(),
+                if (isLessThan(context, FBreakpoint.sm)) ...[
+                  const _CompactDeskNavigation(),
+                  const FDivider(),
+                ],
                 Expanded(
                   child: Padding(
                     key: _mainKey,
@@ -382,8 +388,8 @@ class _HadithPageState extends ConsumerState<HadithPage> {
   }
 }
 
-class _DeskNavigation extends ConsumerWidget {
-  const _DeskNavigation();
+class _CompactDeskNavigation extends ConsumerWidget {
+  const _CompactDeskNavigation();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(
@@ -398,7 +404,7 @@ class _DeskNavigation extends ConsumerWidget {
       (
         l10n.hadithSearchAction,
         session.context is SearchCollection,
-        () => controller.returnToSearch(),
+        controller.openSearchHome,
         FLucideIcons.search,
       ),
       (
@@ -420,53 +426,35 @@ class _DeskNavigation extends ConsumerWidget {
       child: LayoutBuilder(
         builder: (_, constraints) => Row(
           children: [
-            if (session.origin != null)
-              FButton.icon(
-                variant: .ghost,
-                semanticsTooltip: l10n.hadithBackToSearch,
-                onPress: controller.returnToWorkspace,
-                child: const Icon(FLucideIcons.undo2, size: 18),
+            Expanded(
+              child: FPopoverMenu(
+                menuBuilder: (_, popover, _) => [
+                  FItemGroup(
+                    children: [
+                      for (final item in items)
+                        FItem(
+                          prefix: Icon(item.$4, size: 16),
+                          title: Text(item.$1),
+                          onPress: () {
+                            popover.hide();
+                            item.$3();
+                          },
+                        ),
+                    ],
+                  ),
+                ],
+                builder: (_, popover, _) {
+                  final current = items.firstWhere((item) => item.$2);
+                  return FButton(
+                    variant: .ghost,
+                    prefix: Icon(current.$4, size: 16),
+                    suffix: const Icon(FLucideIcons.chevronDown, size: 14),
+                    onPress: popover.toggle,
+                    child: Text(current.$1),
+                  );
+                },
               ),
-            if (constraints.maxWidth < 480)
-              Expanded(
-                child: FPopoverMenu(
-                  menuBuilder: (_, popover, _) => [
-                    FItemGroup(
-                      children: [
-                        for (final item in items)
-                          FItem(
-                            prefix: Icon(item.$4, size: 16),
-                            title: Text(item.$1),
-                            onPress: () {
-                              popover.hide();
-                              item.$3();
-                            },
-                          ),
-                      ],
-                    ),
-                  ],
-                  builder: (_, popover, _) {
-                    final current = items.firstWhere((item) => item.$2);
-                    return FButton(
-                      variant: .ghost,
-                      prefix: Icon(current.$4, size: 16),
-                      suffix: const Icon(FLucideIcons.chevronDown, size: 14),
-                      onPress: popover.toggle,
-                      child: Text(current.$1),
-                    );
-                  },
-                ),
-              )
-            else
-              for (final item in items)
-                FButton(
-                  variant: item.$2 ? .secondary : .ghost,
-                  size: .sm,
-                  mainAxisSize: MainAxisSize.min,
-                  prefix: Icon(item.$4, size: 16),
-                  onPress: item.$3,
-                  child: Text(item.$1),
-                ),
+            ),
           ],
         ),
       ),

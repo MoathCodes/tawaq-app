@@ -1,3 +1,4 @@
+import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_tag.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_interaction.dart';
 
 import 'dart:async';
@@ -262,6 +263,7 @@ class HadithFilterForm extends HookConsumerWidget {
           ),
           HadithHelpLabel(label: l10n.hadithScope, help: l10n.hadithScopeHelp),
           FMultiSelect<HadithTypeFilter>(
+            tagBuilder: hadithFilterTag,
             items: {
               for (final type in HadithTypeFilter.values)
                 type.getLocaleName(l10n): type,
@@ -277,6 +279,7 @@ class HadithFilterForm extends HookConsumerWidget {
             help: l10n.hadithDegreesHelp,
           ),
           FMultiSelect<HadithDegree>.search(
+            tagBuilder: hadithFilterTag,
             contentEmptyBuilder: (_, _) => const SelectEmptyContent(),
             {
               for (final degree in HadithDegree.values.where(

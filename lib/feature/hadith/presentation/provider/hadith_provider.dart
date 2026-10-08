@@ -58,6 +58,15 @@ class HadithSessionController extends _$HadithSessionController {
     ++_generation;
   }
 
+  /// Opens the study desk and cancels requests while preserving filter drafts.
+  void openSearchHome() {
+    _invalidate();
+    state = HadithSessionState(
+      context: const SearchCollection(home: true),
+      filters: state.filters,
+    );
+  }
+
   void returnToSearch() {
     if (state.isSearchMode) return;
     returnToWorkspace();
@@ -182,7 +191,10 @@ class HadithSessionController extends _$HadithSessionController {
     final generation = _generation;
     if (state.context is SavedCollection || state.context is TopicsCollection)
       return;
-    final request = state.copyWith(query: state.query.trim());
+    final request = state.copyWith(
+      context: state.isSearchMode ? const SearchCollection() : state.context,
+      query: state.query.trim(),
+    );
     final refinement =
         (state.committedQuery == null ||
             state.committedQuery == request.query) &&

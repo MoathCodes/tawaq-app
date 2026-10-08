@@ -31,7 +31,7 @@ class ShellBottomNavigationBar extends HookConsumerWidget {
         onChange: (value) {
           final route = routes[value];
           if (route.navigationEnabled) {
-            route.go(context);
+            route.activate(context);
           }
         },
         children: [

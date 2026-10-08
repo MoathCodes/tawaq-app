@@ -283,6 +283,7 @@ void main() {
     ui.exclude.selection = const TextSelection.collapsed(offset: 7);
     final editing = tester.element(editor);
     final card = tester.element(find.byType(HadithResultCard));
+    final cardPosition = tester.getTopLeft(find.byType(HadithResultCard));
     final committed = controller.state.searchPage;
     final offset = ui.scroll.offset;
     controller.state = controller.state.copyWith(
@@ -293,12 +294,22 @@ void main() {
     expect(tester.element(editor), same(editing));
     expect(tester.element(find.byType(HadithResultCard)), same(card));
     expect(find.byType(HadithLoadingCards), findsNothing);
+    expect(tester.getTopLeft(find.byType(HadithResultCard)), cardPosition);
+    expect(
+      find.byKey(const ValueKey('hadith-refresh-progress')),
+      findsOneWidget,
+    );
+    expect(
+      find.text(lookupAppLocalizations(const Locale('en')).hadithUpdating),
+      findsOneWidget,
+    );
     controller.state = controller.state.copyWith(
       searchOutcome: AsyncError(StateError('fixture'), StackTrace.empty),
     );
     await tester.pumpAndSettle();
     expect(tester.element(editor), same(editing));
     expect(tester.element(find.byType(HadithResultCard)), same(card));
+    expect(find.byKey(const ValueKey('hadith-refresh-progress')), findsNothing);
     expect(ui.exclude.selection.baseOffset, 7);
     controller.setResultsOffset(10);
     ui.scroll.jumpTo(0);

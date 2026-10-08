@@ -502,8 +502,12 @@ TextSpan _highlight(String source, String query, FColors colors) {
       TextSpan(
         text: source.substring(range.start, range.end),
         style: TextStyle(
-          backgroundColor: colors.secondary,
+          backgroundColor: Color.alphaBlend(
+            colors.primary.withValues(alpha: 0.18),
+            colors.card,
+          ),
           color: colors.foreground,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

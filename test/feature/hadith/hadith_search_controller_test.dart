@@ -100,6 +100,34 @@ void main() {
       },
     );
 
+    test(
+      'study desk navigation keeps drafts and rejects a late request',
+      () async {
+        final pending = Completer<ApiResponse<List<DetailedHadith>>>();
+        when(() => repository.searchDetailed(any()))
+            .thenAnswer((_) => pending.future);
+        final controller = container.read(
+          hadithSessionControllerProvider.notifier,
+        );
+        const drafts = HadithFilters(
+          exclude: 'exclude',
+          optionalPhrases: ['phrase'],
+        );
+        controller.state = controller.state.copyWith(filters: drafts);
+        final request = controller.setQuery('query');
+        await Future<void>.delayed(Duration.zero);
+        controller.openSearchHome();
+        expect((controller.state.context as SearchCollection).home, isTrue);
+        expect(controller.state.query, isEmpty);
+        expect(controller.state.filters, drafts);
+        expect(controller.state.searchBusy, isFalse);
+        pending.complete(_response('late result'));
+        await request;
+        expect(controller.state.results, isEmpty);
+        expect((controller.state.context as SearchCollection).home, isTrue);
+      },
+    );
+
     test('unselected navigation starts at the first or last result', () async {
       final session = container.read(hadithSessionControllerProvider.notifier);
       final results = [_hadith('first'), _hadith('middle'), _hadith('last')];

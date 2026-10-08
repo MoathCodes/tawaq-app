@@ -1,3 +1,4 @@
+import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_tag.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_interaction.dart';
 import 'package:dorar_hadith/dorar_hadith.dart';
 
@@ -88,6 +89,7 @@ class HadithLookupSection extends HookConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         FMultiSelect<String>.searchBuilder(
+          tagBuilder: hadithFilterTag,
           enabled: interactionsEnabled,
           hint: Text(hint),
           format: (id) => Text(choices.value[id]?.name ?? id),

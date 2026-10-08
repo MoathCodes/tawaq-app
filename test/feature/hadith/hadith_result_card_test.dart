@@ -214,6 +214,68 @@ void main() {
   );
 
   testWidgets(
+    'search highlights keep source text and readable contrast across themes',
+    (tester) async {
+      for (final palette in AppPalette.values) {
+        for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+          final theme = buildAppTheme(
+            palette: palette,
+            themeMode: mode,
+            touch: false,
+            textScale: 1,
+          );
+          const source = 'إِنَّما fixture إِنَّما';
+          await tester.pumpWidget(
+            ProviderScope(
+              overrides: [
+                hadithFavoritesProvider.overrideWith((ref) async => const []),
+              ],
+              child: _wrap(
+                HadithResultCard(
+                  hadith: _fixtureHadith('fixture').copyWith(hadith: source),
+                  query: 'انما',
+                  isFavorite: false,
+                  isSelected: false,
+                  onSelect: () {},
+                ),
+                themeMode: mode,
+                palette: palette,
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final rich = tester
+              .widgetList<RichText>(find.byType(RichText))
+              .firstWhere((w) => w.text.toPlainText().contains(source));
+          final matches = <TextSpan>[];
+          void visit(InlineSpan span) {
+            if (span is TextSpan) {
+              if (span.style?.backgroundColor != null) matches.add(span);
+              for (final child in span.children ?? <InlineSpan>[]) {
+                visit(child);
+              }
+            }
+          }
+
+          visit(rich.text);
+          expect(matches, hasLength(2));
+          for (final span in matches) {
+            expect(span.text, 'إِنَّما');
+            expect(span.style!.backgroundColor, isNot(theme.colors.secondary));
+            final a = span.style!.color!.computeLuminance();
+            final b = span.style!.backgroundColor!.computeLuminance();
+            expect(
+              ((a > b ? a : b) + .05) / ((a < b ? a : b) + .05),
+              greaterThanOrEqualTo(4.5),
+            );
+          }
+          expect(tester.takeException(), isNull);
+        }
+      }
+    },
+  );
+
+  testWidgets(
     'judgment badge keeps full qualified wording and neutral contrast in both themes',
     (tester) async {
       for (final themeMode in [ThemeMode.light, ThemeMode.dark]) {
