@@ -48,11 +48,13 @@ class HadithShareOptions {
     if (!hasHadithMetadata(hadith.numberOrPage)) {
       next.remove(HadithShareInclude.number);
     }
-    if (!hasHadithMetadata(hadith.hukm)) next.remove(HadithShareInclude.grade);
+    if (hadithSourceRulings(hadith).isEmpty)
+      next.remove(HadithShareInclude.grade);
     if (!hasHadithMetadata(hadith.takhrij)) {
       next.remove(HadithShareInclude.takhrij);
     }
-    if (requiresHadithJudgment(hadith) && hasHadithMetadata(hadith.hukm)) {
+    if (requiresHadithJudgment(hadith) &&
+        hadithSourceRulings(hadith).isNotEmpty) {
       next.add(HadithShareInclude.grade);
     }
     if (!sharhAvailable) next.remove(HadithShareInclude.sharh);
@@ -63,4 +65,5 @@ class HadithShareOptions {
 
 /// Check both source fields: the expanded ruling may qualify a short grade.
 bool requiresHadithJudgment(DetailedHadith hadith) =>
+    hadith.verdictTone == VerdictTone.negative ||
     hadithSourceJudgmentTone(hadith) != HadithJudgmentTone.neutral;

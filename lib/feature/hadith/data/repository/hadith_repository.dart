@@ -28,9 +28,12 @@ Future<DorarClient> dorarClient(Ref ref) async {
 @Riverpod(keepAlive: true)
 Future<HadithRepository> hadithRepository(Ref ref) async {
   final log = ref.read(loggerProvider);
-  final client = await ref.watch(dorarClientProvider.future);
   final local = ref.read(hadithLocalDatabaseProvider);
-  return HadithRepository(client: client, local: local, log: log);
+  return HadithRepository.lazy(
+    client: () => ref.read(dorarClientProvider.future),
+    local: local,
+    log: log,
+  );
 }
 
 /// Clears only failed initialization owners before an explicit user retry.
@@ -51,9 +54,22 @@ void retryFailedHadithInitialization(Ref ref) {
 /// Coordinates hadith persistence and remote API access.
 class HadithRepository {
   /// Creates the repository.
-  new({required this._client, required this._local, required this._log});
+  HadithRepository({
+    required DorarClient client,
+    required HadithLocalDatabase local,
+    required Logger log,
+  }) : _resolveClient = (() async => client),
+       _local = local,
+       _log = log;
+  HadithRepository.lazy({
+    required Future<DorarClient> Function() client,
+    required HadithLocalDatabase local,
+    required Logger log,
+  }) : _resolveClient = client,
+       _local = local,
+       _log = log;
 
-  final DorarClient _client;
+  final Future<DorarClient> Function() _resolveClient;
   final HadithLocalDatabase _local;
   final Logger _log;
 
@@ -64,8 +80,15 @@ class HadithRepository {
 
   /// Persists a hadith as a favorite.
   Future<DetailedHadith> createFavorite(DetailedHadith hadith) async {
-    final key = hadithStableKey(hadith);
-    await _local.addFavorite(key, hadith);
+    final entries = await _local.getFavoriteEntries();
+    final existing = entries
+        .where(
+          (entry) =>
+              entry.hadith != null &&
+              hadithStableKey(entry.hadith!) == hadithStableKey(hadith),
+        )
+        .firstOrNull;
+    await _local.addFavorite(existing?.key ?? hadithStableKey(hadith), hadith);
     return hadith;
   }
 
@@ -84,6 +107,10 @@ class HadithRepository {
     await _local.removeRecentSearch(query);
   }
 
+  /// Returns durable bookmark identities, including unreadable entries.
+  Future<List<SavedHadithEntry>> getFavoriteEntries() =>
+      _local.getFavoriteEntries();
+
   /// Returns all saved favorites.
   Future<List<DetailedHadith>> getFavorites() async {
     return _local.getAllFavorites();
@@ -99,14 +126,16 @@ class HadithRepository {
     return _local.isFavorite(key);
   }
 
-  /// Searches books and wraps the result in an API response.
-  Future<ApiResponse<List<BookItem>>> searchBooks(String query) async {
-    final results = await _client.searchBooks(query);
-    return ApiResponse(
-      data: results,
-      metadata: SearchMetadata(length: results.length),
-    );
-  }
+  /// Searches the offline book choices.
+  Future<List<ReferenceChoice>> searchBooks(String query) async =>
+      (await (await _resolveClient()).searchBooks(query))
+          .map(_choice)
+          .toList(growable: false);
+
+  /// Searches explanation prose with the endpoint's own paging contract.
+  Future<ApiResponse<List<SharhSnippet>>> searchProse(
+    SharhTextSearchParams params,
+  ) async => (await _resolveClient()).searchSharhText(params);
 
   /// Runs the detailed hadith search endpoint.
   Future<ApiResponse<List<DetailedHadith>>> searchDetailed(
@@ -115,77 +144,46 @@ class HadithRepository {
     const logPrefix = '[HadithRepository.searchDetailed] ';
     try {
       _log.d('$logPrefix query="${params.value}" page=${params.page}');
-      return await _client.searchHadithDetailed(params);
+      return await (await _resolveClient()).searchHadithDetailed(params);
     } catch (e, stackTrace) {
       _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
 
-  /// Searches scholars in the remote hadith API.
-  Future<List<MohdithItem>> searchScholars(String query) async {
-    return _client.searchMohdith(query);
-  }
+  /// Searches scholars in the offline reference snapshot.
+  Future<List<ReferenceChoice>> searchScholars(String query) async =>
+      (await (await _resolveClient()).searchMohdith(query))
+          .map(_choice)
+          .toList(growable: false);
 
-  /// Searches rawi entries in the remote hadith API.
-  Future<List<RawiItem>> searchRawi(String query) async {
-    return _client.searchRawi(query);
-  }
+  /// Searches rawi entries in the offline reference snapshot.
+  Future<List<ReferenceChoice>> searchRawi(String query) async =>
+      (await (await _resolveClient()).searchRawi(query))
+          .map(_choice)
+          .toList(growable: false);
 
-  /// Resolves a hadith into its detailed record.
-  Future<DetailedHadith?> resolveDetails(Hadith hadith) async {
-    final params = HadithSearchParams(
-      value: hadith.hadith,
-      searchMethod: SearchMethod.exactMatch,
-    );
+  Future<ApiResponse<List<DetailedHadith>>> browseCategory(
+    CategoryBrowseParams params,
+  ) async => (await _resolveClient()).categories.browse(params);
 
-    final response = await searchDetailed(params);
-    if (response.data.isEmpty) return null;
-
-    final normalizedText = hadith.hadith.trim();
-    for (final candidate in response.data) {
-      if (candidate.hadith.trim() == normalizedText &&
-          candidate.rawi == hadith.rawi &&
-          candidate.mohdith == hadith.mohdith) {
-        return candidate;
-      }
-    }
-
-    // No exact match — never fall back to an unrelated first result.
-    return null;
-  }
-
-  /// Toggles the bookmarked state of a hadith.
-  Future<void> toggleFavorite(HadithBase hadith) async {
-    const logPrefix = '[HadithRepository.toggleFavorite] ';
-    try {
-      final key = hadithStableKey(hadith);
-      final isFavorite = await isFavoriteByKey(key);
-      if (isFavorite) {
-        await deleteFavorite(key);
-        return;
-      }
-
-      if (hadith is DetailedHadith) {
-        await createFavorite(hadith);
-        return;
-      }
-
-      if (hadith is Hadith) {
-        final resolved = await resolveDetails(hadith);
-        if (resolved == null) {
-          throw StateError('Unable to resolve hadith details for bookmarking');
-        }
-        await createFavorite(resolved);
-        return;
-      }
-
-      throw StateError(
-        'Unsupported hadith type for bookmarking: ${hadith.runtimeType}',
-      );
-    } catch (e, stackTrace) {
-      _log.e('$logPrefix Error', error: e, stackTrace: stackTrace);
-      rethrow;
+  /// Toggles a detailed record using its existing stored key when present.
+  Future<void> toggleFavorite(DetailedHadith hadith) async {
+    final entries = await _local.getFavoriteEntries();
+    final existing = entries
+        .where(
+          (entry) =>
+              entry.hadith != null &&
+              hadithStableKey(entry.hadith!) == hadithStableKey(hadith),
+        )
+        .firstOrNull;
+    if (existing != null) {
+      await deleteFavorite(existing.key);
+    } else {
+      await createFavorite(hadith);
     }
   }
 }
+
+ReferenceChoice _choice(ReferenceItem item) =>
+    ReferenceChoice(id: item.id, name: item.name);

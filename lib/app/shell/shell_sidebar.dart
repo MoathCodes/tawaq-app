@@ -1,3 +1,5 @@
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/models/hadith_session_state.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
@@ -218,14 +220,17 @@ class _RouteGroup extends ConsumerWidget {
       key: ValueKey('$groupKey-${expanded ? 'expanded' : 'collapsed'}'),
       children: [
         for (final r in routes)
-          expanded
-              ? _expandedSidebarItem(
-                  context: context,
-                  route: r,
-                  itemStyle: itemStyle,
-                  l10n: l10n,
-                )
-              : _collapsedSidebarItem(context: context, route: r, l10n: l10n),
+          if (r is HadithRoute)
+            _HadithSidebarItems(expanded: expanded)
+          else
+            expanded
+                ? _expandedSidebarItem(
+                    context: context,
+                    route: r,
+                    itemStyle: itemStyle,
+                    l10n: l10n,
+                  )
+                : _collapsedSidebarItem(context: context, route: r, l10n: l10n),
       ],
     );
   }
@@ -287,4 +292,102 @@ Widget _collapsedSidebarItem({
       child: Icon(route.icon),
     ),
   );
+}
+
+/// The study desk is the parent destination; its collections are available
+/// beneath it whenever Hadith is open, including the collapsed sidebar.
+class _HadithSidebarItems extends ConsumerWidget {
+  const _HadithSidebarItems({required this.expanded});
+  final bool expanded;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    const route = HadithRoute();
+    final active = route.containsLocation(
+      GoRouter.of(context).routeInformationProvider.value.uri.path,
+    );
+    if (!active) {
+      return expanded
+          ? _expandedSidebarItem(
+              context: context,
+              route: route,
+              itemStyle: _sidebarItemStyle(context),
+              l10n: context.l10n,
+            )
+          : _collapsedSidebarItem(
+              context: context,
+              route: route,
+              l10n: context.l10n,
+            );
+    }
+    final collection = ref.watch(
+      hadithSessionControllerProvider.select((s) => s.context),
+    );
+    final controller = ref.read(hadithSessionControllerProvider.notifier);
+    Widget item(
+      String key,
+      String label,
+      IconData icon,
+      bool selected,
+      VoidCallback action, {
+      bool child = false,
+    }) {
+      final button = expanded
+          ? FSidebarItem(
+              key: ValueKey(key),
+              style: _sidebarItemStyle(context),
+              label: Text(label),
+              icon: Icon(icon, size: child ? 16 : 20),
+              selected: selected,
+              onPress: action,
+            )
+          : MergedActionSemantics(
+              key: ValueKey(key),
+              label: label,
+              selected: selected,
+              child: FButton.icon(
+                semanticsTooltip: label,
+                selected: selected,
+                variant: selected ? .secondary : .ghost,
+                onPress: action,
+                child: Icon(icon, size: child ? 18 : 20),
+              ),
+            );
+      return Padding(
+        padding: EdgeInsetsDirectional.only(
+          start: child ? (expanded ? 24 : 12) : 0,
+        ),
+        child: button,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        item(
+          route.path,
+          context.l10n.hadith,
+          route.icon,
+          collection is SearchCollection,
+          () => route.activate(context),
+        ),
+        item(
+          'hadith-sidebar-topics',
+          context.l10n.hadithTopics,
+          FLucideIcons.library,
+          collection is TopicsCollection || collection is CategoryCollection,
+          controller.openTopics,
+          child: true,
+        ),
+        item(
+          'hadith-sidebar-saved',
+          context.l10n.bookmarks,
+          FLucideIcons.bookmark,
+          collection is SavedCollection,
+          () => controller.openBookmarks(),
+          child: true,
+        ),
+      ],
+    );
+  }
 }

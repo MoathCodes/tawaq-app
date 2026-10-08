@@ -4,6 +4,8 @@
 import 'dart:async';
 
 import 'package:forui/forui.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -173,6 +175,15 @@ class HadithRoute extends AppNavigationRoute with $HadithRoute {
   /// Returns the localized hadith label.
   String localizedLabel(AppLocalizations? localization) =>
       _labelLocalization(localization?.hadith, 'الأحاديث');
+
+  @override
+  void activate(BuildContext context) {
+    ProviderScope.containerOf(
+      context,
+      listen: false,
+    ).read(hadithSessionControllerProvider.notifier).openSearchHome();
+    go(context);
+  }
 
   @override
   /// Builds the hadith page.

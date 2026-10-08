@@ -1,406 +1,288 @@
-import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_display_text.dart';
+import 'package:dorar_hadith/dorar_hadith.dart';
+import 'package:flutter/gestures.dart';
 import 'package:forui/forui.dart';
-import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/core/commentary/commentary_inline_spans.dart';
-import 'package:tawaq/core/commentary/commentary_text_styles.dart';
-import 'package:tawaq/core/hooks/hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:material_ui/material_ui.dart' hide TextRange;
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_sharh_models.dart';
-import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_segment_tokenizer.dart';
+import 'package:tawaq/core/utils/external_link_provider.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_judgment.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/hadith_meta_field.dart';
 import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/core/widgets/dialog_shell.dart';
 
-/// Renders Dorar hadith sharh with zone-aware metadata and segment styling.
-class HadithSharhText extends HookWidget {
-  /// Creates formatted sharh text.
-  const new({
-    required this.text,
-    this.textAlign = TextAlign.justify,
+/// Native selectable rendering of SDK structure, with no source normalization.
+class HadithSharhText extends ConsumerStatefulWidget {
+  const HadithSharhText({
+    this.document,
+    this.text = '',
+    this.fontSize,
+    this.commentaryOnly = false,
     super.key,
   });
-
-  /// Raw sharh string from Dorar cache/API.
+  final SourcedDocument? document;
   final String text;
+  final double? fontSize;
+  final bool commentaryOnly;
 
-  /// Paragraph alignment.
-  final TextAlign textAlign;
+  @override
+  ConsumerState<HadithSharhText> createState() => _HadithSharhTextState();
+}
+
+class _HadithSharhTextState extends ConsumerState<HadithSharhText> {
+  final _recognizers = <TapGestureRecognizer>[];
+
+  void _clearRecognizers() {
+    for (final recognizer in _recognizers) {
+      recognizer.dispose();
+    }
+    _recognizers.clear();
+  }
+
+  @override
+  void dispose() {
+    _clearRecognizers();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final parsed = useMemoized(() => parseHadithSharh(text), [text]);
-
-    final theme = context.theme;
-    final colors = theme.colors;
-    final isDark = theme.isDark;
-    final baseStyle = theme.typography.body.sm.copyWith(height: 1.8);
-    final styles = useCommentaryTextStyles(
-      baseStyle: baseStyle,
-      colors: colors,
-      isDark: isDark,
+    _clearRecognizers();
+    final document = widget.document;
+    final style = context.theme.typography.body.md.copyWith(
+      height: 1.8,
+      fontSize: widget.fontSize,
     );
-
-    final zones = parsed.zones;
-    if (zones.commentary.isEmpty && !parsed.hasMetadataContent) {
-      return Text(
-        context.l10n.noDataAvailable,
-        style: baseStyle.copyWith(color: colors.mutedForeground),
+    if (document == null)
+      return ScopedSelectableText(
+        widget.text,
+        style: style,
+        textDirection: TextDirection.rtl,
+      );
+    final tokens = documentRenderTokens(
+      document,
+      commentaryOnly: widget.commentaryOnly,
+    );
+    final paragraphs = <Widget>[];
+    for (final block in document.blocks) {
+      if (block.kind == BlockKind.separator) continue;
+      final raw = block.range.extract(document.sourceText);
+      final start = block.range.start + raw.length - raw.trimLeft().length;
+      final end = block.range.end - (raw.length - raw.trimRight().length);
+      if (end <= start) continue;
+      final spans = <InlineSpan>[];
+      for (final token in tokens.where(
+        (t) =>
+            t.range.start >= block.range.start &&
+            t.range.end <= block.range.end,
+      )) {
+        if (token.range.start >= end || token.range.end <= start) continue;
+        final annotation = token.annotations
+            .where((a) => a.uri != null || a.definition != null)
+            .firstOrNull;
+        TapGestureRecognizer? recognizer;
+        if (annotation?.uri case final uri?) {
+          if (uri.scheme == 'https' || uri.scheme == 'http') {
+            recognizer = TapGestureRecognizer()
+              ..onTap = () async {
+                await ref.read(externalLinkLauncherProvider)(uri);
+              };
+            _recognizers.add(recognizer);
+          }
+        }
+        if (annotation?.definition case final definition?) {
+          recognizer = TapGestureRecognizer()
+            ..onTap = () {
+              showFDialog<void>(
+                context: context,
+                builder: (context, style, animation) => FDialog(
+                  style: style,
+                  animation: animation,
+                  builder: (context, dialogStyle) => ForuiDialogLayout(
+                    style: dialogStyle,
+                    title: Text(annotation!.label ?? token.text),
+                    body: Text(definition),
+                    actions: [
+                      FButton(
+                        onPress: () => Navigator.of(context).pop(),
+                        child: Text(context.l10n.close),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            };
+          _recognizers.add(recognizer);
+        }
+        spans.add(
+          TextSpan(
+            text: document.sourceText.substring(
+              token.range.start.clamp(start, end),
+              token.range.end.clamp(start, end),
+            ),
+            recognizer: recognizer,
+            style: recognizer == null
+                ? null
+                : TextStyle(
+                    color: context.theme.colors.primary,
+                    decoration: TextDecoration.underline,
+                  ),
+          ),
+        );
+      }
+      if (spans.isEmpty) continue;
+      final paragraph = ScopedSelectableRichText(
+        TextSpan(
+          children: spans,
+          style: block.kind == BlockKind.heading
+              ? style.copyWith(fontWeight: FontWeight.w600)
+              : style,
+        ),
+      );
+      paragraphs.add(
+        Padding(
+          padding: EdgeInsets.only(
+            bottom: block.kind == BlockKind.heading ? 8 : 14,
+          ),
+          child: block.kind == BlockKind.narration
+              ? Container(
+                  padding: const EdgeInsets.all(12),
+                  color: context.theme.colors.secondary,
+                  child: paragraph,
+                )
+              : paragraph,
+        ),
       );
     }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: paragraphs,
+    );
+  }
+}
 
+/// Explanation context is composed independently from its commentary blocks.
+class HadithSharhContent extends StatelessWidget {
+  const HadithSharhContent({
+    required this.sharh,
+    this.origin,
+    this.selectedHadith,
+    this.commentaryOnly = false,
+    this.export = false,
+    super.key,
+  });
+  final Sharh sharh;
+  final ExplanationReference? origin;
+  final DetailedHadith? selectedHadith;
+  final bool export;
+  final bool commentaryOnly;
+
+  static bool sameRecord(DetailedHadith a, DetailedHadith b) {
+    final identified =
+        a.hadithId?.isNotEmpty == true && a.hadithId == b.hadithId;
+    return (identified ||
+            (hasHadithMetadata(a.book) && hasHadithMetadata(a.numberOrPage))) &&
+        a.hadith == b.hadith &&
+        a.rawi == b.rawi &&
+        a.mohdith == b.mohdith &&
+        a.book == b.book &&
+        a.numberOrPage == b.numberOrPage &&
+        a.grade == b.grade &&
+        a.explainGrade == b.explainGrade;
+  }
+
+  Widget _record(BuildContext context, String label, DetailedHadith record) =>
+      Container(
+        padding: export
+            ? const EdgeInsets.symmetric(vertical: 8)
+            : const EdgeInsets.all(14),
+        decoration: export
+            ? null
+            : BoxDecoration(
+                color: context.theme.colors.secondary,
+                borderRadius: context.theme.radii.md,
+              ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 6,
+          children: [
+            Text(
+              label,
+              style: context.theme.typography.body.sm.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: export ? 18 : null,
+              ),
+            ),
+            if (!commentaryOnly)
+              Text(
+                hadithDisplayText(record),
+                textDirection: TextDirection.rtl,
+                style: context.theme.typography.body.md.copyWith(
+                  height: 1.8,
+                  fontSize: export ? 20 : null,
+                ),
+              ),
+            HadithMetaField(
+              label: context.l10n.hadithNarrator,
+              value: record.rawi,
+              layout: HadithMetaFieldLayout.inline,
+              fontSize: export ? 18 : null,
+            ),
+            HadithMetaField(
+              label: context.l10n.hadithMuhaddith,
+              value: record.mohdith,
+              layout: HadithMetaFieldLayout.inline,
+              fontSize: export ? 18 : null,
+            ),
+            HadithMetaField(
+              label: context.l10n.hadithSource,
+              value: context.l10n.hadithSourceCitation(
+                record.book,
+                record.numberOrPage,
+              ),
+              layout: HadithMetaFieldLayout.inline,
+              fontSize: export ? 18 : null,
+            ),
+            for (final ruling in hadithSourceRulings(record))
+              HadithMetaField(
+                label: ruling.expanded
+                    ? context.l10n.hadithGradeExplanation
+                    : context.l10n.hadithGrade,
+                value: ruling.text,
+                layout: HadithMetaFieldLayout.inline,
+                fontSize: export ? 18 : null,
+              ),
+          ],
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final headerVisible =
+        selectedHadith == null || !sameRecord(selectedHadith!, sharh.hadith);
+    final embedded = sharh.embeddedHadith;
+    final embeddedVisible =
+        embedded != null &&
+        !sameRecord(sharh.hadith, embedded) &&
+        (selectedHadith == null || !sameRecord(selectedHadith!, embedded));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.md,
       children: [
-        if (parsed.hasMetadataContent)
-          _HadithSharhMetadataCard(
-            fields: parsed.metadataFields,
-            matnPrefix: zones.matnPrefix,
-            baseStyle: baseStyle,
-          ),
-        if (zones.commentary.isNotEmpty)
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final narrow =
-                  constraints.maxWidth < context.theme.breakpoints.sm;
-              return _HadithSharhCommentaryBody(
-                segments: parsed.segments,
-                styles: styles,
-                textAlign: narrow ? TextAlign.start : textAlign,
-              );
-            },
-          ),
-      ],
-    );
-  }
-}
-
-class _HadithSharhMetadataCard extends StatelessWidget {
-  const new({
-    required this.fields,
-    required this.baseStyle,
-    this.matnPrefix,
-  });
-
-  final HadithSharhMetadataFields fields;
-  final String? matnPrefix;
-  final TextStyle baseStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final colors = theme.colors;
-    final prefix = matnPrefix?.trim();
-
-    if ((prefix == null || prefix.isEmpty) && !fields.hasAny) {
-      return const SizedBox.shrink();
-    }
-
-    final labelStyle = theme.typography.body.sm.copyWith(
-      color: colors.mutedForeground,
-    );
-    final valueStyle = theme.typography.body.md.copyWith(
-      fontFamily: baseStyle.fontFamily,
-      height: 1.55,
-    );
-    final citationStyle = theme.typography.body.sm.copyWith(
-      fontFamily: baseStyle.fontFamily,
-      color: colors.mutedForeground,
-      height: 1.55,
-    );
-
-    return StaticCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: AppSpacing.md,
-        children: [
-          if (prefix case final matn? when matn.isNotEmpty)
-            _MatnPrefixQuote(
-              text: matn,
-              colors: colors,
-              style: baseStyle.copyWith(
-                color: colors.mutedForeground,
-                height: 1.7,
-              ),
-              radii: theme.radii.sm,
-            ),
-          for (final entry in fields.populatedEntries)
-            _MetadataRow(
-              label: entry.label.arabicLabel,
-              value: entry.value,
-              labelStyle: labelStyle,
-              valueStyle: entry.label == HadithSharhMetadataLabel.takhrij
-                  ? citationStyle
-                  : valueStyle,
-              isolateNumerals:
-                  entry.label == HadithSharhMetadataLabel.takhrij,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MatnPrefixQuote extends StatelessWidget {
-  const new({
-    required this.text,
-    required this.colors,
-    required this.style,
-    required this.radii,
-  });
-
-  final String text;
-  final FColors colors;
-  final TextStyle style;
-  final BorderRadius radii;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsetsDirectional.only(
-        start: AppSpacing.md,
-        top: AppSpacing.sm,
-        bottom: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: colors.secondary.withValues(alpha: 0.45),
-        border: BorderDirectional(
-          start: BorderSide(
-            color: colors.border.withValues(alpha: 0.9),
-            width: 3,
-          ),
-        ),
-        borderRadius: BorderRadiusDirectional.only(
-          topStart: radii.topLeft,
-          bottomStart: radii.bottomLeft,
-        ),
-      ),
-      child: ScopedSelectableText(
-        text,
-        style: style,
-        textDirection: TextDirection.rtl,
-        textAlign: TextAlign.justify,
-      ),
-    );
-  }
-}
-
-class _MetadataRow extends StatelessWidget {
-  const new({
-    required this.label,
-    required this.value,
-    required this.labelStyle,
-    required this.valueStyle,
-    required this.isolateNumerals,
-  });
-
-  final String label;
-  final String value;
-  final TextStyle labelStyle;
-  final TextStyle valueStyle;
-  final bool isolateNumerals;
-
-  @override
-  Widget build(BuildContext context) {
-    final displayValue = isolateNumerals ? isolateLtrNumerals(value) : value;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      spacing: AppSpacing.xs,
-      children: [
-        Text(label, style: labelStyle),
-        ScopedSelectableText(
-          displayValue,
-          style: valueStyle,
-          textDirection: TextDirection.rtl,
-          textAlign: TextAlign.start,
+        if (headerVisible && origin?.rawLabel.isNotEmpty == true)
+          Text(origin!.rawLabel.replaceFirst(RegExp(r'^\s*\|\s*'), '').trim()),
+        if (headerVisible)
+          _record(context, context.l10n.hadithExplanationHeader, sharh.hadith),
+        if (embeddedVisible)
+          _record(context, context.l10n.hadithExplanationCitation, embedded),
+        HadithSharhText(
+          document: sharh.document,
+          text: sharh.sharhText ?? '',
+          commentaryOnly: sharh.document != null,
+          fontSize: export ? 20 : null,
         ),
       ],
     );
-  }
-}
-
-/// Renders tokenized sharh segments as inline rich-text runs.
-///
-/// Adjacent segments share one selectable rich-text run so gloss markers
-/// (`أي:`), quotes, and prose flow on the same line and selection crosses
-/// style boundaries. [Column] breaks appear only at paragraph boundaries
-/// (section leads and blank-line pivots).
-class _HadithSharhCommentaryBody extends HookWidget {
-  const new({
-    required this.segments,
-    required this.styles,
-    required this.textAlign,
-  });
-
-  final List<HadithSharhSegment> segments;
-  final CommentaryTextStyles styles;
-  final TextAlign textAlign;
-
-  static final _paragraphBreak = RegExp(r'^\s*\n\s*\n');
-
-  @override
-  Widget build(BuildContext context) {
-    final body = useMemoized(
-      () {
-        if (segments.isEmpty) return null;
-
-        final runs = CommentaryInlineRunBuilder.collectSpanRuns(
-          segments: segments,
-          startsNewParagraph: _startsNewParagraph,
-          buildSpans:
-              (segments, start, end) =>
-                  _buildInlineSpans(
-                    segments: segments,
-                    start: start,
-                    end: end,
-                    styles: styles,
-                  ),
-        );
-
-        return CommentaryInlineRunBuilder.columnFromSpanRuns(
-          runs: runs,
-          styles: styles,
-          textAlign: textAlign,
-        );
-      },
-      [segments, styles, textAlign],
-    );
-
-    return body ?? const SizedBox.shrink();
-  }
-
-  static bool _startsNewParagraph(HadithSharhSegment segment, int index) {
-    if (index == 0) return false;
-
-    if (segment.kind == HadithSharhSegmentKind.sectionLead) return true;
-
-    if (segment.kind == HadithSharhSegmentKind.prose) {
-      return _paragraphBreak.hasMatch(segment.text);
-    }
-
-    return false;
-  }
-
-  static List<InlineSpan> _buildInlineSpans({
-    required List<HadithSharhSegment> segments,
-    required int start,
-    required int end,
-    required CommentaryTextStyles styles,
-  }) {
-    final spans = <InlineSpan>[];
-    HadithSharhSegment? previous;
-
-    for (var i = start; i < end; i++) {
-      final segment = segments[i];
-
-      if (previous != null) {
-        final gap = _gapBeforeSegment(previous, segment);
-        if (gap != null) {
-          spans.add(TextSpan(text: gap, style: styles.prose));
-        }
-      }
-
-      spans.addAll(_spansForSegment(segment, styles));
-      previous = segment;
-    }
-
-    return spans;
-  }
-
-  /// Inserts a space between adjacent inline segments when prose trimming
-  /// or gloss token boundaries would otherwise glue words together.
-  static String? _gapBeforeSegment(
-    HadithSharhSegment previous,
-    HadithSharhSegment current,
-  ) {
-    final leading = _leadingChar(current);
-    final trailing = _trailingChar(previous);
-    if (leading == null || trailing == null) return null;
-    if (leading == ' ' || leading == '\n') return null;
-    if (trailing == ' ' || trailing == '\n') return null;
-    return ' ';
-  }
-
-  static String? _leadingChar(HadithSharhSegment segment) {
-    final text = switch (segment.kind) {
-      HadithSharhSegmentKind.prose => segment.text.trim(),
-      HadithSharhSegmentKind.glossChain =>
-        segment.quotedPhrase ?? segment.text,
-      _ => segment.text,
-    };
-    if (text.isEmpty) return null;
-    return text.characters.first;
-  }
-
-  static String? _trailingChar(HadithSharhSegment segment) {
-    final text = switch (segment.kind) {
-      HadithSharhSegmentKind.prose => segment.text.trim(),
-      HadithSharhSegmentKind.glossChain => () {
-        final gloss = segment.glossText?.trim();
-        if (gloss != null && gloss.isNotEmpty) return gloss;
-        return segment.quotedPhrase ?? segment.text;
-      }(),
-      _ => segment.text,
-    };
-    if (text.isEmpty) return null;
-    return text.characters.last;
-  }
-
-  static List<InlineSpan> _spansForSegment(
-    HadithSharhSegment segment,
-    CommentaryTextStyles styles,
-  ) {
-    return switch (segment.kind) {
-      HadithSharhSegmentKind.prose => CommentaryInlineSpans.tokenizeProse(
-          segment.text,
-        ).map(
-          (token) => TextSpan(
-            text: token.text,
-            style: _styleForProseToken(token.kind, styles),
-          ),
-        ).toList(growable: false),
-      HadithSharhSegmentKind.glossChain => [
-          if (segment.quotedPhrase case final quote? when quote.isNotEmpty)
-            TextSpan(text: quote, style: styles.quote),
-          TextSpan(text: '، أي: ', style: styles.gloss),
-          if (segment.glossText case final gloss? when gloss.isNotEmpty)
-            TextSpan(text: gloss, style: styles.prose),
-        ],
-      HadithSharhSegmentKind.gloss => [
-          TextSpan(text: segment.text, style: styles.gloss),
-        ],
-      HadithSharhSegmentKind.quote => [
-          TextSpan(text: segment.text, style: styles.quote),
-        ],
-      HadithSharhSegmentKind.sectionLead => [
-          TextSpan(text: segment.text, style: styles.sectionLead),
-        ],
-      HadithSharhSegmentKind.alternateOpinion => [
-          TextSpan(text: segment.text, style: styles.alternateOpinion),
-        ],
-      HadithSharhSegmentKind.scholarLead => [
-          TextSpan(text: segment.text, style: styles.scholarLead),
-        ],
-      HadithSharhSegmentKind.editorialBracket => [
-          TextSpan(text: segment.text, style: styles.editorialBracket),
-        ],
-    };
-  }
-
-  static TextStyle _styleForProseToken(
-    CommentaryProseTokenKind kind,
-    CommentaryTextStyles styles,
-  ) {
-    return switch (kind) {
-      CommentaryProseTokenKind.prose => styles.prose,
-      CommentaryProseTokenKind.ayah => styles.ayah,
-      CommentaryProseTokenKind.verseRef => styles.verseRef,
-      CommentaryProseTokenKind.quote => styles.quote,
-      CommentaryProseTokenKind.scholarLead => styles.scholarLead,
-      CommentaryProseTokenKind.qawlLead => styles.qawlLead,
-    };
   }
 }

@@ -17,7 +17,7 @@ fi
 if [[ "$scope" != app ]]; then
   (
     cd packages/dorar_hadith
-    # Keep the pinned upstream checkout; isolate its two default-disk fixtures.
+    # Keep the pinned upstream checkout; isolate the remaining default-disk client-use fixture.
     fixture_patch="../../tool/fixtures/dorar-test-storage.patch"
     if ! git apply --reverse --check "$fixture_patch" 2>/dev/null; then
       git apply --check "$fixture_patch"

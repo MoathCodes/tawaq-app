@@ -6,13 +6,14 @@ import 'dart:ui' as ui;
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/foundation.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_hukm_badge.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_source_ruling.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_dialog.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
@@ -31,15 +32,23 @@ const _longJudgmentFixture =
     'card at large text size; this continuation is intentionally synthetic '
     'and long enough to require several wrapped lines.';
 
-Widget _wrap(Widget child, {required ThemeMode themeMode}) {
+Widget _wrap(
+  Widget child, {
+  required ThemeMode themeMode,
+  AppPalette palette = AppPalette.manuscript,
+}) {
   return FTheme(
     data: buildAppTheme(
-      palette: AppPalette.manuscript,
+      palette: palette,
       themeMode: themeMode,
       touch: false,
       textScale: 1,
     ),
-    child: MaterialApp(home: Scaffold(body: child)),
+    child: MaterialApp(
+      localizationsDelegates: appLocalizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: Scaffold(body: child),
+    ),
   );
 }
 
@@ -86,6 +95,79 @@ Widget _wrapCard(
 
 void main() {
   testWidgets(
+    'every SDK tone is legible on its actual surface in every palette',
+    (tester) async {
+      for (final palette in AppPalette.values) {
+        for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+          for (final tone in VerdictTone.values) {
+            await tester.pumpWidget(
+              _wrap(
+                HadithSourceRuling(hukm: 'Synthetic source ruling', tone: tone),
+                themeMode: mode,
+                palette: palette,
+              ),
+            );
+            await tester.pumpAndSettle();
+            final text = tester.widget<Text>(
+              find.text('Synthetic source ruling'),
+            );
+            final surface = tester.widget<Container>(
+              find.byKey(ValueKey('hadith-ruling-${tone.name}')),
+            );
+            final background = (surface.decoration! as BoxDecoration).color!;
+            final a = text.style!.color!.computeLuminance();
+            final b = background.computeLuminance();
+            expect(
+              ((a > b ? a : b) + .05) / ((a < b ? a : b) + .05),
+              greaterThanOrEqualTo(4.5),
+              reason: '${palette.name} ${mode.name} ${tone.name}',
+            );
+            expect(
+              find.byIcon(FLucideIcons.circleCheck),
+              tone == VerdictTone.positive ? findsOneWidget : findsNothing,
+            );
+            expect(
+              find.byIcon(FLucideIcons.triangleAlert),
+              tone == VerdictTone.negative ? findsOneWidget : findsNothing,
+            );
+          }
+        }
+      }
+    },
+  );
+
+  testWidgets('long source category remains reachable from compact card menu', (
+    tester,
+  ) async {
+    final hadith = _fixtureHadith(_unknownFixture).copyWith(
+      categories: const [
+        HadithCategory(
+          id: 'fixture',
+          name: 'Synthetic category label with enough source wording to wrap repeatedly in a compact result card',
+        ),
+      ],
+    );
+    await tester.pumpWidget(
+      _wrapCard(
+        HadithResultCard(hadith: hadith),
+        themeMode: ThemeMode.dark,
+        locale: const Locale('en'),
+        textScale: 1.4,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text(hadith.categories.single.name), findsNothing);
+    final trigger = find.text(
+      lookupAppLocalizations(const Locale('en')).hadithTopics,
+    );
+    await tester.ensureVisible(trigger);
+    await tester.tap(trigger);
+    await tester.pumpAndSettle();
+    expect(find.text(hadith.categories.single.name), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
+  testWidgets(
     'footer copy preserves complete source judgment without selecting the result',
     (tester) async {
       String? clipboard;
@@ -120,6 +202,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.bySemanticsLabel(l10n.menuCopyText));
       await tester.tap(find.bySemanticsLabel(l10n.menuCopyText));
       await tester.pumpAndSettle();
       expect(clipboard, contains(hadith.hadith));
@@ -127,6 +210,68 @@ void main() {
       expect(clipboard, contains(hadith.book));
       expect(selected, isFalse);
       expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'search highlights keep source text and readable contrast across themes',
+    (tester) async {
+      for (final palette in AppPalette.values) {
+        for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+          final theme = buildAppTheme(
+            palette: palette,
+            themeMode: mode,
+            touch: false,
+            textScale: 1,
+          );
+          const source = 'إِنَّما fixture إِنَّما';
+          await tester.pumpWidget(
+            ProviderScope(
+              overrides: [
+                hadithFavoritesProvider.overrideWith((ref) async => const []),
+              ],
+              child: _wrap(
+                HadithResultCard(
+                  hadith: _fixtureHadith('fixture').copyWith(hadith: source),
+                  query: 'انما',
+                  isFavorite: false,
+                  isSelected: false,
+                  onSelect: () {},
+                ),
+                themeMode: mode,
+                palette: palette,
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final rich = tester
+              .widgetList<RichText>(find.byType(RichText))
+              .firstWhere((w) => w.text.toPlainText().contains(source));
+          final matches = <TextSpan>[];
+          void visit(InlineSpan span) {
+            if (span is TextSpan) {
+              if (span.style?.backgroundColor != null) matches.add(span);
+              for (final child in span.children ?? <InlineSpan>[]) {
+                visit(child);
+              }
+            }
+          }
+
+          visit(rich.text);
+          expect(matches, hasLength(2));
+          for (final span in matches) {
+            expect(span.text, 'إِنَّما');
+            expect(span.style!.backgroundColor, isNot(theme.colors.secondary));
+            final a = span.style!.color!.computeLuminance();
+            final b = span.style!.backgroundColor!.computeLuminance();
+            expect(
+              ((a > b ? a : b) + .05) / ((a < b ? a : b) + .05),
+              greaterThanOrEqualTo(4.5),
+            );
+          }
+          expect(tester.takeException(), isNull);
+        }
+      }
     },
   );
 
@@ -147,7 +292,7 @@ void main() {
           _unknownFixture,
         ]) {
           await tester.pumpWidget(
-            _wrap(HadithHukmBadge(hukm: judgment), themeMode: themeMode),
+            _wrap(HadithSourceRuling(hukm: judgment), themeMode: themeMode),
           );
           await tester.pumpAndSettle();
 
@@ -155,11 +300,6 @@ void main() {
           expect(text.maxLines, isNull);
           expect(text.overflow, isNull);
           expect(text.style?.color, theme.colors.foreground);
-
-          final container = tester.widget<Container>(find.byType(Container));
-          final decoration = container.decoration! as BoxDecoration;
-          expect(decoration.color, theme.colors.card);
-          expect(decoration.border!.top.color, theme.colors.border);
 
           final semantics = tester.getSemantics(find.text(judgment));
           expect(semantics.label, judgment);
@@ -169,7 +309,7 @@ void main() {
   );
 
   testWidgets(
-    'negative source badges use destructive text with readable softer chain tint',
+    'SDK negative tone keeps exact text, contrast and warning icon across palettes',
     (tester) async {
       for (final palette in [
         AppPalette.manuscript,
@@ -183,33 +323,28 @@ void main() {
             touch: false,
             textScale: 1,
           );
-          Color? weakBackground;
           for (final judgment in ['ضعيف', 'فيه أبو داود النخعي كذاب']) {
             await tester.pumpWidget(
-              FTheme(
-                data: theme,
-                child: MaterialApp(
-                  home: Scaffold(body: HadithHukmBadge(hukm: judgment)),
-                ),
+              _wrap(
+                HadithSourceRuling(hukm: judgment, tone: VerdictTone.negative),
+                themeMode: mode,
+                palette: palette,
               ),
             );
             await tester.pumpAndSettle();
             final text = tester.widget<Text>(find.text(judgment));
-            final box =
-                tester.widget<Container>(find.byType(Container)).decoration!
-                    as BoxDecoration;
-            expect(text.style!.color, isNot(theme.colors.foreground));
+            expect(
+              HSLColor.fromColor(text.style!.color!).hue,
+              closeTo(HSLColor.fromColor(theme.colors.destructive).hue, 1),
+            );
+            expect(text.maxLines, isNull);
+            expect(find.byIcon(FLucideIcons.triangleAlert), findsOneWidget);
             final a = text.style!.color!.computeLuminance();
-            final b = box.color!.computeLuminance();
+            final b = theme.colors.card.computeLuminance();
             expect(
               ((a > b ? a : b) + .05) / ((a < b ? a : b) + .05),
               greaterThanOrEqualTo(4.5),
-              reason: '$palette $mode $judgment',
             );
-            if (judgment == 'ضعيف')
-              weakBackground = box.color;
-            else
-              expect(box.color, isNot(weakBackground));
           }
         }
       }

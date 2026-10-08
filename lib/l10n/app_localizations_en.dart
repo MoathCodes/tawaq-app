@@ -760,9 +760,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithAlternateHadithSahih => 'Alternate Authentic Hadith';
 
   @override
-  String get hadithAlternativeAuthentic => 'Alternative Authentic Narrations';
-
-  @override
   String get hadithBackToSearch => 'Back to search';
 
   @override
@@ -810,9 +807,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithFilterTab => 'Filters';
 
   @override
-  String get hadithFoundations => 'Foundations';
-
-  @override
   String hadithShareDetailsFailed(String sections) {
     return 'Could not load: $sections. Retry or turn off the selected detail to export the image.';
   }
@@ -823,17 +817,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hadithGradeExplanation => 'Grade Explanation';
-
-  @override
-  String get hadithLoadMore => 'Load more';
-
-  @override
-  String get hadithLoadSharh => 'Load Explanation';
-
-  @override
-  String hadithLoadSharhFailed(String error) {
-    return 'Failed to load sharh: $error';
-  }
 
   @override
   String get hadithMuhaddith => 'Muhaddith';
@@ -848,17 +831,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithNarrators => 'Narrators';
 
   @override
-  String get hadithNoBookmarks => 'No saved hadiths yet';
-
-  @override
-  String get hadithNoDetailedData => 'No detailed data found for this hadith';
-
-  @override
   String get hadithNoDetailsSelected =>
       'Select a hadith from results to view details';
-
-  @override
-  String get hadithNoMatchingResults => 'No matching results found';
 
   @override
   String get hadithNoRecentSearches => 'No recent searches yet';
@@ -867,14 +841,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithOpenFilters => 'Filters';
 
   @override
-  String get hadithPageLoadFailed =>
-      'Couldn\'t load that page. Showing previous results.';
-
-  @override
   String get hadithRecentSearches => 'Recent Searches';
-
-  @override
-  String get hadithRelatedLinks => 'Related Links';
 
   @override
   String get hadithResetFilters => 'Reset filters';
@@ -890,9 +857,6 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get hadithRetry => 'Retry';
 
   @override
   String hadithResultIdentity(int number) {
@@ -924,29 +888,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get hadithSearchMethodExactMatch => 'Exact match';
 
   @override
-  String get hadithSearchZoneAll => 'All hadiths';
-
-  @override
-  String get hadithSearchZoneMarfoo => 'Marfoo hadiths';
-
-  @override
-  String get hadithSearchZoneQudsi => 'Qudsi hadiths';
-
-  @override
-  String get hadithSearchZoneSahabaAthar => 'Companion narrations';
-
-  @override
-  String get hadithSearchZoneSharh => 'Hadith commentaries';
-
-  @override
-  String get hadithSelectedHadith => 'Selected hadith';
-
-  @override
-  String hadithSelectedResult(int number) {
-    return 'Selected result $number';
-  }
-
-  @override
   String get hadithSharh => 'Explanation';
 
   @override
@@ -954,9 +895,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hadithNumberOrPage => 'Number or page';
-
-  @override
-  String get hadithSimilar => 'Similar Hadiths';
 
   @override
   String get hadithSimilarHadith => 'Similar Hadith';
@@ -970,14 +908,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get hadithSpecialist => 'Takhrij';
+  String get hadithSpecialist => 'With takhrij';
 
   @override
   String get hadithSpecialistHint =>
       'Only return hadiths that include takhrij in their metadata';
-
-  @override
-  String get hadithStartSearchPrompt => 'Press Enter or Search to see results';
 
   @override
   String get hadithTakhrij => 'Takhrij';
@@ -2739,4 +2674,170 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quranSearchFailed => 'Search could not load. Try again.';
+
+  @override
+  String get hadithGrade => 'Source ruling';
+
+  @override
+  String get hadithRelatedSource => 'Related collection source';
+
+  @override
+  String get hadithExplanationHeader => 'Explanation page narration';
+
+  @override
+  String get hadithExplanationCitation => 'Narration cited in the explanation';
+
+  @override
+  String get hadithSearchRecords => 'Hadith records';
+
+  @override
+  String get hadithSearchProse => 'Explanation prose';
+
+  @override
+  String get hadithProseFiltersHint =>
+      'Record filters are retained and apply only to Hadith records.';
+
+  @override
+  String get hadithTypeMarfoo => 'Marfoo hadiths';
+
+  @override
+  String get hadithTypeQudsi => 'Qudsi hadiths';
+
+  @override
+  String get hadithTypeCompanionAthar => 'Companion narrations';
+
+  @override
+  String get hadithTypeWithExplanation => 'Records with an explanation';
+
+  @override
+  String get hadithTopics => 'Topics';
+
+  @override
+  String get hadithStudyDesk => 'Hadith study desk';
+
+  @override
+  String get hadithStudyDeskHint =>
+      'Search narrations, inspect their sources, and read their explanations.';
+
+  @override
+  String get hadithScholarRuling => 'Scholar’s ruling';
+
+  @override
+  String get hadithAsbab => 'Circumstances';
+
+  @override
+  String get hadithUnavailable => 'The source does not advertise this content.';
+
+  @override
+  String get hadithNoRemoteId =>
+      'This saved record has no source identifier. Remote details cannot be opened.';
+
+  @override
+  String get hadithAdvanced => 'Advanced search';
+
+  @override
+  String get hadithExclude => 'Excluded words or phrases';
+
+  @override
+  String get hadithOptionalPhrase => 'Optional phrase';
+
+  @override
+  String get hadithDegreeOrder => 'Order by source degree';
+
+  @override
+  String get hadithTopicSearch => 'Search topics';
+
+  @override
+  String get hadithCloseReader => 'Close reader';
+
+  @override
+  String get hadithInvalidSearch =>
+      'Use at most 500 characters per search field and four optional phrases.';
+
+  @override
+  String get hadithUnreadableSaved =>
+      'This saved entry cannot be read. Its original data is retained.';
+
+  @override
+  String get shortcutHadithFiltersLabel => 'Toggle Hadith filters';
+
+  @override
+  String get shortcutHadithFiltersDescription =>
+      'Show the filter column or open compact filters.';
+
+  @override
+  String get shortcutHadithSearchLabel => 'Focus Hadith search';
+
+  @override
+  String get shortcutHadithSearchDescription =>
+      'Focus the Hadith search field.';
+
+  @override
+  String get hadithSearchInterrupted =>
+      'The search was stopped when you changed collection. Retry to finish it.';
+
+  @override
+  String get hadithSourceUnreadable =>
+      'The source response could not be read. Retry or try a different query.';
+
+  @override
+  String get hadithRequestTimedOut =>
+      'The source request timed out. Try again.';
+
+  @override
+  String get hadithSourceRateLimited =>
+      'Dorar is limiting requests. Try again later.';
+
+  @override
+  String get hadithSourceServerFailed =>
+      'Dorar could not complete the request. Try again later.';
+
+  @override
+  String get hadithRichContentUnavailable =>
+      'Saved text is available; its rich source content could not be recovered.';
+
+  @override
+  String get hadithTargetRecords => 'Hadith';
+
+  @override
+  String get hadithTargetProse => 'Explanations';
+
+  @override
+  String get hadithSearchMethodHelp =>
+      'All words: the narration contains every search word. Any word: it contains at least one. Exact phrase: words appear in the order you entered.';
+
+  @override
+  String get hadithScopeHelp =>
+      'With explanation searches narration text for records with explanations. To search explanation text, choose Explanations in the search field.';
+
+  @override
+  String get hadithDegreesHelp =>
+      'These are scholars’ judgments on Dorar. A judgment on the chain differs from a judgment on the hadith.';
+
+  @override
+  String get hadithExcludeHelp =>
+      'Enter words or phrases you do not want in the results.';
+
+  @override
+  String get hadithAddPhrase => 'Add search phrase';
+
+  @override
+  String get hadithRemovePhrase => 'Remove phrase';
+
+  @override
+  String get hadithUpdating => 'Updating results…';
+
+  @override
+  String get hadithDorarOrder => 'Dorar order';
+
+  @override
+  String get hadithDegreeOrderHelp =>
+      'Orders results by source degree as presented by Dorar.';
+
+  @override
+  String get hadithSpecialistHelp =>
+      'Shows narrations with takhrij information using Dorar’s specialist mode.';
+
+  @override
+  String get hadithSimilarExplanation => 'Explanation of a similar hadith';
 }

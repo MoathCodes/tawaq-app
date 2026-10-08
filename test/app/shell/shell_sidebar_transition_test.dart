@@ -1,3 +1,6 @@
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/models/hadith_session_state.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
 // Fixture overrides belong to an independent root test scope.
 // ignore_for_file: riverpod_lint/scoped_providers_should_specify_dependencies
 
@@ -18,7 +21,99 @@ class _SidebarSettings extends SidebarSettingsNotifier {
   Future<bool> build() async => false;
 }
 
+class _HadithSession extends HadithSessionController {
+  @override
+  HadithSessionState build() => const HadithSessionState(
+    query: 'prior query',
+    filters: HadithFilters(exclude: 'draft'),
+  );
+}
+
 void main() {
+  for (final language in ['en', 'ar']) {
+    testWidgets('Hadith sidebar owns home, topics and saved ($language)', (
+      tester,
+    ) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 860));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      final container = ProviderContainer(
+        overrides: [
+          sidebarSettingsProvider.overrideWith(_SidebarSettings.new),
+          hadithSessionControllerProvider.overrideWith(_HadithSession.new),
+        ],
+      );
+      addTearDown(container.dispose);
+      final router = GoRouter(
+        initialLocation: '/hadith',
+        routes: [
+          GoRoute(
+            path: '/hadith',
+            builder: (_, _) => const Row(
+              children: [
+                ShellSidebar(),
+                Expanded(child: SizedBox()),
+              ],
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+      await container.read(sidebarSettingsProvider.future);
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            routerConfig: router,
+            locale: Locale(language),
+            localizationsDelegates: appLocalizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            builder: (_, child) => FTheme(
+              data: buildAppTheme(
+                palette: AppPalette.manuscript,
+                themeMode: ThemeMode.dark,
+                touch: false,
+                textScale: 1.2,
+              ),
+              child: child!,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final session = container.read(hadithSessionControllerProvider.notifier);
+      await tester.tap(find.byKey(const ValueKey('hadith-sidebar-topics')));
+      await tester.pumpAndSettle();
+      expect(session.state.context, isA<TopicsCollection>());
+      expect(
+        tester
+            .widget<FSidebarItem>(
+              find.byKey(const ValueKey('hadith-sidebar-topics')),
+            )
+            .selected,
+        isTrue,
+      );
+      await tester.tap(find.byKey(const ValueKey('hadith-sidebar-saved')));
+      await tester.pumpAndSettle();
+      expect(session.state.context, isA<SavedCollection>());
+      await tester.tap(find.byKey(const ValueKey('/hadith')));
+      await tester.pumpAndSettle();
+      expect((session.state.context as SearchCollection).home, isTrue);
+      expect(session.state.query, isEmpty);
+      expect(session.state.filters.exclude, 'draft');
+      container
+          .read(sidebarSettingsProvider.notifier)
+          .setCollapsed(collapsed: true);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('hadith-sidebar-topics')));
+      await tester.pumpAndSettle();
+      expect(session.state.context, isA<TopicsCollection>());
+      await tester.tap(find.byKey(const ValueKey('/hadith')));
+      await tester.pumpAndSettle();
+      expect((session.state.context as SearchCollection).home, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final language in ['en', 'ar']) {
     for (final reduced in [false, true]) {
       testWidgets(

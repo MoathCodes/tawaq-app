@@ -31,10 +31,7 @@ void main() {
       ..registerAdapters();
   });
 
-  Widget wrap({
-    required double containerWidth,
-    required Widget child,
-  }) {
+  Widget wrap({required double containerWidth, required Widget child}) {
     final theme = buildAppTheme(
       palette: AppPalette.neutral,
       themeMode: ThemeMode.light,
@@ -59,11 +56,7 @@ void main() {
             data: const MediaQueryData(size: Size(1024, 768)),
             child: Row(
               children: [
-                SizedBox(
-                  width: containerWidth,
-                  height: 700,
-                  child: child,
-                ),
+                SizedBox(width: containerWidth, height: 700, child: child),
                 const Expanded(child: SizedBox.shrink()),
               ],
             ),
@@ -80,12 +73,7 @@ void main() {
   }) async {
     await tester.binding.setSurfaceSize(const Size(1024, 768));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(
-      wrap(
-        containerWidth: containerWidth,
-        child: child,
-      ),
-    );
+    await tester.pumpWidget(wrap(containerWidth: containerWidth, child: child));
   }
 
   group('Hadith split layout', () {
@@ -107,7 +95,7 @@ void main() {
     );
 
     testWidgets(
-      'uses horizontal split when container can honor pane minimums',
+      'leaves an unselected reader closed even when a split would fit',
       (tester) async {
         await pumpHadithLayout(
           tester,
@@ -118,7 +106,7 @@ void main() {
 
         expect(
           find.byKey(const ValueKey('persisted-split-side')),
-          findsOneWidget,
+          findsNothing,
         );
       },
     );

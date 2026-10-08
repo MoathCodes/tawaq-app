@@ -307,7 +307,6 @@
   "hadith": "الأحاديث",
   "hadithActiveFilters": "مرشّحات البحث النشطة",
   "hadithAlternateHadithSahih": "حديث صحيح بديل",
-  "hadithAlternativeAuthentic": "روايات صحيحة بديلة",
   "hadithBackToSearch": "العودة للبحث",
   "hadithBooks": "الكتب",
   "hadithClearAllFilters": "مسح جميع المرشّحات",
@@ -330,34 +329,24 @@
     }
   },
   "hadithFilterTab": "التصفية",
-  "hadithFoundations": "الأصول",
   "hadithShareDetailsFailed": "تعذر تحميل: {sections}. أعد المحاولة أو ألغِ تضمين القسم المحدد لتصدير الصورة.",
-  "@hadithShareDetailsFailed": {"placeholders": {"sections": {"type": "String"}}},
-  "hadithShareJudgmentRequired": "يبقى حكم المصدر ظاهرًا للروايات الضعيفة أو التي ورد تحذير بشأن إسنادها.",
-  "hadithGradeExplanation": "شرح الحكم",
-  "hadithLoadMore": "تحميل المزيد",
-  "hadithLoadSharh": "تحميل الشرح",
-  "hadithLoadSharhFailed": "تعذّر تحميل الشرح: {error}",
-  "@hadithLoadSharhFailed": {
+  "@hadithShareDetailsFailed": {
     "placeholders": {
-      "error": {
+      "sections": {
         "type": "String"
       }
     }
   },
+  "hadithShareJudgmentRequired": "يبقى حكم المصدر ظاهرًا للروايات الضعيفة أو التي ورد تحذير بشأن إسنادها.",
+  "hadithGradeExplanation": "شرح الحكم",
   "hadithMuhaddith": "المحدث",
   "hadithMoreActions": "إجراءات الحديث الإضافية",
   "hadithNarrator": "الراوي",
   "hadithNarrators": "الرواة",
-  "hadithNoBookmarks": "لا توجد أحاديث محفوظة",
-  "hadithNoDetailedData": "لا توجد بيانات تفصيلية لهذا الحديث",
   "hadithNoDetailsSelected": "اختر حديثًا من النتائج لعرض التفاصيل",
-  "hadithNoMatchingResults": "لا توجد نتائج مطابقة",
   "hadithNoRecentSearches": "لا توجد عمليات بحث حديثة",
   "hadithOpenFilters": "التصفية",
-  "hadithPageLoadFailed": "تعذر تحميل هذه الصفحة. يتم عرض النتائج السابقة.",
   "hadithRecentSearches": "عمليات البحث الأخيرة",
-  "hadithRelatedLinks": "روابط ذات صلة",
   "hadithResetFilters": "إعادة ضبط الفلاتر",
   "hadithResultsCount": "{count, plural, =0 {لا نتائج} =1 {نتيجة واحدة} =2 {نتيجتان} few {{count} نتائج} many {{count} نتيجة} other {{count} نتائج}}",
   "@hadithResultsCount": {
@@ -367,7 +356,6 @@
       }
     }
   },
-  "hadithRetry": "إعادة المحاولة",
   "hadithResultIdentity": "النتيجة {number}",
   "@hadithResultIdentity": {
     "placeholders": {
@@ -384,24 +372,9 @@
   "hadithSearchMethodAllWords": "جميع الكلمات",
   "hadithSearchMethodAnyWord": "أي كلمة",
   "hadithSearchMethodExactMatch": "بحث مطابق",
-  "hadithSearchZoneAll": "جميع الأحاديث",
-  "hadithSearchZoneMarfoo": "الأحاديث المرفوعة",
-  "hadithSearchZoneQudsi": "الأحاديث القدسية",
-  "hadithSearchZoneSahabaAthar": "آثار الصحابة",
-  "hadithSearchZoneSharh": "شروح الأحاديث",
-  "hadithSelectedHadith": "الحديث المحدد",
-  "hadithSelectedResult": "النتيجة المحددة {number}",
-  "@hadithSelectedResult": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "hadithSharh": "الشرح",
   "hadithShare": "مشاركة الحديث",
   "hadithNumberOrPage": "الرقم أو الصفحة",
-  "hadithSimilar": "أحاديث مشابهة",
   "hadithSimilarHadith": "أحاديث مشابهة",
   "hadithSource": "المصدر",
   "hadithSourceCitation": "{book} ({reference})",
@@ -415,7 +388,7 @@
       }
     }
   },
-  "hadithSpecialist": "تخريج",
+  "hadithSpecialist": "أحاديث لها تخريج",
   "@hadithSpecialist": {
     "description": "Filter toggle for Dorar's specialist tab: limits results to hadiths that include takhrij in their metadata (Dorar UI label: متخصص)."
   },
@@ -423,7 +396,6 @@
   "@hadithSpecialistHint": {
     "description": "Explains that enabling this filter limits results to hadiths with takhrij populated in result metadata."
   },
-  "hadithStartSearchPrompt": "اضغط Enter أو بحث لعرض النتائج",
   "hadithTakhrij": "التخريج",
   "hadithTypeToSearch": "اكتب للبحث...",
   "hadithUsulHadith": "أصول الحديث",
@@ -1315,5 +1287,54 @@
   "quranSearchJuzs": "الأجزاء",
   "quranSearchHizbs": "الأحزاب",
   "quranSearchAyahs": "الآيات",
-  "quranSearchFailed": "تعذّر تحميل البحث. حاول مجددًا."
+  "quranSearchFailed": "تعذّر تحميل البحث. حاول مجددًا.",
+  "hadithGrade": "حكم المصدر",
+  "hadithRelatedSource": "أصل مجموعة الروايات",
+  "hadithExplanationHeader": "رواية صفحة الشرح",
+  "hadithExplanationCitation": "الرواية الواردة في الشرح",
+  "hadithSearchRecords": "روايات الحديث",
+  "hadithSearchProse": "نصوص الشروح",
+  "hadithProseFiltersHint": "تُحفظ مرشحات الروايات ولا تُطبق على البحث في نصوص الشروح.",
+  "hadithTypeMarfoo": "الأحاديث المرفوعة",
+  "hadithTypeQudsi": "الأحاديث القدسية",
+  "hadithTypeCompanionAthar": "آثار الصحابة",
+  "hadithTypeWithExplanation": "روايات لها شرح",
+  "hadithTopics": "الموضوعات",
+  "hadithStudyDesk": "مكتب دراسة الحديث",
+  "hadithStudyDeskHint": "ابحث في الأحاديث، واطّلع على مصادرها وشروحها.",
+  "hadithScholarRuling": "حكم المحدث",
+  "hadithAsbab": "أسباب الورود",
+  "hadithUnavailable": "لا يشير المصدر إلى توفر هذا المحتوى.",
+  "hadithNoRemoteId": "لا يتوفر معرّف مصدر لهذا الحديث المحفوظ، ولا يمكن فتح تفاصيله عن بُعد.",
+  "hadithAdvanced": "البحث المتقدم",
+  "hadithExclude": "الكلمات أو العبارات المستبعدة",
+  "hadithOptionalPhrase": "عبارة اختيارية",
+  "hadithDegreeOrder": "الترتيب حسب درجة المصدر",
+  "hadithTopicSearch": "ابحث في الموضوعات",
+  "hadithCloseReader": "إغلاق القارئ",
+  "hadithInvalidSearch": "استخدم ٥٠٠ حرف كحد أقصى لكل حقل بحث، وأربع عبارات اختيارية.",
+  "hadithUnreadableSaved": "تعذّر قراءة هذا العنصر المحفوظ. بياناته الأصلية محفوظة.",
+  "shortcutHadithFiltersLabel": "إظهار أو إخفاء مرشحات الحديث",
+  "shortcutHadithFiltersDescription": "إظهار عمود المرشحات أو فتحها في النافذة المصغرة.",
+  "shortcutHadithSearchLabel": "التركيز على بحث الحديث",
+  "shortcutHadithSearchDescription": "التركيز على حقل البحث في الحديث.",
+  "hadithSearchInterrupted": "توقف البحث عند تغيير المجموعة. أعد المحاولة لإكماله.",
+  "hadithSourceUnreadable": "تعذّرت قراءة استجابة المصدر. أعد المحاولة أو جرّب بحثًا آخر.",
+  "hadithRequestTimedOut": "انتهت مهلة طلب المصدر. حاول مرة أخرى.",
+  "hadithSourceRateLimited": "تحدّ الدرر من الطلبات حاليًا. حاول لاحقًا.",
+  "hadithSourceServerFailed": "لم تتمكن الدرر من إكمال الطلب. حاول لاحقًا.",
+  "hadithRichContentUnavailable": "النص المحفوظ متاح، لكن تعذّر استعادة المحتوى المنسق من المصدر.",
+  "hadithTargetRecords": "حديث",
+  "hadithTargetProse": "شرح",
+  "hadithSearchMethodHelp": "جميع الكلمات: تحتوي الرواية كل كلمات البحث. أي كلمة: تحتوي واحدة على الأقل. العبارة نفسها: الكلمات بالترتيب الذي كتبته.",
+  "hadithScopeHelp": "«لها شرح» يبحث في متن الروايات التي لها شرح. للبحث داخل الشرح، اختر «الشروح» من حقل البحث.",
+  "hadithDegreesHelp": "هذه أحكام المحدثين في الدرر. الحكم على الإسناد يختلف عن الحكم على الحديث.",
+  "hadithExcludeHelp": "اكتب الكلمات أو العبارات التي لا تريدها في النتائج.",
+  "hadithAddPhrase": "إضافة عبارة بحث",
+  "hadithRemovePhrase": "حذف العبارة",
+  "hadithUpdating": "جار تحديث النتائج…",
+  "hadithDorarOrder": "ترتيب الدرر",
+  "hadithDegreeOrderHelp": "يرتب النتائج بحسب درجة المصدر كما تعرضها الدرر.",
+  "hadithSpecialistHelp": "يعرض روايات تتضمن معلومات التخريج في وضع الدرر المتخصص.",
+  "hadithSimilarExplanation": "شرح حديث مشابه"
 }

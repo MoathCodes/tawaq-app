@@ -282,17 +282,19 @@ packages:
   dorar_hadith:
     dependency: "direct main"
     description:
-      path: "packages/dorar_hadith"
-      relative: true
-    source: path
-    version: "0.6.1"
+      name: dorar_hadith
+      sha256: "4b40a09f2a58fd39953abc332dd13c0a56cf349608dfa6687ed5abb1d1ed1deb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.0"
   dorar_hadith_flutter:
     dependency: "direct main"
     description:
-      path: "packages/dorar_hadith/dorar_hadith_flutter"
-      relative: true
-    source: path
-    version: "0.6.1"
+      name: dorar_hadith_flutter
+      sha256: "722856aabcdbf1cdd84aeb9732d694c84095ae00fe23fb4287880eadce279345"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.0"
   drift:
     dependency: transitive
     description:

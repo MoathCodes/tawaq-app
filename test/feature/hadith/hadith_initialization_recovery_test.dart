@@ -13,15 +13,24 @@ class _Client extends Mock implements DorarClient {}
 class _Local extends Mock implements HadithLocalDatabase {}
 
 void main() {
-  for (final consumer in ['lookup', 'detail', 'favorites', 'recents']) {
+  for (final consumer in ['lookup', 'detail']) {
     test('$consumer retry resets failed Dorar initialization and recovers', () async {
       var attempts = 0;
       final client = _Client();
       final local = _Local();
       when(() => client.searchMohdith('اب')).thenAnswer((_) async => []);
-      when(() => client.getAlternateHadith('fixture'))
-          .thenAnswer((_) async => null);
-      when(() => local.getAllFavorites()).thenAnswer((_) async => []);
+      when(() => client.getAlternates('fixture')).thenAnswer(
+        (_) async => const ApiResponse(
+          data: RelatedHadithResult(
+            requestedId: 'fixture',
+            source: null,
+            kind: RelatedHadithKind.alternate,
+            related: [],
+          ),
+          metadata: SearchMetadata(),
+        ),
+      );
+      when(() => local.getFavoriteEntries()).thenAnswer((_) async => []);
       when(() => local.getRecentSearches()).thenAnswer((_) async => []);
       final container = ProviderContainer(
         retry: (_, _) => null,
@@ -43,10 +52,12 @@ void main() {
           hadithLookupProvider(HadithLookupKind.scholars, 'اب').future,
         ),
         'detail' => container.read(
-          hadithDetailProvider(HadithDetailKind.alternate, 'fixture').future,
+          hadithRelatedProvider(
+            HadithRecordId('fixture'),
+            RelatedHadithKind.alternate,
+          ).future,
         ),
-        'favorites' => container.read(hadithFavoritesProvider.future),
-        _ => container.read(hadithRecentSearchesStoreProvider.future),
+        _ => throw StateError('unexpected consumer'),
       };
       await expectLater(load(), throwsStateError);
       container
@@ -59,14 +70,22 @@ void main() {
           );
         case 'detail':
           container.invalidate(
-            hadithDetailProvider(HadithDetailKind.alternate, 'fixture'),
+            hadithRelatedProvider(
+              HadithRecordId('fixture'),
+              RelatedHadithKind.alternate,
+            ),
           );
         case 'favorites':
           container.invalidate(hadithFavoritesStoreProvider);
         case 'recents':
           container.invalidate(hadithRecentSearchesStoreProvider);
       }
-      expect(await load(), consumer == 'detail' ? isNull : isEmpty);
+      expect(
+        await load(),
+        consumer == 'detail'
+            ? isA<ApiResponse<RelatedHadithResult>>()
+            : isEmpty,
+      );
       expect(attempts, 2);
       // Request retries preserve successful initialization and the live client.
       container

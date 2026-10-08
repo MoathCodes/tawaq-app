@@ -782,9 +782,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithAlternateHadithSahih => 'حديث صحيح بديل';
 
   @override
-  String get hadithAlternativeAuthentic => 'روايات صحيحة بديلة';
-
-  @override
   String get hadithBackToSearch => 'العودة للبحث';
 
   @override
@@ -836,9 +833,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithFilterTab => 'التصفية';
 
   @override
-  String get hadithFoundations => 'الأصول';
-
-  @override
   String hadithShareDetailsFailed(String sections) {
     return 'تعذر تحميل: $sections. أعد المحاولة أو ألغِ تضمين القسم المحدد لتصدير الصورة.';
   }
@@ -849,17 +843,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hadithGradeExplanation => 'شرح الحكم';
-
-  @override
-  String get hadithLoadMore => 'تحميل المزيد';
-
-  @override
-  String get hadithLoadSharh => 'تحميل الشرح';
-
-  @override
-  String hadithLoadSharhFailed(String error) {
-    return 'تعذّر تحميل الشرح: $error';
-  }
 
   @override
   String get hadithMuhaddith => 'المحدث';
@@ -874,16 +857,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithNarrators => 'الرواة';
 
   @override
-  String get hadithNoBookmarks => 'لا توجد أحاديث محفوظة';
-
-  @override
-  String get hadithNoDetailedData => 'لا توجد بيانات تفصيلية لهذا الحديث';
-
-  @override
   String get hadithNoDetailsSelected => 'اختر حديثًا من النتائج لعرض التفاصيل';
-
-  @override
-  String get hadithNoMatchingResults => 'لا توجد نتائج مطابقة';
 
   @override
   String get hadithNoRecentSearches => 'لا توجد عمليات بحث حديثة';
@@ -892,14 +866,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithOpenFilters => 'التصفية';
 
   @override
-  String get hadithPageLoadFailed =>
-      'تعذر تحميل هذه الصفحة. يتم عرض النتائج السابقة.';
-
-  @override
   String get hadithRecentSearches => 'عمليات البحث الأخيرة';
-
-  @override
-  String get hadithRelatedLinks => 'روابط ذات صلة';
 
   @override
   String get hadithResetFilters => 'إعادة ضبط الفلاتر';
@@ -918,9 +885,6 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$_temp0';
   }
-
-  @override
-  String get hadithRetry => 'إعادة المحاولة';
 
   @override
   String hadithResultIdentity(int number) {
@@ -952,29 +916,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get hadithSearchMethodExactMatch => 'بحث مطابق';
 
   @override
-  String get hadithSearchZoneAll => 'جميع الأحاديث';
-
-  @override
-  String get hadithSearchZoneMarfoo => 'الأحاديث المرفوعة';
-
-  @override
-  String get hadithSearchZoneQudsi => 'الأحاديث القدسية';
-
-  @override
-  String get hadithSearchZoneSahabaAthar => 'آثار الصحابة';
-
-  @override
-  String get hadithSearchZoneSharh => 'شروح الأحاديث';
-
-  @override
-  String get hadithSelectedHadith => 'الحديث المحدد';
-
-  @override
-  String hadithSelectedResult(int number) {
-    return 'النتيجة المحددة $number';
-  }
-
-  @override
   String get hadithSharh => 'الشرح';
 
   @override
@@ -982,9 +923,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hadithNumberOrPage => 'الرقم أو الصفحة';
-
-  @override
-  String get hadithSimilar => 'أحاديث مشابهة';
 
   @override
   String get hadithSimilarHadith => 'أحاديث مشابهة';
@@ -998,14 +936,11 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get hadithSpecialist => 'تخريج';
+  String get hadithSpecialist => 'أحاديث لها تخريج';
 
   @override
   String get hadithSpecialistHint =>
       'إرجاع الأحاديث التي تتضمّن التخريج في بياناتها فقط';
-
-  @override
-  String get hadithStartSearchPrompt => 'اضغط Enter أو بحث لعرض النتائج';
 
   @override
   String get hadithTakhrij => 'التخريج';
@@ -2813,4 +2748,169 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quranSearchFailed => 'تعذّر تحميل البحث. حاول مجددًا.';
+
+  @override
+  String get hadithGrade => 'حكم المصدر';
+
+  @override
+  String get hadithRelatedSource => 'أصل مجموعة الروايات';
+
+  @override
+  String get hadithExplanationHeader => 'رواية صفحة الشرح';
+
+  @override
+  String get hadithExplanationCitation => 'الرواية الواردة في الشرح';
+
+  @override
+  String get hadithSearchRecords => 'روايات الحديث';
+
+  @override
+  String get hadithSearchProse => 'نصوص الشروح';
+
+  @override
+  String get hadithProseFiltersHint =>
+      'تُحفظ مرشحات الروايات ولا تُطبق على البحث في نصوص الشروح.';
+
+  @override
+  String get hadithTypeMarfoo => 'الأحاديث المرفوعة';
+
+  @override
+  String get hadithTypeQudsi => 'الأحاديث القدسية';
+
+  @override
+  String get hadithTypeCompanionAthar => 'آثار الصحابة';
+
+  @override
+  String get hadithTypeWithExplanation => 'روايات لها شرح';
+
+  @override
+  String get hadithTopics => 'الموضوعات';
+
+  @override
+  String get hadithStudyDesk => 'مكتب دراسة الحديث';
+
+  @override
+  String get hadithStudyDeskHint =>
+      'ابحث في الأحاديث، واطّلع على مصادرها وشروحها.';
+
+  @override
+  String get hadithScholarRuling => 'حكم المحدث';
+
+  @override
+  String get hadithAsbab => 'أسباب الورود';
+
+  @override
+  String get hadithUnavailable => 'لا يشير المصدر إلى توفر هذا المحتوى.';
+
+  @override
+  String get hadithNoRemoteId =>
+      'لا يتوفر معرّف مصدر لهذا الحديث المحفوظ، ولا يمكن فتح تفاصيله عن بُعد.';
+
+  @override
+  String get hadithAdvanced => 'البحث المتقدم';
+
+  @override
+  String get hadithExclude => 'الكلمات أو العبارات المستبعدة';
+
+  @override
+  String get hadithOptionalPhrase => 'عبارة اختيارية';
+
+  @override
+  String get hadithDegreeOrder => 'الترتيب حسب درجة المصدر';
+
+  @override
+  String get hadithTopicSearch => 'ابحث في الموضوعات';
+
+  @override
+  String get hadithCloseReader => 'إغلاق القارئ';
+
+  @override
+  String get hadithInvalidSearch =>
+      'استخدم ٥٠٠ حرف كحد أقصى لكل حقل بحث، وأربع عبارات اختيارية.';
+
+  @override
+  String get hadithUnreadableSaved =>
+      'تعذّر قراءة هذا العنصر المحفوظ. بياناته الأصلية محفوظة.';
+
+  @override
+  String get shortcutHadithFiltersLabel => 'إظهار أو إخفاء مرشحات الحديث';
+
+  @override
+  String get shortcutHadithFiltersDescription =>
+      'إظهار عمود المرشحات أو فتحها في النافذة المصغرة.';
+
+  @override
+  String get shortcutHadithSearchLabel => 'التركيز على بحث الحديث';
+
+  @override
+  String get shortcutHadithSearchDescription =>
+      'التركيز على حقل البحث في الحديث.';
+
+  @override
+  String get hadithSearchInterrupted =>
+      'توقف البحث عند تغيير المجموعة. أعد المحاولة لإكماله.';
+
+  @override
+  String get hadithSourceUnreadable =>
+      'تعذّرت قراءة استجابة المصدر. أعد المحاولة أو جرّب بحثًا آخر.';
+
+  @override
+  String get hadithRequestTimedOut => 'انتهت مهلة طلب المصدر. حاول مرة أخرى.';
+
+  @override
+  String get hadithSourceRateLimited =>
+      'تحدّ الدرر من الطلبات حاليًا. حاول لاحقًا.';
+
+  @override
+  String get hadithSourceServerFailed =>
+      'لم تتمكن الدرر من إكمال الطلب. حاول لاحقًا.';
+
+  @override
+  String get hadithRichContentUnavailable =>
+      'النص المحفوظ متاح، لكن تعذّر استعادة المحتوى المنسق من المصدر.';
+
+  @override
+  String get hadithTargetRecords => 'حديث';
+
+  @override
+  String get hadithTargetProse => 'شرح';
+
+  @override
+  String get hadithSearchMethodHelp =>
+      'جميع الكلمات: تحتوي الرواية كل كلمات البحث. أي كلمة: تحتوي واحدة على الأقل. العبارة نفسها: الكلمات بالترتيب الذي كتبته.';
+
+  @override
+  String get hadithScopeHelp =>
+      '«لها شرح» يبحث في متن الروايات التي لها شرح. للبحث داخل الشرح، اختر «الشروح» من حقل البحث.';
+
+  @override
+  String get hadithDegreesHelp =>
+      'هذه أحكام المحدثين في الدرر. الحكم على الإسناد يختلف عن الحكم على الحديث.';
+
+  @override
+  String get hadithExcludeHelp =>
+      'اكتب الكلمات أو العبارات التي لا تريدها في النتائج.';
+
+  @override
+  String get hadithAddPhrase => 'إضافة عبارة بحث';
+
+  @override
+  String get hadithRemovePhrase => 'حذف العبارة';
+
+  @override
+  String get hadithUpdating => 'جار تحديث النتائج…';
+
+  @override
+  String get hadithDorarOrder => 'ترتيب الدرر';
+
+  @override
+  String get hadithDegreeOrderHelp =>
+      'يرتب النتائج بحسب درجة المصدر كما تعرضها الدرر.';
+
+  @override
+  String get hadithSpecialistHelp =>
+      'يعرض روايات تتضمن معلومات التخريج في وضع الدرر المتخصص.';
+
+  @override
+  String get hadithSimilarExplanation => 'شرح حديث مشابه';
 }

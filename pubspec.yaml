@@ -33,10 +33,8 @@ dependencies:
     path: packages/hisn_elmoslem
   adhan_dart:
     path: packages/adhan_dart
-  dorar_hadith:
-    path: packages/dorar_hadith
-  dorar_hadith_flutter:
-    path: packages/dorar_hadith/dorar_hadith_flutter
+  dorar_hadith: 0.7.0
+  dorar_hadith_flutter: 0.7.0
   flutter:
     sdk: flutter
   flutter_animate: ^4.5.2
@@ -88,12 +86,6 @@ dependencies:
   flutter_driver:
     sdk: flutter
 
-
-# The published Flutter adapter requests hosted core. Use the pinned local core
-# throughout the app's dependency graph.
-dependency_overrides:
-  dorar_hadith:
-    path: packages/dorar_hadith
 
 dev_dependencies:
   yaml: 3.1.3

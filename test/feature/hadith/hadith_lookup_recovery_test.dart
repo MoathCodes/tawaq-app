@@ -1,3 +1,4 @@
+import 'package:dorar_hadith/dorar_hadith.dart';
 // Fixture overrides belong to an independent root test scope.
 // ignore_for_file: riverpod_lint/scoped_providers_should_specify_dependencies
 
@@ -26,7 +27,7 @@ void main() {
           addTearDown(tester.view.resetPhysicalSize);
           addTearDown(tester.view.resetDevicePixelRatio);
           var attempts = 0;
-          final resumed = Completer<List<HadithLookupRef>>();
+          final resumed = Completer<List<ReferenceChoice>>();
           final container = ProviderContainer(
             retry: (_, _) => null,
             overrides: [
@@ -124,7 +125,7 @@ void main() {
           expect(find.text(message), findsNothing);
           expect(find.text(l10n.noResults), findsNothing);
           resumed.complete(const [
-            HadithLookupRef(id: 'fixture', name: 'Lookup fixture'),
+            ReferenceChoice(id: '1', name: 'Lookup fixture'),
           ]);
           await tester.pumpAndSettle();
           expect(find.text('Lookup fixture'), findsOneWidget);

@@ -26,13 +26,12 @@ void main() {
           ),
       ],
     );
-    when(() => repository.addRecentSearch(any())).thenAnswer((
-      invocation,
-    ) async {
-      writeCount++;
-      if (writeCount == 1) await firstWrite.future;
-      persisted.add(invocation.positionalArguments.single as String);
-    });
+    when(() => repository.addRecentSearch(any()))
+        .thenAnswer((invocation) async {
+          writeCount++;
+          if (writeCount == 1) await firstWrite.future;
+          persisted.add(invocation.positionalArguments.single as String);
+        });
 
     final container = ProviderContainer(
       overrides: [
@@ -54,9 +53,9 @@ void main() {
     firstWrite.complete();
     await Future.wait([first, second]);
 
-    expect(
-      container.read(hadithRecentSearchesStoreProvider).requireValue,
-      ['second', 'first'],
-    );
+    expect(container.read(hadithRecentSearchesStoreProvider).requireValue, [
+      'second',
+      'first',
+    ]);
   });
 }

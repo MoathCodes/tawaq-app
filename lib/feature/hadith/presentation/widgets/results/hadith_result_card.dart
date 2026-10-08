@@ -1,4 +1,8 @@
+import 'package:tawaq/feature/hadith/domain/models/hadith_display_text.dart';
+
 import 'dart:async';
+
+import 'package:flutter/services.dart';
 
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -8,14 +12,16 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_highlight.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_judgment.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_meta_field.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_hukm_badge.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_source_ruling.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_actions.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_card_layout.dart';
 
 class HadithResultCard extends ConsumerWidget {
   const new({
@@ -29,6 +35,8 @@ class HadithResultCard extends ConsumerWidget {
     this.showMetadataAvailability = true,
     this.showFavoriteAction = true,
     this.hadithMaxLines = 4,
+    this.query = '',
+    this.focusNode,
   });
 
   /// Compact card for nested detail panes (similar/alternate hadith).
@@ -47,6 +55,8 @@ class HadithResultCard extends ConsumerWidget {
     );
   }
 
+  final FocusNode? focusNode;
+  final String query;
   final DetailedHadith hadith;
 
   /// Honest page-local position when the surrounding list has established it.
@@ -133,6 +143,8 @@ class HadithResultCard extends ConsumerWidget {
       builder: (context, constraints) {
         return _HadithResultCardBody(
           hadith: hadith,
+          query: query,
+          focusNode: focusNode,
           maxWidth: constraints.maxWidth,
           isSelected: isSelectedValue,
           showMetadataAvailability: showMetadataAvailability,
@@ -165,6 +177,8 @@ class _HadithResultCardBody extends HookWidget {
   const new({
     required this.hadith,
     required this.maxWidth,
+    required this.query,
+    this.focusNode,
     required this.isSelected,
     required this.showMetadataAvailability,
     required this.hadithMaxLines,
@@ -174,6 +188,8 @@ class _HadithResultCardBody extends HookWidget {
   });
 
   final DetailedHadith hadith;
+  final FocusNode? focusNode;
+  final String query;
   final double maxWidth;
   final bool isSelected;
   final bool showMetadataAvailability;
@@ -193,11 +209,14 @@ class _HadithResultCardBody extends HookWidget {
   }
 
   TextAlign _hadithTextAlign(FBreakpoints breakpoints) {
-    return maxWidth < breakpoints.sm ? TextAlign.start : TextAlign.justify;
+    return TextAlign.start;
   }
 
   @override
   Widget build(BuildContext context) {
+    final fallbackFocus = useFocusNode();
+    final node = focusNode ?? fallbackFocus;
+    useListenable(node);
     final theme = context.theme;
     final colors = theme.colors;
     final l10n = context.l10n;
@@ -207,23 +226,17 @@ class _HadithResultCardBody extends HookWidget {
 
     final hovered = useState(false);
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? colors.secondary
-            : hovered.value
-            ? colors.secondary.withValues(alpha: 0.35)
-            : colors.background,
-        borderRadius: theme.radii.xl,
-        border: Border.all(
-          color: isSelected
-              ? colors.primary
-              : hovered.value
-              ? colors.mutedForeground
-              : colors.border.withValues(alpha: 0.6),
-        ),
-      ),
+    return HadithCardFrame(
+      surface: isSelected
+          ? colors.secondary
+          : hovered.value
+          ? colors.secondary.withValues(alpha: .35)
+          : colors.card,
+      border: isSelected
+          ? colors.primary
+          : hovered.value
+          ? colors.mutedForeground
+          : colors.border,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -233,64 +246,158 @@ class _HadithResultCardBody extends HookWidget {
             button: true,
             selected: isSelected,
             onTap: onPress,
-            child: MouseClick(
-              onClick: onPress,
-              onHoverChange: (value) => hovered.value = value,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: AppSpacing.sm,
-                children: [
-                  ExcludeSemantics(
-                    child: Text(
-                      hadith.hadith,
-                      maxLines: effectiveMaxLines,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: textAlign,
-                      style: theme.typography.body.lg.copyWith(height: 1.9),
-                    ),
-                  ),
-                  HadithDecorExcludeSemantics(
-                    child: HadithHukmBadge(
-                      hukm: hadith.hukm,
-                      tone: hadithSourceJudgmentTone(hadith),
-                    ),
-                  ),
-                  ExcludeSemantics(
+            child: Focus(
+              focusNode: node,
+              onKeyEvent: (_, event) {
+                if (event is KeyDownEvent &&
+                    (event.logicalKey == LogicalKeyboardKey.enter ||
+                        event.logicalKey == LogicalKeyboardKey.space)) {
+                  onPress();
+                  return KeyEventResult.handled;
+                }
+                return KeyEventResult.ignored;
+              },
+              child: FFocusedOutline(
+                focused: node.hasFocus,
+                child: ExcludeFocus(
+                  child: MouseClick(
+                    onClick: onPress,
+                    onHoverChange: (value) => hovered.value = value,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: AppSpacing.xs,
+                      spacing: AppSpacing.sm,
                       children: [
-                        HadithMetaField(
-                          label: l10n.hadithNarrator,
-                          value: hadith.rawi,
-                          layout: HadithMetaFieldLayout.inline,
-                        ),
-                        HadithMetaField(
-                          label: l10n.hadithMuhaddith,
-                          value: hadith.mohdith,
-                          layout: HadithMetaFieldLayout.inline,
-                        ),
-                        HadithMetaField(
-                          label: l10n.hadithSource,
-                          value: l10n.hadithSourceCitation(
-                            hadith.book,
-                            hadith.numberOrPage,
+                        ExcludeSemantics(
+                          child: Text.rich(
+                            _highlight(
+                              hadithDisplayText(hadith),
+                              query,
+                              colors,
+                            ),
+                            maxLines: effectiveMaxLines,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: textAlign,
+                            textDirection: TextDirection.rtl,
+                            style: theme.typography.body.lg.copyWith(
+                              height: 1.9,
+                            ),
                           ),
-                          layout: HadithMetaFieldLayout.inline,
                         ),
+                        HadithDecorExcludeSemantics(
+                          child: HadithSourceRuling(
+                            hukm: hadithRulingText(hadith),
+                            tone: hadith.verdictTone,
+                            fitContent: true,
+                          ),
+                        ),
+                        ExcludeSemantics(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final fields = [
+                                (l10n.hadithNarrator, hadith.rawi),
+                                (l10n.hadithMuhaddith, hadith.mohdith),
+                                (
+                                  l10n.hadithSource,
+                                  l10n.hadithSourceCitation(
+                                    hadith.book,
+                                    hadith.numberOrPage,
+                                  ),
+                                ),
+                              ];
+                              return HadithAttributionLayout(
+                                compact: [
+                                  for (final field in fields)
+                                    HadithMetaField(
+                                      label: field.$1,
+                                      value: field.$2,
+                                      layout: HadithMetaFieldLayout.inline,
+                                    ),
+                                ],
+                                wide: [
+                                  for (final field in fields)
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      spacing: 4,
+                                      children: [
+                                        Text(
+                                          field.$1,
+                                          style: theme.typography.body.sm
+                                              .copyWith(
+                                                color: colors.mutedForeground,
+                                              ),
+                                        ),
+                                        Text(
+                                          field.$2,
+                                          style: theme.typography.body.sm,
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                        if (showMetadataAvailability)
+                          HadithDecorExcludeSemantics(
+                            child: HadithDetailsAvailabilityRow(hadith: hadith),
+                          ),
                       ],
                     ),
                   ),
-                  if (showMetadataAvailability)
-                    HadithDecorExcludeSemantics(
-                      child: HadithDetailsAvailabilityRow(hadith: hadith),
-                    ),
-                ],
+                ),
               ),
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          HadithShareActions(hadith: hadith, favoriteButton: favoriteButton),
+          HadithShareActions(
+            hadith: hadith,
+            favoriteButton: favoriteButton,
+            trailingAction: hadith.categories.isEmpty
+                ? null
+                : Consumer(
+                    builder: (context, ref, _) => FPopoverMenu(
+                      menu: [
+                        FItemGroup(
+                          children: [
+                            for (final category in hadith.categories)
+                              FItem(
+                                title: Text(category.name),
+                                onPress: () => ref
+                                    .read(
+                                      hadithSessionControllerProvider.notifier,
+                                    )
+                                    .openCategory(
+                                      ThematicCategory(
+                                        id: category.id,
+                                        name: category.name,
+                                        uri: Uri.https(
+                                          'dorar.net',
+                                          '/hadith-category/cat/${category.id}',
+                                        ),
+                                      ),
+                                    ),
+                              ),
+                          ],
+                        ),
+                      ],
+                      builder: (_, popover, _) => FButton(
+                        variant: .ghost,
+                        size: .sm,
+                        mainAxisSize: MainAxisSize.min,
+                        onPress: popover.toggle,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(l10n.hadithTopics),
+                            const SizedBox(width: 4),
+                            const Icon(FLucideIcons.chevronDown, size: 12),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
         ],
       ),
     );
@@ -308,14 +415,24 @@ class HadithDetailsAvailabilityRow extends StatelessWidget {
     final hasTakhrij = (hadith.takhrij ?? '').trim().isNotEmpty;
 
     final chips = <Widget>[
-      if (hadith.hasSharhMetadata)
+      if (hadith.explanationReference != null || hadith.hasSharhMetadata)
         HadithInfoMiniChip(
           icon: FLucideIcons.bookOpenText,
-          text: l10n.hadithSharh,
+          text:
+              hadith.explanationReference?.relationship ==
+                  ContentRelationship.similar
+              ? l10n.hadithSimilarExplanation
+              : l10n.hadithSharh,
         ),
       if (hasTakhrij)
         HadithInfoMiniChip(icon: FLucideIcons.link, text: l10n.hadithTakhrij),
-      if (hadith.hasUsulHadith)
+      if (hadith.asbabAvailability == Availability.advertised)
+        HadithInfoMiniChip(
+          icon: FLucideIcons.messageSquareText,
+          text: l10n.hadithAsbab,
+        ),
+      if (hadith.hasUsulHadith ||
+          hadith.usulAvailability == Availability.advertised)
         HadithInfoMiniChip(
           icon: FLucideIcons.sparkles,
           text: l10n.hadithUsulHadith,
@@ -371,4 +488,32 @@ class HadithInfoMiniChip extends StatelessWidget {
       ),
     );
   }
+}
+
+TextSpan _highlight(String source, String query, FColors colors) {
+  final ranges = hadithQueryRanges(source, query);
+  if (ranges.isEmpty) return TextSpan(text: source);
+  var offset = 0;
+  final spans = <TextSpan>[];
+  for (final range in ranges) {
+    if (range.start > offset)
+      spans.add(TextSpan(text: source.substring(offset, range.start)));
+    spans.add(
+      TextSpan(
+        text: source.substring(range.start, range.end),
+        style: TextStyle(
+          backgroundColor: Color.alphaBlend(
+            colors.primary.withValues(alpha: 0.18),
+            colors.card,
+          ),
+          color: colors.foreground,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+    offset = range.end;
+  }
+  if (offset < source.length)
+    spans.add(TextSpan(text: source.substring(offset)));
+  return TextSpan(children: spans);
 }

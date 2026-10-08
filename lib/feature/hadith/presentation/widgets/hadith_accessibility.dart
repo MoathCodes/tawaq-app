@@ -31,7 +31,7 @@ String hadithResultRowSemanticsLabel(
     if (resultOrdinal != null) l10n.hadithResultIdentity(resultOrdinal),
     l10n.hadithSourceCitation(hadith.book, hadith.numberOrPage),
     if (hasHadithMetadata(hadith.rawi)) narrator,
-    hadith.hukm,
+    hadithRulingText(hadith),
   ];
   if (isFavorite) {
     parts.add(l10n.bookmarks);

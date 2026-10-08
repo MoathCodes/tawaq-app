@@ -13,10 +13,8 @@ import 'dart:ui' as ui;
 
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:dorar_hadith/dorar_hadith.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_card.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
-import 'package:tawaq/feature/hadith/presentation/models/hadith_share_include.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_driver/driver_extension.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:tawaq/feature/quran/presentation/widgets/selectors/quran_search_field.dart';
@@ -44,6 +42,7 @@ import 'package:tawaq/core/utils/external_link_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/widgets/hero_header/prayer_hero_header.dart';
 import 'package:tawaq/core/widgets/page_shell/sidebar_settings_provider.dart';
 import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
 import 'package:tawaq/core/layout/lazy_tab_content.dart';
 import 'package:tawaq/feature/onboarding/presentation/providers/onboarding_state_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
@@ -55,9 +54,15 @@ import 'package:tawaq/feature/about/presentation/about_dialog.dart';
 import 'package:tawaq/feature/about/presentation/screens/about_screen.dart';
 import 'package:tawaq/feature/about/presentation/widgets/about_view.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/screens/hadith_screen.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_dialog.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/share/hadith_share_card.dart';
+import 'package:tawaq/feature/hadith/presentation/models/hadith_share_include.dart';
+import 'package:tawaq/feature/hadith/domain/models/hadith_filters.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_interaction.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/filters/hadith_filter_form.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortress_provider.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/screens/muslim_fortress_screen.dart';
@@ -98,6 +103,28 @@ import 'package:window_manager/window_manager.dart';
 final GlobalKey _captureKey = GlobalKey();
 final _reviewSharhAttempts = <String, int>{};
 
+class _DeskReviewSession extends HadithSessionController {
+  HadithSessionState beginLoadingPreview() {
+    final previous = state;
+    state = state.copyWith(
+      searchOutcome: const AsyncLoading(),
+      clearCommittedPage: true,
+    );
+    return previous;
+  }
+
+  HadithSessionState beginRefinementPreview() {
+    final previous = state;
+    state = state.copyWith(
+      committedPage: state.searchPage,
+      searchOutcome: const AsyncLoading(),
+    );
+    return previous;
+  }
+
+  void endLoadingPreview(HadithSessionState previous) => state = previous;
+}
+
 Future<void> main() async {
   try {
     await captureMain();
@@ -108,7 +135,11 @@ Future<void> main() async {
 }
 
 Future<void> captureMain() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  if (const bool.fromEnvironment('ENABLE_FLUTTER_DRIVER')) {
+    enableFlutterDriverExtension();
+  } else {
+    WidgetsFlutterBinding.ensureInitialized();
+  }
   tz.initializeTimeZones();
   final output = Directory(
     Platform.environment['LAUNCH_REVIEW_DIR'] ?? '/tmp/tawaq-launch-d62d0f64',
@@ -121,13 +152,50 @@ Future<void> captureMain() async {
   final container = ProviderContainer(
     retry: const bool.fromEnvironment('HADITH_REVIEW') ? (_, _) => null : null,
     overrides: [
+      if (const bool.fromEnvironment('HADITH_DESK_REVIEW'))
+        hadithSessionControllerProvider.overrideWith(_DeskReviewSession.new),
       if (const bool.fromEnvironment('FINAL_FIXES_REVIEW'))
         deviceLocationAvailableProvider.overrideWith((ref) async => false),
-      if (const bool.fromEnvironment('HADITH_REVIEW'))
-        hadithDetailProvider.overrideWith((ref, argument) async {
-          final (kind, id) = argument;
-          if (kind != HadithDetailKind.sharh || !id.startsWith('review-sharh-'))
-            throw StateError('No synthetic detail fixture for this request');
+      if (const bool.fromEnvironment('DORAR_ADOPTION_REVIEW'))
+        hadithUsulProvider.overrideWith((ref, id) async {
+          final json = jsonDecode(
+            await File(Platform.environment['DORAR_DETAILS_FIXTURE']!)
+                .readAsString(),
+          ) as Map;
+          return ApiResponse(
+            metadata: const SearchMetadata(),
+            data: UsulHadith.fromJson(
+              Map<String, dynamic>.from(json['usul'] as Map),
+            ),
+          );
+        }),
+      if (const bool.fromEnvironment('DORAR_ADOPTION_REVIEW'))
+        hadithRelatedProvider.overrideWith((ref, argument) async {
+          final json = jsonDecode(
+            await File(Platform.environment['DORAR_DETAILS_FIXTURE']!)
+                .readAsString(),
+          ) as Map;
+          return ApiResponse(
+            metadata: const SearchMetadata(),
+            data: RelatedHadithResult.fromJson(
+              Map<String, dynamic>.from(json['similar'] as Map),
+            ),
+          );
+        }),
+      if (const bool.fromEnvironment('HADITH_REVIEW') &&
+          !const bool.fromEnvironment('HADITH_DESK_REVIEW'))
+        hadithSharhProvider.overrideWith((ref, argument) async {
+          final id = argument.value;
+          if (const bool.fromEnvironment('DORAR_ADOPTION_REVIEW') &&
+              id == '111245') {
+            final rows = jsonDecode(
+              await File(Platform.environment['DORAR_REVIEW_FIXTURE']!)
+                  .readAsString(),
+            ) as List;
+            return Sharh.fromJson(
+              Map<String, dynamic>.from((rows.first as Map)['sharh'] as Map),
+            );
+          }
           await Future<void>.delayed(const Duration(milliseconds: 150));
           final attempt = _reviewSharhAttempts.update(
             id,
@@ -137,7 +205,7 @@ Future<void> captureMain() async {
           if (attempt == 1)
             throw StateError('Synthetic selected-detail network failure');
           return const Sharh(
-            hadith: ExplainedHadith(
+            hadith: DetailedHadith(
               hadith: 'Synthetic UI fixture',
               rawi: '-',
               mohdith: 'Fixture scholar',
@@ -146,7 +214,7 @@ Future<void> captureMain() async {
               grade: 'Fixture judgment',
             ),
             sharhMetadata: SharhMetadata(
-              id: 'review-sharh',
+              id: '100',
               isContainSharh: true,
               sharh: 'Synthetic UI review fixture — optional commentary successfully loaded.',
             ),
@@ -182,7 +250,11 @@ Future<void> captureMain() async {
   await container.read(localeProvider.future);
   await container.read(onboardingStateProvider.future);
   await container.read(onboardingStateProvider.notifier).finish();
-  await windowManager.setMinimumSize(const Size(800, 600));
+  await windowManager.setMinimumSize(
+    const bool.fromEnvironment('HADITH_DESK_REVIEW')
+        ? const Size(664, 718)
+        : const Size(800, 600),
+  );
   await windowManager.setSize(const Size(1200, 860));
   await windowManager.show();
 
@@ -271,7 +343,8 @@ Future<void> captureMain() async {
     container.dispose();
     exit(errors.isEmpty ? 0 : 1);
   }
-  if (const bool.fromEnvironment('HADITH_REVIEW')) {
+  if (const bool.fromEnvironment('HADITH_REVIEW') ||
+      const bool.fromEnvironment('HADITH_DESK_REVIEW')) {
     await reviewHadith(container, output, errors, (value) => scenario = value);
     container.dispose();
     exit(errors.isEmpty ? 0 : 1);
@@ -1043,7 +1116,7 @@ Future<void> captureMain() async {
                 await session.openBookmarks();
                 scenario = '$name-hadith-favorites';
                 await captureState('hadith-favorites');
-                await session.exitSpecificMode();
+                session.returnToWorkspace();
               }
             }
 
@@ -2166,18 +2239,9 @@ Future<void> reviewHadith(
   List<String> errors,
   void Function(String) scenario,
 ) async {
-  // Transcribed exactly from the user's provided record screenshot. This is
-  // visual regression evidence, not an independent religious authentication.
-  const source = DetailedHadith(
-    hadith: 'مَن نَوَّر بالفَجرِ نَوَّر اللهُ قلبَه وقبرَه',
-    rawi: '-',
-    mohdith: 'الذهبي',
-    book: 'ترتيب الموضوعات',
-    numberOrPage: '151',
-    grade: 'فيه أبو داود النخعي كذاب',
-  );
+  const confirmation = bool.fromEnvironment('HADITH_ROOT_CONFIRM');
   final captures = <String>[];
-  List<Element> elements(Type type, [Element? scope]) {
+  List<Element> elements(Type type) {
     final found = <Element>[];
     void visit(Element e) {
       if (e.widget is Offstage && (e.widget as Offstage).offstage) return;
@@ -2185,26 +2249,42 @@ Future<void> reviewHadith(
       e.visitChildren(visit);
     }
 
-    visit(scope ?? _captureKey.currentContext! as Element);
+    visit(_captureKey.currentContext! as Element);
     return found;
   }
 
   Future<void> ready(bool Function() condition) async {
-    final deadline = DateTime.now().add(const Duration(seconds: 12));
+    final deadline = DateTime.now().add(const Duration(seconds: 45));
     while (!condition()) {
       if (DateTime.now().isAfter(deadline))
-        throw StateError('Hadith readiness timeout');
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+        throw StateError('Desk readiness timeout');
+      await Future<void>.delayed(const Duration(milliseconds: 30));
     }
     await WidgetsBinding.instance.endOfFrame;
   }
 
-  Future<void> snap(String name, [GlobalKey? key]) async {
+  bool sheetsSettled() {
+    var settled = true;
+    void visit(Element e) {
+      if (e.widget.runtimeType.toString() == 'Sheet') {
+        final animation =
+            (e.widget as dynamic).controller as AnimationController?;
+        if (animation?.isAnimating ?? false) settled = false;
+      }
+      e.visitChildren(visit);
+    }
+
+    visit(_captureKey.currentContext! as Element);
+    return settled;
+  }
+
+  Future<void> snap(String name) async {
     scenario(name);
-    await Future<void>.delayed(const Duration(milliseconds: 450));
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    await ready(sheetsSettled);
     await WidgetsBinding.instance.endOfFrame;
     final boundary =
-        (key ?? _captureKey).currentContext!.findRenderObject()!
+        _captureKey.currentContext!.findRenderObject()!
             as RenderRepaintBoundary;
     final image = await boundary.toImage();
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -2214,154 +2294,495 @@ Future<void> reviewHadith(
     captures.add(name);
   }
 
-  final router = container.read(appRouterProvider);
-  final settingsSubscription = container.listen(
-    hadithScreenSettingsProvider,
-    (_, _) {},
-  );
-  await container.read(hadithScreenSettingsProvider.future);
+  stdout.writeln('DESK_REVIEW_WINDOW_READY pid=$pid');
+  if (Platform.environment.containsKey('HYPRLAND_INSTANCE_SIGNATURE')) {
+    final deadline = DateTime.now().add(const Duration(seconds: 50));
+    while (true) {
+      final clients = jsonDecode(
+        (await Process.run('hyprctl', ['clients', '-j'])).stdout as String,
+      ) as List;
+      if (clients.any((dynamic c) => c['pid'] == pid && c['floating'] == true))
+        break;
+      if (DateTime.now().isAfter(deadline))
+        throw StateError('Owned desk window was not floated');
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+  }
   final subscription = container.listen(
     hadithSessionControllerProvider,
     (_, _) {},
   );
-  for (final scale in [AppTextScale.normal, AppTextScale.extraLarge]) {
-    container.read(themeProvider.notifier).setAppTextScale(scale);
-    for (final language in ['en', 'ar']) {
-      container.read(localeProvider.notifier).setLocale(Locale(language));
-      final l10n = lookupAppLocalizations(Locale(language));
-      for (final mode in [ThemeMode.light, ThemeMode.dark]) {
-        container.read(themeProvider.notifier).setThemeMode(mode);
-        for (final width in [1200.0, 800.0]) {
-          final prefix =
-              'hadith-$language-${mode.name}-${width.toInt()}-${scale == AppTextScale.normal ? 'normal' : 'xl'}';
-          router.go('/prayer');
-          await resizeOwnedWindow(Size(width, width == 800 ? 600 : 860));
-          await Future<void>.delayed(const Duration(milliseconds: 400));
-          router.go('/hadith');
-          await ready(() => elements(HadithPage).isNotEmpty);
-          await container
-              .read(hadithSessionControllerProvider.notifier)
-              .openSpecificList([source]);
-          await ready(() => elements(HadithResultCard).isNotEmpty);
-          if (const bool.fromEnvironment('HADITH_CARD_REVIEW')) {
-            final controller = container.read(
-              hadithSessionControllerProvider.notifier,
-            );
-            Future<void> hover(bool enter) async {
-              final row = elements(HadithResultCard).first;
-              // Invoke the mounted Forui pointer callback; no OS input claim.
-              final body = elements(MouseClick, row).single;
-              final regions = elements(MouseRegion, body);
-              for (final e in regions) {
-                final region = e.widget as MouseRegion;
-                if (enter) {
-                  region.onEnter?.call(const PointerEnterEvent());
-                } else {
-                  region.onExit?.call(const PointerExitEvent());
-                }
-              }
-              await WidgetsBinding.instance.endOfFrame;
-            }
+  final settings = container.listen(hadithScreenSettingsProvider, (_, _) {});
+  await container.read(hadithScreenSettingsProvider.future);
+  final controller = container.read(hadithSessionControllerProvider.notifier);
+  container.read(appRouterProvider).go('/hadith');
+  await ready(() => elements(HadithPage).isNotEmpty);
+  if (const bool.fromEnvironment('HADITH_SIDEBAR_REVIEW')) {
+    final preferences = container.read(hadithScreenSettingsProvider.notifier);
+    Future<void> pressSidebar(String key) async {
+      await ready(
+        () => elements(FSidebarItem).any((e) => e.widget.key == ValueKey(key)),
+      );
+      (elements(FSidebarItem)
+                  .singleWhere((e) => e.widget.key == ValueKey(key))
+                  .widget
+              as FSidebarItem)
+          .onPress!();
+      await WidgetsBinding.instance.endOfFrame;
+    }
 
-            await controller.selectHadith(source);
-            await snap('$prefix-selected');
-            await hover(true);
-            await snap('$prefix-selected-hover');
-            await hover(false);
-            controller.clearSelection();
-            await snap('$prefix-idle');
-            await hover(true);
-            await snap('$prefix-hover');
-            await hover(false);
-            continue;
-          }
-          await snap('$prefix-result');
-          final row = elements(HadithResultCard).first;
-          final share = elements(FButton, row).firstWhere(
-            (e) => (e.widget as FButton).semanticsLabel == l10n.hadithShare,
-          );
-          (share.widget as FButton).onPress!();
-          await ready(() => elements(HadithShareDialog).isNotEmpty);
-          await snap('$prefix-share');
-          final card =
-              elements(HadithShareCard).single.widget as HadithShareCard;
-          await snap('$prefix-card', card.boundaryKey);
-          for (final value in [
-            HadithShareInclude.muhaddith,
-            HadithShareInclude.number,
-          ]) {
-            final option = elements(FSelectTile<HadithShareInclude>).firstWhere(
-              (e) =>
-                  (e.widget as FSelectTile<HadithShareInclude>).value == value,
-            );
-            final tile = elements(FTile, option).single.widget as FTile;
-            tile.onPress!();
-            await WidgetsBinding.instance.endOfFrame;
-          }
-          await snap('$prefix-all-details');
-          final fullCard =
-              elements(HadithShareCard).single.widget as HadithShareCard;
-          await snap('$prefix-full-card', fullCard.boundaryKey);
-          Navigator.of(elements(HadithShareDialog).single).pop();
-          await ready(() => elements(HadithShareDialog).isEmpty);
-          if (width == 800 && scale == AppTextScale.extraLarge) {
-            final id = 'review-sharh-$language-${mode.name}';
-            final review = source.copyWith(
-              hadith: 'Synthetic UI fixture — optional commentary recovery',
-              hasSharhMetadata: true,
-              sharhMetadata: SharhMetadata(id: id),
-            );
-            final dialogFuture = showHadithShareDialog(
-              elements(HadithPage).single,
-              review,
-            );
-            await ready(() => elements(HadithShareDialog).isNotEmpty);
-            final option = elements(FSelectTile<HadithShareInclude>).firstWhere(
-              (e) =>
-                  (e.widget as FSelectTile<HadithShareInclude>).value ==
-                  HadithShareInclude.sharh,
-            );
-            (elements(FTile, option).single.widget as FTile).onPress!();
-            await ready(
-              () => elements(Text).any(
-                (e) =>
-                    (e.widget as Text).data ==
-                    l10n.hadithShareDetailsFailed(l10n.hadithSharh),
-              ),
-            );
-            await snap('$prefix-optional-error');
-            final retry = elements(FButton).singleWhere(
-              (e) => elements(
-                Text,
-                e,
-              ).any((text) => (text.widget as Text).data == l10n.retryAction),
-            );
-            (retry.widget as FButton).onPress!();
-            await ready(
-              () => elements(Text).any(
-                (e) => (e.widget as Text).data == 'Synthetic UI review fixture — optional commentary successfully loaded.',
-              ),
-            );
-            await snap('$prefix-optional-recovered');
-            Navigator.of(elements(HadithShareDialog).single).pop();
-            await dialogFuture;
-            await ready(() => elements(HadithShareDialog).isEmpty);
+    for (final language in ['ar', 'en']) {
+      container.read(localeProvider.notifier).setLocale(Locale(language));
+      for (final mode in [ThemeMode.dark, ThemeMode.light]) {
+        final prefix = 'sidebar-$language-${mode.name}';
+        container
+            .read(sidebarSettingsProvider.notifier)
+            .setCollapsed(collapsed: false);
+        container.read(themeProvider.notifier).setThemeMode(mode);
+        preferences.setFiltersVisible(false);
+        await resizeOwnedWindow(const Size(1440, 900));
+        await pressSidebar('/hadith');
+        await snap('$prefix-home');
+        await controller.setQuery('إنما');
+        preferences.setFiltersVisible(true);
+        await controller.setFilters(
+          const HadithFilters(
+            degrees: [HadithDegree.weakHadith, HadithDegree.weakChain],
+          ),
+          debounced: false,
+        );
+        await snap('$prefix-long-tags');
+        final preview = (controller as _DeskReviewSession)
+            .beginRefinementPreview();
+        await snap('$prefix-refresh');
+        if (language == 'ar' && mode == ThemeMode.dark) {
+          for (var frame = 0; frame < 24; frame++) {
+            await snap('refresh-frame-${frame.toString().padLeft(3, '0')}');
           }
         }
+        controller.endLoadingPreview(preview);
+        preferences.setFiltersVisible(false);
+        await pressSidebar('hadith-sidebar-topics');
+        await container.read(hadithTopicRootsProvider.future);
+        await snap('$prefix-topics');
+        await pressSidebar('hadith-sidebar-saved');
+        await snap('$prefix-saved');
+        await pressSidebar('/hadith');
+        await snap('$prefix-home-return');
       }
     }
+    await File('${output.path}/sidebar-review.json').writeAsString(
+      jsonEncode({
+        'captures': captures,
+        'errors': errors,
+        'pid': pid,
+        'scope': 'Native Linux app; real SDK results; mounted sidebar callbacks; pending refresh preview with committed results; OS pointer and keyboard unverified',
+      }),
+    );
+    subscription.close();
+    settings.close();
+    return;
+  }
+  if (const bool.fromEnvironment('HADITH_DESKTOP_DENSITY')) {
+    final preferences = container.read(hadithScreenSettingsProvider.notifier);
+    for (final language in ['ar', 'en']) {
+      container.read(localeProvider.notifier).setLocale(Locale(language));
+      for (final mode in [ThemeMode.dark, ThemeMode.light]) {
+        final prefix = 'density-$language-${mode.name}';
+        container.read(themeProvider.notifier).setThemeMode(mode);
+        controller.returnToSearch();
+        await controller.setTarget(HadithSearchTarget.records);
+        await controller.setQuery('');
+        preferences.setFiltersVisible(false);
+        await resizeOwnedWindow(const Size(1440, 900));
+        await snap('$prefix-landing');
+        void toggleFilters() {
+          final button =
+              elements(FButton).singleWhere((e) {
+                    var found = false;
+                    void visit(Element child) {
+                      if (child.widget is Icon &&
+                          (child.widget as Icon).icon ==
+                              FLucideIcons.slidersHorizontal)
+                        found = true;
+                      child.visitChildren(visit);
+                    }
+
+                    visit(e);
+                    return found;
+                  }).widget
+                  as FButton;
+          button.onPress!();
+        }
+
+        toggleFilters();
+        await snap('$prefix-desktop-filters');
+        await resizeOwnedWindow(const Size(800, 718));
+        await ready(() => elements(HadithFilterPanel).isEmpty);
+        toggleFilters();
+        await ready(() => elements(HadithFilterPanel).isNotEmpty);
+        await snap('$prefix-compact-filters');
+        (elements(HadithFilterPanel).single.widget as HadithFilterPanel)
+            .onClose!();
+        await ready(sheetsSettled);
+        preferences.setFiltersVisible(false);
+        await resizeOwnedWindow(const Size(1440, 900));
+        controller.openTopics();
+        final roots = await container.read(hadithTopicRootsProvider.future);
+        final root =
+            roots.data.where((r) => r.name == 'إيمان').firstOrNull ??
+            roots.data.first;
+        controller.navigateTopics([HadithTopicStep(root.selector, root.name)]);
+        await container.read(hadithTopicChildrenProvider(root.selector).future);
+        await snap('$prefix-subtopics');
+        controller.returnToSearch();
+        await controller.setTarget(HadithSearchTarget.records);
+        await controller.setQuery('الصلاة');
+        await snap('$prefix-results');
+        final result = container
+            .read(hadithSessionControllerProvider)
+            .results
+            .first;
+        await controller.selectHadith(result);
+        await snap('$prefix-reader');
+        controller.clearSelection();
+      }
+    }
+    await File('${output.path}/density-review.json').writeAsString(
+      jsonEncode({
+        'captures': captures,
+        'errors': errors,
+        'pid': pid,
+        'scope': 'Normally launched Linux app; real Dorar SDK responses including cache; mounted callbacks; native pointer/keyboard unverified',
+      }),
+    );
+    subscription.close();
+    settings.close();
+    return;
+  }
+  await resizeOwnedWindow(const Size(1440, 900));
+  await snap('desk-landing');
+  container.read(localeProvider.notifier).setLocale(const Locale('ar'));
+  container.read(themeProvider.notifier).setThemeMode(ThemeMode.dark);
+  await snap('desk-landing-ar-dark');
+  container.read(localeProvider.notifier).setLocale(const Locale('en'));
+  container.read(themeProvider.notifier).setThemeMode(ThemeMode.light);
+  final query =
+      elements(FTextField)
+              .singleWhere(
+                (e) => e.widget.key == const ValueKey('hadith-query'),
+              )
+              .widget
+          as FTextField;
+  (query.control as FTextFieldManagedControl).controller!.text = 'الصلاة';
+  await WidgetsBinding.instance.endOfFrame;
+  final submittedQuery =
+      elements(FTextField)
+              .singleWhere(
+                (e) => e.widget.key == const ValueKey('hadith-query'),
+              )
+              .widget
+          as FTextField;
+  submittedQuery.onSubmit!('الصلاة');
+  await snap('desk-search-pending');
+  await ready(
+    () => !container.read(hadithSessionControllerProvider).searchBusy,
+  );
+  final page = container.read(hadithSessionControllerProvider).searchPage;
+  if (page == null || page.results.isEmpty)
+    throw StateError(
+      'Live record search did not produce records: ${container.read(hadithSessionControllerProvider).hardSearchError}',
+    );
+  await File('${output.path}/record-page.json').writeAsString(
+    jsonEncode({
+      'query': 'الصلاة',
+      'metadata': page.metadata?.toJson(),
+      'records': page.results.map((r) => r.toJson()).toList(),
+    }),
+  );
+  final record =
+      page.results
+          .where((r) => r.explanationReference != null && r.hasUsulHadith)
+          .firstOrNull ??
+      page.results.where((r) => r.explanationReference != null).firstOrNull ??
+      page.results.first;
+  await snap('desk-results');
+  final reviewController = controller as _DeskReviewSession;
+  final previous = reviewController.beginLoadingPreview();
+  await snap('desk-loading-fixture');
+  if (const bool.fromEnvironment('HADITH_MOTION_REVIEW')) {
+    final ticks = <int>[];
+    final clock = Stopwatch()..start();
+    for (var frame = 0; frame < 24; frame++) {
+      await WidgetsBinding.instance.endOfFrame;
+      ticks.add(clock.elapsedMicroseconds);
+      final boundary =
+          _captureKey.currentContext!.findRenderObject()!
+              as RenderRepaintBoundary;
+      final image = await boundary.toImage();
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      await File('${output.path}/pulse-${frame.toString().padLeft(3, '0')}.png')
+          .writeAsBytes(bytes!.buffer.asUint8List());
+      image.dispose();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    await File('${output.path}/motion.json').writeAsString(
+      jsonEncode({
+        'ticksMicroseconds': ticks,
+        'errors': errors,
+        'pid': pid,
+        'scope': 'Rendered frames of production loading widgets in normally launched isolated app; synthetic pending state',
+      }),
+    );
+    reviewController.endLoadingPreview(previous);
+    await controller.selectHadith(record);
+    for (final language in ['ar', if (!confirmation) 'en']) {
+      container.read(localeProvider.notifier).setLocale(Locale(language));
+      for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+        container.read(themeProvider.notifier).setThemeMode(mode);
+        await resizeOwnedWindow(const Size(664, 718));
+        await snap('desk-$language-${mode.name}-664-settled');
+      }
+    }
+    await File('${output.path}/settled-confirmation.json').writeAsString(
+      jsonEncode({
+        'captures': captures,
+        'errors': errors,
+        'pid': pid,
+        'readiness':
+            'Persistent sheet controller is no longer animating before capture',
+      }),
+    );
+    subscription.close();
+    settings.close();
+    return;
+  }
+  reviewController.endLoadingPreview(previous);
+  await controller.selectHadith(record);
+  for (final language in ['ar', if (!confirmation) 'en']) {
+    container.read(localeProvider.notifier).setLocale(Locale(language));
+    for (final mode in [ThemeMode.dark, ThemeMode.light]) {
+      container.read(themeProvider.notifier).setThemeMode(mode);
+      for (final size in [
+        const Size(1440, 900),
+        if (!confirmation) const Size(1200, 800),
+        if (!confirmation) const Size(800, 718),
+        const Size(664, 718),
+      ]) {
+        await resizeOwnedWindow(size);
+        await snap('desk-$language-${mode.name}-${size.width.toInt()}');
+      }
+    }
+  }
+  for (final palette in [
+    if (!confirmation) AppPalette.neutral,
+    if (!confirmation) AppPalette.sage,
+    if (!confirmation) AppPalette.omarchy,
+  ]) {
+    container.read(themeProvider.notifier).setPalette(palette);
+    for (final mode in [ThemeMode.light, ThemeMode.dark]) {
+      container.read(themeProvider.notifier).setThemeMode(mode);
+      await resizeOwnedWindow(const Size(1440, 900));
+      await snap('desk-${palette.name}-${mode.name}');
+    }
+  }
+  container.read(themeProvider.notifier).setPalette(AppPalette.manuscript);
+  container.read(themeProvider.notifier).setThemeMode(ThemeMode.light);
+  container
+      .read(themeProvider.notifier)
+      .setAppTextScale(AppTextScale.extraLarge);
+  await resizeOwnedWindow(const Size(800, 718));
+  await snap('desk-large-text-compact');
+  container.read(themeProvider.notifier).setAppTextScale(AppTextScale.normal);
+  await resizeOwnedWindow(const Size(1440, 900));
+  if (record.explanationReference != null) {
+    await ready(
+      () =>
+          elements(HadithSharhContent).isNotEmpty ||
+          elements(Text).any(
+            (e) =>
+                (e.widget as Text).data ==
+                lookupAppLocalizations(const Locale('en')).hadithRequestFailed,
+          ),
+    );
+    await snap('desk-record-reader-settled');
+  }
+  container.read(localeProvider.notifier).setLocale(const Locale('ar'));
+  unawaited(showHadithShareDialog(elements(HadithPage).single, record));
+  await ready(() => elements(HadithShareDialog).isNotEmpty);
+  Future<void> exportPreview(String name) async {
+    final card = elements(HadithShareCard).single.widget as HadithShareCard;
+    final boundary =
+        card.boundaryKey.currentContext!.findRenderObject()!
+            as RenderRepaintBoundary;
+    final image = await boundary.toImage(pixelRatio: 2);
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    await File('${output.path}/$name.png')
+        .writeAsBytes(bytes!.buffer.asUint8List());
+    image.dispose();
+  }
+
+  await snap('desk-share-default');
+  await exportPreview('share-default');
+  final group =
+      elements(FSelectTileGroup<HadithShareInclude>).single.widget
+          as FSelectTileGroup<HadithShareInclude>;
+  // The visual harness drives the mounted lifted callback through a temporary
+  // controller; it never replaces the select group's owned controller.
+  // ignore: invalid_use_of_visible_for_overriding_member
+  final selection = group.control!.createController();
+  selection.value = HadithShareInclude.values.toSet();
+  selection.dispose();
+  await ready(() {
+    final card = elements(HadithShareCard).single.widget as HadithShareCard;
+    return (!card.options.contains(HadithShareInclude.sharh) ||
+            card.sharh != null) &&
+        (!card.options.contains(HadithShareInclude.usul) || card.usul != null);
+  });
+  await snap('desk-share-all-options');
+  await exportPreview('share-all-options');
+  Navigator.of(elements(HadithShareDialog).single).pop();
+  await ready(() => elements(HadithShareDialog).isEmpty);
+  final rootPage = container.read(hadithSessionControllerProvider).searchPage;
+  controller.pushReader(page.results.last);
+  await snap('desk-reader-trail');
+  controller.readerBack();
+  if (!identical(
+    container.read(hadithSessionControllerProvider).searchPage,
+    rootPage,
+  ))
+    throw StateError('Reader Back replaced results');
+  await controller.toggleFavorite(record);
+  await controller.openBookmarks();
+  await ready(() => container.read(hadithFavoritesStoreProvider).hasValue);
+  final entry = container
+      .read(hadithFavoritesStoreProvider)
+      .value!
+      .values
+      .first;
+  controller.selectSavedEntry(entry.key);
+  await snap('desk-saved');
+  controller.returnToWorkspace();
+  if (!identical(
+    container.read(hadithSessionControllerProvider).searchPage,
+    rootPage,
+  ))
+    throw StateError('Saved Back replayed results');
+  await controller.setTarget(HadithSearchTarget.prose);
+  if (container
+          .read(hadithSessionControllerProvider)
+          .searchPage
+          ?.snippets
+          .isNotEmpty !=
+      true)
+    throw StateError('Live prose search produced no snippets');
+  controller.selectSharh(
+    container.read(hadithSessionControllerProvider).searchPage!.snippets.first,
+  );
+  await snap('desk-prose-reader');
+  await resizeOwnedWindow(const Size(664, 718));
+  await snap('desk-prose-compact');
+  controller.readerBack();
+  await snap('desk-prose-back');
+  controller.openTopics();
+  await resizeOwnedWindow(const Size(1440, 900));
+  final roots = await container.read(hadithTopicRootsProvider.future);
+  await snap('desk-topics');
+  if (roots.data.isNotEmpty) {
+    controller.navigateTopics([
+      HadithTopicStep(roots.data.first.selector, roots.data.first.name),
+    ]);
+    final children = await container.read(
+      hadithTopicChildrenProvider(roots.data.first.selector).future,
+    );
+    await snap('desk-topic-children');
+    if (children.data.isNotEmpty) {
+      await controller.openCategory(children.data.first);
+      final categoryPage = container
+          .read(hadithSessionControllerProvider)
+          .searchPage;
+      if (categoryPage == null || categoryPage.results.isEmpty) {
+        throw StateError('Live category browse did not produce records');
+      }
+      await File('${output.path}/category-page.json').writeAsString(
+        jsonEncode({
+          'category': children.data.first.toJson(),
+          'metadata': categoryPage.metadata?.toJson(),
+          'records': categoryPage.results.map((r) => r.toJson()).toList(),
+        }),
+      );
+      await snap('desk-category');
+      if (container.read(hadithSessionControllerProvider).results.isNotEmpty) {
+        await controller.selectHadith(
+          container.read(hadithSessionControllerProvider).results.first,
+        );
+        await snap('desk-category-reader');
+      }
+    }
+  }
+  if (confirmation) {
+    controller.returnToSearch();
+    await controller.setTarget(HadithSearchTarget.records);
+    await controller.setQuery('إنما الأعمال');
+    await resizeOwnedWindow(const Size(1440, 900));
+    final settingsController = container.read(
+      hadithScreenSettingsProvider.notifier,
+    );
+    settingsController.setFiltersVisible(true);
+    await WidgetsBinding.instance.endOfFrame;
+    final interaction = container.read(hadithFilterInteractionProvider);
+    for (var i = 0; i < 4; i++) {
+      interaction.expand(i, true);
+    }
+    if (elements(HadithFilterForm).isEmpty) {
+      throw StateError('Record filters are not mounted for refinement capture');
+    }
+    await snap('desk-filters-expanded');
+    final frameTimes = <int>[];
+    final clock = Stopwatch()..start();
+    final pending = controller.setFilters(
+      container
+          .read(hadithSessionControllerProvider)
+          .filters
+          .copyWith(sort: HadithSort.degree),
+      debounced: false,
+    );
+    for (var frame = 0; frame < 24; frame++) {
+      await WidgetsBinding.instance.endOfFrame;
+      final boundary =
+          _captureKey.currentContext!.findRenderObject()!
+              as RenderRepaintBoundary;
+      final image = await boundary.toImage();
+      final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      await File(
+        '${output.path}/refinement-${frame.toString().padLeft(3, '0')}.png',
+      ).writeAsBytes(bytes!.buffer.asUint8List());
+      image.dispose();
+      frameTimes.add(clock.elapsedMicroseconds);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    }
+    await pending;
+    await snap('desk-refinement-settled');
+    await File('${output.path}/refinement-motion.json').writeAsString(
+      jsonEncode({
+        'sampleTimesMicroseconds': frameTimes,
+        'scope': 'Sampled production render frames during a real SDK filter request, triggered through the mounted route controller; native pointer delivery not exercised.',
+      }),
+    );
   }
   await File('${output.path}/errors.txt').writeAsString(errors.join('\n\n'));
   await File('${output.path}/hadith-review.json').writeAsString(
     jsonEncode({
       'captures': captures,
       'errors': errors,
-      'fixture': 'User-supplied source screenshot transcribed for visual regression; no independent authentication',
-      'scope': 'Native mounted app callbacks/render buffers; OS input and accessibility unverified',
+      'pid': pid,
+      'buildMode': 'debug',
+      'source': 'Live Dorar record/prose/category requests; record-page.json retains source metadata',
+      'scope': 'Normally launched isolated app; mounted Flutter callbacks and rendered frames. Loading fixture changes only async presentation state. Native keyboard/pointer unverified.',
     }),
   );
   subscription.close();
-  settingsSubscription.close();
+  settings.close();
 }
 
 Future<void> reviewFinalFixes(
@@ -2387,7 +2808,9 @@ Future<void> reviewFinalFixes(
     final found = <Element>[];
     void visit(Element e) {
       if (e.widget case Offstage(offstage: true)) return;
-      if (e.widget.runtimeType == type) found.add(e);
+      if (e.widget.runtimeType == type ||
+          type == FTappable && e.widget is FTappable)
+        found.add(e);
       e.visitChildren(visit);
     }
 

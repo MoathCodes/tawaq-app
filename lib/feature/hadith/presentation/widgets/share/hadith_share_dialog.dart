@@ -48,12 +48,16 @@ class HadithShareDialog extends HookConsumerWidget {
     final theme = context.theme;
     final boundaryKey = useMemoized(GlobalKey.new);
     final sharhAvailable =
-        hadith.hasSharhMetadata && hadith.sharhMetadata != null;
+        hadith.explanationReference != null || hadith.sharhMetadata != null;
+    final usulAvailable =
+        hadith.hadithId != null &&
+        (hadith.hasUsulHadith ||
+            hadith.usulAvailability == Availability.advertised);
     final options = useState(
       HadithShareOptions.defaults().constrained(
         hadith: hadith,
         sharhAvailable: sharhAvailable,
-        usulAvailable: hadith.hasUsulHadith && hadith.hadithId != null,
+        usulAvailable: usulAvailable,
       ),
     );
     final judgmentRequired = requiresHadithJudgment(hadith);
@@ -61,23 +65,22 @@ class HadithShareDialog extends HookConsumerWidget {
 
     final sharhEnabled = options.value.contains(HadithShareInclude.sharh);
     final usulEnabled = options.value.contains(HadithShareInclude.usul);
-    final sharhState = sharhEnabled && sharhAvailable
+    final AsyncValue<Sharh?> sharhState = sharhEnabled && sharhAvailable
         ? ref.watch(
-            hadithDetailProvider(
-              HadithDetailKind.sharh,
-              hadith.sharhMetadata!.id,
+            hadithSharhProvider(
+              SharhId(
+                hadith.explanationReference?.id ?? hadith.sharhMetadata!.id,
+              ),
             ),
           )
-        : const AsyncData<Object?>(null);
-    final usulState =
-        usulEnabled && hadith.hasUsulHadith && hadith.hadithId != null
-        ? ref.watch(
-            hadithDetailProvider(HadithDetailKind.usul, hadith.hadithId!),
-          )
-        : const AsyncData<Object?>(null);
+        : const AsyncData<Sharh?>(null);
+    final AsyncValue<ApiResponse<UsulHadith>?> usulState =
+        usulEnabled && usulAvailable
+        ? ref.watch(hadithUsulProvider(HadithRecordId(hadith.hadithId!)))
+        : const AsyncData<ApiResponse<UsulHadith>?>(null);
 
-    final sharh = sharhState.hasValue ? sharhState.value as Sharh? : null;
-    final usul = usulState.hasValue ? usulState.value as UsulHadith? : null;
+    final sharh = sharhState.hasValue ? sharhState.value : null;
+    final usul = usulState.hasValue ? usulState.value?.data : null;
     final loading =
         (sharhEnabled && sharhState.isLoading) ||
         (usulEnabled && usulState.isLoading);
@@ -113,7 +116,7 @@ class HadithShareDialog extends HookConsumerWidget {
           .constrained(
             hadith: hadith,
             sharhAvailable: sharhAvailable,
-            usulAvailable: hadith.hasUsulHadith && hadith.hadithId != null,
+            usulAvailable: usulAvailable,
           );
     }
 
@@ -137,7 +140,8 @@ class HadithShareDialog extends HookConsumerWidget {
                 boundaryKey: boundaryKey,
                 hadith: hadith,
                 options: options.value,
-                sharh: sharh?.sharhText,
+                sharh: sharh,
+                explanationOrigin: hadith.explanationReference,
                 usul: usul,
               ),
             ),
@@ -158,7 +162,7 @@ class HadithShareDialog extends HookConsumerWidget {
           _tile(HadithShareInclude.source, l10n.hadithSource),
         if (hasHadithMetadata(hadith.numberOrPage))
           _tile(HadithShareInclude.number, l10n.hadithNumberOrPage),
-        if (hasHadithMetadata(hadith.hukm))
+        if (hadithSourceRulings(hadith).isNotEmpty)
           FSelectTile(
             value: HadithShareInclude.grade,
             title: Text(l10n.hadithGradeExplanation),
@@ -167,7 +171,7 @@ class HadithShareDialog extends HookConsumerWidget {
         if (hasHadithMetadata(hadith.takhrij))
           _tile(HadithShareInclude.takhrij, l10n.hadithTakhrij),
         if (sharhAvailable) _tile(HadithShareInclude.sharh, l10n.hadithSharh),
-        if (hadith.hasUsulHadith && hadith.hadithId != null)
+        if (usulAvailable)
           _tile(HadithShareInclude.usul, l10n.hadithUsulHadith),
         _tile(HadithShareInclude.appName, l10n.shareAppName),
       ],
@@ -176,16 +180,15 @@ class HadithShareDialog extends HookConsumerWidget {
     void retryDetails() {
       if (sharhFailed) {
         ref.invalidate(
-          hadithDetailProvider(
-            HadithDetailKind.sharh,
-            hadith.sharhMetadata!.id,
+          hadithSharhProvider(
+            SharhId(
+              hadith.explanationReference?.id ?? hadith.sharhMetadata!.id,
+            ),
           ),
         );
       }
       if (usulFailed) {
-        ref.invalidate(
-          hadithDetailProvider(HadithDetailKind.usul, hadith.hadithId!),
-        );
+        ref.invalidate(hadithUsulProvider(HadithRecordId(hadith.hadithId!)));
       }
     }
 
