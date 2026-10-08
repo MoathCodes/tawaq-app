@@ -111,62 +111,89 @@ void main() {
       },
     );
   }
-  testWidgets('all five study labels remain readable in a narrow pane', (
-    tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1000, 850));
-    addTearDown(() => tester.binding.setSurfaceSize(null));
-    const dua = FortressDuaItem(
-      contentId: 7,
-      category: 'Fixture',
-      text: 'Fixture',
-      targetCount: 1,
-      lines: [HisnPlainLine('Fixture')],
-      source: 'Fixture source',
-      virtue: 'Fixture virtue',
-      commentary: HisnCommentary(
-        id: 1,
+  testWidgets(
+    'five study tabs fit complete words at normal and enlarged type',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(1200, 1000));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      const dua = FortressDuaItem(
         contentId: 7,
-        sharh: 'Fixture sharh',
-        hadith: 'Fixture hadith',
-        benefit: 'Fixture benefit',
-      ),
-    );
-    for (final locale in [const Locale('ar'), const Locale('en')]) {
-      await tester.pumpWidget(
-        _wrap(
-          SizedBox(
-            width: 420,
-            height: 800,
-            child: FortressStudyPanel(
-              dua: dua,
-              kind: FortressDetailKind.virtue,
-              onKindChanged: (_) {},
-              onClose: () {},
-              bucket: PageStorageBucket(),
-            ),
-          ),
-          locale: locale,
+        category: 'Fixture',
+        text: 'Fixture',
+        targetCount: 1,
+        lines: [HisnPlainLine('Fixture')],
+        source: 'Fixture source',
+        virtue: 'Fixture virtue',
+        commentary: HisnCommentary(
+          id: 1,
+          contentId: 7,
+          sharh: 'Fixture sharh',
+          hadith: 'Fixture hadith',
+          benefit: 'Fixture benefit',
         ),
       );
-      await tester.pumpAndSettle();
-      for (final kind in FortressDetailKind.values) {
-        final label = find.descendant(
-          of: find.byType(FTabs),
-          matching: find.text(kind.label(lookupAppLocalizations(locale))),
-        );
-        final paragraph = tester.renderObject<RenderParagraph>(
-          find.descendant(of: label, matching: find.byType(RichText)).first,
-        );
-        expect(
-          paragraph.didExceedMaxLines,
-          isFalse,
-          reason: '${locale.languageCode} $kind',
-        );
+      for (final locale in [const Locale('ar'), const Locale('en')]) {
+        for (final scale in [1.0, 1.3]) {
+          await tester.pumpWidget(
+            _wrap(
+              MediaQuery(
+                data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+                child: Align(
+                  alignment: Alignment.topLeft,
+                  child: Builder(
+                    builder: (context) => SizedBox(
+                      width: FortressStudyPanel.minimumTabWidth(
+                        context,
+                        dua,
+                      ).clamp(420, 1200),
+                      height: 900,
+                      child: FortressStudyPanel(
+                        dua: dua,
+                        kind: FortressDetailKind.virtue,
+                        onKindChanged: (_) {},
+                        onClose: () {},
+                        bucket: PageStorageBucket(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              locale: locale,
+            ),
+          );
+          await tester.pumpAndSettle();
+          for (final kind in FortressDetailKind.values) {
+            final text = kind.label(lookupAppLocalizations(locale));
+            final label = find.descendant(
+              of: find.byType(FTabs),
+              matching: find.text(text),
+            );
+            final paragraph = tester.renderObject<RenderParagraph>(
+              find.descendant(of: label, matching: find.byType(RichText)).first,
+            );
+            final painter = TextPainter(
+              textScaler: paragraph.textScaler,
+              textDirection: locale.languageCode == 'ar'
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+            );
+            for (final word in text.split(RegExp(r'\s+'))) {
+              painter.text = TextSpan(text: word, style: paragraph.text.style);
+              painter.layout();
+              expect(
+                painter.width,
+                lessThanOrEqualTo(paragraph.size.width + .1),
+                reason: '$locale $scale: complete word $word must fit',
+              );
+            }
+            painter.dispose();
+            expect(paragraph.didExceedMaxLines, isFalse);
+          }
+          expect(tester.takeException(), isNull);
+        }
       }
-      expect(tester.takeException(), isNull);
-    }
-  });
+    },
+  );
   testWidgets(
     'persistent sheet tabs replace visible content and outside tap dismisses',
     (tester) async {

@@ -72,6 +72,39 @@ class FortressStudyPanel extends ConsumerWidget {
   final bool expanded;
   final bool paused;
 
+  /// Width needed for full-width tabs to wrap at word boundaries, including
+  /// the user's interface text scale. Single-field readers have no tab bar.
+  static double minimumTabWidth(BuildContext context, FortressDuaItem dua) {
+    final kinds = FortressDetailKind.available(dua);
+    if (kinds.length < 2) return 0;
+    final theme = context.theme;
+    final painter = TextPainter(
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    );
+    var widest = 0.0;
+    try {
+      for (final kind in kinds) {
+        for (final word in kind.label(context.l10n).split(RegExp(r'\s+'))) {
+          painter.text = TextSpan(
+            text: word,
+            style: theme.typography.body.xs.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          );
+          painter.layout();
+          if (painter.width > widest) widest = painter.width;
+        }
+      }
+    } finally {
+      painter.dispose();
+    }
+    final tabPadding = theme.tabs.compact.padding
+        .resolve(Directionality.of(context))
+        .horizontal;
+    return (32 + tabPadding + kinds.length * (widest + 8) + 2).ceilToDouble();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
@@ -214,7 +247,7 @@ class FortressStudyPanel extends ConsumerWidget {
                     )
                   : TabBarTheme(
                       data: TabBarTheme.of(context).copyWith(
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                       ),
                       child: FTabs(
                         style: theme.tabs.compact,
@@ -229,7 +262,9 @@ class FortressStudyPanel extends ConsumerWidget {
                               label: Text(
                                 tab.label(l10n),
                                 softWrap: true,
-                                style: theme.typography.body.xs,
+                                style: theme.typography.body.xs.copyWith(
+                                  letterSpacing: 0,
+                                ),
                                 textAlign: TextAlign.center,
                               ),
                               child: const SizedBox.shrink(),

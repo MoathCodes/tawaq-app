@@ -46,7 +46,10 @@ class _FortressStudyHostState extends State<FortressStudyHost> {
         if (_sheet == created) close();
       },
       builder: (context, controller) => SizedBox(
-        width: math.min(480, MediaQuery.sizeOf(context).width),
+        width: math.min(
+          math.max(480, FortressStudyPanel.minimumTabWidth(context, dua)),
+          MediaQuery.sizeOf(context).width,
+        ),
         height: double.infinity,
         child: ValueListenableBuilder(
           valueListenable: selected,

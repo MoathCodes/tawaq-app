@@ -1018,6 +1018,21 @@ Future<void> rtlReview(
     lookupAppLocalizations(const Locale('en')).fortressSourceReference,
   );
   await snap(output, 'compact-english-light-five-tabs');
+  config.value = (
+    chapterId: chapterId,
+    index: short,
+    browse: false,
+    locale: 'en',
+    mode: ThemeMode.light,
+    size: const Size(800, 900),
+    scale: 1.3,
+    palette: AppPalette.manuscript,
+  );
+  await Future<void>.delayed(const Duration(seconds: 1));
+  await press(
+    lookupAppLocalizations(const Locale('en')).fortressSourceReference,
+  );
+  await snap(output, 'compact-english-enlarged-five-tabs');
   // Reuse the earlier interaction matrix for compact RTL actions, actual exports,
   // slider endpoints and worker heartbeat. Its browse scenes use the full screen
   // in this run; use a direct focus share instead below.

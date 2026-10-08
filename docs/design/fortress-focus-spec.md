@@ -1,6 +1,6 @@
 # Fortress focus reading and chapter booklets
 
-Status: implemented correction and interaction contract. Final isolated native recaptures cover the named surfaces; both reports record no Flutter errors. The finish verdict resolves the last slider endpoint clipping finding within that scope.
+Status: implemented desktop correction contract, updated 2026-10-09. Eleven native production-widget recaptures record no Flutter errors. The latest finish verdict clears the scored compact English tab-label fix within its stated scope.
 
 ## Purpose and scope
 
@@ -53,7 +53,7 @@ Undo last count is available in the counter context menu and registered localize
 
 Each canonical item owns one read-only chapter segment, independent of repetition target. Complete is solid primary; unfinished retains proportional fill; skipped/unvisited is a quiet track. A separate marker identifies the current item. Segments are 4 logical pixels high and animate through `TweenAnimationBuilder` over 260 ms with `easeOutCubic`; reduced motion uses zero duration. A narrow header shows a local segment window with continuation markers. Item position remains visible and semantics summarize chapter progress.
 
-All Previous/Next controls are icons with localized semantics. Directional glyphs mirror once for RTL through the existing icon behavior. Registered shortcut meanings remain Left/Down Next and Right/Up Previous. Horizontal stage navigation and vertical reading scrolling keep distinct meanings; focused tabs, text, and menus retain local keyboard behavior.
+All Previous/Next controls are icons with localized semantics. Forui Lucide chevron glyphs already declare `matchTextDirection: true` and mirror once through inherited directionality; do not add a manual swap. Registered shortcut meanings remain Left/Down Next and Right/Up Previous. Horizontal stage navigation and vertical reading scrolling keep distinct meanings; focused tabs, text, and menus retain local keyboard behavior.
 
 ## Persistent side details
 
@@ -61,7 +61,7 @@ All Previous/Next controls are icons with localized semantics. Directional glyph
 
 Available fields appear in stable order: Virtue, Source, Benefits, Explanation, Related hadith. `hasDistinctVirtue` omits duplicate virtue display while retaining raw fields. Source-only and virtue-only items expose their detail action; items without details expose Share only. Clicking a rail field opens it directly; clicking the active field closes; another field switches the existing pane. Browse opens an available field, preferring Virtue through the stable ordering.
 
-The header identifies chapter/item, exposes Close, and in focus exposes Expand/Restore. Compact controls add icon Previous/Next. It shows no study-pause indicator because opening details does not pause. One field uses a heading. Multiple fields use `FTabs(scrollable: false)` distributed across width. Constrained labels ellipsize while semantic text remains complete.
+The header identifies chapter/item, exposes Close, and in focus exposes Expand/Restore. Compact controls add icon Previous/Next. It shows no study-pause indicator because opening details does not pause. One field uses a heading. Multiple fields use full-width `FTabs(scrollable: false)` with complete localized labels and natural wrapping between words. Labels use zero tracking and 4 logical pixels of horizontal padding per side. `FortressStudyPanel.minimumTabWidth` measures the longest complete word using theme interface type, selected weight, and `MediaQuery.textScaler`; the hosts reserve enough width for equal tab allocation. This avoids both ellipsis and the reviewed midword split in Explanation at 800 × 900, including 1.3 interface scale.
 
 Forui caches the persistent pane builder. The pane therefore contains its own `ValueListenableBuilder`: browse owns the selected-kind notifier per controller, while focus owns a sheet-revision notifier covering selection, item reconciliation, and extent. A tab change updates the visible selected body, not just its active styling; item changes update header and body together. Controller/notifier lifetimes end with their owning sheet/reader.
 
@@ -69,14 +69,14 @@ Forui caches the persistent pane builder. The pane therefore contains its own `V
 
 Every focus and browse detail surface is a Forui persistent SIDE sheet hosted by `FSheets` and created by `showFPersistentSheet`. Logical end is left in Arabic and right in English. There is no bottom-sheet or `FResizable` presentation.
 
-| Focus window width | Geometry |
+| Focus constraints | Geometry |
 | --- | --- |
-| At least 720 logical pixels | Sheet width `min(420, windowWidth × 0.48)` is reserved at logical end; reader reflows into the remaining width. This includes an 800-wide compact window. |
-| Below 720 | Full-window-width side reading surface with accessible header/Close; closing restores the focus reader. |
+| Viewport at least 720 logical pixels and remaining reading width at least 280 | Pane width is `max(420, minimumTabWidth)` reserved at logical end; reader reflows beside it. The reviewed 800-wide English normal/1.3 compositions retain their stage and counting dock. |
+| Either condition fails | Full-window-width side reading surface with accessible header/Close; closing restores the focus reader. |
 
-The `_compact` flag remains below 1040 or when scaled 18-pixel detail type exceeds 27. It chooses compact controls only and does not choose geometry. Enlarged text therefore preserves side-sheet topology. Reader padding animates to the reserved width over 240 ms with `easeOutCubic`, zero with reduced motion. Expand/Restore changes the real persistent-sheet presentation/controller between dock width and full width; it is not a separate resizable composition. The controller is hidden/disposed at closure and recreated as needed. Browse uses the same side host with width 480 clamped to its window.
+The `_compact` flag remains below 1040 or when scaled 18-pixel detail type exceeds 27. It chooses compact controls only and does not choose geometry. Enlarged text therefore preserves side-sheet topology. Reader padding animates to the reserved width over 240 ms with `easeOutCubic`, zero with reduced motion. Expand/Restore changes the real persistent-sheet presentation/controller between dock width and full width; it is not a separate resizable composition. The controller is hidden/disposed at closure and recreated as needed. Browse uses the same side host with width `max(480, minimumTabWidth)` clamped to its viewport. The host wraps the complete catalog and reading composition outside padding, placing the pane flush with the surface's top, bottom, and logical-end edges.
 
-Browse details cover the underlying browse composition with theme Forui `FModalBarrier` blur/dim; an outside pointer activation dismisses the pane. Barrier transition uses the persistent-sheet theme duration, zero with reduced motion. Focus deliberately remains nonmodal: no blocking/blurred backdrop is added, and its visible reading stage/counter remains countable with details open, preserving the confirmed interaction choice.
+Browse details cover both catalog and reading with theme Forui `FModalBarrier` blur/dim; an outside pointer activation dismisses the pane. Barrier transition uses the persistent-sheet theme duration, zero with reduced motion. Focus adds a visual-only black `Color(0x14000000)` shade (about 8% opacity) behind the pane. `IgnorePointer` leaves its visible reading stage/counter countable and auto-advance active; this shade has no blur or outside-dismiss behavior.
 
 ### Long content, reconciliation, and recovery
 
@@ -90,7 +90,7 @@ Escape closes Share first, then details, then exits focus. Closing details resto
 
 ## Browse integration
 
-Expanded items are full reading cards rather than a longer clipped tile. `FCard` has 24 internal padding, incumbent `theme.radii.lg` top corners, and square bottom corners (0). Ordinal and repetition target flank full prose or structured Quran content. Supplied virtue occupies a tinted labelled section. Source is muted, limited to two visible lines, and opens the source pane for full reading. Available detail actions and Share are individual content-width chips (`mainAxisSize.min`) followed by Collapse. A short primary body tap also collapses through selectable content. `FortressReadingTapRegion` rejects movement beyond 6 logical pixels, taps of 500 ms or longer, selection drags, and long presses; nested source/detail/share controls use `FortressReadingTapControl` to exclude their activation. Repeated generic category icons are removed from chapter/browse chrome.
+Expanded items are full reading cards rather than a longer clipped tile. `FCard` has 24 internal padding, incumbent `theme.radii.lg` top corners, and square bottom corners (0). Ordinal and repetition target flank full prose or structured Quran content. Supplied virtue occupies a tinted labelled section. Source is muted, limited to two visible lines, and opens the source pane for full reading. Available detail actions and Share are individual content-width chips (`mainAxisSize.min`) followed by Collapse. The group aligns at logical start, right in Arabic and left in English. A short primary body tap also collapses through selectable content. `FortressReadingTapRegion` rejects movement beyond 6 logical pixels, taps of 500 ms or longer, selection drags, and long presses; nested source/detail/share controls use `FortressReadingTapControl` to exclude their activation. Repeated generic category icons are removed from chapter/browse chrome.
 
 Collapsed preview metadata uses `none` rather than an arbitrary benefit-only badge. Its full distinct supplied virtue remains governed by the existing content renderer. Canonical selection, search-result entry, favorites, and return-to-chapter context retain their existing owners. Focus and browse reuse the same detail panel and source-safe text presentation.
 
@@ -110,7 +110,7 @@ The ring uses the existing fast duration (150 ms); press uses instant (100 ms) a
 
 Item sharing defaults to This dhikr; chapter entry defaults to Entire chapter. The dialog shows scope, individual available inclusion tiles, a continuous text-size slider, Images/PDF, actual page count/preview navigation, and export actions. Scope changes reset to default inclusions. Defaults are repetition, supplied virtue, and app name; source, explanation, related hadith, and benefits are individually optional. There are no Reading/Study edition toggles or hidden select-all preset.
 
-The established `ForuiDialogLayout`/`ShareCardDialogLayout` provides settings alongside preview, stacking when constrained. Preferred bounds are 1000 × 720, clamped to viewport. The Forui slider ranges continuously from 80–160%, defaults to 100%, and exposes percentage semantics plus 80%, 100%, and 160% marks. Its extra 24 horizontal track inset keeps endpoint labels inside the settings scroll viewport, including the saved-result state. Changes invalidate stale preparation and debounce re-preparation by 150 ms; drag end cancels that timer and prepares immediately. Available-field and text-size choices are retained through preparation, local failure, and retry; generation disables their controls. Export is disabled until the selected content produces a valid plan. Footer Save, Copy image, and Copy text use minimum-content-width icon buttons in a wrapping row; generation replaces them with compact icon Cancel.
+The established `ForuiDialogLayout`/`ShareCardDialogLayout` provides settings alongside preview, stacking when constrained. Preferred bounds are 1000 × 720, clamped to viewport. The Forui slider ranges continuously from 80–160%, defaults to 100%, and exposes percentage semantics plus 80%, 100%, and 160% marks. Its extra 24 horizontal track inset keeps endpoint labels inside the settings scroll viewport, including the saved-result state. Changes invalidate stale preparation and debounce re-preparation by 150 ms; drag end cancels that timer and prepares immediately. Available-field and text-size choices are retained through preparation, local failure, and retry; generation disables their controls. Export is disabled until the selected content produces a valid plan. Footer Save, Copy image, and Copy text use minimum-content-width icon buttons in a wrapping row; generation replaces them with compact icon Cancel. Actions and Cancel align at logical start, right in Arabic.
 
 ### Full content and pagination
 
@@ -126,7 +126,7 @@ Images are an ordered set with zero-padded filenames. Save all pages writes the 
 
 The installed PDF writer is `pdf` 3.13.1. Canvas rendering stays on the UI isolate, one page at a time with yields and the bounded preview cache. `FortressPdfExport` owns a killable worker for heavy PNG decode, PDF assembly, compression, and file writing. Input messages contain PNG paths and destination path rather than page byte payloads; returned messages carry progress, readiness, or failure. Cancellation kills the worker, invalidates the job, and cleans its owned staging directory. The worker uses 432 × 540-point PDF pages.
 
-PDF progress assigns 50% to page rendering and 40% to assembly; localized preparing-PDF copy remains visible through final serialization/write. Generation exposes compact Cancel. Unique staging directories prevent collisions; completed output appears only after the full job succeeds. Cancellation/capture/disk failure cleans this job's temporary output, retains choices, and permits retry. Successful save shows an 8-second `FToast` with `circleCheck`, chapter title, localized page-count/format summary, and Open folder action. Successful reveal dismisses that toast; failed reveal shows a localized failure toast.
+PDF progress assigns 50% to page rendering and 40% to assembly; localized preparing-PDF copy remains visible through final serialization/write. Generation exposes compact Cancel. Jobs share `Downloads/Tawaq`, falling back to Documents when Downloads is unavailable. Each completed directory uses a sanitized chapter title and unique staging-job suffix to prevent overwrites. Owned staging sits under the same root; completed output appears only after the full job succeeds. Cancellation/capture/disk failure cleans this job's temporary output, retains choices, and permits retry. Successful save shows an 8-second `FToast` with `circleCheck`, chapter title, localized page-count/format summary, and Open folder action. Successful reveal dismisses that toast; failed reveal shows a localized failure toast.
 
 Missing selected commentary identifies the item/field with localized Retry and blocks export. Individual inclusion tiles allow the user to remove that field. A superseded options job cannot update the current preview. A failed preview never masquerades as an empty chapter.
 
@@ -138,7 +138,7 @@ Flutter 3.47.5 is pinned by `.fvmrc`; Forui 0.27.3, forui_hooks 0.27.0, and PDF 
 | --- | --- |
 | Focus reader and `FortressFocusSession` | One transient owner for count/history, navigation, pause/dwell, completion; reader composes ring, segments, stage, real persistent controller, and end states. |
 | Dua content and text spans | Source-safe prose/quoted-Quran typography, existing structured Quran path, full expanded content, local rendering Retry, selection-compatible counting. |
-| Study host/panel | Persistent logical-end topology with reactive selected body/item, available fields, scroll memory, and local recovery; browse uses modal outside-dismiss, focus stays nonmodal/countable. |
+| Study host/panel | Persistent logical-end topology, measured complete-word tabs, reactive selected body/item, scroll memory, and local recovery; complete browse composition uses modal outside-dismiss, focus uses a visual-only shade and remains countable. |
 | Browse category detail/sidebar/rows | Expanded reading cards with square bottom corners and selection-safe body collapse, preview metadata `none`, individual actions, chapter-share entry; preserve search, chapter context, and favorite data. |
 | Share dialog/page plan/PDF worker | Explicit scope/inclusions, continuous measured text scale, full pagination, shared preview/output, PNG set/raster PDF/text, owned cancellable staging and worker, progress, actionable save feedback. |
 | Localization and shortcuts | Arabic/English labels, Undo, completion/error copy, localized icon semantics, retained registered key meanings and focus scopes. |
@@ -151,38 +151,32 @@ Flutter 3.47.5 is pinned by `.fvmrc`; Forui 0.27.3, forui_hooks 0.27.0, and PDF 
 
 The validation contract includes targets, retained counts, skipped segments, exactly-once auto-advance, details-open counting/advance, Share/menu/inactivity pause, Undo, and truthful chapter end. Widget/source checks address bounded detail tabs, item/field reconciliation, local errors, browse expansion, full Quran rendering, literal quotation font boundaries, icon semantics, and share defaults without editions. Page-plan checks address canonical order, complete selected spans, continuation identity, grapheme-safe splits, repetition/source association, and consistent preview/export boundaries. Existing focused session, reader, share-dialog, and page-plan regression files were inspected in this pass; the implementation delivery records their execution results.
 
-Native correction evidence is under `/home/moath/.local/state/tawaq-delivery/fortress-corrections/evidence/`:
+Current native evidence is under `/home/moath/.local/state/tawaq-delivery/fortress-pr-20261009/evidence/`:
 
 | Evidence | Covered result |
 | --- | --- |
-| `desktop-focus.png`, `desktop-side-sheet.png` | Open stage, counter, chapter rhythm, distributed detail tabs, logical-end side composition. |
-| `count-with-details.png`, `ayah-tap.png`, `mushaf-tap.png` | Native short pointer taps count with details visible and through real ayah/Mushaf children. |
-| `quoted-ayah-prose.png` | Supplied quoted Quran font boundary within prose. |
-| `expanded-reading-card.png`, `browse-persistent-sheet.png` | Full expanded item, labelled virtue/source, individual actions, shared browse side sheet. |
-| `compact-side-sheet.png`, `large-text-focus.png` | Final 800-wide reader reflow with full stage/counter/detail rail, and enlarged focus type/control composition. |
-| `desktop-completed.png`, `desktop-unfinished.png` | Truthful, centred end states and available actions. |
-| `share-inclusions.png` | Scope, explicit inclusion tiles, default virtue/repetition/app name, image/PDF controls. |
-| `count-motion.mp4` | Interpolated segment fills followed by automatic advance in canonical chapter 6. |
+| `full-browse-before-sheet.png`, `full-browse-sheet-catalog-backdrop.png`, `full-browse-sheet-five-tabs.png` | Complete production catalog/reading composition under the modal barrier; flush pane edges and complete Arabic five-tab labels. |
+| `rtl-expanded-actions.png` | Arabic reading-card chips and Collapse at logical start/right. |
+| `focus-light-backdrop-five-tabs.png`, `focus-counting-with-details.png` | Light nonblocking shade, complete Arabic labels, and native count 0→1 while details remain open. |
+| `compact-english-light-five-tabs.png`, `compact-english-enlarged-five-tabs.png` | 800 × 900 English light at normal and 1.3 interface scale; Explanation fits intact, Related hadith wraps between words, reader and counting dock remain visible. |
+| `rtl-export-actions.png`, `rtl-export-cancel.png`, `rtl-export-ready.png` | Arabic logical-start actions and Cancel, busy settings, restored actions and actionable save toast. |
 
-These are isolated native QA captures of production widgets with bundled sources. All 13 named screenshots were recaptured after the final geometry correction. `corrections-report.json` records no Flutter errors (`errors: []`) and the motion frames' actual timestamps. `/tmp/fortress-corrections-native-final.txt` records actual pointer count changes: with details 0→1 of 100; ayah 0→1 of 1; Mushaf 0→1 of 3. Final compact evidence visibly retains the complete two-column Arabic stage, entire counter, and full detail rail. Geometry regressions at 800/1200 pass in the implementation delivery. Reviewer decode verification found the full 1200 × 850, 1.36-second video readable, showing segment interpolation and automatic advance. The reviewed named visual elements match the correction direction.
+These eleven settled Linux RepaintBoundary captures use production widgets and isolated settings/export paths. The three browse captures include the complete `MuslimFortressScreen`; none establishes complete app-shell or compositor behavior. `rtl-report.json` records `errors: []` and completed exports below one `Tawaq` root. The delivery separately verifies a 13-page PDF at 432 × 540 points. The latest `review-verdict.md` records `disposition: ship` for the scored English label fix, with no material fix-caused regression observed in the supplied matrix. It preserves the review's bounded scope: no all-platform, all-theme, complete app-shell, or exhaustive interaction approval.
 
-The final compact capture supersedes its earlier pre-correction version. These earlier scoped captures remain valid for the named behavior; earlier focus/virtue evidence may establish its earlier booklet/failure states, but does not override current topology or share choices.
+Earlier `/home/moath/.local/state/tawaq-delivery/fortress-corrections/evidence/` and `fortress-interactions-20261008/evidence/` remain historical support for selectable ayah/Mushaf taps, source-safe quotation fonts, segment animation/auto-advance, truthful end states, explicit inclusions, slider endpoints, and worker responsiveness. Their prior pane geometry, tab ellipsis, and focus-backdrop contracts are superseded by this record. Their earlier ship findings do not expand the latest review scope.
 
-Interaction follow-up evidence is under `/home/moath/.local/state/tawaq-delivery/fortress-interactions-20261008/evidence/`:
+Comparable PDF assembly used the same 24 PNG pages. Main-isolate assembly recorded maximum heartbeat gap 2.52129 s and elapsed 3.423993 s; worker assembly recorded 36.81 ms and 3.470566 s. This establishes improved event-loop responsiveness for that measured assembly flow, not increased throughput, rendering speed, or full-app performance. That historical PDF inspection confirms 24 pages at 432 × 540 points. Captures do not establish every export failure path or the entire locale/theme/input matrix.
 
-| Evidence | Covered result |
-| --- | --- |
-| `expanded-card.png`, `collapsed-preview.png` | Incumbent top/square bottom card geometry, compact actions, body pointer collapse, preview without benefit-only metadata badge. |
-| `browse-benefit-backdrop.png`, `browse-sharh-after-tab.png`, `browse-hadith-after-tab.png` | Theme blur/dim, outside pointer dismiss, production tab callbacks changing the actual selected body. |
-| `compact-light-sheet.png` | 800 × 900 English-interface Manuscript light browse sheet and backdrop. |
-| `focus-benefit-after-tab.png` | Nonmodal Arabic reader/counter beside the production pane after field selection. |
-| `share-slider-actions.png`, `pdf-generating.png`, `export-ready-toast.png` | Continuous size control, complete endpoint marks, compact footer/Cancel, generation feedback, successful actionable toast. |
+Latest verification is recorded in `/home/moath/.local/state/tawaq-delivery/fortress-pr-20261009/`:
 
-These ten final captures use isolated native compositions of production widgets, generally 1200 × 850 Arabic Manuscript dark; they do not show the full app shell. Body collapse and outside-dismiss used actual pointer actions; tab selection used production callbacks. `followup-report.json` records `errors: []`. The finish review accepted the requested scope except slider endpoint clipping; `/home/moath/.local/state/tawaq-delivery/fortress-interactions-20261008/review-verdict.md` scores that last fix resolved and records `disposition: ship` within the original isolated composition scope.
+- `checks-latest.log`: full root Flutter tests, 1,308 passing.
+- `analysis-final.log`: full app analysis exits 0, 836 infos and no warnings/errors.
+- `app-build-final.log`: default production Linux debug application builds successfully.
+- `regressions.log` and `goldens.log`: 35 focused browse/share regressions and 10 goldens passing.
+- `review-fix-tests-final.log`: 25 final preview/focus tests passing after the tab repair. Longest-word coverage uses the actual `MediaQuery` scaler and `paragraph.textScaler` for normal/enlarged Arabic and English measurements.
+- `checks-packages-retry.log`: package analyzers/tests complete; Dorar 363, adapters 7, Mushaf 138, Hisn 18, Adhan 51 with 2 skipped, and tray 3 tests pass. The initial Dorar snapshot run hit a transient SQLite lock; retry passes without a source fix.
 
-Comparable PDF assembly used the same 24 PNG pages. Main-isolate assembly recorded maximum heartbeat gap 2.52129 s and elapsed 3.423993 s; worker assembly recorded 36.81 ms and 3.470566 s. This establishes improved event-loop responsiveness for that measured assembly flow, not increased throughput, rendering speed, or full-app performance. PDF inspection confirms 24 pages at 432 × 540 points. Captures do not establish the entire locale/theme/input matrix, cross-platform behavior, or every export failure path.
-
-The implementation delivery records 40 narrow regression tests and 10 updated goldens passing; after the final endpoint inset change, all 9 share-dialog tests pass. Full root testing records 1288 passes and one pre-existing Dorar release-harness fixture failure. The Dorar fixture patch independently fails `git apply --check` at `test/client/dorar_client_test.dart:1`, reproducing that failure. `git diff --check` passes. Final analysis reports 603 infos and no warnings/errors. `fvm flutter gen-l10n` ran and tracked text-size, preparing-PDF, and export-summary outputs are included. No local-package implementation changed. This documentation pass changes no app/generated files and runs no build. The final compact runtime capture and geometry regressions establish the corrected reservation behavior. Inspect the final diff and preserve unrelated changes.
+Delivery ran FVM code generation and includes its tracked outputs. This bounded documentation pass changes no app or generated files and runs no build.
 
 ## Record boundary and drift
 

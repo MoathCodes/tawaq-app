@@ -355,10 +355,19 @@ class _FocusState extends State<FortressFocusReadingSurface>
               _compact =
                   constraints.maxWidth < 1040 ||
                   MediaQuery.textScalerOf(context).scale(18) > 27;
-              _reserveSheet = constraints.maxWidth >= 720;
-              _dockWidth = _reserveSheet
-                  ? math.min(420, constraints.maxWidth * .48)
-                  : constraints.maxWidth;
+              final paneWidth = math.max(
+                420.0,
+                session.ended || widget.duas.isEmpty
+                    ? 0.0
+                    : FortressStudyPanel.minimumTabWidth(
+                        context,
+                        widget.duas[session.index],
+                      ),
+              );
+              _reserveSheet =
+                  constraints.maxWidth >= 720 &&
+                  constraints.maxWidth - paneWidth >= 280;
+              _dockWidth = _reserveSheet ? paneWidth : constraints.maxWidth;
               _syncSheet(sheetContext);
               final content = AnimatedPadding(
                 duration: reduceMotion(context)
