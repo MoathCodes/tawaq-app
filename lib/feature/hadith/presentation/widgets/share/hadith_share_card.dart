@@ -1,11 +1,13 @@
+import 'package:tawaq/feature/hadith/domain/models/hadith_display_text.dart';
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_judgment.dart';
 import 'package:tawaq/feature/hadith/presentation/models/hadith_share_include.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_hukm_badge.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_source_ruling.dart';
 import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
 
 class HadithShareCard extends StatelessWidget {
   const new({
@@ -13,6 +15,7 @@ class HadithShareCard extends StatelessWidget {
     required this.hadith,
     required this.options,
     this.sharh,
+    this.explanationOrigin,
     this.usul,
     super.key,
   });
@@ -20,7 +23,8 @@ class HadithShareCard extends StatelessWidget {
   final GlobalKey boundaryKey;
   final DetailedHadith hadith;
   final HadithShareOptions options;
-  final String? sharh;
+  final Sharh? sharh;
+  final ExplanationReference? explanationOrigin;
   final UsulHadith? usul;
 
   @override
@@ -37,7 +41,7 @@ class HadithShareCard extends StatelessWidget {
           usulAvailable: usul != null,
         )
         .contains;
-    final textStyle = type.body.md.copyWith(height: 1.75);
+    final textStyle = type.body.md.copyWith(fontSize: 18, height: 1.7);
 
     Widget labelled(String label, String value) => Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -61,13 +65,19 @@ class HadithShareCard extends StatelessWidget {
       if (include(HadithShareInclude.muhaddith))
         labelled(l10n.hadithMuhaddith, hadith.mohdith),
       if (include(HadithShareInclude.source))
-        labelled(l10n.hadithSource, hadith.book),
-      if (include(HadithShareInclude.number))
+        labelled(
+          l10n.hadithSource,
+          include(HadithShareInclude.number)
+              ? l10n.hadithSourceCitation(hadith.book, hadith.numberOrPage)
+              : hadith.book,
+        ),
+      if (include(HadithShareInclude.number) &&
+          !include(HadithShareInclude.source))
         labelled(l10n.hadithNumberOrPage, hadith.numberOrPage),
     ];
     final content = <Widget>[
       Text(
-        hadith.hadith,
+        hadithDisplayText(hadith),
         textDirection: TextDirection.rtl,
         textAlign: TextAlign.start,
         style: type.body.lg.copyWith(
@@ -76,18 +86,20 @@ class HadithShareCard extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
       ),
-      if (include(HadithShareInclude.grade)) ...[
-        const SizedBox(height: AppSpacing.lg),
-        Text(
-          l10n.hadithGradeExplanation,
-          style: type.body.sm.copyWith(color: colors.mutedForeground),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        HadithHukmBadge(
-          hukm: hadith.hukm,
-          tone: hadithSourceJudgmentTone(hadith),
-        ),
-      ],
+      if (include(HadithShareInclude.grade))
+        for (final ruling in hadithSourceRulings(hadith)) ...[
+          const SizedBox(height: AppSpacing.lg),
+          HadithSourceRuling(
+            hukm: ruling.text,
+            fontSize: 20,
+            tone: ruling.text == hadith.hukm
+                ? hadith.verdictTone
+                : VerdictTone.unmarked,
+            label: ruling.expanded
+                ? l10n.hadithGradeExplanation
+                : l10n.hadithScholarRuling,
+          ),
+        ],
       if (attribution.isNotEmpty) ...[
         const SizedBox(height: AppSpacing.lg),
         Divider(color: colors.border, height: 1),
@@ -98,12 +110,30 @@ class HadithShareCard extends StatelessWidget {
         labelled(l10n.hadithTakhrij, hadith.takhrij!),
       if (include(HadithShareInclude.sharh) && sharh != null) ...[
         _sectionHeading(context, l10n.hadithSharh),
-        Text(sharh!, textDirection: TextDirection.rtl, style: textStyle),
+        HadithSharhContent(
+          sharh: sharh!,
+          origin: explanationOrigin,
+          commentaryOnly: true,
+          selectedHadith: hadith,
+          export: true,
+        ),
       ],
       if (include(HadithShareInclude.usul) && usul != null) ...[
         _sectionHeading(context, l10n.hadithUsulHadith),
-        for (final source in usul!.sources)
-          labelled(source.source, source.chain),
+        for (final source in usul!.sources) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 16, bottom: 8),
+            child: Text(
+              source.source,
+              style: textStyle.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          HadithSharhText(
+            document: source.chainContent,
+            text: source.chain,
+            fontSize: 18,
+          ),
+        ],
       ],
     ];
 
@@ -111,7 +141,7 @@ class HadithShareCard extends StatelessWidget {
       key: boundaryKey,
       child: Container(
         width: 560,
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: const EdgeInsets.all(28),
         decoration: BoxDecoration(
           color: colors.background,
           border: Border.all(color: colors.border, width: 1),
@@ -139,11 +169,12 @@ class HadithShareCard extends StatelessWidget {
   }
 
   static Widget _sectionHeading(BuildContext context, String text) => Padding(
-    padding: const EdgeInsets.only(top: AppSpacing.md, bottom: AppSpacing.sm),
+    padding: const EdgeInsets.only(top: 28, bottom: 12),
     child: Text(
       text,
       style: context.theme.typography.body.sm.copyWith(
-        color: context.theme.colors.primary,
+        fontSize: 20,
+        color: context.theme.colors.foreground,
         fontWeight: FontWeight.w600,
       ),
     ),

@@ -33,10 +33,8 @@ dependencies:
     path: packages/hisn_elmoslem
   adhan_dart:
     path: packages/adhan_dart
-  dorar_hadith:
-    path: packages/dorar_hadith
-  dorar_hadith_flutter:
-    path: packages/dorar_hadith/dorar_hadith_flutter
+  dorar_hadith: 0.7.0
+  dorar_hadith_flutter: 0.7.0
   flutter:
     sdk: flutter
   flutter_animate: ^4.5.2

@@ -323,7 +323,6 @@
   "hadith": "Hadith",
   "hadithActiveFilters": "Active Filters",
   "hadithAlternateHadithSahih": "Alternate Authentic Hadith",
-  "hadithAlternativeAuthentic": "Alternative Authentic Narrations",
   "hadithBackToSearch": "Back to search",
   "hadithBooks": "Books",
   "hadithClearAllFilters": "Clear all filters",
@@ -346,34 +345,24 @@
     }
   },
   "hadithFilterTab": "Filters",
-  "hadithFoundations": "Foundations",
   "hadithShareDetailsFailed": "Could not load: {sections}. Retry or turn off the selected detail to export the image.",
-  "@hadithShareDetailsFailed": {"placeholders": {"sections": {"type": "String"}}},
-  "hadithShareJudgmentRequired": "The source judgment stays visible for weak reports or warnings about their chain.",
-  "hadithGradeExplanation": "Grade Explanation",
-  "hadithLoadMore": "Load more",
-  "hadithLoadSharh": "Load Explanation",
-  "hadithLoadSharhFailed": "Failed to load sharh: {error}",
-  "@hadithLoadSharhFailed": {
+  "@hadithShareDetailsFailed": {
     "placeholders": {
-      "error": {
+      "sections": {
         "type": "String"
       }
     }
   },
+  "hadithShareJudgmentRequired": "The source judgment stays visible for weak reports or warnings about their chain.",
+  "hadithGradeExplanation": "Grade Explanation",
   "hadithMuhaddith": "Muhaddith",
   "hadithMoreActions": "More hadith actions",
   "hadithNarrator": "Narrator",
   "hadithNarrators": "Narrators",
-  "hadithNoBookmarks": "No saved hadiths yet",
-  "hadithNoDetailedData": "No detailed data found for this hadith",
   "hadithNoDetailsSelected": "Select a hadith from results to view details",
-  "hadithNoMatchingResults": "No matching results found",
   "hadithNoRecentSearches": "No recent searches yet",
   "hadithOpenFilters": "Filters",
-  "hadithPageLoadFailed": "Couldn't load that page. Showing previous results.",
   "hadithRecentSearches": "Recent Searches",
-  "hadithRelatedLinks": "Related Links",
   "hadithResetFilters": "Reset filters",
   "hadithResultsCount": "{count, plural, =0 {No results} =1 {1 result} other {{count} results}}",
   "@hadithResultsCount": {
@@ -383,7 +372,6 @@
       }
     }
   },
-  "hadithRetry": "Retry",
   "hadithResultIdentity": "Result {number}",
   "@hadithResultIdentity": {
     "placeholders": {
@@ -400,24 +388,9 @@
   "hadithSearchMethodAllWords": "All words",
   "hadithSearchMethodAnyWord": "Any word",
   "hadithSearchMethodExactMatch": "Exact match",
-  "hadithSearchZoneAll": "All hadiths",
-  "hadithSearchZoneMarfoo": "Marfoo hadiths",
-  "hadithSearchZoneQudsi": "Qudsi hadiths",
-  "hadithSearchZoneSahabaAthar": "Companion narrations",
-  "hadithSearchZoneSharh": "Hadith commentaries",
-  "hadithSelectedHadith": "Selected hadith",
-  "hadithSelectedResult": "Selected result {number}",
-  "@hadithSelectedResult": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
   "hadithSharh": "Explanation",
   "hadithShare": "Share hadith",
   "hadithNumberOrPage": "Number or page",
-  "hadithSimilar": "Similar Hadiths",
   "hadithSimilarHadith": "Similar Hadith",
   "hadithSource": "Source",
   "hadithSourceCitation": "{book} ({reference})",
@@ -431,7 +404,7 @@
       }
     }
   },
-  "hadithSpecialist": "Takhrij",
+  "hadithSpecialist": "With takhrij",
   "@hadithSpecialist": {
     "description": "Filter toggle for Dorar's specialist tab: limits results to hadiths that include takhrij in their metadata (Dorar UI label: متخصص)."
   },
@@ -439,7 +412,6 @@
   "@hadithSpecialistHint": {
     "description": "Explains that enabling this filter limits results to hadiths with takhrij populated in result metadata."
   },
-  "hadithStartSearchPrompt": "Press Enter or Search to see results",
   "hadithTakhrij": "Takhrij",
   "hadithTypeToSearch": "Type to search...",
   "hadithUsulHadith": "Usul al-Hadith",
@@ -1364,5 +1336,54 @@
   "quranSearchJuzs": "Juz",
   "quranSearchHizbs": "Hizb",
   "quranSearchAyahs": "Ayahs",
-  "quranSearchFailed": "Search could not load. Try again."
+  "quranSearchFailed": "Search could not load. Try again.",
+  "hadithGrade": "Source ruling",
+  "hadithRelatedSource": "Related collection source",
+  "hadithExplanationHeader": "Explanation page narration",
+  "hadithExplanationCitation": "Narration cited in the explanation",
+  "hadithSearchRecords": "Hadith records",
+  "hadithSearchProse": "Explanation prose",
+  "hadithProseFiltersHint": "Record filters are retained and apply only to Hadith records.",
+  "hadithTypeMarfoo": "Marfoo hadiths",
+  "hadithTypeQudsi": "Qudsi hadiths",
+  "hadithTypeCompanionAthar": "Companion narrations",
+  "hadithTypeWithExplanation": "Records with an explanation",
+  "hadithTopics": "Topics",
+  "hadithStudyDesk": "Hadith study desk",
+  "hadithStudyDeskHint": "Search narrations, inspect their sources, and read their explanations.",
+  "hadithScholarRuling": "Scholar’s ruling",
+  "hadithAsbab": "Circumstances",
+  "hadithUnavailable": "The source does not advertise this content.",
+  "hadithNoRemoteId": "This saved record has no source identifier. Remote details cannot be opened.",
+  "hadithAdvanced": "Advanced search",
+  "hadithExclude": "Excluded words or phrases",
+  "hadithOptionalPhrase": "Optional phrase",
+  "hadithDegreeOrder": "Order by source degree",
+  "hadithTopicSearch": "Search topics",
+  "hadithCloseReader": "Close reader",
+  "hadithInvalidSearch": "Use at most 500 characters per search field and four optional phrases.",
+  "hadithUnreadableSaved": "This saved entry cannot be read. Its original data is retained.",
+  "shortcutHadithFiltersLabel": "Toggle Hadith filters",
+  "shortcutHadithFiltersDescription": "Show the filter column or open compact filters.",
+  "shortcutHadithSearchLabel": "Focus Hadith search",
+  "shortcutHadithSearchDescription": "Focus the Hadith search field.",
+  "hadithSearchInterrupted": "The search was stopped when you changed collection. Retry to finish it.",
+  "hadithSourceUnreadable": "The source response could not be read. Retry or try a different query.",
+  "hadithRequestTimedOut": "The source request timed out. Try again.",
+  "hadithSourceRateLimited": "Dorar is limiting requests. Try again later.",
+  "hadithSourceServerFailed": "Dorar could not complete the request. Try again later.",
+  "hadithRichContentUnavailable": "Saved text is available; its rich source content could not be recovered.",
+  "hadithTargetRecords": "Hadith",
+  "hadithTargetProse": "Explanations",
+  "hadithSearchMethodHelp": "All words: the narration contains every search word. Any word: it contains at least one. Exact phrase: words appear in the order you entered.",
+  "hadithScopeHelp": "With explanation searches narration text for records with explanations. To search explanation text, choose Explanations in the search field.",
+  "hadithDegreesHelp": "These are scholars’ judgments on Dorar. A judgment on the chain differs from a judgment on the hadith.",
+  "hadithExcludeHelp": "Enter words or phrases you do not want in the results.",
+  "hadithAddPhrase": "Add search phrase",
+  "hadithRemovePhrase": "Remove phrase",
+  "hadithUpdating": "Updating results…",
+  "hadithDorarOrder": "Dorar order",
+  "hadithDegreeOrderHelp": "Orders results by source degree as presented by Dorar.",
+  "hadithSpecialistHelp": "Shows narrations with takhrij information using Dorar’s specialist mode.",
+  "hadithSimilarExplanation": "Explanation of a similar hadith"
 }

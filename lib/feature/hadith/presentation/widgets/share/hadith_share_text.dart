@@ -10,7 +10,12 @@ String hadithShareText(DetailedHadith hadith, AppLocalizations l10n) {
     if (hasHadithMetadata(value)) lines.add('$label: $value');
   }
 
-  field(l10n.hadithGradeExplanation, hadith.hukm);
+  for (final ruling in hadithSourceRulings(hadith)) {
+    field(
+      ruling.expanded ? l10n.hadithGradeExplanation : l10n.hadithGrade,
+      ruling.text,
+    );
+  }
   field(l10n.hadithNarrator, hadith.rawi);
   field(l10n.hadithMuhaddith, hadith.mohdith);
   field(l10n.hadithSource, hadith.book);

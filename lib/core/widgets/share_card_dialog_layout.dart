@@ -28,7 +28,7 @@ class ShareCardDialogLayout extends StatelessWidget {
                 // preview/settings composition in its scrolling body.
                 SizedBox(
                   height: constraints.hasBoundedHeight
-                      ? constraints.maxHeight.clamp(0.0, 240.0)
+                      ? (constraints.maxHeight * 0.5).clamp(0.0, 240.0)
                       : 240,
                   child: preview,
                 ),

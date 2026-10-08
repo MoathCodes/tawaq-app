@@ -28,10 +28,7 @@ HadithLocalDatabase hadithLocalDatabase(Ref ref) {
 /// Handles local persistence for hadith favorites and recent searches.
 class HadithLocalDatabase {
   /// Creates the local database wrapper.
-  new({
-    required this._favoritesBox,
-    required this._recentsBox,
-  });
+  new({required this._favoritesBox, required this._recentsBox});
   static const _maxHiveIntKey = 0xFFFFFFFF;
   static const _maxRecentSearches = 12;
   static const _savedAtKey = 'savedAt';
@@ -109,7 +106,13 @@ class HadithLocalDatabase {
     }
   }
 
-  /// Returns every stored favorite hadith (corrupt entries skipped).
+  /// Returns saved entries with their original durable keys and recovery state.
+  Future<List<SavedHadithEntry>> getFavoriteEntries() async {
+    await _pruneFavorites();
+    return _readFavoriteEntries();
+  }
+
+  /// Returns readable favorites, retaining unreadable values on disk.
   Future<List<DetailedHadith>> getAllFavorites() async {
     await _pruneFavorites();
     final entries = await _readFavoriteEntries();
@@ -121,7 +124,9 @@ class HadithLocalDatabase {
 
   /// Drops oldest favorites beyond [max] by [savedAt] (oldest first).
   Future<void> _pruneFavorites({int max = maxFavorites}) async {
-    final entries = await _readFavoriteEntries();
+    final entries = (await _readFavoriteEntries())
+        .where((entry) => !entry.richContentUnavailable)
+        .toList();
     if (entries.length <= max) return;
 
     entries.sort((a, b) => a.savedAt.compareTo(b.savedAt));
@@ -130,10 +135,9 @@ class HadithLocalDatabase {
     await _favoritesBox.deleteAll(keysToDelete);
   }
 
-  Future<List<_FavoriteEntry>> _readFavoriteEntries() async {
+  Future<List<SavedHadithEntry>> _readFavoriteEntries() async {
     final keys = (await _favoritesBox.getAllKeys()).toList(growable: false);
-    final entries = <_FavoriteEntry>[];
-    final corruptKeys = <String>[];
+    final entries = <SavedHadithEntry>[];
 
     for (final key in keys) {
       final value = await _favoritesBox.get(key);
@@ -141,20 +145,23 @@ class HadithLocalDatabase {
 
       final parsed = _parseFavoriteEntry(key, value);
       if (parsed == null) {
-        corruptKeys.add(key);
+        entries.add(
+          SavedHadithEntry(
+            key: key,
+            savedAt: DateTime.fromMillisecondsSinceEpoch(0),
+            hadith: null,
+            richContentUnavailable: true,
+          ),
+        );
         continue;
       }
       entries.add(parsed);
     }
 
-    if (corruptKeys.isNotEmpty) {
-      await _favoritesBox.deleteAll(corruptKeys);
-    }
-
     return entries;
   }
 
-  _FavoriteEntry? _parseFavoriteEntry(String key, dynamic value) {
+  SavedHadithEntry? _parseFavoriteEntry(String key, dynamic value) {
     try {
       final decoded = _decodeFavoriteValue(value);
       if (decoded == null) return null;
@@ -163,9 +170,49 @@ class HadithLocalDatabase {
       final hadith = decoded.hadith;
       if (hadith == null) return null;
 
-      return _FavoriteEntry(key: key, savedAt: savedAt, hadith: hadith);
+      return SavedHadithEntry(key: key, savedAt: savedAt, hadith: hadith);
     } catch (_) {
-      return null;
+      // Rich validation remains strict in the SDK. Recover only exact scalar
+      // fields for a read-only projection, retaining the original stored value.
+      try {
+        final decoded = value is String ? jsonDecode(value) : value;
+        if (decoded is! Map) return null;
+        final envelope = Map<String, dynamic>.from(decoded);
+        final raw = envelope['hadith'] is Map
+            ? envelope['hadith'] as Map
+            : envelope;
+        const required = [
+          'hadith',
+          'rawi',
+          'mohdith',
+          'book',
+          'numberOrPage',
+          'grade',
+        ];
+        if (required.any((field) => raw[field] is! String)) return null;
+        final scalar = <String, dynamic>{
+          for (final field in required) field: raw[field],
+        };
+        for (final field in [
+          'hadithId',
+          'mohdithId',
+          'bookId',
+          'explainGrade',
+          'takhrij',
+        ]) {
+          if (raw[field] is String) scalar[field] = raw[field];
+        }
+        return SavedHadithEntry(
+          key: key,
+          savedAt:
+              DateTime.tryParse('${envelope['savedAt']}') ??
+              DateTime.fromMillisecondsSinceEpoch(0),
+          hadith: DetailedHadith.fromJson(scalar),
+          richContentUnavailable: true,
+        );
+      } catch (_) {
+        return null;
+      }
     }
   }
 
@@ -209,21 +256,13 @@ class HadithLocalDatabase {
     if (map[_hadithKey] is Map) {
       final savedAtRaw = map[_savedAtKey];
       final savedAt = savedAtRaw is String
-          ? DateTime.tryParse(savedAtRaw) ?? DateTime.fromMillisecondsSinceEpoch(0)
+          ? DateTime.tryParse(savedAtRaw) ??
+                DateTime.fromMillisecondsSinceEpoch(0)
           : DateTime.fromMillisecondsSinceEpoch(0);
       final hadith = DetailedHadith.fromJson(
         Map<String, dynamic>.from(map[_hadithKey] as Map),
       );
       return (savedAt: savedAt, hadith: hadith);
-    }
-
-    // Legacy: bare DetailedHadith JSON (no savedAt).
-    if (map.containsKey('hadith') && map[_hadithKey] is String) {
-      final hadith = DetailedHadith.fromJson(map);
-      return (
-        savedAt: DateTime.fromMillisecondsSinceEpoch(0),
-        hadith: hadith,
-      );
     }
 
     // Legacy HadithFavorite JSON shape.
@@ -241,6 +280,12 @@ class HadithLocalDatabase {
           explainGrade: favorite.hukm,
         ),
       );
+    }
+
+    // Legacy: bare DetailedHadith JSON (no savedAt).
+    if (map.containsKey('hadith') && map[_hadithKey] is String) {
+      final hadith = DetailedHadith.fromJson(map);
+      return (savedAt: DateTime.fromMillisecondsSinceEpoch(0), hadith: hadith);
     }
 
     // Bare DetailedHadith map without envelope.
@@ -283,14 +328,16 @@ class HadithLocalDatabase {
   }
 }
 
-class _FavoriteEntry {
+class SavedHadithEntry {
   const new({
     required this.key,
     required this.savedAt,
     required this.hadith,
+    this.richContentUnavailable = false,
   });
 
   final String key;
   final DateTime savedAt;
-  final DetailedHadith hadith;
+  final DetailedHadith? hadith;
+  final bool richContentUnavailable;
 }

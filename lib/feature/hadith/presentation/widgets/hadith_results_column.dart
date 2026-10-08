@@ -5,429 +5,694 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
-import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
-import 'package:tawaq/core/widgets/custom_cards.dart';
-import 'package:tawaq/core/widgets/empty_state_panel.dart';
-import 'package:tawaq/core/widgets/f_skeletonizer.dart';
-import 'package:tawaq/core/widgets/mouse_click.dart';
+import 'package:tawaq/core/shortcuts/shortcuts.dart';
+import 'package:tawaq/core/utils/external_link_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/hadith_loading_cards.dart';
+import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/feature/hadith/data/database/hadith_local_database.dart';
+import 'package:tawaq/feature/hadith/presentation/models/hadith_session_state.dart';
+import 'package:tawaq/feature/hadith/presentation/models/hadith_failure_message.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_detail_pane.dart';
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/hadith_topics.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/results/hadith_result_card.dart';
 import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/hadith_help.dart';
 
-/// List of hadith search results with loading, empty, and pagination states.
-///
-/// Watches search fields only — selection is per-card / side-panel.
-class HadithResultsColumn extends ConsumerWidget {
-  const new({required this.useSplitLayout, super.key});
-
-  final bool useSplitLayout;
-
+/// Typed collections with one scroll/pager path and no modal detail destination.
+class HadithResultsColumn extends HookConsumerWidget {
+  const HadithResultsColumn({this.focusNodes, super.key});
+  final Map<String, FocusNode>? focusNodes;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(
-      hadithSessionControllerProvider.select((s) => s.mode),
-    );
-    final query = ref.watch(
-      hadithSessionControllerProvider.select((s) => s.query),
-    );
-    final searchOutcome = ref.watch(
-      hadithSessionControllerProvider.select((s) => s.searchOutcome),
-    );
-    final specificHadiths = mode == HadithViewMode.specificList
-        ? ref.watch(
-            hadithSessionControllerProvider.select((s) => s.specificHadiths),
-          )
-        : const <DetailedHadith>[];
-
-    final theme = context.theme;
-    final l10n = context.l10n;
-    final visibleResults = switch (mode) {
-      HadithViewMode.search => _searchResultsAsync(searchOutcome),
-      HadithViewMode.bookmarks => ref.watch(hadithFavoritesProvider),
-      HadithViewMode.specificList => AsyncData(specificHadiths),
-    };
-    final visibleCount = switch (visibleResults) {
-      AsyncData(:final value) => value.length,
-      _ => 0,
-    };
-    final hardError = searchOutcome.hasError && !searchOutcome.hasValue
-        ? l10n.hadithRequestFailed
-        : null;
-    final isPaginating = ref.watch(
-      hadithSessionControllerProvider.select((s) => s.isPaginating),
-    );
-    final paginationError = ref.watch(
-      hadithSessionControllerProvider.select((s) => s.paginationError),
-    );
-    final isLoading = searchOutcome.isLoading || isPaginating;
-    final results = searchOutcome.value?.results ?? const <DetailedHadith>[];
-    final page = searchOutcome.value?.page ?? 1;
-    final totalPages = searchOutcome.value?.totalPages ?? 0;
-
-    final content = _buildContent(
-      context: context,
-      ref: ref,
-      mode: mode,
-      query: query,
-      hardError: hardError,
-      paginationError: paginationError,
-      isLoading: isLoading,
-      results: results,
-      page: page,
-      totalPages: totalPages,
-      visibleResults: visibleResults,
-      theme: theme,
-    );
-    final showSearchLoadingSemantics =
-        mode == HadithViewMode.search && isLoading;
-    final semanticsContent = showSearchLoadingSemantics
-        ? Semantics(
-            label: hadithSearchLoadingSemanticsLabel(l10n),
-            child: ExcludeSemantics(child: content),
-          )
-        : content;
-
-    return AnimatedSwitcher(
-      duration: reduceMotion(context)
-          ? Duration.zero
-          : context.theme.durations.fast,
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) {
-        // Fade only — avoid scale thrash on page / result-list swaps.
-        return FadeTransition(opacity: animation, child: child);
-      },
-      child: KeyedSubtree(
-        key: ValueKey(
-          'results:$mode:${query.isEmpty}:'
-          '${hardError != null}:$visibleCount',
-        ),
-        child: Stack(
-          children: [
-            FSkeletonizer.shimmer(
-              enabled:
-                  mode == HadithViewMode.search && isLoading && results.isEmpty,
-              child: semanticsContent,
-            ),
-            if (mode == HadithViewMode.search &&
-                isLoading &&
-                results.isNotEmpty)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Semantics(
-                  label: hadithSearchLoadingSemanticsLabel(l10n),
-                  child: const ExcludeSemantics(
-                    child: LinearProgressIndicator(minHeight: 2),
-                  ),
-                ),
-              ),
-          ],
+    ref.watch(
+      hadithSessionControllerProvider.select(
+        (s) => (
+          s.context,
+          s.target,
+          s.query,
+          s.filters,
+          s.searchOutcome,
+          s.selectedHadithKey,
+          s.selectedSharhId,
+          s.isPaginating,
+          s.paginationError,
+          s.emptyNextPage,
         ),
       ),
     );
-  }
-
-  Widget _buildContent({
-    required BuildContext context,
-    required WidgetRef ref,
-    required HadithViewMode mode,
-    required String query,
-    required String? hardError,
-    required String? paginationError,
-    required bool isLoading,
-    required List<DetailedHadith> results,
-    required int page,
-    required int totalPages,
-    required AsyncValue<List<DetailedHadith>> visibleResults,
-    required FThemeData theme,
-  }) {
-    final l10n = context.l10n;
-
-    if (mode != HadithViewMode.search) {
-      return visibleResults.when(
-        loading: () => Semantics(
-          label: hadithSearchLoadingSemanticsLabel(l10n),
-          child: const ExcludeSemantics(
-            child: Center(child: FCircularProgress.loader()),
-          ),
-        ),
-        error: (error, _) => Center(
-          child: ErrorStatePanel(
-            message: l10n.hadithRequestFailed,
-            onRetry: () {
-              ref
-                  .read(hadithSessionControllerProvider.notifier)
-                  .retryInitialization();
-              ref.invalidate(hadithFavoritesStoreProvider);
-              ref.invalidate(hadithFavoritesProvider);
-            },
-            retryLabel: l10n.retryAction,
-          ),
-        ),
-        data: (hadithList) {
-          if (hadithList.isEmpty) {
-            final emptyMessage = mode == HadithViewMode.bookmarks
-                ? l10n.hadithNoBookmarks
-                : l10n.hadithNoMatchingResults;
-            return Center(
-              child: EmptyStatePanel(
-                icon: mode == HadithViewMode.bookmarks
-                    ? FLucideIcons.bookmark
-                    : FLucideIcons.searchX,
-                title: emptyMessage,
-              ),
-            );
-          }
-
-          return _ResultListView(
-            hadithList: hadithList,
-            useSplitLayout: useSplitLayout,
-            showPagination: false,
-            page: page,
-            totalPages: totalPages,
-            isLoading: isLoading,
-          );
-        },
-      );
-    }
-
-    if (query.isEmpty) {
-      return Center(
-        child: EmptyStatePanel(
-          icon: FLucideIcons.search,
-          title: l10n.hadithStartSearchPrompt,
-        ),
-      );
-    }
-
-    if (hardError != null) {
-      return Center(
-        child: ErrorStatePanel(
-          message: hardError,
-          onRetry: () => unawaited(
-            ref.read(hadithSessionControllerProvider.notifier).setQuery(query),
-          ),
-          retryLabel: l10n.retryAction,
-        ),
-      );
-    }
-
-    if (results.isEmpty) {
-      if (isLoading) return const _ResultsSkeletonList();
-
-      return Center(
-        child: EmptyStatePanel(
-          icon: FLucideIcons.searchX,
-          title: l10n.hadithNoMatchingResults,
-        ),
-      );
-    }
-
-    final list = _ResultListView(
-      hadithList: results,
-      useSplitLayout: useSplitLayout,
-      showPagination: totalPages > 1,
-      page: page,
-      totalPages: totalPages,
-      isLoading: isLoading,
+    final session = ref.read(hadithSessionControllerProvider);
+    final controller = ref.read(hadithSessionControllerProvider.notifier);
+    final scroll = useScrollController(
+      initialScrollOffset: session.resultsOffset,
     );
-
-    if (paginationError == null) return list;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-          child: FAlert(
-            icon: const Icon(FLucideIcons.circleAlert),
-            title: Text(l10n.hadithPageLoadFailed),
-          ),
-        ),
-        Expanded(child: list),
-      ],
+    final focus = useFocusNode();
+    final localNodes = useMemoized(() => <String, FocusNode>{});
+    final nodes = focusNodes ?? localNodes;
+    useEffect(
+      () => () {
+        for (final node in localNodes.values) {
+          node.dispose();
+        }
+      },
+      [localNodes],
     );
-  }
-}
-
-AsyncValue<List<DetailedHadith>> _searchResultsAsync(
-  AsyncValue<HadithSearchPage> outcome,
-) {
-  if (outcome.hasValue) {
-    return AsyncData(outcome.requireValue.results);
-  }
-  if (outcome.hasError) {
-    return AsyncError(outcome.error!, outcome.stackTrace!);
-  }
-  return const AsyncLoading();
-}
-
-class _ResultListView extends HookConsumerWidget {
-  const new({
-    required this.hadithList,
-    required this.useSplitLayout,
-    required this.showPagination,
-    required this.page,
-    required this.totalPages,
-    required this.isLoading,
-  });
-
-  final List<DetailedHadith> hadithList;
-  final bool useSplitLayout;
-  final bool showPagination;
-  final int page;
-  final int totalPages;
-  final bool isLoading;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final scrollController = useScrollController();
-    final scrollDuration = context.theme.durations.fast;
-
+    FocusNode nodeFor(String key) => nodes.putIfAbsent(key, FocusNode.new);
+    useEffect(() {
+      void changed() => controller.setResultsOffset(scroll.offset);
+      scroll.addListener(changed);
+      return () => scroll.removeListener(changed);
+    }, [scroll]);
     useEffect(() {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!scrollController.hasClients) return;
-
-        scrollController.animateTo(
-          0,
-          duration: scrollDuration,
-          curve: Curves.easeOutCubic,
-        );
+        if (scroll.hasClients)
+          scroll.jumpTo(
+            session.resultsOffset.clamp(0, scroll.position.maxScrollExtent),
+          );
       });
       return null;
-    }, [page]);
+    }, [session.context, session.searchPage]);
+    final l10n = context.l10n;
+    void select(DetailedHadith record) {
+      ref.read(hadithScreenSettingsProvider.notifier).setReaderCollapsed(false);
+      unawaited(controller.selectHadith(record));
+    }
 
-    final list = ListView.separated(
-      controller: scrollController,
-      padding: hoverCardListPadding(),
-      itemCount: hadithList.length,
-      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-      itemBuilder: (context, index) {
-        return _ResultTile(
-          hadith: hadithList[index],
-          resultOrdinal: index + 1,
-          useSplitLayout: useSplitLayout,
-        );
-      },
-    );
-
-    if (!showPagination || totalPages <= 1) return list;
-
-    final pageIndex = (page - 1).clamp(0, totalPages - 1);
-
-    return Column(
-      children: [
-        Expanded(child: list),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          child: Center(
-            child: FPagination(
-              control: .lifted(
-                page: pageIndex,
-                pages: totalPages,
-                onChange: (index) {
-                  if (isLoading) return;
-                  unawaited(
-                    ref
-                        .read(hadithSessionControllerProvider.notifier)
-                        .goToPage(index + 1),
+    Widget records(List<DetailedHadith> items) => items.isEmpty
+        ? Center(child: Text(l10n.noResults))
+        : ListView.separated(
+            controller: scroll,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            itemCount: items.length,
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+            itemBuilder: (_, index) => HadithResultCard(
+              key: ValueKey('record:${hadithStableKey(items[index])}'),
+              focusNode: nodeFor(hadithStableKey(items[index])),
+              hadith: items[index],
+              query: session.isSearchMode
+                  ? (session.committedQuery ?? session.query)
+                  : '',
+              resultOrdinal: index + 1,
+              onSelect: () => select(items[index]),
+            ),
+          );
+    Widget saved(Map<String, SavedHadithEntry> entries) => entries.isEmpty
+        ? Center(child: Text(l10n.noResults))
+        : ListView.separated(
+            controller: scroll,
+            itemCount: entries.length,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+            itemBuilder: (_, index) {
+              final entry = entries.values.elementAt(index);
+              if (entry.hadith case final record?)
+                return Column(
+                  key: ValueKey('saved:${entry.key}'),
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    HadithResultCard(
+                      hadith: record,
+                      resultOrdinal: index + 1,
+                      isFavorite: true,
+                      isSelected: session.selectedHadithKey == entry.key,
+                      focusNode: nodeFor(entry.key),
+                      onSelect: () {
+                        ref
+                            .read(hadithScreenSettingsProvider.notifier)
+                            .setReaderCollapsed(false);
+                        controller.selectSavedEntry(entry.key);
+                      },
+                      onToggleFavorite: () async {
+                        try {
+                          await controller.removeSavedEntry(entry.key);
+                        } catch (_) {
+                          if (context.mounted)
+                            showFToast(
+                              context: context,
+                              title: Text(l10n.hadithBookmarkFailed),
+                            );
+                        }
+                      },
+                    ),
+                    if (entry.richContentUnavailable)
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        child: Text(l10n.hadithRichContentUnavailable),
+                      ),
+                  ],
+                );
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.hadithUnreadableSaved),
+                  FButton(
+                    variant: .outline,
+                    onPress: () async {
+                      try {
+                        await ref
+                            .read(hadithFavoritesStoreProvider.notifier)
+                            .remove(entry.key);
+                      } catch (_) {
+                        if (context.mounted)
+                          showFToast(
+                            context: context,
+                            title: Text(l10n.hadithBookmarkFailed),
+                          );
+                      }
+                    },
+                    child: Text(l10n.menuRemoveBookmark),
+                  ),
+                ],
+              );
+            },
+          );
+    Widget renderPage(HadithSearchPage page) => switch (page) {
+      HadithProsePage(:final snippets) =>
+        snippets.isEmpty
+            ? Center(child: Text(l10n.noResults))
+            : ListView.separated(
+                controller: scroll,
+                itemCount: snippets.length,
+                separatorBuilder: (_, _) => const FDivider(),
+                itemBuilder: (_, index) {
+                  final snippet = snippets[index];
+                  return Column(
+                    key: ValueKey('prose:${snippet.id}'),
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      FButton(
+                        variant: session.selectedSharhId == snippet.id
+                            ? .secondary
+                            : .ghost,
+                        onPress: () {
+                          ref
+                              .read(hadithScreenSettingsProvider.notifier)
+                              .setReaderCollapsed(false);
+                          controller.selectSharh(snippet);
+                        },
+                        child: Flexible(
+                          child: Text(
+                            snippet.text,
+                            style: context.theme.typography.body.lg.copyWith(
+                              height: 1.8,
+                            ),
+                            maxLines: 5,
+                            overflow: TextOverflow.ellipsis,
+                            textDirection: TextDirection.rtl,
+                          ),
+                        ),
+                      ),
+                      FButton(
+                        variant: .ghost,
+                        mainAxisSize: MainAxisSize.min,
+                        onPress: () =>
+                            ref.read(externalLinkLauncherProvider)(snippet.uri),
+                        child: Text(l10n.hadithSource),
+                      ),
+                    ],
                   );
                 },
               ),
+      _ => records(page.results),
+    };
+    Widget body;
+    if (session.context is SavedCollection) {
+      body = ref
+          .watch(hadithFavoritesStoreProvider)
+          .when(
+            data: saved,
+            loading: () => const Center(child: FCircularProgress.loader()),
+            error: (_, _) => _Retry(
+              onRetry: () => ref.invalidate(hadithFavoritesStoreProvider),
+            ),
+          );
+    } else if (session.context is TopicsCollection) {
+      body = SingleChildScrollView(
+        controller: scroll,
+        child: const HadithTopics(),
+      );
+    } else {
+      body = session.searchPage != null
+          ? renderPage(session.searchPage!)
+          : session.searchOutcome.when(
+              skipLoadingOnRefresh: true,
+              skipError: session.searchPage != null,
+              loading: () => session.target == HadithSearchTarget.prose
+                  ? const HadithProseLoading()
+                  : const HadithLoadingCards(),
+              error: (error, _) => _Retry(
+                message: hadithFailureMessage(error, l10n),
+                onRetry: controller.search,
+              ),
+              data: renderPage,
+            );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (session.context case CategoryCollection(:final category))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(category.name, style: context.theme.typography.body.lg),
+          ),
+        if (session.context is SearchCollection ||
+            session.context is CategoryCollection)
+          const _ResultTools(),
+        if (session.context is SavedCollection)
+          Text(
+            l10n.hadithResultsCount(
+              ref.watch(hadithFavoritesStoreProvider).value?.length ?? 0,
             ),
           ),
+        if (session.searchOutcome.isLoading && session.searchPage != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                l10n.hadithUpdating,
+                style: context.theme.typography.body.sm,
+              ),
+            ),
+          ),
+        if (session.searchOutcome.hasError && session.searchPage != null)
+          _Retry(
+            message: hadithFailureMessage(session.searchOutcome.error, l10n),
+            onRetry: controller.search,
+          ),
+        Expanded(
+          key: const ValueKey('hadith-collection-body'),
+          child: AppShortcutScope(
+            shortcuts: {
+              AppShortcut.hadithResultNext,
+              AppShortcut.hadithResultPrev,
+            },
+            handlers: {
+              AppShortcut.hadithResultNext: () =>
+                  unawaited(controller.selectAdjacentResult(1)),
+              AppShortcut.hadithResultPrev: () =>
+                  unawaited(controller.selectAdjacentResult(-1)),
+            },
+            child: Focus(
+              focusNode: focus,
+              child: Listener(
+                onPointerDown: (_) => focus.requestFocus(),
+                child: body,
+              ),
+            ),
+          ),
+        ),
+        if (session.paginationError != null)
+          _Retry(
+            message: hadithFailureMessage(session.paginationError, l10n),
+            onRetry: () => controller.goToPage(
+              session.paginationRequestedPage ?? session.page + 1,
+            ),
+          ),
+        if (session.context is SearchCollection ||
+            session.context is CategoryCollection)
+          _Pager(),
+      ],
+    );
+  }
+}
+
+class _ResultTools extends ConsumerWidget {
+  const _ResultTools();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(
+      hadithSessionControllerProvider.select(
+        (s) => (s.context, s.target, s.filters, s.searchPage),
+      ),
+    );
+    final session = ref.read(hadithSessionControllerProvider);
+    final controller = ref.read(hadithSessionControllerProvider.notifier);
+    final l10n = context.l10n;
+    final specialist = switch (session.context) {
+      CategoryCollection(:final specialist) => specialist,
+      _ => session.filters.specialist,
+    };
+    final supported =
+        session.supportsFilters || session.context is CategoryCollection;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: session.searchPage == null
+                ? const SizedBox.shrink()
+                : Text(
+                    l10n.hadithResultsCount(
+                      session.searchPage!.results.length +
+                          session.searchPage!.snippets.length,
+                    ),
+                    style: context.theme.typography.body.sm,
+                  ),
+          ),
+          if (supported)
+            FPopoverMenu(
+              menuBuilder: (_, popover, _) => [
+                FItemGroup(
+                  children: [
+                    if (session.supportsFilters)
+                      for (final degreeOrder in [false, true])
+                        FItem(
+                          prefix: Icon(
+                            session.filters.sort ==
+                                    (degreeOrder ? HadithSort.degree : null)
+                                ? FLucideIcons.check
+                                : FLucideIcons.arrowDownWideNarrow,
+                            size: 16,
+                          ),
+                          title: HadithHelpLabel(
+                            label: degreeOrder
+                                ? l10n.hadithDegreeOrder
+                                : l10n.hadithDorarOrder,
+                            help: l10n.hadithDegreeOrderHelp,
+                          ),
+                          onPress: () {
+                            popover.hide();
+                            controller.setFilters(
+                              session.filters.copyWith(
+                                sort: degreeOrder ? HadithSort.degree : null,
+                              ),
+                            );
+                          },
+                        ),
+                    FItem(
+                      prefix: Icon(
+                        specialist ? FLucideIcons.check : FLucideIcons.link,
+                        size: 16,
+                      ),
+                      title: HadithHelpLabel(
+                        label: l10n.hadithSpecialist,
+                        help: l10n.hadithSpecialistHelp,
+                      ),
+                      onPress: () {
+                        popover.hide();
+                        if (session.context is CategoryCollection) {
+                          controller.setCategorySpecialist(!specialist);
+                        } else {
+                          controller.setFilters(
+                            session.filters.copyWith(specialist: !specialist),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ],
+              builder: (_, popover, _) => FButton(
+                variant: .ghost,
+                size: .sm,
+                mainAxisSize: MainAxisSize.min,
+                prefix: const Icon(FLucideIcons.arrowDownWideNarrow, size: 16),
+                onPress: popover.toggle,
+                child: Text(
+                  session.supportsFilters &&
+                          session.filters.sort == HadithSort.degree
+                      ? l10n.hadithDegreeOrder
+                      : specialist
+                      ? l10n.hadithSpecialist
+                      : l10n.hadithDorarOrder,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Pager extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(
+      hadithSessionControllerProvider.select(
+        (s) => (
+          s.context,
+          s.target,
+          s.query,
+          s.filters,
+          s.searchOutcome,
+          s.selectedHadithKey,
+          s.selectedSharhId,
+          s.isPaginating,
+          s.paginationError,
+          s.emptyNextPage,
+        ),
+      ),
+    );
+    final session = ref.read(hadithSessionControllerProvider);
+    final pages = session.searchPage?.reachablePages;
+    if (session.page == 1 &&
+        !session.canGoNext &&
+        (pages == null || pages <= 1))
+      return const SizedBox.shrink();
+    final controller = ref.read(hadithSessionControllerProvider.notifier);
+    if (pages != null)
+      return Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.sm),
+        child: ExcludeFocus(
+          excluding: session.searchBusy,
+          child: IgnorePointer(
+            ignoring: session.searchBusy,
+            child: Opacity(
+              opacity: session.searchBusy ? .5 : 1,
+              child: FPagination(
+                control: FPaginationControl.lifted(
+                  pages: pages,
+                  page: session.page - 1,
+                  onChange: (value) {
+                    if (!session.searchBusy)
+                      unawaited(controller.goToPage(value + 1));
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        FButton.icon(
+          variant: .outline,
+          semanticsTooltip: context.l10n.fortressPrevious,
+          onPress: !session.searchBusy && session.page > 1
+              ? () => controller.goToPage(session.page - 1)
+              : null,
+          child: const Icon(FLucideIcons.chevronLeft),
+        ),
+        Text('${session.page}'),
+        FButton.icon(
+          variant: .outline,
+          semanticsTooltip: context.l10n.next,
+          onPress: !session.searchBusy && session.canGoNext
+              ? () => controller.goToPage(session.page + 1)
+              : null,
+          child: const Icon(FLucideIcons.chevronRight),
         ),
       ],
     );
   }
 }
 
-class _ResultTile extends ConsumerWidget {
-  const new({
-    required this.hadith,
-    required this.resultOrdinal,
-    required this.useSplitLayout,
-  });
-
-  final DetailedHadith hadith;
-  final int resultOrdinal;
-  final bool useSplitLayout;
-
+class _Retry extends StatelessWidget {
+  const _Retry({required this.onRetry, this.message});
+  final String? message;
+  final VoidCallback onRetry;
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final card = HadithResultCard(hadith: hadith, resultOrdinal: resultOrdinal);
-
-    if (useSplitLayout) return card;
-
-    return FPopover(
-      popoverBuilder: (_, _) => ConstrainedBox(
-        constraints: dialogConstraints(
-          context,
-          preferredWidth: 620,
-          preferredHeight: 620,
+  Widget build(BuildContext context) => Center(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      spacing: AppSpacing.sm,
+      children: [
+        Text(message ?? context.l10n.hadithRequestFailed),
+        FButton(
+          variant: .secondary,
+          onPress: onRetry,
+          child: Text(context.l10n.retryAction),
         ),
-        child: HadithSelectedDetailsPane(
-          key: ValueKey('hadith-detail-${hadithStableKey(hadith)}'),
-          hadith: hadith,
-        ),
-      ),
-      builder: (_, controller, child) => MouseClick(
-        onClick: () {
-          unawaited(
-            ref
-                .read(hadithSessionControllerProvider.notifier)
-                .selectHadith(hadith),
-          );
-          unawaited(controller.toggle());
-        },
-        child: child!,
-      ),
-      child: card,
-    );
-  }
+      ],
+    ),
+  );
 }
 
-class _ResultsSkeletonList extends StatelessWidget {
-  const new();
-
+class HadithRecentQueries extends ConsumerWidget {
+  const HadithRecentQueries({super.key});
   @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: hadithSearchLoadingSemanticsLabel(context.l10n),
-      child: ExcludeSemantics(
-        child: ListView.separated(
-          itemCount: 4,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-          itemBuilder: (_, _) {
-            return const StaticCard(
-              padding: EdgeInsets.all(AppSpacing.md),
-              child: Column(
+  Widget build(BuildContext context, WidgetRef ref) => ref
+      .watch(hadithRecentSearchesStoreProvider)
+      .when(
+        loading: () => Text(context.l10n.loading),
+        error: (_, _) => _Retry(
+          message: context.l10n.hadithRecentsLoadFailed,
+          onRetry: () => ref.invalidate(hadithRecentSearchesStoreProvider),
+        ),
+        data: (items) => items.isEmpty
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 12,
+                children: [
+                  Text(
+                    context.l10n.hadithRecentSearches,
+                    style: context.theme.typography.body.sm.copyWith(
+                      color: context.theme.colors.mutedForeground,
+                    ),
+                  ),
+                  Text(
+                    context.l10n.hadithNoRecentSearches,
+                    style: context.theme.typography.body.sm.copyWith(
+                      color: context.theme.colors.mutedForeground,
+                    ),
+                  ),
+                ],
+              )
+            : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: AppSpacing.sm,
                 children: [
-                  SizedBox(height: 20, width: double.infinity),
-                  SizedBox(height: 20, width: double.infinity),
-                  SizedBox(height: 20, width: 220),
-                  SizedBox(height: AppSpacing.md),
-                  SizedBox(height: 14, width: 180),
-                  SizedBox(height: AppSpacing.xs),
-                  SizedBox(height: 14, width: 220),
-                  SizedBox(height: AppSpacing.md),
-                  SizedBox(height: 30, width: 120),
+                  Row(
+                    children: [
+                      Expanded(child: Text(context.l10n.hadithRecentSearches)),
+                      FButton(
+                        variant: .ghost,
+                        size: .sm,
+                        mainAxisSize: MainAxisSize.min,
+                        onPress: () => _clearRecents(context, ref),
+                        child: Text(context.l10n.hadithClearAllRecents),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (final query in items.take(5))
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Expanded(
+                              child: FButton(
+                                variant: .ghost,
+                                size: .sm,
+                                onPress: () => ref
+                                    .read(
+                                      hadithSessionControllerProvider.notifier,
+                                    )
+                                    .setQuery(query),
+                                child: Flexible(
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        FLucideIcons.history,
+                                        size: 14,
+                                        color: context
+                                            .theme
+                                            .colors
+                                            .mutedForeground,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          query,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: context
+                                              .theme
+                                              .typography
+                                              .body
+                                              .sm
+                                              .copyWith(
+                                                color: context
+                                                    .theme
+                                                    .colors
+                                                    .mutedForeground,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            FButton.icon(
+                              variant: .ghost,
+                              semanticsLabel:
+                                  hadithRemoveRecentSearchSemanticsLabel(
+                                    query,
+                                    context.l10n,
+                                  ),
+                              semanticsTooltip:
+                                  hadithRemoveRecentSearchSemanticsLabel(
+                                    query,
+                                    context.l10n,
+                                  ),
+                              onPress: () async {
+                                try {
+                                  await ref
+                                      .read(
+                                        hadithRecentSearchesStoreProvider
+                                            .notifier,
+                                      )
+                                      .removeQuery(query);
+                                } catch (_) {
+                                  if (context.mounted)
+                                    showFToast(
+                                      context: context,
+                                      title: Text(
+                                        context.l10n.hadithRecentsUpdateFailed,
+                                      ),
+                                    );
+                                }
+                              },
+                              child: const Icon(FLucideIcons.x, size: 14),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
                 ],
               ),
-            );
-          },
-        ),
+      );
+}
+
+Future<void> _clearRecents(BuildContext context, WidgetRef ref) async {
+  final l10n = context.l10n;
+  final confirmed = await showFDialog<bool>(
+    context: context,
+    builder: (dialogContext, style, animation) => FDialog(
+      style: style,
+      animation: animation,
+      builder: (context, dialogStyle) => ForuiDialogLayout(
+        style: dialogStyle,
+        expandActions: true,
+        title: Text(l10n.hadithClearRecentsConfirm),
+        body: const SizedBox.shrink(),
+        actions: [
+          FButton(
+            variant: .secondary,
+            onPress: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FButton(
+            variant: .destructive,
+            onPress: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.hadithClearAllRecents),
+          ),
+        ],
       ),
-    );
+    ),
+  );
+  if (confirmed != true || !context.mounted) return;
+  try {
+    await ref.read(hadithRecentSearchesStoreProvider.notifier).clearAll();
+  } catch (_) {
+    if (context.mounted)
+      showFToast(context: context, title: Text(l10n.hadithRecentsUpdateFailed));
   }
 }

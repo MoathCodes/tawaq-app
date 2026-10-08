@@ -10,16 +10,14 @@ part 'hadith_screen_settings_provider.g.dart';
 const _logPrefix = '[HadithScreenSettingsNotifier]';
 
 /// Persisted Hadith screen UI state.
-@riverpod
+@Riverpod(keepAlive: true)
 @JsonPersist()
 class HadithScreenSettingsNotifier extends _$HadithScreenSettingsNotifier {
   @override
   Future<HadithPersistedSettings> build() async {
     await persist(
       ref.watch(settingsStorageProvider.future),
-      options: const StorageOptions(
-        cacheTime: StorageCacheTime.unsafe_forever,
-      ),
+      options: const StorageOptions(cacheTime: StorageCacheTime.unsafe_forever),
     ).future;
     return state.value ?? HadithPersistedSettings.initial();
   }
@@ -36,17 +34,17 @@ class HadithScreenSettingsNotifier extends _$HadithScreenSettingsNotifier {
     ref.read(loggerProvider).i('$_logPrefix $field updated');
   }
 
-  /// Sets the hadith active panel tab.
-  void setActiveTab(HadithPanelTab tab) =>
-      _commit((s) => s.copyWith(activeTab: tab), 'Hadith tab');
-
-  /// Sets the side panel width ratio (0..1).
-  void setSidePanelRatio(double ratio) =>
-      _commit((s) => s.copyWith(sidePanelRatio: ratio), 'Side panel ratio');
-
-  /// Sets whether the side panel is collapsed.
-  void setSidePanelCollapsed({required bool collapsed}) => _commit(
-    (s) => s.copyWith(sidePanelCollapsed: collapsed),
-    'Side panel collapsed',
+  void setFiltersVisible(bool visible) =>
+      _commit((s) => s.copyWith(filtersVisible: visible), 'Filters visible');
+  void setFiltersWidth(double width) =>
+      _commit((s) => s.copyWith(filtersWidth: width), 'Filters width');
+  void setReaderRatio(double ratio) => _commit(
+    (s) => s.copyWith(readerRatio: ratio, sidePanelRatio: ratio),
+    'Reader ratio',
+  );
+  void setReaderCollapsed(bool collapsed) => _commit(
+    (s) =>
+        s.copyWith(readerCollapsed: collapsed, sidePanelCollapsed: collapsed),
+    'Reader collapsed',
   );
 }

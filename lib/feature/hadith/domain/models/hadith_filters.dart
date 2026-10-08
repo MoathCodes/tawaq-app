@@ -16,50 +16,29 @@ enum HadithLookupKind {
   rawi,
 }
 
-/// A lookup reference used by hadith search filters.
-@freezed
-abstract class HadithLookupRef with _$HadithLookupRef {
-  /// Creates a lookup reference.
-  const factory({required String id, required String name}) =
-      _HadithLookupRef;
-
-  /// Deserializes a lookup reference from JSON.
-  factory fromJson(Map<String, dynamic> json) =>
-      _$HadithLookupRefFromJson(json);
-}
-
 /// Search filters used by the hadith search screen.
 @freezed
 abstract class HadithFilters with _$HadithFilters {
   /// Creates a hadith filter set.
   const factory({
     @Default(SearchMethod.anyWord) SearchMethod searchMethod,
-    @Default(SearchZone.all) SearchZone zone,
+    @Default(<HadithTypeFilter>{}) Set<HadithTypeFilter> types,
+
     /// When true, limit results to hadiths that include takhrij in their
     /// metadata (Dorar.net `#specialist` tab / `&all` URL flag; site UI
     /// label: "متخصص").
     @Default(false) bool specialist,
+    @Default('') String exclude,
+    @Default(<String>[]) List<String> optionalPhrases,
+    HadithSort? sort,
     @Default(<HadithDegree>[]) List<HadithDegree> degrees,
-    @Default(<HadithLookupRef>[]) List<HadithLookupRef> scholars,
-    @Default(<HadithLookupRef>[]) List<HadithLookupRef> books,
-    @Default(<HadithLookupRef>[]) List<HadithLookupRef> rawi,
+    @Default(<ReferenceChoice>[]) List<ReferenceChoice> scholars,
+    @Default(<ReferenceChoice>[]) List<ReferenceChoice> books,
+    @Default(<ReferenceChoice>[]) List<ReferenceChoice> rawi,
   }) = _HadithFilters;
 
   /// Deserializes a hadith filter set from JSON.
-  factory fromJson(Map<String, dynamic> json) =>
-      _$HadithFiltersFromJson(json);
-}
-
-/// Converts lookup references into the Dorar Hadith API reference types.
-extension HadithLookupRefX on HadithLookupRef {
-  /// Converts this lookup reference to a scholar reference.
-  MohdithReference toMohdithReference() => MohdithReference(id: id, name: name);
-
-  /// Converts this lookup reference to a book reference.
-  BookReference toBookReference() => BookReference(id: id, name: name);
-
-  /// Converts this lookup reference to a rawi reference.
-  RawiReference toRawiReference() => RawiReference(id: id, name: name);
+  factory fromJson(Map<String, dynamic> json) => _$HadithFiltersFromJson(json);
 }
 
 /// Convenience helpers for working with hadith filters.
@@ -68,8 +47,11 @@ extension HadithFiltersX on HadithFilters {
   int get activeCount {
     var count = 0;
     if (searchMethod != SearchMethod.anyWord) count++;
-    if (zone != SearchZone.all) count++;
+    count += types.length;
     if (specialist) count++;
+    if (exclude.trim().isNotEmpty) count++;
+    count += optionalPhrases.where((p) => p.trim().isNotEmpty).length;
+    if (sort != null) count++;
     count += degrees.length;
     count += scholars.length;
     count += books.length;

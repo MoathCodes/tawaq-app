@@ -46,7 +46,7 @@ bool hasHadithMetadata(String? value) =>
 HadithJudgmentTone hadithSourceJudgmentTone(HadithBase hadith) {
   final tones = [
     hadithJudgmentTone(hadith.grade),
-    hadithJudgmentTone(hadith.hukm),
+    if (hadith is DetailedHadith) hadithJudgmentTone(hadith.explainGrade ?? ''),
   ];
   if (tones.contains(HadithJudgmentTone.weak)) return HadithJudgmentTone.weak;
   if (tones.contains(HadithJudgmentTone.chainWarning)) {
@@ -54,3 +54,17 @@ HadithJudgmentTone hadithSourceJudgmentTone(HadithBase hadith) {
   }
   return HadithJudgmentTone.neutral;
 }
+
+/// Meaningful source rulings, in source-field order, without interpretation.
+List<({bool expanded, String text})> hadithSourceRulings(HadithBase hadith) {
+  final expanded = hadith is DetailedHadith ? hadith.explainGrade : null;
+  return [
+    if (hasHadithMetadata(hadith.grade)) (expanded: false, text: hadith.grade),
+    if (hasHadithMetadata(expanded) && expanded != hadith.grade)
+      (expanded: true, text: expanded!),
+  ];
+}
+
+/// Compact display retains both supplied rulings when they differ.
+String hadithRulingText(HadithBase hadith) =>
+    hadithSourceRulings(hadith).map((ruling) => ruling.text).join('\n');

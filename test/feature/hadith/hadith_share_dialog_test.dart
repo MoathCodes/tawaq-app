@@ -46,6 +46,90 @@ Widget wrap(
 
 void main() {
   testWidgets(
+    'all export options keep one primary citation and distinct source qualifications',
+    (tester) async {
+      const record = DetailedHadith(
+        hadithId: 'fixture',
+        hadith: 'Synthetic narration',
+        rawi: 'Primary narrator',
+        mohdith: 'Primary scholar',
+        book: 'Primary source',
+        numberOrPage: '42',
+        grade: 'Primary source ruling',
+        verdictTone: VerdictTone.positive,
+        takhrij: 'Synthetic takhrij',
+      );
+      final related = record.copyWith(
+        mohdith: 'Related scholar',
+        book: 'Related source',
+        grade: 'Distinct qualified ruling',
+      );
+      final explanation = Sharh(
+        hadith: record,
+        embeddedHadith: related,
+        sharhMetadata: const SharhMetadata(
+          id: '1',
+          sharh: 'Synthetic commentary.',
+        ),
+      );
+      final origins = UsulHadith(
+        hadith: record,
+        sources: const [
+          UsulSource(
+            source: 'Synthetic origin source (1)',
+            chain: 'Synthetic chain.',
+            hadithText: 'Synthetic narration',
+          ),
+        ],
+        count: 1,
+      );
+      await tester.pumpWidget(
+        wrap(
+          SingleChildScrollView(
+            child: HadithShareCard(
+              boundaryKey: GlobalKey(),
+              hadith: record,
+              options: HadithShareOptions(HadithShareInclude.values.toSet()),
+              sharh: explanation,
+              usul: origins,
+            ),
+          ),
+          const Locale('en'),
+          ThemeMode.dark,
+          1,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Synthetic narration'), findsOneWidget);
+      expect(
+        find.textContaining('Primary source', findRichText: true),
+        findsNWidgets(2),
+      ); // one ruling and one citation
+      expect(
+        find.textContaining('Related source', findRichText: true),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('Distinct qualified ruling', findRichText: true),
+        findsOneWidget,
+      );
+      expect(find.text('Synthetic commentary.'), findsOneWidget);
+      expect(find.text('Synthetic chain.'), findsOneWidget);
+      expect(
+        find.text(
+          lookupAppLocalizations(const Locale('en')).hadithScholarRuling,
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.widget<Text>(find.text('Primary source ruling')).style!.fontSize,
+        20,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     'direct card cannot hide negative ruling or show empty narrator',
     (tester) async {
       for (final locale in [const Locale('ar'), const Locale('en')]) {
@@ -135,24 +219,18 @@ void main() {
     (tester) async {
       final hadith = fixture.copyWith(
         hasSharhMetadata: true,
-        sharhMetadata: const SharhMetadata(
-          id: 'fixture-sharh',
-          isContainSharh: false,
-        ),
+        sharhMetadata: const SharhMetadata(id: '3', isContainSharh: false),
       );
       var calls = 0;
       var fail = true;
       final container = ProviderContainer(
         retry: (_, _) => null,
         overrides: [
-          hadithDetailProvider(
-            HadithDetailKind.sharh,
-            'fixture-sharh',
-          ).overrideWith((ref) async {
+          hadithSharhProvider(SharhId('3')).overrideWith((ref) async {
             calls++;
             if (fail) throw StateError('Synthetic network failure');
             return const Sharh(
-              hadith: ExplainedHadith(
+              hadith: DetailedHadith(
                 hadith: 'Synthetic fixture',
                 rawi: '-',
                 mohdith: 'Fixture scholar',
@@ -161,7 +239,7 @@ void main() {
                 grade: 'Fixture judgment',
               ),
               sharhMetadata: SharhMetadata(
-                id: 'fixture-sharh',
+                id: '3',
                 isContainSharh: true,
                 sharh: 'Synthetic commentary fixture',
               ),
@@ -213,9 +291,7 @@ void main() {
       expect(find.text('Synthetic commentary fixture'), findsOneWidget);
       expect(saveButton().onPress, isNotNull);
       fail = true;
-      container.invalidate(
-        hadithDetailProvider(HadithDetailKind.sharh, 'fixture-sharh'),
-      );
+      container.invalidate(hadithSharhProvider(SharhId('3')));
       await tester.pumpAndSettle();
       expect(saveButton().onPress, isNull);
       await tester.ensureVisible(sharhOption);

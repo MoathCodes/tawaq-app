@@ -1,3 +1,4 @@
+import 'package:dorar_hadith/dorar_hadith.dart';
 // Fixture overrides belong to an independent root test scope.
 // ignore_for_file: riverpod_lint/scoped_providers_should_specify_dependencies
 
@@ -8,10 +9,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tawaq/feature/hadith/data/models/hadith_recent_search.dart';
 import 'package:tawaq/feature/hadith/data/repository/hadith_repository.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
+import 'package:tawaq/feature/hadith/presentation/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_accessibility.dart';
-import 'package:tawaq/feature/hadith/presentation/widgets/hadith_search_column.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/hadith_results_column.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
@@ -50,6 +51,12 @@ void main() {
         overrides: [
           hadithRepositoryProvider.overrideWith((_) async => repository),
           hadithSessionControllerProvider.overrideWith(_Session.new),
+          hadithTopicRootsProvider.overrideWith(
+            (ref) async => const ApiResponse(
+              data: <ThematicRoot>[],
+              metadata: SearchMetadata(),
+            ),
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -67,11 +74,7 @@ void main() {
               locale: Locale(language),
               localizationsDelegates: appLocalizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: const FToaster(
-                child: Scaffold(
-                  body: HadithSearchColumn(useSplitLayout: false),
-                ),
-              ),
+              home: FToaster(child: Scaffold(body: HadithRecentQueries())),
             ),
           ),
         ),

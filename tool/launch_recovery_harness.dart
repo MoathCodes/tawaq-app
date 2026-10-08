@@ -2,6 +2,8 @@
 /// Fixtures exercise mounted recovery callbacks, not OS input or real disk faults.
 library;
 
+import 'package:dorar_hadith/dorar_hadith.dart';
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -165,9 +167,7 @@ Future<void> recoveryMain() async {
           overrides: [
             hadithLookupProvider(kind, 'اب').overrideWith((ref) async {
               await load();
-              return const [
-                HadithLookupRef(id: 'fixture', name: 'Lookup fixture'),
-              ];
+              return const [ReferenceChoice(id: '1', name: 'Lookup fixture')];
             }),
             hiveCoreInitProvider.overrideWith((ref) async {}),
             settingsStorageProvider.overrideWith(

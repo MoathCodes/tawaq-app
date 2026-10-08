@@ -1382,12 +1382,6 @@ abstract class AppLocalizations {
   /// **'Alternate Authentic Hadith'**
   String get hadithAlternateHadithSahih;
 
-  /// No description provided for @hadithAlternativeAuthentic.
-  ///
-  /// In en, this message translates to:
-  /// **'Alternative Authentic Narrations'**
-  String get hadithAlternativeAuthentic;
-
   /// No description provided for @hadithBackToSearch.
   ///
   /// In en, this message translates to:
@@ -1478,12 +1472,6 @@ abstract class AppLocalizations {
   /// **'Filters'**
   String get hadithFilterTab;
 
-  /// No description provided for @hadithFoundations.
-  ///
-  /// In en, this message translates to:
-  /// **'Foundations'**
-  String get hadithFoundations;
-
   /// No description provided for @hadithShareDetailsFailed.
   ///
   /// In en, this message translates to:
@@ -1501,24 +1489,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Grade Explanation'**
   String get hadithGradeExplanation;
-
-  /// No description provided for @hadithLoadMore.
-  ///
-  /// In en, this message translates to:
-  /// **'Load more'**
-  String get hadithLoadMore;
-
-  /// No description provided for @hadithLoadSharh.
-  ///
-  /// In en, this message translates to:
-  /// **'Load Explanation'**
-  String get hadithLoadSharh;
-
-  /// No description provided for @hadithLoadSharhFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Failed to load sharh: {error}'**
-  String hadithLoadSharhFailed(String error);
 
   /// No description provided for @hadithMuhaddith.
   ///
@@ -1544,29 +1514,11 @@ abstract class AppLocalizations {
   /// **'Narrators'**
   String get hadithNarrators;
 
-  /// No description provided for @hadithNoBookmarks.
-  ///
-  /// In en, this message translates to:
-  /// **'No saved hadiths yet'**
-  String get hadithNoBookmarks;
-
-  /// No description provided for @hadithNoDetailedData.
-  ///
-  /// In en, this message translates to:
-  /// **'No detailed data found for this hadith'**
-  String get hadithNoDetailedData;
-
   /// No description provided for @hadithNoDetailsSelected.
   ///
   /// In en, this message translates to:
   /// **'Select a hadith from results to view details'**
   String get hadithNoDetailsSelected;
-
-  /// No description provided for @hadithNoMatchingResults.
-  ///
-  /// In en, this message translates to:
-  /// **'No matching results found'**
-  String get hadithNoMatchingResults;
 
   /// No description provided for @hadithNoRecentSearches.
   ///
@@ -1580,23 +1532,11 @@ abstract class AppLocalizations {
   /// **'Filters'**
   String get hadithOpenFilters;
 
-  /// No description provided for @hadithPageLoadFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Couldn\'t load that page. Showing previous results.'**
-  String get hadithPageLoadFailed;
-
   /// No description provided for @hadithRecentSearches.
   ///
   /// In en, this message translates to:
   /// **'Recent Searches'**
   String get hadithRecentSearches;
-
-  /// No description provided for @hadithRelatedLinks.
-  ///
-  /// In en, this message translates to:
-  /// **'Related Links'**
-  String get hadithRelatedLinks;
 
   /// No description provided for @hadithResetFilters.
   ///
@@ -1609,12 +1549,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count, plural, =0 {No results} =1 {1 result} other {{count} results}}'**
   String hadithResultsCount(int count);
-
-  /// No description provided for @hadithRetry.
-  ///
-  /// In en, this message translates to:
-  /// **'Retry'**
-  String get hadithRetry;
 
   /// No description provided for @hadithResultIdentity.
   ///
@@ -1670,48 +1604,6 @@ abstract class AppLocalizations {
   /// **'Exact match'**
   String get hadithSearchMethodExactMatch;
 
-  /// No description provided for @hadithSearchZoneAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All hadiths'**
-  String get hadithSearchZoneAll;
-
-  /// No description provided for @hadithSearchZoneMarfoo.
-  ///
-  /// In en, this message translates to:
-  /// **'Marfoo hadiths'**
-  String get hadithSearchZoneMarfoo;
-
-  /// No description provided for @hadithSearchZoneQudsi.
-  ///
-  /// In en, this message translates to:
-  /// **'Qudsi hadiths'**
-  String get hadithSearchZoneQudsi;
-
-  /// No description provided for @hadithSearchZoneSahabaAthar.
-  ///
-  /// In en, this message translates to:
-  /// **'Companion narrations'**
-  String get hadithSearchZoneSahabaAthar;
-
-  /// No description provided for @hadithSearchZoneSharh.
-  ///
-  /// In en, this message translates to:
-  /// **'Hadith commentaries'**
-  String get hadithSearchZoneSharh;
-
-  /// No description provided for @hadithSelectedHadith.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected hadith'**
-  String get hadithSelectedHadith;
-
-  /// No description provided for @hadithSelectedResult.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected result {number}'**
-  String hadithSelectedResult(int number);
-
   /// No description provided for @hadithSharh.
   ///
   /// In en, this message translates to:
@@ -1729,12 +1621,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Number or page'**
   String get hadithNumberOrPage;
-
-  /// No description provided for @hadithSimilar.
-  ///
-  /// In en, this message translates to:
-  /// **'Similar Hadiths'**
-  String get hadithSimilar;
 
   /// No description provided for @hadithSimilarHadith.
   ///
@@ -1757,7 +1643,7 @@ abstract class AppLocalizations {
   /// Filter toggle for Dorar's specialist tab: limits results to hadiths that include takhrij in their metadata (Dorar UI label: متخصص).
   ///
   /// In en, this message translates to:
-  /// **'Takhrij'**
+  /// **'With takhrij'**
   String get hadithSpecialist;
 
   /// Explains that enabling this filter limits results to hadiths with takhrij populated in result metadata.
@@ -1765,12 +1651,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only return hadiths that include takhrij in their metadata'**
   String get hadithSpecialistHint;
-
-  /// No description provided for @hadithStartSearchPrompt.
-  ///
-  /// In en, this message translates to:
-  /// **'Press Enter or Search to see results'**
-  String get hadithStartSearchPrompt;
 
   /// No description provided for @hadithTakhrij.
   ///
@@ -4787,6 +4667,300 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search could not load. Try again.'**
   String get quranSearchFailed;
+
+  /// No description provided for @hadithGrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Source ruling'**
+  String get hadithGrade;
+
+  /// No description provided for @hadithRelatedSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Related collection source'**
+  String get hadithRelatedSource;
+
+  /// No description provided for @hadithExplanationHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Explanation page narration'**
+  String get hadithExplanationHeader;
+
+  /// No description provided for @hadithExplanationCitation.
+  ///
+  /// In en, this message translates to:
+  /// **'Narration cited in the explanation'**
+  String get hadithExplanationCitation;
+
+  /// No description provided for @hadithSearchRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Hadith records'**
+  String get hadithSearchRecords;
+
+  /// No description provided for @hadithSearchProse.
+  ///
+  /// In en, this message translates to:
+  /// **'Explanation prose'**
+  String get hadithSearchProse;
+
+  /// No description provided for @hadithProseFiltersHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Record filters are retained and apply only to Hadith records.'**
+  String get hadithProseFiltersHint;
+
+  /// No description provided for @hadithTypeMarfoo.
+  ///
+  /// In en, this message translates to:
+  /// **'Marfoo hadiths'**
+  String get hadithTypeMarfoo;
+
+  /// No description provided for @hadithTypeQudsi.
+  ///
+  /// In en, this message translates to:
+  /// **'Qudsi hadiths'**
+  String get hadithTypeQudsi;
+
+  /// No description provided for @hadithTypeCompanionAthar.
+  ///
+  /// In en, this message translates to:
+  /// **'Companion narrations'**
+  String get hadithTypeCompanionAthar;
+
+  /// No description provided for @hadithTypeWithExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Records with an explanation'**
+  String get hadithTypeWithExplanation;
+
+  /// No description provided for @hadithTopics.
+  ///
+  /// In en, this message translates to:
+  /// **'Topics'**
+  String get hadithTopics;
+
+  /// No description provided for @hadithStudyDesk.
+  ///
+  /// In en, this message translates to:
+  /// **'Hadith study desk'**
+  String get hadithStudyDesk;
+
+  /// No description provided for @hadithStudyDeskHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search narrations, inspect their sources, and read their explanations.'**
+  String get hadithStudyDeskHint;
+
+  /// No description provided for @hadithScholarRuling.
+  ///
+  /// In en, this message translates to:
+  /// **'Scholar’s ruling'**
+  String get hadithScholarRuling;
+
+  /// No description provided for @hadithAsbab.
+  ///
+  /// In en, this message translates to:
+  /// **'Circumstances'**
+  String get hadithAsbab;
+
+  /// No description provided for @hadithUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The source does not advertise this content.'**
+  String get hadithUnavailable;
+
+  /// No description provided for @hadithNoRemoteId.
+  ///
+  /// In en, this message translates to:
+  /// **'This saved record has no source identifier. Remote details cannot be opened.'**
+  String get hadithNoRemoteId;
+
+  /// No description provided for @hadithAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced search'**
+  String get hadithAdvanced;
+
+  /// No description provided for @hadithExclude.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded words or phrases'**
+  String get hadithExclude;
+
+  /// No description provided for @hadithOptionalPhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional phrase'**
+  String get hadithOptionalPhrase;
+
+  /// No description provided for @hadithDegreeOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Order by source degree'**
+  String get hadithDegreeOrder;
+
+  /// No description provided for @hadithTopicSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search topics'**
+  String get hadithTopicSearch;
+
+  /// No description provided for @hadithCloseReader.
+  ///
+  /// In en, this message translates to:
+  /// **'Close reader'**
+  String get hadithCloseReader;
+
+  /// No description provided for @hadithInvalidSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at most 500 characters per search field and four optional phrases.'**
+  String get hadithInvalidSearch;
+
+  /// No description provided for @hadithUnreadableSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'This saved entry cannot be read. Its original data is retained.'**
+  String get hadithUnreadableSaved;
+
+  /// No description provided for @shortcutHadithFiltersLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Toggle Hadith filters'**
+  String get shortcutHadithFiltersLabel;
+
+  /// No description provided for @shortcutHadithFiltersDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the filter column or open compact filters.'**
+  String get shortcutHadithFiltersDescription;
+
+  /// No description provided for @shortcutHadithSearchLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus Hadith search'**
+  String get shortcutHadithSearchLabel;
+
+  /// No description provided for @shortcutHadithSearchDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus the Hadith search field.'**
+  String get shortcutHadithSearchDescription;
+
+  /// No description provided for @hadithSearchInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'The search was stopped when you changed collection. Retry to finish it.'**
+  String get hadithSearchInterrupted;
+
+  /// No description provided for @hadithSourceUnreadable.
+  ///
+  /// In en, this message translates to:
+  /// **'The source response could not be read. Retry or try a different query.'**
+  String get hadithSourceUnreadable;
+
+  /// No description provided for @hadithRequestTimedOut.
+  ///
+  /// In en, this message translates to:
+  /// **'The source request timed out. Try again.'**
+  String get hadithRequestTimedOut;
+
+  /// No description provided for @hadithSourceRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Dorar is limiting requests. Try again later.'**
+  String get hadithSourceRateLimited;
+
+  /// No description provided for @hadithSourceServerFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dorar could not complete the request. Try again later.'**
+  String get hadithSourceServerFailed;
+
+  /// No description provided for @hadithRichContentUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved text is available; its rich source content could not be recovered.'**
+  String get hadithRichContentUnavailable;
+
+  /// No description provided for @hadithTargetRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Hadith'**
+  String get hadithTargetRecords;
+
+  /// No description provided for @hadithTargetProse.
+  ///
+  /// In en, this message translates to:
+  /// **'Explanations'**
+  String get hadithTargetProse;
+
+  /// No description provided for @hadithSearchMethodHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'All words: the narration contains every search word. Any word: it contains at least one. Exact phrase: words appear in the order you entered.'**
+  String get hadithSearchMethodHelp;
+
+  /// No description provided for @hadithScopeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'With explanation searches narration text for records with explanations. To search explanation text, choose Explanations in the search field.'**
+  String get hadithScopeHelp;
+
+  /// No description provided for @hadithDegreesHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'These are scholars’ judgments on Dorar. A judgment on the chain differs from a judgment on the hadith.'**
+  String get hadithDegreesHelp;
+
+  /// No description provided for @hadithExcludeHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter words or phrases you do not want in the results.'**
+  String get hadithExcludeHelp;
+
+  /// No description provided for @hadithAddPhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Add search phrase'**
+  String get hadithAddPhrase;
+
+  /// No description provided for @hadithRemovePhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove phrase'**
+  String get hadithRemovePhrase;
+
+  /// No description provided for @hadithUpdating.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating results…'**
+  String get hadithUpdating;
+
+  /// No description provided for @hadithDorarOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Dorar order'**
+  String get hadithDorarOrder;
+
+  /// No description provided for @hadithDegreeOrderHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders results by source degree as presented by Dorar.'**
+  String get hadithDegreeOrderHelp;
+
+  /// No description provided for @hadithSpecialistHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Shows narrations with takhrij information using Dorar’s specialist mode.'**
+  String get hadithSpecialistHelp;
+
+  /// No description provided for @hadithSimilarExplanation.
+  ///
+  /// In en, this message translates to:
+  /// **'Explanation of a similar hadith'**
+  String get hadithSimilarExplanation;
 }
 
 class _AppLocalizationsDelegate

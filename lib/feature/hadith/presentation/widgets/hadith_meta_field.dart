@@ -11,6 +11,9 @@ enum HadithMetaFieldLayout {
 
   /// Label above value (detail pane).
   stacked,
+
+  /// A compact reader row with distinct label and value.
+  row,
 }
 
 /// Shared metadata row for hadith narrator, source, grade, etc.
@@ -20,6 +23,7 @@ class HadithMetaField extends StatelessWidget {
     required this.label,
     required this.value,
     this.layout = HadithMetaFieldLayout.stacked,
+    this.fontSize,
     super.key,
   });
 
@@ -32,6 +36,9 @@ class HadithMetaField extends StatelessWidget {
   /// Inline single-line vs stacked multi-line presentation.
   final HadithMetaFieldLayout layout;
 
+  /// Export size independent of screen typography.
+  final double? fontSize;
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
@@ -41,16 +48,41 @@ class HadithMetaField extends StatelessWidget {
       HadithMetaFieldLayout.inline => RichText(
         text: TextSpan(
           style: theme.typography.body.sm.copyWith(
+            fontSize: fontSize,
             color: theme.colors.secondaryForeground,
           ),
           children: [
             TextSpan(
-              text: context.l10n.hadithFieldLabel(label),
+              text: '${context.l10n.hadithFieldLabel(label)} ',
               style: theme.typography.body.sm.copyWith(
+                fontSize: fontSize,
                 color: theme.colors.mutedForeground,
               ),
             ),
             TextSpan(text: value),
+          ],
+        ),
+      ),
+      HadithMetaFieldLayout.row => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: theme.typography.body.sm.copyWith(
+                fontSize: fontSize,
+                color: theme.colors.mutedForeground,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                value,
+                textAlign: TextAlign.end,
+                style: theme.typography.body.sm.copyWith(fontSize: fontSize),
+              ),
+            ),
           ],
         ),
       ),
@@ -63,10 +95,14 @@ class HadithMetaField extends StatelessWidget {
             Text(
               label,
               style: theme.typography.body.sm.copyWith(
+                fontSize: fontSize,
                 color: theme.colors.mutedForeground,
               ),
             ),
-            Text(value, style: theme.typography.body.md),
+            Text(
+              value,
+              style: theme.typography.body.md.copyWith(fontSize: fontSize),
+            ),
           ],
         ),
       ),

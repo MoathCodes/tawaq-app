@@ -172,9 +172,7 @@ abstract final class AppShortcut {
     category: AppShortcutCategory.quran,
     scope: ShortcutScope.route,
     routePath: '/quran',
-    activators: [
-      plainShortcut(LogicalKeyboardKey.arrowDown),
-    ],
+    activators: [plainShortcut(LogicalKeyboardKey.arrowDown)],
   );
 
   static final quranAyahPrev = ShortcutDef(
@@ -182,9 +180,7 @@ abstract final class AppShortcut {
     category: AppShortcutCategory.quran,
     scope: ShortcutScope.route,
     routePath: '/quran',
-    activators: [
-      plainShortcut(LogicalKeyboardKey.arrowUp),
-    ],
+    activators: [plainShortcut(LogicalKeyboardKey.arrowUp)],
   );
 
   static final fortressCount = ShortcutDef(
@@ -243,6 +239,21 @@ abstract final class AppShortcut {
   );
 
   /// Every shortcut in the application.
+  static final hadithFilters = ShortcutDef(
+    id: 'hadithFilters',
+    category: AppShortcutCategory.hadith,
+    scope: ShortcutScope.route,
+    routePath: '/hadith',
+    activators: [plainShortcut(LogicalKeyboardKey.keyF)],
+  );
+  static final hadithFocusSearch = ShortcutDef(
+    id: 'hadithFocusSearch',
+    category: AppShortcutCategory.hadith,
+    scope: ShortcutScope.route,
+    routePath: '/hadith',
+    activators: [plainShortcut(LogicalKeyboardKey.slash)],
+  );
+
   static final List<ShortcutDef> all = [
     toggleTheme,
     toggleLocale,
@@ -261,6 +272,8 @@ abstract final class AppShortcut {
     fortressThikrPrev,
     hadithResultNext,
     hadithResultPrev,
+    hadithFilters,
+    hadithFocusSearch,
   ];
 }
 

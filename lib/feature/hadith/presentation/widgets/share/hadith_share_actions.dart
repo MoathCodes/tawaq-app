@@ -9,10 +9,16 @@ import 'package:tawaq/theme/theme.dart';
 
 /// Consistent, independent actions after the source text and ruling.
 class HadithShareActions extends StatelessWidget {
-  const new({required this.hadith, this.favoriteButton, super.key});
+  const new({
+    required this.hadith,
+    this.favoriteButton,
+    this.trailingAction,
+    super.key,
+  });
 
   final DetailedHadith hadith;
   final Widget? favoriteButton;
+  final Widget? trailingAction;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +63,7 @@ class HadithShareActions extends StatelessWidget {
           child: Flexible(child: Text(l10n.menuCopyText)),
         ),
         ?favoriteButton,
+        ?trailingAction,
       ],
     );
   }

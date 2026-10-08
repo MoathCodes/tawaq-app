@@ -13,18 +13,14 @@ extension SearchMethodLocale on SearchMethod {
   }
 }
 
-/// Localized labels for [SearchZone] values.
-extension SearchZoneLocale on SearchZone {
-  /// Returns the localized name for this search zone.
-  String getLocaleName(AppLocalizations l10n) {
-    return switch (this) {
-      SearchZone.all => l10n.hadithSearchZoneAll,
-      SearchZone.marfoo => l10n.hadithSearchZoneMarfoo,
-      SearchZone.qudsi => l10n.hadithSearchZoneQudsi,
-      SearchZone.sahabaAthar => l10n.hadithSearchZoneSahabaAthar,
-      SearchZone.sharh => l10n.hadithSearchZoneSharh,
-    };
-  }
+/// Localized record scopes, distinct from explanation prose search.
+extension HadithTypeLocale on HadithTypeFilter {
+  String getLocaleName(AppLocalizations l10n) => switch (this) {
+    HadithTypeFilter.marfoo => l10n.hadithTypeMarfoo,
+    HadithTypeFilter.qudsi => l10n.hadithTypeQudsi,
+    HadithTypeFilter.companionAthar => l10n.hadithTypeCompanionAthar,
+    HadithTypeFilter.withExplanation => l10n.hadithTypeWithExplanation,
+  };
 }
 
 /// Localized labels for [HadithDegree] values.

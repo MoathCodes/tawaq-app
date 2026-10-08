@@ -1,172 +1,172 @@
-import 'dart:convert';
-import 'dart:io';
+import 'dart:async';
 
+import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:tawaq/core/widgets/desktop_selection.dart';
-import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_metadata_parser.dart';
-import 'package:tawaq/feature/hadith/domain/services/hadith_sharh_zone_splitter.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
+import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
+import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
 void main() {
-  late List<Map<String, dynamic>> fixtures;
-
-  setUpAll(() {
-    final raw =
-        File('test/fixtures/hadith_sharh_samples.json').readAsStringSync();
-    fixtures = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
-  });
-
-  Map<String, dynamic> fixture(String id) {
-    return fixtures.firstWhere((entry) => entry['id'] == id);
-  }
-
-  Widget wrap(Widget child) {
-    return FTheme(
-      data: buildAppTheme(
-        palette: AppPalette.neutral,
-        themeMode: ThemeMode.light,
-        touch: false,
-        textScale: 1,
-      ),
-      child: MaterialApp(
-        home: Scaffold(
-          body: SingleChildScrollView(child: child),
+  testWidgets('shared pending explanation uses the current selection origin', (
+    tester,
+  ) async {
+    final pending = Completer<Sharh>();
+    var requests = 0;
+    final container = ProviderContainer(
+      overrides: [
+        hadithSharhProvider.overrideWith((ref, id) {
+          requests++;
+          return pending.future;
+        }),
+      ],
+    );
+    addTearDown(container.dispose);
+    Future<void> render(String label, ContentRelationship relationship) async {
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: FTheme(
+            data: buildAppTheme(
+              palette: AppPalette.neutral,
+              themeMode: ThemeMode.light,
+              touch: false,
+              textScale: 1,
+            ),
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: Consumer(
+                  builder: (context, ref, _) {
+                    final value = ref.watch(hadithSharhProvider(SharhId('1')));
+                    return value.when(
+                      loading: () => const Text('pending'),
+                      error: (error, stack) => Text('$error'),
+                      data: (sharh) => SingleChildScrollView(
+                        child: HadithSharhContent(
+                          sharh: sharh,
+                          origin: ExplanationReference(
+                            id: '1',
+                            uri: Uri.parse('https://dorar.net/sharh/1'),
+                            relationship: relationship,
+                            rawLabel: label,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
         ),
+      );
+      await tester.pump();
+    }
+
+    await render('first direct origin', ContentRelationship.direct);
+    await render('current similar origin', ContentRelationship.similar);
+    pending.complete(
+      const Sharh(
+        hadith: DetailedHadith(
+          hadith: 'source header',
+          rawi: 'r',
+          mohdith: 'm',
+          book: 'b',
+          numberOrPage: '1',
+          grade: 'g',
+        ),
+        sharhMetadata: SharhMetadata(id: '1', sharh: 'source prose'),
       ),
     );
-  }
-
-  Iterable<String> visibleTexts(WidgetTester tester) sync* {
-    for (final widget in tester.widgetList<Text>(find.byType(Text))) {
-      if (widget.data case final text? when text.isNotEmpty) yield text;
-    }
-    for (final widget in tester.widgetList<ScopedSelectableText>(
-      find.byType(ScopedSelectableText),
-    )) {
-      if (widget.data case final text when text.isNotEmpty) yield text;
-    }
-  }
-
-  group('HadithSharhText metadata', () {
-    testWidgets('renders matn prefix in blockquote area', (tester) async {
-      final sample = fixture('113371');
-      final zones = HadithSharhZoneSplitter.split(sample['sharh'] as String);
-      expect(zones.matnPrefix, isNotNull);
-
-      await tester.pumpWidget(
-        wrap(HadithSharhText(text: sample['sharh'] as String)),
-      );
-
-      expect(find.textContaining('السلامُ اسمٌ'), findsOneWidget);
-    });
-
-    testWidgets('keeps labels paired with values, not orphaned', (
-      tester,
-    ) async {
-      final sample = fixture('113371');
-      final zones = HadithSharhZoneSplitter.split(sample['sharh'] as String);
-      final fields = HadithSharhMetadataParser.parse(zones.metadata);
-
-      expect(fields.rawi, 'عبدالله بن مسعود');
-      expect(fields.mohdith, 'الألباني');
-
-      await tester.pumpWidget(
-        wrap(HadithSharhText(text: sample['sharh'] as String)),
-      );
-
-      final texts = visibleTexts(tester).toList(growable: false);
-
-      expect(texts, contains('الراوي'));
-      expect(texts, contains('عبدالله بن مسعود'));
-      expect(texts, contains('المحدث'));
-      expect(texts, contains('الألباني'));
-      expect(texts, contains('التخريج'));
-      expect(
-        texts.any((text) => RegExp(r'^الراوي\s*:\s*$').hasMatch(text.trim())),
-        isFalse,
-        reason: 'raw metadata label line must not appear with trailing colon',
-      );
-      expect(
-        texts.any((text) => RegExp(r'^المحدث\s*:\s*$').hasMatch(text.trim())),
-        isFalse,
-      );
-      expect(
-        texts.any(
-          (text) => RegExp(r'^التخريج\s*:\s*$').hasMatch(text.trim()),
-        ),
-        isFalse,
-      );
-      expect(
-        texts.any((text) => text.contains('المحدث :')),
-        isFalse,
-        reason: 'value text must not include the next field label',
-      );
-    });
-
-    testWidgets('renders takhrij as one flowing paragraph', (tester) async {
-      final sample = fixture('113371');
-
-      await tester.pumpWidget(
-        wrap(HadithSharhText(text: sample['sharh'] as String)),
-      );
-
-      final takhrijText = tester.widgetList<ScopedSelectableText>(
-        find.byType(ScopedSelectableText),
-      ).map((widget) => widget.data).whereType<String>().firstWhere(
-            (text) => text.contains('أخرجه'),
-          );
-
-      expect(takhrijText, contains('أخرجه'));
-      expect(takhrijText, contains('البخاري'));
-      expect(takhrijText, isNot(contains('\n')));
-    });
+    await tester.pumpAndSettle();
+    expect(requests, 1);
+    expect(find.text('current similar origin'), findsOneWidget);
+    expect(find.text('first direct origin'), findsNothing);
+    expect(find.text('source header'), findsOneWidget);
   });
 
-  group('HadithSharhText wiring', () {
-    testWidgets('shows metadata card with matn prefix from zones', (
-      tester,
-    ) async {
-      final sample = fixture('113371');
-
-      await tester.pumpWidget(
-        wrap(HadithSharhText(text: sample['sharh'] as String)),
-      );
-
-      expect(find.textContaining('السلامُ اسمٌ'), findsOneWidget);
-      expect(find.text('الراوي'), findsOneWidget);
-      expect(find.textContaining('عبدالله بن مسعود'), findsOneWidget);
-    });
-
-    testWidgets('shows metadata card when commentary is stub sharh id', (
-      tester,
-    ) async {
-      const stubSharh = '''
-ثلاثةٌ من الكُفرِ باللهِ : شَقُّ الجيبِ ، والنِّياحةُ ، والطَّعنُ في النَّسَبِ .
-     الراوي :
-        أبو هريرة |  المحدث :
-        الألباني
-        |
-        المصدر :
-        صحيح مسلم
-    
-    
-        الصفحة أو الرقم: 431 |  خلاصة حكم المحدث : [صحيح]
-    
-          التخريج :
-        أخرجه أبو ادود (1000)، وأحمد (20964)، وابن حبان (1878) جميعهم باختلاف يسير.
-    
-        
-
-113343''';
-
-      await tester.pumpWidget(wrap(const HadithSharhText(text: stubSharh)));
-
-      expect(find.text('الراوي'), findsOneWidget);
-      expect(find.textContaining('أبو هريرة'), findsOneWidget);
-    });
+  testWidgets('page header and body citation do not leak selection origin', (
+    tester,
+  ) async {
+    const header = DetailedHadith(
+      hadith: 'header matn',
+      rawi: 'header narrator',
+      mohdith: 'header scholar',
+      book: 'header book',
+      numberOrPage: '1',
+      grade: 'header ruling',
+    );
+    const body = DetailedHadith(
+      hadith: 'body matn',
+      rawi: 'body narrator',
+      mohdith: 'body scholar',
+      book: 'body book',
+      numberOrPage: '2',
+      grade: 'body ruling',
+    );
+    const sharh = Sharh(
+      hadith: header,
+      embeddedHadith: body,
+      sharhMetadata: SharhMetadata(id: '1', sharh: 'old plain commentary'),
+    );
+    Future<void> render(String label, {bool commentaryOnly = false}) =>
+        tester.pumpWidget(
+          ProviderScope(
+            child: FTheme(
+              data: buildAppTheme(
+                palette: AppPalette.neutral,
+                themeMode: ThemeMode.light,
+                touch: false,
+                textScale: 1,
+              ),
+              child: MaterialApp(
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: Scaffold(
+                  body: SingleChildScrollView(
+                    child: HadithSharhContent(
+                      sharh: sharh,
+                      commentaryOnly: commentaryOnly,
+                      origin: ExplanationReference(
+                        id: '1',
+                        uri: Uri.parse('https://dorar.net/sharh/1'),
+                        rawLabel: label,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+    await render('similar origin');
+    await tester.pumpAndSettle();
+    expect(find.text('header matn'), findsOneWidget);
+    expect(find.text('body matn'), findsOneWidget);
+    expect(find.text('similar origin'), findsOneWidget);
+    await render('direct origin');
+    await tester.pumpAndSettle();
+    expect(find.text('similar origin'), findsNothing);
+    expect(find.text('direct origin'), findsOneWidget);
+    expect(find.text('old plain commentary'), findsOneWidget);
+    await render('direct origin', commentaryOnly: true);
+    await tester.pumpAndSettle();
+    expect(find.text('header matn'), findsNothing);
+    expect(find.text('body matn'), findsNothing);
+    expect(
+      find.textContaining('header ruling', findRichText: true),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('body ruling', findRichText: true),
+      findsOneWidget,
+    );
+    expect(find.text('old plain commentary'), findsOneWidget);
   });
 }

@@ -7,7 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
-import 'package:tawaq/feature/hadith/domain/models/hadith_session_state.dart';
+import 'package:tawaq/feature/hadith/presentation/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_screen_settings_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_detail_pane.dart';
@@ -63,7 +63,7 @@ const _original = DetailedHadith(
   book: 'Fixture book',
   numberOrPage: '1',
   grade: 'Synthetic judgment',
-  hadithId: 'fixture-original',
+  hadithId: 'fixtureoriginal',
   hasAlternateHadithSahih: true,
 );
 const _alternate = DetailedHadith(
@@ -80,7 +80,9 @@ class _Session extends HadithSessionController {
   @override
   HadithSessionState build() => HadithSessionState(
     query: 'Fixture search',
-    selectedHadithKey: hadithStableKey(_original),
+    readerTrail: [
+      HadithReaderEntry(RecordSelection(hadithStableKey(_original))),
+    ],
     searchOutcome: const AsyncData(HadithSearchPage(results: [_original])),
   );
 }
@@ -100,10 +102,20 @@ void main() {
         hadithSessionControllerProvider.overrideWith(_Session.new),
         hadithScreenSettingsProvider.overrideWith(_Settings.new),
         hadithFavoritesProvider.overrideWith((ref) async => []),
-        hadithDetailProvider(
-          HadithDetailKind.alternate,
-          'fixture-original',
-        ).overrideWith((ref) async => _alternate),
+        hadithRelatedProvider(
+          HadithRecordId('fixtureoriginal'),
+          RelatedHadithKind.alternate,
+        ).overrideWith(
+          (ref) async => const ApiResponse(
+            data: RelatedHadithResult(
+              requestedId: 'fixtureoriginal',
+              source: null,
+              kind: RelatedHadithKind.alternate,
+              related: [_alternate],
+            ),
+            metadata: SearchMetadata(),
+          ),
+        ),
       ],
     );
     addTearDown(container.dispose);
@@ -143,9 +155,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(container.read(selectedHadithProvider), _alternate);
     final session = container.read(hadithSessionControllerProvider);
-    expect(session.mode, HadithViewMode.specificList);
-    expect(session.specificHadiths, [_alternate]);
-    expect(session.searchSnapshot!.query, 'Fixture search');
+    expect(session.mode, HadithViewMode.search);
+    expect(session.readerTrail.length, 2);
+    expect(session.query, 'Fixture search');
+    expect(session.results, [_original]);
     expect(find.text('Missing selected detail'), findsNothing);
     expect(find.text(_alternate.hadith), findsOneWidget);
     expect(find.text(_alternate.hukm), findsOneWidget);

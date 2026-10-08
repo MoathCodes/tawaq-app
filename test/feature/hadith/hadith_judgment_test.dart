@@ -18,6 +18,39 @@ const fixture = DetailedHadith(
 );
 
 void main() {
+  test('placeholder and distinct rulings survive copy and mandatory image constraints', () {
+    final l10n = lookupAppLocalizations(const Locale('en'));
+    for (final fields in [
+      ('ضعيف', '-'),
+      ('-', 'ضعيف'),
+      ('ضعيف', 'إسناده ضعيف'),
+    ]) {
+      final record = fixture.copyWith(
+        grade: fields.$1,
+        explainGrade: fields.$2,
+      );
+      final expected = [fields.$1, fields.$2].where(hasHadithMetadata).toList();
+      expect(
+        hadithSourceRulings(record).map((ruling) => ruling.text),
+        expected,
+      );
+      final text = hadithShareText(record, l10n);
+      for (final ruling in expected) {
+        expect(text, contains(ruling));
+      }
+      expect(
+        HadithShareOptions(const {})
+            .constrained(
+              hadith: record,
+              sharhAvailable: false,
+              usulAvailable: false,
+            )
+            .contains(HadithShareInclude.grade),
+        isTrue,
+      );
+    }
+  });
+
   test('explicit source warnings distinguish hadith and chain emphasis', () {
     for (final judgment in [
       'ضعيف',
@@ -99,7 +132,7 @@ void main() {
       final l10n = lookupAppLocalizations(locale);
       final text = hadithShareText(fixture, l10n);
       expect(text, startsWith(fixture.hadith));
-      expect(text, contains('${l10n.hadithGradeExplanation}: ${fixture.hukm}'));
+      expect(text, contains('${l10n.hadithGrade}: ${fixture.grade}'));
       expect(text, contains(fixture.mohdith));
       expect(text, contains(fixture.book));
       expect(text, isNot(contains(l10n.hadithNarrator)));
