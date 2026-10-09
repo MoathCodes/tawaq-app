@@ -189,8 +189,21 @@ abstract final class AppShortcut {
     scope: ShortcutScope.contextual,
     contextTag: 'fortress.focusReading',
     activators: [
-      plainShortcut(LogicalKeyboardKey.space),
-      plainShortcut(LogicalKeyboardKey.enter),
+      const SingleActivator(LogicalKeyboardKey.space, includeRepeats: false),
+      const SingleActivator(LogicalKeyboardKey.enter, includeRepeats: false),
+    ],
+  );
+
+  static final fortressUndo = ShortcutDef(
+    id: 'fortressUndo',
+    category: AppShortcutCategory.fortress,
+    scope: ShortcutScope.contextual,
+    contextTag: 'fortress.focusReading',
+    activators: [
+      const SingleActivator(
+        LogicalKeyboardKey.backspace,
+        includeRepeats: false,
+      ),
     ],
   );
 
@@ -268,6 +281,7 @@ abstract final class AppShortcut {
     quranAyahNext,
     quranAyahPrev,
     fortressCount,
+    fortressUndo,
     fortressThikrNext,
     fortressThikrPrev,
     hadithResultNext,

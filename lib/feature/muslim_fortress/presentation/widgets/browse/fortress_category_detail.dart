@@ -5,13 +5,13 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_reading_tap_region.dart';
 import 'package:tawaq/core/layout/centered_viewport_shell.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/context_menu_action.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
-import 'package:tawaq/core/widgets/mouse_click.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
@@ -21,6 +21,8 @@ import 'package:tawaq/feature/muslim_fortress/presentation/provider/muslim_fortr
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_a11y.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/reading/fortress_dua_content.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/share/fortress_share_dialog.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_study_panel.dart';
 import 'package:tawaq/theme/theme.dart';
 
 class FortressCategoryDetailView extends ConsumerWidget {
@@ -62,6 +64,7 @@ class FortressCategoryDetailHeader extends StatelessWidget {
     required this.category,
     required this.duaCount,
     required this.onStartReading,
+    this.onShareChapter,
     super.key,
   });
 
@@ -73,6 +76,7 @@ class FortressCategoryDetailHeader extends StatelessWidget {
 
   /// Starts focus reading, or is null while the chapter has no content.
   final VoidCallback? onStartReading;
+  final VoidCallback? onShareChapter;
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +132,20 @@ class FortressCategoryDetailHeader extends StatelessWidget {
                 const SizedBox(height: AppSpacing.md),
                 Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: startButton,
+                  child: Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children: [
+                      startButton,
+                      if (onShareChapter != null)
+                        FButton.icon(
+                          variant: .ghost,
+                          semanticsLabel: l10n.fortressShareChapter,
+                          onPress: onShareChapter,
+                          child: const Icon(FLucideIcons.share2),
+                        ),
+                    ],
+                  ),
                 ),
               ],
             );
@@ -139,6 +156,13 @@ class FortressCategoryDetailHeader extends StatelessWidget {
               Expanded(child: titleAndMeta),
               const SizedBox(width: AppSpacing.lg),
               startButton,
+              if (onShareChapter != null)
+                FButton.icon(
+                  variant: .ghost,
+                  semanticsLabel: l10n.fortressShareChapter,
+                  onPress: onShareChapter,
+                  child: const Icon(FLucideIcons.share2),
+                ),
             ],
           );
         },
@@ -186,6 +210,16 @@ class _FortressCategoryDetailBody extends HookConsumerWidget {
       header: FortressCategoryDetailHeader(
         category: category,
         duaCount: duas.length,
+        onShareChapter: duas.isEmpty
+            ? null
+            : () => unawaited(
+                showFortressShareDialog(
+                  context,
+                  duas.first,
+                  chapter: duas,
+                  entireChapter: true,
+                ),
+              ),
         onStartReading: duas.isEmpty && !isLoading
             ? null
             : controller.startFocusReading,
@@ -301,120 +335,168 @@ class FortressDuaPreviewCard extends StatelessWidget {
   final bool isExpanded;
   final VoidCallback onToggleExpanded;
 
+  Widget _expandedCard(BuildContext context) {
+    final theme = context.theme;
+    final l10n = context.l10n;
+    return Semantics(
+      container: true,
+      expanded: true,
+      explicitChildNodes: true,
+      label: FortressA11y.previewRowLabel(
+        l10n,
+        oneBasedIndex: index + 1,
+        isExpanded: true,
+        targetCount: dua.targetCount,
+        text: dua.text,
+      ),
+      child: FortressReadingTapRegion(
+        onTap: onToggleExpanded,
+        child: FCard(
+          style: .delta(
+            decoration: .shapeDelta(
+              shape: RoundedSuperellipseBorder(
+                side: BorderSide(color: theme.colors.border),
+                borderRadius: BorderRadius.only(
+                  topLeft: theme.radii.lg.topLeft,
+                  topRight: theme.radii.lg.topRight,
+                ),
+              ),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${index + 1}',
+                      style: theme.typography.body.sm.copyWith(
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: FortressDuaContent(
+                        dua: dua,
+                        mode: .previewExpanded,
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Text(
+                      '×${dua.targetCount}',
+                      style: theme.typography.body.sm.copyWith(
+                        color: theme.colors.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                FortressReadingTapControl(
+                  child: Wrap(
+                    alignment: WrapAlignment.start,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final kind in FortressDetailKind.available(dua))
+                        if (kind != FortressDetailKind.virtue &&
+                            kind != FortressDetailKind.source)
+                          FButton(
+                            mainAxisSize: MainAxisSize.min,
+                            variant: .outline,
+                            size: .sm,
+                            onPress: () => unawaited(
+                              showFortressStudySheet(context, dua, kind: kind),
+                            ),
+                            child: Text(kind.label(l10n)),
+                          ),
+                      FButton(
+                        mainAxisSize: MainAxisSize.min,
+                        variant: .outline,
+                        size: .sm,
+                        semanticsLabel: l10n.fortressShare,
+                        prefix: const Icon(FLucideIcons.share2, size: 16),
+                        onPress: () => showFortressShareDialog(context, dua),
+                        child: Text(l10n.fortressShare),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: FortressReadingTapControl(
+                    child: FButton(
+                      mainAxisSize: MainAxisSize.min,
+                      variant: .ghost,
+                      size: .sm,
+                      semanticsLabel: FortressA11y.previewCollapseLabel(
+                        l10n,
+                        oneBasedIndex: index + 1,
+                      ),
+                      onPress: onToggleExpanded,
+                      child: Text(l10n.fortressShowLess),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = context.l10n;
     final colors = theme.colors;
-    final hasInsights = dua.hasBenefit;
+    if (isExpanded) return _expandedCard(context);
 
-    final content = FortressDuaContent(
-      dua: dua,
-      mode: isExpanded
-          ? FortressDuaContentMode.previewExpanded
-          : FortressDuaContentMode.previewCollapsed,
-    );
-    final title = isExpanded ? content : ExcludeSemantics(child: content);
-    final insightMeta = !isExpanded && hasInsights
-        ? ExcludeSemantics(
-            child: Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              children: [
-                if (dua.hasBenefit)
-                  _FortressPreviewMeta(
-                    icon: FLucideIcons.sparkles,
-                    label: l10n.fortressBenefit,
-                  ),
-              ],
-            ),
-          )
-        : null;
-    final disclosure = isExpanded
-        ? Semantics(
-            container: true,
-            button: true,
-            label: FortressA11y.previewCollapseLabel(
-              l10n,
-              oneBasedIndex: index + 1,
-            ),
-            onTap: onToggleExpanded,
-            child: ExcludeSemantics(
-              child: MouseClick(
-                onClick: onToggleExpanded,
-                child: ExcludeSemantics(
-                  child: _FortressDuaPreviewFooter(
-                    targetCount: dua.targetCount,
-                    isExpanded: isExpanded,
-                    colors: colors,
-                    typography: theme.typography,
-                  ),
-                ),
-              ),
-            ),
-          )
-        : ExcludeSemantics(
-            child: GestureDetector(
-              onTap: onToggleExpanded,
-              child: _FortressDuaPreviewFooter(
-                targetCount: dua.targetCount,
-                isExpanded: isExpanded,
-                colors: colors,
-                typography: theme.typography,
-              ),
-            ),
-          );
-    final subtitle = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (insightMeta != null) ...[
-          insightMeta,
-          const SizedBox(height: AppSpacing.xs),
-        ],
-      ],
-    );
-    final prefix = ExcludeSemantics(
-      child: Text(
-        '${index + 1}.',
-        style: theme.typography.body.sm.copyWith(
-          color: colors.mutedForeground,
-          fontWeight: FontWeight.w600,
+    final content = FortressDuaContent(dua: dua, mode: .previewCollapsed);
+    final disclosure = ExcludeSemantics(
+      child: GestureDetector(
+        onTap: onToggleExpanded,
+        child: _FortressDuaPreviewFooter(
+          targetCount: dua.targetCount,
+          isExpanded: false,
+          colors: colors,
+          typography: theme.typography,
         ),
       ),
     );
-
-    // Collapsed rows own one semantic button with the sourced dhikr text.
-    // Expanded rows expose benefit text and independent footer actions.
-    // Sharing never changes the disclosure state.
-    final tile = FTile(
-      prefix: prefix,
-      title: title,
-      subtitle: insightMeta == null ? null : subtitle,
-      selected: isExpanded,
-      semanticsLabel: isExpanded
-          ? null
-          : FortressA11y.previewRowLabel(
-              l10n,
-              oneBasedIndex: index + 1,
-              isExpanded: false,
-              targetCount: dua.targetCount,
-              text: [
-                dua.text,
-                if (dua.hasDistinctVirtue)
-                  '${l10n.fortressVirtue}: ${dua.virtue}',
-              ].join('\n'),
-            ),
-      semanticsExpanded: isExpanded,
-      // Keep expanded prose selectable; the footer owns collapse.
-      onPress: isExpanded ? null : onToggleExpanded,
-    );
-
-    final card = Column(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        tile,
+        FTile(
+          prefix: ExcludeSemantics(
+            child: Text(
+              '${index + 1}.',
+              style: theme.typography.body.sm.copyWith(
+                color: colors.mutedForeground,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          title: ExcludeSemantics(child: content),
+          semanticsLabel: FortressA11y.previewRowLabel(
+            l10n,
+            oneBasedIndex: index + 1,
+            isExpanded: false,
+            targetCount: dua.targetCount,
+            text: [
+              dua.text,
+              if (dua.hasDistinctVirtue)
+                '${l10n.fortressVirtue}: ${dua.virtue}',
+            ].join('\n'),
+          ),
+          semanticsExpanded: false,
+          onPress: onToggleExpanded,
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Row(
@@ -441,20 +523,6 @@ class FortressDuaPreviewCard extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
       ],
-    );
-    if (!isExpanded) return card;
-
-    return Semantics(
-      container: true,
-      explicitChildNodes: true,
-      label: FortressA11y.previewRowLabel(
-        l10n,
-        oneBasedIndex: index + 1,
-        isExpanded: true,
-        targetCount: dua.targetCount,
-      ),
-      expanded: true,
-      child: card,
     );
   }
 }
@@ -530,35 +598,6 @@ class _FortressHeaderMeta extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: theme.typography.body.sm.copyWith(
-              color: theme.colors.mutedForeground,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FortressPreviewMeta extends StatelessWidget {
-  const new({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 14, color: theme.colors.mutedForeground),
-        const SizedBox(width: AppSpacing.xs),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.typography.body.xs.copyWith(
               color: theme.colors.mutedForeground,
             ),
           ),

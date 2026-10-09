@@ -2840,4 +2840,145 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hadithSimilarExplanation => 'Explanation of a similar hadith';
+
+  @override
+  String get fortressExitFocus => 'Exit reading';
+
+  @override
+  String fortressCountProgress(int completed, int target) {
+    return '$completed of $target';
+  }
+
+  @override
+  String get fortressStudyPaused => 'Reading details · counting paused';
+
+  @override
+  String get fortressReachedEnd => 'Reached the end';
+
+  @override
+  String fortressChapterProgress(int completed, int total) {
+    return '$completed of $total adhkar completed';
+  }
+
+  @override
+  String get fortressContinueUnfinished => 'Continue unfinished';
+
+  @override
+  String get fortressReadAgain => 'Read again';
+
+  @override
+  String get fortressReturnChapter => 'Return to chapter';
+
+  @override
+  String get fortressUndoCount => 'Undo last count';
+
+  @override
+  String get fortressExpandDetails => 'Expand details';
+
+  @override
+  String get fortressRestoreDetails => 'Restore panel';
+
+  @override
+  String get fortressShareChapter => 'Share chapter';
+
+  @override
+  String get fortressShareThisDhikr => 'This dhikr';
+
+  @override
+  String get fortressEntireChapter => 'Entire chapter';
+
+  @override
+  String get fortressReadingEdition => 'Reading edition';
+
+  @override
+  String get fortressStudyEdition => 'Study edition';
+
+  @override
+  String get fortressBooklet => 'Chapter booklet';
+
+  @override
+  String get fortressSavePages => 'Save all pages';
+
+  @override
+  String get fortressSavePdf => 'Save PDF';
+
+  @override
+  String get fortressCopyText => 'Copy complete text';
+
+  @override
+  String fortressExportSummary(int pages, String format) {
+    return '$pages pages · $format';
+  }
+
+  @override
+  String get fortressPreparingPdf => 'Preparing PDF…';
+
+  @override
+  String get fortressExportTextSize => 'Text size';
+
+  @override
+  String fortressPagePosition(int page, int total) {
+    return 'Page $page of $total';
+  }
+
+  @override
+  String get fortressContinued => 'Continued';
+
+  @override
+  String get fortressExportCancelled => 'Export cancelled';
+
+  @override
+  String get fortressExportFailed =>
+      'Could not create the booklet. Retry or remove unavailable details.';
+
+  @override
+  String get fortressExportReady => 'Booklet saved';
+
+  @override
+  String get fortressPdfVisualNote =>
+      'PDF preserves these pages as images. Use Copy complete text for text.';
+
+  @override
+  String get fortressPreparingPages => 'Preparing pages…';
+
+  @override
+  String get fortressDragBooklet => 'Drag all pages to another app';
+
+  @override
+  String get fortressImages => 'Images';
+
+  @override
+  String get fortressExportFormat => 'Format';
+
+  @override
+  String get fortressExportScope => 'Content';
+
+  @override
+  String get fortressExportEdition => 'Edition';
+
+  @override
+  String get fortressFocusInputHint =>
+      'Click the counter or reading space · Space / Enter to count · ← / ↓ next · → / ↑ previous · Esc to exit';
+
+  @override
+  String get shortcutFortressUndoLabel => 'Undo count';
+
+  @override
+  String get shortcutFortressUndoDescription =>
+      'Undo the last repetition in focus reading';
+
+  @override
+  String fortressItemPosition(int item, int total) {
+    return 'Item $item of $total';
+  }
+
+  @override
+  String fortressItemIdentity(int item) {
+    return 'Item $item';
+  }
+
+  @override
+  String fortressExportDetailFailed(int item, String field) {
+    return 'Could not load $field for item $item. Retry, or deselect this field to omit it.';
+  }
 }

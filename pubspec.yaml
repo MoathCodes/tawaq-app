@@ -85,6 +85,8 @@ dependencies:
   super_drag_and_drop: ^0.9.1
   flutter_driver:
     sdk: flutter
+  pdf: ^3.13.1
+  characters: ^1.4.1
 
 
 dev_dependencies:

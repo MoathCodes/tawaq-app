@@ -2913,4 +2913,145 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hadithSimilarExplanation => 'شرح حديث مشابه';
+
+  @override
+  String get fortressExitFocus => 'الخروج من القراءة';
+
+  @override
+  String fortressCountProgress(int completed, int target) {
+    return '$completed من $target';
+  }
+
+  @override
+  String get fortressStudyPaused => 'قراءة التفاصيل · العد متوقف';
+
+  @override
+  String get fortressReachedEnd => 'وصلت إلى نهاية الباب';
+
+  @override
+  String fortressChapterProgress(int completed, int total) {
+    return 'أتممت $completed من $total أذكار';
+  }
+
+  @override
+  String get fortressContinueUnfinished => 'إكمال الأذكار المتبقية';
+
+  @override
+  String get fortressReadAgain => 'القراءة من جديد';
+
+  @override
+  String get fortressReturnChapter => 'العودة إلى الباب';
+
+  @override
+  String get fortressUndoCount => 'التراجع عن آخر عدّة';
+
+  @override
+  String get fortressExpandDetails => 'توسيع التفاصيل';
+
+  @override
+  String get fortressRestoreDetails => 'استعادة اللوحة';
+
+  @override
+  String get fortressShareChapter => 'مشاركة الباب';
+
+  @override
+  String get fortressShareThisDhikr => 'هذا الذكر';
+
+  @override
+  String get fortressEntireChapter => 'الباب كاملًا';
+
+  @override
+  String get fortressReadingEdition => 'نسخة القراءة';
+
+  @override
+  String get fortressStudyEdition => 'نسخة الدراسة';
+
+  @override
+  String get fortressBooklet => 'كتيّب الأذكار';
+
+  @override
+  String get fortressSavePages => 'حفظ جميع الصفحات';
+
+  @override
+  String get fortressSavePdf => 'حفظ PDF';
+
+  @override
+  String get fortressCopyText => 'نسخ النص كاملًا';
+
+  @override
+  String fortressExportSummary(int pages, String format) {
+    return '$pages صفحة · $format';
+  }
+
+  @override
+  String get fortressPreparingPdf => 'جارٍ تجهيز ملف PDF…';
+
+  @override
+  String get fortressExportTextSize => 'حجم النص';
+
+  @override
+  String fortressPagePosition(int page, int total) {
+    return 'الصفحة $page من $total';
+  }
+
+  @override
+  String get fortressContinued => 'يتبع';
+
+  @override
+  String get fortressExportCancelled => 'أُلغي التصدير';
+
+  @override
+  String get fortressExportFailed =>
+      'تعذّر إنشاء الكتيّب. أعد المحاولة أو أزل التفاصيل غير المتاحة.';
+
+  @override
+  String get fortressExportReady => 'حُفظ الكتيّب';
+
+  @override
+  String get fortressPdfVisualNote =>
+      'يحفظ PDF هذه الصفحات كصور. استخدم نسخ النص كاملًا للحصول على النص.';
+
+  @override
+  String get fortressPreparingPages => 'جارٍ إعداد الصفحات…';
+
+  @override
+  String get fortressDragBooklet => 'اسحب جميع الصفحات إلى تطبيق آخر';
+
+  @override
+  String get fortressImages => 'صور';
+
+  @override
+  String get fortressExportFormat => 'الصيغة';
+
+  @override
+  String get fortressExportScope => 'المحتوى';
+
+  @override
+  String get fortressExportEdition => 'النسخة';
+
+  @override
+  String get fortressFocusInputHint =>
+      'انقر على العداد أو مساحة القراءة · مسافة / Enter للعد · ← / ↓ التالي · → / ↑ السابق · Esc للخروج';
+
+  @override
+  String get shortcutFortressUndoLabel => 'التراجع عن العد';
+
+  @override
+  String get shortcutFortressUndoDescription =>
+      'التراجع عن آخر تكرار في وضع القراءة';
+
+  @override
+  String fortressItemPosition(int item, int total) {
+    return 'الذكر $item من $total';
+  }
+
+  @override
+  String fortressItemIdentity(int item) {
+    return 'الذكر $item';
+  }
+
+  @override
+  String fortressExportDetailFailed(int item, String field) {
+    return 'تعذّر تحميل $field للذكر $item. أعد المحاولة أو ألغِ اختيار هذا الحقل لاستبعاده.';
+  }
 }

@@ -249,9 +249,7 @@ class FortressRepository {
     return FortressDuaItem(
       contentId: item.id,
       category: categoryTitle,
-      text: item.plainText.isNotEmpty
-          ? item.plainText
-          : item.toPlainText(_client.uthmani),
+      text: item.isQuranic ? item.toPlainText(_client.uthmani) : item.plainText,
       targetCount: item.repeatCount <= 0 ? 1 : item.repeatCount,
       source: item.source.isEmpty ? null : item.source,
       virtue: item.virtue.isEmpty ? null : item.virtue,

@@ -15,6 +15,8 @@ import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortre
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/browse/fortress_category_detail.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/fortress_favorite_toggle.dart';
 import 'package:tawaq/feature/muslim_fortress/presentation/widgets/search/fortress_search_results.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_dua_insights.dart';
+import 'package:tawaq/feature/muslim_fortress/presentation/widgets/study/fortress_study_panel.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
@@ -70,6 +72,43 @@ void main() {
       tester.element(find.byType(MuslimFortressScreen)),
     );
   }
+
+  testWidgets(
+    'browse sheet covers catalog, is flush, and closes on catalog tap',
+    (tester) async {
+      final container = await mount(tester, const Locale('ar'));
+      final chapter = repository.loadChapters().first;
+      container
+          .read(fortressScreenControllerProvider.notifier)
+          .selectCategory(chapter);
+      await tester.pumpAndSettle();
+      final item = repository.loadDuas(chapter.chapterId).first;
+      showFortressStudySheet(
+        tester.element(find.byType(FortressCategoryDetailView)),
+        item,
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(FortressStudyHost), findsOneWidget);
+      final screen = tester.getRect(find.byType(MuslimFortressScreen));
+      final sheet = tester.getRect(find.byType(FortressStudyPanel));
+      expect(sheet.left, screen.left);
+      expect(sheet.top, screen.top);
+      expect(sheet.bottom, screen.bottom);
+      final barrier = tester.getRect(find.byType(FModalBarrier));
+      expect(
+        barrier.contains(tester.getCenter(find.byType(FortressBrowseSidebar))),
+        isTrue,
+      );
+      await tester.tapAt(tester.getCenter(find.byType(FortressBrowseSidebar)));
+      await tester.pumpAndSettle();
+      expect(find.byType(FortressStudyPanel), findsNothing);
+      expect(
+        container.read(fortressScreenControllerProvider).selectedChapterId,
+        chapter.chapterId,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   for (final locale in [const Locale('en'), const Locale('ar')]) {
     testWidgets(
