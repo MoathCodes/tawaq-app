@@ -37,6 +37,8 @@
 /// [MushafReaderController], [MushafConstants].
 library;
 
+import 'dart:io';
+
 import 'package:mushaf_reader/src/data/hive/hive_box_manager.dart';
 
 // Core utilities
@@ -113,16 +115,17 @@ abstract final class MushafReaderLibrary {
   /// the [MushafReaderController]. It initializes the Hive database,
   /// registers type adapters, and copies pre-populated data from assets.
   ///
-  /// [subDirectory] - Optional subdirectory within the app documents folder
-  /// where data should be stored. If provided, data will be stored at
-  /// `documents/<subDirectory>/` instead of directly in `documents/`.
-  /// This is useful for organizing app data in an app-specific folder.
+  /// [storageDirectory] - Optional directory for the bundled Quran boxes.
+  /// When omitted, the package uses
+  /// `<application-support>/mushaf_reader/`.
   ///
-  /// Example with app-specific subdirectory:
+  /// Example with a host-selected storage directory:
   /// ```dart
   /// void main() async {
   ///   WidgetsFlutterBinding.ensureInitialized();
-  ///   await MushafReaderLibrary.ensureInitialized(subDirectory: 'my_app');
+  ///   await MushafReaderLibrary.ensureInitialized(
+  ///     storageDirectory: Directory('/path/to/app-support/quran'),
+  ///   );
   ///   runApp(MyApp());
   /// }
   /// ```
@@ -130,11 +133,11 @@ abstract final class MushafReaderLibrary {
   /// This method is idempotent - subsequent calls return immediately.
   ///
   /// Throws if database initialization fails (e.g., missing assets).
-  static Future<void> ensureInitialized({String? subDirectory}) async {
+  static Future<void> ensureInitialized({Directory? storageDirectory}) async {
     if (_initialized) return;
 
     final boxManager = HiveBoxManager.acquire();
-    await boxManager.init(subDirectory: subDirectory);
+    await boxManager.init(storageDirectory: storageDirectory);
 
     _initialized = true;
   }

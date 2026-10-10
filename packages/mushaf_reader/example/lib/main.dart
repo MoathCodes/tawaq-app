@@ -8,11 +8,8 @@ import 'package:mushaf_reader/mushaf_reader.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Use an app-specific subdirectory (same pattern as tawaq's `subDirectory: 'tawaq'`)
-  // so hive boxes are not shared with other apps or stale files under ~/Documents/.
-  await MushafReaderLibrary.ensureInitialized(
-    subDirectory: 'mushaf_reader_example',
-  );
+  // Defaults to the application support directory under mushaf_reader/.
+  await MushafReaderLibrary.ensureInitialized();
   LocaleSettings.useDeviceLocale();
   runApp(TranslationProvider(child: const MushafExampleApp()));
 }

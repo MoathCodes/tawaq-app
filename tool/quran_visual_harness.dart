@@ -46,10 +46,10 @@ class _HarnessSettings extends QuranScreenSettingsNotifier {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Use a dedicated app-data subdirectory so this preview reads the shipped
+  // Use a dedicated app-data directory so this preview reads the shipped
   // Hive fixture without contending with a running Tawaq instance's lock.
   await MushafReaderLibrary.ensureInitialized(
-    subDirectory: 'tawaq-quran-review-harness',
+    storageDirectory: Directory('/tmp/tawaq-quran-review-harness'),
   );
   final controller = MushafReaderController();
   const dark = bool.fromEnvironment('DARK');

@@ -4,11 +4,12 @@ import 'package:local_notifier/local_notifier.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mpv_audio_kit/mpv_audio_kit.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
-import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:tawaq/core/desktop/launch_at_login_service.dart';
 import 'package:tawaq/core/desktop/single_instance.dart';
 import 'package:tawaq/core/desktop/window_snapshot.dart';
+import 'package:tawaq/core/logging/logger_provider.dart';
+import 'package:tawaq/core/storage/app_storage_paths.dart';
 import 'package:tawaq/core/utils/platform.dart';
 import 'package:tawaq/hive/hive_registrar.g.dart';
 import 'package:window_manager/window_manager.dart';
@@ -19,21 +20,28 @@ part 'app_init_providers.g.dart';
 @Riverpod(keepAlive: true)
 Future<void> mushafInit(Ref ref) async {
   await initFileLogging();
-  await MushafReaderLibrary.ensureInitialized(subDirectory: 'tawaq');
+  final storagePaths = await AppStoragePaths.resolve();
+  await MushafReaderLibrary.ensureInitialized(
+    storageDirectory: storagePaths.quran,
+  );
 }
 
 /// Initializes Hive and registers adapters for persisted settings and data.
 @Riverpod(keepAlive: true)
 Future<void> hiveCoreInit(Ref ref) async {
   await ref.watch(mushafInitProvider.future);
-  await Hive.initFlutter();
+  final storagePaths = await AppStoragePaths.resolve();
+  await Hive.initFlutter(storagePaths.hive.path);
   Hive.registerAdapters();
 }
 
 /// Initializes the Dorar hadith client.
 @Riverpod(keepAlive: true)
 Future<void> dorarInit(Ref ref) async {
-  await DorarHadithFlutter.ensureInitialized();
+  final storagePaths = await AppStoragePaths.resolve();
+  await DorarHadithFlutter.ensureInitialized(
+    databaseDirectory: storagePaths.dorar,
+  );
 }
 
 /// Initializes desktop window manager, notifications, tray hooks, and MPV.

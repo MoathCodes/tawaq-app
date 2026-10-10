@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/storage/app_storage_paths.dart';
 
 part 'logger_provider.g.dart';
 
@@ -40,8 +40,8 @@ String? logFilePath;
 /// swallowed so logging never blocks startup; the console logger stays put.
 Future<void> initFileLogging() async {
   try {
-    final dir = await getApplicationSupportDirectory();
-    final file = File('${dir.path}/logs/tawaq.log');
+    final storagePaths = await AppStoragePaths.resolve();
+    final file = File('${storagePaths.logs.path}/tawaq.log');
     await file.parent.create(recursive: true);
 
     logger = Logger(

@@ -1,6 +1,6 @@
 {
   "appTitle": "عروض mushaf_reader",
-  "gettingStarted": "استدعِ MushafReaderLibrary.ensureInitialized(subDirectory: 'my_app') في main() لعزل بيانات Hive لكل تطبيق.",
+  "gettingStarted": "استدعِ MushafReaderLibrary.ensureInitialized() في main() لحفظ بيانات Hive في مجلد دعم التطبيق.",
   "catalogSections": {
     "readers": "القرّاء",
     "pages": "الصفحات والمقتطفات",

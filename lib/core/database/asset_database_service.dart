@@ -6,9 +6,9 @@ import 'dart:isolate';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:tawaq/core/storage/app_storage_paths.dart';
 
 part 'asset_database_service.g.dart';
 
@@ -78,7 +78,7 @@ AssetDatabaseService assetDatabaseService(Ref ref) {
 /// Service for managing SQLite databases bundled as Flutter assets.
 ///
 /// This service handles copying database files from the assets bundle to
-/// a writable directory (app documents) and opening them with sqlite3.
+/// a writable directory (application support) and opening them with sqlite3.
 /// Databases are cached to avoid repeated copying and opening.
 ///
 /// Copies are versioned (SHA-256 content digest, unlike fortress
@@ -86,16 +86,17 @@ AssetDatabaseService assetDatabaseService(Ref ref) {
 class AssetDatabaseService {
   /// Creates an [AssetDatabaseService].
   ///
-  /// [documentsDirectory] and [loadAsset] are test seams; production uses
-  /// path_provider + [rootBundle].
+  /// [storageDirectory] and [loadAsset] are test seams; production uses the
+  /// shared application storage paths and [rootBundle].
   new({
-    Future<Directory> Function()? documentsDirectory,
+    Future<Directory> Function()? storageDirectory,
     Future<ByteData> Function(String assetPath)? loadAsset,
-  }) : _documentsDirectory =
-           documentsDirectory ?? getApplicationDocumentsDirectory,
+  }) : _storageDirectory =
+           storageDirectory ??
+           (() async => (await AppStoragePaths.resolve()).root),
        _loadAsset = loadAsset ?? rootBundle.load;
 
-  final Future<Directory> Function() _documentsDirectory;
+  final Future<Directory> Function() _storageDirectory;
   final Future<ByteData> Function(String assetPath) _loadAsset;
 
   final Map<String, Database> _openDatabases = {};
@@ -104,8 +105,8 @@ class AssetDatabaseService {
 
   /// Opens a database from the given asset path.
   ///
-  /// The database is copied to the app documents directory (under the
-  /// `tawaq/databases/` subdirectory) when missing or when the bundled
+  /// The database is copied to the application's content database directory
+  /// when missing or when the bundled
   /// version key differs from the persisted one, then opened with sqlite3.
   /// Subsequent calls with the same [assetPath] return the cached instance.
   /// Concurrent opens for the same path share a single in-flight [Completer].
@@ -135,14 +136,14 @@ class AssetDatabaseService {
     Completer<Database> completer,
   ) async {
     try {
-      final documentsDir = await _documentsDirectory();
+      final storageDirectory = await _storageDirectory();
       if (_disposed) {
         throw StateError('AssetDatabaseService has been disposed');
       }
       final dbFileName = p.basename(assetPath);
       final dbPath = p.join(
-        documentsDir.path,
-        'tawaq',
+        storageDirectory.path,
+        'content',
         'databases',
         dbFileName,
       );

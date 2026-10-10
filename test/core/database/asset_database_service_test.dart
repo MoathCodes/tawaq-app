@@ -76,7 +76,7 @@ void main() {
       var bundled = v1;
 
       final service = AssetDatabaseService(
-        documentsDirectory: () async => docs,
+        storageDirectory: () async => docs,
         loadAsset: (path) async {
           expect(path, 'assets/database/demo.db');
           return ByteData.sublistView(bundled);
@@ -88,7 +88,7 @@ void main() {
       expect(db1.select('SELECT COUNT(*) AS c FROM t').first['c'], 1);
       service.dispose();
 
-      final onDisk = File(p.join(docs.path, 'tawaq', 'databases', 'demo.db'));
+      final onDisk = File(p.join(docs.path, 'content', 'databases', 'demo.db'));
       expect(onDisk.existsSync(), isTrue);
       final versionFile = File('${onDisk.path}.version.json');
       expect(
@@ -122,7 +122,7 @@ void main() {
       expect(bundled.length, isNot(v1.length));
 
       final service2 = AssetDatabaseService(
-        documentsDirectory: () async => docs,
+        storageDirectory: () async => docs,
         loadAsset: (path) async => ByteData.sublistView(bundled),
       );
       addTearDown(service2.dispose);
@@ -147,7 +147,7 @@ void main() {
           ..writeAsStringSync('my notes');
         var bundled = _sqliteBytes(rowCount: 1);
         AssetDatabaseService service() => AssetDatabaseService(
-          documentsDirectory: () async => docs,
+          storageDirectory: () async => docs,
           loadAsset: (_) async => ByteData.sublistView(bundled),
         );
         final first = service();
@@ -177,13 +177,13 @@ void main() {
         addTearDown(() => docs.delete(recursive: true));
         var bundled = _sqliteBytes(rowCount: 1);
         AssetDatabaseService service() => AssetDatabaseService(
-          documentsDirectory: () async => docs,
+          storageDirectory: () async => docs,
           loadAsset: (_) async => ByteData.sublistView(bundled),
         );
         final first = service();
         await first.openDatabase('assets/database/demo.db');
         first.dispose();
-        final path = p.join(docs.path, 'tawaq', 'databases', 'demo.db');
+        final path = p.join(docs.path, 'content', 'databases', 'demo.db');
         final before = File(path).readAsBytesSync();
         final marker = File('$path.version.json').readAsStringSync();
         bundled = Uint8List.fromList([1, 2, 3]);
@@ -205,7 +205,7 @@ void main() {
 
       final documents = Completer<Directory>();
       final service = AssetDatabaseService(
-        documentsDirectory: () => documents.future,
+        storageDirectory: () => documents.future,
         loadAsset: (path) async =>
             ByteData.sublistView(_sqliteBytes(rowCount: 1)),
       );

@@ -45,7 +45,7 @@ Future<void> main() async {
   await output.create(recursive: true);
   final data = await Directory('${output.path}/data').create(recursive: true);
   await MushafReaderLibrary.ensureInitialized(
-    subDirectory: 'tawaq-sage-review',
+    storageDirectory: Directory('${data.path}/quran'),
   );
   final container = ProviderContainer(
     overrides: [

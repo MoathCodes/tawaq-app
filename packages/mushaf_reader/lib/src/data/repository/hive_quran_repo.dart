@@ -175,8 +175,8 @@ class HiveQuranRepository implements IQuranRepository {
       }
 
       // Shares the [HiveBoxManager] singleton with [MushafReaderLibrary].
-      // Prefer calling MushafReaderLibrary.ensureInitialized() first so
-      // [subDirectory] is applied before any box access.
+      // Prefer calling MushafReaderLibrary.ensureInitialized() first so its
+      // storage directory is selected before any box access.
       _boxManager = HiveBoxManager.acquire();
       if (!_boxManager!.isInitialized) {
         await _boxManager!.init();

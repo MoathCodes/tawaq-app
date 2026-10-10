@@ -6,7 +6,7 @@ import 'dart:isolate';
 import 'package:http/http.dart' as http;
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:tawaq/core/storage/app_storage_paths.dart';
 import 'package:tawaq/core/utils/cancellation_token.dart';
 
 /// A cached surah audio file on disk.
@@ -187,8 +187,8 @@ class RecitationCache {
     if (rootOverride != null) {
       dir = rootOverride!;
     } else {
-      final support = await getApplicationSupportDirectory();
-      dir = Directory(p.join(support.path, 'tawaq', 'recitations'));
+      final storagePaths = await AppStoragePaths.resolve();
+      dir = storagePaths.recitations;
     }
     await dir.create(recursive: true);
     _root = dir;
