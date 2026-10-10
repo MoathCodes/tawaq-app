@@ -20,7 +20,7 @@ void main() {
       final messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       messenger.setMockMethodCallHandler(channel, (call) async {
-        if (call.method == 'getApplicationDocumentsDirectory') {
+        if (call.method == 'getApplicationSupportDirectory') {
           if (++attempts == 1)
             throw PlatformException(code: 'fixture-unavailable');
           return directory.path;
@@ -34,10 +34,7 @@ void main() {
         await directory.delete(recursive: true);
       });
       await runZonedGuarded(() async {
-        await expectLater(
-          manager.init(subDirectory: 'retry'),
-          throwsA(isA<PlatformException>()),
-        );
+        await expectLater(manager.init(), throwsA(isA<PlatformException>()));
         await Future<void>.delayed(Duration.zero);
       }, (error, stack) => unhandled.add(error));
       expect(
@@ -47,15 +44,15 @@ void main() {
       );
       expect(HiveBoxManager.refCount, 0);
       final retry = HiveBoxManager.acquire();
-      await retry.init(subDirectory: 'retry');
+      await retry.init();
       expect(retry.surahsBox.length, 114);
       expect(attempts, 2);
       retry.dispose();
       await Future<void>.delayed(const Duration(milliseconds: 100));
       // A surviving manifest must not cause a missing bundled box to become empty.
-      await File('${directory.path}/retry/surahs.hive').delete();
+      await File('${directory.path}/mushaf_reader/surahs.hive').delete();
       final repair = HiveBoxManager.acquire();
-      await repair.init(subDirectory: 'retry');
+      await repair.init();
       expect(repair.surahsBox.length, 114);
       repair.dispose();
     },

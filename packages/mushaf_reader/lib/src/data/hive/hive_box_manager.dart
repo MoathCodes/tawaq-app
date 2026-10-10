@@ -24,7 +24,7 @@ import 'package:path_provider/path_provider.dart';
 /// ## Usage
 ///
 /// Prefer initializing via [MushafReaderLibrary.ensureInitialized] so apps can
-/// pass a [subDirectory]. Direct use:
+/// pass an application-specific [storageDirectory]. Direct use:
 ///
 /// ```dart
 /// final manager = HiveBoxManager.acquire();
@@ -36,8 +36,8 @@ import 'package:path_provider/path_provider.dart';
 /// manager.dispose();
 /// ```
 ///
-/// [subDirectory] is fixed on the first successful [init] call. Later calls with
-/// a different value throw [StateError].
+/// [storageDirectory] is fixed on the first successful [init] call. Later
+/// calls with a different value throw [StateError].
 class HiveBoxManager {
   /// Singleton instance.
   static HiveBoxManager? _instance;
@@ -51,8 +51,8 @@ class HiveBoxManager {
   /// Whether [init] has completed successfully.
   bool _initialized = false;
 
-  /// [subDirectory] passed to the first successful [init], if any.
-  String? _configuredSubDirectory;
+  /// [storageDirectory] passed to the first successful [init], if any.
+  String? _configuredStoragePath;
 
   /// The directory where Hive stores its boxes.
   late String _hivePath;
@@ -80,8 +80,8 @@ class HiveBoxManager {
   /// Whether the final owner released this manager during initialization.
   bool _disposeRequested = false;
 
-  /// [subDirectory] from the first successful [init], if any.
-  String? get configuredSubDirectory => _configuredSubDirectory;
+  /// [storageDirectory] from the first successful [init], if any.
+  String? get configuredStoragePath => _configuredStoragePath;
 
   /// Current reference count (for tests).
   @visibleForTesting
@@ -220,29 +220,28 @@ class HiveBoxManager {
   /// This copies the pre-populated boxes from assets on first run,
   /// registers adapters, and opens all required boxes.
   ///
-  /// [subDirectory] - Optional subdirectory within the app documents folder
-  /// where Hive boxes should be stored. If provided, boxes will be stored at
-  /// `documents/<subDirectory>/` instead of directly in `documents/`.
-  /// This is useful for organizing app data in an app-specific folder.
+  /// [storageDirectory] - Directory where these Hive boxes are stored. When
+  /// omitted, boxes use `<application-support>/mushaf_reader/`.
   ///
-  /// [subDirectory] is only applied on the first successful init. Subsequent
-  /// calls must pass the same value (or both omit it) or a [StateError] is
-  /// thrown.
+  /// [storageDirectory] is only applied on the first successful init.
+  /// Subsequent calls must pass the same value (or both omit it) or a
+  /// [StateError] is thrown.
   ///
   /// Safe to call multiple times concurrently — all callers await the same
   /// initialization future.
-  Future<void> init({String? subDirectory}) async {
+  Future<void> init({Directory? storageDirectory}) async {
+    final requestedPath = storageDirectory?.absolute.path;
     if (_initialized) {
-      _assertMatchingSubDirectory(subDirectory);
+      _assertMatchingStoragePath(requestedPath);
       return;
     }
     if (_initCompleter != null) {
-      _assertMatchingSubDirectory(subDirectory);
+      _assertMatchingStoragePath(requestedPath);
       return _initCompleter!.future;
     }
 
-    _assertMatchingSubDirectory(subDirectory);
-    _configuredSubDirectory = subDirectory;
+    _assertMatchingStoragePath(requestedPath);
+    _configuredStoragePath = requestedPath;
     final initCompleter = Completer<void>();
     _initCompleter = initCompleter;
     // The initiating caller receives the rethrow below. Observe the shared
@@ -252,10 +251,15 @@ class HiveBoxManager {
 
     try {
       // Keep package boxes independent of the host's global Hive directory.
-      final appDir = await getApplicationDocumentsDirectory();
-      _hivePath = subDirectory != null
-          ? p.join(appDir.path, subDirectory)
-          : appDir.path;
+      final appDir =
+          storageDirectory ??
+          Directory(
+            p.join(
+              (await getApplicationSupportDirectory()).path,
+              'mushaf_reader',
+            ),
+          );
+      _hivePath = appDir.absolute.path;
 
       // Ensure the directory exists
       await Directory(_hivePath).create(recursive: true);
@@ -294,7 +298,7 @@ class HiveBoxManager {
       initCompleter.complete();
       if (_disposeRequested) _closeAndReset();
     } catch (e, st) {
-      _configuredSubDirectory = null;
+      _configuredStoragePath = null;
       if (!initCompleter.isCompleted) {
         initCompleter.completeError(e, st);
       }
@@ -303,14 +307,14 @@ class HiveBoxManager {
     }
   }
 
-  void _assertMatchingSubDirectory(String? subDirectory) {
+  void _assertMatchingStoragePath(String? storagePath) {
     if (!_initialized && _initCompleter == null) return;
-    if (subDirectory == _configuredSubDirectory) return;
+    if (storagePath == _configuredStoragePath) return;
     throw StateError(
       'HiveBoxManager already initialized with '
-      'subDirectory=${_configuredSubDirectory == null ? 'null' : '"$_configuredSubDirectory"'}; '
+      'storageDirectory=${_configuredStoragePath == null ? 'null' : '"$_configuredStoragePath"'}; '
       'cannot re-init with '
-      'subDirectory=${subDirectory == null ? 'null' : '"$subDirectory"'}',
+      'storageDirectory=${storagePath == null ? 'null' : '"$storagePath"'}',
     );
   }
 
@@ -344,7 +348,7 @@ class HiveBoxManager {
     _layoutsByPage.clear();
 
     _initialized = false;
-    _configuredSubDirectory = null;
+    _configuredStoragePath = null;
     _initCompleter = null;
     _disposeRequested = false;
     _instance = null;

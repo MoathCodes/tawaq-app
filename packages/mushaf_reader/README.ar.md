@@ -70,10 +70,14 @@ void main() async {
 }
 ```
 
-اختياري: عزل بيانات Hive في مجلد فرعي:
+اختياري: مرّر مجلد تخزين مخصص لبيانات Hive:
 
 ```dart
-await MushafReaderLibrary.ensureInitialized(subDirectory: 'my_app');
+import 'dart:io';
+
+await MushafReaderLibrary.ensureInitialized(
+  storageDirectory: Directory('/path/to/app-support/quran'),
+);
 ```
 
 ## استخدام بسيط
@@ -313,4 +317,3 @@ cd example && flutter pub get && flutter run
 
 - **كود الحزمة** — [رخصة MIT](LICENSE)
 - **ملفات خطوط QCF4** — برمجيات حرة ملكية؛ راجع [الأصول من جهات خارجية](#الأصول-من-جهات-خارجية) والإشعار في نهاية [LICENSE](LICENSE)
-

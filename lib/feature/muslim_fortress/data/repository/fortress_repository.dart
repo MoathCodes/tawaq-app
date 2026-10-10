@@ -1,15 +1,12 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:crypto/crypto.dart';
-import 'package:tawaq/core/database/bundled_database_set_installer.dart';
-import 'package:tawaq/core/text/arabic_search_normalize.dart';
-
 import 'package:flutter/services.dart';
 import 'package:hisn_elmoslem/hisn_elmoslem.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:tawaq/core/database/bundled_database_set_installer.dart';
+import 'package:tawaq/core/storage/app_storage_paths.dart';
+import 'package:tawaq/core/text/arabic_search_normalize.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/fortress_models.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_dua_item.dart';
 import 'package:tawaq/feature/muslim_fortress/domain/models/fortress_search_results.dart';
@@ -40,18 +37,13 @@ Future<FortressRepository> fortressRepository(Ref ref) async {
 }
 
 Future<String> _ensureDatabasesDirectory() async {
-  final documentsDir = await getApplicationDocumentsDirectory();
-  final dbDir = p.join(
-    documentsDir.path,
-    'tawaq',
-    'databases',
-    'hisn_elmoslem',
-  );
-  await Directory(dbDir).create(recursive: true);
+  final storagePaths = await AppStoragePaths.resolve();
+  final dbDirectory = storagePaths.fortress;
+  await dbDirectory.create(recursive: true);
 
   final bundledVersion = await _resolveBundledVersionKey();
   return installBundledDatabaseSet(
-    root: Directory(dbDir),
+    root: dbDirectory,
     versionKey: bundledVersion,
     fileNames: _databaseFiles,
     load: (name) async {

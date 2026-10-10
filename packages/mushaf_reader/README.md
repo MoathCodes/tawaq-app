@@ -68,10 +68,16 @@ void main() async {
 }
 ```
 
-Optional: isolate Hive data under a subdirectory of the app documents folder:
+By default, Hive data is stored under application support in
+`mushaf_reader/`. Hosts that manage several data stores can pass a dedicated
+directory:
 
 ```dart
-await MushafReaderLibrary.ensureInitialized(subDirectory: 'my_app');
+import 'dart:io';
+
+await MushafReaderLibrary.ensureInitialized(
+  storageDirectory: Directory('/path/to/app-support/quran'),
+);
 ```
 
 After updating `mushaf_reader`, run a **full rebuild** (not hot restart) so new Hive assets such as `search_index.hive` are bundled. Hot restart does not pick up new package assets.

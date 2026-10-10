@@ -147,7 +147,7 @@ Future<void> captureMain() async {
   await output.create(recursive: true);
   final data = await Directory('${output.path}/data').create(recursive: true);
   await MushafReaderLibrary.ensureInitialized(
-    subDirectory: 'tawaq-launch-d62d0f64',
+    storageDirectory: Directory('${data.path}/quran'),
   );
   final container = ProviderContainer(
     retry: const bool.fromEnvironment('HADITH_REVIEW') ? (_, _) => null : null,

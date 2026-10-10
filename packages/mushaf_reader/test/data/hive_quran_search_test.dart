@@ -22,7 +22,9 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async => tempDir.path);
     manager = HiveBoxManager.acquire();
-    await manager.init(subDirectory: 'reader');
+    await manager.init(
+      storageDirectory: Directory(p.join(tempDir.path, 'reader')),
+    );
     repository = HiveQuranRepository.acquire();
     await repository.ensureReady();
   });

@@ -240,7 +240,9 @@ void main() {
       messenger.setMockMethodCallHandler(channel, null);
       await directory.delete(recursive: true);
     });
-    await MushafReaderLibrary.ensureInitialized(subDirectory: 'reader');
+    await MushafReaderLibrary.ensureInitialized(
+      storageDirectory: Directory('${directory.path}/reader'),
+    );
     controller = MushafReaderController();
     await controller.ensureReady();
     final ayah = await controller.getAyahBySurah(2, 255);

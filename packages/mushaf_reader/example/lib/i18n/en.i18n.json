@@ -1,6 +1,6 @@
 {
   "appTitle": "mushaf_reader demos",
-  "gettingStarted": "Call MushafReaderLibrary.ensureInitialized(subDirectory: 'my_app') in main() so hive data is isolated per app.",
+  "gettingStarted": "Call MushafReaderLibrary.ensureInitialized() in main() to store Hive data in application support.",
   "catalogSections": {
     "readers": "Readers",
     "pages": "Pages & excerpts",

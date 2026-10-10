@@ -161,7 +161,9 @@ Future<void> main() async {
     Platform.environment['FORTRESS_REVIEW_DIR'] ?? '/tmp/tawaq-fortress-review',
   ).create(recursive: true);
   PathProviderPlatform.instance = _Paths(output.path);
-  await MushafReaderLibrary.ensureInitialized(subDirectory: 'mushaf-review');
+  await MushafReaderLibrary.ensureInitialized(
+    storageDirectory: Directory('${output.path}/quran'),
+  );
   final client = await HisnClient.openFromDirectory(
     '${Directory.current.path}/packages/hisn_elmoslem/assets/database',
   );
