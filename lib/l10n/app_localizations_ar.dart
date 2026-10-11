@@ -3054,4 +3054,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String fortressExportDetailFailed(int item, String field) {
     return 'تعذّر تحميل $field للذكر $item. أعد المحاولة أو ألغِ اختيار هذا الحقل لاستبعاده.';
   }
+
+  @override
+  String get deviceTimezoneUnavailable =>
+      'تعذّر تحديد المنطقة الزمنية للجهاز. أعد المحاولة أو اختر منطقة زمنية يدويًا.';
+
+  @override
+  String get onboardingSetupSection => 'الإعداد';
+
+  @override
+  String get alertPositionPreview => 'معاينة التنبيه';
+
+  @override
+  String get alertPositionPreviewDisabled =>
+      'فعّل التنبيهات داخل التطبيق لاستخدام هذا الموضع.';
+
+  @override
+  String get hadithSavedEmptyTitle => 'لا توجد أحاديث محفوظة بعد';
+
+  @override
+  String get hadithSavedEmptyHint =>
+      'استخدم زر الحفظ في الحديث للاحتفاظ به هنا.';
+
+  @override
+  String get hadithBrowseAction => 'تصفّح الأحاديث';
+
+  @override
+  String get hadithSearchEmptyHint => 'جرّب عبارة أخرى أو عدّل خيارات البحث.';
+
+  @override
+  String get hadithEditSearchAction => 'تعديل البحث';
+
+  @override
+  String get notificationsSummaryEnabled => 'مفعّل';
+
+  @override
+  String get notificationsSummaryDisabled => 'متوقف';
 }

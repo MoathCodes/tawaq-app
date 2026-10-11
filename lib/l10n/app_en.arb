@@ -1493,5 +1493,16 @@
         "type": "String"
       }
     }
-  }
+  },
+  "deviceTimezoneUnavailable": "Device timezone could not be detected. Retry or choose a timezone manually.",
+  "onboardingSetupSection": "Setup",
+  "alertPositionPreview": "Alert preview",
+  "alertPositionPreviewDisabled": "Enable in-app alerts to use this position.",
+  "hadithSavedEmptyTitle": "No saved hadith yet",
+  "hadithSavedEmptyHint": "Use the bookmark button on a hadith to keep it here.",
+  "hadithBrowseAction": "Browse hadith",
+  "hadithSearchEmptyHint": "Try another phrase or adjust your search filters.",
+  "hadithEditSearchAction": "Edit search",
+  "notificationsSummaryEnabled": "Enabled",
+  "notificationsSummaryDisabled": "Off"
 }

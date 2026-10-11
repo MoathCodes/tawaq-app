@@ -90,17 +90,27 @@ enum IqamahSound {
 
 /// Corner placement for the compact adhan alert window.
 enum AdhanAlertPosition {
-  /// Top trailing corner (respects RTL).
+  /// Physical top-right corner, matching the native alert window.
   @JsonValue('top_end')
   topEnd,
 
-  /// Top leading corner (respects RTL).
+  /// Physical top-left corner, matching the native alert window.
   @JsonValue('top_start')
   topStart,
 
   /// Screen center.
   @JsonValue('center')
-  center,
+  center;
+
+  /// Horizontal position within the usable screen (physical, not directional).
+  double get horizontalFraction => switch (this) {
+    topStart => 0,
+    topEnd => 1,
+    center => 0.5,
+  };
+
+  /// Vertical position within the usable screen.
+  double get verticalFraction => this == center ? 0.5 : 0;
 }
 
 /// Extension methods for [AdhanSound].
@@ -225,8 +235,7 @@ abstract class AdhanSettings with _$AdhanSettings {
   }
 
   /// Parses persisted JSON.
-  factory fromJson(Map<String, dynamic> json) =>
-      _$AdhanSettingsFromJson(json);
+  factory fromJson(Map<String, dynamic> json) => _$AdhanSettingsFromJson(json);
 }
 
 /// Default alert mode for [kind].

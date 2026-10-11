@@ -17,7 +17,10 @@ import 'package:tawaq/theme/theme.dart';
 /// Calculation method, custom parameters, and time format controls.
 class PrayerCalculationSettings extends ConsumerWidget {
   /// Creates [PrayerCalculationSettings].
-  const new({super.key});
+  const new({this.showTimeFormat = true, super.key});
+
+  /// Setup shows this earlier with the location controls.
+  final bool showTimeFormat;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,41 +29,41 @@ class PrayerCalculationSettings extends ConsumerWidget {
         (value) => value.value?.method ?? CalculationMethod.ummAlQura,
       ),
     );
-    final is24Hours = ref.watch(
-      prayerSettingsProvider.select(
-        (value) => value.value?.is24Hours,
-      ),
-    );
     final l10n = context.l10n;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: AppSpacing.lg,
       children: [
+        if (showTimeFormat) const PrayerTimeFormatSettings(),
         SettingsGroup(
           title: l10n.calculationMethod,
           child: Column(
             spacing: AppSpacing.md,
             children: [
-              buildCalculationMethodSelector(
-                context,
-                ref,
-                method,
-              ),
+              buildCalculationMethodSelector(context, ref, method),
               const CustomParametersAccordion(),
             ],
-          ),
-        ),
-        const FDivider(),
-        SettingsGroup(
-          title: l10n.timeFormat,
-          child: NonSelectable(
-            child: _TimeFormatSwitch(is24Hours: is24Hours ?? false),
           ),
         ),
       ],
     );
   }
+}
+
+/// Shared time-format control, also shown early in setup.
+class PrayerTimeFormatSettings extends ConsumerWidget {
+  const new({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => SettingsGroup(
+    title: context.l10n.timeFormat,
+    child: NonSelectable(
+      child: _TimeFormatSwitch(
+        is24Hours: ref.watch(prayerSettingsProvider).value?.is24Hours ?? false,
+      ),
+    ),
+  );
 }
 
 /// Iqamah offset editors.
@@ -79,28 +82,25 @@ class PrayerIqamahSettings extends HookConsumerWidget {
     final draft = ref.read(iqamahDraftProvider.notifier);
     final l10n = context.l10n;
 
-    useEffect(
-      () {
-        final listeners = <Prayer, VoidCallback>{};
-        for (final prayer in kIqamahDraftPrayers) {
-          void listener() {
-            if (!draft.focusNode(prayer).hasFocus) {
-              draft.save(context, prayer);
-            }
+    useEffect(() {
+      final listeners = <Prayer, VoidCallback>{};
+      for (final prayer in kIqamahDraftPrayers) {
+        void listener() {
+          if (!draft.focusNode(prayer).hasFocus) {
+            draft.save(context, prayer);
           }
-
-          draft.focusNode(prayer).addListener(listener);
-          listeners[prayer] = listener;
         }
 
-        return () {
-          for (final entry in listeners.entries) {
-            draft.focusNode(entry.key).removeListener(entry.value);
-          }
-        };
-      },
-      const [],
-    );
+        draft.focusNode(prayer).addListener(listener);
+        listeners[prayer] = listener;
+      }
+
+      return () {
+        for (final entry in listeners.entries) {
+          draft.focusNode(entry.key).removeListener(entry.value);
+        }
+      };
+    }, const []);
 
     final saveButton = showSaveButton
         ? NonSelectable(
@@ -113,10 +113,7 @@ class PrayerIqamahSettings extends HookConsumerWidget {
                 style: const FButtonStyleDelta.delta(
                   contentStyle: FButtonContentStyleDelta.delta(
                     padding: EdgeInsetsGeometryDelta.value(
-                      EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
                   ),
                 ),

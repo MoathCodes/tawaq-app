@@ -11,6 +11,8 @@ import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/core/locale/locale_select_tile_group.dart';
 import 'package:tawaq/core/utils/prayer_extensions.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/sections/location_section/location_controls.dart';
+import 'package:tawaq/feature/settings/presentation/adhan_locale_extensions.dart';
 import 'package:tawaq/core/widgets/animation_entry.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/core/widgets/semantics_scale_step_picker.dart';
@@ -187,7 +189,10 @@ List<OnboardingStepDef> onboardingStepDefs(AppLocalizations l10n) {
       builder: (_) => const Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: AppSpacing.lg,
-        children: [OnboardingLocationStep(), PrayerCalculationSettings()],
+        children: [
+          OnboardingLocationStep(),
+          PrayerCalculationSettings(showTimeFormat: false),
+        ],
       ),
     ),
     OnboardingStepDef(
@@ -403,7 +408,11 @@ class OnboardingLocationStep extends StatelessWidget {
       spacing: AppSpacing.md,
       children: [
         OnboardingLocationAlert(),
-        PrayerLocationSettings(chrome: SettingsChrome.none, compactMap: true),
+        PrayerLocationSettings(
+          chrome: SettingsChrome.none,
+          compactMap: true,
+          beforeAdvanced: PrayerTimeFormatSettings(),
+        ),
       ],
     );
   }
@@ -485,6 +494,10 @@ class OnboardingFinishStep extends ConsumerWidget {
     final dayKey = ref.watch(prayerCalendarDayKeyProvider);
     final rows = ref.watch(prayerScheduleProvider(dayKey));
     final settings = ref.watch(prayerSettingsProvider).value;
+    final alerts = ref.watch(adhanSettingsProvider).value;
+    String enabled(bool value) => value
+        ? l10n.notificationsSummaryEnabled
+        : l10n.notificationsSummaryDisabled;
 
     if (bundle == null) {
       final loading = ref.watch(prayerDayIsLoadingProvider);
@@ -504,8 +517,25 @@ class OnboardingFinishStep extends ConsumerWidget {
         FTile(
           prefix: const Icon(FLucideIcons.mapPin),
           title: Text(l10n.onboardingStepLocation),
-          subtitle: Text(
-            '${settings?.locationName ?? ''} · ${settings?.location.name ?? ''}\n${settings?.method.getLocaleName(l10n) ?? ''}',
+          subtitle: DefaultTextStyle(
+            style: theme.typography.body.sm.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: AppSpacing.xs,
+              children: [
+                Text(
+                  settings == null
+                      ? ''
+                      : resolveLocationDisplayName(l10n, settings.locationName),
+                ),
+                Text('${l10n.timezone}: ${settings?.location.name ?? ''}'),
+                Text(
+                  '${l10n.calculationMethod}: ${settings?.method.getLocaleName(l10n) ?? ''}',
+                ),
+              ],
+            ),
           ),
           suffix: const Icon(FLucideIcons.pencil),
           onPress: () => ref
@@ -515,30 +545,57 @@ class OnboardingFinishStep extends ConsumerWidget {
         FTile(
           prefix: const Icon(FLucideIcons.bell),
           title: Text(l10n.onboardingStepNotifications),
-          subtitle: Text(l10n.onboardingStepNotificationsSubtitle),
+          subtitle: DefaultTextStyle(
+            style: theme.typography.body.sm.copyWith(
+              color: theme.colors.mutedForeground,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: AppSpacing.xs,
+              children: [
+                Text(
+                  '${l10n.adhanShowAlertLabel}: ${enabled(alerts?.showAdhanAlert ?? false)}',
+                ),
+                Text(
+                  '${l10n.adhanShowOsNotificationLabel}: ${enabled(alerts?.showOsNotification ?? false)}',
+                ),
+                if (alerts != null)
+                  Text(
+                    '${l10n.adhanSoundLabel}: ${alerts.sound.getLocaleName(l10n)} · ${alerts.volume.round()}%',
+                  ),
+                if (alerts != null)
+                  Text(
+                    '${l10n.iqamahSoundLabel}: ${alerts.iqamahSound.getLocaleName(l10n)}',
+                  ),
+              ],
+            ),
+          ),
           suffix: const Icon(FLucideIcons.pencil),
           onPress: () => ref
               .read(onboardingControllerProvider.notifier)
               .review(OnboardingStep.notifications),
         ),
         StaticCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: AppSpacing.sm,
-            children: [
-              Text(
-                l10n.todaysSchedule,
-                style: theme.typography.body.sm.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colors.mutedForeground,
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: AppSpacing.sm,
+              children: [
+                Text(
+                  l10n.todaysSchedule,
+                  style: theme.typography.body.sm.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colors.mutedForeground,
+                  ),
                 ),
-              ),
-              for (final row in rows)
-                _PrayerPreviewRow(
-                  label: row.prayer.getLocaleName(l10n, date: day?.now),
-                  time: row.formattedAdhanTime,
-                ),
-            ],
+                for (final row in rows)
+                  _PrayerPreviewRow(
+                    label: row.prayer.getLocaleName(l10n, date: day?.now),
+                    time: row.formattedAdhanTime,
+                  ),
+              ],
+            ),
           ),
         ),
       ],
@@ -557,14 +614,14 @@ class _PrayerPreviewRow extends StatelessWidget {
     final theme = context.theme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         children: [
           Expanded(child: Text(label)),
           Text(
             time,
-            style: theme.typography.body.sm.copyWith(
-              fontWeight: FontWeight.w500,
+            style: theme.typography.body.md.copyWith(
+              fontWeight: FontWeight.w600,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),

@@ -23,7 +23,11 @@ class OnboardingRerunTile extends ConsumerWidget {
         final cleared = await ref
             .read(onboardingStateProvider.notifier)
             .reset();
-        if (!cleared || !context.mounted) return;
+        if (!context.mounted) return;
+        if (!cleared) {
+          showFToast(context: context, title: Text(l10n.onboardingSaveFailed));
+          return;
+        }
         const OnboardingRoute().go(context);
       },
     );

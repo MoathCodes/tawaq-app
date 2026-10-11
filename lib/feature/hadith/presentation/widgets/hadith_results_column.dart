@@ -10,6 +10,7 @@ import 'package:tawaq/core/shortcuts/shortcuts.dart';
 import 'package:tawaq/core/utils/external_link_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/hadith_loading_cards.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
+import 'package:tawaq/core/widgets/empty_state_panel.dart';
 import 'package:tawaq/feature/hadith/data/database/hadith_local_database.dart';
 import 'package:tawaq/feature/hadith/presentation/models/hadith_session_state.dart';
 import 'package:tawaq/feature/hadith/presentation/models/hadith_failure_message.dart';
@@ -81,8 +82,34 @@ class HadithResultsColumn extends HookConsumerWidget {
       unawaited(controller.selectHadith(record));
     }
 
+    void browse() {
+      controller.openSearchHome();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) AppSearchFocusRegistry.instance.focus();
+      });
+    }
+
+    Widget empty({bool saved = false}) => Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: EmptyStatePanel(
+          icon: saved ? FLucideIcons.bookmark : FLucideIcons.search,
+          title: saved ? l10n.hadithSavedEmptyTitle : l10n.noResults,
+          hint: saved ? l10n.hadithSavedEmptyHint : l10n.hadithSearchEmptyHint,
+          action: FButton(
+            variant: .outline,
+            mainAxisSize: MainAxisSize.min,
+            onPress: browse,
+            child: Text(
+              saved ? l10n.hadithBrowseAction : l10n.hadithEditSearchAction,
+            ),
+          ),
+        ),
+      ),
+    );
+
     Widget records(List<DetailedHadith> items) => items.isEmpty
-        ? Center(child: Text(l10n.noResults))
+        ? empty()
         : ListView.separated(
             controller: scroll,
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
@@ -100,7 +127,7 @@ class HadithResultsColumn extends HookConsumerWidget {
             ),
           );
     Widget saved(Map<String, SavedHadithEntry> entries) => entries.isEmpty
-        ? Center(child: Text(l10n.noResults))
+        ? empty(saved: true)
         : ListView.separated(
             controller: scroll,
             itemCount: entries.length,
@@ -172,7 +199,7 @@ class HadithResultsColumn extends HookConsumerWidget {
     Widget renderPage(HadithSearchPage page) => switch (page) {
       HadithProsePage(:final snippets) =>
         snippets.isEmpty
-            ? Center(child: Text(l10n.noResults))
+            ? empty()
             : ListView.separated(
                 controller: scroll,
                 itemCount: snippets.length,
@@ -261,7 +288,9 @@ class HadithResultsColumn extends HookConsumerWidget {
         if (session.context is SearchCollection ||
             session.context is CategoryCollection)
           const _ResultTools(),
-        if (session.context is SavedCollection)
+        if (session.context is SavedCollection &&
+            (ref.watch(hadithFavoritesStoreProvider).value?.isNotEmpty ??
+                false))
           Text(
             l10n.hadithResultsCount(
               ref.watch(hadithFavoritesStoreProvider).value?.length ?? 0,

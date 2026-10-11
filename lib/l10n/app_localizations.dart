@@ -5207,6 +5207,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not load {field} for item {item}. Retry, or deselect this field to omit it.'**
   String fortressExportDetailFailed(int item, String field);
+
+  /// No description provided for @deviceTimezoneUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Device timezone could not be detected. Retry or choose a timezone manually.'**
+  String get deviceTimezoneUnavailable;
+
+  /// No description provided for @onboardingSetupSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup'**
+  String get onboardingSetupSection;
+
+  /// No description provided for @alertPositionPreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Alert preview'**
+  String get alertPositionPreview;
+
+  /// No description provided for @alertPositionPreviewDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable in-app alerts to use this position.'**
+  String get alertPositionPreviewDisabled;
+
+  /// No description provided for @hadithSavedEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved hadith yet'**
+  String get hadithSavedEmptyTitle;
+
+  /// No description provided for @hadithSavedEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use the bookmark button on a hadith to keep it here.'**
+  String get hadithSavedEmptyHint;
+
+  /// No description provided for @hadithBrowseAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse hadith'**
+  String get hadithBrowseAction;
+
+  /// No description provided for @hadithSearchEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another phrase or adjust your search filters.'**
+  String get hadithSearchEmptyHint;
+
+  /// No description provided for @hadithEditSearchAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit search'**
+  String get hadithEditSearchAction;
+
+  /// No description provided for @notificationsSummaryEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get notificationsSummaryEnabled;
+
+  /// No description provided for @notificationsSummaryDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get notificationsSummaryDisabled;
 }
 
 class _AppLocalizationsDelegate

@@ -35,6 +35,6 @@ abstract class ThemePrefs with _$ThemePrefs {
   factory defaults() =>
       const ThemePrefs(
         appPalette: AppPalette.manuscript,
-        themeMode: ThemeMode.light,
+        themeMode: ThemeMode.system,
       );
 }

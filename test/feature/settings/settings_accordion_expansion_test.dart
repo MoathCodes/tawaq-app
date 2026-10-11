@@ -18,6 +18,7 @@ import 'package:tawaq/l10n/app_localizations_delegates.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as timezone;
 
 void main() {
   setUpAll(tz.initializeTimeZones);
@@ -27,12 +28,15 @@ void main() {
       (true, false),
       (true, true),
     ]) {
-      final initiallyOpen = location && !available;
+      const initiallyOpen = false;
       testWidgets(
         '${location ? 'advanced location (service $available)' : 'custom parameters'} stays expanded after settling and theme rebuild in $language',
         (tester) async {
           final container = ProviderContainer(
             overrides: [
+              deviceTimezoneLookupProvider.overrideWithValue(
+                () async => timezone.getLocation('Asia/Riyadh'),
+              ),
               settingsStorageProvider.overrideWith(
                 (_) async => Storage<String, String>.inMemory(),
               ),

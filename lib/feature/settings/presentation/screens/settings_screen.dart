@@ -193,8 +193,7 @@ class SettingsScreen extends HookConsumerWidget {
                 physics: const BouncingScrollPhysics(),
                 children: [
                   for (final (i, tab) in tabs.indexed)
-                    CenteredViewportShell.scrollTab(
-                      maxContentWidth: _maxContentWidth,
+                    _SettingsTabViewport(
                       child: LazyPanelContent.tab(
                         controller: tabController,
                         index: i,
@@ -213,4 +212,21 @@ class SettingsScreen extends HookConsumerWidget {
       ),
     );
   }
+}
+
+/// Each tab owns its scroll position, including when adjacent panels are kept
+/// alive during a swipe. Padding belongs to the content, so it is scrollable.
+class _SettingsTabViewport extends HookWidget {
+  const new({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => CenteredViewportShell.scrollTab(
+    maxContentWidth: SettingsScreen._maxContentWidth,
+    controller: useScrollController(),
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+      child: child,
+    ),
+  );
 }

@@ -10,6 +10,7 @@ class EmptyStatePanel extends StatelessWidget {
     required this.title,
     super.key,
     this.hint,
+    this.action,
     this.semanticsLabel,
     this.padding = const EdgeInsets.symmetric(horizontal: AppSpacing.md),
     this.iconSize = 40,
@@ -23,6 +24,9 @@ class EmptyStatePanel extends StatelessWidget {
 
   /// Secondary hint below the title.
   final String? hint;
+
+  /// Optional recovery or navigation action.
+  final Widget? action;
 
   /// Optional merged accessibility label.
   final String? semanticsLabel;
@@ -38,6 +42,7 @@ class EmptyStatePanel extends StatelessWidget {
     final theme = context.theme;
 
     final content = Column(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Icon(
@@ -64,6 +69,7 @@ class EmptyStatePanel extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
         ],
+        if (action != null) ...[const SizedBox(height: AppSpacing.lg), action!],
       ],
     );
 
@@ -120,11 +126,7 @@ class ErrorStatePanel extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            FLucideIcons.circleAlert,
-            size: 48,
-            color: theme.colors.error,
-          ),
+          Icon(FLucideIcons.circleAlert, size: 48, color: theme.colors.error),
           const SizedBox(height: AppSpacing.lg),
           Text(
             message,
@@ -153,10 +155,7 @@ class ErrorStatePanel extends StatelessWidget {
           ],
           if (onRetry != null && retryLabel != null) ...[
             const SizedBox(height: AppSpacing.lg),
-            FButton(
-              onPress: onRetry,
-              child: Text(retryLabel!),
-            ),
+            FButton(onPress: onRetry, child: Text(retryLabel!)),
           ],
         ],
       ),

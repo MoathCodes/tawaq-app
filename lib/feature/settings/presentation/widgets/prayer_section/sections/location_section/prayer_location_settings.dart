@@ -24,6 +24,7 @@ class PrayerLocationSettings extends HookConsumerWidget {
   const new({
     this.chrome = SettingsChrome.section,
     this.compactMap = false,
+    this.beforeAdvanced,
     this.gateMapToSettingsTab = false,
     super.key,
   });
@@ -34,6 +35,9 @@ class PrayerLocationSettings extends HookConsumerWidget {
   /// When true, uses a shorter map height (onboarding).
   final bool compactMap;
 
+  /// Optional setup control placed before advanced location options.
+  final Widget? beforeAdvanced;
+
   /// When true, builds [FmMap] only while the Settings Location tab is active.
   ///
   /// Avoids keeping the map (and its tile/controller retention) alive after
@@ -43,13 +47,13 @@ class PrayerLocationSettings extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final availability = ref.watch(deviceLocationAvailableProvider);
+    final timezoneUnresolved = ref.watch(
+      prayerSettingsProvider.select((s) => s.value?.timezoneResolved == false),
+    );
     // Use availability only for the initial default. A person's explicit
     // collapse/expand choice survives later service checks and rebuilds.
     final expansionChoice = useState<bool?>(null);
-    final advancedExpanded =
-        expansionChoice.value ??
-        (!availability.isLoading && availability.value != true);
+    final advancedExpanded = expansionChoice.value ?? timezoneUnresolved;
     final mapActive =
         !gateMapToSettingsTab ||
         ref.watch(
@@ -64,6 +68,7 @@ class PrayerLocationSettings extends HookConsumerWidget {
       children: [
         const LocationControlsRow(),
         const _UseLocationTile(),
+        if (beforeAdvanced != null) beforeAdvanced!,
         FAccordion(
           control: .lifted(
             expanded: (_) => advancedExpanded,
@@ -75,6 +80,7 @@ class PrayerLocationSettings extends HookConsumerWidget {
               child: Column(
                 spacing: AppSpacing.md,
                 children: [
+                  const TimezoneSelect(),
                   const CoordinatesRow(),
                   LocationMapSection(compact: compactMap, mapActive: mapActive),
                 ],
@@ -114,7 +120,7 @@ class _UseLocationTile extends HookConsumerWidget {
       return;
     }
 
-    // Commit autoLocation only after GPS (+ TZ) succeeds — one bundle write.
+    // Commit autoLocation only after GPS succeeds — one bundle write.
     try {
       await notifier.applyCurrentDeviceLocation(autoLocation: true);
     } catch (e) {

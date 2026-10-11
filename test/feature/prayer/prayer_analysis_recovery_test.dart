@@ -18,6 +18,8 @@ import 'package:tawaq/feature/prayer/domain/models/prayer_completion.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_settings.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_completions_repair_provider.dart';
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_day.dart';
+import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
+import 'package:timezone/timezone.dart' as timezone;
 import 'package:tawaq/feature/prayer/presentation/widgets/analysis/analysis_section.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/l10n/app_localizations_delegates.dart';
@@ -51,6 +53,9 @@ void main() {
         final container = ProviderContainer(
           retry: (_, _) => null,
           overrides: [
+            deviceTimezoneLookupProvider.overrideWithValue(
+              () async => timezone.getLocation('Asia/Riyadh'),
+            ),
             hiveCoreInitProvider.overrideWith((ref) async {}),
             settingsStorageProvider.overrideWith(
               (ref) async => Storage<String, String>.inMemory(),
@@ -58,6 +63,7 @@ void main() {
             prayerDatabaseProvider.overrideWithValue(database),
             effectivePrayerSettingsProvider.overrideWithValue(
               PrayerSettings.defaultSettings().copyWith(
+                timezoneResolved: true,
                 coordinates: Coordinates(24.7136, 46.6753),
               ),
             ),

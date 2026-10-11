@@ -12,6 +12,7 @@ import 'package:tawaq/feature/prayer/presentation/widgets/prayer_sound_preview.d
 import 'package:tawaq/feature/settings/presentation/adhan_locale_extensions.dart';
 import 'package:tawaq/feature/settings/presentation/widgets/settings_section.dart';
 import 'package:tawaq/theme/theme.dart';
+import 'package:tawaq/feature/settings/presentation/widgets/prayer_section/widgets/prayer_alert_position_preview.dart';
 
 /// Prayer alert notification and sound controls with optional settings chrome.
 class PrayerAdhanSettings extends ConsumerWidget {
@@ -102,18 +103,13 @@ class PrayerAdhanSettings extends ConsumerWidget {
         ];
 
         if (constraints.maxWidth < 560) {
-          return Column(
-            spacing: AppSpacing.md,
-            children: soundFields,
-          );
+          return Column(spacing: AppSpacing.md, children: soundFields);
         }
 
         return Row(
           spacing: AppSpacing.lg,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final field in soundFields) Expanded(child: field),
-          ],
+          children: [for (final field in soundFields) Expanded(child: field)],
         );
       },
     );
@@ -144,18 +140,13 @@ class PrayerAdhanSettings extends ConsumerWidget {
         ];
 
         if (constraints.maxWidth < 560) {
-          return Column(
-            spacing: AppSpacing.sm,
-            children: switchFields,
-          );
+          return Column(spacing: AppSpacing.sm, children: switchFields);
         }
 
         return Row(
           spacing: AppSpacing.lg,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final field in switchFields) Expanded(child: field),
-          ],
+          children: [for (final field in switchFields) Expanded(child: field)],
         );
       },
     );
@@ -181,23 +172,33 @@ class PrayerAdhanSettings extends ConsumerWidget {
         const FDivider(),
         SettingsGroup(
           title: l10n.adhanAlertPositionLabel,
-          child: FSelect<AdhanAlertPosition>(
-            enabled: ready,
-            contentConstraints: selectPopoverPortalConstraints(context),
-            control: .lifted(
-              value: alertPosition,
-              onChange: (value) {
-                if (value == null) return;
-                ref
-                    .read(adhanSettingsProvider.notifier)
-                    .setAlertPosition(value);
-              },
-            ),
-            items: {
-              l10n.adhanAlertPositionTopEnd: AdhanAlertPosition.topEnd,
-              l10n.adhanAlertPositionTopStart: AdhanAlertPosition.topStart,
-              l10n.adhanAlertPositionCenter: AdhanAlertPosition.center,
-            },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: AppSpacing.md,
+            children: [
+              FSelect<AdhanAlertPosition>(
+                enabled: ready,
+                contentConstraints: selectPopoverPortalConstraints(context),
+                control: .lifted(
+                  value: alertPosition,
+                  onChange: (value) {
+                    if (value == null) return;
+                    ref
+                        .read(adhanSettingsProvider.notifier)
+                        .setAlertPosition(value);
+                  },
+                ),
+                items: {
+                  l10n.adhanAlertPositionTopEnd: AdhanAlertPosition.topEnd,
+                  l10n.adhanAlertPositionTopStart: AdhanAlertPosition.topStart,
+                  l10n.adhanAlertPositionCenter: AdhanAlertPosition.center,
+                },
+              ),
+              PrayerAlertPositionPreview(
+                position: alertPosition,
+                enabled: showAdhanAlert,
+              ),
+            ],
           ),
         ),
       ],
@@ -215,11 +216,7 @@ class PrayerAdhanSettings extends ConsumerWidget {
 }
 
 class _AdhanSoundField extends StatelessWidget {
-  const new({
-    required this.label,
-    required this.select,
-    required this.preview,
-  });
+  const new({required this.label, required this.select, required this.preview});
 
   final String label;
   final Widget select;
@@ -232,10 +229,7 @@ class _AdhanSoundField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
-          child: SettingsGroup(
-            title: label,
-            child: select,
-          ),
+          child: SettingsGroup(title: label, child: select),
         ),
         preview,
       ],

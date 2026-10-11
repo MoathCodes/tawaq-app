@@ -86,7 +86,7 @@ FThemeData appThemeData(Ref ref) {
     themeProvider.select((t) => t.value?.appPalette ?? AppPalette.manuscript),
   );
   final themeMode = ref.watch(
-    themeProvider.select((t) => t.value?.themeMode ?? ThemeMode.light),
+    themeProvider.select((t) => t.value?.themeMode ?? ThemeMode.system),
   );
   final omarchyTheme = ref.watch(omarchyThemeProvider).value;
   return buildAppTheme(
@@ -114,7 +114,7 @@ FThemeData appThemeWithTextScale(Ref ref) {
       themeProvider.select((t) => t.value?.appPalette ?? AppPalette.manuscript),
     ),
     themeMode: ref.watch(
-      themeProvider.select((t) => t.value?.themeMode ?? ThemeMode.light),
+      themeProvider.select((t) => t.value?.themeMode ?? ThemeMode.system),
     ),
     platformBrightness:
         ref.watch(platformBrightnessProvider).value ??

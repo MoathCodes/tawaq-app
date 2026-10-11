@@ -31,12 +31,15 @@ class SettingsAppearanceTab extends StatelessWidget {
           subtitle: l10n.typographySectionSubtitle,
           child: const TypographySettingsSection(),
         ),
-        const OnboardingRerunTile(),
         const DesktopSettingsSection(),
         SettingsSection(
           title: l10n.languageLabel,
           subtitle: l10n.onboardingLanguageStepHint,
           child: const LocaleSelectTileGroup(),
+        ),
+        SettingsGroup(
+          title: l10n.onboardingSetupSection,
+          child: const OnboardingRerunTile(),
         ),
       ],
     );

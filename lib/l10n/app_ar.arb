@@ -1444,5 +1444,16 @@
         "type": "String"
       }
     }
-  }
+  },
+  "deviceTimezoneUnavailable": "تعذّر تحديد المنطقة الزمنية للجهاز. أعد المحاولة أو اختر منطقة زمنية يدويًا.",
+  "onboardingSetupSection": "الإعداد",
+  "alertPositionPreview": "معاينة التنبيه",
+  "alertPositionPreviewDisabled": "فعّل التنبيهات داخل التطبيق لاستخدام هذا الموضع.",
+  "hadithSavedEmptyTitle": "لا توجد أحاديث محفوظة بعد",
+  "hadithSavedEmptyHint": "استخدم زر الحفظ في الحديث للاحتفاظ به هنا.",
+  "hadithBrowseAction": "تصفّح الأحاديث",
+  "hadithSearchEmptyHint": "جرّب عبارة أخرى أو عدّل خيارات البحث.",
+  "hadithEditSearchAction": "تعديل البحث",
+  "notificationsSummaryEnabled": "مفعّل",
+  "notificationsSummaryDisabled": "متوقف"
 }

@@ -6,6 +6,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_reader_text.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_judgment.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
@@ -303,9 +304,8 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: AppSpacing.md,
               children: [
-                SelectableText(
+                HadithReaderText(
                   hadithDisplayText(hadith),
-                  textDirection: TextDirection.rtl,
                   style: theme.typography.body.xl.copyWith(
                     fontSize: (theme.typography.body.xl.fontSize ?? 20) * 1.2,
                     height: 1.8,
