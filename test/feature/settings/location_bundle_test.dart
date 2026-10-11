@@ -206,6 +206,83 @@ void main() {
   });
 
   group('timezone policy', () {
+    test('manual choice survives pending startup detection', () async {
+      final storage = Storage<String, String>.inMemory();
+      await flushPersistedValue(
+        storage,
+        'PrayerSettingsNotifier',
+        PrayerSettings.defaultSettings().copyWith(timezoneResolved: true),
+      );
+      final started = Completer<void>();
+      final lookup = Completer<tz.Location>();
+      final container = _container(
+        storage: storage,
+        timezoneLookup: () {
+          started.complete();
+          return lookup.future;
+        },
+      );
+      addTearDown(container.dispose);
+      container.read(prayerSettingsProvider);
+      await started.future;
+      expect(container.read(prayerSettingsProvider).hasValue, true);
+      await container
+          .read(prayerSettingsProvider.notifier)
+          .setSystemTimezone(tz.getLocation('Europe/London'));
+      lookup.complete(tz.getLocation('America/New_York'));
+      await pumpEventQueue();
+      final settings = container.read(prayerSettingsProvider).requireValue;
+      expect(settings.useSystemTimezone, false);
+      expect(settings.location.name, 'Europe/London');
+    });
+
+    for (final fails in [false, true]) {
+      test(
+        'startup detection preserves newer edits (failure: $fails)',
+        () async {
+          final storage = Storage<String, String>.inMemory();
+          await flushPersistedValue(
+            storage,
+            'PrayerSettingsNotifier',
+            PrayerSettings.defaultSettings().copyWith(timezoneResolved: true),
+          );
+          final started = Completer<void>();
+          final lookup = Completer<tz.Location>();
+          final container = _container(
+            storage: storage,
+            timezoneLookup: () {
+              started.complete();
+              return lookup.future;
+            },
+          );
+          addTearDown(container.dispose);
+          container.read(prayerSettingsProvider);
+          await started.future;
+          final notifier = container.read(prayerSettingsProvider.notifier);
+          await notifier.applyLocationBundle(
+            coordinates: Coordinates(51.5, -.1),
+            locationName: 'London',
+          );
+          notifier.set24HourFormat(value: true);
+          if (fails) {
+            lookup.completeError(StateError('unavailable'));
+          } else {
+            lookup.complete(tz.getLocation('America/New_York'));
+          }
+          await pumpEventQueue();
+          final settings = container.read(prayerSettingsProvider).requireValue;
+          expect(settings.locationName, 'London');
+          expect(settings.coordinates.latitude, 51.5);
+          expect(settings.is24Hours, true);
+          expect(settings.useSystemTimezone, true);
+          expect(
+            settings.location.name,
+            fails ? 'Asia/Riyadh' : 'America/New_York',
+          );
+        },
+      );
+    }
+
     test(
       'manual choice survives city edits, restart, and device refresh',
       () async {

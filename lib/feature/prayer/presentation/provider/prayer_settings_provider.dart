@@ -55,14 +55,21 @@ class PrayerSettingsNotifier extends _$PrayerSettingsNotifier {
     }
     final settings = state.value ?? PrayerSettings.defaultSettings();
     if (!settings.useSystemTimezone) return settings;
+    final generation = _timezoneGeneration;
     try {
       final location = await ref.read(deviceTimezoneLookupProvider)();
-      return settings.copyWith(location: location, timezoneResolved: true);
+      if (!ref.mounted) return settings;
+      final current = state.value ?? settings;
+      if (generation != _timezoneGeneration || !current.useSystemTimezone) {
+        return current;
+      }
+      return current.copyWith(location: location, timezoneResolved: true);
     } on Object catch (error, stack) {
+      if (!ref.mounted) return settings;
       ref
           .read(loggerProvider)
           .w('Device timezone unavailable', error: error, stackTrace: stack);
-      return settings;
+      return state.value ?? settings;
     }
   }
 
