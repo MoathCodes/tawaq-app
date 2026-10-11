@@ -90,7 +90,7 @@ void main() {
       );
 
       expect(find.byIcon(FLucideIcons.bookMarked), findsOneWidget);
-      expect(find.byType(SelectableText), findsNWidgets(2));
+      expect(find.byType(SelectionArea), findsOneWidget);
       expect(find.textContaining('تحفة'), findsOneWidget);
       expect(find.textContaining('/55'), findsNothing);
     });

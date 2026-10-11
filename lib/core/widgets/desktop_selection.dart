@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart' show SelectedContent;
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/utils/platform.dart';
@@ -13,8 +14,8 @@ import 'package:tawaq/core/utils/platform.dart';
   );
 }
 
-/// Plain text that opts out of [SelectionArea] but keeps native single
-/// click-drag selection (for content inside scrollables).
+/// Plain text participating in the shared desktop reading selection region.
+/// Mouse anchors use the displayed paragraph, without an editable viewport.
 class ScopedSelectableText extends StatelessWidget {
   /// Creates scoped selectable text.
   const new(
@@ -53,16 +54,18 @@ class ScopedSelectableText extends StatelessWidget {
       );
     }
 
-    final (:selectionColor, :cursorColor) = desktopTextSelectionColors(context);
-    return NonSelectable(
-      child: SelectableText(
-        data,
-        style: style,
-        textAlign: textAlign,
-        textDirection: textDirection,
-        maxLines: maxLines,
-        selectionColor: selectionColor,
-        cursorColor: cursorColor,
+    return Directionality(
+      textDirection: textDirection ?? Directionality.of(context),
+      child: DesktopSelectionArea(
+        child: Text(
+          data,
+          style: style,
+          softWrap: true,
+          overflow: TextOverflow.clip,
+          textAlign: textAlign,
+          textDirection: textDirection,
+          maxLines: maxLines,
+        ),
       ),
     );
   }
@@ -101,21 +104,25 @@ class ScopedSelectableRichText extends StatelessWidget {
       );
     }
 
-    final (:selectionColor, :cursorColor) = desktopTextSelectionColors(context);
-    return NonSelectable(
-      child: SelectableText.rich(
-        textSpan,
-        textAlign: textAlign,
-        textDirection: textDirection,
-        strutStyle: strutStyle,
-        selectionColor: selectionColor,
-        cursorColor: cursorColor,
+    return Directionality(
+      textDirection: textDirection,
+      child: DesktopSelectionArea(
+        child: Text.rich(
+          textSpan,
+          style: textSpan.style,
+          softWrap: true,
+          overflow: TextOverflow.clip,
+          textAlign: textAlign,
+          textDirection: textDirection,
+          strutStyle: strutStyle,
+        ),
       ),
     );
   }
 }
 
-/// Enables [SelectionArea] on desktop; passthrough on other platforms.
+/// Owns desktop reading selection; nested instances share the existing region.
+/// Standalone dialogs and previews receive the same behavior through a fallback.
 class DesktopSelectionArea extends StatelessWidget {
   /// Creates a desktop-only selection region.
   const new({required this.child, super.key});
@@ -125,13 +132,21 @@ class DesktopSelectionArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isDesktopPlatform) return child;
+    final container = context
+        .findAncestorWidgetOfExactType<SelectionContainer>();
+    if (!isDesktopPlatform ||
+        SelectionContainer.maybeOf(context) != null ||
+        (container != null && container.delegate == null)) {
+      return child;
+    }
 
     final (:selectionColor, :cursorColor) = desktopTextSelectionColors(context);
     return DefaultSelectionStyle(
       selectionColor: selectionColor,
       cursorColor: cursorColor,
-      child: SelectionArea(child: child),
+      child: _DesktopSelectionRegion(
+        child: DesktopSelectionDocument(child: child),
+      ),
     );
   }
 }
@@ -149,4 +164,168 @@ class NonSelectable extends StatelessWidget {
   Widget build(BuildContext context) {
     return SelectionContainer.disabled(child: child);
   }
+}
+
+/// Keeps clipboard paragraph boundaries inside a shared selection region.
+/// Place around logical reading blocks, inside any surrounding scroll view.
+class DesktopSelectionDocument extends StatefulWidget {
+  /// Creates a paragraph-aware reading document.
+  const new({required this.child, super.key});
+
+  /// Paragraphs and other logical reading blocks.
+  final Widget child;
+
+  @override
+  State<DesktopSelectionDocument> createState() =>
+      _DesktopSelectionDocumentState();
+}
+
+class _DesktopSelectionDocumentState extends State<DesktopSelectionDocument> {
+  final _delegate = _ParagraphSelectionDelegate();
+
+  @override
+  void dispose() {
+    _delegate.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!isDesktopPlatform) return widget.child;
+    return DesktopSelectionArea(
+      child: SelectionContainer(delegate: _delegate, child: widget.child),
+    );
+  }
+}
+
+class _ParagraphSelectionDelegate extends StaticSelectionContainerDelegate {
+  @override
+  SelectedContent? getSelectedContent() {
+    final paragraphs = [
+      for (final selectable in selectables)
+        if (selectable.getSelectedContent() case final SelectedContent content)
+          if (content.plainText.isNotEmpty) content.plainText,
+    ];
+    return paragraphs.isEmpty
+        ? null
+        : SelectedContent(plainText: paragraphs.join('\n'));
+  }
+}
+
+class _DesktopSelectionRegion extends StatefulWidget {
+  const _DesktopSelectionRegion({required this.child});
+  final Widget child;
+
+  @override
+  State<_DesktopSelectionRegion> createState() =>
+      _DesktopSelectionRegionState();
+}
+
+class _DesktopSelectionRegionState extends State<_DesktopSelectionRegion> {
+  final _focus = FocusNode(debugLabel: 'Desktop reading selection');
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SelectionArea(
+    focusNode: _focus,
+    child: Builder(
+      builder: (regionContext) => Actions(
+        actions: {
+          ExtendSelectionVerticallyToAdjacentLineIntent: _CaretSelectionAction(
+            regionContext,
+          ),
+        },
+        child: widget.child,
+      ),
+    ),
+  );
+}
+
+// Flutter 3.47's vertical selection action casts EditableText's caret action to
+// a concrete intent type. Forward through the common caret type so input keys
+// reach the editable action, while reading keys retain the region's behavior.
+class _CaretSelectionAction extends Action<DirectionalCaretMovementIntent> {
+  _CaretSelectionAction(this.regionContext);
+  final BuildContext regionContext;
+
+  Action<DirectionalCaretMovementIntent>? _action(
+    DirectionalCaretMovementIntent intent,
+  ) => callingAction ?? Actions.maybeFind(regionContext, intent: intent);
+
+  @override
+  bool isEnabled(DirectionalCaretMovementIntent intent) =>
+      _action(intent)?.isEnabled(intent) ?? false;
+
+  @override
+  bool consumesKey(DirectionalCaretMovementIntent intent) =>
+      _action(intent)?.consumesKey(intent) ?? false;
+
+  @override
+  Object? invoke(DirectionalCaretMovementIntent intent) {
+    if (callingAction case final action?) return action.invoke(intent);
+    return Actions.invoke(regionContext, intent);
+  }
+}
+
+/// Keeps contextual shortcuts below a shared reading region's selection focus.
+/// Only the pointer-hit scope adopts focus; inputs and controls retain theirs.
+class DesktopSelectionFocusAnchor extends StatefulWidget {
+  /// Creates a focus anchor for contextual reading shortcuts.
+  const new({
+    required this.child,
+    this.focusNode,
+    this.autofocus = false,
+    super.key,
+  });
+
+  /// Content governed by the surrounding shortcut scope.
+  final Widget child;
+
+  /// An existing reading focus node, when the caller owns one.
+  final FocusNode? focusNode;
+
+  /// Whether the contextual reading scope initially requests focus.
+  final bool autofocus;
+
+  @override
+  State<DesktopSelectionFocusAnchor> createState() =>
+      _DesktopSelectionFocusAnchorState();
+}
+
+class _DesktopSelectionFocusAnchorState
+    extends State<DesktopSelectionFocusAnchor> {
+  final _ownedFocus = FocusNode(debugLabel: 'Reading shortcut anchor');
+
+  void _adoptSelectionFocus(PointerEvent event) {
+    final area = context.findAncestorStateOfType<SelectionAreaState>();
+    if (area == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted &&
+          FocusManager.instance.primaryFocus == area.widget.focusNode) {
+        (widget.focusNode ?? _ownedFocus).requestFocus();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ownedFocus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Focus(
+    focusNode: widget.focusNode ?? _ownedFocus,
+    autofocus: widget.autofocus,
+    child: Listener(
+      onPointerDown: _adoptSelectionFocus,
+      onPointerUp: _adoptSelectionFocus,
+      child: widget.child,
+    ),
+  );
 }

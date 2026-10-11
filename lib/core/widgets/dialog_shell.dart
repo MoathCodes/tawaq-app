@@ -1,8 +1,9 @@
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
-import 'package:tawaq/theme/theme.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/theme/theme.dart';
 
 /// Shared title row for player-style modal dialogs.
 class PlayerDialogHeader extends StatelessWidget {
@@ -180,17 +181,19 @@ class TawaqDialogShell extends StatelessWidget {
             borderRadius: theme.radii.xl,
           ),
           clipBehavior: Clip.antiAlias,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              header,
-              Container(height: 1, color: colors.border),
-              body,
-              if (footer != null) ...[
+          child: DesktopSelectionArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                header,
                 Container(height: 1, color: colors.border),
-                footer!,
+                body,
+                if (footer != null) ...[
+                  Container(height: 1, color: colors.border),
+                  NonSelectable(child: footer!),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -236,34 +239,38 @@ class ForuiDialogLayout extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: touch ? 18 : 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(bottom: titleBottom),
-            child: DefaultTextStyle.merge(
-              style: style.titleTextStyle,
-              child: title,
-            ),
-          ),
-          Flexible(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: bodyBottom),
+      child: DesktopSelectionArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.only(bottom: titleBottom),
               child: DefaultTextStyle.merge(
-                style: style.bodyTextStyle,
-                child: body,
+                style: style.titleTextStyle,
+                child: title,
               ),
             ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            spacing: actionSpacing,
-            children: expandActions || touch
-                ? [for (final action in actions) Expanded(child: action)]
-                : actions,
-          ),
-        ],
+            Flexible(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: bodyBottom),
+                child: DefaultTextStyle.merge(
+                  style: style.bodyTextStyle,
+                  child: body,
+                ),
+              ),
+            ),
+            NonSelectable(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                spacing: actionSpacing,
+                children: expandActions || touch
+                    ? [for (final action in actions) Expanded(child: action)]
+                    : actions,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

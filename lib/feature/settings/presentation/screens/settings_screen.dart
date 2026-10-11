@@ -2,6 +2,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/layout/centered_viewport_shell.dart';
 import 'package:tawaq/core/layout/lazy_tab_content.dart';
 import 'package:tawaq/core/layout/responsive.dart';
@@ -160,10 +161,12 @@ class SettingsScreen extends HookConsumerWidget {
                   for (final tab in tabs)
                     Tab(
                       height: tabsStyle.minHeight,
-                      child: IconLabel(
-                        label: tab.label(l10n),
-                        icon: tab.icon,
-                        excludeIconSemantics: true,
+                      child: NonSelectable(
+                        child: IconLabel(
+                          label: tab.label(l10n),
+                          icon: tab.icon,
+                          excludeIconSemantics: true,
+                        ),
                       ),
                     ),
                 ],

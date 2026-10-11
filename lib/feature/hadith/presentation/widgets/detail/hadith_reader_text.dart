@@ -9,17 +9,9 @@ class HadithReaderText extends StatelessWidget {
   final TextStyle style;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = desktopTextSelectionColors(context);
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: DefaultSelectionStyle(
-        selectionColor: colors.selectionColor,
-        cursorColor: colors.cursorColor,
-        child: SelectionArea(
-          child: Text(text, style: style, textDirection: TextDirection.rtl),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ScopedSelectableText(
+    text,
+    style: style,
+    textDirection: TextDirection.rtl,
+  );
 }

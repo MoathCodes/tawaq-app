@@ -283,9 +283,11 @@ class TafsirCommentaryBody extends HookWidget {
     if (children.isEmpty) return null;
     if (children.length == 1) return children.first;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: children,
+    return DesktopSelectionDocument(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
     );
   }
 

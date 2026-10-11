@@ -1,3 +1,4 @@
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_display_text.dart';
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -375,7 +376,7 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
                     children: [
                       for (final (i, section) in sections.indexed)
                         FTabEntry(
-                          label: Text(section.label),
+                          label: NonSelectable(child: Text(section.label)),
                           child: i == active
                               ? sectionBody!
                               : const SizedBox.shrink(),

@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 
 /// A thin desktop thumb that fades after scrolling.
 ScrollbarThemeData tawaqScrollbarTheme(ColorScheme colorScheme) {
@@ -36,7 +37,12 @@ class TawaqAppScrollBehavior extends MaterialScrollBehavior {
     Widget child,
     ScrollableDetails details,
   ) {
-    if (details.controller == null) return child;
+    // Scrollable owns an inner selection registrar. Keep paragraph boundaries
+    // inside it, before its aggregate reaches the outer reading region.
+    final selectionChild = SelectionContainer.maybeOf(context) != null
+        ? DesktopSelectionDocument(child: child)
+        : child;
+    if (details.controller == null) return selectionChild;
     final theme = Theme.of(context).scrollbarTheme;
     return RawScrollbar(
       controller: details.controller,
@@ -51,7 +57,7 @@ class TawaqAppScrollBehavior extends MaterialScrollBehavior {
       crossAxisMargin: theme.crossAxisMargin ?? 2,
       mainAxisMargin: theme.mainAxisMargin ?? 6,
       minThumbLength: theme.minThumbLength ?? 20,
-      child: child,
+      child: selectionChild,
     );
   }
 }

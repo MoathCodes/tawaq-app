@@ -76,73 +76,75 @@ class OnboardingScaffold extends ConsumerWidget {
     final borderWidth = context.theme.style.borderWidth;
     final controlsOnLeft = Platform.isMacOS || forceMacStyle;
 
-    return FScaffold(
-      scaffoldStyle: FScaffoldStyleDelta.delta(
-        childPadding: const .value(.zero),
-      ),
-      child: Column(
-        children: [
-          if (showDesktopTopBar)
-            NonSelectable(
-              child: Container(
-                height: 52,
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: colors.border,
-                      width: borderWidth,
+    return DesktopSelectionArea(
+      child: FScaffold(
+        scaffoldStyle: FScaffoldStyleDelta.delta(
+          childPadding: const .value(.zero),
+        ),
+        child: Column(
+          children: [
+            if (showDesktopTopBar)
+              NonSelectable(
+                child: Container(
+                  height: 52,
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: colors.card,
+                    border: Border(
+                      bottom: BorderSide(
+                        color: colors.border,
+                        width: borderWidth,
+                      ),
                     ),
                   ),
-                ),
-                child: Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Stack(
-                    children: [
-                      const Positioned.fill(child: TitleBarDragArea()),
-                      Align(
-                        alignment: controlsOnLeft
-                            ? Alignment.centerLeft
-                            : Alignment.centerRight,
-                        child: WindowControls(forceMacStyle: forceMacStyle),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          Expanded(
-            child: SafeArea(
-              top: !showDesktopTopBar,
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 720),
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                  child: Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Stack(
                       children: [
-                        header,
-                        const SizedBox(height: AppSpacing.lg),
-                        Expanded(
-                          child: _OnboardingStepViewport(
-                            resetTrigger: stepKey,
-                            maxWidth: 720,
-                            child: content,
-                          ),
+                        const Positioned.fill(child: TitleBarDragArea()),
+                        Align(
+                          alignment: controlsOnLeft
+                              ? Alignment.centerLeft
+                              : Alignment.centerRight,
+                          child: WindowControls(forceMacStyle: forceMacStyle),
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        navigation,
                       ],
                     ),
                   ),
                 ),
               ),
+            Expanded(
+              child: SafeArea(
+                top: !showDesktopTopBar,
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          header,
+                          const SizedBox(height: AppSpacing.lg),
+                          Expanded(
+                            child: _OnboardingStepViewport(
+                              resetTrigger: stepKey,
+                              maxWidth: 720,
+                              child: content,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          navigation,
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

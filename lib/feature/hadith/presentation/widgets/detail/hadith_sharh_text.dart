@@ -155,9 +155,11 @@ class _HadithSharhTextState extends ConsumerState<HadithSharhText> {
         ),
       );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: paragraphs,
+    return DesktopSelectionDocument(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: paragraphs,
+      ),
     );
   }
 }

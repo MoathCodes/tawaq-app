@@ -11,6 +11,7 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart' hide TextRange;
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
@@ -166,6 +167,7 @@ void main() {
       (spans.first.recognizer! as TapGestureRecognizer).onTap!();
       await tester.pumpAndSettle();
       expect(find.text('source definition'), findsOneWidget);
+      expect(find.descendant(of: find.byType(ForuiDialogLayout), matching: find.byType(SelectionArea)), findsOneWidget);
       (spans.last.recognizer! as TapGestureRecognizer).onTap!();
       await tester.pump();
       expect(opened, uri);

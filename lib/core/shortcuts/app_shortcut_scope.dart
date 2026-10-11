@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_bindings.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 
 /// Binds route/contextual catalog shortcuts to keyboard activators.
 ///
@@ -57,7 +58,7 @@ class _AppShortcutScopeState extends State<AppShortcutScope> {
 
     return CallbackShortcuts(
       bindings: bindings,
-      child: Focus(
+      child: DesktopSelectionFocusAnchor(
         autofocus: widget.autofocus,
         child: widget.child,
       ),

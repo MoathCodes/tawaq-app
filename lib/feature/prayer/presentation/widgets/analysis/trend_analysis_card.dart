@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
 import 'package:tawaq/feature/prayer/domain/models/prayer_analytics.dart';
@@ -66,7 +67,7 @@ class TrendAnalysisCard extends ConsumerWidget {
             children: [
               for (final period in PrayerAnalyticsPeriod.values)
                 FTabEntry(
-                  label: Text(period.getLocaleName(l10n)),
+                  label: NonSelectable(child: Text(period.getLocaleName(l10n))),
                   child: dataPeriod == period
                       ? const _PeriodTrendBody()
                       : const SizedBox.shrink(),

@@ -215,11 +215,13 @@ class _LayoutSegment extends StatelessWidget {
         children: [
           for (final mode in QuranReadingLayout.values)
             FTabEntry(
-              label: _LayoutTabLabel(
-                mode: mode,
-                label: mode.getLocaleName(l10n),
-                selected: mode == layout,
-                showLabel: showLabels,
+              label: NonSelectable(
+                child: _LayoutTabLabel(
+                  mode: mode,
+                  label: mode.getLocaleName(l10n),
+                  selected: mode == layout,
+                  showLabel: showLabels,
+                ),
               ),
               child: const SizedBox.shrink(),
             ),

@@ -17,6 +17,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/app/onboarding/onboarding_screen.dart';
 import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_reader_text.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
@@ -32,6 +33,7 @@ import 'package:timezone/data/latest.dart' as tz;
 
 final _capture = GlobalKey();
 final _container = ProviderContainer();
+bool _reviewPointerAdded = false;
 
 Future<void> main() async {
   if (Platform.environment['XDG_CONFIG_HOME'] == null ||
@@ -133,11 +135,22 @@ Future<String> _review(String? payload) async {
     case 'select':
       Element? reader;
       void findReader(Element e) {
-        if (e.widget is HadithReaderText) reader = e;
+        if (request['source'] == true) {
+          if (e.widget case ScopedSelectableRichText(:final textSpan)) {
+            if (textSpan.toPlainText().length > 100 &&
+                textSpan.toPlainText().contains('الغداة')) {
+              reader ??= e;
+            }
+          }
+        } else if (e.widget is HadithReaderText) {
+          reader = e;
+        }
         e.visitChildren(findReader);
       }
       findReader(_capture.currentContext! as Element);
       if (reader == null) return 'reader unavailable';
+      await Scrollable.ensureVisible(reader!, alignment: .3);
+      await WidgetsBinding.instance.endOfFrame;
       RenderParagraph? paragraph;
       SelectionAreaState? selection;
       void findText(Element e) {
@@ -148,26 +161,43 @@ Future<String> _review(String? payload) async {
         e.visitChildren(findText);
       }
       reader!.visitChildren(findText);
+      selection ??= reader!.findAncestorStateOfType<SelectionAreaState>();
       final p = paragraph!;
       Offset point(int offset) => p.localToGlobal(
         p.getOffsetForCaret(TextPosition(offset: offset), Rect.zero) +
             const Offset(0, 26),
       );
+      var frame = 0;
+      Future<void> captureFrame() async {
+        if (request['frames'] case final String directory) {
+          await Directory(directory).create(recursive: true);
+          await _review(
+            jsonEncode({
+              'action': 'capture',
+              'path': '$directory/${(frame++).toString().padLeft(3, '0')}.png',
+            }),
+          );
+        }
+      }
+      await captureFrame();
       final start = point(request['start'] as int);
       final end = point(request['end'] as int);
       final anchor = p.getPositionForOffset(p.globalToLocal(start)).offset;
       final extent = p.getPositionForOffset(p.globalToLocal(end)).offset;
-      WidgetsBinding.instance.handlePointerEvent(
-        PointerAddedEvent(
-          pointer: 71934,
-          timeStamp: Duration(
-            milliseconds: DateTime.now().millisecondsSinceEpoch,
+      if (!_reviewPointerAdded) {
+        WidgetsBinding.instance.handlePointerEvent(
+          PointerAddedEvent(
+            pointer: 71934,
+            timeStamp: Duration(
+              milliseconds: DateTime.now().millisecondsSinceEpoch,
+            ),
+            device: 71934,
+            kind: PointerDeviceKind.mouse,
+            position: start,
           ),
-          device: 71934,
-          kind: PointerDeviceKind.mouse,
-          position: start,
-        ),
-      );
+        );
+        _reviewPointerAdded = true;
+      }
       WidgetsBinding.instance.handlePointerEvent(
         PointerDownEvent(
           pointer: 71934,
@@ -195,6 +225,7 @@ Future<String> _review(String? payload) async {
           ),
         );
         await Future<void>.delayed(const Duration(milliseconds: 60));
+        await captureFrame();
       }
       WidgetsBinding.instance.handlePointerEvent(
         PointerUpEvent(
@@ -208,21 +239,16 @@ Future<String> _review(String? payload) async {
         ),
       );
       await WidgetsBinding.instance.endOfFrame;
+      await captureFrame();
       if (request['capture'] case final String path) {
         await _review(jsonEncode({'action': 'capture', 'path': path}));
       }
-      WidgetsBinding.instance.handlePointerEvent(
-        PointerRemovedEvent(
-          pointer: 71934,
-          timeStamp: Duration(
-            milliseconds: DateTime.now().millisecondsSinceEpoch,
-          ),
-          device: 71934,
-          kind: PointerDeviceKind.mouse,
-          position: end,
-        ),
-      );
-      selection!.selectableRegion.copySelection(SelectionChangedCause.toolbar);
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+      final button = selection!.selectableRegion.contextMenuButtonItems
+          .where((item) => item.type.name == 'copy')
+          .firstOrNull;
+      if (button == null) return 'selection has no copy action';
+      button.onPressed?.call();
       await Future<void>.delayed(const Duration(milliseconds: 100));
       final copied = await Clipboard.getData(Clipboard.kTextPlain);
       final expected = p.text.toPlainText().substring(
