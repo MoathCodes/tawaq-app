@@ -125,10 +125,8 @@ abstract class PrayerSettings with _$PrayerSettings {
     required Location location,
 
     /// Whether the prayer clock follows the device, independently of the city.
-    /// Missing values preserve the timezone in older profiles as manual.
-    @JsonKey(name: 'use_system_timezone')
-    @Default(false)
-    bool useSystemTimezone,
+    /// Older profiles follow the device unless they explicitly saved an override.
+    @JsonKey(name: 'use_system_timezone') @Default(true) bool useSystemTimezone,
 
     /// A timezone was detected or explicitly chosen. New profiles wait for it.
     @JsonKey(name: 'timezone_resolved') @Default(true) bool timezoneResolved,

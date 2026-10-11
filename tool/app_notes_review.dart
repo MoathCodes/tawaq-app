@@ -26,6 +26,7 @@ import 'package:tawaq/feature/prayer/presentation/provider/adhan_preview_provide
 import 'package:tawaq/feature/prayer/presentation/provider/prayer_settings_provider.dart';
 import 'package:tawaq/feature/settings/data/models/app_text_scale.dart';
 import 'package:tawaq/feature/settings/presentation/provider/theme_settings_provider.dart';
+import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/main.dart';
 import 'package:timezone/data/latest.dart' as tz;
 
@@ -58,6 +59,20 @@ Future<String> _review(String? payload) async {
       await _container.read(prayerSettingsProvider.future);
       await _container.read(themeProvider.future);
       await _container.read(localeProvider.future);
+      if (request['zoom'] case final num zoom) {
+        final subscription = _container.listen(
+          quranScreenSettingsProvider,
+          (_, _) {},
+        );
+        await _container.read(quranScreenSettingsProvider.future);
+        _container
+            .read(quranScreenSettingsProvider.notifier)
+            .setMushafZoom(zoom.toDouble());
+        _container
+            .read(quranScreenSettingsProvider.notifier)
+            .setSidePanelCollapsed(collapsed: false);
+        subscription.close();
+      }
       if (request['city'] == 'London') {
         await _container
             .read(prayerSettingsProvider.notifier)

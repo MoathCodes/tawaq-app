@@ -430,16 +430,19 @@ void main() {
       },
     );
 
-    test('older JSON keeps its zone as a verified manual choice', () {
-      final json = PrayerSettings.defaultSettings().toJson()
-        ..remove('use_system_timezone')
-        ..remove('timezone_resolved');
-      json['location'] = 'Europe/London';
-      final legacy = PrayerSettings.fromJson(json);
-      expect(legacy.useSystemTimezone, false);
-      expect(legacy.timezoneResolved, true);
-      expect(legacy.location.name, 'Europe/London');
-    });
+    test(
+      'older JSON defaults to device mode until the platform resolves its zone',
+      () {
+        final json = PrayerSettings.defaultSettings().toJson()
+          ..remove('use_system_timezone')
+          ..remove('timezone_resolved');
+        json['location'] = 'Europe/London';
+        final legacy = PrayerSettings.fromJson(json);
+        expect(legacy.useSystemTimezone, true);
+        expect(legacy.timezoneResolved, true);
+        expect(legacy.location.name, 'Europe/London');
+      },
+    );
   });
 
   group('PrayerSettings JSON hydrate harden', () {

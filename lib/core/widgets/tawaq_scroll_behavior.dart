@@ -1,13 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 
-/// A persistent desktop thumb with hover and drag feedback.
+/// A thin desktop thumb that fades after scrolling.
 ScrollbarThemeData tawaqScrollbarTheme(ColorScheme colorScheme) {
   final thumbBase = colorScheme.onSurface;
 
   return ScrollbarThemeData(
-    thumbVisibility: const WidgetStatePropertyAll(true),
+    thumbVisibility: const WidgetStatePropertyAll(false),
     trackVisibility: const WidgetStatePropertyAll(false),
-    thickness: const WidgetStatePropertyAll(6),
+    thickness: const WidgetStatePropertyAll(3),
     radius: const Radius.circular(4),
     crossAxisMargin: 2,
     mainAxisMargin: 6,
@@ -24,7 +24,7 @@ ScrollbarThemeData tawaqScrollbarTheme(ColorScheme colorScheme) {
   );
 }
 
-/// App-wide persistent, draggable scrollbar for overflowing desktop content.
+/// Transient desktop scrollbars. Persistent overflow hints are screen-owned.
 /// RawScrollbar handles initial and subsequent layout metrics and paints no
 /// thumb when content fits. Keeping it mounted preserves the scroll subtree.
 class TawaqAppScrollBehavior extends MaterialScrollBehavior {
@@ -40,8 +40,10 @@ class TawaqAppScrollBehavior extends MaterialScrollBehavior {
     final theme = Theme.of(context).scrollbarTheme;
     return RawScrollbar(
       controller: details.controller,
-      thumbVisibility: true,
+      thumbVisibility: false,
       interactive: true,
+      timeToFade: const Duration(milliseconds: 100),
+      fadeDuration: const Duration(milliseconds: 150),
       trackVisibility: false,
       thickness: theme.thickness?.resolve({}),
       radius: theme.radius,
