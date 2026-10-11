@@ -177,6 +177,14 @@ class ReadingSwipeViewport extends HookWidget {
         : 0.0;
 
     final swipeRegion = GestureDetector(
+      // A primary mouse drag selects prose; pan/zoom trackpad events and touch
+      // gestures retain reading navigation.
+      supportedDevices: const {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.stylus,
+        PointerDeviceKind.invertedStylus,
+        PointerDeviceKind.trackpad,
+      },
       behavior: HitTestBehavior.opaque,
       onTapDown: onTapDown == null
           ? null

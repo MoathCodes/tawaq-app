@@ -1,4 +1,5 @@
-import 'package:flutter/rendering.dart' show SelectedContent;
+import 'package:flutter/rendering.dart'
+    show ClearSelectionEvent, Selectable, SelectedContent;
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/utils/platform.dart';
@@ -199,6 +200,35 @@ class _DesktopSelectionDocumentState extends State<DesktopSelectionDocument> {
 }
 
 class _ParagraphSelectionDelegate extends StaticSelectionContainerDelegate {
+  bool _removedSelectionEdge = false;
+
+  @override
+  void remove(Selectable selectable) {
+    for (final index in [
+      currentSelectionStartIndex,
+      currentSelectionEndIndex,
+    ]) {
+      if (index >= 0 &&
+          index < selectables.length &&
+          selectables[index] == selectable) {
+        _removedSelectionEdge = true;
+      }
+    }
+    super.remove(selectable);
+  }
+
+  @override
+  void didChangeSelectables() {
+    // StaticSelectionContainerDelegate replays cached edge positions before
+    // updating geometry. A removed edge can leave a visible cached point with
+    // an invalid index. Retire that selection before replaying it into new text.
+    if (_removedSelectionEdge) {
+      _removedSelectionEdge = false;
+      dispatchSelectionEvent(const ClearSelectionEvent());
+    }
+    super.didChangeSelectables();
+  }
+
   @override
   SelectedContent? getSelectedContent() {
     final paragraphs = [

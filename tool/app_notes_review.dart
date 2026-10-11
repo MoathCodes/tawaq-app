@@ -18,6 +18,7 @@ import 'package:tawaq/app/onboarding/onboarding_screen.dart';
 import 'package:tawaq/app/routing/route_provider.dart';
 import 'package:tawaq/core/locale/locale_provider.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/core/widgets/reading_swipe_viewport.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_reader_text.dart';
 import 'package:tawaq/feature/muslim_fortress/data/repository/fortress_repository.dart';
@@ -74,6 +75,9 @@ Future<String> _review(String? payload) async {
             .read(quranScreenSettingsProvider.notifier)
             .setSidePanelCollapsed(collapsed: false);
         subscription.close();
+      }
+      if (request['ayah'] case final int ayah) {
+        _container.read(quranSelectedAyahIdProvider.notifier).select(ayah);
       }
       if (request['city'] == 'London') {
         await _container
@@ -135,7 +139,11 @@ Future<String> _review(String? payload) async {
     case 'select':
       Element? reader;
       void findReader(Element e) {
-        if (request['source'] == true) {
+        if (request['quran'] == true) {
+          if (e.widget case ScopedSelectableRichText(:final textSpan)) {
+            if (textSpan.toPlainText().length > 100) reader ??= e;
+          }
+        } else if (request['source'] == true) {
           if (e.widget case ScopedSelectableRichText(:final textSpan)) {
             if (textSpan.toPlainText().length > 100 &&
                 textSpan.toPlainText().contains('الغداة')) {
@@ -180,6 +188,7 @@ Future<String> _review(String? payload) async {
         }
       }
       await captureFrame();
+      final ayahBefore = _container.read(quranSelectedAyahIdProvider);
       final start = point(request['start'] as int);
       final end = point(request['end'] as int);
       final anchor = p.getPositionForOffset(p.globalToLocal(start)).offset;
@@ -257,10 +266,56 @@ Future<String> _review(String? payload) async {
       );
       return jsonEncode({
         'matches': copied?.text == expected,
+        if (request['quran'] == true) ...{
+          'ayahBefore': ayahBefore,
+          'ayahAfter': _container.read(quranSelectedAyahIdProvider),
+        },
         'anchor': anchor,
         'extent': extent,
         'copied': copied?.text,
         'expected': expected,
+      });
+    case 'trackpad':
+      Element? viewport;
+      void findViewport(Element e) {
+        if (e.widget is ReadingSwipeViewport) viewport = e;
+        e.visitChildren(findViewport);
+      }
+      findViewport(_capture.currentContext! as Element);
+      if (viewport == null) return 'study viewport unavailable';
+      final box = viewport!.findRenderObject()! as RenderBox;
+      final position = box.localToGlobal(box.size.center(Offset.zero));
+      final before = _container.read(quranSelectedAyahIdProvider);
+      WidgetsBinding.instance.handlePointerEvent(
+        PointerPanZoomStartEvent(
+          pointer: 71935,
+          device: 71935,
+          position: position,
+        ),
+      );
+      for (var step = 1; step <= 12; step++) {
+        WidgetsBinding.instance.handlePointerEvent(
+          PointerPanZoomUpdateEvent(
+            pointer: 71935,
+            device: 71935,
+            position: position,
+            pan: Offset(step * 12, 0),
+            panDelta: const Offset(12, 0),
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 60));
+      }
+      WidgetsBinding.instance.handlePointerEvent(
+        PointerPanZoomEndEvent(
+          pointer: 71935,
+          device: 71935,
+          position: position,
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      return jsonEncode({
+        'ayahBefore': before,
+        'ayahAfter': _container.read(quranSelectedAyahIdProvider),
       });
     case 'capture':
       await WidgetsBinding.instance.endOfFrame;
