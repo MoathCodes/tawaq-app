@@ -28,7 +28,6 @@ void main() {
       (true, false),
       (true, true),
     ]) {
-      const initiallyOpen = false;
       testWidgets(
         '${location ? 'advanced location (service $available)' : 'custom parameters'} stays expanded after settling and theme rebuild in $language',
         (tester) async {
@@ -93,15 +92,7 @@ void main() {
           final content = find.text(
             location ? l10n.latitude : l10n.basicParametersTitle,
           );
-          expect(
-            content.hitTestable(),
-            initiallyOpen ? findsOneWidget : findsNothing,
-          );
-          if (initiallyOpen) {
-            await tester.tap(title);
-            await tester.pumpAndSettle();
-            expect(content.hitTestable(), findsNothing);
-          }
+          expect(content.hitTestable(), findsNothing);
           await tester.tap(title);
           await tester.pumpAndSettle();
           expect(content.hitTestable(), findsOneWidget);
