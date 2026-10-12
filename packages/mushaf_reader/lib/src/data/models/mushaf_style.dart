@@ -144,7 +144,7 @@ class MushafScale {
   /// Gets the effective Basmalah font size for a given scale.
   double getBasmalahFontSize(double scale) {
     if (basmalahFontSize != null) return basmalahFontSize!;
-    return 21.0 * scale; // Base size is 21
+    return 18.0 * scale; // Keep opening decorations secondary to ayah text.
   }
 
   /// Gets the effective page number font size for a given scale.

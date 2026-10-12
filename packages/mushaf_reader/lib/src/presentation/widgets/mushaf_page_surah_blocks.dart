@@ -49,22 +49,27 @@ abstract final class MushafPageSurahBlocks {
 
       if (renderSurahHeader) {
         widgets.addAll([
-          SurahHeaderWidget(
-            surahData: block.toSurah(),
-            width: width,
-            fontSize: basmalahFontSize,
-            textStyle:
-                mushafStyle.headerSurahNameStyle ?? mushafStyle.surahNameStyle,
-            styleModifier:
-                mushafStyle.headerSurahNameStyleModifier ??
-                mushafStyle.surahNameStyleModifier,
-            customHeaderImageLight: mushafStyle.surahHeaderImage,
-            customHeaderImageDark: mushafStyle.surahHeaderImageDark,
-            isDark: isDark,
-            onTap: onTapSurahHeader,
-            onLongPress: onLongPressSurahHeader,
+          Center(
+            child: SurahHeaderWidget(
+              surahData: block.toSurah(),
+              // Align the ornament with the QCF text measure rather than the
+              // outer page. Its proportional height then leaves room for verses.
+              width: width * 0.8,
+              fontSize: basmalahFontSize,
+              textStyle:
+                  mushafStyle.headerSurahNameStyle ??
+                  mushafStyle.surahNameStyle,
+              styleModifier:
+                  mushafStyle.headerSurahNameStyleModifier ??
+                  mushafStyle.surahNameStyleModifier,
+              customHeaderImageLight: mushafStyle.surahHeaderImage,
+              customHeaderImageDark: mushafStyle.surahHeaderImageDark,
+              isDark: isDark,
+              onTap: onTapSurahHeader,
+              onLongPress: onLongPressSurahHeader,
+            ),
           ),
-          SizedBox(height: 12 * scale),
+          SizedBox(height: 8 * scale),
         ]);
       }
 
@@ -87,13 +92,10 @@ abstract final class MushafPageSurahBlocks {
         );
       }
 
-      final compactNewlines = isRangeMode &&
+      final compactNewlines =
+          isRangeMode &&
           !preserveMushafLineBreaks &&
-          MushafPageRangeLayout.shouldCompactNewlines(
-            data,
-            block,
-            selectedIds,
-          );
+          MushafPageRangeLayout.shouldCompactNewlines(data, block, selectedIds);
 
       widgets.add(
         PageAyahWidget(

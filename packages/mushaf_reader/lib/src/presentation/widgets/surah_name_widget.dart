@@ -52,7 +52,7 @@ class SurahNameWidget extends StatefulWidget {
 
   /// The font size for the Surah name.
   ///
-  /// If not provided, uses the base Basmalah font size (21).
+  /// If not provided, uses the base Basmalah font size (18).
   final double? fontSize;
 
   /// Optional custom text style.

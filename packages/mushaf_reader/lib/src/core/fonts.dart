@@ -21,7 +21,7 @@ class MushafBaseFontSizes {
   static const double ayah = 28.0;
 
   /// Base font size for Basmalah, Surah names, and Juz markers.
-  static const double basmalah = 21.0;
+  static const double basmalah = 18.0;
 
   /// Base font size for page numbers.
   static const double pageNumber = 20.0;
@@ -249,7 +249,7 @@ class MushafTextStyleMerger {
   ///
   /// [userStyle] - Optional user-provided TextStyle with customizations.
   /// [modifier] - Optional function to modify the resolved style.
-  /// [baseSize] - Base font size before scaling (default: 21.0).
+  /// [baseSize] - Base font size before scaling (default: 18.0).
   /// [scaleFactor] - Scale multiplier to apply to the font size (default: 1.0).
   ///
   /// Returns a [TextStyle] with the QCF4_BSML font and user customizations.

@@ -264,7 +264,7 @@ class _MushafPageState extends State<MushafPage>
   Widget _buildHeader(
     QuranPage data,
     double width,
-    double fontSize,
+    double scale,
     MushafStyle style,
   ) {
     return SizedBox(
@@ -275,7 +275,7 @@ class _MushafPageState extends State<MushafPage>
           if (data.surahs.isNotEmpty)
             SurahNameWidget(
               surahData: data.surahs.first.toSurah(),
-              fontSize: fontSize,
+              fontSize: snapToDevicePixel(context, 16 * scale),
               textStyle: style.surahNameStyle,
               styleModifier: style.surahNameStyleModifier,
               onTap: widget.onTapSurahName,
@@ -283,7 +283,9 @@ class _MushafPageState extends State<MushafPage>
             ),
           JuzWidget(
             number: data.juzNumber,
-            fontSize: fontSize + 20,
+            // Juz glyphs have a smaller ink area than surah-name glyphs.
+            // Scale both labels with the page, including on narrow panes.
+            fontSize: snapToDevicePixel(context, 32 * scale),
             textStyle: style.juzStyle,
             styleModifier: style.juzStyleModifier,
             onTap: widget.onTapJuz,
@@ -383,8 +385,7 @@ class _MushafPageState extends State<MushafPage>
               : (availableHeight.isFinite ? availableHeight : pageHeight),
           child: Column(
             children: [
-              if (headerShown)
-                _buildHeader(data, contentWidth, basmalahFontSize, style),
+              if (headerShown) _buildHeader(data, contentWidth, scale, style),
               SizedBox(height: 8 * scale),
               Expanded(
                 child: SingleChildScrollView(
@@ -458,10 +459,7 @@ class _MushafPageState extends State<MushafPage>
           return pageContent;
         }
 
-        return ColoredBox(
-          color: style.backgroundColor!,
-          child: pageContent,
-        );
+        return ColoredBox(color: style.backgroundColor!, child: pageContent);
       },
     );
   }
@@ -504,8 +502,7 @@ class _MushafPageState extends State<MushafPage>
           return;
         }
 
-        final currentSelection =
-            _controller?.selectedAyahId ?? _selectedAyahId;
+        final currentSelection = _controller?.selectedAyahId ?? _selectedAyahId;
         if (currentSelection == ayahId) {
           if (_controller != null) {
             _controller!.clearSelection();
