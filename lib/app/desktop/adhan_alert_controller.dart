@@ -22,20 +22,16 @@ Offset _resolveAdhanAlertCompactOrigin({
 }) {
   const size = kAdhanAlertCompactSize;
   const inset = _adhanAlertScreenInset;
-  return switch (alertPosition) {
-    AdhanAlertPosition.center => Offset(
-      screen.left + (screen.width - size.width) / 2,
-      screen.top + (screen.height - size.height) / 2,
-    ),
-    AdhanAlertPosition.topEnd => Offset(
-      screen.right - size.width - inset,
-      screen.top + inset,
-    ),
-    AdhanAlertPosition.topStart => Offset(
-      screen.left + inset,
-      screen.top + inset,
-    ),
-  };
+  return Offset(
+    screen.left +
+        inset +
+        (screen.width - size.width - 2 * inset) *
+            alertPosition.horizontalFraction,
+    screen.top +
+        inset +
+        (screen.height - size.height - 2 * inset) *
+            alertPosition.verticalFraction,
+  );
 }
 
 /// In-app prayer alert channel.

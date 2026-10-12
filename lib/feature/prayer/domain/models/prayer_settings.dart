@@ -124,6 +124,13 @@ abstract class PrayerSettings with _$PrayerSettings {
     )
     required Location location,
 
+    /// Whether the prayer clock follows the device, independently of the city.
+    /// Older profiles follow the device unless they explicitly saved an override.
+    @JsonKey(name: 'use_system_timezone') @Default(true) bool useSystemTimezone,
+
+    /// A timezone was detected or explicitly chosen. New profiles wait for it.
+    @JsonKey(name: 'timezone_resolved') @Default(true) bool timezoneResolved,
+
     /// When true, GPS auto-updates coordinates and related fields.
     @JsonKey(name: 'auto_location') @Default(false) bool autoLocation,
   }) = _PrayerSettings;
@@ -140,14 +147,16 @@ abstract class PrayerSettings with _$PrayerSettings {
       coordinates: Coordinates(0, 0),
       locationName: LocationConstants.defaultLocationName,
       location: tz.getLocation('Asia/Riyadh'),
+      useSystemTimezone: true,
+      timezoneResolved: false,
     );
   }
 
   /// Creates a [PrayerSettings] instance from a JSON map.
-  factory fromJson(Map<String, dynamic> json) =>
-      _$PrayerSettingsFromJson(json);
+  factory fromJson(Map<String, dynamic> json) => _$PrayerSettingsFromJson(json);
 
   /// Whether [coordinates] are set to a real location (not the 0,0 sentinel).
   bool get isLocationReady =>
+      timezoneResolved &&
       !(coordinates.latitude == 0 && coordinates.longitude == 0);
 }

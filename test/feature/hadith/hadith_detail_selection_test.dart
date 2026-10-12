@@ -2,6 +2,10 @@
 // ignore_for_file: riverpod_lint/scoped_providers_should_specify_dependencies
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_reader_text.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -31,6 +35,7 @@ Widget _wrap(
   DetailedHadith hadith, {
   required Key key,
   Locale locale = const Locale('en'),
+  double height = 300,
 }) {
   return ProviderScope(
     child: FTheme(
@@ -47,7 +52,7 @@ Widget _wrap(
         home: Scaffold(
           body: SizedBox(
             width: 360,
-            height: 300,
+            height: height,
             child: HadithSelectedDetailsPane(key: key, hadith: hadith),
           ),
         ),
@@ -94,6 +99,91 @@ class _Settings extends HadithScreenSettingsNotifier {
 }
 
 void main() {
+  testWidgets('Arabic mouse drag keeps the pointer anchor in the reader', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const text =
+        'نص تجريبي لاختبار تحديد الكلمات العربية في السطر الأول ثم السطر التالي 123.';
+    const record = DetailedHadith(
+      hadith: text,
+      rawi: 'Fixture',
+      mohdith: 'Fixture',
+      book: 'Fixture',
+      numberOrPage: '1',
+      grade: 'Fixture',
+    );
+    await tester.pumpWidget(
+      _wrap(
+        record,
+        key: const ValueKey('mouse-reader'),
+        locale: const Locale('ar'),
+        height: 1000,
+      ),
+    );
+    await tester.pumpAndSettle();
+    final reader = find.byType(HadithReaderText);
+    final paragraph = tester.renderObject<RenderParagraph>(
+      find.descendant(of: reader, matching: find.byType(RichText)),
+    );
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData')
+          copied = (call.arguments as Map)['text'] as String;
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    final area = tester.state<SelectionAreaState>(
+      find.descendant(of: reader, matching: find.byType(SelectionArea)),
+    );
+    for (final offsets in [(5, 20), (20, 5), (12, 48)]) {
+      Offset point(int offset) => paragraph.localToGlobal(
+        paragraph.getOffsetForCaret(TextPosition(offset: offset), Rect.zero) +
+            const Offset(0, 14),
+      );
+      final start = point(offsets.$1);
+      final end = point(offsets.$2);
+      final expectedStart = paragraph
+          .getPositionForOffset(paragraph.globalToLocal(start))
+          .offset;
+      final expectedEnd = paragraph
+          .getPositionForOffset(paragraph.globalToLocal(end))
+          .offset;
+      final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+      await mouse.addPointer(location: start);
+      await mouse.down(start);
+      await tester.pump(const Duration(milliseconds: 100));
+      for (var step = 1; step <= 10; step++) {
+        await mouse.moveTo(Offset.lerp(start, end, step / 10)!);
+        await tester.pump(const Duration(milliseconds: 40));
+      }
+      await mouse.up();
+      await tester.pump();
+      area.selectableRegion.copySelection(SelectionChangedCause.toolbar);
+      await tester.pump();
+      expect(
+        copied,
+        text.substring(
+          expectedStart < expectedEnd ? expectedStart : expectedEnd,
+          expectedStart > expectedEnd ? expectedStart : expectedEnd,
+        ),
+      );
+      await mouse.removePointer();
+      await tester.pump(const Duration(seconds: 1));
+    }
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
   testWidgets('alternate card opens its own selected detail destination', (
     tester,
   ) async {

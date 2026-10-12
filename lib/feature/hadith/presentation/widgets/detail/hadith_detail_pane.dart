@@ -1,3 +1,4 @@
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_display_text.dart';
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -6,6 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/custom_cards.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_reader_text.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_identity.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_judgment.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
@@ -303,9 +305,8 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               spacing: AppSpacing.md,
               children: [
-                SelectableText(
+                HadithReaderText(
                   hadithDisplayText(hadith),
-                  textDirection: TextDirection.rtl,
                   style: theme.typography.body.xl.copyWith(
                     fontSize: (theme.typography.body.xl.fontSize ?? 20) * 1.2,
                     height: 1.8,
@@ -375,7 +376,7 @@ class HadithSelectedDetailsPane extends HookConsumerWidget {
                     children: [
                       for (final (i, section) in sections.indexed)
                         FTabEntry(
-                          label: Text(section.label),
+                          label: NonSelectable(child: Text(section.label)),
                           child: i == active
                               ? sectionBody!
                               : const SizedBox.shrink(),

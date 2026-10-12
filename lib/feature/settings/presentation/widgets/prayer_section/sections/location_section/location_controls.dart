@@ -1,10 +1,8 @@
 import 'dart:async';
-
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
-import 'package:tawaq/core/widgets/localized_search_clear_button.dart';
 import 'package:forui_hooks/forui_hooks.dart';
 import 'package:free_map/free_map.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -14,6 +12,7 @@ import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/location_extensions.dart';
 import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/core/widgets/localized_search_clear_button.dart';
 import 'package:tawaq/core/widgets/select_empty_content.dart';
 import 'package:tawaq/feature/prayer/domain/models/location_constants.dart';
 import 'package:tawaq/feature/prayer/domain/models/location_failure.dart';
@@ -24,6 +23,7 @@ import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.d
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/theme.dart';
 import 'package:timezone/timezone.dart' as tz;
+
 
 /// Default map center (Makkah).
 const kDefaultCenter = LatLng(21.4362544, 39.6817387);
@@ -77,18 +77,14 @@ bool manualLocationControlsEnabled(WidgetRef ref) {
   return ready && !autoLocation;
 }
 
-/// City search and timezone controls in a responsive row.
+/// Primary place search. Timezone policy lives under Advanced.
 class LocationControlsRow extends ConsumerWidget {
   /// Creates [LocationControlsRow].
   const new({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return const NonSelectable(
-      child: ResponsiveFieldRow(
-        children: [PlaceSearchField(), TimezoneSelect()],
-      ),
-    );
+    return const NonSelectable(child: PlaceSearchField());
   }
 }
 
@@ -307,7 +303,7 @@ class _PlaceSearchResults extends StatelessWidget {
 }
 
 /// Timezone select with system-timezone shortcut.
-class TimezoneSelect extends ConsumerWidget {
+class TimezoneSelect extends HookConsumerWidget {
   /// Creates [TimezoneSelect].
   const new({super.key});
 
@@ -326,71 +322,101 @@ class TimezoneSelect extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final enabled = manualLocationControlsEnabled(ref);
-    final location = ref.watch(
-      prayerSettingsProvider.select((v) => v.value?.location),
-    );
+    final settings = ref.watch(prayerSettingsProvider).value;
+    final pending = useState(false);
+    final enabled = settings != null && !pending.value;
+    final location = settings?.timezoneResolved == true
+        ? settings?.location
+        : null;
     final l10n = context.l10n;
     final colors = context.theme.colors;
 
-    final locateButton = FTooltip(
-      tipBuilder: (_, _) => Text(l10n.useSystemTimezone),
-      child: SettingsSemantics.iconAction(
-        label: SettingsSemantics.useSystemTimezoneAction(l10n),
-        enabled: enabled,
-        child: FButton.icon(
-          semanticsTooltip: l10n.useSystemTimezone,
-          variant: .ghost,
-          onPress: enabled ? () => unawaited(_setTimezone(context, ref)) : null,
-          child: const Icon(FLucideIcons.locate),
-        ),
-      ),
-    );
+    Future<void> useDevice(bool value) async {
+      if (settings == null || pending.value) return;
+      pending.value = true;
+      try {
+        await _setTimezone(context, ref, value ? null : settings.location);
+      } finally {
+        if (context.mounted) pending.value = false;
+      }
+    }
 
-    return FSelect<tz.Location>.searchBuilder(
-      enabled: enabled,
-      contentConstraints: selectPopoverPortalConstraints(context),
-      control: .lifted(
-        value: location,
-        onChange: (v) {
-          if (v != null) unawaited(_setTimezone(context, ref, v));
-        },
-      ),
-      label: Text(l10n.timezone),
-      format: (loc) => loc.name,
-      searchFieldProperties: FSelectSearchFieldProperties(
-        hint: l10n.searchForMore,
-      ),
-      prefixBuilder: (_, _, _) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Icon(FLucideIcons.clock, color: colors.secondaryForeground),
-      ),
-      filter: (query) async {
-        final catalog = ref.read(timezoneCatalogProvider);
-        final locations = location == null
-            ? catalog
-            : sortTimezones(locations: catalog, selected: location);
-        return query.isEmpty
-            ? locations
-            : locations.where(
-                (l) => l.name.toLowerCase().contains(query.toLowerCase()),
-              );
-      },
-      contentBuilder: (_, _, data) => data
-          .take(16)
-          .map((l) => FSelectItem(title: Text(l.name), value: l))
-          .toList(),
-      contentEmptyBuilder: (_, _) => buildSelectEmptyContent(context),
-      contentLoadingBuilder: (_, _) => const FCircularProgress(),
-      suffixBuilder: (_, _, _) => Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        spacing: 4,
-        children: [
-          Icon(FLucideIcons.chevronDown, color: colors.primary),
-          locateButton,
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: AppSpacing.sm,
+      children: [
+        FSwitch(
+          label: Text(l10n.useSystemTimezone),
+          value: settings?.useSystemTimezone ?? true,
+          enabled: enabled,
+          onChange: useDevice,
+        ),
+        if (settings != null && !settings.timezoneResolved)
+          FAlert(
+            variant: .destructive,
+            title: Text(l10n.timezone),
+            subtitle: Text(l10n.deviceTimezoneUnavailable),
+          ),
+        if (settings?.useSystemTimezone == true)
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  location?.name ?? l10n.deviceTimezoneUnavailable,
+                  style: context.theme.typography.body.sm,
+                ),
+              ),
+              FButton.icon(
+                variant: .ghost,
+                semanticsTooltip: l10n.retryAction,
+                onPress: enabled ? () => useDevice(true) : null,
+                child: const Icon(FLucideIcons.refreshCw, size: 16),
+              ),
+            ],
+          ),
+        FSelect<tz.Location>.searchBuilder(
+          enabled: enabled && !settings.useSystemTimezone,
+          contentConstraints: selectPopoverPortalConstraints(context),
+          control: .lifted(
+            value: location,
+            onChange: (v) {
+              if (v != null) unawaited(_setTimezone(context, ref, v));
+            },
+          ),
+          label: Text(l10n.timezone),
+          format: (loc) => loc.name,
+          searchFieldProperties: FSelectSearchFieldProperties(
+            hint: l10n.searchForMore,
+          ),
+          prefixBuilder: (_, _, _) => Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Icon(FLucideIcons.clock, color: colors.secondaryForeground),
+          ),
+          filter: (query) async {
+            final catalog = ref.read(timezoneCatalogProvider);
+            final locations = location == null
+                ? catalog
+                : sortTimezones(locations: catalog, selected: location);
+            return query.isEmpty
+                ? locations
+                : locations.where(
+                    (l) => l.name.toLowerCase().contains(query.toLowerCase()),
+                  );
+          },
+          contentBuilder: (_, _, data) => data
+              .take(16)
+              .map((l) => FSelectItem(title: Text(l.name), value: l))
+              .toList(),
+          contentEmptyBuilder: (_, _) => buildSelectEmptyContent(context),
+          contentLoadingBuilder: (_, _) => const FCircularProgress(),
+          suffixBuilder: (_, _, _) => Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            spacing: 4,
+            children: [Icon(FLucideIcons.chevronDown, color: colors.primary)],
+          ),
+        ),
+      ],
     );
   }
 }

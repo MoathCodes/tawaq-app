@@ -2,10 +2,12 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/layout/centered_viewport_shell.dart';
 import 'package:tawaq/core/layout/lazy_tab_content.dart';
 import 'package:tawaq/core/layout/responsive.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/widgets/scroll_overflow_hint_viewport.dart';
 import 'package:tawaq/core/shortcuts/app_shortcut_platform.dart';
 import 'package:tawaq/core/widgets/icon_label.dart';
 import 'package:tawaq/feature/settings/presentation/models/settings_tabs.dart';
@@ -159,10 +161,12 @@ class SettingsScreen extends HookConsumerWidget {
                   for (final tab in tabs)
                     Tab(
                       height: tabsStyle.minHeight,
-                      child: IconLabel(
-                        label: tab.label(l10n),
-                        icon: tab.icon,
-                        excludeIconSemantics: true,
+                      child: NonSelectable(
+                        child: IconLabel(
+                          label: tab.label(l10n),
+                          icon: tab.icon,
+                          excludeIconSemantics: true,
+                        ),
                       ),
                     ),
                 ],
@@ -193,8 +197,7 @@ class SettingsScreen extends HookConsumerWidget {
                 physics: const BouncingScrollPhysics(),
                 children: [
                   for (final (i, tab) in tabs.indexed)
-                    CenteredViewportShell.scrollTab(
-                      maxContentWidth: _maxContentWidth,
+                    _SettingsTabViewport(
                       child: LazyPanelContent.tab(
                         controller: tabController,
                         index: i,
@@ -213,4 +216,23 @@ class SettingsScreen extends HookConsumerWidget {
       ),
     );
   }
+}
+
+/// Each tab owns its scroll position, including when adjacent panels are kept
+/// alive during a swipe. Padding belongs to the content, so it is scrollable.
+class _SettingsTabViewport extends StatelessWidget {
+  const new({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => ScrollOverflowHintViewport(
+    builder: (controller) => CenteredViewportShell.scrollTab(
+      maxContentWidth: SettingsScreen._maxContentWidth,
+      controller: controller,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+        child: child,
+      ),
+    ),
+  );
 }

@@ -71,7 +71,7 @@ void main() {
       );
 
       expect(find.byType(ScopedSelectableRichText), findsOneWidget);
-      expect(find.byType(SelectableText), findsOneWidget);
+      expect(find.byType(SelectionArea), findsOneWidget);
     });
 
     testWidgets('merges qawl, ayah, reference, and commentary into one selectable run', (
@@ -94,7 +94,7 @@ void main() {
       );
 
       expect(find.byType(ScopedSelectableRichText), findsOneWidget);
-      expect(find.byType(SelectableText), findsOneWidget);
+      expect(find.byType(SelectionArea), findsOneWidget);
 
       final richText = tester.widget<ScopedSelectableRichText>(
         find.byType(ScopedSelectableRichText),

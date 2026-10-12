@@ -259,13 +259,15 @@ class FortressStudyPanel extends ConsumerWidget {
                         children: [
                           for (final tab in kinds)
                             .entry(
-                              label: Text(
-                                tab.label(l10n),
-                                softWrap: true,
-                                style: theme.typography.body.xs.copyWith(
-                                  letterSpacing: 0,
+                              label: NonSelectable(
+                                child: Text(
+                                  tab.label(l10n),
+                                  softWrap: true,
+                                  style: theme.typography.body.xs.copyWith(
+                                    letterSpacing: 0,
+                                  ),
+                                  textAlign: TextAlign.center,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
                               child: const SizedBox.shrink(),
                             ),

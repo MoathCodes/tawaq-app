@@ -1,9 +1,7 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 
-/// Builds a minimal scrollbar theme: no track, thin auto-hiding thumb.
-///
-/// The thumb is not pinned (`thumbVisibility` false) so it fades out shortly
-/// after scrolling stops. See [kScrollbarTimeToFade] / [kScrollbarFadeDuration].
+/// A thin desktop thumb that fades after scrolling.
 ScrollbarThemeData tawaqScrollbarTheme(ColorScheme colorScheme) {
   final thumbBase = colorScheme.onSurface;
 
@@ -27,49 +25,10 @@ ScrollbarThemeData tawaqScrollbarTheme(ColorScheme colorScheme) {
   );
 }
 
-/// Delay after the last scroll before the thumb starts fading out.
-///
-/// Kept short so the thumb dismisses almost immediately once scrolling stops.
-const Duration kScrollbarTimeToFade = Duration(milliseconds: 100);
-
-/// Duration of the thumb fade-out animation.
-const Duration kScrollbarFadeDuration = Duration(milliseconds: 150);
-
-/// Minimum scroll overflow before showing a scrollbar thumb.
-const double kScrollbarMinScrollExtent = 512;
-
-/// Minimum overflow as a fraction of the viewport (e.g. 0.08 → 8%).
-const double kScrollbarMinOverflowFraction = 0.08;
-
-/// Hide the thumb when it would cover more than this fraction of the track.
-const double kScrollbarMaxThumbTrackFraction = 0.88;
-
-/// Returns whether a scrollbar would convey useful scroll-position info.
-bool isMeaningfulScroll(ScrollMetrics metrics) {
-  // Extents are null until the scrollable has completed its first layout.
-  if (!metrics.hasContentDimensions) return false;
-
-  final extent = metrics.maxScrollExtent;
-  if (extent <= 0) return false;
-
-  final viewport = metrics.viewportDimension;
-  if (viewport <= 0) return false;
-
-  // A nearly full-height thumb means almost no overflow — not worth showing.
-  if (viewport / (viewport + extent) > kScrollbarMaxThumbTrackFraction) {
-    return false;
-  }
-
-  return extent >= kScrollbarMinScrollExtent &&
-      extent / viewport >= kScrollbarMinOverflowFraction;
-}
-
-/// App-wide scroll behavior with a thin scrollbar thumb on long content only.
-///
-/// The track stays hidden. The thumb appears only when overflow is large enough
-/// that position and remaining content are actually informative.
+/// Transient desktop scrollbars. Persistent overflow hints are screen-owned.
+/// RawScrollbar handles initial and subsequent layout metrics and paints no
+/// thumb when content fits. Keeping it mounted preserves the scroll subtree.
 class TawaqAppScrollBehavior extends MaterialScrollBehavior {
-  /// Creates scroll behavior with minimal, context-aware scrollbars.
   const new();
 
   @override
@@ -78,91 +37,27 @@ class TawaqAppScrollBehavior extends MaterialScrollBehavior {
     Widget child,
     ScrollableDetails details,
   ) {
-    final controller = details.controller;
-    if (controller == null) {
-      return child;
-    }
-
-    return _MeaningfulScrollbar(controller: controller, child: child);
-  }
-}
-
-class _MeaningfulScrollbar extends StatefulWidget {
-  const new({
-    required this.controller,
-    required this.child,
-  });
-
-  final ScrollController controller;
-  final Widget child;
-
-  @override
-  State<_MeaningfulScrollbar> createState() => _MeaningfulScrollbarState();
-}
-
-class _MeaningfulScrollbarState extends State<_MeaningfulScrollbar> {
-  bool _showThumb = false;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_syncThumbVisibility);
-  }
-
-  @override
-  void didUpdateWidget(covariant _MeaningfulScrollbar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller) {
-      oldWidget.controller.removeListener(_syncThumbVisibility);
-      widget.controller.addListener(_syncThumbVisibility);
-      _syncThumbVisibility();
-    }
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_syncThumbVisibility);
-    super.dispose();
-  }
-
-  void _syncThumbVisibility() {
-    if (!widget.controller.hasClients) {
-      if (_showThumb) setState(() => _showThumb = false);
-      return;
-    }
-
-    final show =
-        widget.controller.position.hasContentDimensions &&
-        isMeaningfulScroll(widget.controller.position);
-    if (show != _showThumb) {
-      setState(() => _showThumb = show);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scrollChild = widget.child;
-    if (!_showThumb) {
-      return scrollChild;
-    }
-
-    final scrollbarTheme = Theme.of(context).scrollbarTheme;
-    const states = <WidgetState>{};
-
+    // Scrollable owns an inner selection registrar. Keep paragraph boundaries
+    // inside it, before its aggregate reaches the outer reading region.
+    final selectionChild = SelectionContainer.maybeOf(context) != null
+        ? DesktopSelectionDocument(child: child)
+        : child;
+    if (details.controller == null) return selectionChild;
+    final theme = Theme.of(context).scrollbarTheme;
     return RawScrollbar(
-      controller: widget.controller,
+      controller: details.controller,
       thumbVisibility: false,
-      trackVisibility: false,
       interactive: true,
-      thickness: scrollbarTheme.thickness?.resolve(states),
-      radius: scrollbarTheme.radius,
-      thumbColor: scrollbarTheme.thumbColor?.resolve(states),
-      crossAxisMargin: scrollbarTheme.crossAxisMargin ?? 0,
-      mainAxisMargin: scrollbarTheme.mainAxisMargin ?? 0,
-      minThumbLength: scrollbarTheme.minThumbLength ?? 18,
-      timeToFade: kScrollbarTimeToFade,
-      fadeDuration: kScrollbarFadeDuration,
-      child: scrollChild,
+      timeToFade: const Duration(milliseconds: 100),
+      fadeDuration: const Duration(milliseconds: 150),
+      trackVisibility: false,
+      thickness: theme.thickness?.resolve({}),
+      radius: theme.radius,
+      thumbColor: theme.thumbColor?.resolve({}),
+      crossAxisMargin: theme.crossAxisMargin ?? 2,
+      mainAxisMargin: theme.mainAxisMargin ?? 6,
+      minThumbLength: theme.minThumbLength ?? 20,
+      child: selectionChild,
     );
   }
 }

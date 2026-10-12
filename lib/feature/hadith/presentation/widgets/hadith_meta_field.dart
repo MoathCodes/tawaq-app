@@ -45,12 +45,14 @@ class HadithMetaField extends StatelessWidget {
     if (!hasHadithMetadata(value)) return const SizedBox.shrink();
 
     return switch (layout) {
-      HadithMetaFieldLayout.inline => RichText(
-        text: TextSpan(
-          style: theme.typography.body.sm.copyWith(
-            fontSize: fontSize,
-            color: theme.colors.secondaryForeground,
-          ),
+      HadithMetaFieldLayout.inline => Text.rich(
+        style: theme.typography.body.sm.copyWith(
+          fontSize: fontSize,
+          color: theme.colors.secondaryForeground,
+        ),
+        softWrap: true,
+        overflow: TextOverflow.clip,
+        TextSpan(
           children: [
             TextSpan(
               text: '${context.l10n.hadithFieldLabel(label)} ',

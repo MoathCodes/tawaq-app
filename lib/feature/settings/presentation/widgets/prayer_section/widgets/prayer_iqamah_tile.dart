@@ -1,5 +1,6 @@
 import 'package:adhan_dart/adhan_dart.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -13,70 +14,10 @@ import 'package:tawaq/feature/settings/presentation/provider/iqamah_draft_provid
 import 'package:tawaq/feature/settings/presentation/widgets/settings_semantics.dart';
 import 'package:tawaq/theme/theme.dart';
 
-final _squareShape = RoundedRectangleBorder(
-  borderRadius: BorderRadius.circular(0),
-);
-
-final _iqamahStepperButtonStyle = FButtonStyleDelta.delta(
-  decoration: FVariantsDelta.delta([
-    FVariantOperation.all(
-      DecorationDelta.shapeDelta(shape: _squareShape),
-    ),
-  ]),
-  contentStyle: const FButtonContentStyleDelta.delta(
-    padding: EdgeInsetsGeometryDelta.value(
-      EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-    ),
-  ),
-);
-
-FTextFieldStyleDelta _iqamahStepperFieldStyle({
-  required FColors colors,
-  required Color borderColor,
-  required double borderWidth,
-}) {
-  OutlineInputBorder squareBorder(Color color) => OutlineInputBorder(
-    borderRadius: BorderRadius.zero,
-    borderSide: BorderSide(color: color, width: borderWidth),
-  );
-
-  return FTextFieldStyleDelta.delta(
-    color: FVariantsValueDelta.delta([
-      FVariantValueDeltaOperation.base(colors.card),
-      FVariantValueDeltaOperation.exact(
-        {FTextFieldVariant.disabled},
-        colors.disable(colors.card),
-      ),
-    ]),
-    border: FVariantsValueDelta.delta([
-      FVariantValueDeltaOperation.all(squareBorder(borderColor)),
-      FVariantValueDeltaOperation.exact(
-        {FTextFieldVariant.focused},
-        squareBorder(colors.primary),
-      ),
-      FVariantValueDeltaOperation.exact(
-        {FTextFieldVariant.disabled},
-        squareBorder(colors.disable(colors.border)),
-      ),
-      FVariantValueDeltaOperation.exact(
-        {FTextFieldVariant.error},
-        squareBorder(colors.error),
-      ),
-    ]),
-    contentPadding: const EdgeInsetsGeometryDelta.value(
-      EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-    ),
-  );
-}
-
 /// A row for adjusting the iqamah offset of a single prayer.
 class PrayerIqamahTile extends ConsumerWidget {
   /// Creates a new [PrayerIqamahTile] instance.
-  const new({
-    required this.prayer,
-    required this.allowSigned,
-    super.key,
-  });
+  const new({required this.prayer, required this.allowSigned, super.key});
 
   /// The prayer this row controls.
   final Prayer prayer;
@@ -91,10 +32,7 @@ class PrayerIqamahTile extends ConsumerWidget {
     final l10n = context.l10n;
     final prayerName = prayer.getLocaleName(l10n);
 
-    final label = _PrayerLabel(
-      prayer: prayer,
-      prayerName: prayerName,
-    );
+    final label = _PrayerLabel(prayer: prayer, prayerName: prayerName);
     final stepper = _IqamahStepper(
       prayer: prayer,
       prayerName: prayerName,
@@ -134,10 +72,7 @@ class PrayerIqamahTile extends ConsumerWidget {
 }
 
 class _PrayerLabel extends StatelessWidget {
-  const new({
-    required this.prayer,
-    required this.prayerName,
-  });
+  const new({required this.prayer, required this.prayerName});
 
   final Prayer prayer;
   final String prayerName;
@@ -159,11 +94,7 @@ class _PrayerLabel extends StatelessWidget {
               borderRadius: theme.radii.md,
               border: Border.all(color: colors.border),
             ),
-            child: Icon(
-              prayer.icon,
-              size: 18,
-              color: colors.foreground,
-            ),
+            child: Icon(prayer.icon, size: 18, color: colors.foreground),
           ),
         ),
         Expanded(
@@ -180,7 +111,7 @@ class _PrayerLabel extends StatelessWidget {
   }
 }
 
-class _IqamahStepper extends ConsumerWidget {
+class _IqamahStepper extends HookConsumerWidget {
   const new({
     required this.prayer,
     required this.prayerName,
@@ -209,77 +140,73 @@ class _IqamahStepper extends ConsumerWidget {
     final unitStyle = theme.typography.body.xs.copyWith(
       color: colors.mutedForeground,
     );
-    final borderColor = isUnsaved
-        ? Color.lerp(colors.border, colors.primary, 0.55)!
-        : colors.border;
-    final borderWidth = isUnsaved ? 1.5 : theme.style.borderWidth;
-    final fieldStyle = _iqamahStepperFieldStyle(
-      colors: colors,
-      borderColor: borderColor,
-      borderWidth: borderWidth,
-    );
+    final controller = draft.controller(prayer);
+    useListenable(controller);
+    final canDecrease =
+        enabled && (allowSigned || (int.tryParse(controller.text) ?? 0) > 0);
 
     return NonSelectable(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: colors.card,
-          border: Border.all(color: borderColor, width: isUnsaved ? 1.5 : 1),
-        ),
-        child: IntrinsicHeight(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _StepperIconButton(
-                icon: FLucideIcons.minus,
-                label: SettingsSemantics.decreaseIqamahAction(l10n, prayerName),
-                enabled: enabled,
-                onPress: () => draft.applyDelta(prayer, -1),
-              ),
-              _StepperDivider(color: colors.border),
-              ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 88, maxWidth: 112),
-                child: FTextField(
-                  enabled: enabled,
-                  control: .managed(controller: draft.controller(prayer)),
-                  focusNode: draft.focusNode(prayer),
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  style: fieldStyle,
-                  inputFormatters: [
-                    if (allowSigned)
-                      FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]*$'))
-                    else
-                      FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  onEditingComplete: () => draft.save(context, prayer),
-                  onSubmit: (_) => draft.save(context, prayer),
-                  suffixBuilder: (context, value, child) => Padding(
-                    padding: const EdgeInsetsDirectional.only(end: 6),
-                    child: Text(l10n.minute, style: unitStyle),
-                  ),
-                ),
-              ),
-              _StepperDivider(color: colors.border),
-              _StepperIconButton(
-                icon: FLucideIcons.plus,
-                label: SettingsSemantics.increaseIqamahAction(l10n, prayerName),
-                enabled: enabled,
-                onPress: () => draft.applyDelta(prayer, 1),
-              ),
-              _StepperDivider(color: colors.border),
-              FTooltip(
-                tipBuilder: (context, controller) => Text(l10n.resetToDefaults),
-                child: _StepperIconButton(
-                  semanticsTooltip: l10n.resetToDefaults,
-                  icon: FLucideIcons.rotateCcw,
-                  label: SettingsSemantics.resetIqamahAction(l10n, prayerName),
-                  enabled: enabled,
-                  onPress: () => draft.reset(context, prayer),
-                ),
-              ),
-            ],
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: AppSpacing.xs,
+        children: [
+          _StepperIconButton(
+            icon: FLucideIcons.minus,
+            label: SettingsSemantics.decreaseIqamahAction(l10n, prayerName),
+            enabled: canDecrease,
+            onPress: () => draft.applyDelta(prayer, -1),
           ),
-        ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 88, maxWidth: 112),
+            child: FTextField(
+              enabled: enabled,
+              control: .managed(controller: draft.controller(prayer)),
+              focusNode: draft.focusNode(prayer),
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              style: FTextFieldStyleDelta.delta(
+                border: FVariantsValueDelta.delta([
+                  if (isUnsaved)
+                    FVariantValueDeltaOperation.all(
+                      OutlineInputBorder(
+                        borderRadius: theme.radii.md,
+                        borderSide: BorderSide(color: colors.primary),
+                      ),
+                    ),
+                ]),
+              ),
+              inputFormatters: [
+                if (allowSigned)
+                  FilteringTextInputFormatter.allow(RegExp(r'^-?[0-9]*$'))
+                else
+                  FilteringTextInputFormatter.digitsOnly,
+              ],
+              onEditingComplete: () => draft.save(context, prayer),
+              onSubmit: (_) => draft.save(context, prayer),
+              suffixBuilder: (context, value, child) => Padding(
+                padding: const EdgeInsetsDirectional.only(end: 6),
+                child: Text(l10n.minute, style: unitStyle),
+              ),
+            ),
+          ),
+          _StepperIconButton(
+            icon: FLucideIcons.plus,
+            label: SettingsSemantics.increaseIqamahAction(l10n, prayerName),
+            enabled: enabled,
+            onPress: () => draft.applyDelta(prayer, 1),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          FTooltip(
+            tipBuilder: (context, controller) => Text(l10n.resetToDefaults),
+            child: _StepperIconButton(
+              semanticsTooltip: l10n.resetToDefaults,
+              icon: FLucideIcons.rotateCcw,
+              label: SettingsSemantics.resetIqamahAction(l10n, prayerName),
+              enabled: enabled,
+              onPress: () => draft.reset(context, prayer),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -308,7 +235,6 @@ class _StepperIconButton extends StatelessWidget {
       child: FButton.icon(
         variant: .ghost,
         semanticsTooltip: semanticsTooltip,
-        style: _iqamahStepperButtonStyle,
         onPress: enabled ? onPress : null,
         child: Icon(icon, size: 16),
       ),
@@ -316,28 +242,10 @@ class _StepperIconButton extends StatelessWidget {
   }
 }
 
-class _StepperDivider extends StatelessWidget {
-  const new({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return VerticalDivider(
-      width: 1,
-      thickness: 1,
-      color: color,
-    );
-  }
-}
-
 /// List container for iqamah prayer rows.
 class IqamahPrayerList extends StatelessWidget {
   /// Creates an [IqamahPrayerList].
-  const new({
-    required this.children,
-    super.key,
-  });
+  const new({required this.children, super.key});
 
   /// Prayer rows to display.
   final List<Widget> children;
@@ -349,6 +257,7 @@ class IqamahPrayerList extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         border: Border.all(color: colors.border),
+        borderRadius: context.theme.radii.lg,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

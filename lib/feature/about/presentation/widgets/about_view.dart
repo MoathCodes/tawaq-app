@@ -10,6 +10,7 @@ import 'package:tawaq/core/logging/logger_provider.dart';
 import 'package:tawaq/feature/about/domain/models/about_content.dart';
 import 'package:tawaq/feature/about/presentation/about_strings.dart';
 import 'package:tawaq/gen/assets.gen.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// The scrollable content of the about dialog.
@@ -191,7 +192,10 @@ Future<void> _openAboutLink(BuildContext context, String url) async {
     context: context,
     builder: (dialogContext) => AlertDialog(
       title: Text(AboutStrings.linkFailed.resolve(context)),
-      content: SelectableText(url),
+      content: ScopedSelectableText(
+        url,
+        style: context.theme.typography.body.md,
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),

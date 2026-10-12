@@ -2,16 +2,64 @@ import 'dart:async';
 
 import 'package:dorar_hadith/dorar_hadith.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/rendering.dart';
 import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/feature/hadith/presentation/widgets/detail/hadith_sharh_text.dart';
+import 'package:tawaq/feature/hadith/presentation/widgets/hadith_meta_field.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/hadith/presentation/provider/hadith_provider.dart';
 import 'package:tawaq/l10n/app_localizations.dart';
 import 'package:tawaq/theme/app_theme_builder.dart';
 import 'package:tawaq/theme/theme_model.dart';
 
 void main() {
+  testWidgets('compact and wide metadata join the reading selection', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      FTheme(
+        data: buildAppTheme(
+          palette: AppPalette.neutral,
+          themeMode: ThemeMode.light,
+          touch: false,
+          textScale: 1,
+        ),
+        child: MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const Scaffold(
+            body: DesktopSelectionArea(
+              child: Column(
+                children: [
+                  HadithMetaField(
+                    label: 'Source',
+                    value: 'Compact source',
+                    layout: HadithMetaFieldLayout.inline,
+                  ),
+                  HadithMetaField(label: 'Source', value: 'Wide source'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final paragraphs = tester.renderObjectList<RenderParagraph>(
+      find.descendant(
+        of: find.byType(HadithMetaField),
+        matching: find.byType(RichText),
+      ),
+    );
+    expect(paragraphs, hasLength(3));
+    expect(
+      paragraphs.every((paragraph) => paragraph.registrar != null),
+      isTrue,
+    );
+  }, variant: TargetPlatformVariant.only(TargetPlatform.linux));
+
   testWidgets('shared pending explanation uses the current selection origin', (
     tester,
   ) async {

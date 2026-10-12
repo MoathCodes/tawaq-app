@@ -4,10 +4,14 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
+import 'package:tawaq/theme/app_theme_builder.dart';
+import 'package:tawaq/theme/theme_model.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/recitation_provider.dart';
@@ -54,7 +58,19 @@ void main() {
   Widget host(Widget child) => UncontrolledProviderScope(
     container: container,
     child: MaterialApp(
-      home: Scaffold(body: QuranReadingShortcuts(child: child)),
+      home: FTheme(
+        data: buildAppTheme(
+          palette: AppPalette.neutral,
+          themeMode: ThemeMode.light,
+          touch: false,
+          textScale: 1,
+        ),
+        child: Scaffold(
+          body: DesktopSelectionArea(
+            child: QuranReadingShortcuts(child: child),
+          ),
+        ),
+      ),
     ),
   );
 
@@ -100,7 +116,14 @@ void main() {
   testWidgets('readonly prose keeps Up and Down for ayah selection', (
     tester,
   ) async {
-    await tester.pumpWidget(host(const SelectableText('Fixture prose')));
+    await tester.pumpWidget(
+      host(
+        const ScopedSelectableText(
+          'Fixture prose',
+          style: TextStyle(fontSize: 20),
+        ),
+      ),
+    );
     await tester.tap(find.text('Fixture prose'));
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);

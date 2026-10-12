@@ -2981,4 +2981,41 @@ class AppLocalizationsEn extends AppLocalizations {
   String fortressExportDetailFailed(int item, String field) {
     return 'Could not load $field for item $item. Retry, or deselect this field to omit it.';
   }
+
+  @override
+  String get deviceTimezoneUnavailable =>
+      'Device timezone could not be detected. Retry or choose a timezone manually.';
+
+  @override
+  String get onboardingSetupSection => 'Setup';
+
+  @override
+  String get alertPositionPreview => 'Alert preview';
+
+  @override
+  String get alertPositionPreviewDisabled =>
+      'Enable in-app alerts to use this position.';
+
+  @override
+  String get hadithSavedEmptyTitle => 'No saved hadith yet';
+
+  @override
+  String get hadithSavedEmptyHint =>
+      'Use the bookmark button on a hadith to keep it here.';
+
+  @override
+  String get hadithBrowseAction => 'Browse hadith';
+
+  @override
+  String get hadithSearchEmptyHint =>
+      'Try another phrase or adjust your search filters.';
+
+  @override
+  String get hadithEditSearchAction => 'Edit search';
+
+  @override
+  String get notificationsSummaryEnabled => 'Enabled';
+
+  @override
+  String get notificationsSummaryDisabled => 'Off';
 }

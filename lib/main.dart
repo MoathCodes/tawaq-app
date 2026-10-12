@@ -1,6 +1,8 @@
 /// The entry point of the application.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_driver/driver_extension.dart';
@@ -189,7 +191,7 @@ class TawaqApp extends ConsumerWidget {
     final appRouter = ref.watch(appRouterProvider);
     final langCode = ref.watch(localeProvider).value ?? 'en';
     final themeMode = ref.watch(
-      themeProvider.select((t) => t.value?.themeMode ?? ThemeMode.light),
+      themeProvider.select((t) => t.value?.themeMode ?? ThemeMode.system),
     );
     final appTheme = ref.watch(appThemeDataProvider);
     final locale = Locale(langCode);
@@ -256,29 +258,41 @@ class _AutoLocationLifecycleState
     extends ConsumerState<_AutoLocationLifecycle> {
   late final AppLifecycleListener _listener;
   var _refreshing = false;
+  Timer? _timezoneTimer;
 
   @override
   void initState() {
     super.initState();
     _listener = AppLifecycleListener(onResume: _onResume);
+    _timezoneTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        unawaited(_refresh(includeLocation: false));
+      }
+    });
   }
 
   @override
   void dispose() {
+    _timezoneTimer?.cancel();
     _listener.dispose();
     super.dispose();
   }
 
-  Future<void> _onResume() async {
+  Future<void> _onResume() => _refresh(includeLocation: true);
+
+  Future<void> _refresh({required bool includeLocation}) async {
     if (_refreshing) return;
     final settings = ref.read(prayerSettingsProvider).value;
-    if (settings == null || !settings.autoLocation) return;
+    if (settings == null) return;
 
     _refreshing = true;
     try {
-      await ref
-          .read(prayerSettingsProvider.notifier)
-          .applyCurrentDeviceLocation();
+      final notifier = ref.read(prayerSettingsProvider.notifier);
+      await Future.wait([
+        if (settings.useSystemTimezone) notifier.refreshSystemTimezone(),
+        if (includeLocation && settings.autoLocation)
+          notifier.applyCurrentDeviceLocation(),
+      ]);
     } on Object catch (error, stack) {
       ref
           .read(loggerProvider)

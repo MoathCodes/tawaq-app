@@ -48,6 +48,11 @@ void main() {
     }
     expect(appPaletteFromJson('unknown'), AppPalette.manuscript);
     expect(ThemePrefs.defaults().appPalette, AppPalette.manuscript);
+    expect(ThemePrefs.defaults().themeMode, ThemeMode.system);
+    for (final mode in ThemeMode.values) {
+      final saved = ThemePrefs.defaults().copyWith(themeMode: mode);
+      expect(ThemePrefs.fromJson(saved.toJson()).themeMode, mode);
+    }
   });
 
   group('settingsStorage gate', () {

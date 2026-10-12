@@ -192,24 +192,28 @@ class FortressBrowseSidebar extends HookConsumerWidget {
                     ),
                     children: [
                       FTabEntry(
-                        label: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          spacing: AppSpacing.sm,
-                          children: [
-                            const Icon(FLucideIcons.bookOpenText, size: 16),
-                            Flexible(child: Text(l10n.fortressAllChapters)),
-                          ],
+                        label: NonSelectable(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            spacing: AppSpacing.sm,
+                            children: [
+                              const Icon(FLucideIcons.bookOpenText, size: 16),
+                              Flexible(child: Text(l10n.fortressAllChapters)),
+                            ],
+                          ),
                         ),
                         child: const SizedBox.shrink(),
                       ),
                       FTabEntry(
-                        label: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          spacing: AppSpacing.sm,
-                          children: [
-                            const Icon(FLucideIcons.bookmark, size: 16),
-                            Flexible(child: Text(l10n.fortressFavorites)),
-                          ],
+                        label: NonSelectable(
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            spacing: AppSpacing.sm,
+                            children: [
+                              const Icon(FLucideIcons.bookmark, size: 16),
+                              Flexible(child: Text(l10n.fortressFavorites)),
+                            ],
+                          ),
                         ),
                         child: const SizedBox.shrink(),
                       ),

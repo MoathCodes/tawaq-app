@@ -7,6 +7,7 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/quran/presentation/hooks/quran_ayah_selection.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_mushaf_controller_provider.dart';
 import 'package:tawaq/feature/quran/presentation/providers/quran_screen_settings_provider.dart';
@@ -99,6 +100,10 @@ class QuranReadingShortcuts extends HookConsumerWidget {
       return () => FocusManager.instance.removeEarlyKeyEventHandler(handle);
     }, [controller, focus]);
 
-    return Focus(focusNode: focus, autofocus: true, child: child);
+    return DesktopSelectionFocusAnchor(
+      focusNode: focus,
+      autofocus: true,
+      child: child,
+    );
   }
 }

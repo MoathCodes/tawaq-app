@@ -10,7 +10,7 @@ part 'theme_model.freezed.dart';
 final defaultTheme = ThemeSettings(
   appPalette: AppPalette.manuscript,
   colorScheme: ManuscriptTheme.lightManuscript.desktop,
-  themeMode: ThemeMode.light,
+  themeMode: ThemeMode.system,
 );
 
 final Map<String, List<FPlatformThemeData>> _palettesData = {

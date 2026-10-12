@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:forui/forui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
+import 'package:tawaq/core/utils/reduce_motion.dart';
 import 'package:tawaq/theme/theme.dart';
 
 /// Minimum remaining scroll extent before the “more below” hint appears.
@@ -43,12 +46,45 @@ class _ScrollOverflowHintViewportState
     extends State<ScrollOverflowHintViewport> {
   late final ScrollController _controller;
   var _showChip = false;
+  var _syncScheduled = false;
+
+  void _scheduleSync() {
+    if (_syncScheduled) return;
+    _syncScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncScheduled = false;
+      _syncHintVisibility();
+    });
+    // Metrics may arrive during post-frame callbacks. Drive the next frame
+    // so that initial or asynchronously added overflow needs no user scroll.
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  void _scrollDown() {
+    if (!_controller.hasClients) return;
+    final position = _controller.position;
+    final target = (position.pixels + position.viewportDimension * 0.75).clamp(
+      position.minScrollExtent,
+      position.maxScrollExtent,
+    );
+    if (reduceMotion(context)) {
+      _controller.jumpTo(target);
+    } else {
+      unawaited(
+        _controller.animateTo(
+          target,
+          duration: context.theme.durations.normal,
+          curve: Curves.easeOut,
+        ),
+      );
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _controller = ScrollController()..addListener(_syncHintVisibility);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncHintVisibility());
+    _scheduleSync();
   }
 
   @override
@@ -95,7 +131,10 @@ class _ScrollOverflowHintViewportState
   }
 
   bool _shouldShowHint(ScrollController controller) {
-    if (!widget.showHint || !controller.hasClients) return false;
+    if (!widget.showHint ||
+        !controller.hasClients ||
+        !controller.position.hasContentDimensions)
+      return false;
     final remaining =
         controller.position.maxScrollExtent - controller.position.pixels;
     return remaining > widget.minOverflowExtent;
@@ -105,28 +144,47 @@ class _ScrollOverflowHintViewportState
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final label = widget.hintLabel ?? l10n.scrollMoreHint;
+    final duration = reduceMotion(context)
+        ? Duration.zero
+        : context.theme.durations.fast;
 
     return Stack(
       alignment: Alignment.bottomCenter,
       clipBehavior: Clip.none,
       children: [
-        NotificationListener<ScrollNotification>(
+        NotificationListener<ScrollMetricsNotification>(
           onNotification: (notification) {
-            _syncHintVisibility();
+            if (notification.depth == 0) _scheduleSync();
             return false;
           },
-          child: widget.builder(_controller),
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              if (notification.depth == 0) _syncHintVisibility();
+              return false;
+            },
+            child: widget.builder(_controller),
+          ),
         ),
         IgnorePointer(
-          child: AnimatedOpacity(
-            opacity: _showChip ? 1 : 0,
-            duration: context.theme.durations.fast,
-            child: AnimatedSlide(
-              offset: _showChip ? Offset.zero : const Offset(0, 0.35),
-              duration: context.theme.durations.fast,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                child: _ScrollMoreHintChip(label: label),
+          ignoring: !_showChip,
+          child: ExcludeFocus(
+            excluding: !_showChip,
+            child: ExcludeSemantics(
+              excluding: !_showChip,
+              child: AnimatedOpacity(
+                opacity: _showChip ? 1 : 0,
+                duration: duration,
+                child: AnimatedSlide(
+                  offset: _showChip ? Offset.zero : const Offset(0, 0.35),
+                  duration: duration,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: _ScrollMoreHintChip(
+                      label: label,
+                      onPress: _scrollDown,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -137,9 +195,10 @@ class _ScrollOverflowHintViewportState
 }
 
 class _ScrollMoreHintChip extends StatelessWidget {
-  const new({required this.label});
+  const new({required this.label, required this.onPress});
 
   final String label;
+  final VoidCallback onPress;
 
   @override
   Widget build(BuildContext context) {
@@ -159,11 +218,10 @@ class _ScrollMoreHintChip extends StatelessWidget {
           ),
         ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs,
-        ),
+      child: FButton(
+        mainAxisSize: MainAxisSize.min,
+        variant: .ghost,
+        onPress: onPress,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           spacing: AppSpacing.xs,

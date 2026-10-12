@@ -21,6 +21,8 @@ class _TestQuranScreenSettings extends QuranScreenSettingsNotifier {
 void main() {
   Widget harness({required TranslationId source, required String text}) {
     return MaterialApp(
+      localizationsDelegates: appLocalizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: TranslationProse(
           source: source,
@@ -50,8 +52,8 @@ void main() {
       tester.widget<Directionality>(prose).textDirection,
       TextDirection.ltr,
     );
-    final selectable = tester.widget<SelectableText>(
-      find.descendant(of: prose, matching: find.byType(SelectableText)),
+    final selectable = tester.widget<Text>(
+      find.descendant(of: prose, matching: find.byType(Text)),
     );
     expect(selectable.textDirection, TextDirection.ltr);
   });
@@ -62,6 +64,8 @@ void main() {
     const sourceText = 'In the name of Allah — [2]';
     await tester.pumpWidget(
       const MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         locale: Locale('ar'),
         home: Directionality(
           textDirection: TextDirection.rtl,
@@ -86,8 +90,8 @@ void main() {
       tester.widget<Directionality>(prose).textDirection,
       TextDirection.ltr,
     );
-    final selectable = tester.widget<SelectableText>(
-      find.descendant(of: prose, matching: find.byType(SelectableText)),
+    final selectable = tester.widget<Text>(
+      find.descendant(of: prose, matching: find.byType(Text)),
     );
     expect(selectable.textDirection, TextDirection.ltr);
     expect(find.text(sourceText), findsOneWidget);
@@ -99,6 +103,8 @@ void main() {
     const sourceText = 'اللہ کے نام سے — [۲]';
     await tester.pumpWidget(
       const MaterialApp(
+        localizationsDelegates: appLocalizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         locale: Locale('en'),
         home: Scaffold(
           body: TranslationProse(
@@ -121,8 +127,8 @@ void main() {
       tester.widget<Directionality>(prose).textDirection,
       TextDirection.rtl,
     );
-    final selectable = tester.widget<SelectableText>(
-      find.descendant(of: prose, matching: find.byType(SelectableText)),
+    final selectable = tester.widget<Text>(
+      find.descendant(of: prose, matching: find.byType(Text)),
     );
     expect(selectable.textDirection, TextDirection.rtl);
   });

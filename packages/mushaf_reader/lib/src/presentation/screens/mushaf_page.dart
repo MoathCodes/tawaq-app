@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
 import 'package:mushaf_reader/src/core/extensions.dart';
+import 'package:mushaf_reader/src/core/mushaf_layout.dart';
 import 'package:mushaf_reader/src/data/repository/hive_quran_repo.dart';
 import 'package:mushaf_reader/src/data/repository/i_quran_repo.dart';
 import 'package:mushaf_reader/src/presentation/mushaf_loading.dart';
-import 'package:mushaf_reader/src/core/mushaf_layout.dart';
+import 'package:mushaf_reader/src/presentation/widgets/mushaf_page_fit.dart';
 import 'package:mushaf_reader/src/presentation/widgets/mushaf_page_surah_blocks.dart';
 
 /// A widget that displays a single page of the Mushaf (Quran).
@@ -69,9 +70,9 @@ import 'package:mushaf_reader/src/presentation/widgets/mushaf_page_surah_blocks.
 ///
 /// ## Layout
 ///
-/// The widget lays out against a reference page of 500×~797 (KFQC
-/// `345×550` aspect), then scales uniformly to the pane (`contain` by
-/// default so the full page is visible without scrolling). Optional
+/// The widget measures the complete rendered page at its reference width,
+/// including headers and the page number, then scales uniformly to the pane
+/// (`contain` by default so the full page is visible without scrolling). Optional
 /// [MushafScale.readingBoost] may grow the page up to width-fit (vertical
 /// scroll only — never horizontal).
 ///
@@ -187,8 +188,6 @@ class _MushafPageState extends State<MushafPage>
   /// Drops stale async results when [page] changes mid-load.
   int _loadGeneration = 0;
 
-  final PageScaleCache _pageScaleCache = PageScaleCache();
-
   @override
   bool get wantKeepAlive => widget.keepAlive;
 
@@ -218,10 +217,6 @@ class _MushafPageState extends State<MushafPage>
         _repository = HiveQuranRepository.acquire();
         _ownsRepository = true;
       }
-    }
-
-    if (widget.page != oldWidget.page || widget.style != oldWidget.style) {
-      _pageScaleCache.clear();
     }
 
     if (widget.keepAlive != oldWidget.keepAlive) {
@@ -296,69 +291,38 @@ class _MushafPageState extends State<MushafPage>
     );
   }
 
-  /// Builds the complete page content with responsive scaling.
-  ///
-  /// Layout uses a fixed design size (reference width ×
-  /// [mushafReferencePageHeight]). Scale is contain-fit by default; optional
-  /// [MushafScale.readingBoost] may grow up to width-fit (vertical scroll
-  /// only — never horizontal).
+  /// Fits the whole printed page, including all headers and its footer.
   Widget _buildPageContent(QuranPage data) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final style = widget.style ?? const MushafStyle();
-        final scaleConfig = style.scale;
-
-        final availableWidth = constraints.maxWidth.isFinite
+        final scale = style.scale;
+        final width = constraints.maxWidth.isFinite
             ? constraints.maxWidth
-            : scaleConfig.referenceWidth;
-        final availableHeight = constraints.maxHeight.isFinite
-            ? constraints.maxHeight
-            : double.infinity;
-
-        final scale = _pageScaleCache.resolve(
-          context: context,
-          scaleConfig: scaleConfig,
-          page: data,
-          availableWidth: availableWidth,
-          availableHeight: availableHeight,
-          hideHeader: widget.hideHeader == true,
-          pageNumber: widget.page,
-          style: style,
-        );
-
-        // Always ≤ availableWidth (width-fit cap in resolvePageScale).
-        final contentWidth = scaleConfig.referenceWidth * scale;
-        final pageHeight = mushafReferencePageHeight * scale;
-        final needsVerticalScroll = pageNeedsVerticalScroll(
-          scale: scale,
-          availableHeight: availableHeight,
-          scaleConfig: scaleConfig,
-        );
-
-        final ayahFontSize = snapToDevicePixel(
-          context,
-          scaleConfig.getAyahFontSize(scale),
-        );
-        final basmalahFontSize = snapToDevicePixel(
-          context,
-          scaleConfig.getBasmalahFontSize(scale),
-        );
-        final pageNumberFontSize = snapToDevicePixel(
-          context,
-          scaleConfig.getPageNumberFontSize(scale),
-        );
-
-        final repository = _repository;
-        final basmalahGlyph = _controller?.basmalah;
-
+            : scale.referenceWidth;
+        final height = constraints.maxHeight;
+        final fixedFonts =
+            scale.ayahFontSize != null ||
+            scale.basmalahFontSize != null ||
+            scale.pageNumberFontSize != null;
+        // Literal font overrides opt out of uniform page scaling. Keep their
+        // pixel sizes and allow the complete page to scroll when needed.
+        final layoutScale = fixedFonts
+            ? resolvePageScale(
+                scaleConfig: scale,
+                availableWidth: width,
+                availableHeight: height,
+              )
+            : 1.0;
+        final layoutWidth = fixedFonts ? width : scale.referenceWidth;
+        final ayahFontSize = scale.getAyahFontSize(layoutScale);
+        final basmalahFontSize = scale.getBasmalahFontSize(layoutScale);
         final defaultAyahStyle = MushafTextStyleMerger.mergeAyahStyle(
           userStyle: style.ayahStyle,
           modifier: style.ayahStyleModifier,
           pageNumber: widget.page,
           baseSize: ayahFontSize,
-          scaleFactor: 1.0,
         );
-
         final activeStyle =
             style.activeAyahStyle != null ||
                 style.activeAyahStyleModifier != null
@@ -367,101 +331,64 @@ class _MushafPageState extends State<MushafPage>
                 modifier: style.activeAyahStyleModifier,
                 pageNumber: widget.page,
                 baseSize: ayahFontSize,
-                scaleFactor: 1.0,
               )
             : defaultAyahStyle.copyWith(backgroundColor: style.highlightColor);
-
-        // Top-align ayah content (printed mushaf style) and pin the page
-        // number to the bottom. Keep only a small pad when the surah/juz
-        // header is hidden — QCF line layout already encodes vertical rhythm.
-        final headerShown = widget.hideHeader != true;
-
-        final pageColumn = SizedBox(
-          width: contentWidth,
-          height: needsVerticalScroll
-              ? pageHeight
-              : (availableHeight.isFinite ? availableHeight : pageHeight),
-          child: Column(
-            children: [
-              if (headerShown)
-                _buildHeader(data, contentWidth, basmalahFontSize, style),
-              SizedBox(height: 8 * scale),
-              Expanded(
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  child: widget.enableAyahHighlight && _controller != null
-                      ? ListenableBuilder(
-                          listenable: _controller!.selection,
-                          builder: (context, _) {
-                            return Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                ..._buildSurahBlocks(
-                                  data,
-                                  contentWidth,
-                                  scale,
-                                  defaultAyahStyle,
-                                  activeStyle,
-                                  style,
-                                  basmalahFontSize,
-                                  addTrailingSpacer: false,
-                                  repository: repository,
-                                  basmalahGlyph: basmalahGlyph,
-                                ),
-                              ],
-                            );
-                          },
-                        )
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            ..._buildSurahBlocks(
-                              data,
-                              contentWidth,
-                              scale,
-                              defaultAyahStyle,
-                              activeStyle,
-                              style,
-                              basmalahFontSize,
-                              addTrailingSpacer: false,
-                              repository: repository,
-                              basmalahGlyph: basmalahGlyph,
-                            ),
-                          ],
-                        ),
-                ),
-              ),
-              PageNumberWidget(
-                page: widget.page,
-                fontSize: pageNumberFontSize,
-                textStyle: style.pageNumberStyle,
-                styleModifier: style.pageNumberStyleModifier,
-              ),
-            ],
+        Widget blocks() => Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ..._buildSurahBlocks(
+              data,
+              layoutWidth,
+              layoutScale,
+              defaultAyahStyle,
+              activeStyle,
+              style,
+              basmalahFontSize,
+              addTrailingSpacer: false,
+              repository: _repository,
+              basmalahGlyph: _controller?.basmalah,
+            ),
+          ],
+        );
+        final page = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.hideHeader != true)
+              _buildHeader(data, layoutWidth, basmalahFontSize, style),
+            const SizedBox(height: 8),
+            if (widget.enableAyahHighlight && _controller != null)
+              ListenableBuilder(
+                listenable: _controller!.selection,
+                builder: (context, _) => blocks(),
+              )
+            else
+              blocks(),
+            PageNumberWidget(
+              page: widget.page,
+              fontSize: scale.getPageNumberFontSize(layoutScale),
+              textStyle: style.pageNumberStyle,
+              styleModifier: style.pageNumberStyleModifier,
+            ),
+          ],
+        );
+        final content = SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: height.isFinite ? height : 0,
+            ),
+            child: fixedFonts
+                ? SizedBox(width: width, child: page)
+                : MushafPageFit(
+                    viewport: Size(width, height),
+                    scale: scale,
+                    child: page,
+                  ),
           ),
         );
-
-        final pageContent = Center(
-          child: needsVerticalScroll
-              ? SizedBox(
-                  width: contentWidth,
-                  height: availableHeight,
-                  child: SingleChildScrollView(
-                    clipBehavior: Clip.hardEdge,
-                    child: pageColumn,
-                  ),
-                )
-              : pageColumn,
-        );
-
-        if (style.backgroundColor == null) {
-          return pageContent;
-        }
-
-        return ColoredBox(
-          color: style.backgroundColor!,
-          child: pageContent,
-        );
+        return style.backgroundColor == null
+            ? content
+            : ColoredBox(color: style.backgroundColor!, child: content);
       },
     );
   }
@@ -504,8 +431,7 @@ class _MushafPageState extends State<MushafPage>
           return;
         }
 
-        final currentSelection =
-            _controller?.selectedAyahId ?? _selectedAyahId;
+        final currentSelection = _controller?.selectedAyahId ?? _selectedAyahId;
         if (currentSelection == ayahId) {
           if (_controller != null) {
             _controller!.clearSelection();

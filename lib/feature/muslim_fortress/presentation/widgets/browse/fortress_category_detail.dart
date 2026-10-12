@@ -156,6 +156,7 @@ class FortressCategoryDetailHeader extends StatelessWidget {
               Expanded(child: titleAndMeta),
               const SizedBox(width: AppSpacing.lg),
               startButton,
+              if (onShareChapter != null) const SizedBox(width: AppSpacing.sm),
               if (onShareChapter != null)
                 FButton.icon(
                   variant: .ghost,

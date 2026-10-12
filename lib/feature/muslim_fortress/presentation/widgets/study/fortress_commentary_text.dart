@@ -34,10 +34,9 @@ class FortressCommentaryText extends HookWidget {
 
   @override
   Widget build(BuildContext context) {
-    final blocks = useMemoized(
-      () => FortressCommentaryParser.parse(text),
-      [text],
-    );
+    final blocks = useMemoized(() => FortressCommentaryParser.parse(text), [
+      text,
+    ]);
     final colors = context.theme.colors;
     final styles = useCommentaryTextStyles(
       baseStyle: baseStyle,
@@ -48,31 +47,30 @@ class FortressCommentaryText extends HookWidget {
     return CommentaryStyleScope(
       styles: styles,
       child: blocks.isEmpty
-          ? _CommentaryInlineText(
-              text: text,
-              textAlign: textAlign,
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var i = 0; i < blocks.length; i++) ...[
-                  if (i > 0)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.md,
+          ? _CommentaryInlineText(text: text, textAlign: textAlign)
+          : DesktopSelectionDocument(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < blocks.length; i++) ...[
+                    if (i > 0)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.md,
+                        ),
+                        child: Divider(
+                          height: 1,
+                          color: colors.border.withAlpha(80),
+                        ),
                       ),
-                      child: Divider(
-                        height: 1,
-                        color: colors.border.withAlpha(80),
-                      ),
+                    _CommentaryBlockView(
+                      block: blocks[i],
+                      colors: colors,
+                      textAlign: textAlign,
                     ),
-                  _CommentaryBlockView(
-                    block: blocks[i],
-                    colors: colors,
-                    textAlign: textAlign,
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
     );
   }
@@ -140,12 +138,7 @@ class _CommentaryInlineText extends StatelessWidget {
     final spans = <InlineSpan>[];
 
     if (listNumber != null) {
-      spans.add(
-        TextSpan(
-          text: '$listNumber — ',
-          style: styles.listMarker,
-        ),
-      );
+      spans.add(TextSpan(text: '$listNumber — ', style: styles.listMarker));
     }
 
     spans.addAll(
@@ -166,11 +159,7 @@ class _CommentaryInlineText extends StatelessWidget {
 }
 
 class _CitationLine extends StatelessWidget {
-  const new({
-    required this.text,
-    required this.style,
-    required this.colors,
-  });
+  const new({required this.text, required this.style, required this.colors});
 
   final String text;
   final TextStyle style;

@@ -17,7 +17,7 @@ const _category = FortressCategory(
   supplicationCount: 5,
 );
 
-Widget _host(double width) {
+Widget _host(double width, {VoidCallback? onStart, VoidCallback? onShare}) {
   return ProviderScope(
     child: FTheme(
       data: buildAppTheme(
@@ -35,7 +35,8 @@ Widget _host(double width) {
             child: FortressCategoryDetailHeader(
               category: _category,
               duaCount: 5,
-              onStartReading: () {},
+              onStartReading: onStart ?? () {},
+              onShareChapter: onShare ?? () {},
             ),
           ),
         ),
@@ -45,6 +46,38 @@ Widget _host(double width) {
 }
 
 void main() {
+  for (final width in [360.0, 720.0]) {
+    testWidgets('reading and share are separated and usable at $width', (
+      tester,
+    ) async {
+      var starts = 0;
+      var shares = 0;
+      await tester.pumpWidget(
+        _host(width, onStart: () => starts++, onShare: () => shares++),
+      );
+      await tester.pumpAndSettle();
+      final buttons = find.byType(FButton);
+      final start = buttons.at(0);
+      final share = buttons.at(1);
+      expect(tester.getRect(start).overlaps(tester.getRect(share)), false);
+      final a = tester.getRect(start);
+      final b = tester.getRect(share);
+      final gap = b.top >= a.bottom
+          ? b.top - a.bottom
+          : a.top >= b.bottom
+          ? a.top - b.bottom
+          : a.left >= b.right
+          ? a.left - b.right
+          : b.left - a.right;
+      expect(gap, greaterThanOrEqualTo(8));
+      await tester.tap(start);
+      await tester.tap(share);
+      await tester.pumpAndSettle();
+      expect(starts, 1);
+      expect(shares, 1);
+    });
+  }
+
   testWidgets('header keeps one action visible when it wraps at narrow width', (
     tester,
   ) async {

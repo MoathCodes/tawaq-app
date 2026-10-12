@@ -139,6 +139,58 @@ void main() {
   setUpAll(registerAudioServiceFallbacks);
 
   group('adhan preview (TAW-72)', () {
+    for (final handoff in [
+      const AudioSessionSnapshot(owner: 'adhan'),
+      AudioSessionSnapshot(
+        owner: 'adhan',
+        lifecycle: AudioSessionLifecycle.paused,
+        track: AudioTrack.asset(
+          id: 'quran:fixture',
+          title: 'Fixture',
+          assetPath: 'fixture.mp3',
+        ),
+      ),
+    ]) {
+      test(
+        'lease acquisition ${handoff.lifecycle.name} keeps the opening preview active',
+        () async {
+          final fixture = _create();
+          fixture.audio.onPlay = (track) {
+            fixture.session.emit(handoff);
+            fixture.session.emit(
+              AudioSessionSnapshot(
+                owner: 'adhan',
+                track: track,
+                lifecycle: AudioSessionLifecycle.playing,
+              ),
+            );
+          };
+          final notifier = fixture.container.read(
+            adhanPreviewProvider.notifier,
+          );
+          await notifier.previewAdhan(
+            AdhanSound.makkah,
+            label: 'Makkah',
+            volume: 80,
+          );
+          expect(
+            fixture.container.read(adhanPreviewProvider).status,
+            AdhanPreviewStatus.playing,
+          );
+          await notifier.previewAdhan(
+            AdhanSound.makkah,
+            label: 'Makkah',
+            volume: 80,
+          );
+          expect(fixture.audio.played, hasLength(1));
+          expect(fixture.audio.stops, 1);
+          expect(
+            fixture.container.read(adhanPreviewProvider).status,
+            AdhanPreviewStatus.idle,
+          );
+        },
+      );
+    }
     test(
       'previews the candidate muezzin voice without touching settings',
       () async {
@@ -202,9 +254,7 @@ void main() {
         volume: 80,
       );
       // Engine still holds our preview track, so cleanup stops it.
-      session.emit(
-        AudioSessionSnapshot(track: audio.played.single),
-      );
+      session.emit(AudioSessionSnapshot(track: audio.played.single));
       await notifier.previewAdhan(
         AdhanSound.makkah,
         label: 'Makkah',

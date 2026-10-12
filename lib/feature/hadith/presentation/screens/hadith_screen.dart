@@ -11,6 +11,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:tawaq/core/layout/persisted_horizontal_split_pane.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/shortcuts/shortcuts.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/feature/hadith/domain/models/hadith_persisted_settings.dart';
 import 'package:tawaq/feature/hadith/presentation/models/hadith_desk_layout.dart';
 import 'package:tawaq/feature/hadith/presentation/models/hadith_session_state.dart';
@@ -476,31 +477,33 @@ class _DeskReader extends ConsumerWidget {
         const SingleActivator(LogicalKeyboardKey.escape): () =>
             ref.read(hadithSessionControllerProvider.notifier).readerBack(),
       },
-      child: ColoredBox(
-        color: context.theme.colors.card,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const HadithDeskBreadcrumbs(reader: true),
-              const SizedBox(height: 10),
-              Expanded(
-                child: selection is ProseSelection
-                    ? HadithProseDetailsPane(
-                        key: ValueKey(selection.key),
-                        id: selection.id,
-                        onClose: onClose,
-                      )
-                    : record == null
-                    ? const SizedBox.shrink()
-                    : HadithSelectedDetailsPane(
-                        key: ValueKey(selection!.key),
-                        hadith: record,
-                        onClose: onClose,
-                      ),
-              ),
-            ],
+      child: DesktopSelectionFocusAnchor(
+        child: ColoredBox(
+          color: context.theme.colors.card,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const HadithDeskBreadcrumbs(reader: true),
+                const SizedBox(height: 10),
+                Expanded(
+                  child: selection is ProseSelection
+                      ? HadithProseDetailsPane(
+                          key: ValueKey(selection.key),
+                          id: selection.id,
+                          onClose: onClose,
+                        )
+                      : record == null
+                      ? const SizedBox.shrink()
+                      : HadithSelectedDetailsPane(
+                          key: ValueKey(selection!.key),
+                          hadith: record,
+                          onClose: onClose,
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

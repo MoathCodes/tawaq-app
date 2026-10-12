@@ -6,6 +6,7 @@ import 'package:forui/forui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:mushaf_reader/mushaf_reader.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/widgets/dialog_shell.dart';
 import 'package:tawaq/core/widgets/f_skeletonizer.dart';
@@ -479,7 +480,7 @@ class _RangeRepeatDialog extends HookConsumerWidget {
                     children: [
                       for (final p in _presetTabOrder)
                         FTabEntry(
-                          label: Text(presetLabel(p)),
+                          label: NonSelectable(child: Text(presetLabel(p))),
                           child: const SizedBox.shrink(),
                         ),
                     ],
@@ -1005,10 +1006,7 @@ _useRangePresetResolver({
 }
 
 class _RangeRepeatSectionLabel extends StatelessWidget {
-  const new({
-    required this.icon,
-    required this.label,
-  });
+  const new({required this.icon, required this.label});
 
   final IconData icon;
   final String label;

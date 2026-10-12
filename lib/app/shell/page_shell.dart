@@ -130,7 +130,9 @@ class PageShell extends ConsumerWidget {
                     ? const NonSelectable(child: ShellBottomNavigationBar())
                     : null,
                 child: RepaintBoundary(
-                  child: ShellShortcutScope(child: wrappedChild),
+                  child: ShellShortcutScope(
+                    child: DesktopSelectionArea(child: wrappedChild),
+                  ),
                 ),
               ),
               Positioned.fill(child: contentOverlay),

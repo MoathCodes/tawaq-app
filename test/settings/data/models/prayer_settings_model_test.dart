@@ -21,10 +21,12 @@ void main() {
         expect(settings.autoLocation, isFalse);
       });
 
-      test('default settings have Riyadh timezone', () {
+      test('default device timezone placeholder is not verified', () {
         final settings = PrayerSettings.defaultSettings();
 
         expect(settings.location.name, 'Asia/Riyadh');
+        expect(settings.useSystemTimezone, true);
+        expect(settings.timezoneResolved, false);
       });
 
       test('default iqamah settings is empty map', () {
@@ -98,10 +100,7 @@ void main() {
 
       test('updates adhan adjustments', () {
         final original = PrayerSettings.defaultSettings();
-        final adjustments = {
-          Prayer.fajr: -2,
-          Prayer.maghrib: 3,
-        };
+        final adjustments = {Prayer.fajr: -2, Prayer.maghrib: 3};
 
         final updated = original.copyWith(adhanAdjustments: adjustments);
 
@@ -127,11 +126,7 @@ void main() {
       });
 
       test('iqamahSettingsFromJson parses prayer map', () {
-        final json = {
-          'fajr': 15,
-          'dhuhr': 20,
-          'asr': 15,
-        };
+        final json = {'fajr': 15, 'dhuhr': 20, 'asr': 15};
 
         final settings = iqamahSettingsFromJson(json);
 
@@ -141,10 +136,7 @@ void main() {
       });
 
       test('iqamahSettingsToJson serializes prayer map', () {
-        final settings = {
-          Prayer.fajr: 15,
-          Prayer.dhuhr: 20,
-        };
+        final settings = {Prayer.fajr: 15, Prayer.dhuhr: 20};
 
         final json = iqamahSettingsToJson(settings);
 
@@ -153,10 +145,7 @@ void main() {
       });
 
       test('adhanAdjustmentsFromJson parses adjustments', () {
-        final json = {
-          'fajr': -5,
-          'maghrib': 3,
-        };
+        final json = {'fajr': -5, 'maghrib': 3};
 
         final adjustments = adhanAdjustmentsFromJson(json);
 
@@ -165,10 +154,7 @@ void main() {
       });
 
       test('adhanAdjustmentsToJson serializes adjustments', () {
-        final adjustments = {
-          Prayer.fajr: -5,
-          Prayer.isha: 2,
-        };
+        final adjustments = {Prayer.fajr: -5, Prayer.isha: 2};
 
         final json = adhanAdjustmentsToJson(adjustments);
 
@@ -182,13 +168,8 @@ void main() {
         final original = PrayerSettings(
           method: const MuslimWorldLeague(),
           is24Hours: true,
-          iqamahSettings: {
-            Prayer.fajr: 15,
-            Prayer.dhuhr: 25,
-          },
-          adhanAdjustments: {
-            Prayer.fajr: -3,
-          },
+          iqamahSettings: {Prayer.fajr: 15, Prayer.dhuhr: 25},
+          adhanAdjustments: {Prayer.fajr: -3},
           coordinates: Coordinates(21.4225, 39.8262), // Mecca
           locationName: 'Mecca',
           location: getLocation('Asia/Riyadh'),

@@ -91,6 +91,7 @@ class AdhanPreview extends _$AdhanPreview {
 
   /// Whether the engine is currently held by our preview track.
   bool _ownsEngine = false;
+  bool _openingTrack = false;
   String? _activeTrackId;
 
   /// Set once per preview run and cleared only by the matching teardown.
@@ -212,9 +213,14 @@ class AdhanPreview extends _$AdhanPreview {
       // Set ownership before the async transport call. The native session can
       // emit `playing` before playTrack resolves.
       _ownsEngine = true;
-      await _player.playTrack(
-        AudioTrack.asset(id: trackId, title: title, assetPath: assetPath),
-      );
+      _openingTrack = true;
+      try {
+        await _player.playTrack(
+          AudioTrack.asset(id: trackId, title: title, assetPath: assetPath),
+        );
+      } finally {
+        _openingTrack = false;
+      }
 
       if (_disposed || generation != _generation) {
         await _stopOwnedTrack(restore: false, expectedTrackId: trackId);
@@ -319,6 +325,13 @@ class AdhanPreview extends _$AdhanPreview {
     if (_disposed || trackId == null || !_ownsEngine) return;
 
     if (next.track?.id != trackId) {
+      // Lease acquisition publishes the previous idle/paused snapshot before
+      // loading the new track. That handoff is not a preview completion.
+      if (_openingTrack &&
+          (next.lifecycle == AudioSessionLifecycle.idle ||
+              next.lifecycle == AudioSessionLifecycle.paused)) {
+        return;
+      }
       final hasOtherTrack = next.track != null;
       _ownsEngine = false;
       _activeTrackId = null;

@@ -9,6 +9,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:super_drag_and_drop/super_drag_and_drop.dart';
+import 'package:tawaq/core/widgets/desktop_selection.dart';
 import 'package:tawaq/core/layout/viewport_dialog_constraints.dart';
 import 'package:tawaq/core/locale/locale_extension.dart';
 import 'package:tawaq/core/utils/clipboard_image.dart';
@@ -382,7 +383,10 @@ class _ShareState extends ConsumerState<FortressShareDialog> {
       control: .lifted(index: selected, onChange: _busy ? (_) {} : change),
       children: [
         for (final label in labels)
-          .entry(label: Text(label), child: const SizedBox.shrink()),
+          .entry(
+            label: NonSelectable(child: Text(label)),
+            child: const SizedBox.shrink(),
+          ),
       ],
     );
     final settings = Column(
