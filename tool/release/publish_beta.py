@@ -10,6 +10,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
@@ -20,6 +21,9 @@ from beta_version import check_not_backwards
 from github_api import gh_json
 from validate_acceptance import verify_file
 
+# Branches whose Build desktop workflow file is trusted to describe a beta. A
+# feature branch can carry its own edited workflow, so its builds are not.
+ALLOWED_BRANCH = re.compile(r'main|release/[^\s/][^\s]*')
 BUILD_WORKFLOW = '.github/workflows/build-desktop.yml'
 OWN_CHECK_JOBS = {'Beta checks: App analyze and test', 'Beta checks: Local package quality'}
 # Not SHA256SUMS: the one-line installer (website/public/install.sh) takes the
@@ -47,6 +51,9 @@ def validate_build_run(run, repo, run_id):
         raise ValueError('Only builds from this repository can be published')
     if run.get('path', '').split('@')[0] != BUILD_WORKFLOW:
         raise ValueError('This run is not a Build desktop run')
+    if not ALLOWED_BRANCH.fullmatch(run.get('head_branch') or ''):
+        raise ValueError(f"Betas can only be published from builds of main or release/* "
+                         f"branches, not {run.get('head_branch')!r}")
     if run.get('event') != 'workflow_dispatch':
         raise ValueError(f"Only manually started builds can be published, not {run.get('event')}")
     if run.get('status') != 'completed':

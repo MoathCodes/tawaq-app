@@ -80,8 +80,12 @@ A beta is one installer built from one commit, saved for 30 days, and published
 later without being rebuilt. Merging a PR runs only the Quality checks: no
 installer, version, tag or release.
 
-**Build:** Actions → Build desktop → Run workflow on the branch or tag to build →
-`action: beta`. The workflow builds the tip of that ref (Windows only for now).
+**Build:** Actions → Build desktop → Run workflow on `main` or a `release/*`
+branch → `action: beta`. The workflow builds the tip of that branch (Windows
+only for now). Any other ref fails in `beta_plan` before the Windows build, and
+Publish beta independently refuses a run whose `head_branch` is not `main` or
+`release/*`: a feature branch carries its own edited workflow file, so its
+manifest is not trusted.
 
 - Version is fixed before the build: the `pubspec.yaml` base without any
   prerelease or build suffix, plus `-beta.<run number>` and `+<run number>`
@@ -129,9 +133,16 @@ prayer tests stay required, and `prayer-api-validation.yml` runs them weekly wit
 timeouts. An Aladhan outage fails the "Aladhan API is reachable" step, not a
 prayer check.
 
-The submodule was not edited. Upstream, tag those tests (`@Tags(['live'])` with a
-`dart_test.yaml` entry) so both sides can use `--exclude-tags live` and
-`--tags live`; then bump the pinned revision and drop the name filter.
+The submodule was not edited. Upstream follow-ups, then bump the pinned revision
+and drop the `--name` filter in `tool/checks.sh`:
+
+- Tag the network tests (`@Tags(['live'])` with a `dart_test.yaml` entry) so both
+  sides can use `--exclude-tags live` and `--tags live`.
+- Fail on a fetch error. `_validatePrayerTimes` (around line 614) prints
+  "Could not fetch API data … skipping validation" and returns, so a test run
+  passes silently when Aladhan cannot be reached. Until that changes, only the
+  workflow's curl pre-check makes an outage visible; an outage that starts
+  mid-run still passes.
 
 ## Timing
 

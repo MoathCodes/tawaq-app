@@ -11,7 +11,7 @@ on:
       action:
         description: >-
           release/patch/build are the coordinated stable pipeline. beta builds one
-          installer from the selected branch or tag tip; publish it with Publish beta.
+          installer from the tip of main or a release/* branch; publish it with Publish beta.
         required: true
         default: 'build'
         type: choice
@@ -478,6 +478,19 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
+      # Fail before the long Windows build: Publish beta only accepts these branches.
+      - name: Require a trusted branch
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          case "$REF_TYPE:$REF_NAME" in
+            branch:main | branch:release/?*) ;;
+            *)
+              echo "::error title=Untrusted ref::Beta builds run only from main or release/* branches, not $REF_TYPE $REF_NAME. Publish beta would refuse them."
+              exit 1 ;;
+          esac
+
       - uses: actions/checkout@v4
 
       - name: Fix the version before building

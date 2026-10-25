@@ -184,6 +184,20 @@ void main() {
       expect((upload['with'] as YamlMap)['name'], 'tawaq-beta-windows-x64');
     });
 
+    test('beta planning fails early outside main and release branches', () {
+      final guard = stepsOf(workflow, 'beta_plan').first;
+      expect(guard['name'], 'Require a trusted branch');
+      final script = guard['run'] as String;
+      expect(script, contains(r'branch:main | branch:release/?*) ;;'));
+      expect(script, contains('exit 1'));
+      // The guard precedes checkout and every other planning step.
+      expect(guard.containsKey('uses'), isFalse);
+      expect(needs('beta_windows'), ['beta_plan']);
+      // Mirrors the authoritative check in publish_beta.py.
+      final publisher = File('tool/release/publish_beta.py').readAsStringSync();
+      expect(publisher, contains(r"r'main|release/[^\s/][^\s]*'"));
+    });
+
     test('beta checks are reused, awaited or run alongside the build, and gate the run', () {
       expect(needs('beta_wait_checks'), ['beta_plan']);
       expect(needs('beta_check_app'), ['beta_plan']);

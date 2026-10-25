@@ -15,7 +15,7 @@ URL = 'https://github.com/owner/app/actions/runs/77'
 
 def build_run(**overrides):
     record = {'id': 77, 'path': '.github/workflows/build-desktop.yml', 'event': 'workflow_dispatch',
-              'status': 'completed', 'conclusion': 'success', 'head_sha': SHA,
+              'head_branch': 'main', 'status': 'completed', 'conclusion': 'success', 'head_sha': SHA,
               'repository': {'full_name': REPO}, 'head_repository': {'full_name': REPO},
               'html_url': URL}
     record.update(overrides)
@@ -41,6 +41,14 @@ class BuildRunTests(unittest.TestCase):
     def test_a_successful_manual_build_in_this_repo_is_accepted(self):
         validate_build_run(build_run(), REPO, '77')
         validate_build_run(build_run(path='.github/workflows/build-desktop.yml@refs/heads/main'), REPO, '77')
+
+    def test_only_main_and_release_branches_are_trusted(self):
+        for branch in ['main', 'release/1.0.0-beta.9', 'release/2.x']:
+            validate_build_run(build_run(head_branch=branch), REPO, '77')
+        for branch in ['feature/faster', 'ci/faster-desktop-betas', 'release', 'release/', 'mainline',
+                       'v1.0.0', 'refs/heads/main', 'main ', '', None]:
+            with self.assertRaisesRegex(ValueError, 'main or release', msg=branch):
+                validate_build_run(build_run(head_branch=branch), REPO, '77')
 
     def test_pull_request_fork_failed_pending_and_foreign_builds_are_refused(self):
         for change in [{'event': 'pull_request'}, {'event': 'push'},
