@@ -1,0 +1,47 @@
+name: Set up pinned Flutter
+description: >-
+  Install the Flutter SDK pinned by .fvmrc and restore the pub package cache.
+  Run after actions/checkout (with submodules) so lockfile hashes cover every package.
+
+runs:
+  using: composite
+  steps:
+    # flutter-action's own pub cache matches only an exact lockfile hash, so one
+    # changed lockfile re-downloads everything. Cache pub ourselves with a
+    # fallback to the nearest earlier cache for the same OS and SDK.
+    - name: Locate pub cache
+      shell: bash
+      run: echo "PUB_CACHE=${{ runner.temp }}/pub-cache" >> "$GITHUB_ENV"
+
+    - name: Install Flutter SDK
+      id: flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version-file: .fvmrc
+        channel: stable
+        cache: true
+        pub-cache: false
+
+    - name: Restore pub cache
+      id: pub
+      uses: actions/cache@v4
+      with:
+        path: ${{ runner.temp }}/pub-cache
+        key: pub-${{ runner.os }}-${{ runner.arch }}-${{ steps.flutter.outputs.VERSION }}-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          pub-${{ runner.os }}-${{ runner.arch }}-${{ steps.flutter.outputs.VERSION }}-
+
+    - name: Report cache hits
+      shell: bash
+      env:
+        SDK_HIT: ${{ steps.flutter.outputs.CACHE-HIT }}
+        PUB_HIT: ${{ steps.pub.outputs.cache-hit }}
+        PUB_MATCH: ${{ steps.pub.outputs.cache-matched-key }}
+      run: |
+        sdk="miss"; [[ "$SDK_HIT" == true ]] && sdk="hit"
+        pub="miss"
+        if [[ "$PUB_HIT" == true ]]; then pub="exact hit"; elif [[ -n "$PUB_MATCH" ]]; then pub="partial hit (older lockfiles)"; fi
+        echo "Flutter SDK cache: $sdk; pub cache: $pub"
+        if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+          echo "- ${RUNNER_OS} setup: Flutter SDK cache ${sdk}, pub cache ${pub}" >> "$GITHUB_STEP_SUMMARY"
+        fi

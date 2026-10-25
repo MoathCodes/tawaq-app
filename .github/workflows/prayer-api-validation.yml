@@ -1,0 +1,46 @@
+name: Live prayer API validation
+
+# Compares adhan_dart against the live Aladhan API. It needs the network, so it
+# is not a required check: an Aladhan outage fails the "Aladhan API is
+# reachable" step and never a prayer check. Offline prayer and calendar tests
+# stay in Quality.
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prayer-api-validation
+  cancel-in-progress: true
+
+jobs:
+  aladhan:
+    name: Compare against Aladhan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-flutter
+
+      - name: Aladhan API is reachable
+        run: |
+          if ! curl --fail --silent --show-error --max-time 20 --retry 2 --retry-delay 5 \
+            --output /dev/null \
+            'http://api.aladhan.com/v1/timings/25-10-2026?latitude=21.4225&longitude=39.8262&method=4'; then
+            echo "::error title=Aladhan API outage::api.aladhan.com did not answer. This is an outage, not a prayer calculation failure."
+            exit 1
+          fi
+
+      - name: Compare calculations with Aladhan
+        working-directory: packages/adhan_dart
+        run: |
+          dart pub get
+          dart test test/api_validation_test.dart \
+            --plain-name 'Prayer Times API Validation validates ' \
+            --timeout 5m
