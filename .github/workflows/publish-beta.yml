@@ -1,0 +1,66 @@
+name: Publish beta
+
+# Turns one saved beta build into a GitHub prerelease. It rebuilds nothing and
+# runs no tests. Only this workflow gets permission to write releases for betas.
+# Stable releases and Shorebird patches stay in Build desktop.
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: 'Exact run ID of a successful Build desktop run with action=beta (the number in its URL). Never "latest".'
+        required: true
+        type: string
+      mode:
+        description: >-
+          rehearse uploads to a private draft, checks the bytes, and deletes the draft.
+          Nothing becomes public. publish makes the verified prerelease public.
+        required: true
+        default: 'rehearse'
+        type: choice
+        options:
+          - rehearse
+          - publish
+
+permissions:
+  contents: read
+
+concurrency:
+  # One publish at a time, so two runs cannot race to the same version.
+  group: publish-beta
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish verified beta
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BUILD_RUN_ID: ${{ inputs.build_run_id }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the build run and its saved installer
+        id: inspect
+        run: python3 tool/release/publish_beta.py inspect --repo "$GITHUB_REPOSITORY" --run-id "$BUILD_RUN_ID"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.inspect.outputs.artifact }}
+          path: beta-input
+          run-id: ${{ inputs.build_run_id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+
+      - name: Verify bytes and checks, stage a private draft, then publish
+        env:
+          MODE: ${{ inputs.mode }}
+        run: |
+          flag=""
+          if [ "$MODE" = rehearse ]; then flag="--rehearse"; fi
+          python3 tool/release/publish_beta.py publish --repo "$GITHUB_REPOSITORY" \
+            --run-id "$BUILD_RUN_ID" --directory beta-input $flag

@@ -67,12 +67,21 @@ exit 0
         environment: {
           'PATH': '${bin.path}:${Platform.environment['PATH']}',
           'FAIL_STAGE': stage,
+          'GITHUB_STEP_SUMMARY': '${root.path}/summary-${stage.hashCode}.md',
         },
       );
       expect(
         result.exitCode,
         stage == 'none' ? 0 : 77,
         reason: '$stage: ${result.stdout}\n${result.stderr}',
+      );
+      // Timing never hides a failure, and a failed run still reports how far it got.
+      final summary = File('${root.path}/summary-${stage.hashCode}.md')
+          .readAsStringSync();
+      expect(summary, contains('| Stage | Seconds |'), reason: stage);
+      expect(
+        summary,
+        contains(stage == 'none' ? '| adhan_dart |' : '| app codegen |'),
       );
     }
   });

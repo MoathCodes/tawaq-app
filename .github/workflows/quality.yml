@@ -1,10 +1,15 @@
 name: Quality
 
+# Required checks for pull requests and main. This workflow never builds an
+# installer, sets a release version, tags, or publishes.
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 concurrency:
   group: quality-${{ github.ref }}
@@ -19,11 +24,7 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: .fvmrc
-          channel: stable
-          cache: true
+      - uses: ./.github/actions/setup-flutter
 
       - name: App checks
         run: bash tool/checks.sh app
@@ -36,11 +37,7 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: .fvmrc
-          channel: stable
-          cache: true
+      - uses: ./.github/actions/setup-flutter
 
       - name: Local package checks
         run: bash tool/checks.sh packages

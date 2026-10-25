@@ -2,12 +2,16 @@ name: Build desktop
 
 on:
   push:
+    # Stable versions only. A published beta tag (v1.0.0-beta.N) must never
+    # start a stable release.
     tags:
-      - 'v*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
     inputs:
       action:
-        description: 'Action to perform'
+        description: >-
+          release/patch/build are the coordinated stable pipeline. beta builds one
+          installer from the tip of main or a release/* branch; publish it with Publish beta.
         required: true
         default: 'build'
         type: choice
@@ -15,6 +19,25 @@ on:
           - release
           - patch
           - build
+          - beta
+      beta_platform:
+        description: 'Beta only: platform to build.'
+        required: false
+        default: 'windows'
+        type: choice
+        options:
+          - windows
+      beta_checks:
+        description: >-
+          Beta only: auto reuses a passed Quality run for this exact commit, waits for a
+          running one, or runs the checks alongside the build. skip marks the build
+          unchecked and Publish beta refuses it.
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - skip
       platforms:
         description: 'Target platforms (comma-separated: macos,windows,linux)'
         required: false
@@ -29,24 +52,25 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: read
+
 concurrency:
-  group: desktop-${{ github.ref }}
+  # Betas queue separately so they cannot displace a pending stable release.
+  group: desktop-${{ github.event.inputs.action == 'beta' && 'beta-' || '' }}${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   checks:
     name: Lint & test
+    if: github.event.inputs.action != 'beta'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: .fvmrc
-          channel: stable
-          cache: true
+      - uses: ./.github/actions/setup-flutter
 
       - name: App and local package checks
         run: bash tool/checks.sh all
@@ -54,7 +78,9 @@ jobs:
   native_gate:
     name: Verify coordinated native candidate
     needs: [checks]
-    if: github.event_name == 'push' || github.event.inputs.action != 'build'
+    if: >-
+      github.event_name == 'push' ||
+      (github.event.inputs.action != 'build' && github.event.inputs.action != 'beta')
     runs-on: ubuntu-latest
     environment: coordinated-desktop-release
     outputs:
@@ -109,11 +135,7 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: .fvmrc
-          channel: stable
-          cache: true
+      - uses: ./.github/actions/setup-flutter
 
       - name: Apply candidate build identity
         run: dart tool/set_pubspec_version.dart --build-number "$BUILD_NUMBER" --build-name "$REVIEWED_BUILD_NAME"
@@ -236,11 +258,7 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: .fvmrc
-          channel: stable
-          cache: true
+      - uses: ./.github/actions/setup-flutter
 
       - name: Apply candidate build identity
         shell: bash
@@ -291,7 +309,7 @@ jobs:
       # Flutter Build (Manual 'build')
       - name: Candidate build (no upload)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
-        run: shorebird release windows --dry-run --flutter-version 3.47.5 --build-number ${{ env.BUILD_NUMBER }}
+        run: flutter build windows --release --build-number ${{ env.BUILD_NUMBER }}
 
       # Packaging (Inno Setup EXE) - Only for release or build (not patch)
       - name: Install Inno Setup
@@ -337,11 +355,7 @@ jobs:
         with:
           submodules: recursive
 
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version-file: .fvmrc
-          channel: stable
-          cache: true
+      - uses: ./.github/actions/setup-flutter
 
       - name: Apply candidate build identity
         run: dart tool/set_pubspec_version.dart --build-number "$BUILD_NUMBER" --build-name "$REVIEWED_BUILD_NAME"
@@ -443,11 +457,215 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  # ---------------------------------------------------------------------------
+  # Beta installers (action=beta). Manual only. They build with plain Flutter
+  # (no Shorebird install or login), never touch pubspec.yaml, never tag or
+  # publish. Publish beta turns a saved build into a prerelease.
+  # ---------------------------------------------------------------------------
+  beta_plan:
+    name: Plan beta
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'beta'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      name: ${{ steps.version.outputs.name }}
+      number: ${{ steps.version.outputs.number }}
+      identity: ${{ steps.version.outputs.identity }}
+      checks_mode: ${{ steps.checks.outputs.mode }}
+      checks_run_id: ${{ steps.checks.outputs.run_id }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      # Fail before the long Windows build: Publish beta only accepts these branches.
+      - name: Require a trusted branch
+        env:
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          case "$REF_TYPE:$REF_NAME" in
+            branch:main | branch:release/?*) ;;
+            *)
+              echo "::error title=Untrusted ref::Beta builds run only from main or release/* branches, not $REF_TYPE $REF_NAME. Publish beta would refuse them."
+              exit 1 ;;
+          esac
+
+      - uses: actions/checkout@v4
+
+      - name: Fix the version before building
+        id: version
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            --jq '.[].tag_name' > "$RUNNER_TEMP/published-tags.txt"
+          python3 tool/release/beta_version.py \
+            --run-number "$GITHUB_RUN_NUMBER" --published-tags "$RUNNER_TEMP/published-tags.txt"
+
+      - name: Find checks for this exact commit
+        id: checks
+        env:
+          BETA_CHECKS: ${{ github.event.inputs.beta_checks }}
+        run: >-
+          python3 tool/release/beta_checks.py find
+          --repo "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --checks "$BETA_CHECKS"
+
+  beta_wait_checks:
+    name: 'Beta checks: wait for Quality'
+    needs: [beta_plan]
+    if: needs.beta_plan.outputs.checks_mode == 'wait'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for the running Quality run of this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QUALITY_RUN_ID: ${{ needs.beta_plan.outputs.checks_run_id }}
+        run: >-
+          python3 tool/release/beta_checks.py wait
+          --repo "$GITHUB_REPOSITORY" --commit "$GITHUB_SHA" --run-id "$QUALITY_RUN_ID"
+
+  # No Quality run exists for this commit (or it failed): run the same checks,
+  # in parallel with the installer build rather than before it.
+  beta_check_app:
+    name: 'Beta checks: App analyze and test'
+    needs: [beta_plan]
+    if: needs.beta_plan.outputs.checks_mode == 'run'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/setup-flutter
+      - run: bash tool/checks.sh app
+
+  beta_check_packages:
+    name: 'Beta checks: Local package quality'
+    needs: [beta_plan]
+    if: needs.beta_plan.outputs.checks_mode == 'run'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/setup-flutter
+      - run: bash tool/checks.sh packages
+
+  beta_windows:
+    name: Beta Windows installer
+    needs: [beta_plan]
+    if: github.event.inputs.action == 'beta' && github.event.inputs.beta_platform == 'windows'
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      BETA_NAME: ${{ needs.beta_plan.outputs.name }}
+      BETA_NUMBER: ${{ needs.beta_plan.outputs.number }}
+      BETA_IDENTITY: ${{ needs.beta_plan.outputs.identity }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: ./.github/actions/setup-flutter
+
+      - name: Codegen (packages then app)
+        shell: bash
+        run: bash tool/codegen.sh
+
+      # The version goes on the command line; pubspec.yaml stays as committed.
+      - name: Build Windows app
+        shell: bash
+        run: flutter build windows --release --build-name "$BETA_NAME" --build-number "$BETA_NUMBER"
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Package EXE installer
+        shell: pwsh
+        run: iscc /DAppVersion="$env:BETA_NAME" /DBuildNumber="$env:BETA_NUMBER" tool/packaging/inno-setup.iss
+
+      - name: Record actual candidate toolchain
+        shell: bash
+        run: >-
+          python3 tool/release/record_toolchain.py --platform windows-x64
+          --output "$RUNNER_TEMP/toolchain-windows-x64.json"
+          --require-clean --build-identity "$BETA_IDENTITY"
+          --tool 'inno-setup=powershell -NoProfile -Command "(Get-Item (Get-Command iscc).Source).VersionInfo.FileVersion"'
+
+      - name: Write build manifest
+        shell: bash
+        env:
+          CHECKS_MODE: ${{ needs.beta_plan.outputs.checks_mode }}
+          CHECKS_RUN_ID: ${{ needs.beta_plan.outputs.checks_run_id }}
+        run: |
+          case "$CHECKS_MODE" in
+            reuse) basis=reused ;;
+            wait) basis=waited ;;
+            run) basis=own; CHECKS_RUN_ID="$GITHUB_RUN_ID" ;;
+            skip) basis=skipped; CHECKS_RUN_ID="" ;;
+            *) echo "Unexpected checks mode: $CHECKS_MODE" >&2; exit 1 ;;
+          esac
+          python3 tool/release/beta_manifest.py write \
+            --repo "$GITHUB_REPOSITORY" --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --commit "$GITHUB_SHA" --version-name "$BETA_NAME" --version-number "$BETA_NUMBER" \
+            --platform windows-x64 --toolchain "$RUNNER_TEMP/toolchain-windows-x64.json" \
+            --checks-basis "$basis" --checks-run-id "$CHECKS_RUN_ID" --directory dist
+          {
+            echo "### Beta $BETA_IDENTITY (windows-x64)"
+            echo "- Commit: \`$GITHUB_SHA\`"
+            echo "- Checks: $basis"
+            if [ "$basis" = skipped ]; then echo "- **UNCHECKED.** Publish beta will refuse this build."; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tawaq-beta-windows-x64
+          path: |
+            dist/tawaq-*-windows-x64-setup.exe
+            dist/beta-manifest.json
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
+
+  # The run is green only if the build and the checks it relies on are green.
+  # Publish beta requires a green run.
+  beta_result:
+    name: Beta result
+    if: always() && github.event.inputs.action == 'beta'
+    needs: [beta_plan, beta_wait_checks, beta_check_app, beta_check_packages, beta_windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the build and the checks it relies on
+        env:
+          MODE: ${{ needs.beta_plan.outputs.checks_mode }}
+          PLAN: ${{ needs.beta_plan.result }}
+          BUILD: ${{ needs.beta_windows.result }}
+          WAIT: ${{ needs.beta_wait_checks.result }}
+          APP: ${{ needs.beta_check_app.result }}
+          PACKAGES: ${{ needs.beta_check_packages.result }}
+        run: |
+          [ "$PLAN" = success ] || { echo "::error::Beta planning: $PLAN"; exit 1; }
+          [ "$BUILD" = success ] || { echo "::error::Beta build: $BUILD"; exit 1; }
+          case "$MODE" in
+            reuse) echo "Relied on a passed Quality run for this exact commit." ;;
+            wait) [ "$WAIT" = success ] || { echo "::error::Quality run: $WAIT"; exit 1; } ;;
+            run)
+              [ "$APP" = success ] && [ "$PACKAGES" = success ] ||
+                { echo "::error::Checks: app $APP, packages $PACKAGES"; exit 1; } ;;
+            skip) echo "::warning::Checks were skipped. This build is unchecked and cannot be published." ;;
+            *) echo "::error::Unexpected checks mode: $MODE"; exit 1 ;;
+          esac
+
   release:
     name: Publish release
     if: >-
-      (startsWith(github.ref, 'refs/tags/v') ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release'))
+      (startsWith(github.ref, 'refs/tags/v') && github.event.inputs.action != 'beta') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'release')
     needs: [checks, native_gate, macos, windows, linux]
     runs-on: ubuntu-latest
     env:
