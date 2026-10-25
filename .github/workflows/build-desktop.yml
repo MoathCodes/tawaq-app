@@ -300,6 +300,7 @@ jobs:
         run: choco install innosetup -y --no-progress
 
       - name: Package EXE installer
+        id: windows_installer
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         shell: pwsh
         run: |
@@ -312,7 +313,7 @@ jobs:
         run: python3 tool/release/record_toolchain.py --platform windows-x64 --output dist/toolchain-windows-x64.json --tool 'shorebird=shorebird --version' --tool 'inno-setup=powershell -NoProfile -Command "(Get-Item (Get-Command iscc).Source).VersionInfo.FileVersion"'
 
       - uses: actions/upload-artifact@v4
-        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
+        if: always() && steps.windows_installer.outcome == 'success'
         with:
           name: tawaq-windows
           path: |

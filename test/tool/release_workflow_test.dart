@@ -48,6 +48,16 @@ void main() {
       expect(candidate['if'] as String, contains("action == 'build'"));
       expect(candidate['run'] as String, contains('flutter build windows'));
       expect(candidate['run'] as String, isNot(contains('shorebird')));
+      final upload = steps.cast<YamlMap>().singleWhere(
+        (step) => (step['uses'] as String? ?? '').startsWith(
+          'actions/upload-artifact',
+        ),
+      );
+      expect(upload['if'] as String, contains('always()'));
+      expect(
+        upload['if'] as String,
+        contains("steps.windows_installer.outcome == 'success'"),
+      );
     },
   );
 

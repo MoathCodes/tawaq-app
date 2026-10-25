@@ -6,12 +6,17 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
 
 
 def run(command):
-    return subprocess.run(command, check=True, stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT, text=True).stdout.strip()
+    executable = shutil.which(command[0])
+    if executable is None:
+        raise FileNotFoundError(f'Command not found on PATH: {command[0]}')
+    return subprocess.run([executable, *command[1:]], check=True,
+                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                          text=True).stdout.rstrip()
 
 
 def read_build_identity(root):
