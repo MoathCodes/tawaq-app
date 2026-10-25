@@ -20,6 +20,11 @@ on:
         required: false
         default: 'macos,windows,linux'
         type: string
+      skip_checks:
+        description: 'Skip checks for a manual Windows-only candidate build'
+        required: false
+        default: false
+        type: boolean
       release_version:
         description: 'Explicit reviewed Shorebird patch target (required for patch).'
         required: false
@@ -36,6 +41,9 @@ concurrency:
 jobs:
   checks:
     name: Lint & test
+    if: >-
+      ${{ !(github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build' &&
+      github.event.inputs.platforms == 'windows' && github.event.inputs.skip_checks == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -228,7 +236,10 @@ jobs:
     name: Windows
     runs-on: windows-latest
     if: >-
-      always() && needs.checks.result == 'success' &&
+      always() && (needs.checks.result == 'success' ||
+      (needs.checks.result == 'skipped' && github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.action == 'build' && github.event.inputs.platforms == 'windows' &&
+      github.event.inputs.skip_checks == 'true')) &&
       (needs.native_gate.result == 'success' || needs.native_gate.result == 'skipped') &&
       (github.event_name == 'push' || contains(github.event.inputs.platforms || 'macos,windows,linux', 'windows'))
     steps:
@@ -250,8 +261,7 @@ jobs:
         if: >-
           github.event_name == 'push' ||
           github.event.inputs.action == 'release' ||
-          github.event.inputs.action == 'patch' ||
-          github.event.inputs.action == 'build'
+          github.event.inputs.action == 'patch'
         uses: shorebirdtech/setup-shorebird@v1
         with:
           cache: true
@@ -310,7 +320,14 @@ jobs:
       - name: Record actual candidate toolchain
         if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.action != 'patch')
         shell: bash
-        run: python3 tool/release/record_toolchain.py --platform windows-x64 --output dist/toolchain-windows-x64.json --tool 'shorebird=shorebird --version' --tool 'inno-setup=powershell -NoProfile -Command "(Get-Item (Get-Command iscc).Source).VersionInfo.FileVersion"'
+        env:
+          DISTRIBUTION_ACTION: ${{ github.event.inputs.action }}
+        run: |
+          TOOL_ARGS=(--tool 'inno-setup=powershell -NoProfile -Command "(Get-Item (Get-Command iscc).Source).VersionInfo.FileVersion"')
+          if [[ "$DISTRIBUTION_ACTION" != build ]]; then
+            TOOL_ARGS+=(--tool 'shorebird=shorebird --version')
+          fi
+          python3 tool/release/record_toolchain.py --platform windows-x64 --output dist/toolchain-windows-x64.json "${TOOL_ARGS[@]}"
 
       - uses: actions/upload-artifact@v4
         if: always() && steps.windows_installer.outcome == 'success'
