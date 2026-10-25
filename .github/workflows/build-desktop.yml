@@ -291,7 +291,7 @@ jobs:
       # Flutter Build (Manual 'build')
       - name: Candidate build (no upload)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'build'
-        run: shorebird release windows --dry-run --flutter-version 3.47.5 --build-number ${{ env.BUILD_NUMBER }}
+        run: flutter build windows --release --build-number ${{ env.BUILD_NUMBER }}
 
       # Packaging (Inno Setup EXE) - Only for release or build (not patch)
       - name: Install Inno Setup

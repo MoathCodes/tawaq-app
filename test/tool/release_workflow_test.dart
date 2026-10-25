@@ -39,6 +39,19 @@ void main() {
   );
 
   test(
+    'Windows candidate builds do not require a Shorebird login',
+    () {
+      final steps = (jobs['windows'] as YamlMap)['steps'] as YamlList;
+      final candidate = steps.cast<YamlMap>().singleWhere(
+        (step) => step['name'] == 'Candidate build (no upload)',
+      );
+      expect(candidate['if'] as String, contains("action == 'build'"));
+      expect(candidate['run'] as String, contains('flutter build windows'));
+      expect(candidate['run'] as String, isNot(contains('shorebird')));
+    },
+  );
+
+  test(
     'public release requires all platforms and verifies privately staged bytes',
     () {
       expect(
