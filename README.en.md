@@ -43,7 +43,7 @@ Tawaq is designed to remain useful without a connection. Prayer times, Quran rea
 
 ## Download and install
 
-Beta releases are available for macOS, Windows, and Linux. Download the right package from the [releases page](https://github.com/MoathCodes/tawaq-app/releases).
+Beta releases are available for macOS, Windows, and Linux. Download the right package from the [releases page](https://github.com/MoathCodes/tawaq-app/releases). Some betas are Windows-only test builds; each release page lists exactly the files it includes.
 
 | Platform | Available package |
 | --- | --- |

@@ -6,12 +6,22 @@ import json
 import os
 from pathlib import Path
 import shlex
+import shutil
 import subprocess
+
+# Stable candidates rewrite the pubspec.yaml version before building. Nothing
+# else may differ from the reviewed commit.
+STABLE_ALLOWED_CHANGES = {' M pubspec.yaml'}
 
 
 def run(command):
-    return subprocess.run(command, check=True, stdout=subprocess.PIPE,
-                          stderr=subprocess.STDOUT, text=True).stdout.strip()
+    executable = shutil.which(command[0])
+    if executable is None:
+        raise FileNotFoundError(f'Command not found on PATH: {command[0]}')
+    # rstrip only: git status --porcelain starts with a meaningful space.
+    return subprocess.run([executable, *command[1:]], check=True,
+                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                          text=True).stdout.rstrip()
 
 
 def read_build_identity(root):
@@ -20,11 +30,23 @@ def read_build_identity(root):
                 if line.startswith('version:'))
 
 
+def check_working_tree(status, allowed=STABLE_ALLOWED_CHANGES):
+    unexpected = [line for line in status.splitlines() if line not in allowed]
+    if unexpected:
+        raise ValueError('Candidate source/generation differs from the reviewed commit: '
+                         + '; '.join(unexpected))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--platform', required=True)
     parser.add_argument('--output', required=True)
     parser.add_argument('--tool', action='append', default=[])
+    parser.add_argument('--require-clean', action='store_true',
+                        help='Beta builds pass the version on the command line and '
+                             'leave the working tree untouched; allow no changes.')
+    parser.add_argument('--build-identity',
+                        help='Version that was built. Defaults to the pubspec.yaml version.')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     os.chdir(root)
@@ -43,10 +65,9 @@ def main():
     locks = {str(path.relative_to(root)): hashlib.sha256(path.read_bytes()).hexdigest()
              for path in [root / 'pubspec.lock', *sorted((root / 'packages').glob('**/pubspec.lock'))]
              if path.is_file()}
-    version = read_build_identity(root)
+    version = args.build_identity or read_build_identity(root)
     status = run(['git', 'status', '--porcelain'])
-    if any(line != ' M pubspec.yaml' for line in status.splitlines()):
-        raise ValueError('Candidate source/generation differs from the reviewed commit')
+    check_working_tree(status, set() if args.require_clean else STABLE_ALLOWED_CHANGES)
     record = {'candidate_sha': run(['git', 'rev-parse', 'HEAD']),
               'platform': args.platform, 'build_identity': version,
               'sdk': pinned, 'flutter': sdk, 'tools': tools,
