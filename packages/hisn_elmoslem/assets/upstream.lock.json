@@ -1,14 +1,14 @@
 {
   "source_repo": "https://github.com/muslimpack/HisnElmoslem_App",
-  "source_commit": "1d52411b6d8457630693a9394190ef30265e68f5",
-  "synced_at": "2026-06-03T04:28:12.230606Z",
+  "source_commit": "5f937b4dd4889bfb4b6760e195a4269bd558cabd",
+  "synced_at": "2026-11-16T15:17:10.683545Z",
   "databases": {
     "hisn_elmoslem.db": {
       "titles": 135,
       "contents": 335
     },
     "commentary.db": {
-      "commentary": 311
+      "commentary": 335
     },
     "fake_hadith.db": {
       "fakeHadith": 20
